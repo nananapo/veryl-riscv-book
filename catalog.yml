@@ -10,7 +10,12 @@ PREDEF:
 
 ## 本文
 CHAPS:
-  - 01-abst.re
+  - 01-intro.re
+  - 02-setup.re
+  - 03-veryl.re
+  - 04-bluecore.re
+  - 05-impl-log.re
+  - 06-impl-rv64i.re
 
 ## 付録
 APPENDIX:
