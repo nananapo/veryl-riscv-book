@@ -1,0 +1,432 @@
+<% # -*- coding: utf-8 -*-
+
+## based on Re:VIEW 2.5
+
+def xelatex?()
+  @texcompiler == 'xelatex'
+end
+
+## I18n用文字列
+i18n   = proc {|key, *args| escape_latex(I18n.t(key, *args)) }
+i18n_t = proc {|key, *args| I18n.t(key, *args) }
+
+## dviコマンド
+case @dvicommand
+when 'dvipdfmx'
+  dvipdfmx  = 'dvipdfmx'
+when nil, ''
+  dvipdfmx  = ''
+else
+  dvipdfmx  = 'dvipdfmx'
+end
+
+pagesize = @config['starter']['pagesize']  # A5 or B5
+fontsize = @config['starter']['fontsize']  # 9pt or 10pt
+docopts = [@documentclassoption]
+docopts << "#{pagesize.downcase}paper"  # a5paper or b5paper
+docopts << fontsize                     # 9pt or 10pt
+
+%>
+\documentclass[<%= docopts.join(',') %>]{<%= @documentclass %>}
+
+
+%% copy values from 'config-starter.yml'
+<%-
+def to_val(v)
+   case v
+   when nil      ; ''
+   when true     ; 'Y'
+   when false    ; ''
+   when Numeric  ; v.to_s
+   when /\A(\d+(?:\.\d+)?)(mm|cm|pt)\z/ ; "#{$1}true#{$2}"
+   when /\A(\d+(?:\.\d+)?)(zw|zh)\z/ ; xelatex?() ? "#{$1}\\#{$2}" : v
+   else          ; escape(v.to_s)
+   end
+end
+-%>
+\makeatletter
+<%-
+    length_keys = ['caption_needspace', 'program_widen', 'terminal_widen', 'output_widen']
+    @config['starter'].each do |k, v|
+      x = k.gsub('_', '@')
+      if k =~ /_default_options\z/
+        x = $`.gsub('_', '@')
+        dict = v
+        dict.each do |k_, v_|
+ -%>
+\def\starter@<%= x %>@<%= k_.gsub('_', '@') %>{<%= to_val(v_) %>}
+<%-
+        end
+      elsif v.is_a?(Hash) || v.is_a?(Array)
+        next
+      elsif length_keys.include?(k)
+        #v = v.sub(/\b(z[wh])$/, '\\zw')
+ -%>
+%\def\<%= x %>{<%= v %>}
+\newlength{\starter@<%= x %>}
+\setlength{\starter@<%= x %>}{<%= to_val(v) %>}
+<%-
+      else
+ -%>
+\def\starter@<%= x %>{<%= to_val(v) %>}
+<%-
+      end#if
+    end#each
+ -%>
+\makeatother
+
+%% environment values for Starter
+\makeatletter
+<%-
+    ENV.each do |k, v|
+      if k =~ /^STARTER_\w+$/
+ -%>
+\def\<%= k.gsub('_', '@') %>{<%= v %>}%
+<%-
+      end
+    end
+    ##
+    target = ENV['STARTER_TARGET']
+    if target && !target.strip.empty?
+ -%>
+\def\starter@target{<%= target.strip %>} % $STARTER_TARGET=<%- target -%>
+<%-
+   end
+   ##
+   case ENV['STARTER_EXCLUDE_MOUSESELECT']
+   when 'on'
+ -%>
+\def\starter@exclude@mouseselect{Y}  % $STARTER_EXCLUDE_MOUSESELECT=on
+<%-
+    when 'off'
+ -%>
+\def\starter@exclude@mouseselect{}   % $STARTER_EXCLUDE_MOUSESELECT=off
+<%-
+    end
+ -%>
+\makeatother
+
+\usepackage{mytextsize}    % 本文の幅と高さを設定
+
+<%- if @texcompiler == "uplatex" -%>
+\usepackage[deluxe,uplatex]{otf}
+<%- elsif @texcompiler == "xelatex" -%>
+%\usepackage[deluxe]{otf}
+<%- else -%>
+\usepackage[deluxe]{otf}
+<%- end -%>
+
+<%- case ENV['STARTER_DRAFT'] -%>
+<%- when nil, '', 'off', 'false' -%>
+\usepackage{graphicx}
+<%- else -%>
+\usepackage[draft]{graphicx}
+<%- end -%>
+\usepackage[table]{xcolor}%requires colortbl, array
+
+\usepackage[bookmarks=true,bookmarksnumbered=true,colorlinks=true,%
+     pdftitle={<%= escape_latex(@config.name_of("booktitle")) %>},%
+     pdfauthor={<%= escape_latex(@config.names_of("aut").join(i18n_t.('names_splitter'))) %>}]{hyperref}
+<%- p = xelatex?() ? '%' : '' -%>
+<%= p %>\usepackage{pxjahyper}   % Bookmarkの文字化け対策（日本語向け）
+
+<%- p = ["utbook", "tbook"].include?(@documentclass) ? '' : '%' -%>
+<%= p %>\usepackage{plext}       % 縦書き用のパッケージ
+
+%% コードハイライト用の設定情報
+\makeatletter
+<%- yes = @config["highlight"] && @config["highlight"]["latex"] == "listings" -%>
+\def\config@highlight@listings{<%= yes ? 'Y' : '' %>}
+<%- yes = @config["language"] == "ja" -%>
+\def\config@language@ja{<%= yes ? 'Y' : '' %>}
+\def\review@t@list{<%= i18n.('list') %>}
+\makeatother
+
+%% Re:VIEW用のスタイルファイル
+\usepackage{review-base}
+
+
+%% I18N辞書のデータ
+\newcommand{\reviewcolumnhead}[2]{%
+{\noindent\large <%= i18n.('column_head') %>: #2}}
+
+\newcommand{\reviewimageref}[2]{<%= i18n.('image') %> #1}
+\newcommand{\reviewtableref}[2]{<%= i18n.('table') %> #1}
+\newcommand{\reviewlistref}[1]{<%= i18n.('list') %> #1}
+\newcommand{\reviewbibref}[2]{#1}
+\newcommand{\reviewcolumnref}[2]{<%= i18n.('columnname') %> #1}
+\newcommand{\reviewsecref}[2]{#1}
+
+\newcommand{\reviewminicolumntitle}[1]{%
+  {\large <%= i18n.('memo_head') %>: #1}\\}
+
+<%- if @config["toctitle"].present? -%>
+\renewcommand{\contentsname}{<%= escape_latex(@config["toctitle"]) %>}
+<%- elsif i18n_t.('toctitle') -%>
+\renewcommand{\contentsname}{<%= i18n.('toctitle')  %>}
+<%- end -%>
+
+
+%% ロケールに関する文字列
+<%-
+    locale = proc {|key| escape_latex(@locale_latex[key]) }
+ -%>
+\newcommand{\reviewprepartname}{<%= locale.('prepartname') %>}
+\newcommand{\reviewpostpartname}{<%= locale.('postpartname') %>}
+\newcommand{\reviewprechaptername}{<%= locale.('prechaptername') %>}
+\newcommand{\reviewpostchaptername}{<%= locale.('postchaptername') %>}
+\newcommand{\reviewfigurename}{<%= i18n.('image')  %>}
+\newcommand{\reviewtablename}{<%= i18n.('table')  %>}
+\newcommand{\reviewappendixname}{<%= locale.('preappendixname') %>}
+
+
+\makeatletter
+
+%% true between '\appendix' and ''
+\newif\if@appendix     % true なら付録を処理中である
+\@appendixfalse
+
+\makeatother
+
+<%- [@config["texstyle"]].flatten.compact.each do |x| -%>
+\usepackage{<%= x %>}
+<%- end -%>
+
+<%- if @config["makeindex"] -%>
+\usepackage{makeidx}
+\makeindex
+<%- end -%>
+
+<%- if @config['secnolevel'] -%>
+\setcounter{secnumdepth}{<%= @config['secnolevel'] - 1 %>}
+<%- end -%>
+
+<%- if (n = @config['starter']['part_startnumber']) -%>
+\setcounter{part}{<%= n - 1 %>}
+<%- end -%>
+<%- if (n = @config['starter']['chapter_startnumber']) -%>
+\setcounter{chapter}{<%= n - 1 %>}
+<%- end -%>
+
+
+\begin{document}
+
+\reviewmainfont
+
+<%-
+    ## PDFファイルを読み込む
+    include_pdffiles = proc do |pdf_files, except: nil, incrpagenum: false|
+      next if ENV['STARTER_CHAPTER'].present?
+      target = ENV['STARTER_TARGET'].to_s.strip
+      target = (@config['starter'] || {})['target'] if target.empty?
+      p = except && except == target ? '%' : ''
+      imagedir   = @config['imagedir']
+      pdf_option = @config['starter']['includepdf_option']
+      offset     = pdf_option =~ /\Aoffset=(.*)/ ? $1 : nil
+      [pdf_files].flatten.compact.each do |pdf_file|
+        pdf_file = pdf_file.sub(/(?:<(.*?)>)?(\*)?\z/, '')
+        pagenum = $1; star = $2
+        pdf_filepath = "./#{imagedir}/#{pdf_file}"
+ -%>
+\begingroup
+<%= p %>\makeatletter\def\starter@includepdf@pagenum{<%= pagenum %>}\makeatother
+<%= p %>\starterincludepdf<%= star %>[<%= offset %>]{<%= pdf_filepath %>}
+\endgroup
+<%-     if ! incrpagenum -%>
+<%= p %>\addtocounter{page}{-1}
+<%-
+        end
+      end
+    end
+
+    ## 表紙用PDFファイルを読み込む
+    include_pdffiles.(@config['starter']['frontcover_pdffile'], except: 'pbook')
+ -%>
+%
+
+<%-
+    ## 表紙と奥付用の各種データ
+    maintitle = escape_latex(@config.name_of("booktitle").to_s)
+    maintitle = maintitle.gsub(/\n/) { "\\\\\n" }  # '\n' -> '\\'
+    #
+    subtitle  = escape_latex(@config.name_of("subtitle").to_s)
+    rexp = /([！？])$/
+    if subtitle =~ rexp
+      subtitle = subtitle.gsub(rexp) { "\\mbox{#{$1}}"  }
+    elsif !subtitle.empty?
+      subtitle += " "
+    end
+    subtitle  = subtitle.gsub(/\n/) { "\\\\\n" }   # '\n' -> '\\'
+    #
+    pubevent     = escape_latex(@config["pubevent_name"].to_s)
+    pubhistory   = escape_latex(@config["pubhistory"].to_s)
+    pubdate      = escape_latex(@config["date"].to_s)
+    pubedition   = i18n.('edition')
+    publisher    = @config.names_of("pbl").join(I18n.t("names_splitter"))
+    published_by = i18n.('published_by', publisher)
+    #
+    latest_pubhist = pubhistory.lines[-1]
+    if latest_pubhist
+      if latest_pubhist =~ /\s*（.*）\z/
+        latest_pubhist = $`
+      end
+    end
+ -%>
+%%%
+\makeatletter
+\title{<%= maintitle %>}
+\def\@maintitle{<%= maintitle %>}
+\def\@subtitle{<%= subtitle %>}
+\def\@pubevent{<%= pubevent %>}
+\def\@latestpubhistory{<%= latest_pubhist %>}
+\author{<%= @authors %>}
+\date{<%= pubdate %> <%= pubedition %>\hspace{2zw}<%= published_by %>}
+\def\book@author{<%= escape(@book_author||'') %>}
+\def\book@supervisor{<%= escape(@book_supervisor||'') %>}
+\def\book@translator{<%= escape(@book_translator||'') %>}
+\makeatother
+%%%
+<%-
+    ## 大扉（タイトルページ）を表示
+    if ! @config['titlepage']
+      # nothing
+    elsif @custom_titlepage
+ -%>
+<%= @custom_titlepage %>
+<%-
+    elsif @config['starter']['titlepage_pdffile'].present?
+      ## 大扉用PDFファイルを読み込む
+      include_pdffiles.(@config['starter']['titlepage_pdffile'], incrpagenum: true)
+    else
+ -%>
+\begin{titlepage}
+<%-   if @config["coverimage"] -%>
+<%-     image_filepath = "./#{@config['imagedir']}/#{@config['coverimage']}" -%>
+  \begin{center}
+    \includegraphics[<%= @coverimageoption %>]{<%= image_filepath %>}
+  \end{center}
+  \clearpage
+<%-   end -%>
+  \ifdefined\mytitlepage
+    \mytitlepage      % defined in 'sty/mytitlepage.sty'
+  \else
+    \reviewtitlepage  % defined in 'sty/review-base.sty'
+  \fi
+\end{titlepage}
+<%-
+    end#if
+    #
+    if @config['titlepage']
+ -%>
+\ifdefined\mytitlenextpage
+  \mytitlenextpage    % defined in 'sty/mytitlepage.sty'
+\fi
+<%-
+    end
+ -%>
+
+%\renewcommand{\chaptermark}[1]{{}}
+\frontmatter
+
+%%% originaltitle
+<%- if @config["originaltitlefile"] -%>
+<%= @custom_originaltitlepage %>
+<%- end -%>
+
+%%% credit
+<%- if @config["creditfile"] -%>
+<%= @custom_creditpage %>
+<%- end -%>
+
+%% preface
+<%= @input_files["PREDEF"] %>
+
+<%- if @config["toc"] -%>
+\setcounter{tocdepth}{<%= @config["toclevel"] - 1 %>}
+\tableofcontents
+<%- end -%>
+
+%\renewcommand{\chaptermark}[1]{\markboth{\prechaptername\thechapter\postchaptername~#1}{}}
+\mainmatter
+<%= @input_files["CHAPS"] %>
+%\renewcommand{\chaptermark}[1]{\markboth{\appendixname\thechapter~#1}{}}
+\reviewappendix
+\makeatletter\@appendixtrue\makeatother
+<%= @input_files["APPENDIX"] %>
+\makeatletter\@appendixfalse\makeatother
+
+%% backmatter begins
+<%- if @input_files["POSTDEF"].present? # or @config["colophon"] -%>
+\backmatter
+<%- end -%>
+
+<%- if @input_files["POSTDEF"] -%>
+<%= @input_files["POSTDEF"] %>
+<%- end -%>
+<%- if @config["pdfmaker"]["makeindex"] -%>
+\printindex
+<%- end -%>
+
+%%% profile
+<%- if @config["profile"] -%>
+<%= @custom_profilepage %>
+<%- end -%>
+
+%%% advfile
+<%- if @config["advfile"] -%>
+<%= @custom_advfilepage %>
+<%- end -%>
+
+%%% colophon
+<%- ## 奥付に必要なデータ -%>
+\title{<%= escape_latex(@config.name_of("booktitle")) %>}  % 2行にしない
+\def\@subtitle{<%= escape_latex(@config.name_of("subtitle")) %>}  % 2行にしない
+\def\colophonpubhistory{%
+  <%= @config["pubhistory"].to_s.gsub(/\n/){ "\n\n\\noindent\n" } %>%
+}
+\def\colophonokuduke{%
+  <%= @okuduke %>%
+}
+\def\colophonrights{%
+  <%- @config.names_of("rights").each do |s| -%>
+  <%= escape_latex(s).sub(/^\(C\)/i, '{\textcopyright}') %>\\
+  <%- end if @config["rights"] -%>
+}
+<%-
+    ## 奥付を表示
+    if ! @config['colophon']
+      # nothing
+    elsif @custom_colophonpage
+ -%>
+<%= @custom_colophonpage %>
+<%-
+    elsif @config['starter']['colophon_pdffile'].present?
+      ## 奥付のPDFファイルを読み込む
+ -%>
+\reviewcolophon   % 偶数ページに移動
+<%-
+      include_pdffiles.(@config['starter']['colophon_pdffile'], incrpagenum: true)
+    else
+ -%>
+\ifdefined\mycolophon
+  \mycolophon          % defined in 'sty/mycolophon.sty'
+\else
+  \reviewcolophonpage  % defined in 'sty/review-base.sty'
+\fi
+<%-
+    end#if
+ -%>
+
+%%% backcover
+<%-
+    if @config['backcover']
+ -%>
+<%= @custom_backcoverpage %>
+<%-
+    elsif @config['starter']['backcover_pdffile'].present?
+      ## 裏表紙用PDFファイルを読み込む
+      include_pdffiles.(@config['starter']['backcover_pdffile'], except: 'pbook')
+    end
+ -%>
+
+\end{document}

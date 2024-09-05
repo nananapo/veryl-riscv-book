@@ -1,0 +1,264 @@
+# coding: utf-8
+
+## Starter独自設定
+starter:
+
+  ## 出力のターゲット。環境変数 $STARTER_TARGET で上書き可能。
+  ## * pbook: 印刷用のモノクロPDFを出力。printing bookの略。
+  ## * ebook: 電子用のカラーPDFを出力。electric bookの略。
+  ## * tablet: タブレット用のカラーPDFを出力。
+  target: pbook
+
+  ## ドラフトモード。trueなら画像を読み込むかわりに枠を表示する。
+  ## 図やスクリーンショットが多くてコンパイルに時間がかかるときに便利。
+  draft: false
+
+  ## 用紙サイズ
+  ## ・A5 … コロコロコミック、ボンボン、LaLa DXの大きさ
+  ## ・B5 … 少年ジャンプ、ジャポニカ学習帳の大きさ
+  pagesize:  B5            # A5 or B5
+
+  ## 上下左右の塗り足し幅（印刷用PDFのみ）
+  ## （参考：https://www.eikou.com/making/basis#nuritashi ）
+  bleedsize:           # 通常は指定しなくてよい
+  #bleedsize: 3mm      # 背景色を使うなら、上下左右に3mmの塗り足しが必要
+  bleedcolor:          # 通常は無指定、確認時のみ使用（red/blue/green/yellow/gray）
+
+  ## フォントサイズ
+  ## ・A5なら「9pt」、B5なら「10pt」を推奨
+  ## ・初心者向け入門書なら大きめにして、A5「10pt」、B5「11pt」を推奨
+  fontsize:  10pt          # 9pt or 10pt
+
+  ## 本文幅
+  ## ・A5 9ptなら「38zw」か「39zw」、A5 10ptなら「35zw」を推奨
+  ## ・B5 10ptなら「44zw」か「45zw」、B5 11ptなら「41zw」を推奨
+  textwidth: 44zw          # 全角の文字数で指定
+
+  ## 本文のフォント（注：実験的）
+  ## （Notoフォントが前提なので、Docker環境が必要。MacTeXでは使わないこと）
+  fontfamily_ja: mincho    # (日本語) mincho: 明朝体, gothic: ゴシック体
+  fontfamily_en: roman     # (英数字) roman: ローマン体, sansserif: サンセリフ体
+  fontweight_ja: normal    # (日本語) normal: 通常, light: 細字
+  fontweight_en: normal    # (英数字) normal: 通常, light: 細字
+
+  ## 表紙や大扉（タイトルページ）や奥付のページのPDFファイルを指定
+  ## ・PDFファイルは `images/` フォルダに置くこと。
+  ## ・PDFは1ファイルにつき1ページであること。もし複数ページのPDFを指定する場合は
+  ##   取り込むページ番号を `cover.pdf<2>` のように指定すること（実験的機能）。
+  ## ・ファイル名の後ろに `*` をつけると、上下左右の塗り足し部分が除かれる。
+  ## ・必要なら配列を使って複数ファイルを指定可能（例： [a.pdf, b.pdf]）。
+  frontcover_pdffile: cover_b5.pdf   # 表表紙（電子用のみ、印刷用にはつかない）
+  #frontcover_pdffile: cover.pdf<2>* # （ページ番号を指定し、塗り足しを除く場合）
+  backcover_pdffile:  null           # 裏表紙（電子用のみ、印刷用にはつかない）
+  titlepage_pdffile:  null           # 大扉（印刷用・電子用どちらにもつく）
+  colophon_pdffile:   null           # 奥付（印刷用・電子用どちらにもつく）
+  includepdf_option:  null           # PDFの位置調整が必要な場合
+  #includepdf_option:  "offset=-0.0mm 0.0mm"  # 位置調整の指定例
+
+  ## ノンブル（1枚目からの通し番号）の設定
+  ## （注：印刷用PDFのときのみ有効、電子用PDFではノンブルはつかない）
+  nombre:               on           # on ならノンブルをつける
+  nombre_sidemargin:    0.5mm        # ページ左右からのマージン幅
+  nombre_bottommargin:  2.0mm        # ページ下からのマージン高
+  nombre_fontcolor:     gray         # 'gray' or 'black'
+  nombre_fontsize:      6pt          # フォントサイズ（6〜8pt）
+  nombre_startnumber:   1            # ノンブルの開始番号（3から始める流儀もある）
+
+  ## 部 (Part) の開始番号（上・下巻に分割する場合に必要）
+  part_startnumber: 1          # 5 なら「第5部」から始まる
+
+  ## 章 (Chapter) の開始番号
+  chapter_startnumber: 1       # 0 なら「第0章」から始まる
+
+  ## 章 (Chapter) タイトルの装飾
+  ## （none: なし、underline: 下線、boldlines: 上下に太線）
+  chapter_decoration: boldlines
+
+  ## 章 (Chapter) タイトルの左寄せ/右寄せ/中央揃え
+  ## （left: 左寄せ、right: 右寄せ、center: 中央揃え）
+  chapter_align: center
+
+  ## 章 (Chapter) タイトルを1行にする（章番号とタイトルとの間で改行しない）
+  chapter_oneline: false
+
+  ## 節 (Section) ごとに改ページするか
+  ## （ただし各章の最初の節は改ページしない）
+  section_newpage: false
+
+  ## ページ先頭なら節や項のタイトルの前にスペースを入れない
+  ## （obsolete: 現在は常にtrue扱い）
+  section_notopmargin: true
+
+  ## 節 (Section) タイトルの装飾
+  ## （none: なし、underline: 下線、grayback: 灰色の背景色、
+  ##   leftline: 左に縦線、numbox: 節番号を黒背景に、circle: 円）
+  ## （節タイトルが長くて二行になる場合は「leftline」「numbox」「circle」がお勧め）
+  section_decoration: numbox
+
+  ## 項 (Subsection) タイトルの装飾
+  ## （none: なし、symbol: 先頭にクローバー）
+  subsection_decoration: none
+
+  ## プログラムやターミナルのキャプションを小さくするか？
+  caption_small: true
+
+  ## キャプションの見映えをよくするか？
+  caption_pretty: true
+
+  ## キャプション直後での改ページを防ぐために、最低限必要とする高さ
+  ## （もしキャプション直後での改ページが発生するなら値を増やす。
+  ##   もし十分なスペースがあるのに改ページされるなら値を減らす。）
+  caption_needspace: 4.0zh        # 全角文字4個分の高さ（実験で得た境界値）
+
+  ## プログラム用（//list）の等幅フォント。
+  ##  * lmodern … LaTeXのデフォルト。1とl、0とOが見分けにくい。太字が目立たない。
+  ##  * lmodern-lighttt … lmodernを細字にしたもの。太字が目立つ。
+  ##  * courier … 文字が細いので太字が目立つ。1とl、0とOが見分けにくい。文字幅が広い。
+  ##  * beramono … 1とl、0とOが見分けやすい。「'」と「`」が見分けにくい。
+  ##  * inconsolata … 1とl、0とOが見分けやすい。文字幅が少し狭い。
+  ##  * inconsolata-narrow … inconsolataの文字幅をさらに狭めたもの。英数字と日本語の文字幅が約1:2。
+  program_ttfont: inconsolata-narrow
+
+  ## ターミナル用（//terminal、//cmd）の等幅フォント。
+  ## 使用できるフォント名はプログラム用と同じ。
+  ## ただしinconsolataとinconsolata-narrow、lmodernとlmodern-lightttは互いに排他的。
+  ## たとえばプログラム用でinconsolataを使いつつターミナル用でinconsolata-narrowを
+  ## 使う、といったことはできない（どちらもinconsolata-narrowになる）。
+  terminal_ttfont: inconsolata-narrow
+
+  ## プログラム（//list）の表示幅をほんの少しだけ広げる。
+  ## 折返し記号が右端まで届かず、あともう1文字入りそうなときに使う。
+  ## 詳細は https://twitter.com/_kauplan/status/1162167825407963137
+  program_widen:   0.0mm         # 0.3mmとか
+
+  ## ターミナル（//terminal, //cmd）の表示幅をほんの少しだけ広げる。
+  ## 折返し記号が右端まで届かず、あともう1文字入りそうなときに使う。
+  ## 詳細は https://twitter.com/_kauplan/status/1162167825407963137
+  terminal_widen:  0.0mm         # 0.3mmとか
+
+  ## プログラム（//list）のデフォルトオプション
+  ## （注：YAMLでは `on, off, ~` は `true, false, null` と同じ）
+  program_default_options:
+    fold:        on        # on なら長い行を右端で折り返す
+    foldmark:    on        # on なら折り返し記号をつける
+    eolmark:     off       # on なら行末に改行記号をつける
+    lineno:      ~         # 1 なら行番号をつける
+    linenowidth: ~         # 行番号の幅を半角文字数で指定する
+    indent:      ~         # インデント幅（指定するとインデント記号がつく）
+    fontsize:    small     # null, or small/x-small/xx-smal
+    lang:        ~         # デフォルトのプログラミング言語名
+    #file:       ~         # （使用しない）
+    encoding:    utf-8     # ファイルの文字コード
+    widecharfit: off       # on なら全角1文字を半角2文字幅に
+    charspace:   ~         # 文字の間隔を空ける/詰める（例：-0.03em）
+
+  ## ターミナル（//terminal）のデフォルトオプション
+  ## （注：YAMLでは `on, off, ~` は `true, false, null` と同じ）
+  terminal_default_options:
+    fold:        on        # on なら長い行を右端で折り返す
+    foldmark:    on        # on なら折り返し記号をつける
+    eolmark:     off       # on なら行末に改行記号をつける
+    lineno:      ~         # 1 なら行番号をつける
+    linenowidth: ~         # 行番号の幅を半角文字数で指定する
+    indent:      ~         # インデント幅（指定するとインデント記号がつく）
+    fontsize:    small     # null, or small/x-small/xx-smal
+    lang:        ~         # デフォルトのプログラミング言語名
+    #file:       ~         # （使用しない）
+    encoding:    utf-8     # ファイルの文字コード
+    widecharfit: off       # on なら全角1文字を半角2文字幅に
+    charspace:   ~         # 文字の間隔を空ける/詰める（例：-0.03em）
+
+  ## プログラム（//list）を枠で囲むか？
+  program_border: true
+
+  ## ターミナル（//terminal, //cmd）を枠で囲むか？
+  terminal_border: false
+
+
+  ## 出力結果（//output）の設定
+  output_ttfont:   inconsolata-narrow
+  output_widen:    0.0mm         # 0.3mmとか
+  output_border:   true          # 枠線で囲むか？
+  output_default_options:
+    fold:        on        # on なら長い行を右端で折り返す
+    foldmark:    on        # on なら折り返し記号をつける
+    eolmark:     off       # on なら行末に改行記号をつける
+    lineno:      ~         # 1 なら行番号をつける
+    linenowidth: ~         # 行番号の幅を半角文字数で指定する
+    indent:      ~         # インデント幅（指定するとインデント記号がつく）
+    fontsize:    ~         # null, or small/x-small/xx-smal
+    lang:        ~         # デフォルトのプログラミング言語名
+    #file:       ~         # （使用しない）
+    encoding:    utf-8     # ファイルの文字コード
+    widecharfit: on        # on なら全角1文字を半角2文字幅に
+    charspace:   ~         # 文字の間隔を空ける/詰める（例：-0.03em）
+
+
+  ## 文章中の「@<code>{...}」の背景色を薄いグレーにするか？
+  inlinecode_gray: true
+
+  ## 奥付 (Colophon) に「powered by Re:VIEW Starter」と入れるか？
+  colophon_poweredby: false
+
+  ## 画像が現在位置に入りきらず次ページに送られたとき、後続のテキストを現在位置に
+  ## 流し込むかどうか。流し込まないと現在位置に大きなスペースができてしまう。
+  ## またLaTeXの位置指定(t:top, b:bottom, p:page)も指定可能。
+  #image_position: H   # 現在位置にスペースが空く（要float.sty）
+  image_position: h    # 現在位置に後続テキストを流し込む
+
+  ## （obsolete、現在では常にtrue扱い）
+  ## 十分なスペースがあるのに節や項のタイトル直前で改ページされるのを避ける。
+  ## （LaTeXのデフォルトでは、ページ最下部の段落が最初の1行だけになるのを嫌う。
+  ##   そのため、節(Section)のタイトル直後が1行だけで改ページされるくらいなら
+  ##   節タイトルの直前で改ページすることをLaTeXは選ぶ。
+  ##   このせいで、十分な空きがあるのに節タイトル前で改ページされることがある。）
+  page_clubline: true      # trueなら改ページを避ける
+
+  ## リンクのURLを脚注に埋め込む（PDFでのみ）。
+  linkurl_footnote: true   # trueならリンクのURLを脚注に埋め込む（お勧め）
+
+  ## @<secref>{}において、親の節のタイトルを含めるか？
+  secref_parenttitle: false # trueなら親の節のタイトルを含める
+
+  ## PDF中のテキストをマウスで選択したとき、折り返し記号やインデント記号を選択対象から外すか？
+  ## ・trueだとコンパイル時間が大幅に増えるので、デフォルトではfalse。
+  ## ・環境変数「$STARTER_EXCLUDE_MOUSESELECT=on」でもtrueにできる。
+  ## ・AcrobatReaderでは機能するが、macOS Preview.appでは機能しない。
+  exclude_mouseselect: false
+
+
+  ## 説明リスト（`//desclist`）のデフォルトオプション
+  ## （注：YAMLでは `on` は `true` と同じ、`off` は `false` と同じ）
+  desclist_default_options:
+    indent:      3zw       # 説明文の左側の空き幅
+    space:       1zw       # キーや用語の直後の空き幅
+    bold:        off       # on ならキーや用語を太字に
+    compact:     off       # on ならキーや用語の直後で改行しない
+    listmargin:  0.5zw     # 説明リスト上下の空きの高さ
+    itemmargin:  0mm       # 説明項目間の空きの高さ
+    classname:             # HTMLタグに含めるクラス名
+
+  ## 会話形式（`//talklist`）のデフォルトオプション
+  ## （注：YAMLでは `on` は `true` と同じ、`off` は `false` と同じ）
+  talklist_default_options:
+    indent:      6zw       # 本文左端から会話部分までの幅
+    separator:   "："      # 名前と会話文との区切り文字列
+    imagewidth:  4zw       # 画像幅
+    imageheight:           # 画像高さ（通常は無指定でよい）
+    imageborder: off       # on なら画像に枠線をつける
+    needvspace:  4zw       # 必要な空きがなければ改ページ
+    itemmargin:  1mm       # 会話項目間の空き
+    listmargin:  0.5zw     # 会話リストの最初と最後の空き
+    itemstart:   "「"      # 会話文の先頭につける文字列
+    itemend:     "」"      # 会話文の最後につける文字列
+    classname:             # HTMLタグに含めるクラス名
+
+  ## 大量の会話形式をより簡単に入力するための設定
+  ## （例：`//t[b1]` が `//talk[avatar-b][]` の短縮形となる）
+  talk_shortcuts:
+    ## アイコン画像を使う場合
+    "b1":         {image: "avatar-b"}
+    "g1":         {image: "avatar-g"}
+    ## アイコン画像を使わない場合
+    #"b1":        {name: "アリス"}
+    #"g1":        {name: "ボブ"}

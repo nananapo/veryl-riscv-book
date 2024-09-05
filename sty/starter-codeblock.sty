@@ -1,0 +1,526 @@
+%%% -*- coding: utf-8 -*-
+
+%%%
+%%% コードブロック（//list、//terminal、//output）
+%%%
+
+
+%%% 図や表のキャプションを見映えよくする
+\ifx\starter@caption@pretty\empty\else
+  \let\original@makecaption\@makecaption  % jsbook.clsでの定義を保存し、あとで再利用
+  \renewcommand{\@makecaption}[2]{%       % 図や表のキャプション
+    \original@makecaption{\starter@caption@font\starter@caption@prefix #1}{\starter@caption@font #2}
+  }
+\fi
+%\usepackage{amssymb}   % $\blacktriangle$ や $\blacktriangledown$ に必要
+\newcommand{\starter@caption@font}{\gtfamily\sffamily}  % キャプションをゴシック体に
+\newcommand{\starter@caption@symbolup}{▲}    % または $\blacktriangle$
+\newcommand{\starter@caption@symboldown}{▼}  % または $\blacktriangledown$
+\newcommand{\starter@caption@symbol}{\starter@caption@symboldown} % デフォルトは「▼」
+\newcommand{\starter@caption@prefix}{%        % キャプションの接頭辞
+  \textcolor{starter@captioncolor}{\starter@caption@symbol}%  % 「▲」や「▼」に色をつける
+  \,%                                        % 接頭辞の直後に少し隙間を空ける
+}
+\renewcommand{\reviewimagecaption}[1]{{%     % 図のキャプションは図の下につくので、
+  \def\starter@caption@symbol{\starter@caption@symbolup}%  % 接頭辞を「▼」から「▲」に変更
+  \caption{#1}%
+}}
+\renewcommand{\reviewindepimagecaption}[1]{%
+  % \begin{center}{\gtfamily\sffamily #1}\end{center}%
+  \par%
+  {\starter@caption@font #1}%                 % 「▲」をつけない
+}
+
+
+%%% キャプション（「//list」や「//cmd」につける説明のこと）
+%%% ・キャプション直後で改ページされるのを防ぐ（要 needspace.sty）
+%%% ・ただし同じページに画像がある場合は、うまく動作しないことがあるので注意
+\newcommand{\starter@caption}[1]{%
+  %\ifempty{#1}\else%
+    \needvspace{\starter@caption@needspace}%   % 必要な分のスペースがなければ改ページ
+    \starter@caption@text{#1}%
+    \par%
+    \starter@caption@sep%
+  %\fi%
+}
+\newcommand{\starter@caption@text}[1]{{%
+  %\medskip{\small\noindent #1}\vspace*{-1.3zw}%    % original
+  \noindent%                   % キャプションをインデントしない
+  \ifx\starter@caption@small\empty\else%
+    \small%                    % キャプションの文字を小さくする
+  \fi%
+  \ifx\starter@in@quote\empty\else%  % 引用文の中なら、
+    \hspace{1zw}%                    % 少しインデントする
+  \fi%
+  \ifx\starter@caption@pretty\empty\else%
+    \starter@caption@font\starter@caption@prefix% ゴシック体に変更、接頭辞をつける
+  \fi%
+  #1%                          % キャプションを表示
+}}
+\newcommand{\starter@caption@sep}{%
+  \vspace*{-0.6zw}%            % 縦方向の余白を減らす
+}
+
+
+
+
+%%% コードブロック（プログラムリストやターミナル）
+\newenvironment{starter@codeblock}[2][]{%
+  \def\starter@in@codeblock{Y}%
+  \starter@codeblock@vspace%                        % 上に余白を空ける
+  \ifempty{#1}\else\label{#1}\fi%                   % 参照用のラベル
+  \ifempty{#1}\else%
+    \def\starter@codeblock@hascaption{Y}%           % キャプションがあるときだけY
+  \fi%
+  \starter@codeblock@caption{#2}%                   % キャプションを表示
+  \begin{@starter@codeblock}%
+}{%
+  \end{@starter@codeblock}%
+  \starter@codeblock@vspace%                        % 下に余白を空ける
+  \def\starter@in@codeblock{}%
+}
+\def\starter@in@codeblock{}                         % コードブロック中ならY
+\def\starter@codeblock@hascaption{}                 % キャプションがあるならY
+\newenvironment{@starter@codeblock}{%
+  %\vspace{-\lastskip}%
+  \starter@enablettfont{\starter@codeblock@ttfont}% 等幅フォントを指定
+  \ifempty\starter@codeblock@fontsize\else%         % fontsizeオプションが指定されていたら
+    \csname\starter@codeblock@fontsize\endcsname%   % その大きさに変更する
+  \fi%
+  \setlength{\baselineskip}{\starter@codeblock@baselineskip}% 行間を狭める
+  \@starter@codeblock@defframe%    % 枠の表示方法を設定
+  %% 自動折返しに必要なコマンドを準備する
+  %\def\seqinsert{\-}%              % 折り返し用のコマンドを上書き
+  %\def\-{\starter@fold@able}%     % （効果なし）「\-」を上書き
+  %\let\-\starter@fold@able%       % （効果なし）「\-」を上書き
+  %\renewcommand\-{\starter@fold@able}% （効果なし）「\-」を上書き
+  \ifx\starter@codeblock@fold\empty%
+    \DeclareRobustCommand{\-}{\starter@fold@not}% 折り返ししない
+  \else%
+    \DeclareRobustCommand{\-}{\starter@fold@able}% 折り返しする
+  \fi%
+  \def\UL@dischyp{\starter@fold@dischyp}% 取り消し線で使うulem.sty内部のコマンドを上書き
+  %
+  \setlength{\@totalleftmargin}{0pt}% 箇条書き用のインデント幅をクリア（折返しに影響するため）
+  %% 左右の空きの幅をもとに、コードブロック左の空き幅を計算する
+  \setlength{\starter@codeblock@leftmargin}{\leftskip}%         % 左側の空きの幅から、
+  \addtolength{\starter@codeblock@leftmargin}{-\rightskip}%     % 右側の空きの幅を引く
+  %% 左右の空きの幅をもとに、表示幅を調整する
+  %% （条件により +/-1zw の調整が必要、理由は不明）
+  \ifdim\rightskip=0pt%
+    \setlength{\starter@codeblock@hsizedelta}{0pt}%
+  \else\ifdim\leftskip>\rightskip%
+    \setlength{\starter@codeblock@hsizedelta}{\dimexpr -\leftskip +1zw}%
+  \else\ifdim\leftskip<\rightskip%
+    \setlength{\starter@codeblock@hsizedelta}{\dimexpr -\leftskip -\rightskip -1zw}%
+  \else%
+    \setlength{\starter@codeblock@hsizedelta}{\dimexpr -\leftskip -\rightskip}%
+  \fi\fi\fi%
+  %
+  \vspace{-0.4\baselineskip}%
+  %\begin{alltt}%                   % verbatim環境もalltt環境も使わない
+  \ttfamily%
+  \frenchspacing%
+  %\obeylines%
+  %\obeyspaces%
+  \setlength{\parindent}{0pt}%      % 段落最初の字下げをなくす
+  \setlength{\parskip}{0pt}%        % 段落間の縦方向の空きをなくす
+  %
+  \ifx\starter@codeblock@widecharfit\empty%
+    \settowidth{\starter@codeblock@widechar@width}{あ}%     % 全角1文字分の幅
+    %\let\ZC=\starter@codeblock@widechar@asis% '\ZC{あ}' はそのままの幅
+    \let\ZC=\starter@codeblock@widechar@fit% '\ZC{あ}' が全角1文字分の幅
+  \else%
+    \settowidth{\starter@codeblock@widechar@width}{a\-b}%   % 半角2文字分の幅
+    \let\ZC=\starter@codeblock@widechar@fit% '\ZC{あ}' が半角2文字分の幅になる
+  \fi%
+  %
+  \ifx\starter@in@quote\empty%      % 引用の中でないなら背景色をつける
+    %\setlength{\baselineskip}{0.85\baselineskip}%
+    \MakeFramed{%
+      \addtolength{\hsize}{-\width}% ブロック幅をテキスト幅と同じにする（左右に広げない）
+      \addtolength{\hsize}{\starter@codeblock@widen}% ほんの少しだけ表示幅を広げる
+      \addtolength{\hsize}{\starter@codeblock@hsizedelta}% 表示幅を調整する
+      \setlength{\leftskip}{0pt}%                % //note と //desclist 用に、
+      \setlength{\rightskip}{0pt}%               % フレーム内のインデントをなくす
+      \clubpenalty=\z@%   % ページの一番下に1行だけ表示されるのを許す
+      \widowpenalty=\z@%  % ページの一番上に1行だけ表示されるのを許す
+      \FrameRestore%
+    }%
+  \else%                            % 引用の中なら背景色をつけない
+    \setlength{\leftskip}{1zw}%                  % かわりに左側をインデント
+    \setlength{\baselineskip}{0.92\baselineskip}%
+    \ifx\starter@codeblock@hascaption\empty%
+      \addvspace{1.1\baselineskip}%
+    \else%
+      \addvspace{0.75\baselineskip}%
+    \fi%
+  \fi%
+}{%
+  \ifx\starter@in@quote\empty%
+    \endMakeFramed%
+  \else%
+  \fi%
+  %\end{alltt}%
+  \vspace{-\lastskip}%
+}
+
+\def\starter@codeblock@fontcolor{}         % コードブロックの文字色
+\def\starter@codeblock@backcolor{}         % コードブロックの背景色
+\def\starter@codeblock@widecharfit{}       % 全角1文字を半角2文字幅に調節するか？
+\def\starter@codeblock@charspace{}         % 文字の間隔を調整する幅
+\newlength{\starter@codeblock@leftmargin}  % コードブロック右側の空き幅
+\newlength{\starter@codeblock@hsizedelta}  % コードブロックの表示幅を狭める長さ
+
+%% 全角1文字を半角2文字分の幅で表示する
+\newcommand{\starter@codeblock@widechar@fit}[1]{%
+  \makebox[\starter@codeblock@widechar@width][c]{#1}%
+}
+\newcommand{\starter@codeblock@widechar@asis}[1]{%
+  \mbox{#1}%
+}
+\newlength{\starter@codeblock@widechar@width}% 半角2文字分の幅
+\settowidth{\starter@codeblock@widechar@width}{a\-b}
+
+
+\newcommand{\@starter@codeblock@defframe}{% 枠の表示方法を設定
+  %% framed.sty で提供されているコマンドを上書き
+  \ifx\starter@codeblock@border\empty%  %%% 枠線をつけない場合
+    \def\@framecommandsetup{%
+      \fboxsep=0.5\FrameSep%       % ブロックのパディング
+      \ifx\starter@codeblock@fontcolor\empty\else%
+        \color{\starter@codeblock@fontcolor}% 文字色を指定
+      \fi%
+      \ifdim\starter@codeblock@leftmargin=0pt\else%
+        \hspace{\starter@codeblock@leftmargin}% 左側を空ける
+      \fi%
+    }%
+    \ifx\starter@codeblock@backcolor\empty%
+      \def\FrameCommand{%
+        \@framecommandsetup%
+      }%
+    \else%
+      \def\FrameCommand{%
+        \@framecommandsetup%
+        \colorbox{\starter@codeblock@backcolor}% ブロックの背景色
+      }%
+    \fi%
+  \else%                        %%% 枠線をつける場合
+    \def\FrameCommand{%            % ページまたぎがないとき
+      \@starter@codeblock@openfbox{\FrameRule}{\FrameRule}{\FrameRule}{\FrameRule}%
+    }%
+    \def\FirstFrameCommand{%       % 次のページにまたがるとき
+      \@starter@codeblock@openfbox{\FrameRule}{\z@}{\FrameRule}{\FrameRule}%
+    }%
+    \def\MidFrameCommand{%         % 次/前のページへまたがるとき
+      \@starter@codeblock@openfbox{\z@}{\z@}{\FrameRule}{\FrameRule}%
+    }%
+    \def\LastFrameCommand{%        % 前のページからまたがるとき
+      \@starter@codeblock@openfbox{\z@}{\FrameRule}{\FrameRule}{\FrameRule}%
+    }%
+  \fi%
+}
+\newcommand{\@starter@codeblock@openfbox}[5]{{%           % 枠線で囲むだけでなく、背景色をつける
+  \edef\@top{#1}%                  % 枠線（上）
+  \edef\@bottom{#2}%               % 枠線（下）
+  \edef\@left{#3}%                 % 枠線（左）
+  \edef\@right{#4}%                % 枠線（右）
+  \edef\@bordercolor{\starter@codeblock@bordercolor}% 枠線の色
+  \edef\@bgcolor{\starter@codeblock@backcolor}% 背景の色
+  \edef\@fontcolor{\starter@codeblock@fontcolor}% フォントの色
+  \ifx\@fontcolor\empty%
+    \edef\@fontcolor{black}%
+  \fi%
+  \edef\@padding{\starter@codeblock@padding}% 内側のpadding
+  \FrameSep=0pt%                   % 枠線内の padding をなくす
+  \ifx\@bgcolor\empty%
+    \fboxsep=\@padding%            % 枠線内の padding をつける
+  \else%
+    \fboxsep=0pt%                  % 枠線とcolorbox間の padding をなくす
+  \fi%
+  \color{\@bordercolor}%           % 枠線に色をつける
+  \ifdim\starter@codeblock@leftmargin=0pt\else%
+    \hspace{\starter@codeblock@leftmargin}% 左側を空ける
+  \fi%
+  \CustomFBox{}{}{\@top}{\@bottom}{\@left}{\@right}{% 枠線をつける
+    \ifx\@bgcolor\empty%
+      {\color{\@fontcolor}#5}%     % 背景色をつけない
+    \else%
+      \fboxsep=\@padding%          % colorbox 内の padding を設定
+      \colorbox{\@bgcolor}{\color{\@fontcolor}#5}% 背景色をつける
+    \fi%
+  }%
+}}%
+
+\def\starter@codeblock@padding{4.5pt}
+
+\newcommand{\starter@codeblock@vspace}{%   % コードブロックの前後の余白
+  %% \vspace と違い、\addvspace は直前に余白があればその分の高さを引いた余白を追加する
+  \addvspace{\medskipamount}%              % \medskipと同じ高さの余白にする
+}
+
+\newcommand{\starter@codeblock@widen}{0.0mm}     % コードブロックを少しだけ広げる幅
+
+%%% コードブロック用のキャプション
+\newcommand{\starter@codeblock@caption}[1]{%
+  %\ifempty{#1}\else%
+  \def\@arg{#1}%
+  \ifx\@arg\empty\else%
+    \starter@caption{#1}%                  % キャプションを表示
+  \fi%
+}
+
+%%% コードブロック用の行番号
+\newcommand{\starterouterlineno}[1]{%        % #1: 行番号
+  \makebox[0pt][r]{%                         % 右揃えにする
+    \small\rmfamily%                         % 文字を小さくし、ローマン体を使う
+    \textcolor{gray}{%                       % 文字色をグレーにする
+      \starter@excluewhencopied{#1}%         % マウスコピペの対象にしない
+    }%
+    \hspace{0.8\FrameSep}%                   % 少しスペースを空ける
+  }%
+}
+\newcommand{\starterinnerlineno}[1]{%        % #1: 行番号
+  \textcolor{gray}{%                         % 文字色をグレーにする
+    \starter@excluewhencopied{#1}%           % マウスコピペの対象にしない
+  }%
+}
+
+%%% プログラム（//list[label][caption][optionstr]{ ... //}）
+\newenvironment{starterprogram}[2][]{%       % #1:ラベル、#2:キャプション
+  \def\starter@in@program{Y}%
+  \edef\starter@codeblock@ttfont{\starter@program@ttfont}% 等幅フォントを指定
+  \edef\starter@codeblock@fontsize{\starter@program@fontsize}% 文字を少し小さくする
+  \edef\starter@codeblock@border{\starter@program@border}% 枠をつける/つけない
+  \edef\starter@codeblock@widen{\starter@program@widen}% 幅をほんの少し広げる
+  \edef\starter@codeblock@widecharfit{\starter@program@widecharfit}% 全角幅を半角2文字分に
+  \edef\starter@codeblock@charspace{\starter@program@charspace}% 文字間のスペース
+  \edef\starter@codeblock@baselineskip{0.85\baselineskip}% 行間を狭める
+  \edef\starter@codeblock@fontcolor{starter@program@fontcolor}% 文字色を無指定
+  \edef\starter@codeblock@backcolor{starter@program@backcolor}% 背景色を指定
+  \edef\starter@codeblock@bordercolor{starter@program@bordercolor}% 枠の色
+  \edef\starter@codeblock@weakcolor{starter@program@weakcolor}% 折り返し記号の色
+  \edef\starter@codeblock@weakercolor{starter@program@weakercolor}% 改行記号の色
+  \edef\starter@codeblock@thincolor{starter@program@thincolor}% インデント記号の色
+  \ifx\starter@program@border\empty%
+    \edef\starter@codeblock@bordercolor{}%       % 枠をつけない
+  \fi%
+  \begin{starter@codeblock}[#1]{#2}%
+}{%
+  \end{starter@codeblock}%
+  \def\starter@in@program{}%
+}
+\def\starter@in@program{}%    % programの中ならY
+
+%%% ターミナル（//terminal[label][caption][optionstr]{ ... //}）
+\newenvironment{starterterminal}[2][]{%       % #1:ラベル、#2:キャプション
+  \def\starter@in@terminal{Y}%
+  \edef\starter@codeblock@ttfont{\starter@terminal@ttfont}% 等幅フォントを指定
+  \edef\starter@codeblock@fontsize{\starter@terminal@fontsize}% 文字を少し小さくする
+  \edef\starter@codeblock@border{\starter@terminal@border}% 枠をつける/つけない
+  \edef\starter@codeblock@widen{\starter@terminal@widen}% 幅をほんの少し広げる
+  \edef\starter@codeblock@widecharfit{\starter@terminal@widecharfit}% 全角幅を半角2文字分に
+  \edef\starter@codeblock@charspace{\starter@terminal@charspace}% 文字間のスペース
+  \edef\starter@codeblock@baselineskip{0.85\baselineskip}% 行間を狭める
+  %\color{white}% ←ここで指定してはダメ！キャプションなしterminal間の余白が広がってしまう
+  \edef\starter@codeblock@fontcolor{starter@terminal@fontcolor}% 文字色を無指定
+  \edef\starter@codeblock@backcolor{starter@terminal@backcolor}% 背景色を指定
+  \edef\starter@codeblock@bordercolor{starter@terminal@bordercolor}% 枠の色
+  \edef\starter@codeblock@weakcolor{starter@terminal@weakcolor}% 折り返し記号の色
+  \edef\starter@codeblock@weakercolor{starter@terminal@weakercolor}% 改行記号の色
+  \edef\starter@codeblock@thincolor{starter@terminal@thincolor}% インデント記号の色
+  \ifx\starter@terminal@border\empty%
+    \edef\starter@codeblock@bordercolor{}%       % 枠をつけない
+  \fi%
+  \begin{starter@codeblock}[#1]{#2}%
+}{%
+  \end{starter@codeblock}%
+  \def\starter@in@terminal{}%
+}
+\def\starter@in@terminal{}%    % terminalの中ならY
+
+%%% 出力結果（//output[label][caption][optionstr]{ ... //}）
+\newenvironment{starteroutput}[2][]{%       % #1:ラベル、#2:キャプション
+  \def\starter@in@output{Y}%
+  \edef\starter@codeblock@ttfont{\starter@output@ttfont}% 等幅フォントを指定
+  \edef\starter@codeblock@fontsize{\starter@output@fontsize}% 文字を少し小さくする
+  \edef\starter@codeblock@border{\starter@output@border}% 枠をつける/つけない
+  \edef\starter@codeblock@widen{\starter@output@widen}% 幅をほんの少し広げる
+  \edef\starter@codeblock@widecharfit{\starter@output@widecharfit}% 全角幅を半角2文字分に
+  \edef\starter@codeblock@charspace{\starter@output@charspace}% 文字間のスペース
+  \edef\starter@codeblock@baselineskip{0.85\baselineskip}% 行間を狭める
+  \edef\starter@codeblock@fontcolor{starter@output@fontcolor}% 文字色を無指定
+  \edef\starter@codeblock@backcolor{starter@output@backcolor}% 背景色を指定
+  \edef\starter@codeblock@bordercolor{starter@output@bordercolor}% 枠の色
+  \edef\starter@codeblock@weakcolor{starter@output@weakcolor}% 折り返し記号の色
+  \edef\starter@codeblock@weakercolor{starter@output@weakercolor}% 改行記号の色
+  \edef\starter@codeblock@thincolor{starter@output@thincolor}% インデント記号の色
+  \ifx\starter@output@border\empty%
+    \edef\starter@codeblock@bordercolor{}%       % 枠をつけない
+  \fi%
+  \begin{starter@codeblock}[#1]{#2}%
+}{%
+  \end{starter@codeblock}%
+  \def\starter@in@output{}%
+}
+\def\starter@in@output{}%    % outputの中ならY
+
+
+
+%%% 長い行を自動的に折り返す（コードブロック内で使用）
+\usepackage{seqsplit}
+\renewcommand{\seqinsert}{%                  % 文字間に挿入されるコマンド
+  \ifmmode\allowbreak\else\hspace{0pt}\fi%   % コードブロックでこの定義を上書きする
+}
+%% 指定箇所が折り返し可能であることを表す
+\newcommand{\starter@fold@able}{%
+  %% \discretionary は単語中の折り返せる箇所を指定するときに使うコマンド。
+  %% 「\-」の実体。
+  %% ・第1引数は折り返し箇所の行末で実行されるコマンド
+  %% ・第2引数は折り返し箇所の次行の行頭で実行されるコマンド
+  %% ・第3引数は折り返ししないときに実行されるコマンド
+  %% ・「\starter@excluewhencopied」を使って、折返し文字をマウスコピペの対象外にする
+  %% （TODO：\discretionaryを上書きするとコンパイルがかなり遅くなってしまう）
+  \discretionary{%
+    \makebox[0pt][l]{%
+      \starter@excluewhencopied{\starter@fold@char}% 折り返しを表す記号を行末に挿入
+    }%
+  }{%
+    \makebox[\starter@fold@indentwidth][r]{% % 折返しの直後にインデントを挿入
+      \starter@excluewhencopied{\starter@fold@contchar}% 折り返しを表す記号を行頭に挿入
+    }%
+  }{%
+    \starter@fold@whennot%
+  }%
+}
+\newcommand{\starter@fold@whennot}{%
+  %% 文字間の間隔を空ける/詰める
+  \ifx\starter@codeblock@charspace\empty\else%
+    \mbox{\hspace{\starter@codeblock@charspace}}%
+  \fi%
+}
+\newcommand{\starter@fold@char}{%
+  \mdseries\rmfamily%                        % 通常の太さのローマン体
+  \textcolor{\starter@codeblock@weakcolor}{\guilsinglright}% グレーの '>'
+  %\tiny\textcolor{gray}{\raisebox{0.5mm}{$\blacktriangleright$}}% % 右向きの三角形
+}
+\newcommand{\starter@fold@contchar}{%        % 折り返し後の継続行の頭につける記号
+  \starter@fold@char%
+}
+\newcommand{\startersetfoldmark}[1]{%        % 折り返しを表す記号を空にするのに使う
+  \def\starter@fold@char{#1}%
+}
+\newlength{\starter@fold@indentwidth}        % 折り返し後のインデント幅
+\newcommand{\startersetfoldindentwidth}[1]{%
+  \settowidth{\starter@fold@indentwidth}{#1}%
+}
+\newcommand{\starterfoldhere}{%              % 折り返し箇所を手動で指定するときに使う
+  \makebox[0pt][l]{\starter@fold@char}%      % 折り返しを表す記号を挿入
+  \\%                                        % 改行
+  \makebox[\starter@fold@indentwidth]{}%     % 折返しの直後にインデントを挿入
+}
+%% 取り消し線で使うulem.styのコマンドをコピーして上書き
+%% （これにより取り消し線の中でも折返しされるようになる）
+\newcommand{\starter@fold@dischyp}{%
+  \global\setbox\UL@hyphenbox\hbox%
+  {\ifnum \hyphenchar\font<\z@ \string-\else \char\hyphenchar\font \fi}%
+  %\kern\wd\UL@hyphenbox \LA@penalty\@M%    %-
+  \UL@stop%
+  %\kern-\wd\UL@hyphenbox%                  %-
+  %\discretionary{\box\UL@hyphenbox}{}{}    %-
+  \starter@fold@able@ulem%                  %+
+  \UL@start%
+}
+\newcommand{\starter@fold@able@ulem}{%
+  \discretionary{%
+    %\makebox[0pt][l]{\@fold@char}%         % この書き方だとなぜかエラー
+    \hbox to 0pt{\starter@fold@char}%       % 仕方ないので別の書き方でしのぐ
+  }{%
+    %\makebox[\starter@fold@indentwidth][r]{% この書き方だとなぜかエラー
+    %  \starter@fold@contchar%
+    %}%
+    \hbox to \starter@fold@indentwidth{}%   % 仕方ないので別の書き方でしのぐ
+    \settowidth{\@tempdima}{\mbox{\starter@fold@contchar}}%
+    \hbox to -\@tempdima{}%
+    \mbox{\starter@fold@contchar}%
+  }{}%
+}
+
+%% 折り返しをしない
+\newcommand{\starter@fold@not}{%
+  \ifx\starter@codeblock@charspace\empty\else%
+    \mbox{\hspace{\starter@codeblock@charspace}}%
+  \fi%
+  \nolinebreak%            % 折り返し以外での改行を禁止する
+}
+
+
+
+%%% 行末 (End Of Line) を表す記号
+%\usepackage[arrows]{boisik}                 % for $\dlsh$
+%\usepackage[notext,notextcomp,upint]{stix}  % for $\leftdowncurvedarrow$
+%%% 注：boisik.styを読み込むとdvipdfmxコマンドでwarningが出るので、
+%%% かわりに必要な行だけを抜き出すことにする。
+%%% <ここから>
+\input{lbmenc.def}
+\DeclareSymbolFont{bskarr}{U}{bskarr}{m}{n}
+\DeclareFontFamily{U}{bskarr}{ }
+\DeclareFontShape{U}{bskarr}{m}{n}{<->bskarr10}{}
+\DeclareMathSymbol{\dlsh}{\mathrel}{bskarr}{"F8}
+%%% </ここまで>
+
+\newcommand{\startereolmark}{%               % 行末を表す改行記号を表示する
+  \makebox[0pt][l]{%
+    \textcolor{\starter@codeblock@weakercolor}{%
+      \starter@excluewhencopied{\starter@eol@char}%
+    }%
+  }%
+}
+\newcommand{\starter@eol@char}{%             % 行末を表す改行記号
+  \footnotesize$\dlsh$%                      % （直角タイプ、boisik.styが必要）
+  %\raisebox{0.1zw}{%
+  %  \scriptsize$\leftdowncurvedarrow$}%     % （カーブタイプ、stix.styが必要）
+  %}%
+}
+
+
+
+%%% コードブロックのインデントを示す記号（「|」）
+%%% （以前はパイプ記号だったけど、マウスでコピペするとそれに含まれてしまうので、縦線を引くように変更。）
+\newcommand{\starterindentchar}{%
+  \textcolor{\starter@codeblock@thincolor}{% % 色つきで表示
+    \starter@indentchar%
+  }%
+}
+\def\starter@indentchar{%   % インデントを表す記号
+  \rlap{%                                    % 表示するけど位置を移動しない
+    \rule[-0.55ex]{0.5pt}{2.35ex}%           % 縦線を引く
+  }%
+  \mbox{ }%                                  % 半角空白
+}
+
+
+
+%%%
+%%% コードブロックの中では jumoline.sty の \Underline が使えなくなる。
+%%% 回避策として、コードブロックの中では \underline を使うよう切り替える。
+%%%
+\renewcommand{\reviewunderline}[1]{%
+  \ifx\starter@in@codeblock\empty%  % \starter@in@codeblock はコードブロック中だけYになる
+    \Underline{#1}%     % 途中で折り返しされるが、コードブロッグ中で使うとエラー
+  \else%
+    \underline{#1}%     % コードブロッグ中で使ってもエラーにならないが、折り返しされない
+  \fi%
+}
+
+
+%%%
+%%% @<ins>{} は、本文では下線だが、コードブロックの中では太字にする。
+%%%
+\renewcommand{\reviewinsert}[1]{%
+  \ifx\starter@in@codeblock\empty%  % \starter@in@codeblock はコードブロック中だけYになる
+    \Underline{#1}%     % 下線（本文中）
+  \else%
+    {\bfseries #1}%     % 太字（コードブロック中）
+  \fi%
+}

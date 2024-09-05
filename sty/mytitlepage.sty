@@ -1,0 +1,126 @@
+%%%
+%%% タイトルページ（大扉）のデザイン
+%%%
+
+\usepackage{afterpage}                  % for '\afterpage'
+\usepackage{pagecolor}                  % for '\newpagecolor'
+
+%% 背景色を指定
+%\definecolor{starter@titlepagecolor}{gray}{0.90}  % 薄いグレー
+\colorlet{starter@titlepagecolor}{white}           % 白
+
+\newcommand{\mytitlepage}{%
+  \newpagecolor{starter@titlepagecolor} % このページの背景色を指定する
+  \afterpage{\restorepagecolor}         % 次のページからは背景色をなくす
+
+  \thispagestyle{empty}% ページ番号やヘッダーを入れない
+  \centering           % 中央寄せ
+  %\raggedright        % 左寄せ
+  %\raggedleft         % 右寄せ
+  %\addtolength{\oddsidemargin}{-2zw}% 右余白を調整する（右寄せの場合）
+
+  \vspace*{5zw}        % 縦方向のスペース（ページの先頭なので「*」が必要）
+
+  %% フォントを変更
+  \sffamily            % サンセリフ体（英語）
+  \gtfamily            % ゴシック体（日本語）
+
+  %% タイトル
+  {
+    \HUGE              % フォントサイズをかなり大きく
+    \bfseries          % 太字（日本語と英語）
+    %\@ifundefined{ebseries}{}{\ebseries}% 極太字にする場合（日本語のみ、未定義なら無視）
+    \@title            % タイトル（複数行可）
+    \par               % 段落を区切る（デザイン崩れを防ぐため）
+  }
+
+  %% サブタイトル
+  \ifx\@subtitle\empty\else
+    \vspace{1zw}       % 縦方向に少しスペースを空ける
+    {
+      \Large           % フォントサイズを大きめに
+      {\rmfamily ---}~ % ローマン体で「--」
+      \@subtitle{}%    % サブタイトル
+      ~{\rmfamily ---} % ローマン体で「--」
+      \par             % 段落を区切る（デザイン崩れを防ぐため）
+    }
+  \fi
+
+  %% フォントを変更
+  %\mcfamily           % 明朝体（日本語）
+  %\rmfamily           % ローマン体（英語）
+  \normalfont          % デフォルトの書体
+
+  %% 著者、翻訳者、監修者
+  {
+    \Large                      % 大きめのフォントに変更
+    \newcommand{\@render@who}[2]{{
+      \edef\@tempa{##2}         % 第2引数を一時変数に代入
+      \ifx\@tempa\empty\else    % 第2引数が空でなければ、
+        ［##1］##2              %   第1引数とともに表示する
+      \fi
+    }}
+    \def\render@bookauthor{\@render@who{著}{\book@author}}            % 著者
+    \def\render@booktranslator{\@render@who{訳}{\book@translator}}    % 翻訳者
+    \def\render@booksupervisor{\@render@who{監修}{\book@supervisor}}  % 監修者
+    %% その中でいちばん長い表示幅を調べる
+    %% （テキストが複数行だと \settowidth が表示幅をうまく取得できない。
+    %%   仕方ないので1行ずつ調べて長さを比較し、いちばん長いものを選ぶ。）
+    \setlength{\@tempdimb}{0pt}
+    \settowidth{\@tempdimc}{\render@bookauthor}
+    \ifdim\@tempdimb<\@tempdimc \setlength{\@tempdimb}{\@tempdimc} \fi
+    \settowidth{\@tempdimc}{\render@booktranslator}
+    \ifdim\@tempdimb<\@tempdimc \setlength{\@tempdimb}{\@tempdimc} \fi
+    \settowidth{\@tempdimc}{\render@booksupervisor}
+    \ifdim\@tempdimb<\@tempdimc \setlength{\@tempdimb}{\@tempdimc} \fi
+    %% 表示幅のボックスを作ると、そのボックスが左右の中央に位置する
+    \ifdim\@tempdimb>0pt
+      \vspace{3\baselineskip}          % 縦方向の空き
+      \parbox[t]{\@tempdimb}{{         % 表示幅のボックスを作る
+        \render@bookauthor\par         % 著者
+        \render@booktranslator\par     % 翻訳者
+        \render@booksupervisor\par     % 監修者
+      }}
+    \fi
+  }
+
+  %% 日付、バージョン、イベント名
+  \vfill               % 縦方向のスペース
+  {
+    \Large             % フォントサイズを大きめに
+    \ifx\@pubevent\empty\else
+      \@pubevent\par   % イベント名（config.ymlの「pubevent_name:」で指定）
+    \fi
+    \ifx\@latestpubhistory\empty
+      \@date           % 日付（config.ymlの「date:」で指定）
+    \else
+      \@latestpubhistory % 日付とバージョン（config.ymlの「history:」で指定）
+    \fi
+    \par               % 段落を区切る（デザイン崩れを防ぐため）
+  }
+
+  \vspace{4zw}         % 縦方向のスペース
+
+}
+
+
+%%%
+%%% タイトルページ（大扉）の、次のページ
+%%%
+\newcommand{\mytitlenextpage}{{%
+  \thispagestyle{empty}       % ページ番号やヘッダーをなくす
+  \setlength{\parindent}{0pt} % 段落先頭のインデントをなくす
+  \vspace*{\fill}      % 縦方向の長いスペース（ページ先頭なので「*」が必要）
+  \small               % フォントを小さく
+
+  {\gtfamily\bfseries ■免責}\\
+  本書は情報の提供のみを目的としています。\\
+  本書の内容を実行・適用・運用したことで何が起きようとも、それは実行・適用・運用した人自身の責任であり、著者や関係者はいかなる責任も負いません。\\
+
+  {\gtfamily\bfseries ■商標}\\
+  本書に登場するシステム名や製品名は、関係各社の商標または登録商標です。\\
+  また本書では、{\texttrademark}、{\textregistered}、{\textcopyright}などのマークは省略しています。\\
+
+  %%% 挿絵を入れる場合
+  %\includegraphics[width=0.7\textwidth]{images/illust.png}
+}}

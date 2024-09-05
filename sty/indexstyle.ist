@@ -1,0 +1,25 @@
+##
+## LaTeXでの索引生成コマンド mendex (upmendex) の設定
+##
+
+## 用語とページ番号との間をピリオドで埋める
+delim_0 "\\quad\\dotfill ~"
+delim_1 "\\quad\\dotfill ~"
+delim_2 "\\quad\\dotfill ~"
+
+## 用語とページ番号との間を空白で埋める
+#delim_0 "\\quad\\hfill"
+#delim_1 "\\quad\\hfill"
+#delim_2 "\\quad\\hfill"
+
+## 索引に見出しをつける
+## （mendex のデフォルトでは見出しが「あ い う え お か ...」になる。
+##   これを「あ か さ た な は ...」にするには、config.yml の
+##   `makeindex_options:` オプションに「-g」を含める。）
+heading_flag     1
+letter_head      2
+
+## 見出しを囲うLaTeXコマンド
+#heading_prefix   "{\\bfseries\\gtfamily\\sffamily ■"
+heading_prefix   "\\starterindexgroup{"
+heading_suffix   "}"

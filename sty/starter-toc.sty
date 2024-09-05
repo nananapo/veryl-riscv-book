@@ -1,0 +1,72 @@
+%%% -*- coding: utf-8 -*-
+
+%%%
+%%% 目次
+%%%
+
+
+%%% 目次の上余白を狭める（jsbook.clsからコピー）
+\renewcommand{\tableofcontents}{%
+  \settowidth\jsc@tocl@width{\headfont\prechaptername\postchaptername}%
+  \settowidth\@tempdima{\headfont\appendixname}%
+  \ifdim\jsc@tocl@width<\@tempdima \setlength\jsc@tocl@width{\@tempdima}\fi
+  \ifdim\jsc@tocl@width<2zw \divide\jsc@tocl@width by 2 \advance\jsc@tocl@width 1zw\fi
+  \if@twocolumn
+    \@restonecoltrue\onecolumn
+  \else
+    \@restonecolfalse
+  \fi
+  %
+  %\chapter*{\contentsname}%
+  %% 章も目次も右起こしにする or しない
+  \if@openleft\cleardoublepage\else
+  \if@openright\cleardoublepage\else\clearpage\fi\fi
+  %% 章が右起こしでも、目次は右起こしにしない
+  %\clearpage
+  %
+  \plainifnotempty
+  \@ifundefined{Chapter}{%    % starter-section.sty を使っているとき
+    \@makechapterhead{\contentsname}%
+  }{%                         % starter-heading.sty を使っているとき
+    \Chapter*[]{\contentsname}%
+  }%
+  %
+  \@mkboth{\contentsname}{}%
+  \@starttoc{toc}%
+  \if@restonecol\twocolumn\fi
+}
+
+%%% 目次のページ番号にもリンクをつける
+%\@ifundefined{@hyperref}{}{%
+%  \let\original@contentsline=\contentsline
+%  \renewcommand{\contentsline}[4]{%
+%    \original@contentsline{#1}{#2}{\hyperlink{#4}{#3}}{#4}
+%  }
+%}
+
+%%% 目次での章 (Chapter) 直後での改ページを防ぐ
+\let\original@l@chapter=\l@chapter                % もとの定義を保存
+\renewcommand*{\l@chapter}[2]{{%
+  \needvspace{2.5zw}%                           % スペースがなければ改ページ
+  \original@l@chapter{#1}{#2}%                    % もとの定義を呼び出す
+}}
+
+%%% 目次での節 (Section) をゴシック体に変更
+\let\original@l@section=\l@section                % もとの定義を保存
+\renewcommand*{\l@section}[2]{{%
+  \original@l@section{\gtfamily\sffamily #1}{#2}% % ゴシック体に変更
+}}
+
+%%% 目次での項 (Subsection) を少し小さくして行間を狭める
+\let\original@l@subsection=\l@subsection          % もとの定義を保存
+\renewcommand*{\l@subsection}[2]{{%
+  \baselineskip=0.90\baselineskip%                % 行間を狭める
+  \original@l@subsection{\hspace{2zw}\small #1}{\small #2}% 少し小さく、2文字分字下げ
+}}
+
+%%% 目次での目 (Subsubsection) を小さくして行間を狭める
+\let\original@l@subsubsection=\l@subsubsection    % もとの定義を保存
+\renewcommand*{\l@subsubsection}[2]{{%
+  \baselineskip=0.85\baselineskip%                % 行間を狭める
+  \original@l@subsection{\footnotesize #1}{\footnotesize #2}% フォントを小さく
+}}

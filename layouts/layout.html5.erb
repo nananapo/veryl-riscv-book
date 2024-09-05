@@ -1,0 +1,108 @@
+<% # -*- coding: utf-8 -*-
+
+prev_page = @prev ? "#{@prev.id}.#{@book.config['htmlext']}" : nil
+next_page = @next ? "#{@next.id}.#{@book.config['htmlext']}" : nil
+
+rebuild_js = ENV['STARTER_REBUILD_JS']
+
+body_ext = @body_ext || (@error ? ' class="has-compile-error"' : nil)
+
+%>
+<!doctype html>
+<html lang="<%=h @language %>">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title><%=h @title %> | <%=h @book.config.name_of("booktitle")%></title>
+<% @stylesheets.each do |style| %>
+    <link rel="stylesheet" type="text/css" href="css/<%=h style %>" />
+<% end if @stylesheets.present? %>
+<% if next_page %>
+    <link rel="next" title="<%=h @next_title %>" href="<%=h next_page %>">
+<% end %>
+<% if prev_page %>
+    <link rel="prev" title="<%=h @prev_title %>" href="<%=h prev_page %>">
+<% end %>
+    <meta name="generator" content="Re:VIEW Starter">
+  </head>
+  <body<%= body_ext %>>
+    <div class="page-outer">
+<% if @chapter || @error %>
+      <nav class="side-content">
+        <% if rebuild_js %>
+        <div class="rebuild">
+          <a href="javascript:void(0)" onclick="rebuildAndReloadForcedly()">Rebuild and Reload</a>
+        </div>
+        <% end %>
+        <a class="nav-title" href="index.html"><%=h @book.config.name_of("booktitle") %></a>
+<%= @toc %>
+      </nav>
+<% end %>
+      <div class="page-inner">
+        <header class="page-header">
+        </header>
+        <main class="page-main">
+<% if @chapter %>
+<%= @body %>
+
+<% elsif @error %>
+          <h2>Error</h2>
+          <div class="compile-error-message">
+            <dl>
+              <dt>File:</dt>
+              <dd><%= @textfile ? h(@textfile) : '&nbsp;' %></dd>
+              <dt>Error:</dt>
+              <dd><%=h @error.message %>
+                <i>(<%=h @error.class.name %>)</i>
+              </dd>
+            </dl>
+          </div>
+          <p>Traceback:</p>
+          <pre class="compile-error-backtrace"><% @error.backtrace.each do |x| %><%=h x %><%= "\n" %><% end %></pre>
+
+<% elsif @toc %>
+          <h1><%=h @book.config.name_of("booktitle") %></h1>
+<%= @toc %>
+<% else %>
+<%= @body %>
+<% end %>
+        </main>
+        <nav class="page-navi">
+<% if prev_page %>
+          <a href="<%=h prev_page %>" class="page-prev">&#9664;</a>
+<% end %>
+<% if next_page %>
+          <a href="<%=h next_page %>" class="page-next">&#9654;</a>
+<% end %>
+        </nav>
+        <footer>
+<% if @book.config["copyright"].present? %>
+          <p class="copyright"><%=h @config["copyright"] %></p>
+<% end %>
+        </footer>
+      </div>
+    </div>
+<% @javascripts.each do |script| %>
+    <script src="<%=h script %>"></script>
+<% end if @javascripts.present? %>
+<% ##### %>
+<% if rebuild_js %>
+    <script>
+function rebuildAndReloadForcedly() {
+  fetch('<%= rebuild_js %>').then((resp)=>{
+    resp.text().then((text)=>{ eval(text); });
+  });
+}
+    </script>
+<%   #textfile = @textfile || @chapter.name  #=> NoMethodError (why?) %>
+<%   textfile = @textfile || @chapter.instance_eval { @name } %>
+<%   if textfile && !textfile.empty? %>
+    <script src="<%=h rebuild_js %>?file=<%= textfile %>"></script>
+<%   else %>
+    <!--script src="<%=h rebuild_js %>?file=<%= textfile %>"></script-->
+<%   end %>
+<% end %>
+<% ##### %>
+  </body>
+</html>
+<!-- layout.html5.erb -->

@@ -1,0 +1,35 @@
+%%% -*- coding: utf-8 -*-
+
+
+%%% 引数が空かどうか調べるマクロ
+\newcommand{\ifempty}[1]{%
+  \edef\temp{#1}%      % \ifx#1\empty とはできないので、一時マクロを定義
+  \ifx\temp\empty%     % \empty は他の言語でいえば空文字列に相当
+}
+
+%%% 文字列比較をするマクロ
+\newcommand\ifstreq[2]{
+  \edef\@tempa{#1}%
+  \edef\@tempb{#2}%
+  \ifx\@tempa\@tempb%  % \ifx#1#2 とはできないことに注意（TeXの仕様）
+}
+
+%%% 例：「\@eval{section}{blabla}」は「\section{blabla}」と同等
+\newcommand{\@eval}[1]{%
+  \csname#1\endcsname%
+}
+
+%%% \lastskip を保存するための一時変数
+\newcommand{\keeplastskip}[1]{%
+  \@tempskipa=\lastskip%
+  \vskip -\lastskip\relax%
+  #1%
+  \vskip \@tempskipa\relax%
+  \@tempskipa=0pt%
+}
+
+%%% 縦方向のスペースがあるか調べる。なければ改ページする。
+\newcommand{\needvspace}[1]{%
+  \rule[#1]{0pt}{0pt}%   % 幅のない縦線を引く。引くスペースがなければ改ページされる。
+  \vspace{-#1}\par%      % もとの位置に戻る
+}

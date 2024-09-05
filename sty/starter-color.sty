@@ -1,0 +1,134 @@
+%%% -*- coding: utf-8 -*-
+
+%%%
+%%% 色の設定
+%%%
+
+
+%%% config-starter.ymlの「target:」によって、カラーにするか決める
+\iffalse
+\else\ifstreq{\starter@target}{pbook}    % pbook (printing book) なら
+  \def\starter@colormode{mono}           %   白黒
+\else\ifstreq{\starter@target}{ebook}    % ebook (electric book) なら
+  \def\starter@colormode{rgb}            %   カラー (RGB)
+  %\def\starter@colormode{cmyk}          %   カラー (CMYK)
+\else\ifstreq{\starter@target}{tablet}   % tablet なら
+  \def\starter@colormode{rgb}            %   カラー (RGB)
+  %\def\starter@colormode{cmyk}          %   カラー (CMYK)
+\else                                    % それら以外なら
+  \def\starter@colormode{mono}           %   白黒
+\fi
+
+
+%%% 白黒 (白黒印刷用、0.0が黒で1.0が白）
+\ifstreq{\starter@colormode}{mono}
+  \definecolor{starter@deepcolor}{gray}{0.1}        % very dark gray
+  \definecolor{starter@palecolor}{gray}{0.9}        % very light gray
+  \definecolor{starter@chaptercolor}{gray}{0.4}     % gray
+  \definecolor{starter@sectioncolor}{gray}{0.1}     % gray
+  \definecolor{starter@subsectioncolor}{gray}{0.1}  % dark gray
+  \definecolor{starter@notecolor}{gray}{0.0}        % black
+  \definecolor{starter@captioncolor}{gray}{0.4}     % gray
+  \definecolor{starter@quotecolor}{gray}{0.4}       % gray
+     \colorlet{starter@linkcolor}{black}            % black
+     \colorlet{starter@chaptitlepagecolor}{white}%  % white
+ %\definecolor{starter@chaptitlepagecolor}{gray}{0.9}% very light gray
+  %% プログラム用（フォント、背景、枠、折返し記号、改行記号、インデント記号）
+  \definecolor{starter@program@fontcolor}{gray}{0.0}   % black
+  \definecolor{starter@program@backcolor}{gray}{0.9}   % very light gray
+  \definecolor{starter@program@bordercolor}{gray}{0.5} % gray
+  \definecolor{starter@program@weakcolor}{gray}{0.5}   % gray
+  \definecolor{starter@program@weakercolor}{gray}{0.75}% gray
+  \definecolor{starter@program@thincolor}{gray}{0.95}  % ultra light gray
+  %% ターミナル用（フォント、背景、枠、折返し記号、改行記号、インデント記号）
+  \definecolor{starter@terminal@fontcolor}{gray}{1.0}  % white
+  \definecolor{starter@terminal@backcolor}{gray}{0.1}  % very dark black
+  \definecolor{starter@terminal@bordercolor}{gray}{0.5}% gray
+  \definecolor{starter@terminal@weakcolor}{gray}{0.5}  % gray
+  \definecolor{starter@terminal@weakercolor}{gray}{0.25}% dark gray
+  \definecolor{starter@terminal@thincolor}{gray}{0.18} % ultra dark black
+  %% 出力結果用（フォント、背景、枠、折返し記号、改行記号、インデント記号）
+  \definecolor{starter@output@fontcolor}{gray}{0.0}    % black
+  \definecolor{starter@output@backcolor}{gray}{1.0}    % white
+  \definecolor{starter@output@bordercolor}{gray}{0.5}  % gray
+  \definecolor{starter@output@weakcolor}{gray}{0.5}    % gray
+  \definecolor{starter@output@weakercolor}{gray}{0.75} % gray
+  \definecolor{starter@output@thincolor}{gray}{0.95}   % ultra light gray
+  %
+  \definecolor{starter@userinputcolor}{gray}{0.35}     % dark gray
+\fi
+
+%%% カラー（RGB、PCやタブレット向け）
+\ifstreq{\starter@colormode}{rgb}
+  \definecolor{starter@deepcolor}{HTML}{990000}     % red
+ %\definecolor{starter@deepcolor}{HTML}{006699}     % blue
+  \definecolor{starter@palecolor}{HTML}{E5E5E5}     % light gray
+     \colorlet{starter@chaptercolor}{starter@deepcolor}
+     \colorlet{starter@sectioncolor}{starter@deepcolor}
+     \colorlet{starter@subsectioncolor}{starter@deepcolor}
+     \colorlet{starter@notecolor}{starter@deepcolor}
+  \definecolor{starter@captioncolor}{HTML}{999999}  % gray
+  \definecolor{starter@quotecolor}{HTML}{999999}    % gray
+     \colorlet{starter@linkcolor}{starter@deepcolor}% red
+     \colorlet{starter@chaptitlepagecolor}{starter@palecolor}
+  %% プログラム用（フォント、背景、枠、折返し記号、インデント記号）
+  \definecolor{starter@program@fontcolor}{HTML}{000000}    % black
+  \definecolor{starter@program@backcolor}{HTML}{E5E5E5}    % very light gray
+  \definecolor{starter@program@bordercolor}{HTML}{909090}  % gray
+  \definecolor{starter@program@weakcolor}{HTML}{909090}    % gray
+  \definecolor{starter@program@weakercolor}{HTML}{C0C0C0}  % light gray
+  \definecolor{starter@program@thincolor}{HTML}{F2F2F2}    % ultra light gray
+  %% ターミナル用（フォント、背景、枠、折返し記号、インデント記号）
+  \definecolor{starter@terminal@fontcolor}{HTML}{FFFFFF}   % white
+  \definecolor{starter@terminal@backcolor}{HTML}{191919}   % very dark black
+  \definecolor{starter@terminal@bordercolor}{HTML}{909090} % gray
+  \definecolor{starter@terminal@weakcolor}{HTML}{909090}   % gray
+  \definecolor{starter@terminal@weakercolor}{HTML}{404040} % dark gray
+  \definecolor{starter@terminal@thincolor}{HTML}{2E2E2E}   % ultra dark black
+  %% 出力結果用（フォント、背景、枠、折返し記号、インデント記号）
+  \definecolor{starter@output@fontcolor}{HTML}{000000}     % black
+  \definecolor{starter@output@backcolor}{HTML}{FFFFFF}     % white
+  \definecolor{starter@output@bordercolor}{HTML}{909090}   % gray
+  \definecolor{starter@output@weakcolor}{HTML}{909090}     % gray
+  \definecolor{starter@output@weakercolor}{HTML}{C0C0C0}   % light gray
+  \definecolor{starter@output@thincolor}{HTML}{F2F2F2}     % ultra light gray
+  %
+  \definecolor{starter@userinputcolor}{HTML}{595959}       % dark gray
+\fi
+
+%%% カラー（CYMK、カラー印刷向け）
+\ifstreq{\starter@colormode}{cmyk}
+  \definecolor{starter@deepcolor}{cmyk}{0.0,1.0,1.0,0.4}     % red
+  \definecolor{starter@palecolor}{cmyk}{0.0,0.0,0.0,0.1}     % light gray
+     \colorlet{starter@chaptercolor}{starter@deepcolor}
+     \colorlet{starter@sectioncolor}{starter@deepcolor}
+     \colorlet{starter@subsectioncolor}{starter@deepcolor}
+     \colorlet{starter@notecolor}{starter@deepcolor}
+  \definecolor{starter@captioncolor}{cmyk}{0.0,0.0,0.0,0.5}  % gray
+  \definecolor{starter@quotecolor}{cmyk}{0.0,0.0,0.0,0.5}    % gray
+     \colorlet{starter@linkcolor}{starter@deepcolor}         % red
+     \colorlet{starter@chaptitlepagecolor}{starter@palecolor}
+  %% プログラム用（フォント、背景、枠、折返し記号、改行記号、インデント記号）
+  \definecolor{starter@program@fontcolor}{cmyk}{0.0,0.0,0.0,1.0}    % black
+  \definecolor{starter@program@backcolor}{cmyk}{0.0,0.0,0.0,0.1}    % very light gray
+  \definecolor{starter@program@bordercolor}{cmyk}{0.0,0.0,0.0,0.5}  % gray
+  \definecolor{starter@program@weakcolor}{cmyk}{0.0,0.0,0.0,0.5}    % gray
+  \definecolor{starter@program@weakercolor}{cmyk}{0.0,0.0,0.0,0.75} % light gray
+  \definecolor{starter@program@thincolor}{cmyk}{0.0,0.0,0.0,0.05}   % ultra light gray
+  %% ターミナル用（フォント、背景、枠、折返し記号、改行記号、インデント記号）
+  \definecolor{starter@terminal@fontcolor}{cmyk}{0.0,0.0,0.0,0.0}   % white
+  \definecolor{starter@terminal@backcolor}{cmyk}{0.0,0.0,0.0,0.9}   % very dark black
+  \definecolor{starter@terminal@bordercolor}{cmyk}{0.0,0.0,0.0,0.5} % gray
+  \definecolor{starter@terminal@weakcolor}{cmyk}{0.0,0.0,0.0,0.5}   % gray
+  \definecolor{starter@terminal@weakercolor}{cmyk}{0.0,0.0,0.0,0.75}% dark gray
+  \definecolor{starter@terminal@thincolor}{cmyk}{0.0,0.0,0.0,0.85}  % ultra dark black
+  %% 出力結果用（フォント、背景、枠、折返し記号、改行記号、インデント記号）
+  \definecolor{starter@output@fontcolor}{cmyk}{0.0,0.0,0.0,1.0}     % black
+  \definecolor{starter@output@backcolor}{cmyk}{0.0,0.0,0.0,0.0}     % white
+  \definecolor{starter@output@bordercolor}{cmyk}{0.0,0.0,0.0,0.5}   % gray
+  \definecolor{starter@output@weakcolor}{cmyk}{0.0,0.0,0.0,0.5}     % gray
+  \definecolor{starter@output@weakercolor}{cmyk}{0.0,0.0,0.0,0.75}  % light gray
+  \definecolor{starter@output@thincolor}{cmyk}{0.0,0.0,0.0,0.05}    % ultra light gray
+  %
+  \definecolor{starter@userinputcolor}{cmyk}{0.0,0.0,0.0,0.35}% dark gray
+\fi

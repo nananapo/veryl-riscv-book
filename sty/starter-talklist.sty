@@ -1,0 +1,104 @@
+%%% -*- coding: utf-8 -*-
+
+%%%
+%%% 会話形式
+%%%
+
+%%% 会話リスト
+\newenvironment{startertalklist}{%
+  \addvspace{\starter@talklist@listmargin}%  % 空きを入れる
+}{%
+  \vspace{-\starter@talklist@itemmargin}%    % 空きを調整
+  \addvspace{\starter@talklist@listmargin}%  % 空きを入れる
+}
+
+%%% 会話項目
+\newcommand\startertalk[3]{{%
+  \edef\@image{#1}%               % 画像ファイル
+  \edef\@chara{#2}%               % 名前（発言者名）
+  \ifx\@image\@empty%             % 画像が指定されなければ、
+    \rlap{%                           % 表示はするけど位置を移動しない
+      \starter@talklist@character{\@chara}% 名前を表示
+    }%
+    \settowidth{\@tempdima}{%         % 名前と '：「' を表示したときの幅
+      \starter@talklist@character{\@chara}%   名前と '：'
+      \starter@talklist@itemstart%    %   '「'
+    }%
+    \addtolength{\@tempdima}{%        % 名前と '：「' の表示幅から、
+      -\starter@talklist@indent%      % 会話文左の空き幅を引く
+    }%
+    \vspace{-\baselineskip}%          % なぜか1行下がるので戻す
+  \else%                          % 画像が指定されれば、
+    \needvspace{\starter@talklist@needvspace}% 縦方向の空きがなければ改ページ
+    %\vspace{-\intextsep}%            % 参考：美文書第8版p.159
+    \vspace{-\baselineskip}%          % 画像上部の空きを調整
+    \vbox to -0.2zw{%                 % 画像の上部を本文と揃える
+      \noindent%                      % 画像を字下げさせない
+      \starter@talklist@itemimage{\@image}% 画像を表示
+    }%
+    \setlength{\@tempdima}{0pt}%      % 画像の場合は名前が長すぎるようなことは起こらない
+  \fi%
+  {%
+    \setlength{\leftskip}{\starter@talklist@indent}% 会話文の左側の空きを設定
+    \noindent%                        % 最初の段落だけ字下げしない
+    \ifdim\@tempdima>0pt%             % 左側の空きより名前のほうが長ければ、
+      \hspace{\@tempdima}%            %   会話文の開始位置をずらす
+    \fi%
+    \llap{\starter@talklist@itemstart}% '「' を表示
+    #3%                               % 会話文を表示
+    \rlap{\starter@talklist@itemend}% % '」' を表示
+    \par%                             % 改行がわり
+    \ifx\@image\@empty%               % 画像を使うとき、
+    \else%
+      \starter@talklist@adjustheight{#3}% 会話文が短い場合は画像高さと揃える
+    \fi%
+  }%
+  \vspace{\starter@talklist@itemmargin}% 会話項目間に空きを入れる
+}}%
+
+%%% 名前を表示
+\newcommand{\starter@talklist@character}[1]{%
+  {%
+    {\starter@talklist@namefont #1}%  % ゴシック体で表示
+    \starter@talklist@separator%      % 「：」を表示
+  }%
+}
+\def\starter@talklist@namefont{\gtfamily\sffamily}  % ゴシック体
+
+%%% 会話文が少ないとき、会話文の高さを画像と揃える
+\newcommand{\starter@talklist@adjustheight}[1]{%
+  {%
+    \edef\imgw{\starter@talklist@imagewidth}%   % 画像幅
+    \edef\imgh{\starter@talklist@imageheight}%  % 画像高さ
+    \ifx\imgh\empty%                  % 画像高さが無指定なら
+      \edef\imgh{\starter@talklist@imagewidth}% 画像幅と同じにする
+    \fi%
+    \setlength{\@tempdima}{%          % 画像を除いた、会話文の本文幅
+      \dimexpr \textwidth-\starter@talklist@indent%
+    }
+    \sbox{0}{\parbox{\@tempdima}{#1}}%% 会話文の表示サイズを調べる
+    \setlength{\@tempdimb}{\ht0+\dp0}%% 会話文の表示上の高さが
+    \ifdim\@tempdimb<\imgh%           % 画像より低ければ
+      \setlength{\@tempdimc}{\imgh-\@tempdimb}
+      \vspace{\@tempdimc}%            % その分の空きを入れる
+    \fi%
+  }%
+}
+
+%%% 会話の画像を表示
+\newcommand\starter@talklist@itemimage[1]{%
+  \ifx\starter@talklist@imageborder\empty% 画像に枠線をつけない場合
+    \starter@talklist@image{#1}%
+  \else%                              % 画像に枠線をつける場合
+    \textcolor{gray}{%                % グレーの枠線
+      \fbox{\starter@talklist@image{#1}}%
+    }%
+  \fi%
+}
+\newcommand{\starter@talklist@image}[1]{%
+  \if\starter@talklist@imageheight\empty% 画像の高さが指定されている場合
+    \includegraphics[width=\starter@talklist@imagewidth]{#1}%
+  \else%                              % 画像の高さが指定されてない場合
+    \includegraphics[width=\starter@talklist@imagewidth,height=\starter@talklist@imageheight]{#1}%
+  \fi%
+}

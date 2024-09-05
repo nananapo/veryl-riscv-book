@@ -1,0 +1,11 @@
+{
+  "filters": {
+  }
+, "rules": {
+    "preset-japanese": false
+  , "preset-ja-technical-writing": true
+  , "preset-jtf-style": false
+  , "preset-ja-spacing": false
+  , "preset-ja-engineering-paper": false
+  }
+}

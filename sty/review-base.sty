@@ -1,0 +1,279 @@
+% -*- coding: utf-8 -*-
+
+\usepackage{caption}
+\usepackage{suffix}
+\usepackage[T1]{fontenc}
+\usepackage{textcomp}%T1/TS1
+%\usepackage{lmodern}
+\usepackage{framed}
+\usepackage{wrapfig}
+\definecolor{shadecolor}{gray}{0.9}
+\definecolor{shadecolorb}{gray}{0.1}
+\definecolor{reviewgreen}{rgb}{0,0.4,0}
+\definecolor{reviewblue}{rgb}{0.2,0.2,0.4}
+\definecolor{reviewred}{rgb}{0.7,0,0}
+\definecolor{reviewdarkred}{rgb}{0.3,0,0}
+\usepackage[utf8]{inputenc}
+\usepackage{ascmac}
+\usepackage{float}
+\usepackage{alltt}
+\usepackage{amsmath}
+
+%% if you use @<u>{} (underline), use jumoline.sty
+\IfFileExists{jumoline.sty}{
+\usepackage{jumoline}
+}
+
+\newenvironment{shadedb}{%
+  \def\FrameCommand{\fboxsep=\FrameSep \colorbox{shadecolorb}}%
+  \MakeFramed {\FrameRestore}}%
+ {\endMakeFramed}
+
+%\usepackage[top=10zw,bottom=12zw,left=10zw,right=10zw]{geometry}
+%\usepackage[top=5zw,bottom=5zw,left=1zw,right=1zw]{geometry}
+
+\newcommand{\parasep}{\vspace*{3zh}}
+\setlength{\footskip}{30pt}
+
+%% クラスファイルによっては \headfont が定義されてないので、
+%% \newcommand ではなく \def を使う。
+\def\headfont{\gtfamily\sffamily\bfseries}
+
+
+%% listings
+\ifx\config@highlight@listings\empty\else
+  %
+  \usepackage{listings}
+  \ifx\config@language@ja\empty\else
+    \usepackage{jlisting}
+  \fi
+  %
+  \renewcommand{\lstlistingname}{\review@t@list}
+  %
+  \lstset{%
+    breaklines=true,%
+    breakautoindent=false,%
+    breakindent=0pt,%
+    fontadjust=true,%
+    backgroundcolor=\color{shadecolor},%
+    frame=single,%
+    framerule=0pt,%
+    basicstyle=\ttfamily\scriptsize,%
+    commentstyle=\color{reviewgreen},%
+    identifierstyle=\color{reviewblue},%
+    stringstyle=\color{reviewred},%
+    keywordstyle=\bfseries\color{reviewdarkred},%
+  }
+  %
+  \lstnewenvironment{reviewemlistlst}[1][]{\lstset{#1}}{}
+  \lstnewenvironment{reviewemlistnumlst}[1][]{\lstset{numbers=left, #1}}{}
+  \lstnewenvironment{reviewlistlst}[1][]{\lstset{#1}}{}
+  \lstnewenvironment{reviewlistnumlst}[1][]{\lstset{numbers=left, #1}}{}
+  \lstnewenvironment{reviewsourcelst}[1][]{\lstset{#1}}{}
+  \lstnewenvironment{reviewsourcenumlst}[1][]{\lstset{numbers=left, #1}}{}
+  \lstnewenvironment{reviewcmdlst}[1][]{\lstset{backgroundcolor=\color{white}, frameround=tttt, frame=trbl, #1}}{}
+  %
+\fi
+
+
+
+%%
+%% マクロ定義
+%%
+
+\newenvironment{reviewimage}{%
+  \begin{figure}[H]
+    \begin{center}}{%
+    \end{center}
+  \end{figure}}
+
+\newenvironment{reviewdummyimage}{%
+  \begin{figure}[H]
+    \begin{center}\begin{alltt}}{%
+    \end{alltt}\end{center}
+  \end{figure}}
+
+\newcommand{\reviewimagecaption}[1]{%
+  \caption{#1}}
+
+\newenvironment{reviewemlist}{%
+  \medskip\small\begin{shaded}\setlength{\baselineskip}{1.3zw}\begin{alltt}}{%
+  \end{alltt}\end{shaded}}
+
+\newenvironment{reviewlist}{%
+  \begin{shaded}\small\setlength{\baselineskip}{1.3zw}\begin{alltt}}{%
+  \end{alltt}\end{shaded}\par\vspace*{0.5zw}}
+
+\newenvironment{reviewsource}{%
+  \begin{shaded}\small\setlength{\baselineskip}{1.3zw}\begin{alltt}}{%
+  \end{alltt}\end{shaded}\par\vspace*{0.5zw}}
+
+\newenvironment{reviewcmd}{%
+  \color{white}\medskip\small\begin{shadedb}\setlength{\baselineskip}{1.3zw}\begin{alltt}}{%
+  \end{alltt}\end{shadedb}}
+
+\newenvironment{reviewbox}{%
+  \medskip\small\begin{framed}\setlength{\baselineskip}{1.3zw}\begin{alltt}}{%
+  \end{alltt}\end{framed}}
+
+\newenvironment{reviewtable}[1]{%
+  \begin{center}\small\setlength{\baselineskip}{1.2zw}
+    \begin{tabular}{#1}}{%
+    \end{tabular}
+  \end{center}}
+
+\newenvironment{reviewcolumn}{%
+     \begin{framed}
+  }{%
+     \end{framed}
+  \vspace{2zw}}
+
+\newcommand{\reviewtablecaption}[1]{%
+  \caption{#1}}
+
+\WithSuffix\newcommand\reviewtablecaption*[1]{%
+  \caption*{#1}}
+
+\newcommand{\reviewimgtablecaption}[1]{%
+  \caption{#1}\vspace{-3mm}}
+
+\newcommand{\reviewbackslash}[0]{%
+  \textbackslash{}}
+
+\newcommand{\reviewlistcaption}[1]{%
+  \medskip{\small\noindent #1}\vspace*{-1.3zw}}
+
+\newcommand{\reviewemlistcaption}[1]{%
+  \medskip{\small\noindent #1}\vspace*{-1.3zw}}
+
+\newcommand{\reviewsourcecaption}[1]{%
+  \medskip{\small\noindent #1}\vspace*{-1.3zw}}
+
+\newcommand{\reviewcmdcaption}[1]{%
+  \medskip{\small\noindent #1}\vspace*{-1.3zw}}
+
+\newcommand{\reviewindepimagecaption}[1]{%
+  \begin{center}#1\end{center}}
+
+\newcommand{\reviewboxcaption}[1]{%
+  \medskip{\small\noindent #1}\vspace*{-1.3zw}}
+
+
+\newenvironment{reviewminicolumn}{%
+  \vspace{1.5zw}\begin{screen}}{%
+  \end{screen}\vspace{2zw}}
+
+\newcommand{\reviewkw}[1]{\textbf{\textgt{#1}}}
+\newcommand{\reviewami}[1]{\mask{#1}{A}}
+\newcommand{\reviewem}[1]{\textbf{#1}}
+\newcommand{\reviewstrong}[1]{\textbf{#1}}
+\newcommand{\reviewunderline}{\Underline}
+
+
+%% @<del> is ignored in LaTeX with default style
+\newcommand{\reviewstrike}[1]{#1}
+
+%%%% for ulem.sty:
+%%\renewcommand{\reviewstrike}[1]{\sout{#1}}
+%%
+%%%% for jumoline.sty:
+%%\renewcommand{\reviewstrike}[1]{\Middleline{#1}}
+
+%% @<ins> is available since Re:VIEW 5.1
+\newcommand{\reviewinsert}[1]{\Underline{#1}}
+
+
+\newcommand{\reviewth}[1]{{\gtfamily\sffamily\bfseries #1}}
+\newcommand{\reviewtitlefont}[0]{\usefont{T1}{phv}{b}{n}\gtfamily}
+\newcommand{\reviewmainfont}[0]{}
+\newcommand{\reviewcolophon}[0]{\clearpage}
+\newcommand{\reviewappendix}[0]{\appendix}
+
+
+\ifdefined\prepartname
+  \renewcommand{\prepartname}{\reviewprepartname}
+\fi
+\ifdefined\postpartname
+  \renewcommand{\postpartname}{\reviewpostpartname}
+\fi
+\ifdefined\prechaptername
+  \renewcommand{\prechaptername}{\reviewprechaptername}
+\fi
+\ifdefined\postchaptername
+  \renewcommand{\postchaptername}{\reviewpostchaptername}
+\fi
+\ifdefined\figurename
+  \renewcommand{\figurename}{\reviewfigurename}
+\fi
+\ifdefined\tablename
+  \renewcommand{\tablename}{\reviewtablename}
+\fi
+\ifdefined\appendixname
+  \renewcommand{\appendixname}{\reviewappendixname}
+\fi
+
+
+%% maxwidth is the original width if it is less than linewidth
+%% otherwise use linewidth (to make sure the graphics do not exceed the margin)
+\def\maxwidth{%
+  \ifdim\Gin@nat@width>\linewidth
+    \linewidth
+  \else
+    \Gin@nat@width
+  \fi
+}
+
+
+
+%%
+%% titlepage
+%%
+\newcommand\reviewtitlepage{%
+  \thispagestyle{empty}
+  \begin{center}%
+    \mbox{} \vskip5zw
+    \reviewtitlefont%
+    {\HUGE\bfseries \@title \par}%
+    \ifx\@subtitle\empty\else%
+      \vskip 1em%
+      {\Large {\rmfamily --- } \@subtitle{} {\rmfamily --- } \par}%
+    \fi%
+    \vskip 15em%
+    {\LARGE
+      \lineskip .75em
+      \begin{tabular}[t]{c}%
+        \@author%
+      \end{tabular}\par}%
+    \vfill
+    {\large \@date\par}%
+    \vskip4zw\mbox{}
+  \end{center}%
+}
+
+
+%%
+%% colophon page
+%%
+\newcommand\reviewcolophonpage{%
+  \reviewcolophon
+  \thispagestyle{empty}
+  \vspace*{\fill}
+  {\noindent\reviewtitlefont\Large \@title} \\
+  \ifx\@subtitle\empty\else
+    \medskip
+    {\noindent\reviewtitlefont \@subtitle} \\
+  \fi
+  \rule[8pt]{\textwidth}{1pt} \\
+  {\noindent \colophonpubhistory}
+  \medskip
+  %
+  \begin{tabular}{ll}
+    \colophonokuduke
+  \end{tabular}
+  %　\\
+  %
+  \medskip
+  \noindent
+  \rule[0pt]{\textwidth}{1pt} \\
+  \colophonrights
+}

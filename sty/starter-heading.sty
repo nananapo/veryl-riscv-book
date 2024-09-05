@@ -1,0 +1,561 @@
+%%% -*- coding: utf-8 -*-
+
+%%%
+%%% 見出し（章・節・項・目・段・小段）
+%%%
+
+
+
+%%% hyperref.styが\refstepcounterを上書きするのでその対策
+\newcommand{\@refstepcounter}{%
+  \@ifundefined{@hyperref}{%
+    \refstepcounter%
+  }{%
+    \H@refstepcounter%
+  }%
+}
+
+%%% 目次をクリックしたときのジャンプ先となるアンカー
+\newcommand{\Heading@anchor}[2]{%  #1: chapter, section, ..., 2: number
+  \@ifundefined{@hyperref}{%
+  }{%
+    \ifempty{#2}%                   % 章番号や節番号がなければ
+      \Hy@MakeCurrentHrefAuto{#1*}% %   自動採番してアンカーを作成
+    \else%                          % 章番号や節番号があれば
+      \Hy@MakeCurrentHref{#1.#2}%   %   それを使ってアンカーを作成
+    \fi%
+    \Hy@raisedlink{\hyper@anchorstart{\@currentHref}\hyper@anchorend}%
+  }%
+}
+
+%%% 目次のエントリをtocファイルに出力する
+\newcommand{\Heading@toc}[3]{%  #1: chapter, section, ..., #2: number, #3: toc title
+  \ifempty{#2}%                     % 章番号や節番号がなければ
+    \addcontentsline{toc}{#1}{#3}%  %   目次エントリを出力
+  \else%                            % 章番号や節番号があれば
+    \addcontentsline{toc}{#1}{\protect\numberline{#2}#3}% 番号つきで出力
+  \fi%
+}
+
+%%%
+\newcommand{\Heading@heading}[4]{% #1: Chapter, Section, etc, #2: 番号, #3: タイトル, #4: 目次用タイトル
+  %% タイトル前の余白
+  \@eval{#1@topmargin}{#2}%       % #2: 番号
+  %;\pagebreak[0]%                % 必要なら改ページをする ← TODO:要調査
+  %% 目次をクリックしたときのジャンプ先（アンカー）
+  \@eval{#1@anchor}{#2}%          % #2: 番号
+  %% 番号とタイトル
+  {%
+    \setlength{\parindent}{0pt}%  % タイトルでは段落のインデントをなくす
+    \@eval{#1@font}{#2}%          % フォントを設定
+    \@eval{#1@title}{#2}{#3}%     % #2: 番号、#3: タイトル
+    \par\nobreak%                 % 改段落はするが、改ページは禁止
+  }%
+  %% 目次用のエントリ（タイトルよりあとに置くこと）
+  \def\@tempc{#4}%                % #4: 目次用タイトル
+  \def\@relax{\relax}%            % （\relaxは他言語のnullに相当）
+  \ifx\@tempc\empty%              % 空文字列なら目次に出さない
+  \else\ifx\@tempc\@relax%        % \relaxなら
+    \@eval{#1@toc}{#2}{#3}%       %   タイトルをそのまま目次に使う
+  \else%                          % それ以外なら
+    \@eval{#1@toc}{#2}{#4}%       %   目次用タイトルを目次に使う
+  \fi\fi%
+  \nobreak%                       % 改ページ禁止
+  %% タイトル後の余白
+  \@eval{#1@bottommargin}{#2}%
+  %% 後処理
+  \@eval{#1@aftertitle}{#2}%
+}
+
+
+
+
+%%% 章 (Chapter) のタイトル
+\newcommand{\Chapter}{%
+  \@ifstar{\Chapter@star}{\Chapter@nostar}%
+}
+\newcommand{\Chapter@star}[2][\relax]{%  #1: 目次用タイトル, #2: タイトル
+  \Chapter@heading{}{#2}{#1}%
+}
+\newcommand{\Chapter@nostar}[2][\relax]{%  #1: 目次用タイトル, #2: タイトル
+  \ifnum\c@secnumdepth<0%
+    \Chapter@heading{}{#2}{#1}%
+  \else\if@mainmatter%
+    \@refstepcounter{chapter}%
+    \Chapter@heading{\thechapter}{#2}{#1}%
+  \else%
+    \Chapter@heading{}{#2}{#1}%
+  \fi\fi%
+}
+\newcommand{\Chapter@heading}[3]{%
+  \Heading@heading{Chapter}{#1}{#2}{#3}%
+}
+\newcommand{\Chapter@anchor}[1]{%  #1: 章番号
+  \Heading@anchor{chapter}{#1}%
+}
+\newcommand{\Chapter@toc}[2]{%  #1: 章番号, #2: 目次用タイトル
+  \@ifundefined{minitoc}{}{\stepcounter{mtc}}% 章扉の目次用
+  \def\@tempa{#1}%
+  \def\@tempb{#2}%
+  \ifnum\c@tocdepth<0%
+  \else\ifx\@tempb\empty%
+  \else\ifx\@tempa\empty%
+    \Heading@toc{chapter}{}{#2}%
+  \else%
+    \Heading@toc{chapter}{\@chapapp#1\@chappos}{#2}%
+  \fi\fi\fi%
+  \chaptermark{#2}%               % ページヘッダに章タイトルを設定
+}
+\newcommand{\Chapter@topmargin}[1]{%
+  \if@Chapter@clearpage@%
+    \if@openleft\cleardoublepage\else%
+    \if@openright\cleardoublepage\else\clearpage\fi\fi%
+  \fi%
+  \plainifnotempty% 元: \thispagestyle{plain}%
+  \global\@topnum\z@%
+ %\vspace*{2.0\Cvs}%     % (jsbook.cls) 2\Cvs
+}
+\newcommand{\Chapter@bottommargin}[1]{%  #1: 章番号
+  \addvspace{2.0\Cvs}%   % (jsbook.cls) 3\Cvs
+}
+\newcommand{\Chapter@aftertitle}[1]{%  #1: 章番号
+  \@FirstSectionPerChapter@true%   % 最初の章を表すフラグをオン
+}
+\newcommand{\Chapter@font}[1]{%  #1: 章番号
+  \headfont\Huge%
+}%
+\newcommand{\Chapter@title}[2]{%  #1: 章番号, #2: 章タイトル
+  \Chapter@align%                           % 左寄せ/右寄せ/中央揃え
+  \edef\@tempa{#1}%
+  \ifx\@tempa\empty%                        % 章番号がないなら何もしない
+  \else\ifx\starter@chapter@oneline\empty%  % 章番号とタイトルを別行にするなら
+    \Chapter@number{#1}%                    % 章番号（例：第1章）
+  \else%                                    % 章番号とタイトルを横に並べるなら
+    \@hangfrom{%                            % タイトルが複数行になったときの対策
+      \Chapter@number{#1}%                  % 章番号（例：第1章）
+    }%
+  \fi\fi%
+  #2%                                       % 章タイトル
+}
+\newcommand{\Chapter@number}[1]{%  #1: 章番号
+  %{\headfont\huge\@chapapp#1\@chappos}%    % 章番号（例：第1章）
+  {\headfont\LARGE\@chapapp{\HUGE #1}\@chappos}% 番号を大きくして出力
+  \ifempty{\starter@chapter@oneline}%
+    \par\vspace{0.50\Cvs}%                  % 縦方向に余白を空ける
+  \else%
+    \hspace{1zw}%                           % 横方向に1文字分空ける
+  \fi%
+}
+\newcommand{\Chapter@align}{%
+  \def\@align{\starter@chapter@align}%      % left/right/center
+  \ifstreq{\@align}{left}\raggedright\fi    % 左寄せ
+  \ifstreq{\@align}{right}\raggedleft\fi    % 右寄せ
+  \ifstreq{\@align}{center}\centering\fi    % 中央寄せ
+}
+\newif\if@FirstSectionPerChapter@           % 章における最初の節ならtrue
+\newif\if@Chapter@clearpage@                % trueなら章タイトル直前で改ページ
+\@Chapter@clearpage@true
+
+%%% 章タイトルのカスタマイズ：下に細い下線
+\iffalse
+\else\ifstreq{\starter@chapter@decoration}{underline}
+
+  \let\original@Chapter@title=\Chapter@title
+  \renewcommand{\Chapter@title}[2]{%  #1: 章番号、#2: 章タイトル
+    \original@Chapter@title{#1}{#2}%
+    \par%
+    \textcolor{starter@chaptercolor}{\rule{\textwidth}{0.2pt}}%
+  }
+
+%%% 章タイトルのカスタマイズ：上下に太い横線
+\else\ifstreq{\starter@chapter@decoration}{boldlines}
+
+  \let\original@Chapter@title=\Chapter@title
+  \renewcommand{\Chapter@title}[2]{%  #1: 章番号、#2: 章タイトル
+    \def\@@boldline{%
+      \textcolor{starter@chaptercolor}{\rule{\textwidth}{0.5\Cvs}}% 太い横線
+    }
+    %\ifempty{#1}%   % TeX言語仕様の制限によりエラーになるので使わないこと
+    \edef\@tempa{#1}%                       % 章番号（例：1）
+    \ifx\@tempa\empty%
+      \original@Chapter@title{#1}{#2}%      % 章番号（例：第1章）
+    \else%
+      \@@boldline\par%                      % 太い横線
+      \vspace{0.75\Cvs}%                    % 余白
+      \original@Chapter@title{#1}{#2}%      % 章番号（例：第1章）
+      \vspace{0.25\Cvs}%                    % 余白
+      \par\@@boldline%                      % 太い横線
+    \fi%
+  }
+
+\else
+\fi
+
+
+
+%%% 節 (Section) のタイトル
+\newcommand{\Section}{%
+  \@ifstar{\Section@star}{\Section@nostar}%
+}
+\newcommand{\Section@star}[2][\relax]{%  #1: 目次用タイトル, #2: タイトル
+  \Section@heading{}{#2}{#1}%
+}
+\newcommand{\Section@nostar}[2][\relax]{%  #1: 目次用タイトル, #2: タイトル
+  \ifnum\c@secnumdepth<1%
+    \Section@heading{}{#2}{#1}%
+  \else\if@mainmatter%
+    \@refstepcounter{section}%
+    \Section@heading{\thesection}{#2}{#1}%
+  \else%
+    \Section@heading{}{#2}{#1}%
+  \fi\fi%
+}
+\newcommand{\Section@heading}[3]{%
+  \pagebreak[1]%       % 節タイトルの直前では改ページしやすくする
+  \Heading@heading{Section}{#1}{#2}{#3}%
+}
+\newcommand{\Section@anchor}[1]{%  #1: 節番号
+  \Heading@anchor{section}{#1}%
+}
+\newcommand{\Section@toc}[2]{%  #1: 節番号, #2: 目次用タイトル
+  \def\@tempb{#2}%
+  \ifnum\c@tocdepth<1%
+  \else\ifx\@tempb\empty%
+  \else%
+    \Heading@toc{section}{#1}{#2}%
+  \fi\fi%
+  %\sectionmark{#2}               % まえがきの章で使うとページヘッダに「0.1」と出てしまう
+  \def\@tempa{#1}%
+  \ifx\@tempa\empty%
+    \markright{#2}%               % ページヘッダに節タイトルだけを設定
+  \else%
+    \markright{#1\hspace{1zw}#2}% % ページヘッダに節番号と節タイトルを設定
+  \fi%
+}
+\newcommand{\Section@topmargin}[1]{%  #1: 節番号
+  %\addvspace{1.0\Cvs}%   % (jsbook.cls) \Cvs \@plus.5\Cdp \@minus.2\Cdp
+  \edef\@newpage{\starter@section@newpage}%  % Yなら改ページする
+  \edef\@tempa{#1}%
+  \ifx\@tempa\empty%            % 節番号なしなら
+    \def\@newpage{}%            %   改ページしない
+  \fi%
+  \if@FirstSectionPerChapter@   % 章における最初の節なら
+    \def\@newpage{}%            %   改ページしない
+  \fi%
+  \ifx\@newpage\empty%          % 改ページが必要ないなら
+    \Section@@topmargin{#1}     %   節タイトルの上に余白を空ける
+  \else%                        % 改ページが必要なら
+    \clearpage%                 %   改ページする
+  \fi%
+}%
+\newcommand{\Section@@topmargin}[1]{%  #1: 節番号
+  \ifempty{#1}\addvspace{1.0\Cvs}% 節番号なしなら装飾しないので少し狭く
+  \else       \addvspace{1.5\Cvs}% 節番号ありなら装飾するので少し広く
+  \fi%
+}
+\newcommand{\Section@bottommargin}[1]{%  #1: 節番号
+  %\addvspace{0.5\Cvs}%   % (jsbook.cls) .5\Cvs \@plus.3\Cdp
+  \ifempty{#1}\addvspace{0.5\Cvs}% 節番号なしなら装飾しないので少し狭く
+  \else       \addvspace{1.0\Cvs}% 節番号ありなら装飾するので少し広く
+  \fi%
+}%
+\newcommand{\Section@aftertitle}[1]{%  節番号
+  \@FirstSectionPerChapter@false%  % 最初の章を表すフラグをオフ
+}
+\newcommand{\Section@font}[1]{%  #1: 節番号
+  \headfont\Large
+}%
+\newcommand{\Section@title}[2]{%  #1: 節番号, #2: 節タイトル
+  \ifempty{#1}\else%
+    \@hangfrom{%                % タイトルが複数行になったときの対策
+      \Section@number{#1}%
+    }%
+  \fi%
+  #2%
+}
+\newcommand{\Section@number}[1]{%  #1: 節番号
+  #1\hspace{1zw}%               % 節番号と全角1文字分の空白
+}
+
+%%% 節タイトルのカスタマイズ：節番号を白抜き、背景を薄いグレー
+\iffalse
+\else\ifstreq{\starter@section@decoration}{grayback}
+
+  \renewcommand{\Section@number}[1]{%  #1: 節番号
+    \textcolor{starter@palecolor}{%    % タイトルの背景色（薄いグレー）
+      \rlap{\rule[-0.6zh]{\textwidth}{2zh}}%  % 本文幅の背景色
+    }%
+    \textcolor{starter@sectioncolor}{% % 節番号の背景色（主色）
+      \rlap{\rule[-0.6zh]{3.5zw}{2zh}}%% 全角3.5文字分の背景色
+    }%
+    \makebox[3.5zw][c]{\textcolor{white}{#1}}% 白抜き文字で章番号
+    \hspace{0.9zw}%                    % 空白
+  }
+
+%%% 節タイトルのカスタマイズ：節番号を白抜き（背景色がないので複数行向き）
+\else\ifstreq{\starter@section@decoration}{numbox}
+
+  \renewcommand{\Section@number}[1]{%  #1: 節番号
+    \textcolor{starter@sectioncolor}{% % 節番号の背景色（主色）
+      \rlap{\rule[-0.6zh]{3.5zw}{2zh}}%% 全角3.5文字分の背景色
+    }%
+    \makebox[3.5zw][c]{\textcolor{white}{#1}}% 白抜き文字で章番号
+    \hspace{0.9zw}%                    % 空白
+  }
+
+%%% 節タイトルのカスタマイズ：節タイトルに下線を引く
+\else\ifstreq{\starter@section@decoration}{underline}
+
+  \renewcommand{\Section@number}[1]{%  #1: 節番号
+    \textcolor{starter@sectioncolor}{% % 線の色
+      \rlap{\rule[-0.6zh]{\textwidth}{0.2pt}}% 本文幅の下線
+      \rlap{\rule[-0.6zh]{0.75zw}{2zh}}%     % 左端に太い縦線
+    }%
+    \hspace{1.5zw}#1\hspace{1.0zw}%    % 節番号（と空白）
+  }%
+
+%%% 節タイトルのカスタマイズ：節タイトル右に太い縦線（下線がないので複数行向き）
+\else\ifstreq{\starter@section@decoration}{leftline}
+
+  \renewcommand{\Section@number}[1]{%  #1: 節番号
+    \textcolor{starter@sectioncolor}{% % 線の色
+      \rlap{\rule[-0.6zh]{0.75zw}{2zh}}% 左端に太い縦線
+    }%
+    \hspace{1.5zw}#1\hspace{1.0zw}%    % 節番号（と空白）
+  }%
+
+%%% 節タイトルのカスタマイズ：大きな円（複数行向き）
+\else\ifstreq{\starter@section@decoration}{circle}
+
+  \renewcommand{\Section@number}[1]{%  #1: 節番号
+    \hspace{-0.40\Cwd}%                % 円をちょっとだけ右にはみ出させる
+    \rlap{{%                           % 現在位置を変えずに右側に表示
+      \parbox[c]{6\Cwd}{%              % 全角6文字分の幅で上下の中央揃え
+        \fontsize{6\Cwd}{0}\selectfont%% 文字サイズを大きくする
+        \textcolor{starter@sectioncolor}{●}% 大きな円
+        %%% if you prefer math symbol rather than CJK font
+        %\fontsize{7\Cwd}{0}\selectfont%
+        %\textcolor{starter@sectioncolor}{\ding{108}}%   % requires \usepackage{pifont}
+      }%
+    }}%
+    \hspace{-0.20\Cwd}%                % 節番号をちょっとだけ右にずらす
+    \makebox[6\Cwd][c]{%               % 全角6文字分の幅で左右の中央揃え
+      \textcolor{white}{\raisebox{-0.14\Cwd}{#1}}% 白い文字で節番号を表示
+    }%
+    \hspace{0.60\Cwd}%                 % ちょっとだけ右にずらしていたのを戻す
+  }%
+  \renewcommand{\Section@title}[2]{{%  #1: 節番号, #2: 節タイトル
+    \setlength{\@tempdima}{\textwidth}%% 本文幅
+    \edef\@tempa{#1}%
+    \ifx\@tempa\empty\else%            % 節番号があれば
+      \Section@number{#1}%             %   節番号を表示
+      \addtolength{\@tempdima}{-6\Cwd}%%   本文幅から全角6文字分引く
+    \fi%
+    \parbox[c]{\@tempdima}{%           % 本文幅から全角6文字分引いた幅で上下の中央揃え
+      \baselineskip=0.85\baselineskip% % 行間隔を狭くする
+      #2%                              % 節タイトルを表示（\parboxのおかげで2行にも対応）
+    }%
+    \par%                              % 改行がわりの改段落
+  }}
+
+%%% 節タイトルのカスタマイズ：装飾なし
+\else
+
+  \renewcommand{\Section@@topmargin}[1]{%
+    \addvspace{1.0\Cvs}%    % 装飾ありと比べて、節タイトル上のスペースを狭める
+  }%
+  \renewcommand{\Section@bottommargin}[1]{%
+    \addvspace{0.5\Cvs}%    % 装飾ありと比べて、節タイトル下のスペースを狭める
+  }%
+
+\fi
+
+
+
+%%% 項 (Subsection) のタイトル
+\newcommand{\Subsection}{%
+  \@ifstar{\Subsection@star}{\Subsection@nostar}%
+}
+\newcommand{\Subsection@star}[2][\relax]{%  #1: 目次用タイトル, #2: タイトル
+  \Subsection@heading{}{#2}{#1}%
+}
+\newcommand{\Subsection@nostar}[2][\relax]{%  #1: 目次用タイトル, #2: タイトル
+  \ifnum\c@secnumdepth<2%
+    \Subsection@heading{}{#2}{#1}%
+  \else\if@mainmatter%
+    \@refstepcounter{subsection}%
+    \Subsection@heading{\thesubsection}{#2}{#1}%
+  \else%
+    \Subsection@heading{}{#2}{#1}%
+  \fi\fi%
+}
+\newcommand{\Subsection@heading}[3]{%
+  \Heading@heading{Subsection}{#1}{#2}{#3}%
+}
+\newcommand{\Subsection@anchor}[1]{%  #1: 項番号
+  \Heading@anchor{subsection}{#1}%
+}
+\newcommand{\Subsection@toc}[2]{%  #1: 項番号, #2: 目次用タイトル
+  \def\@tempb{#2}%
+  \ifnum\c@tocdepth<2%
+  \else\ifx\@tempb\empty%
+  \else\ifnum\c@secnumdepth<2%
+    \Heading@toc{subsection}{#1}{\startersubsectionsymbol#2}%
+  \else%
+    \Heading@toc{subsection}{#1}{#2}%
+  \fi\fi\fi%
+}
+\newcommand{\Subsection@topmargin}[1]{%  #1: 項番号
+  \addvspace{0.7\Cvs}%   % (jsbook.cls) \Cvs \@plus.5\Cdp \@minus.2\Cdp
+}
+\newcommand{\Subsection@bottommargin}[1]{%  #1: 項番号
+  \addvspace{0.3\Cvs}%   % (jsbook.cls) .5\Cvs \@plus.3\Cdp
+}
+\newcommand{\Subsection@aftertitle}[1]{}  % 何もしない
+\newcommand{\Subsection@font}[1]{%  #1: 項番号
+  \headfont\large
+}%
+\newcommand{\Subsection@title}[2]{%  #1: 項番号, #2: 項タイトル
+  \ifempty{#1}\else%
+    \@hangfrom{%                % タイトルが複数行になったときの対策
+      \Subsection@number{#1}%
+    }%
+  \fi%
+  #2%
+}
+\newcommand{\Subsection@number}[1]{%  #1: 項番号
+  #1\hspace{1zw}%               % 項番号と全角1文字分の空白
+}
+
+%%% 項 (Subsection) タイトルのカスタマイズ：クローバー
+\newcommand{\starter@subsection@symbol}{$\clubsuit$}% クローバー
+\newcommand{\startersubsectionsymbol}{}
+\ifstreq{\starter@subsection@decoration}{symbol}  % 'none' or 'symbol'
+
+  \let\original@Subsection@title=\Subsection@title% もとの定義を保存
+  \renewcommand{\Subsection@title}[2]{%    % #1: 項番号, #2: 項タイトル
+    \startersubsectionsymbol%              % タイトル先頭にクローバー
+    \original@Subsection@title{#1}{#2}%    % もとの定義を呼び出す
+  }
+  \renewcommand{\startersubsectionsymbol}{%
+    \textcolor{starter@subsectioncolor}{\starter@subsection@symbol}% クローバーの記号
+    ~%                                     % 半角空白空けるけど改行はしない
+  }%
+
+\fi
+
+
+
+%%% 目 (Subsubsection) のタイトル
+\newcommand{\Subsubsection}{%
+  \@ifstar{\Subsubsection@star}{\Subsubsection@nostar}%
+}
+\newcommand{\Subsubsection@star}[2][\relax]{%  #1: 目次用タイトル, #2: タイトル
+  \Subsubsection@heading{}{#2}{#1}%
+}
+\newcommand{\Subsubsection@nostar}[2][\relax]{%  #1: 目次用タイトル, #2: タイトル
+  \ifnum\c@secnumdepth<3%
+    \Subsubsection@heading{}{#2}{#1}%
+  \else\if@mainmatter%
+    \@refstepcounter{subsubsection}%
+    \Subsubsection@heading{\thesubsubsection}{#2}{#1}%
+  \else%
+    \Subsubsection@heading{}{#2}{#1}%
+  \fi\fi%
+}
+\newcommand{\Subsubsection@heading}[3]{%
+  \Heading@heading{Subsubsection}{#1}{#2}{#3}%
+}
+\newcommand{\Subsubsection@anchor}[1]{%  #1: 目番号
+  \Heading@anchor{subsubsection}{#1}%
+}
+\newcommand{\Subsubsection@toc}[2]{%  #1: 目番号, #2: 目次用タイトル
+  \def\@tempb{#2}%
+  \ifnum\c@tocdepth<3%
+  \else\ifx\@tempb\empty%
+  \else%
+    \Heading@toc{subsubsection}{#1}{#2}%
+  \fi\fi%
+}
+\newcommand{\Subsubsection@topmargin}[1]{%  #1: 目番号
+  \addvspace{0.4\Cvs}%   % (jsbook.cls) \Cvs \@plus.5\Cdp \@minus.2\Cdp
+}
+\newcommand{\Subsubsection@bottommargin}[1]{%  #1: 目番号
+  \addvspace{0.1\Cvs}%   % (jsbook.cls) \z@
+}
+\newcommand{\Subsubsection@aftertitle}[1]{}  % 何もしない
+\newcommand{\Subsubsection@font}[1]{%  #1: 目番号
+  \headfont\normalsize
+}%
+\newcommand{\Subsubsection@title}[2]{%  #1: 目番号, #2: 目タイトル
+  \ifempty{#1}\else%
+    \@hangfrom{%                % タイトルが複数行になったときの対策
+      \Subsubsection@number{#1}%
+    }%
+  \fi%
+  #2%
+}
+\newcommand{\Subsubsection@number}[1]{%  #1: 目番号
+  #1\hspace{1zw}%               % 目番号と全角1文字分の空白
+}
+
+
+
+%%% 段 (Paragraph)
+\newcommand\Paragraph{%
+  \@ifstar{\Paragraph@title}{\Paragraph@title}% '*' がついていたら読み飛ばす
+}
+\newcommand\Paragraph@title[1]{%       % #1: タイトル
+  \Paragraph@separator%          % 少しだけ余白を空ける
+  \noindent%                     % タイトルはインデントしない
+  {\headfont #1}%                % タイトルを表示（太字のゴシック体）
+  \par\nobreak%                  % 改行する（直後の改ページは禁止）
+}
+\newcommand\Paragraph@separator{%
+  \par\addvspace{0.25\baselineskip}%   % 1/4行分の余白
+}
+
+
+
+%%% 小段 (Subparagraph)
+\newcommand\Subparagraph{%
+  \@ifstar{\Subparagraph@title}{\Subparagraph@title}% '*' がついていたら読み飛ばす
+}
+\newcommand\Subparagraph@title[1]{%    % #1: タイトル
+  \Subparagraph@separator%       % 少しだけ余白を空ける
+  \noindent%                     % タイトルはインデントしない
+  {\headfont #1}%                % タイトルを表示（太字のゴシック体）
+  \hspace{1zw}%                  % 改行せず、全角1文字分空ける
+}
+\newcommand\Subparagraph@separator{%
+ %\par\addvspace{0.25\baselineskip}%   % 1/4行分の余白
+  \par\addvspace{0.00\baselineskip}%   % 余白を空けない
+}
+
+
+
+%%% 「//paragraphend」ブロック命令用
+\newcommand\ParagraphEnd{%
+  \Paragraph@separator%
+}
+\newcommand\SubparagraphEnd{%
+  \Subparagraph@separator%
+}
+
+
+
+%%% LaTeXの見出し用マクロを上書きする
+\def\chapter{\Chapter}
+\def\section{\Section}
+\def\subsection{\Subsection}
+\def\subsubsection{\Subsubsection}
+\def\paragraph{\Paragraph}
+\def\subparagraph{\Subparagraph}
+
+
+%%% 索引ページのタイトルデザインを変更
+\renewcommand{\@makeschapterhead}[1]{%
+  \@Chapter@clearpage@false%  % もとの \@makeschapterhead は改ページしないので、それに倣う
+  \Chapter*[]{#1}%            % まえがきや目次と同じタイトルデザインを使う
+  \@Chapter@clearpage@true%
+}

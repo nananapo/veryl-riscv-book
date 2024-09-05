@@ -1,0 +1,897 @@
+%%% -*- coding: utf-8 -*-
+
+%%% 目次やリンクの色を指定する。印刷用なら黒にする。
+\hypersetup{colorlinks=true,linkcolor=starter@linkcolor,urlcolor=starter@linkcolor}
+%\hypersetup{colorlinks=false}   % リンク機能をオフにする
+
+
+
+%%% 「@<strong>{ ... }」を太字のゴシック体にする（「@<b>{ ... }」は明朝体のまま）。
+\renewcommand{\reviewstrong}[1]{\textbf{\gtfamily\sffamily #1}}
+
+%%% 「@<em>{ ... }」をゴシック体にする。
+\renewcommand{\reviewem}[1]{{\gtfamily\sffamily #1}}
+
+%%% 「@<del>{ ... }」（取り消し線）が効くようにする。
+%%% (See https://qiita.com/takahashim/items/5c1af2941a1ce9fa5919)
+\usepackage{ulem}
+\renewcommand{\reviewstrike}[1]{\sout{#1}}
+%\usepackage{jumoline}
+%\renewcommand{\reviewstrike}[1]{\Midline{#1}}  % \seqsplit{}と相性が悪い？
+
+%%% 目立たせない（「@<strong>{}」の反対）
+\newcommand{\starterweak}[1]{%
+  \textcolor{gray}{#1}%
+}
+
+%%% ふきだし説明の文字色をグレーに
+\renewcommand{\reviewballoon}[1]{%
+  \textcolor{gray}{←#1}
+}
+
+%% 「@<tt>{}」を上書き
+\renewcommand{\reviewtt}[1]{{%
+  \frenchspacing%                         % 「! ? : .」の直後の空白が2文字分になるのを防ぐ
+  \texttt{#1}%                            % 等幅フォント
+}}
+
+%% 「@<code>{...}」を薄いグレーで囲む
+%% （ただし章や節のタイトル、および各種キャプションでは囲まない）
+\ifx\starter@inlinecode@gray\empty
+  \renewcommand{\reviewcode}[2][]{{%
+    \frenchspacing%                       % 「! ? : .」の直後の空白が2文字分になるのを防ぐ
+    %\obeyspaces%                         % （効果なし, why?）
+    %\,%                                  % ほんの少しスペースを入れる
+    \texttt{#2}%
+    %\,%                                  % ほんの少しスペースを入れる
+  }}
+\else
+  \renewcommand{\reviewcode}[2][]{{%      % #1：空 or 'headline' or 'caption'
+    \frenchspacing%                       % 「! ? : .」の直後の空白が2文字分になるのを防ぐ
+    %\obeyspaces%                         % （効果なし, why?）
+    \,%                                   % ほんの少しスペースを入れる
+    \edef\@tmpA{#1}%
+    \ifx\@tmpA\empty%                     % #1が空（未指定）なら
+      \colorbox{shadecolor}{\texttt{#2}}% %   背景色を薄いグレーにして等幅フォントで表示
+    \else%                                % #1がheadlineやcaptionなら
+      \texttt{#2}%                        %   等幅フォントで表示（背景色なし）
+    \fi%
+    \,%                                   % ほんの少しスペースを入れる
+  }}
+\fi
+
+\def\starterspacechar{\hspace{0pt}\mbox{ }\hspace{0pt}}
+
+%%% ファイル名を表す
+\newcommand{\starterfile}[1]{%
+  {\gtfamily\sffamily #1}%                % ゴシック体で表示
+}
+
+%%% ユーザ入力を表す
+\newcommand{\starteruserinput}[1]{%
+  \ifempty{\starter@codeblock@fontcolor}%
+    \def\@fontcolor{black}%
+  \else%
+    \def\@fontcolor{\starter@codeblock@fontcolor}%
+  \fi%
+  \textcolor{starter@userinputcolor}{%    % 下線の色
+    \underline{%                          % 下線（LaTeX標準）
+    %\uline{%                             % 下線（ulem.sty）
+      \textcolor{\@fontcolor}{#1}%
+    }%
+  }%
+}
+
+%%% ルビをふるのに必要（例：@<ruby>{漢, おとこ}）
+\usepackage{okumacro}
+
+
+
+%%% 箇条書き（順序なし）の上下の余白を、行間の0.5倍から0.25倍へと減らす
+\newenvironment{starteritemize}{%
+  \ifnum\@listdepth=0%
+    \def\@listi{%
+      \@listI%
+      \topsep 0.25\baselineskip%     % 上下の余白を減らす（original: 0.5\baselineskip）
+    }%
+  \fi%
+  \begin{itemize}%
+}{%
+  \end{itemize}%
+}
+
+%%% 箇条書き（順序つき）の上下の余白を、行間の0.5倍から0.25倍へと減らす
+\newenvironment{starterenumerate}{%
+  \ifnum\@listdepth=0%
+    \def\@listi{%
+      \@listI%
+      \topsep 0.25\baselineskip%     % 上下の余白を減らす（original: 0.5\baselineskip）
+    }%
+  \fi%
+  \begin{enumerate}%
+}{%
+  \end{enumerate}%
+}
+
+%%% 順序なし箇条書きの行頭文字を変更
+\usepackage{amssymb}            % \blacktriangleright や \bigstar のために必要
+%\renewcommand{\labelitemi}{$\blacktriangleright$}  % 深さ1段目：小さい黒丸→小さい三角へ
+\renewcommand{\labelitemii}{$\circ$}                % 深さ2段目：「-」→小さい白丸へ
+%\renewcommand{\labelitemiii}{{\small$\bigstar$}}   % 深さ3段目：「*」→星形へ
+
+
+
+
+%%% 奥付 (colophon) が最終ページになるよう調整する。
+%%% （奥付が右ページだと、次ページである最終ページが空ページになるため）
+\renewcommand{\reviewcolophon}[0]{%
+  \clearpage                     % 改ページ
+  \ifstreq{\starter@target}{tablet}% タブレット向けなら何も調整しない
+  \else\if@openright             % \documentclass で openright が指定されていれば
+    \pltx@cleartoleftpage        % 左ページ（偶数ページ）になるよう調整する
+  \else\if@openleft              % \documentclass で openleft が指定されていれば
+    \pltx@cleartorightpage       % 右ページ（奇数ページ）になるよう調整する
+  \fi\fi\fi
+}
+
+%%% 右起こし（奇数ぺージ始まり）にしない場合でも、大扉とまえがきの間に
+%%% 空白ページが入ることがあるので、修正する。
+\if@openright\else\if@openleft\else  % 右起こしでも左起こしでもない場合だけ、
+  \renewcommand\frontmatter{%        % 大扉やまえがきの開始を表すコマンドを再定義する。
+    %\pltx@cleartooddpage            % 削除
+    \clearpage                       % 追加
+    \@mainmatterfalse
+    \pagenumbering{roman}
+  }
+\fi\fi
+
+%%% 右起こし（奇数ぺージ始まり）にしない場合でも、目次と第1章との間に
+%%% 空白ページが入ることがあるので、修正する。
+\if@openright\else\if@openleft\else  % 右起こしでも左起こしでもない場合だけ、
+  \renewcommand\mainmatter{%         % 本文の開始を表すコマンドを再定義する。
+    %\pltx@cleartooddpage            % 削除
+    \clearpage                       % 追加
+    \@mainmattertrue
+    \pagenumbering{arabic}
+  }
+\fi\fi
+
+
+
+%%% ページヘッダーの形式を変更（fancyhdr.styを使用）
+\newcommand{\pageheaderfont}{\footnotesize\gtfamily\sffamily}           % ゴシック体
+%\newcommand{\pageheaderfont}{\footnotesize\gtfamily\sffamily\bfseries} % ゴシック体、太字
+%%% 紙書籍のような右起こしの場合（左ページに章タイトル、右ページに節タイトル）
+%\lhead[\pageheaderfont\leftmark]{}
+%\rhead[]{\pageheaderfont\rightmark}
+%%% タブレット向けのような両起こしの場合（両ページに章タイトルと節タイトル）
+\lhead{\pageheaderfont\leftmark}
+\rhead{\pageheaderfont\rightmark}
+
+%%% ページ番号のスタイル
+%\newcommand{\pagenumberstyle}{\thepage}                   % 例：「1」
+%\newcommand{\pagenumberstyle}{\itshape\bfseries\thepage}  % 太字、斜体
+\newcommand{\pagenumberstyle}{\rmfamily --\ \thepage\ --}  % 例：「-- 1 --」
+% \newcommand{\pagenumberstyle}{\itshape --\ \thepage\ --} % 斜体
+
+%%% ページ番号をページフッタに表示（fancyhdr.styを使用）
+\fancyfoot{}                        % ページフッタをクリア
+\cfoot{\pagenumberstyle}            % ページフッタの真ん中に表示
+%\lfoot[\pagenumberstyle]{}         % 偶数ページの左下に表示
+%\rfoot[]{\pagenumberstyle}         % 奇数ページの右下に表示
+\fancypagestyle{plainhead}{         % 章タイトルページのスタイル
+  \fancyhead{}                        % ページヘッダなし
+  \fancyfoot{}                        % ページフッタをクリア
+  \cfoot{\pagenumberstyle}            % ページフッタの真ん中に表示
+  %\lfoot[\pagenumberstyle]{}         % 偶数ページの左下に表示
+  %\rfoot[]{\pagenumberstyle}         % 奇数ページの右下に表示
+  \renewcommand{\headrulewidth}{0pt}  % ページヘッダの区切り線をなくす
+  \renewcommand{\footrulewidth}{0pt}  % ページフッタの区切り線をなくす
+}
+
+%%% ページヘッダを構成する要素を余計なことに Re:VIEW が上書きしちゃってるので、
+%%% オリジナルの定義を jsbook.cls からコピーして元に戻す。
+\def\chaptermark#1{%
+  \markboth{%
+    \ifnum \c@secnumdepth >\m@ne%
+      \if@mainmatter%
+        \if@omit@number\else%
+          \@chapapp\thechapter\@chappos\hskip1zw%
+        \fi%
+      \fi%
+    \fi%
+    #1%
+  }{}%
+}%
+\def\sectionmark#1{%
+  \markright{%
+    \ifnum \c@secnumdepth >\z@ \thesection \hskip1zw\fi%
+    #1%
+  }%
+}%
+
+
+
+%%% 章 (Chapter) のタイトルを独立したページにするコマンド。
+%%% 独立したページには、章タイトルと、章の概要と、章ごとの目次を含める。
+\usepackage{pagecolor}                  % for '\newpagecolor'
+\usepackage{afterpage}                  % for '\afterpage'
+\newcommand{\makechaptitlepage}[1]{%
+  \pagecolor{starter@chaptitlepagecolor} % ページに背景色をつける
+  %\addtolength{\linewidth}{-\parindent} % 目次の右側余白が左側より1文字分狭いことへの対策
+  \def\arg{#1}                   % '\ifx#1{toc}' がうまく動作してくれないので、その対策
+  \def\toc{toc}
+  \def\tocsec{toc=section}
+  \def\tocsub{toc=subsection}
+  \def\tocon{toc=on}
+  \def\tocoff{toc=off}
+  \ifx\arg\tocon
+    \setcounter{minitocdepth}{1} % 目次に出すのは節(Section)まで
+    \minitoc                     % 章ごとの目次
+  \else\ifx\arg\tocsec
+    \setcounter{minitocdepth}{1} % 目次に出すのは節(Section)まで
+    \minitoc                     % 章ごとの目次
+  \else\ifx\arg\tocsub
+    \setcounter{minitocdepth}{2} % 目次に出すのは項(SubSection)まで
+    \minitoc                     % 章ごとの目次
+  \else\ifx\arg\tocoff
+  \else
+    % TODO: invalid argument
+  \fi\fi\fi\fi
+  \clearpage%                    % 改ページ
+  \pagecolor{none}%              % ページの背景色をなくす
+}
+%%% 章ごとの目次
+%%% （'nohints' は、裏表紙の直後に空白ページができるのを防ぐために必要）
+\usepackage[japanese,nohints]{minitoc}   % 章ごとの目次を作る
+\AtBeginDocument{%               % \begin{document} で実行するコマンドを登録
+  \dominitoc
+  %\listoffigures
+  %\listoftables
+}
+\setcounter{minitocdepth}{1}%    % 目次に出すのはSectionまで（Subsectionは出さない）
+%\setlength{\mtcindent}{3zw}     % 目次左右の余白幅（左右の幅であることに注意）
+%\mtcsetoffset{minitoc}{3zw}     % 目次左のインデント幅（テキスト幅は変わらず）
+%\setlength{\mtcskipamount}{\bigskipamount}
+\mtcsetrules{*}{off}             % 章ごとの目次の上下に罫線を入れない
+\mtcsettitle{minitoc}{【この章の内容】}  % 章ごとの目次のタイトル
+%\mtcsettitle{minitoc}{【{\@chapapp\thechapter\@chappos}の内容】}  % または
+\renewcommand{\mtcSfont}{\rmfamily\small} % 章ごとの目次のフォント
+%\renewcommand{\mtcSfont}{\small\gtfamily\sffamily\color{white}} % 色をつける場合
+\mtcsettitlefont{minitoc}{%      % 章ごとの目次のタイトルを設定
+  \gtfamily\sffamily             % ゴシック体、サンセリフ体
+  \hspace{2zw}                   % 左側のインデント
+}
+
+
+
+%%% 現在位置に画像が入りきらない場合、画像は次のページに回される。
+%%% その際、現在位置に大きなスペースが空くのを防ぐために、
+%%% 後続のテキストを現在位置に流し込むようにする。
+\renewenvironment{reviewimage}[1][]{%
+  \begin{starter@image}{#1}%
+}{%
+  \end{starter@image}%
+}
+%
+\newenvironment{starter@image}[1]{%
+  \vspace{0.8zw}      % 画像上の余白を調整（少し増やす）
+  \begin{figure}[#1]
+    %\begin{center}   % center環境は余分な余白がつくので使わない
+    \centering        % \centeringを使うと余分な余白がつかない
+}{%
+    %\end{center}
+  \end{figure}
+  \vspace{-0.8zw}     % 画像下の余白を調整（少し減らす）
+}
+%
+\renewenvironment{reviewdummyimage}{%
+  \begin{reviewimage}
+    \begin{alltt}
+}{%
+    \end{alltt}
+  \end{reviewimage}
+}
+
+
+
+%%% 表のマクロを上書き
+%\newenvironment{reviewtable}[1]{%
+%  \begin{center}\small\setlength{\baselineskip}{1.2zw}
+%    \begin{tabular}{#1}}{%
+%    \end{tabular}
+%  \end{center}}
+\renewenvironment{reviewtable}[1]{%
+  %\small\setlength{\baselineskip}{1.2zw}%
+  \startertablefont\setlength{\baselineskip}{1.2zw}%
+  \begin{tabular}{#1}%
+}{%
+  \end{tabular}%
+}
+\def\startertablefont{\small}
+
+
+%%% //imgtable のキャプション
+\renewcommand{\reviewimgtablecaption}[1]{%
+  %\caption{#1}\vspace{-3mm}%    % original
+  \caption{#1}%
+}
+
+
+
+%%% コラムが複数のページにまたがるとき、次のページに続いていることが
+%%% わかるようにするために、ページ境界では上下の線を引かない。
+\renewenvironment{reviewcolumn}{%
+  %\begin{framed}%        % original
+  \begin{oframed}%
+}{%
+  %\end{framed}%          % original
+  \end{oframed}%
+  \vspace{2zw}%
+}
+
+%%% コラムのタイトルを変更する
+\renewcommand{\reviewcolumnhead}[2]{%
+  %{\noindent\large ■コラム: #2}%  % original
+  %{\noindent\large\gtfamily\sffamily\bfseries ■コラム：#2}%  % 太字のゴシック
+  {\noindent\large\gtfamily\sffamily\bfseries 【コラム】#2}%  % 太字のゴシック
+  \vspace{2mm}%
+}
+
+
+
+%%% @<hd>{} や @<subsec>{} で、節や項へのリンクを作成
+%%% （config.yml で「chapterlink: true」の設定が必要）
+\newcommand{\startersecref}[2]{%
+  「\hyperref[#2]{#1}」(p.\pageref{#2})%     % 節や項のタイトルがリンク
+  %{#1}(\hyperref[#2]{p.\pageref{#2}})%  % ページ番号がリンク
+}
+\newcommand{\startersubsecref}[2]{%
+  「\hyperref[#2]{{\startersubsectionsymbol}#1}」(p.\pageref{#2})%     % 節や項のタイトルがリンク
+  %{\startersubsectionsymbol}{#1}(\hyperref[#2]{p.\pageref{#2}})%  % ページ番号がリンク
+}
+\newcommand{\startersubsubsecref}[2]{%
+  「\hyperref[#2]{#1}」(p.\pageref{#2})%     % 節や項のタイトルがリンク
+  %{#1}(\hyperref[#2]{p.\pageref{#2}})%  % ページ番号がリンク
+}
+
+
+
+%%% 導入文（リード文）
+\newenvironment{starterlead}{%
+  \begin{quotation}%     % または \begin{abstract}
+}{%
+  \end{quotation}%       % または \end{abstract}
+}
+
+
+
+%%% 章 (Chaper) の概要
+%%% （導入文（リード文）と違うことに注意）
+\newenvironment{starterabstract}{%
+  \addtolength{\rightskip}{2.5zw}%     % 右の余白を2.5文字分広げる (default: 0pt)
+  \addtolength{\leftskip}{2.5zw}%      % 左の余白を2.5文字分広げる (default: 5pt)
+  \gtfamily\sffamily%    % ゴシック体
+  \small%                % 少し小さめ
+}{%
+  \par%
+  \addvspace{2\Cvs}%     % 下に1行空ける
+}
+
+
+%%% 章 (Chapter) の著者
+\newcommand{\starterchapterauthor}[1]{%
+  \starter@chapterauthor{#1}%
+}
+\newcommand{\starter@chapterauthor}[1]{%
+  \setlength{\@tempdima}{\lastskip}%  % 直前のスペースの高さを保存
+  \addvspace{-\lastskip}%             % 直前のスペースをキャンセル
+  \starter@chapterauthor@topmargin%   % スペースを空ける
+  \begingroup%                        % flushright環境は上下に余分な空きが入るので使わない
+    \raggedleft%                      % テキストを右寄せ
+    \starter@chapterauthor@name{#1}%  % 著者名を表示
+    \par%                             % 改行がわりの改段落
+  \endgroup%
+  \addvspace{\@tempdima}%             % 保存した高さ分のスペースを空ける
+}
+\newcommand{\starter@chapterauthor@name}[1]{%
+  \gtfamily\sffamily%                 % フォントをゴシック体に
+  ［著］#1%                           % 著者名
+}
+\newcommand{\starter@chapterauthor@topmargin}{%
+  \addvspace{1\Cvs}%                  % 1行分の空き
+}
+
+
+%%% 引用（複数段落に対応）
+\newenvironment{starterquote}{%
+  \def\starter@in@quote{Y}%
+  \begin{starter@leftbar}{3pt}{starter@quotecolor}%
+}{%
+  \end{starter@leftbar}%
+  \def\starter@in@quote{}%
+}
+\def\starter@in@quote{}                % quoteの中でだけY
+%
+\newenvironment{starter@leftbar}[2]{%   % #1: 太さ、#2: 色
+  %% framed.sty の機能を使って、文章の左側に縦棒を入れる
+  \def\FrameCommand{\textcolor{#2}{\vrule width #1} \hspace{10pt}}%
+  \MakeFramed{%
+    \advance\hsize-\width%
+    \advance\hsize-2\starter@quote@sidemargin% ノート環境では左右に余白を空ける
+    \advance\rightskip -\starter@quote@sidemargin% 右マージンが二重にかかるのを避ける
+    \advance\leftskip -\starter@quote@sidemargin%  左マージンが二重にかかるのを避ける
+    \FrameRestore%
+  }%
+}{%
+  \endMakeFramed%
+}
+%
+\newlength{\starter@quote@sidemargin}   % 引用部の左右の余白幅（ノート環境で使う）
+
+
+
+%%% 画像のまわりに線をつける
+\newcommand{\starterimageframe}[1]{{%
+  \setlength{\fboxrule}{0.1pt}%
+  \fcolorbox{lightgray}{white}{#1}%
+}}
+
+
+
+%%% テキストの横に画像を配置する
+%%% （注意：途中での改ページはできない、テキストの回り込みはされない、脚注は使えない）
+\newenvironment{startersideimage}[6]{%
+  \begin{starter@sideimage}{#1}{#2}{#3}{#4}{#5}{#6}%
+}{%
+  \end{starter@sideimage}%
+}
+\newenvironment{starter@sideimage}[6]{%
+  %% #1: L or R, #2: 画像ファイル名
+  %% #3: 画像表示幅, #4: 画像領域幅,
+  %% #5: 区切り余白幅, #6: テキスト幅（空白なら自動計算）
+  \ifempty{#6}%                     % テキスト幅が未指定なら
+    \setlength\@tempdima{\textwidth}%   本文幅から
+    \addtolength{\@tempdima}{-#4}%  %   画像領域幅を引いて
+    \addtolength{\@tempdima}{-#5}%  %   区切り余白幅を引く
+  \else%                            % テキスト幅が指定されていれば
+    \setlength\@tempdima{#6}%       %   それを使う
+  \fi%
+  %
+  \def\@tempimgL{}%
+  \def\@tempimgR{}%
+  \ifstreq{#1}{L}%               % L なら、画像と区切り余白とテキストを表示
+    \def\@tempimgL{\starter@miniimage{#2}{#3}{#4}\hspace{#5}}%
+  \else\ifstreq{#1}{R}%          % R なら、テキストと区切り余白と画像を表示
+    \def\@tempimgR{\hspace{#5}\starter@miniimage{#2}{#3}{#4}}%
+  \fi%
+  %
+  \noindent%
+  \@tempimgL%
+  \begin{minipage}[t]{\@tempdima}% minipage環境開始
+    \setlength{\parindent}{1zw}% % minipage環境内で段落開始行をインデントする
+}{%
+  \end{minipage}%                % minipage環境終了
+  \@tempimgR%
+  \par%                          % これがないと後続のテキストが続いてエラーになる
+}
+\newcommand\starter@miniimage[3]{%  #1:画像ファイル名, #2:画像の表示幅, #3:画像の領域幅
+  \begin{minipage}[t]{#3}%
+    \centering                   % 中央揃え
+    %\vskip 0pt\relax%           % 画像の上に少し余白が入る (why?)
+    \vskip -0.6zw\relax%         % 画像の上に余白が入らないよう調整
+    %\null\vspace*{-\baselineskip}%
+    \ifempty{\starterminiimageframe}%
+      \includegraphics[width=#2]{#1}%      % 画像を表示
+    \else%
+      \starterimageframe{%                 % 画像のまわりを灰色の線で囲む
+        \includegraphics[width=#2]{#1}%    % 画像を表示
+      }%
+    \fi%
+  \end{minipage}%
+}
+\def\starterminiimageframe{}
+
+
+
+%%% サンプルの出力結果（Starterのドキュメントで使用）
+\newenvironment{startersampleoutput}[1]{%
+  \starter@codeblock@vspace%
+  \starter@caption{#1}%
+  %\begin{oframed}%                    % error in note block
+  \vspace{-0.3\baselineskip}%
+  \noindent%
+  \textcolor{lightgray}{\hrulefill}\par%
+}{%
+  %\end{oframed}%                      % error in note block
+  \vspace{-0.3\baselineskip}%
+  \noindent%
+  \textcolor{lightgray}{\hrulefill}\par%
+  \starter@codeblock@vspace%
+}
+
+
+
+%%% 黒ヌキ（白い背景に黒い文字）
+%%%
+%%% 使い方: \startercursor{テキスト}
+\newcommand*{\startercursor}[1]{%
+  \starter@bgcolor[black]{white}{#1}%    % 文字を黒、背景を白にして表示
+  %\mybgcolor{white}{\textcolor{black}{#1}}%
+}%
+
+%%% 背景色（と文字色）をつける
+%%%
+%%% 使い方: \starter@bgcolor{white}{テキスト}
+%%%      or \starter@bgcolor[black]{white}{テキスト}
+\newcommand{\starter@bgcolor}[3][]{% % #1: 文字色(default: 空), #2: 背景色, #3: テキスト
+  \settowidth{\tmp@width}{#3}%       % 幅
+  \settodepth{\tmp@depth}{g}%        % 深さ
+  \settoheight{\tmp@height}{M}%      % 高さ
+  \addtolength{\tmp@height}{\tmp@depth}%  % 高さに深さを追加
+  \addtolength{\tmp@depth}{1pt}%     % 深さを少し増やす
+  \addtolength{\tmp@height}{2pt}%    % 高さを少し増やす
+  %
+  \makebox[0pt][l]{%                 % カーソル位置を変えないまま
+    \textcolor{#2}{%                 % 背景色を指定して
+      \rule[-\tmp@depth]{\tmp@width}{\tmp@height}% % 塗りつぶす
+      %\rule[-\tmp@depth]{\tmp@width}{\baselineskip}%
+    }%
+  }%
+  \ifempty{#1}%                      % 文字色が未指定なら
+    #3%                              % テキストをそのまま表示
+  \else%                             % 文字色が指定されていれば
+    \textcolor{#1}{#3}%              % 色を指定してテキストを表示
+  \fi%
+}
+
+%%% 長さを表す変数 (control sequence) を宣言
+\newlength{\tmp@width}%    % 幅
+\newlength{\tmp@height}%   % 高さ
+\newlength{\tmp@depth}%    % 深さ
+
+
+
+%%% 長いURLを折り返す（要seqsplitパッケージ）
+\newcommand{\starterurl}[2]{%
+  \href{#1}{\texttt{\seqsplit{#2}}}%
+}
+
+
+%%% 改段落する。\parindentが0でもインデントする。
+\newcommand{\starterpar}[1]{%
+  \par%
+  \edef\@tempa{#1}%
+  \edef\@tempb{i}%
+  \ifx\@tempa\@tempb%
+    \ifdim\parindent=\z@%
+      \hspace{0.8zw}%
+    \fi%
+  \fi%
+}
+
+
+%%% 定義リストの語句
+\newcommand{\starterdt}[1]{%
+  \item[{#1}]%
+  \mbox{}%                       % 幅のないテキスト
+  \par%                          % 改行がわりの改段落
+  \nobreak%                      % 語句と説明文の間での改ページを避ける
+  \noindent%                     % 説明文の先頭の段落は字下げしない
+  \setlength{\parindent}{1zw}%   % 第2段落以降は先頭行を字下げする
+}
+
+
+%%% 説明リスト
+\newenvironment{starterdesclist}{%
+  %\begin{description}%
+  \edef\@indent@{\starter@desclist@indent}% 説明文のインデント幅
+  \addvspace{\starter@desclist@listmargin}% 上部に空きを入れる
+  \addtolength{\leftskip}{\@indent@}%     % 左側の余白を設定
+  %% 箇条書き（itemize, enumerate）に対応
+  \addtolength{\@totalleftmargin}{\@indent@}% 左の空きを増やす
+  \addtolength{\linewidth}{-\@indent@}%   % 本文幅を短くする
+  %
+  \begingroup%
+    \edef\starter@desclist@listmargin{%   % 上部の空きの高さを
+      \starter@desclist@itemmargin%       % 項目間の空きの高さと同じに変更
+    }%
+}{%
+  %\end{description}%
+  \endgroup%
+  \addvspace{\starter@desclist@listmargin}% 下部に空きを入れる
+}
+
+%% starterdesc を \newcommand で定義すると、説明文の中に
+%% プログラムコードを含めるとその表示が崩れるので注意
+%% （\obeyspaces と \obeylines が効かなくなるせい、理由は不明）
+\newenvironment{starterdesc}[1]{%         % #1: キーや語句
+  %\item[{#1}]%
+  \par%
+  \addvspace{\starter@desclist@itemmargin}% 説明項目間の空き
+  \noindent%                              % 最初の段落先頭は字下げしない
+  \edef\@indent@{\starter@desclist@indent}% 説明文のインデント幅
+  \hspace{-\@indent@}%                    % インデント分だけ戻る
+  \ifx\starter@desclist@compact\empty%  % コンパクトモードでないなら、
+    \starter@desc@term{#1}%               % キーや語句を表示
+    \mbox{}\par%                          % 改行がわりの改段落
+    \nobreak%                             % 語句と説明文の間での改ページを避ける
+    \noindent%                            % 説明文の先頭の段落は字下げしない
+  \else%                                % コンパクトモードなら、
+    \settowidth{\@tempdima}{\starter@desc@term{#1}}% % 表示幅を調べる
+    \ifdim\@tempdima<\@indent@%           % 表示幅がインデント幅より短い場合は、
+      \makebox[\@indent@][l]{%            %   インデントと同じ幅で
+        \starter@desc@term{#1}%           %   キーや語句を表示
+      }%
+    \else%                                % 表示幅のほうが長い場合は、
+      \starter@desc@term{#1}%             %   そのまま表示
+    \fi%
+  \fi%
+}{%
+  \par%
+  \addvspace{\starter@desclist@itemmargin}%
+}
+
+\newcommand{\starter@desc@term}[1]{{%     % #1: キーや語句
+  \starter@desclist@font%                 % ゴシック体に変更
+  \ifx\starter@desclist@bold\empty\else%
+    \bfseries%                            % 太字に変更
+  \fi%
+  #1%                                     % キーや語句を表示
+  \hspace{\starter@desclist@space}%       % 直後に全角1文字分の空き
+}}
+
+\def\starter@desclist@font{\gtfamily\sffamily}       % キーのフォント
+
+
+%%% PDFのテキストをマウスでコピペしたときに、コピー対象外にする。
+%%% ただしAcrobatReaderでしか機能しない。macOSのPreview.appではコピーされてしまう。
+\usepackage{accsupp}
+\newcommand{\@starter@excluewhencopied}[2][]{% #1: 代替文字列、#2: 表示文字列
+  \BeginAccSupp{ActualText={#1}}%           % ここから、
+  #2%
+  \EndAccSupp{}%                            % ここまでがマウスコピー対象外
+}
+%% config-starter.ymlで「exclude_mouseselect: true」のときだけ有効化
+\ifx\starter@exclude@mouseselect\empty
+  \newcommand{\starter@excluewhencopied}[2][]{%
+    #2%                                     % コンパイルが早い
+  }
+\else
+  \newcommand{\starter@excluewhencopied}[2][]{%
+    \@starter@excluewhencopied[#1]{#2}%     % コンパイルが遅い
+  }
+\fi
+
+
+
+%%%
+%%% ノンブル（隠しノンブル）
+%%%
+\usepackage{seqsplit}                 % 「123」を「1 2 3」にするのに必要
+
+%% ノンブルの番号（1ページ目からの通し番号）
+\newcounter{starter@nombre}
+\setcounter{starter@nombre}{\starter@nombre@startnumber}
+\addtocounter{starter@nombre}{-1}
+
+%% ノンブルのフォント
+\def\starter@nombre@font{\sffamily}
+
+%% ノンブルの表示位置：ページ下から5mm、ページ左右から1mm〜2mm
+%% 参考：https://www.marusho-ink.co.jp/howto/kakushi.html
+%\def\starter@nombre@sidemargin{1truemm}           % 左右のマージン
+%\def\starter@nombre@bottommargin{5truemm}         % ページ下からのマージン
+
+%% ノンブルの表示位置を計算する
+\newcommand{\starter@nombre@setup}{{%
+  %% 塗り足しの幅（印刷用PDFのみ）
+  \def\@bleed{0pt}%
+  \def\@tempa{pbook}%
+  \ifx\starter@target\@tempa%
+    \ifx\starter@bleedsize\empty\else%
+      \def\@bleed{\starter@bleedsize}%
+    \fi%
+  \fi%
+  %% 計算結果を \@tempdima に設定するヘルパーマクロ
+  \def\@calc@##1{%
+    \setlength{\@tempdima}{##1}%      % 長さを計算
+    \edef\@tempa{\number\@tempdima}%  % 長さを整数値に変換（単位: sp）
+    \@tempcnta=\@tempa%               % 整数値をレジスタに設定
+    \divide \@tempcnta 65536 \relax%  % 単位をspからptに変換（1pt=65536sp）
+  }%
+  %% set `\starter@nombre@posy`: ノンブルのY座標は、用紙の高さ - 2mm
+  \@calc@{\dimexpr - \inv@mag in + \paperheight - \starter@nombre@bottommargin - \@bleed}%
+  \multiply \@tempcnta -1 \relax%
+  \expandafter\gdef\expandafter\starter@nombre@posy\expandafter{\the\@tempcnta}%
+  %% set `\starter@nombre@posx@odd`: 奇数ページでのノンブルのX座標は、ページ左端から1mm
+  \@calc@{\dimexpr - \inv@mag in + \starter@nombre@sidemargin + \@bleed}%
+  \expandafter\gdef\expandafter\starter@nombre@posx@odd\expandafter{\the\@tempcnta}%
+  %% set `\starter@nombre@posx@even`: 偶数ページでのノンブルのX座標は、用紙の幅 - 1mm
+  \settowidth{\@tempdimb}{{%          % ノンブルの数字1文字分の幅
+    \starter@nombre@font%
+    \fontsize{\starter@nombre@fontsize}{0}\selectfont%
+    9%
+  }}%
+  \@calc@{\dimexpr - \inv@mag in + \paperwidth - \@tempdimb - \starter@nombre@sidemargin - \@bleed}%
+  \expandafter\gdef\expandafter\starter@nombre@posx@even\expandafter{\the\@tempcnta}%
+}}
+
+%% 必要になって初めてノンブルの初期設定を行うためのマクロ
+\newcommand{\starter@nombre@setup@once}{%
+  \starter@nombre@setup%              % 初期化を行う
+  \gdef\starter@nombre@setup@once{}%  % 何もしないよう自己再定義する（注：\renewcommandでは効果ない）
+}
+
+%% ノンブルを表示する
+\newcommand{\starter@nombre@put}{{%
+  \addtocounter{starter@nombre}{1}%   % ノンブルの番号（1ページ目からの通し番号）を増やす
+  \ifodd\c@starter@nombre%            % 奇数ページなら、
+    \edef\starter@nombre@posx{\starter@nombre@posx@odd}% 奇数ページ用のX座標を使う
+  \else%                              % 偶数ページなら、
+    \edef\starter@nombre@posx{\starter@nombre@posx@even}% 偶数ページ用のX座標を使う
+  \fi%
+  %
+  \starter@nombre@font%               % フォントをサンセリフ体に変更
+  \fontsize{\starter@nombre@fontsize}{0}\selectfont% フォントサイズを小さく
+  \color{\starter@nombre@fontcolor}%  % フォントをグレーに
+  %
+  \begin{picture}(0,0)%               % ページ左上から右に1inch、下に1inch移動した位置が原点
+    \put(\starter@nombre@posx,\starter@nombre@posy){%
+      \parbox[b]{0.0em}{%             % 表示幅を半角1文字以下にすると、数字が縦に並ぶ
+        %\def\seqinsert{\hspace{0pt}}%% 例：「123」を「1\hspace{0pt}2\hspace{0pt}3」に
+        \def\seqinsert{\ }%           % 例：「123」を「1 2 3」に
+        \expandafter\seqsplit\expandafter{\the\c@starter@nombre}%  % ok!
+        %\expandafter\seqsplit\expandafter{\thestarter@nombre}%    % not ok. why?
+      }%
+    }%
+  \end{picture}%
+}}
+
+%% 印刷用PDFのときだけノンブルをつける
+\usepackage{everypage}
+\ifstreq{\starter@target}{pbook}
+  \ifx\starter@nombre\empty\else%
+    \AddEverypageHook{                % すべてのページで実行されるフック
+      \starter@nombre@setup@once      % 初期設定を1回だけ行う
+      \starter@nombre@put             % ノンブルをつける
+    }
+  \fi%
+\fi
+
+
+
+%%%
+%%% 塗り足しの確認用に可視化する
+%%%
+\newcommand{\starter@bleed@colorize}[2]{{%  #1: page width, #2: page height
+  \def\@w{#1}%
+  \def\@h{#2}%
+  \setlength{\unitlength}{0.1truemm}%  % 0.1mmを単位とする
+  \color{\starter@bleedcolor}%         % 線の色 (red/green/blue/yellow/gray)
+  \begin{picture}(0,0)%
+    \put(-224,224){%            % 1inch - 3mm = 25.4mm - 3mm = 22.4mm
+      \line(0,-1){\@h}%         % 左
+      \line(1,0){\@w}%          % 上
+    }%
+    \@tempcnta=\@w%
+    \advance \@tempcnta -224%   % 1inch - 3mm = 25.4mm - 3mm = 22.4mm
+    \@tempcntb=\@h%
+    \advance \@tempcntb -224%
+    \edef\@tempa{(\@tempcnta,-\@tempcntb)}%
+    \expandafter\put\@tempa{%
+      \line(0,1){\@h}%          % 右
+      \line(-1,0){\@w}%         % 下
+    }%
+  \end{picture}%
+}}
+
+\usepackage{everypage}
+\ifx\starter@bleedcolor\empty\else
+  %
+  \def\@tempb{A4}%                      % A4 (210x297mm)
+  \ifx\starter@pagesize\@tempb%
+    \AddEverypageHook{\starter@bleed@colorize{2100}{2970}}%
+  \fi%
+  %
+  \def\@tempb{A5}%                      % A5 (148x210mm)
+  \ifx\starter@pagesize\@tempb%
+    \AddEverypageHook{\starter@bleed@colorize{1480}{2100}}%
+  \fi%
+  %
+  \def\@tempb{B5}%                      % B5 (182x257mm)
+  \ifx\starter@pagesize\@tempb%
+    \AddEverypageHook{\starter@bleed@colorize{1820}{2570}}%
+  \fi%
+  %
+  \edef\@tempb{B6}%                     % B6 (128x182mm)
+  \ifx\starter@pagesize\@tempb%
+    \AddEverypageHook{\starter@bleed@colorize{1280}{1820}}%
+  \fi%
+  %
+\fi
+
+
+
+%%%
+%%% 表紙用PDFファイルを取り込む
+%%%
+\usepackage{pdfpages}     % provides `\includepdf` command
+\newcommand{\starterincludepdf}{%
+  \@ifstar{%                          % `\starterinclude*` として呼び出されたら
+    \def\@starterincludepdf@star{Y}%  %   変数に `Y` を設定
+    \@starter@includepdf%             %   本体のマクロを呼び出す
+  }{%                                 % `\starterinclude` として呼び出されたら
+    \def\@starterincludepdf@star{}%   %   変数を空に設定
+    \@starter@includepdf%             %   本体のマクロを呼び出す
+  }%
+  %\@starter@includepdf%              % （マクロの呼び出しを共通化したらエラー。why?）
+}
+\def\@starterinncludepdf@star{}
+\newcommand\@starter@includepdf[2][]{{% #1: オフセット, #2: ファイル名
+  \edef\@offset{#1}%
+  \ifx\@offset\empty%
+    %% フォントサイズが9ptや11ptだとPDFの位置がずれる（10ptだとずれない）ので
+    %% 位置を調整する必要があり、そのためのオフセットを計算する。
+    %% （注：\@tempdima を使うとこのあとのマクロが正常に動作してくれない）
+    \setlength{\@tempdimb}{\dimexpr 1in - 1truein}%
+    \setlength{\@tempdimc}{\dimexpr 1truein - 1in}%
+    \ifodd\thepage\else%                   % 偶数ページのときは
+      \setlength{\@tempdimb}{\@tempdimc}%  % オフセットを別途調整
+    \fi%
+  \else%
+    \def\@sprittwo##1 ##2\relax{%          % 例：文字列 `-2.3mm 2.3mm` を
+      \setlength{\@tempdimb}{##1}%         % `-2.3mm` と
+      \setlength{\@tempdimc}{##2}%         % `2.3mm` に分解する
+    }%
+    \expandafter\@sprittwo\@offset\relax%  % \@offset を展開してから \@splittwo を呼び出す
+  \fi%
+  %% 取り込むページ
+  \ifx\starter@includepdf@pagenum\empty%
+    \def\@pagenum{1}%
+  \else%
+    \def\@pagenum{\starter@includepdf@pagenum}%
+  \fi%
+  %% PDFファイルを読み込む。
+  %% ・'*' なしなら位置を自動調整し、用紙に合わせて拡大・縮小する
+  %% ・'*' つきなら位置の調整はするが、拡大も縮小もしない
+  %%   （自動的に中央に配置されるため、結果として塗りしろが用紙からはみ出る）
+  \ifx\@starterincludepdf@star\empty%    % '*' なしのとき
+    \def\@arg##1##2##3##4{[offset=##1 ##2,pages={##4}]}%
+  \else%                                 % '*' つきのとき
+    \def\@arg##1##2##3##4{[offset=##1 ##2,noautoscale=true,scale=##3,pages={##4}]}%
+  \fi%
+  \expandafter\includepdf\@arg\@tempdimb\@tempdimc\inv@mag\@pagenum{#2}%
+}}
+\def\starter@includepage@pagenum{}
+
+
+%%
+%% 索引
+%%
+\newcommand{\starterindexgroup}[1]{%  % 索引グループ
+  {%
+    \bfseries%                   % 太字
+    \gtfamily\sffamily%          % ゴシック体
+    ■#1%                        % 例：`■あ`
+  }%
+}
+%% 参考：美文書8版 第10.7節、第10.9節
+\renewcommand{\seename}{$\rightarrow$}                   % → XXXX
+%\renewcommand{\seename}{\textit{see}}                   % see XXXX
+%\renewcommand{\subitem}{\@idxitem \hspace*{1zw}}        % インデント幅を全角1文字に
+%\renewcommand{\subsubitem}{\@idxitem \hspace*{2zw}}     % インデント幅を全角2文字に
+\newcommand{\starterindexplaceholder}{%
+  %--%          % 欧文のエヌダッシュ
+  %---%         % 欧文のエムダッシュ
+  %―%          % 全角ダッシュ記号（長音記号と見分けがつきにくい）
+  \――%        % 倍角ダッシュ（defined in okumacro.sty）
+}
+
+
+%%
+%% 用語
+%%
+\newcommand{\starterterm}[1]{%
+  {\gtfamily\sffamily #1}%       % ゴシック体で表示
+}

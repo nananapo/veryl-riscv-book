@@ -1,0 +1,112 @@
+%%% -*- coding: utf-8 -*-
+
+%%%
+%%% 本文のフォントを設定
+%%%
+%%% （参考までに）
+%%% ・日本語は「明朝体」(\mcfamily)と「ゴシック体」(\gtfamily)がある。
+%%% ・英数字は「ローマン体」(\rmfamily)と「サンセリフ体」(\sffamily)と「タイプライター体」(\ttfamily)がある。
+%%% ・通常は「明朝体とローマン体」「ゴシック体とサンセリフ体」の組で使う。
+%%%
+\ifstreq{\starter@fontweight@ja}{light}
+  %% 日本語フォントの太さを細くする
+  %% （Notoフォントを使っていることが前提なので、Docker環境を使うか、
+  %%   Notoフォントを自分でインストールすること）
+  %% 参考：https://tm23forest.com/contents/veryeasy-latex-meiryo-font
+  \special{pdf:mapline uphminr-h unicode NotoSerifCJK-Light.ttc}  % 明朝体
+  \special{pdf:mapline uphgothr-h unicode NotoSansCJK-Light.ttc}  % ゴシック体
+  \special{pdf:mapline uphminb-h unicode NotoSerifCJK-Medium.ttc} % 明朝体（太字）
+  \special{pdf:mapline uphgothb-h unicode NotoSansCJK-Medium.ttc} % ゴシック体（太字）
+\else
+  %% 英数字のサンセリフ体をHelveticaに変更
+  %% （LaTeXのデフォルトであるComputerModernより少し太めなので、
+  %%   日本語フォントを細くした場合は使わないほうがいい）
+  \renewcommand{\sfdefault}{phv}
+\fi
+\ifstreq{\starter@fontweight@en}{light}
+  %% 英語のローマン体フォントを細いものに変更
+  %% 参考：https://tug.org/FontCatalogue/sourceserifprolight/
+  %%       https://tug.org/FontCatalogue/iwonalight/
+  \usepackage[light,math]{iwona}
+  \renewcommand{\bfdefault}{bx}    % 日本語の太字が効くように修正(iwona)
+  %\usepackage[light,semibold]{sourceserifpro}
+  %\renewcommand{\bfseries@rm}{bx} % 日本語の太字が効くように修正(sourceserifpro)
+  %% 英語のサンセリフ体フォントを細いものに変更
+  %% 参考：https://tug.org/FontCatalogue/robotolight/
+  %%       https://tug.org/FontCatalogue/firasanslight/
+  \usepackage[light,medium]{roboto}
+  %\usepackage[light]{FiraSans}
+  \renewcommand{\bfseries@sf}{bx}  % 日本語の太字が効くように修正(roboto,FiraSans)
+\fi
+\ifstreq{\starter@fontfamily@ja}{gothic}
+  \renewcommand\kanjifamilydefault{\gtdefault} % 日本語のデフォルトをゴシック体に変更
+\fi
+\ifstreq{\starter@fontfamily@en}{sansserif}
+  \renewcommand\familydefault{\sfdefault}      % 英数字のデフォルトをサンセリフ体に変更
+  %% 英数字のデフォルトフォントを細いサンセリフ体に変更しても、
+  %% 脚注の英数字が細くならないバグを回避するハック
+  %% see https://twitter.com/_kauplan/status/1223641864189857793
+  \let\original@@footnotetext=\@footnotetext
+  \long\def\@footnotetext#1{%
+    \original@@footnotetext{{\mdseries #1}}%   % フォントの太さを明示する
+  }
+\fi
+
+
+
+%%% プログラムやターミナルの表示で使う等幅フォント。
+%%% 参考： http://www.tug.dk/FontCatalogue/typewriterfonts.html
+
+%%% 等幅フォントを読み込む
+\newcommand\starter@loadttfont[2]{%       % #1: 等幅フォント名、#2: 実行するコード
+  \ifstreq{\starter@program@ttfont}{#1}   % プログラム用等幅フォント名が第1引数と一致したら
+    #2                                    % 第2引数を実行
+  \fi
+  \ifstreq{\starter@terminal@ttfont}{#1}  % ターミナル用等幅フォント名が第1引数と一致したら
+    #2                                    % 第2引数を実行
+  \fi
+}
+
+%%% lmodern … LaTeXのデフォルト。1とl、0とOが見分けにくい。太字が目立たない。
+\starter@loadttfont{lmodern}{
+  \usepackage{lmodern}
+}
+%%% lmodern-lighttt … 細字にするオプションをつけたlmodern。太字が目立つ。
+\starter@loadttfont{lmodern-lighttt}{
+  \usepackage[lighttt]{lmodern}
+  %\usepackage{lmodern}
+  %\let\lmtt@use@light@as@normal\@empty    % enable 'lighttt' option
+}
+%%% courier … 文字が細い。文字幅が広め。1とl、0とOが見分けにくい。
+\starter@loadttfont{courier}{
+  \usepackage{courier}
+}
+%%% beramono … 1とl、0とOが見分けやすい。「'」と「`」が見分けにくい。
+\starter@loadttfont{beramono}{
+  \usepackage[scaled]{beramono}
+}
+%%% inconsolata … 文字幅が狭め。0と0が見分けやすい、varlつけると1とlが見分けやすい。
+\starter@loadttfont{inconsolata}{
+  \usepackage[varl,varqu,mono]{inconsolata}
+}
+%%% inconsolata-narrow … 文字幅をより狭くするオプションをつけたinconsolata。
+\starter@loadttfont{inconsolata-narrow}{
+  %\usepackage[varl,varqu,mono,narrow]{inconsolata}
+  \usepackage[varl,varqu,mono]{inconsolata}
+  \def\zifour@narrow{n}                   % enable 'narrow' option
+}
+
+%%% 指定した等幅フォントを有効にする
+\newcommand{\starter@enablettfont}[1]{
+  \iffalse
+  \else\ifstreq{#1}{beramono}           \renewcommand{\ttdefault}{fvm}
+  \else\ifstreq{#1}{inconsolata}        \renewcommand{\ttdefault}{zi4}
+  \else\ifstreq{#1}{inconsolata-narrow} \renewcommand{\ttdefault}{zi4}
+  \else\ifstreq{#1}{lmodern}            \renewcommand{\ttdefault}{lmtt}
+  \else\ifstreq{#1}{lmodern-lighttt}    \renewcommand{\ttdefault}{lmtt}
+  \else\ifstreq{#1}{courier}            \renewcommand{\ttdefault}{pcr}
+  \fi
+}
+
+%%% デフォルトの等幅フォントとしてプログラム用（//list）のものを使う
+\starter@enablettfont{\starter@program@ttfont}
