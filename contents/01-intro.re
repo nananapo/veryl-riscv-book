@@ -30,7 +30,7 @@ Eの場合はレジスタの数が16個になります。
 CPUが何を実装しているかを示す表現にISA Stringというものがあり、
 例えばかけ算と割り算, 不可分操作ができるRV32IのCPUは@<code>{RV32IMA}と表現されます。
 
-本書では@<code>{RV32I}の単純なCPUを@<code>{RV64IMACFD_Zicond_Zicsr_Zifencei}に進化させることを目標に実装を進めます。
+本書では、まず@<code>{RV32I}のCPUを作成し、これを@<code>{RV64IMACFD_Zicond_Zicsr_Zifencei}に進化させることを目標に実装を進めます。
 
 =={section} 使用する言語
 

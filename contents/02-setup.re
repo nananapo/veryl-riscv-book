@@ -13,10 +13,5 @@ vscodeの拡張
 
 == riscv-gnu-toolchain
 
-== 参考実装(bluecore)
-
+== 参考実装
 clone
-
-tagは@<code>{book-sec4}
-
-== Gowin EDA

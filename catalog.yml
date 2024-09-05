@@ -13,12 +13,13 @@ CHAPS:
   - 01-intro.re
   - 02-setup.re
   - 03-veryl.re
-  - 04-bluecore.re
-  - 05-impl-log.re
-  - 06-impl-rv64i.re
+  - 04-impl-rv32i.re
+  - 05-impl-rv64i.re
 
 ## 付録
 APPENDIX:
+  - old-04-bluecore.re
+  - old-05-impl-log.re
 
 ## あとがき
 POSTDEF:
