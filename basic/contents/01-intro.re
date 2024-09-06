@@ -90,4 +90,4 @@ OSを実行するために、かけ算, 不可分操作, 圧縮命令, 例外, �
 これは3万円程度でAliExpressで購入することができます。
 ただし、実機がなくても実装を進めることができるので所有していなくても構いません。
 
-//image[tangmega138k][使用するFPGA(TangMega138K)][width=100%]
+#@# //image[tangmega138k][使用するFPGA(TangMega138K)][width=100%]

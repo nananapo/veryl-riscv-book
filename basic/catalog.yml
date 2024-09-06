@@ -7,10 +7,10 @@
 ## まえがき
 PREDEF:
   - 00-preface.re
+  - 01-intro.re
 
 ## 本文
 CHAPS:
-  - 01-intro.re
   - 基本編:
     - 02-setup.re
     - 03-veryl.re
