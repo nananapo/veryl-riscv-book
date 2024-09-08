@@ -1,0 +1,1 @@
+sudo docker run --rm -v $(pwd):/work -v /etc/group:/etc/group:ro -v /etc/passwd:/etc/passwd:ro -u $(id -u $USER):$(id -g $USER) -w /work kauplan/review2.5 find contents -type f -exec review-preproc --replace {} \;

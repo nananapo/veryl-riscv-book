@@ -33,7 +33,7 @@ CHAPS:
 ## 付録
 APPENDIX:
   # - old-04-bluecore.re
-  - old-05-impl-log.re
+  # - old-05-impl-log.re
 
 ## あとがき
 POSTDEF:
