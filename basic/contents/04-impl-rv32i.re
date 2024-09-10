@@ -174,15 +174,13 @@ RV32Iにおいて命令の幅は32ビットです。
 import eei::*;
 
 interface membus_if {
-    type DataType = UInt32;
-
-    var valid : logic   ;
-    var ready : logic   ;
-    var addr  : Addr    ;
-    var wen   : logic   ;
-    var wdata : DataType;
-    var rvalid: logic   ;
-    var rdata : DataType;
+    var valid : logic ;
+    var ready : logic ;
+    var addr  : Addr  ;
+    var wen   : logic ;
+    var wdata : UInt32;
+    var rvalid: logic ;
+    var rdata : UInt32;
 
     modport master {
         valid : output,
@@ -233,16 +231,15 @@ interfaceを利用することで、レジスタやワイヤの定義が不要�
 import eei::*;
 
 module memory #(
-    param MEMORY_WIDTH: u32    = 20, // メモリのサイズ
-    param FILE_PATH   : string = "" // メモリの初期値が格納されたファイルのパス
-    ,
+    param MEMORY_WIDTH: u32 = 20, // メモリのサイズ
 ) (
-    clk   : input   clock           ,
-    rst   : input   reset           ,
-    membus: modport membus_if::slave,
+    clk      : input   clock           ,
+    rst      : input   reset           ,
+    membus   : modport membus_if::slave,
+    FILE_PATH: input   string          , // メモリの初期値が格納されたファイルのパス
 ) {
 
-    var mem: membus_if::DataType [2 ** MEMORY_WIDTH];
+    var mem: UInt32 [2 ** MEMORY_WIDTH];
 
     // Addrをmemのインデックスに変換する関数
     function addr_to_memaddr (
@@ -319,20 +316,18 @@ memレジスタにおけるインデックスに変換しています。
 #@mapfile(scripts/04/memif/core/src/top.veryl)
 import eei::*;
 
-module top #(
-    param MEM_FILE_PATH: string = "",
-) (
-    clk: input clock,
-    rst: input reset,
+module top (
+    clk          : input clock ,
+    rst          : input reset ,
+    MEM_FILE_PATH: input string,
 ) {
     inst membus: membus_if;
 
-    inst mem: memory #(
+    inst mem: memory (
+        clk                     ,
+        rst                     ,
+        membus                  ,
         FILE_PATH: MEM_FILE_PATH,
-    ) (
-        clk     ,
-        rst     ,
-        membus  ,
     );
 }
 #@end
@@ -408,6 +403,7 @@ module core (
 //}
 
 @<code>{if_pc}レジスタはPC(プログラムカウンタ)です。
+ここで@<code>{if_}というprefixはinstruction fetchの略です。
 @<code>{if_is_requested}で現在フェッチ中かどうかを管理しており、
 フェッチ中のアドレスを@<code>{if_pc_requested}に格納しています。
 
@@ -423,7 +419,7 @@ module core (
 フェッチ中かつ@<code>{membus.rvalid}が@<code>{1}のときは命令フェッチが完了しています。
 その場合は、メモリがreadyならすぐに次の命令フェッチを開始します。
 
-これにより、0,4,8,c,10,...という順番で次々に命令をフェッチするようになっています。
+これにより、0,4,8,c,10,...という順番のアドレスの命令を次々にフェッチするようになっています。
 
 上から2つめの@<code>{always_ff}ブロックはデバッグ用のプログラムです。
 命令フェッチが完了したときにその結果を@<code>{$display}システムタスクによって出力します。
@@ -441,7 +437,7 @@ module core (
 #@end
 //}
 
-=== フェッチのテスト
+=== 命令フェッチのテスト
 
 ここまでのプログラムが正しく動くかを検証します。
 
@@ -458,35 +454,127 @@ $ @<userinput>{veryl build} @<balloon>{ビルドする}
 @<code>{core.f}は生成されたSystemVerilogのプログラムファイルのリストです。
 これをシミュレータのビルドに利用します。
 
-Verilatorでのシミュレーションの実行のためにC++プログラムを作成します。
-@<code>{src/test_verilator.cpp}を作成し、次のように記述します。
+シミュレータのビルドにはVerilatorを利用します。
+Verilatorは与えられたSystemVerilogプログラムをC++プログラムに変換することでシミュレータを生成します。
+verilatorを利用するために、次のようなC++プログラムを書く必要があります。
 
-//list[test_verilator.cpp][test_verilator.cpp]{
-にゃ
+@<code>{src/tb_verilator.cpp}を作成し、次のように記述します。
+
+//list[test_verilator.cpp][tb_verilator.cpp]{
+#@mapfile(scripts/04/verilator-tb/core/src/tb_verilator.cpp)
+#include <iostream>
+#include <filesystem>
+#include <verilated.h>
+#include "Vcore_top.h"
+
+namespace fs = std::filesystem;
+
+int main(int argc, char** argv) {
+    Verilated::commandArgs(argc, argv);
+
+    if (argc < 2) {
+        std::cout << "Usage: " << argv[0] << " MEMORY_FILE_PATH [CYCLE]" << std::endl;
+        return 1;
+    }
+
+    // メモリの初期値を格納しているファイル名
+    std::string memory_file_path = argv[1];
+    try {
+        // 絶対パスに変換する
+        fs::path absolutePath = fs::absolute(memory_file_path);
+        memory_file_path = absolutePath.string();
+    } catch (const std::exception& e) {
+        std::cerr << "Invalid memory file path : " << e.what() << std::endl;
+        return 1;
+    }
+
+    // シミュレーションを実行するクロックサイクル数
+    unsigned long long cycles = 0;
+    if (argc >= 3) {
+        std::string cycles_string = argv[2];
+        try {
+            cycles = stoull(cycles_string);
+        } catch (const std::exception& e) {
+            std::cerr << "Invalid number: " << argv[2] << std::endl;
+            return 1;
+        }
+    }
+
+    Vcore_top *dut = new Vcore_top();
+    dut->MEM_FILE_PATH = memory_file_path;
+
+    // reset
+    dut->clk = 0;
+    dut->rst = 1;
+    dut->eval();
+    dut->rst = 0;
+    dut->eval();
+
+    // loop
+    dut->rst = 1;
+    for (long long i=0; cycles == 0 || i / 2 < cycles; i++) {
+        dut->clk = !dut->clk;
+        dut->eval();
+    }
+
+    dut->final();
+}
+#@end
 //}
 
-このC++プログラムでは、
-topモジュール(プログラム中ではVtopクラス)をインスタンス化し、
+このC++プログラムはtopモジュール(プログラム中ではVtop_coreクラス)をインスタンス化し、
 そのクロックを反転して実行するのを繰り返しています。
 
-利用できるパラメータは次の通りです。
+このプログラムはコマンドライン引数として次の2つの値を受け取ります。
 
- : -time, -t
-	何クロックで実行を終了するか。
-	0のときは終了しない。
-	デフォルト値は0。
-
- : -memory, -m
+ : MEMORY_FILE_PATH
 	メモリの初期値のファイルへのパス。
-	デフォルト値は""。
+	実行時にtopモジュールのMEM_FILE_PATHパラメータに渡されます。
+
+ : CYCLE
+	何クロックで実行を終了するかを表す値。
+	0のときは終了しません。デフォルト値は0です。
+
+Verilatorによるシミュレーションは、トップモジュールのクロック信号を変更して@<code>{eval}関数を呼び出すことにより実行します。
+プログラムでは@<code>{clk}を反転させて@<code>{eval}するループの前にtopモジュールをリセットする必要があるため、
+topモジュールの@<code>{rst}を1にして@<code>{eval}を実行し、
+@<code>{rst}を0にしてまた@<code>{eval}を実行し、
+@<code>{rst}を1にもどしてから@<code>{clk}を反転しています。
+
+==== シミュレータのビルド
 
 @<code>{verilator}コマンドを実行し、シミュレータをビルドします。
 
 //terminal[build.simulator][シミュレータのビルド]{
-$ verilator にゃ
+$ verilator --cc -f core.f --exe src/tb_verialtor.cpp --top-module top --Mdir obj_dir
+$ make -C obj_dir -f Vcore_top.mk @<balloon>{シミュレータをビルドする}
+$ mv obj_dir/Vcore_top obj_dir/sim @<balloon>{シミュレータの名前をsimに変更する}
 //}
 
-上記のコマンドの実行により、シミュレータが@<code>{にゃ}に生成されました。
+@<code>{verilator --cc}コマンドに次のコマンドライン引数を渡して実行することで、
+シミュレータを生成するためのプログラムが@<code>{obj_dir}に生成されます。
+
+ : -f
+	SystemVerilogプログラムのファイルリストを指定します。
+	今回は@<code>{core.f}を指定しています。
+
+ : --exe
+	実行可能なシミュレータの生成に使用する、main関数が含まれたC++プログラムを指定します。
+	今回は@<code>{src/tb_verilator.cpp}を指定しています。
+
+ : --top-module
+	トップモジュールを指定します。
+	今回は@<code>{top}モジュールを指定しています。
+
+ : --Mdir
+	成果物の生成先を指定します。
+	今回は@<code>{obj_dir}フォルダに指定しています。
+
+
+上記のコマンドの実行により、シミュレータが@<code>{obj_dir/sim}に生成されました。
+
+==== メモリの初期化用ファイルの作成
+
 シミュレータを実行する前にメモリの初期値となるファイルを作成します。
 @<code>{src/sample.hex}を作成し、次のように記述します。
 
@@ -497,6 +585,7 @@ $ verilator にゃ
 deadbeef
 cafebebe
 #@end
+@<balloon>{必ず末尾に改行をいれてください}
 //}
 
 値は16進数で4バイトずつ記述されています。
@@ -513,37 +602,367 @@ cafebebe
 00000010~	不定
 //}
 
-生成されたシミュレータを実行し、0, 4, 8, cのデータが正しくフェッチされていることを確認します。
+==== シミュレータの実行
+
+生成されたシミュレータを実行し、アドレスが0, 4, 8, cのデータが正しくフェッチされていることを確認します。
 
 //terminal[check-memory][命令フェッチの動作チェック]{
-$ Vtop -t 6 -m sample.hex
-実行結果
+$ obj_dir/sim src/sample.hex 4
+00000000 : 01234567
+00000004 : 89abcdef
+00000008 : deadbeef
+0000000c : cafebebe
 //}
 
 メモリファイルのデータが4バイトずつ読み込まれていることが確認できます。
+
+==== Makefileの作成
 
 ビルド、シミュレータのビルドのために一々コマンドを打つのは面倒です。
 これらの作業を一つのコマンドで済ますために、@<code>{Makefile}を作成し、次のように記述します。
 
 //list[Makefile][Makefile]{
+#@mapfile(scripts/04/verilator-tb/core/Makefile)
+PROJECT = core
+FILELIST = $(PROJECT).f
+
+TOP_MODULE = top
+TB_PROGRAM = src/tb_verilator.cpp
+OBJ_DIR = obj_dir/
+SIM_NAME = sim
+
+build:
+        veryl fmt
+        veryl build
+
+clean:
+        veryl clean
+        rm -f src/*.sv.map
+        rm -rf $(OBJ_DIR)
+
+sim:
+        verilator --cc -f $(FILELIST) --exe $(TB_PROGRAM) --top-module $(PROJECT)_$(TOP_MODULE) --Mdir $(OBJ_DIR)
+        make -C $(OBJ_DIR) -f V$(PROJECT)_$(TOP_MODULE).mk
+        mv $(OBJ_DIR)/V$(PROJECT)_$(TOP_MODULE) $(OBJ_DIR)/$(SIM_NAME)
+#@end
 //}
 
 これ以降、次のようにビルドやシミュレータのビルドができるようになります。
 
 //terminal[build.command][Makefileによって追加されたコマンド]{
-$ @<userinput>{make build} @<balloon>{ビルド}
+$ @<userinput>{make build} @<balloon>{Verylプログラムのビルド}
 $ @<userinput>{make sim} @<balloon>{シミュレータのビルド}
 $ @<userinput>{make clean} @<balloon>{ビルドした成果物の削除}
 //}
 
+=== フェッチした命令をFIFOに格納する
+
+==== FIFOの作成
+
+フェッチした命令は次々に実行されますが、その命令が何クロックで実行されるかは分かりません。
+命令が常に1クロックで実行される場合は現状の常にフェッチし続けるようなコードで問題ありませんが、
+例えばメモリにアクセスする命令は実行に何クロックかかるか分からないため、
+フェッチされた次の命令を保持しておくバッファを用意しておく必要があります。
+
+そこで、FIFOを作成して、フェッチした命令を格納します。@<code>{src/fifo.veryl}を作成し、次のように記述します。
+
+//list[fifo.veryl][fifo.veryl]{
+#@mapfile(scripts/04/if-fifo/core/src/fifo.veryl)
+module fifo #(
+    param DATA_TYPE: type = logic,
+    param WIDTH    : u32  = 2    ,
+) (
+    clk   : input  clock    ,
+    rst   : input  reset    ,
+    wready: output logic    ,
+    wvalid: input  logic    ,
+    wdata : input  DATA_TYPE,
+    rready: input  logic    ,
+    rvalid: output logic    ,
+    rdata : output DATA_TYPE,
+) {
+    type Ptr = logic<WIDTH>;
+
+    var mem : DATA_TYPE [2 ** WIDTH];
+    var head: Ptr                   ;
+    var tail: Ptr                   ;
+
+    let tail_plus1: Ptr = tail + 1;
+
+    always_comb {
+        rvalid = head != tail;
+        rdata  = mem[head];
+        wready = tail_plus1 != head;
+    }
+
+    always_ff {
+        if wready && wvalid {
+            mem[tail] = wdata;
+            tail      = tail + 1;
+        }
+        if rready && rvalid {
+            head = head + 1;
+        }
+    }
+}
+#@end
+//}
+
+fifoモジュールは、@<code>{DATA_TYPE}型のデータを@<code>{2 ** WIDTH - 1}個格納することができるFIFOです。
+操作は次のように行います。
+
+ : データを追加する
+    @<code>{wready}が@<code>{1}のとき、データを追加することができます。
+    データを追加するためには、追加したいデータを@<code>{wdata}に格納し、@<code>{wvalid}を@<code>{1}にします。
+    追加したデータは次のクロック以降に取り出すことができます。
+
+ : データを取り出す
+    @<code>{rready}が@<code>{1}のとき、データを取り出すことができます。
+    データを取り出すことができるとき、@<code>{rdata}にデータが出力されています。
+    @<code>{rvalid}を@<code>{1}にすることで、FIFOにデータを取り出したことを通知することができます。
+
+@<code>{head}レジスタと@<code>{tail}レジスタによってデータの格納状況を管理しています。
+データを書き込むとき、つまり@<code>{wready && wvalid}のとき、@<code>{tail = tail + 1}しています。
+データを取り出すとき、つまり@<code>{rready && rvalid}のとき、@<code>{head = head + 1}しています。
+
+データを書き込める状況とは、@<code>{tail}に1を足しても@<code>{head}を超えない、
+つまり、@<code>{tail}が指す場所が一周してしまわないときです。
+この制限から、FIFOには最大でも@<code>{2 ** WIDTH - 1}個しかデータを格納することができません。
+データを取り出せる状況とは、@<code>{head}と@<code>{tail}の指す場所が違うときです。
+
+==== 命令フェッチ処理の変更
+
+fifoモジュールを使って、次のように命令フェッチ処理を変更します。
+
+まず、fifoモジュールをインスタンス化します。
+
+//list[if-fifo-inst][fifoモジュールのインスタンス化]{
+#@maprange(scripts/04/if-fifo-range/core/src/core.veryl,inst_fifo)
+    // ifのFIFOのデータ型
+    struct if_fifo_type {
+        addr: Addr,
+        bits: Inst,
+    }
+
+    // FIFOの制御用レジスタ
+    var if_fifo_wready: logic       ;
+    var if_fifo_wvalid: logic       ;
+    var if_fifo_wdata : if_fifo_type;
+    var if_fifo_rready: logic       ;
+    var if_fifo_rvalid: logic       ;
+    var if_fifo_rdata : if_fifo_type;
+
+    // フェッチした命令を格納するFIFO
+    inst if_fifo: fifo #(
+        DATA_TYPE: if_fifo_type,
+        WIDTH    : 3           ,
+    ) (
+        clk                   ,
+        rst                   ,
+        wready: if_fifo_wready,
+        wvalid: if_fifo_wvalid,
+        wdata : if_fifo_wdata ,
+        rready: if_fifo_rready,
+        rvalid: if_fifo_rvalid,
+        rdata : if_fifo_rdata ,
+    );
+#@end
+//}
+
+まず、FIFOに入れるデータの型として@<code>{if_fifo_type}という構造体を定義します。
+@<code>{if_fifo_type}には、命令のアドレス(@<code>{addr})と命令のビット列(@<code>{bits})を格納するためのメンバーが含まれています。
+
+次に、fifoモジュールとデータの受け渡しをするための変数を定義し、fifoモジュールを@<code>{if_fifo}という名前でインスタンス化しています。
+@<code>{DATA_TYPE}パラメータに@<code>{if_fifo_type}を渡すことでアドレスと命令のペアを格納することができるようにし、
+@<code>{WIDTH}に@<code>{3}と指定することで、サイズを@<code>{2 ** 3 - 1 = 7}にしています。
+このサイズは適当です。
+
+fifoモジュールを用意したので、メモリへフェッチ指令を送る処理を変更します。
+
+//list[change-fetch-if][フェッチ処理の変更]{
+#@maprange(scripts/04/if-fifo-range/core/src/core.veryl,fetch)
+    // 命令フェッチ処理
+    always_comb {
+        // FIFOに空きがあるとき、命令をフェッチする
+        membus.valid = if_fifo_wready; @<balloon>{1をif_fifo_wreadyに変更}
+        membus.addr  = if_pc;
+        membus.wen   = 0;
+        membus.wdata = 'x; // wdataは使用しない
+
+        // 常にFIFOから命令を受け取る
+        if_fifo_rready = 1;
+    }
+#@end
+//}
+
+上のコードでは、メモリに命令フェッチを要求する条件をFIFOに空きがあるという条件に変更しています。
+これにより、FIFOがあふれてしまうことがなくなります。
+また、とりあえずFIFOから常にデータを取り出すようにしています。
+
+次に、命令をフェッチできたらFIFOに格納するようにします。
+
+//list[fifo_ctrl][FIFOへのデータの格納]{
+    always_ff {
+            ...
+#@maprange(scripts/04/if-fifo-range/core/src/core.veryl,fifo_ctrl)
+            // IFのFIFOの制御
+            if if_is_requested && membus.rvalid { @<balloon>{フェッチできた時}
+                if_fifo_wvalid     = 1;
+                if_fifo_wdata.addr = if_pc_requested;
+                if_fifo_wdata.bits = membus.rdata;
+            } else {
+                if if_fifo_wvalid && if_fifo_wready { @<balloon>{FIFOにデータを格納できる時}
+                    if_fifo_wvalid = 0;
+                }
+            }
+#@end
+//}
+
+上のコードを@<code>{always_ff}ブロックの中に追加します。
+また、@<code>{if_fifo_wvalid}と@<code>{if_fifo_wdata}を@<code>{if_reset}内で0に初期化してください。
+
+フェッチができた時、@<code>{if_fifo_wvalid}レジスタの値を@<code>{1}にして、
+@<code>{if_fifo_wdata}レジスタにフェッチした命令とアドレスを格納します。
+これにより、次のクロック以降のFIFOに空きがあるタイミングでデータが追加されます。
+
+それ以外の時、FIFOにデータを格納しようとしていてFIFOに空きがあるとき、
+@<code>{if_fifo_wvalid}を@<code>{0}にすることでデータの追加を完了します。
+
+命令フェッチはFIFOに空きがあるときにのみ行うため、
+まだ追加されていないデータが@<code>{if_fifo_wdata}レジスタに格納されていても別のデータに上書きされてしまうことはありません。
+
+//list[fifo-debug][命令を表示する]{
+#@maprange(scripts/04/if-fifo-range/core/src/core.veryl,debug)
+    let inst_pc  : Addr = if_fifo_rdata.addr;
+    let inst_bits: Inst = if_fifo_rdata.bits;
+
+    always_ff {
+        if if_fifo_rvalid {
+            $display("%h : %h", inst_pc, inst_bits);
+        }
+    }
+#@end
+//}
+
+命令を表示するコードを上のように変更し、シミュレータを実行しましょう。
+FIFOに格納して取り出すクロック分だけ命令が表示されるまでに遅延があることに注意してください。
+
+//terminal[sim-fifo][FIFOをテストする]{
+$ make build sim
+$ obj_dir/sim src/sample.hex 6 @<balloon>{TODO クロック数}
+00000000 : 01234567
+00000004 : 89abcdef
+00000008 : deadbeef
+0000000c : cafebebe
+//}
+
 == 命令のデコードと即値の生成
 
-次に各命令がどのような意味を持つのかを、命令のビットをチェックすることで取得します。
+命令をフェッチすることができたら、
+フェッチした命令がどのような意味を持つかをチェックし、
+CPUが何をすればいいかを判断するためのフラグや値を生成します。
+この作業のことを、命令のデコードと呼びます。
 
-RV32Iでは、次の形の命令フォーマットが定義されています。
-ここに各形式の簡単な説明。
+RISC-Vにはいくつかの命令の形式がありますが、RV32IにはR, I, S, B, U, Jの6つの形式の命令が存在しています。
 
-デコード処理を書く前に、デコードの結果生成する列挙子と構造体を@<code>{src/ctrl.veryl}に定義します。
+//image[riscv-inst-types][RISC-Vの命令形式 (引用元: The RISC-V Instruction Set Manual Volume I: Unprivileged Architecture version 20240411 2.3. Immediate Encoding Variants)]{
+//}
+
+ : R形式
+	ソースレジスタ(rs1, rs2)が2つ、デスティネーションレジスタ(rd)が1つの命令形式です。
+	2つのソースレジスタの値を使って計算し、その結果をデスティネーションレジスタに格納します。
+	例えばADD, SUB命令に使用されています。
+
+ : I形式
+	ソースレジスタ(rs1)が1つ、デスティネーションレジスタ(rd)が1つの命令形式です。
+	12ビットの即値(@<code>{imm[11:0]})が命令中に含まれており、これとrs1を使って計算し、
+	その結果をデスティネーションレジスタに格納します。
+	例えばADDI, SUBI命令に使用されています。
+
+ : S形式
+	ソースレジスタ(rs1, rs2)が2つ、デスティネーションレジスタ(rd)が1つの命令形式です。
+	12ビットの即値(@<code>{imm{11:5], imm[4:0]})が命令中に含まれており、
+	これとソースレジスタを使って計算やメモリにアクセスし、
+	その結果をデスティネーションレジスタに格納します。
+	例えばSW命令(メモリにデータを格納する命令)に使用されています。
+
+ : B形式
+	ソースレジスタ(rs1, rs2)が2つの命令形式です。
+	12ビットの即値(@<code>{imm[12], imm[11], imm[10:5], imm[4:1]})が命令中に含まれています。
+	分岐命令に使用されており、
+	ソースレジスタの計算の結果が分岐を成立させる場合、
+	即値を使ってジャンプします。
+
+ : U形式
+	デスティネーションレジスタ(rd)が1つの命令形式です。
+	20ビットの即値(@<code>{imm[31:12]})が命令中に含まれています。
+	例えばLUI命令(レジスタの上位20ビットを設定する命令)に使用されています。
+
+ : J形式
+	デスティネーションレジスタ(rd)が1つの命令形式です。
+	20ビットの即値(@<code>{imm[20], imm[19:12], imm[11], imm[10:1]})が命令中に含まれています。
+	例えばJAL命令(ジャンプ命令)に使用されており、
+	PCに即値を足した相対位置にジャンプします。
+
+全ての命令形式には@<code>{opcode}が共通して存在しています。
+命令の判別には@<code>{opcode}、@<code>{funct3}、@<code>{funct7}を利用します。
+
+=== デコード用の定数、構造体の定義
+
+デコード処理を書く前に、デコードに利用する定数や構造体を定義します。
+
+@<code>{src/corectrl.veryl}を作成し、次のように記述します。
+
+//list[ctrl.veryl.decode][corectrl.veryl]{
+#@mapfile(scripts/04/id/core/src/corectrl.veryl)
+import eei::*;
+
+package corectrl {
+    // 命令形式を表す列挙型
+    enum InstType: logic<6> {
+        X = 6'b000000,
+        R = 6'b000001,
+        I = 6'b000010,
+        S = 6'b000100,
+        B = 6'b001000,
+        U = 6'b010000,
+        J = 6'b100000,
+    }
+
+    // 制御に使うフラグ用の構造体
+    struct InstCtrl {
+        itype    : InstType   , // 命令の形式
+        rwb_en   : logic      , // レジスタに書き込むかどうか
+        is_lui   : logic      , // LUI命令である
+        is_aluop : logic      , // ALUを利用する命令である
+        is_jump  : logic      , // ジャンプ命令である
+        is_load  : logic      , // ロード命令である
+        is_system: logic      , // CSR命令である
+        is_fence : logic      , // フェンス命令である
+        funct3   : logic   <3>, // 命令のfunct3フィールド
+        funct7   : logic   <7>, // 命令のfunct7フィールド
+    }
+}
+#@end
+//}
+
+//list[opcode.eei][eei.verylに追加記述]{
+#@maprange(scripts/04/id-range/core/src/eei.veryl, opcode)
+    // opcode
+    const OP_OP_IMM  : logic<7> = 7'b0010011;
+    const OP_LUI     : logic<7> = 7'b0110111;
+    const OP_AUIPC   : logic<7> = 7'b0010111;
+    const OP_OP      : logic<7> = 7'b0110011;
+    const OP_JAL     : logic<7> = 7'b1101111;
+    const OP_JALR    : logic<7> = 7'b1100111;
+    const OP_BRANCH  : logic<7> = 7'b1100011;
+    const OP_LOAD    : logic<7> = 7'b0000011;
+    const OP_STORE   : logic<7> = 7'b0100011;
+    const OP_MISC_MEM: logic<7> = 7'b0001111;
+    const OP_SYSTEM  : logic<7> = 7'b1110011;
+#@end
+//}
+
 
 まず、形式を示すenumを作成します。
 
@@ -552,7 +971,68 @@ RV32Iでは、次の形の命令フォーマットが定義されています。
 追加で、構造体を引数にとって、それがどのような命令であるかを判別する関数を作成しておきます。
 
 それでは、命令のデコード処理を書きます。
-デコーダとして、@<code>{src/decode.veryl}を定義します。
+デコーダとして、@<code>{src/inst_decoder.veryl}を定義します。
+
+//list[inst_decoder.veryl][inst_decoder.veryl]{
+#@mapfile(scripts/04/id/core/src/inst_decoder.veryl)
+import eei::*;
+import corectrl::*;
+
+module inst_decoder (
+    bits: input  Inst    ,
+    ctrl: output InstCtrl,
+    imm : output UIntX   ,
+) {
+    // 即値の生成
+    let imm_i_g: logic<12> = bits[31:20];
+    let imm_s_g: logic<12> = {bits[31:25], bits[11:7]};
+    let imm_b_g: logic<12> = {bits[31], bits[7], bits[30:25], bits[11:8]};
+    let imm_u_g: logic<20> = bits[31:12];
+    let imm_j_g: logic<20> = {bits[31], bits[19:12], bits[20], bits[30:21]};
+    let imm_z_g: logic<17> = bits[31:15]; // {csr address, uimm}
+
+    let imm_i: UIntX = {imm_i_g[msb] repeat XLEN - $bits(imm_i_g), imm_i_g};
+    let imm_s: UIntX = {imm_s_g[msb] repeat XLEN - $bits(imm_s_g), imm_s_g};
+    let imm_b: UIntX = {imm_b_g[msb] repeat XLEN - $bits(imm_b_g) - 1, imm_b_g, 1'b0};
+    let imm_u: UIntX = {imm_u_g[msb] repeat XLEN - $bits(imm_u_g) - 12, imm_u_g, 12'b0};
+    let imm_j: UIntX = {imm_j_g[msb] repeat XLEN - $bits(imm_j_g) - 1, imm_j_g, 1'b0};
+    let imm_z: UIntX = {1'b0 repeat XLEN - $bits(imm_z_g), imm_z_g};
+
+    let op: logic<7> = bits[6:0];
+    let f7: logic<7> = bits[31:25];
+    let f3: logic<3> = bits[14:12];
+
+    const T: logic = 1'b1;
+    const F: logic = 1'b0;
+
+    always_comb {
+        imm = case op {
+            OP_LUI, OP_AUIPC                        : imm_u,
+            OP_JAL                                  : imm_j,
+            OP_JALR, OP_LOAD, OP_OP_IMM, OP_MISC_MEM: imm_i,
+            OP_BRANCH                               : imm_b,
+            OP_STORE                                : imm_s,
+            OP_SYSTEM                               : imm_z,
+            default                                 : 'x,
+        };
+        ctrl = {case op {
+            OP_LUI     : {InstType::U, T, T, F, F, F, F, F},
+            OP_AUIPC   : {InstType::U, T, F, F, F, F, F, F},
+            OP_JAL     : {InstType::J, T, F, F, T, F, F, F},
+            OP_JALR    : {InstType::I, T, F, F, T, F, F, F},
+            OP_BRANCH  : {InstType::B, F, F, F, F, F, F, F},
+            OP_LOAD    : {InstType::I, T, F, F, F, T, F, F},
+            OP_STORE   : {InstType::S, F, F, F, F, F, F, F},
+            OP_OP      : {InstType::R, T, F, T, F, F, F, F},
+            OP_OP_IMM  : {InstType::I, T, F, T, F, F, F, F},
+            OP_MISC_MEM: {InstType::I, F, F, F, F, F, F, T},
+            OP_SYSTEM  : {InstType::I, T, F, F, F, F, T, F},
+            default    : {InstType::X, F, F, F, F, F, F, F},
+        }, f3, f7};
+    }
+}
+#@end
+//}
 
 decodeモジュールでは、受け取った命令のOPビットを確認し、その値によってInstType, InstCtrl, 即値を設定しています。
 処理の振り分けにはcase文を使用しています。
@@ -570,7 +1050,7 @@ coreモジュールに、レジスタを定義します。
 
 RV32Iの命令は、最大で2個のレジスタの値を同時に読み出します。
 命令の中のレジスタのアドレスを示すビットの場所は共通で、rs1, rs2, rdで示されています。
-このうち、rs1, rs2はソースレジスタ、rdはディスティネーションレジスタ(結果の書き込み先)です。
+このうち、rs1, rs2はソースレジスタ、rdはデスティネーションレジスタ(結果の書き込み先)です。
 
 簡単のために、命令がレジスタを使用するか否かにかかわらず、常にレジスタの値を読み出すことにします。
 0番目のレジスタが指定されたときは、レジスタを読み込まずに0を読み込んでいます。
