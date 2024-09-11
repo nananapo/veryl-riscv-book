@@ -52,6 +52,8 @@ CPUはプログラムを実行しますが、
 計算対象のデータにレジスタと即値のどれを使うかは命令によって異なります。
 レジスタの番号は命令のビット列の中に含まれています。
 
+計算を実行するユニット(部品)のことを、ALU(Arithmetic Logic Unit)といいます。
+
 計算やメモリアクセスが終わると、その結果をレジスタに格納します。
 例えば足し算を行う命令なら足し算の結果が、
 メモリから値を読み込む命令なら読み込まれた値が格納されます。
@@ -277,9 +279,9 @@ memoryモジュールには次のパラメータが定義されています。
 	メモリのサイズは32ビット * (2 ** MEMORY_WIDTH)になります。
 
  : FILE_PATH
-	メモリの初期値が格納されたファイルのパスです。
-	指定しない場合は""になり初期化されません。
-	初期化は$readmemhシステムタスクで行います。
+    メモリの初期値が格納されたファイルのパスです。
+    初期化は$readmemhシステムタスクで行います。
+    (ポートとして定義していますが、本書ではパラメータとして扱います。)
 
 読み込み、書き込み時の動作は次の通りです。
 
@@ -589,7 +591,7 @@ cafebebe
 //}
 
 値は16進数で4バイトずつ記述されています。
-シミュレーションを実行すると、このファイルはmemoryモジュールの@<code>{readmemh}システムタスクによって読み込ます。
+シミュレーションを実行すると、このファイルはmemoryモジュールの@<code>{$readmemh}システムタスクによって読み込みます。
 それにより、メモリは次のように初期化されます。
 
 //table[sample.hex.initial][sample.hexによって設定されるメモリの初期値]{
@@ -795,7 +797,8 @@ fifoモジュールを用意したので、メモリへフェッチ指令を送�
 #@end
 //}
 
-上のコードでは、メモリに命令フェッチを要求する条件をFIFOに空きがあるという条件に変更しています。
+上のコードでは、メモリに命令フェッチを要求する条件を、
+FIFOに空きがあるという条件に変更しています。
 これにより、FIFOがあふれてしまうことがなくなります。
 また、とりあえずFIFOから常にデータを取り出すようにしています。
 
@@ -845,11 +848,11 @@ fifoモジュールを用意したので、メモリへフェッチ指令を送�
 //}
 
 命令を表示するコードを上のように変更し、シミュレータを実行しましょう。
-FIFOに格納して取り出すクロック分だけ命令が表示されるまでに遅延があることに注意してください。
+命令がフェッチされて表示されるまでに、FIFOに格納して取り出すクロック分だけ遅延があることに注意してください。
 
 //terminal[sim-fifo][FIFOをテストする]{
 $ make build sim
-$ obj_dir/sim src/sample.hex 6 @<balloon>{TODO クロック数}
+$ obj_dir/sim src/sample.hex 7
 00000000 : 01234567
 00000004 : 89abcdef
 00000008 : deadbeef
@@ -907,10 +910,9 @@ RISC-Vにはいくつかの命令の形式がありますが、RV32IにはR, I, 
 全ての命令形式には@<code>{opcode}が共通して存在しています。
 命令の判別には@<code>{opcode}、@<code>{funct3}、@<code>{funct7}を利用します。
 
-=== デコード用の定数、構造体の定義
+=== 定数と型の定義
 
-デコード処理を書く前に、デコードに利用する定数や構造体を定義します。
-
+デコード処理を書く前に、デコードに利用する定数と型を定義します。
 @<code>{src/corectrl.veryl}を作成し、次のように記述します。
 
 //list[ctrl.veryl.decode][corectrl.veryl]{
@@ -946,7 +948,19 @@ package corectrl {
 #@end
 //}
 
-//list[opcode.eei][eei.verylに追加記述]{
+@<code>{InstType}は、命令の形式を表すための列挙型です。
+@<code>{InstType}の幅は6ビットで、それぞれのビットに1つの命令形式が対応しています。
+どの命令形式にも対応しない場合、すべてのビットが0の@<code>{InstType::X}を対応させます。
+
+@<code>{InstCtrl}は、制御に使うフラグを列挙するための構造体です。
+@<code>{itype}には命令の形式、@<code>{funct3}, @<code>{funct7}には、
+それぞれ命令の@<code>{funct3}, @<code>{funct3}フィールドを格納します。
+これ以外の構造体のメンバーについては、使用するときに説明します。
+
+命令をデコードするとき、まずopcodeを使って判別します。
+このために、デコードに使う定数を@<code>{eei}パッケージに記述します。
+
+//list[opcode.eei][eei.verylに追加で記述する]{
 #@maprange(scripts/04/id-range/core/src/eei.veryl, opcode)
     // opcode
     const OP_OP_IMM  : logic<7> = 7'b0010011;
@@ -963,15 +977,13 @@ package corectrl {
 #@end
 //}
 
+これらの値とそれぞれの命令の対応については、
+仕様書Volume Iの@<code>{37. RV32/64G Instruction Set Listings}を確認してください。
 
-まず、形式を示すenumを作成します。
+=== デコードと即値の生成
 
-次に、命令がどのような操作を行うかを示す構造体を作成します。
-
-追加で、構造体を引数にとって、それがどのような命令であるかを判別する関数を作成しておきます。
-
-それでは、命令のデコード処理を書きます。
-デコーダとして、@<code>{src/inst_decoder.veryl}を定義します。
+デコード処理を書く準備が整いました。
+@<code>{src/inst_decoder.veryl}を作成し、次のように記述します。
 
 //list[inst_decoder.veryl][inst_decoder.veryl]{
 #@mapfile(scripts/04/id/core/src/inst_decoder.veryl)
@@ -1034,26 +1046,210 @@ module inst_decoder (
 #@end
 //}
 
-decodeモジュールでは、受け取った命令のOPビットを確認し、その値によってInstType, InstCtrl, 即値を設定しています。
-処理の振り分けにはcase文を使用しています。
+inst_decoderモジュールは、
+命令のビット列@<code>{bits}を受け取り、
+制御信号@<code>{ctrl}と即値@<code>{imm}を出力します。
 
-decodeモジュールをcoreモジュールでインスタンス化します。
-命令のデコード結果を表示し、次のように表示されているか確認してください。
+==== 即値の生成
+
+B形式の命令について考えます。
+まず、命令のビット列から即値部分を取り出して、@<code>{imm_b_g}ワイヤを生成します。
+B形式の命令内に含まれている即値は12ビットで、最上位ビットは符号ビットです。
+最上位ビットを繰り返す(符号拡張する)ことによって、32ビットの即値@<code>{imm_b}を生成します。
+
+@<code>{imm_z}はCSR命令で使用する即値をまとめたものです。
+これについては後の章で説明します。
+
+@<code>{always_comb}ブロックでは、
+opcodeをcase式で分岐することにより@<code>{imm}ポートに適切な即値を出力しています。
+
+==== 制御フラグの生成
+
+opcodeがOP-IMMな命令、例えばADDI命令について考えます。
+ADDI命令は、即値とソースレジスタの値を足し、
+デスティネーションレジスタに結果を格納する命令です。
+
+@<code>{always_comb}ブロックでは、
+opcodeが@<code>{OP_OP_IMM}のとき、次のように制御信号@<code>{ctrl}を設定します。
+
+ * 命令形式@<code>{itype}を@<code>{InstType::I}に設定します
+ * @<code>{funct3}, @<code>{funct7}を命令中のビットをそのまま設定します 
+ * 結果をレジスタに書き込むため、@<code>{rwb_en}を@<code>{1}に設定します
+ * ALU(計算を実行するユニット)を利用するため、@<code>{is_aluop}を@<code>{1}に設定します。
+ * それ以外のメンバーは@<code>{0}に設定します。
+
+=== デコーダのインスタンス化
+
+inst_decoderモジュールを、@<code>{core}モジュールでインスタンス化します。
+
+//list[core.veryl.id][inst_decoderのインスタンス化(core.veryl)]{
+#@maprange(scripts/04/id-range/core/src/core.veryl,inst)
+    let inst_pc  : Addr     = if_fifo_rdata.addr;
+    let inst_bits: Inst     = if_fifo_rdata.bits;
+    var inst_ctrl: InstCtrl;
+    var inst_imm : UIntX   ;
+
+    inst decoder: inst_decoder (
+        bits: inst_bits,
+        ctrl: inst_ctrl,
+        imm : inst_imm ,
+    );
+#@end
+//}
+
+まず、デコーダとcoreモジュールを接続するために@<code>{inst_ctrl}と@<code>{inst_imm}を定義します。
+次に、inst_decoderモジュールをインスタンス化します。
+@<code>{bits}ポートに@<code>{inst_bits}を渡すことで、フェッチした命令をデコードします。
+
+//list[core.veryl.id.debug][デコード結果の表示プログラム(core.veryl)]{
+#@maprange(scripts/04/id-range/core/src/core.veryl,debug)
+    always_ff {
+        if if_fifo_rvalid {
+            $display("%h : %h", inst_pc, inst_bits);
+            $display("  itype   : %b", inst_ctrl.itype);
+            $display("  imm     : %h", inst_imm);
+        }
+    }
+#@end
+//}
+
+デバッグ用の@<code>{always_ff}ブロックに、デコードした結果を表示するプログラムを記述します。
+
+@<code>{sample.hex}をメモリの初期値として使い、デコード結果を確認します。
+
+//terminal[sim-id][デコーダのテスト]{
+$ @<userinput>{make build sim}
+$ @<userinput>{obj_dir/sim src/sample.hex 7}
+00000000 : 01234567
+  itype   : 000010
+  imm     : 00000012
+00000004 : 89abcdef
+  itype   : 100000
+  imm     : fffbc09a
+00000008 : deadbeef
+  itype   : 100000
+  imm     : fffdb5ea
+0000000c : cafebebe
+  itype   : 000000
+  imm     : 00000000
+//}
+
+例えば@<code>{01234567}は、@<code>{jalr x10, 18(x6)}という命令のビット列になります。
+命令の種類はJALRで、命令形式はI形式、即値は10進数で@<code>{18}です。
+デコード結果を確認すると、
+@<code>{itype}が@<code>{0000010}、
+@<code>{imm}が@<code>{00000012}に   なっており、正しくデコードできていることが確認できます。
 
 == レジスタの定義と読み込み
 
-最初に説明した通り、RV32Iでは32ビット幅のレジスタが32個用意されています。
+RV32Iの仕様では、32ビット幅のレジスタが32個用意されています。
 0番目のレジスタの値は常に0です。
 
+命令を実行するとき、実行に使うデータをレジスタ番号で指定することがあります。
+実行に使うデータとなるレジスタのことを、ソースレジスタと呼びます。
+また、命令の結果を、指定された番号のレジスタに格納することがあります。
+このために使われるレジスタのことを、デスティネーションレジスタと呼びます。
+
 coreモジュールに、レジスタを定義します。
-初期値を0に設定しておきます。
+RV32Iのレジスタの幅はXLEN(=32)ビットです。
+よって、サイズが32の@<code>{UIntX}型のレジスタの配列を定義します。
 
-RV32Iの命令は、最大で2個のレジスタの値を同時に読み出します。
-命令の中のレジスタのアドレスを示すビットの場所は共通で、rs1, rs2, rdで示されています。
-このうち、rs1, rs2はソースレジスタ、rdはデスティネーションレジスタ(結果の書き込み先)です。
+//list[core.reg.define][レジスタの定義 (core.veryl)]{
+#@maprange(scripts/04/reg-range/core/src/core.veryl,define)
+    // レジスタ
+    var regfile: UIntX<32>;
+#@end
+//}
 
-簡単のために、命令がレジスタを使用するか否かにかかわらず、常にレジスタの値を読み出すことにします。
-0番目のレジスタが指定されたときは、レジスタを読み込まずに0を読み込んでいます。
+レジスタをまとめたもののことをレジスタファイルと呼ぶため、@<code>{regfile}という名前をつけています。
+
+@<img>{riscv-inst-types}を見るとわかるように、
+RISC-Vの命令は形式によってソースレジスタの数が異なります。
+例えば、R形式はソースレジスタが2つで、2つのレジスタのデータを使って実行されます。
+それに対して、I形式のソースレジスタは1つです。
+I形式の命令の実行には、ソースレジスタのデータと即値を利用します。
+
+レジスタを定義したので、命令が使用するレジスタのデータを取得します。
+命令のビット列の中のソースレジスタの番号の場所は、命令形式が違っても共通の場所にあります。
+
+ここで、プログラムを簡単にするために、
+命令中のソースレジスタの番号にあたる場所に、
+常にソースレジスタの番号が書かれていると解釈します。
+更に、命令がレジスタのデータを利用するかどうかに関係なく、
+常にレジスタのデータを読み込むことにします。
+
+//list[core.reg.use][命令が使うレジスタのデータを取得する (core.veryl)]{
+#@maprange(scripts/04/reg-range/core/src/core.veryl,use)
+    // レジスタ番号
+    let rs1_addr: logic<5> = inst_bits[19:15];
+    let rs2_addr: logic<5> = inst_bits[24:20];
+
+    // ソースレジスタのデータ
+    let rs1_data: UIntX = if rs1_addr == 0 {
+        0
+    } else {
+        regfile[rs1_addr]
+    };
+    let rs2_data: UIntX = if rs2_addr == 0 {
+        0
+    } else {
+        regfile[rs2_addr]
+    };
+#@end
+//}
+
+@<code>{if}式により、0番目のレジスタが指定されたときは、常に0になるようにします。
+
+レジスタの値を読み込めていることを確認するために、
+次のように記述します。
+
+//list[core.reg.debug][レジスタの値を表示する (core.veryl)]{
+#@maprange(scripts/04/reg-range/core/src/core.veryl,debug)
+    always_ff {
+        if if_fifo_rvalid {
+            $display("%h : %h", inst_pc, inst_bits);
+            $display("  itype   : %b", inst_ctrl.itype);
+            $display("  imm     : %h", inst_imm);
+            $display("  rs1[%d] : %h", rs1_addr, rs1_data);
+            $display("  rs2[%d] : %h", rs2_addr, rs2_data);
+        }
+    }
+#@end
+//}
+
+@<code>{$display}システムタスクで、命令のレジスタ番号とデータを表示します。
+早速動作のテストをしたいところですが、今のままだとレジスタのデータが初期化されておらず、
+0番目のレジスタのデータ以外は不定(0か1か分からない)になってしまいます。
+
+これではテストする意味がないため、レジスタの値を適当な値に初期化します。
+
+//list[core.reg.init][レジスタの値を初期化する (core.veryl)]{
+#@maprange(scripts/04/reg-range/core/src/core.veryl,init)
+    // レジスタの初期化
+    always_ff {
+        if_reset {
+            for i: i32 in 0..32 {
+                regfile[i] = i + 100;
+            }
+        }
+    }
+#@end
+//}
+
+上のコードでは、@<code>{always_ff}ブロックの@<code>{if_reset}で、
+n番目(32 > n > 0)のレジスタの値を@<code>{n + 100}で初期化しています。
+
+//terminal[reg.debug][レジスタ読み込みのデバッグ]{
+$ @<userinput>{make build sim}
+$ @<userinput>{obj_dir/sim sample.hex 7}
+TODO にゃ
+//}
+
+@<code>{01234567}は@<code>{jalr x10, 18(x6)}です。
+JALR命令は、2つのソースレジスタ@<code>{x10}と@<code>{x6}を使用します。
+それぞれ、レジスタ番号は@<code>{10}, @<code>{6}であるため、
+値は@<code>{110}, @<code>{106}になります。
+これが、シミュレーションと一致していることを確認してください。
 
 == ALU
 
