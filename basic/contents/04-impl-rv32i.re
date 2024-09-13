@@ -1249,12 +1249,15 @@ TODO にゃ
 JALR命令は、2つのソースレジスタ@<code>{x10}と@<code>{x6}を使用します。
 それぞれ、レジスタ番号が@<code>{10}, @<code>{6}であることを表しており、
 値は@<code>{110}, @<code>{106}になります。
+それぞれ16進数で@<code>{TODO}, @<code>{TODO}です。
 これが、シミュレーションと一致していることを確認してください。
 
 == ALUを作り、計算する
 
 命令は足し算や引き算、ビット演算などの計算を行います。
 計算の対象となるデータが揃ったので、ALU(計算する部品)を作成します。
+
+=== ALUの作成
 
 データの幅は@<code>{XLEN}です。
 計算には、符号付き整数と符号なし整数向けの計算があります。
@@ -1408,11 +1411,13 @@ case文でfunct3によって計算を区別します。
 ALUに渡すデータを用意したので、aluモジュールをインスタンス化します。
 結果を受け取る用の変数として、@<code>{alu_result}を指定します。
 
+=== ALUのテスト
+
 最後にALUが正しく動くことを確認します。
 @<code>{always_ff}ブロックで、
 @<code>{op1}, @<code>{op2}, @<code>{alu_result}を表示します。
 
-//list[core.veryl.alu.debug][ALUのデバッグ (core.veryl)]{
+//list[core.veryl.alu.debug][ALUの結果表示 (core.veryl)]{
 #@maprange(scripts/04/alu-range/core/src/core.veryl,debug)
     always_ff {
         if if_fifo_rvalid {
@@ -1480,41 +1485,218 @@ TODO
 	2番目のレジスタは@<code>{102}として初期化しているので、@<code>{TODO}と表示されています。
 	ALUの計算結果として、これを足した結果@<code>{TODO}が表示されています。
 
-== レジスタに値を書き込む
+== レジスタに結果を書き込む
 
 CPUはレジスタから値を読み込み、これを計算して、レジスタに結果の値を書き戻します。
 レジスタに値を書き戻すことを、ライトバックと言います。
 
+ライトバックする値は、計算やメモリアクセスの結果です。
+まだメモリにアクセスする処理を実装していませんが、先にライトバック処理を実装します。
+
 === ライトバックの実装
 
-計算やメモリアクセスが終わったら、その結果をレジスタに書き込みます。
-書き込む対象のレジスタはrd番目のレジスタです。
-書き込むかどうかはInstCtrl.reg_wenで表されます。
+書き込む対象のレジスタは、命令の@<code>{rd}フィールドによって番号で指定します。
+デコード時に、ライトバックする命令化どうかを@<code>{InstCtrl.rwb_en}に格納しています。
+(inst_decoderモジュールを確認してください)
 
-プログラム
+//list[core.veryl.wb][ライトバック処理の実装 (core.veryl)]{
+#@maprange(scripts/04/wb-range/core/src/core.veryl,wb)
+    let rd_addr: logic<5> = inst_bits[11:7];
+    let wb_data: UIntX    = alu_result;
+
+    always_ff {
+        if_reset {
+            for i: i32 in 0..32 {
+                regfile[i] = i + 100;
+            }
+        } else {
+            if if_fifo_rvalid && inst_ctrl.rwb_en {
+                regfile[rd_addr] = wb_data;
+            }
+        }
+    }
+#@end
+//}
 
 === ライトバックのテスト
 
-ここで、プログラムをテストしましょう。
+@<code>{always_ff}ブロックに、ライトバック処理の概要を表示するプログラムを記述します。
+処理している命令がライトバックする命令のときにのみ、@<code>{$display}システムコールを呼び出します。
 
-メモリに格納されている命令は～なので、結果が～になることを確認できます。
+//list[core.veryl.wb.test][結果の表示 (core.veryl)]{
+#@maprange(scripts/04/wb-range/core/src/core.veryl,debug)
+            if inst_ctrl.rwb_en {
+                $display("  reg[%d] <= %h", rd_addr, wb_data);
+            }
+#@end
+//}
 
+シミュレータを実行し、結果を確かめます。
 
-== ロード、ストア命令
+//terminal[wb.test][ライトバックのデバッグ]{
+$ @<userinput>{make build sim}
+$ @<userinput>{obj_dir/sim sample.hex 6}
+00000000 : 02000093
+  itype     : 000010
+  imm       : 00000020
+  rs1[ 0]   : 00000000
+  rs2[ 0]   : 00000000
+  op1       : 00000000
+  op2       : 00000020
+  alu res   : 00000020
+  reg[ 1] <= 00000020
+00000004 : 00100117
+  itype     : 010000
+  imm       : 00100000
+  rs1[ 0]   : 00000000
+  rs2[ 1]   : 00000020
+  op1       : 00000004
+  op2       : 00100000
+  alu res   : 00100004
+  reg[ 2] <= 00100004
+00000008 : 002081b3
+  itype     : 000001
+  imm       : 00000000
+  rs1[ 1]   : 00000020
+  rs2[ 2]   : 00100004
+  op1       : 00000020
+  op2       : 00100004
+  alu res   : 00100024
+  reg[ 3] <= 00100024
+//}
 
-=== LW, SW命令
-RISC-Vにはメモリのデータを読み込む/書き込む命令として次の命令があります。
+ : addi x1, x0, 32
+    x1に、0と32を足した結果を格納しています。
 
-表
+ : auipc x2, 256
+    x2に、PCと256を足した結果を格納しています。
 
-これらの命令で指定するメモリのアドレスは足し算です。
-先ほど作ったALUは、ALUを使用する命令ではない場合は常に足し算を行うため、ALUの結果をアドレスとして利用できます。
+ : add x3, x1, x2
+    x1は1つ目の命令で@<code>{00000020}に、
+    x2は2つ目の命令で@<code>{00100004}にされています。
+    x3に、x1とx2を足した結果@<code>{00100024}を格納しています。
+
+おめでとうございます！
+このCPUは整数演算命令の実行ができるようになりました。
+
+== ロード命令とストア命令の実装
+
+RV32Iには、メモリのデータをロードする(読み込む), 
+ストアする(書き込む)命令として次の命令があります。
+
+//table[ls.insts][ロード命令, ストア命令]{
+命令    作用
+-------------------------------------------------------------
+LB      8ビットのデータを読み込む。上位24ビットは符号拡張する
+LBU     8ビットのデータを読み込む。上位24ビットは0とする
+LH      16ビットのデータを読み込む。上位16ビットは符号拡張する
+LHU     16ビットのデータを読み込む。上位16ビットは0とする
+LW      32ビットのデータを読み込む
+SB      8ビットのデータを書き込む
+SH      16ビットのデータを書き込む
+SW      32ビットのデータを書き込む
+//}
+
+ロード命令はI形式、ストア命令はS形式です。
+これらの命令で指定するメモリのアドレスは、rs1と即値の足し算です。
+ALUに渡すデータがrs1と即値になっていることを確認してください(@<list>{core.reg.use})。
+
+=== LW, SW命令の実装
 
 まず32ビット単位で読み書きを行うLW, SW命令を実装します。
+メモリ操作を行うモジュールを@<code>{memunit.veryl}に記述します。
 
-メモリ操作を行うモジュールを@<code>{memunit.veryl}に定義します。
+//list[memunit.veryl.lwsw][memunit.veryl]{
+#@mapfile(scripts/04/lwsw/core/src/memunit.veryl)
+import eei::*;
+import corectrl::*;
 
-プログラム
+module memunit (
+    clk   : input   clock            ,
+    rst   : input   reset            ,
+    valid : input   logic            ,
+    is_new: input   logic            , // 命令が新しく供給されたかどうか
+    ctrl  : input   InstCtrl         , // 命令のInstCtrl
+    addr  : input   Addr             , // アクセスするアドレス
+    rs2   : input   UIntX            , // ストア命令で書き込むデータ
+    rdata : output  UIntX            , // ロード命令の結果 (stall = 0のときに有効)
+    stall : output  logic            , // メモリアクセス命令が完了していない
+    membus: modport membus_if::master, // メモリとのinterface
+) {
+
+    // 命令がメモリにアクセスする命令か判別する関数
+    function inst_is_memop (
+        ctrl: input InstCtrl,
+    ) -> logic    {
+        return ctrl.itype == InstType::S || ctrl.is_load;
+    }
+
+    // 命令がストア命令か判別する関数
+    function inst_is_store (
+        ctrl: input InstCtrl,
+    ) -> logic    {
+        return inst_is_memop(ctrl) && !ctrl.is_load;
+    }
+
+    // memunitの状態を表す列挙型
+    enum State: logic<2> {
+        Init, // 命令を受け付ける状態
+        WaitReady, // メモリが操作可能になるのを待つ状態
+        WaitValid, // メモリ操作が終了するのを待つ状態
+    }
+
+    var state: State;
+
+    var req_wen  : logic ;
+    var req_addr : Addr  ;
+    var req_wdata: UInt32;
+
+    always_comb {
+        // メモリアクセス
+        membus.valid = state == State::WaitReady;
+        membus.addr  = req_addr;
+        membus.wen   = req_wen;
+        membus.wdata = req_wdata;
+        // loadの結果
+        rdata = membus.rdata;
+        // stall判定
+        stall = valid & case state {
+            State::Init     : is_new && inst_is_memop(ctrl),
+            State::WaitReady: 1,
+            State::WaitValid: !membus.rvalid,
+            default         : 0,
+        };
+    }
+
+    always_ff {
+        if_reset {
+            state     = State::Init;
+            req_wen   = 0;
+            req_addr  = 0;
+            req_wdata = 0;
+        } else {
+            if valid {
+                case state {
+                    State::Init: if is_new & inst_is_memop(ctrl) {
+                                     state     = State::WaitReady;
+                                     req_wen   = inst_is_store(ctrl);
+                                     req_addr  = addr;
+                                     req_wdata = rs2;
+                                 }
+                    State::WaitReady: if membus.ready {
+                                          state = State::WaitValid;
+                                      }
+                    State::WaitValid: if membus.rvalid {
+                                          state = State::Init;
+                                      }
+                    default: {}
+                }
+            }
+        }
+    }
+}
+#@end
+//}
 
 memunitモジュールでは、命令がメモリ命令の時、ALUから受け取ったアドレスをメモリに渡して操作を実行します。
 書き込み命令の時は、書き込む値をmemif.wdataに設定し、memif.wenを1に設定します。
@@ -1533,7 +1715,7 @@ topモジュールに、ロードストアと命令フェッチが同時に要�
 
 アラインの例外について注記を入れる
 
-=== LH[U], LB[U], SH, SB命令
+=== LH[U], LB[U], SH, SB命令の実装
 
 ロード、ストア命令には、2バイト単位, 1バイト単位での読み書きを行う命令も存在します。
 
