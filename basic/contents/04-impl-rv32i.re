@@ -1247,23 +1247,258 @@ TODO にゃ
 
 @<code>{01234567}は@<code>{jalr x10, 18(x6)}です。
 JALR命令は、2つのソースレジスタ@<code>{x10}と@<code>{x6}を使用します。
-それぞれ、レジスタ番号は@<code>{10}, @<code>{6}であるため、
+それぞれ、レジスタ番号が@<code>{10}, @<code>{6}であることを表しており、
 値は@<code>{110}, @<code>{106}になります。
 これが、シミュレーションと一致していることを確認してください。
 
-== ALU
+== ALUを作り、計算する
 
-ALUとは、Arithmetic Logic Unitの略で、CPUの計算を行う部分です。
-ALUは足し算や引き算、シフト命令などの計算を行います。
-ALUでどの計算を行うかは、funct3, funct5によって判別します。
+命令は足し算や引き算、ビット演算などの計算を行います。
+計算の対象となるデータが揃ったので、ALU(計算する部品)を作成します。
 
-@<code>{alu.veryl}を作成し、次のように記述します。
+データの幅は@<code>{XLEN}です。
+計算には、符号付き整数と符号なし整数向けの計算があります。
+これに利用するために、eeiモジュールに@<code>{XLEN}ビットの符号あり整数型を定義します。
+
+//list[eei.veryl.sint][XLENビットの符号付き整数を定義する (eei.veryl)]{
+#@maprange(scripts/04/alu-range/core/src/eei.veryl,define)
+    type SIntX  = signed logic<XLEN>;
+    type SInt32 = signed logic<32>  ;
+    type SInt64 = signed logic<64>  ;
+#@end
+//}
+
+次に、@<code>{src/alu.veryl}を作成し、次のように記述します。
+
+//list[alu.veryl.all][alu.veryl]{
+#@mapfile(scripts/04/alu/core/src/alu.veryl)
+import eei::*;
+import corectrl::*;
+
+module alu (
+    ctrl  : input  InstCtrl,
+    op1   : input  UIntX   ,
+    op2   : input  UIntX   ,
+    result: output UIntX   ,
+) {
+    let add: UIntX = op1 + op2;
+    let sub: UIntX = op1 - op2;
+
+    let srl: UIntX = op1 >> op2[4:0];
+    let sra: SIntX = $signed(op1) >>> op2[4:0];
+
+    always_comb {
+        if ctrl.is_aluop {
+            case ctrl.funct3 {
+                3'b000: result = if ctrl.itype == InstType::I | ctrl.funct7 == 0 {
+                            add // ADD, ADDI
+                        } else {
+                            sub // SUB
+                        };
+                3'b001: result = op1 << op2[4:0]; // SLL, SLLI
+                3'b010: result = {1'b0 repeat XLEN - 1, $signed(op1) <: $signed(op2)}; // SLT, SLTI
+                3'b011: result = {1'b0 repeat XLEN - 1, op1 <: op2}; // SLTU, SLTUI
+                3'b100: result = op1 ^ op2; // XOR, XORI
+                3'b101: result = if ctrl.funct7 == 0 {
+                            srl // SRL, SRLI
+                        } else {
+                            sra // SRA, SRAI
+                        };
+                3'b110 : result = op1 | op2; // OR, ORI
+                3'b111 : result = op1 & op2; // AND, ANDI
+                default: result = 'x;
+            }
+        } else {
+            result = add;
+        }
+    }
+}
+#@end
+//}
+
+@<code>{alu}モジュールには、次のポートを定義します。
+
+//table[alu.veryl.port][aluモジュールのポート定義]{
+ポート名	方向	型	用途	
+-------------------------------------------------------------
+ctrl	input	InstCtrl	制御用信号
+op1		input	UIntX		1つ目のデータ
+op2 	input	UIntX		2つ目のデータ
+result	output	UIntX		結果
+//}
+
+命令がALUでどのような計算を行うかは命令の種別によって異なります。
+RV32Iでは、仕様書の@<code>{2.4. Integer Computational Instructions}(整数演算命令)に定義されている命令は、
+命令のfunct3, funct7フィールドによって計算の種類を特定することができます。
+
+それ以外の命令は、CSR命令を除いて足し算しか行いません。
+そのため、デコード時に整数演算命令とそれ以外の命令を@<code>{InstCtrl.is_aluop}で区別し、
+整数演算命令以外は常に足し算を行うようにしています。
+具体的には、@<code>{opcode}がOPかOP-IMMの命令の@<code>{InstCtrl.is_aluop}を@<code>{1}にしています。
+(inst_decoderモジュールを確認してください)
+
+@<code>{always_comb}ブロックでは、
+case文でfunct3によって計算を区別します。
+それだけでは区別できないとき、funct7を使用します。
+
+//list[core.veryl.alu.data][ALUに渡すデータの用意 (core.veryl)]{
+#@maprange(scripts/04/alu-range/core/src/core.veryl,data)
+    // ALU
+    var op1       : UIntX;
+    var op2       : UIntX;
+    var alu_result: UIntX;
+
+    always_comb {
+        case inst_ctrl.itype {
+            InstType::R, InstType::B: {
+                                          op1 = rs1_data;
+                                          op2 = rs2_data;
+                                      }
+            InstType::I, InstType::S: {
+                                          op1 = rs1_data;
+                                          op2 = inst_imm;
+                                      }
+            InstType::U, InstType::J: {
+                                          op1 = inst_pc;
+                                          op2 = inst_imm;
+                                      }
+            default: {
+                         op1 = 'x;
+                         op2 = 'x;
+                     }
+        }
+    }
+#@end
+//}
+
+次に、ALUに渡すデータを用意します。
+@<code>{UIntX}型の変数@<code>{op1}, @<code>{op2}, @<code>{alu_result}を定義し、
+@<code>{always_comb}ブロックで値を割り当てます。
+割り当てるデータは命令形式によって次のように異なります。
+
+ : R形式, B形式
+	R形式, B形式は、レジスタのデータとレジスタのデータの演算を行います。
+	@<code>{op1}, @<code>{op2}は、レジスタのデータ@<code>{rs1_data}, @<code>{rs2_data}になります。
+
+ : I形式, S形式
+	I形式, S形式は、レジスタのデータと即値の演算を行います。
+	@<code>{op1}, @<code>{op2}は、それぞれレジスタのデータ@<code>{rs1_data}, 即値@<code>{inst_imm}になります。
+	S形式はメモリのストア命令に利用されており、
+	レジスタのデータと即値を足し合わせた値がアクセスするアドレスになります。
+
+ : U形式, J形式
+	U形式, J形式は、即値とPCを足した値、または即値を使う命令に使われています。
+	@<code>{op1}, @<code>{op2}は、それぞれPC@<code>{inst_pc}, 即値@<code>{inst_imm}になります。
+	J形式はJAL命令に利用されており、即値とPCを足した値がジャンプ先になります。
+	U形式はAUIPC命令とLUI命令に利用されています。
+	AUIPC命令は、即値とPCを足した値をデスティネーションレジスタに格納します。
+	LUI命令は、即値をそのままデスティネーションレジスタに格納します。
+
+//list[core.veryl.alu.inst][ALUのインスタンス化 (core.veryl)]{
+#@maprange(scripts/04/alu-range/core/src/core.veryl,inst)
+    inst alum: alu (
+        ctrl  : inst_ctrl ,
+        op1               ,
+        op2               ,
+        result: alu_result,
+    );
+#@end
+//}
+
+ALUに渡すデータを用意したので、aluモジュールをインスタンス化します。
+結果を受け取る用の変数として、@<code>{alu_result}を指定します。
+
+最後にALUが正しく動くことを確認します。
+@<code>{always_ff}ブロックで、
+@<code>{op1}, @<code>{op2}, @<code>{alu_result}を表示します。
+
+//list[core.veryl.alu.debug][ALUのデバッグ (core.veryl)]{
+#@maprange(scripts/04/alu-range/core/src/core.veryl,debug)
+    always_ff {
+        if if_fifo_rvalid {
+            $display("%h : %h", inst_pc, inst_bits);
+            $display("  itype   : %b", inst_ctrl.itype);
+            $display("  imm     : %h", inst_imm);
+            $display("  rs1[%d] : %h", rs1_addr, rs1_data);
+            $display("  rs2[%d] : %h", rs2_addr, rs2_data);
+            $display("  op1     : %h", op1); @<balloon>{追加}
+            $display("  op2     : %h", op2); @<balloon>{追加}
+            $display("  alu res : %h", alu_result); @<balloon>{追加}
+        }
+    }
+#@end
+//}
+
+@<code>{sample.hex}を次のように書き換えます。
+
+//list[sample.hex.debug][sample.hexを書き換える]{
+#@mapfile(scripts/04/alu/core/src/sample.hex)
+02000093 // addi x1, x0, 32
+00100117 // auipc x2, 256
+002081b3 // add x3, x1, x2
+#@end
+//}
+
+それぞれの命令の意味は次のとおりです。
+
+//table[sample.hex.alu][命令の意味]{
+アドレス	命令	意味
+-------------------------------------------------------------
+00000000	addi x1, x0, 32		x1 = x0 + 32
+00000004	auipc x2, 256		x2 = pc + 256
+00000008	add x3, x1, x2		x3 = x1 + x2
+//}
+
+シミュレータを実行し、結果を確かめます。
+
+//terminal[alu.debug][ALUのデバッグ]{
+$ @<userinput>{make build sim}
+$ @<userinput>{obj_dir/sim src/sample.hex 5}
+TODO
+//}
+
+まだ結果をディスティネーションレジスタに格納する処理を作成していません。
+そのため、レジスタの値は変わらないことに注意してください
+
+ : addi x1, x0, 32
+	@<code>{op1}は0番目のレジスタの値です。
+	0番目のレジスタの値は常に0であるため、@<code>{00000000}と表示されています。
+	@<code>{op2}は即値です。
+	即値は32であるため、16進数で@<code>{00000020}と表示されています。
+	ALUの計算結果として、0と32を足した結果@<code>{00000020}が表示されています。
+
+ : auipc x2, 256
+	@<code>{op1}は2番目のレジスタの値です。
+	2番目のレジスタは@<code>{102}として初期化しているので、@<code>{TODO}と表示されています。
+	@<code>{op2}はPCです。
+	命令のアドレス@<code>{00000004}が表示されています。
+	ALUの計算結果として、これを足した結果@<code>{TODO}が表示されています。
+
+ : add x3, x1, x2
+	@<code>{op1}は1番目のレジスタの値です。
+	1番目のレジスタは@<code>{101}として初期化しているので、@<code>{TODO}と表示されています。
+	2番目のレジスタは@<code>{102}として初期化しているので、@<code>{TODO}と表示されています。
+	ALUの計算結果として、これを足した結果@<code>{TODO}が表示されています。
+
+== レジスタに値を書き込む
+
+CPUはレジスタから値を読み込み、これを計算して、レジスタに結果の値を書き戻します。
+レジスタに値を書き戻すことを、ライトバックと言います。
+
+=== ライトバックの実装
+
+計算やメモリアクセスが終わったら、その結果をレジスタに書き込みます。
+書き込む対象のレジスタはrd番目のレジスタです。
+書き込むかどうかはInstCtrl.reg_wenで表されます。
 
 プログラム
 
-ポート定義
+=== ライトバックのテスト
 
-coreモジュールでaluモジュールをインスタンス化します。
+ここで、プログラムをテストしましょう。
+
+メモリに格納されている命令は～なので、結果が～になることを確認できます。
+
 
 == ロード、ストア命令
 
@@ -1319,25 +1554,6 @@ memifインターフェースに、どこの書き込みを行うかをバイト
 これを利用して、読み込みして加工して書き込みという操作をサポートさせます。
 
 プログラム
-
-== レジスタに値を書き込む
-
-CPUはレジスタから値を読み込み、これを計算して、レジスタに結果の値を書き戻します。
-レジスタに値を書き戻すことを、ライトバックと言います。
-
-=== ライトバックの実装
-
-計算やメモリアクセスが終わったら、その結果をレジスタに書き込みます。
-書き込む対象のレジスタはrd番目のレジスタです。
-書き込むかどうかはInstCtrl.reg_wenで表されます。
-
-プログラム
-
-=== ライトバックのテスト
-
-ここで、プログラムをテストしましょう。
-
-メモリに格納されている命令は～なので、結果が～になることを確認できます。
 
 == 分岐, ジャンプ
 
