@@ -1496,7 +1496,7 @@ CPUはレジスタから値を読み込み、これを計算して、レジス�
 === ライトバックの実装
 
 書き込む対象のレジスタは、命令の@<code>{rd}フィールドによって番号で指定します。
-デコード時に、ライトバックする命令化どうかを@<code>{InstCtrl.rwb_en}に格納しています。
+デコード時に、ライトバックする命令かどうかを@<code>{InstCtrl.rwb_en}に格納しています。
 (inst_decoderモジュールを確認してください)
 
 //list[core.veryl.wb][ライトバック処理の実装 (core.veryl)]{
@@ -1585,25 +1585,30 @@ RV32Iには、メモリのデータをロードする(読み込む),
 ストアする(書き込む)命令として次の命令があります。
 
 //table[ls.insts][ロード命令, ストア命令]{
-命令    作用
+命令	作用
 -------------------------------------------------------------
-LB      8ビットのデータを読み込む。上位24ビットは符号拡張する
-LBU     8ビットのデータを読み込む。上位24ビットは0とする
-LH      16ビットのデータを読み込む。上位16ビットは符号拡張する
-LHU     16ビットのデータを読み込む。上位16ビットは0とする
-LW      32ビットのデータを読み込む
-SB      8ビットのデータを書き込む
-SH      16ビットのデータを書き込む
-SW      32ビットのデータを書き込む
+LB		8ビットのデータを読み込む。上位24ビットは符号拡張する
+LBU		8ビットのデータを読み込む。上位24ビットは0とする
+LH		16ビットのデータを読み込む。上位16ビットは符号拡張する
+LHU		16ビットのデータを読み込む。上位16ビットは0とする
+LW		32ビットのデータを読み込む
+SB		8ビットのデータを書き込む
+SH		16ビットのデータを書き込む
+SW		32ビットのデータを書き込む
 //}
 
 ロード命令はI形式、ストア命令はS形式です。
 これらの命令で指定するメモリのアドレスは、rs1と即値の足し算です。
 ALUに渡すデータがrs1と即値になっていることを確認してください(@<list>{core.reg.use})。
+ストア命令は、rs2の値をメモリに格納します。
 
 === LW, SW命令の実装
 
+8ビット, 16ビット単位で読み書きを行う命令の実装は少し大変です。
 まず32ビット単位で読み書きを行うLW, SW命令を実装します。
+
+==== memunitモジュールの作成
+
 メモリ操作を行うモジュールを@<code>{memunit.veryl}に記述します。
 
 //list[memunit.veryl.lwsw][memunit.veryl]{
@@ -1698,22 +1703,382 @@ module memunit (
 #@end
 //}
 
-memunitモジュールでは、命令がメモリ命令の時、ALUから受け取ったアドレスをメモリに渡して操作を実行します。
-書き込み命令の時は、書き込む値をmemif.wdataに設定し、memif.wenを1に設定します。
+memunitモジュールでは、
+命令がメモリにアクセスする命令の時、
+ALUから受け取ったアドレスをメモリに渡して操作を実行します。
 
-memunitモジュールをcoreモジュールにインスタンス化します。
-ここで、memunitモジュールとメモリの接続は、命令フェッチ用のインターフェースとは別にしなくてはいけません。
-そのため、coreモジュールに新しくmemif_dataを定義し、これをmemunitモジュールと接続します。
+命令がメモリにアクセスする命令かどうかは。@<code>{inst_is_memop}関数で判定します。
+ストア命令のとき、命令の形式はS形式です。
+ロード命令のとき、デコーダは@<code>{InstCtrl.is_load}を@<code>{1}にしています。
 
-これでtopモジュールにはロードストア命令と命令フェッチのインターフェースが2つ存在します。
-しかし、メモリは同時に1つの読み込みまたは書き込みしかできないため、これを調停する必要があります。
+memunitモジュールには、次の状態が定義されています。
+初期状態は@<code>{State::Init}です。
 
-topモジュールに、ロードストアと命令フェッチが同時に要求した場合は、ロードストアを優先するプログラムを記述します。
+ : State::Init
+	memunitモジュールに新しく命令が供給されたとき、
+	@<code>{valid}と@<code>{is_new}が@<code>{1}になります。
+	新しく命令が供給されて、それがメモリにアクセスする命令のとき、
+	状態を@<code>{State::WaitReady}に移動します。
+	その際、@<code>{req_wen}にストア命令かどうか、
+	@<code>{req_addr}にアクセスするアドレス、
+	@<code>{req_wdata}に@<code>{rs2}を格納します。
 
-ロードストアには複数クロックかかるため、これが完了していないことを示すワイヤがあります。
-これを見て、coreは処理を進めます。
+ : State::WaitReady
+	この状態の時、命令に応じた要求をメモリに送り続けます。
+	メモリが要求を受け付ける(@<code>{ready})とき、
+	状態を@<code>{State::WaitValid}に移動します。
 
-アラインの例外について注記を入れる
+ : State::WaitValid
+	メモリに送信した要求の処理が終了した(@<code>{rvalid})とき、
+	状態を@<code>{State::Init}に移動します。
+
+メモリにアクセスする命令のとき、
+memunitモジュールは@<code>{Init}, @<code>{WaitReady}, @<code>{WaitValid}の順で状態を移動するため、
+実行には少なくとも3クロックが必要です。
+その間、CPUはレジスタのライトバック処理やFIFOからの命令の取り出しを待つ必要があります。
+
+これを実現するために、memunitモジュールには処理中かどうかを表す@<code>{stall}フラグが存在します。
+有効な命令が供給されているとき、@<code>{state}やメモリの状態に応じて、次のように@<code>{stall}を決定します。
+
+//table[stall.cond][stallの値の決定方法]{
+状態	stallが1になる条件
+-------------------------------------------------------------
+Init		新しく命令が供給されて、それがメモリにアクセスする命令のとき
+WaitReady	常に1
+WaitValid	処理が終了していない(@<code>{!membus.rvalid})とき
+//}
+
+
+//caution[アドレスが4バイトに整列されていない場合の動作]{
+@<code>{addr}の下位2ビットが@<code>{00}ではない、
+つまり、4で割り切れないアドレスに対してLW, SW命令を実行する場合、
+memunitモジュールは正しい動作をしません。
+また、2で割り切れないアドレスに対するLH, LHU, SH命令についても同様です。
+これらの問題については後の章で対策するため、今は無視します。
+//}
+
+
+==== memunitモジュールのインスタンス化
+
+coreモジュール内にmemunitモジュールをインスタンス化します。
+
+まず、命令が供給されていることを示す信号@<code>{inst_valid}と、
+命令が現在のクロックで供給されたことを示す信号@<code>{inst_is_new}を作成します。
+
+//list[valid.new.inst][inst_valid, inst_is_newの定義 (core.veryl)]{
+#@maprange(scripts/04/lwsw-range/core/src/core.veryl,valid_new)
+    let inst_valid : logic    = if_fifo_rvalid;
+    var inst_is_new: logic   ; // 命令が今のクロックで供給されたかどうか
+#@end
+//}
+
+//list[valid.new.inst][inst_is_newの実装 (core.veryl)]{
+#@maprange(scripts/04/lwsw-range/core/src/core.veryl,new_ff)
+    always_ff {
+        if_reset {
+            inst_is_new = 0;
+        } else {
+            if if_fifo_rvalid {
+                inst_is_new = if_fifo_rready;
+            } else {
+                inst_is_new = 1;
+            }
+        }
+    }
+#@end
+//}
+
+命令が供給されているかどうかは、@<code>{if_fifo_rvalid}と同値です。
+これを機に、@<code>{if_fifo_rvalid}を使用しているところを@<code>{inst_valid}に置き換えましょう。
+
+命令が現在のクロックで供給されたかどうかは、FIFOの@<code>{rvalid}, @<code>{rready}を観測することでわかります。
+@<code>{rvalid}が@<code>{1}のとき、@<code>{ready}が@<code>{1}なら、次のクロックで供給される命令は新しく供給される命令です。
+@<code>{ready}が@<code>{0}なら、次のクロックで供給されている命令は現在のクロックと同じ命令になります。
+@<code>{rvalid}が@<code>{0}のとき、次のクロックで供給される命令は常に新しく供給される命令になります。
+(次のクロックで@<code>{rvalid}が@<code>{1}かどうかについては考えません)
+
+さて、memunitモジュールをインスタンス化する前に、メモリとの接続方法について考える必要があります。
+
+coreモジュールには、メモリとの接続点としてmembusポートが存在します。
+しかし、これは命令フェッチ用に使用されているため、
+memunitモジュール用に使用することができません。
+また、memoryモジュールは同時に2つの操作を受け付けることができません。
+
+この問題を、coreモジュールにメモリとの接続点を2つ用意し、それをtopモジュールで調停することにより回避します。
+
+
+//list[valid.new.inst][inst_is_newの実装 (core.veryl)]{
+#@maprange(scripts/04/lwsw-range/core/src/core.veryl,port)
+module core (
+    clk     : input   clock            ,
+    rst     : input   reset            ,
+    i_membus: modport membus_if::master,
+    d_membus: modport membus_if::master,
+) {
+#@end
+//}
+
+
+まず、coreモジュールに、命令フェッチ用のポート@<code>{i_membus}, ロードストア命令用のポート@<code>{d_membus}の2つのポートを用意します。
+命令フェッチ用のポートが@<code>{membus}から@<code>{i_membus}に変更されるため、
+既存の@<code>{membus}を@<code>{i_membus}に置き換えてください。
+
+//list[membus.to.i_membus][membusをi_membusに置き換える (core.veryl)]{
+#@maprange(scripts/04/lwsw-range/core/src/core.veryl,fetch)
+        // FIFOに空きがあるとき、命令をフェッチする
+        i_membus.valid = if_fifo_wready;
+        i_membus.addr  = if_pc;
+        i_membus.wen   = 0;
+        i_membus.wdata = 'x; // wdataは使用しない
+#@end
+//}
+
+次に、topモジュールでの調停を実装します。
+
+//list[top.arb][メモリへのアクセス要求の調停 (top.veryl)]{
+#@maprange(scripts/04/lwsw-range/core/src/top.veryl,arb)
+    inst membus  : membus_if;
+    inst i_membus: membus_if; // 命令フェッチ用
+    inst d_membus: membus_if; // ロードストア命令用
+
+    var memarb_last_i: logic;
+
+    // メモリアクセスを調停する
+    always_ff {
+        if_reset {
+            memarb_last_i = 0;
+        } else {
+            if membus.ready {
+                memarb_last_i = !d_membus.valid;
+            }
+        }
+    }
+
+    always_comb {
+        i_membus.ready  = membus.ready && !d_membus.valid;
+        i_membus.rvalid = membus.rvalid && memarb_last_i;
+        i_membus.rdata  = membus.rdata;
+
+        d_membus.ready  = membus.ready;
+        d_membus.rvalid = membus.rvalid && !memarb_last_i;
+        d_membus.rdata  = membus.rdata;
+
+        membus.valid = i_membus.valid | d_membus.valid;
+        if d_membus.valid {
+            membus.addr  = d_membus.addr;
+            membus.wen   = d_membus.wen;
+            membus.wdata = d_membus.wdata;
+        } else {
+            membus.addr  = i_membus.addr;
+            membus.wen   = i_membus.wen;
+            membus.wdata = i_membus.wdata;
+        }
+    }
+#@end
+//}
+
+新しく、@<code>{i_membus}と@<code>{d_membus}をインスタンス化し、
+それを@<code>{membus}と接続します。
+
+調停の仕組みは次のとおりです。
+
+ * @<code>{i_membus}と@<code>{d_membus}の両方の@<code>{valid}が@<code>{1}のとき、@<code>{d_membus}を優先する
+ * @<code>{memarb_last_i}レジスタに、受け入れた要求が@<code>{i_membus}からのものだったかどうかを記録する
+ * メモリが要求の結果を返すとき、@<code>{memarb_last_i}を見て、@<code>{i_membus}と@<code>{d_membus}のどちらか片方の@<code>{rvalid}を@<code>{1}にする
+
+命令フェッチを優先していると命令の処理が進まないため、
+@<code>{i_membus}よりも@<code>{d_membus}を優先します。
+
+coreモジュールとの接続を次のように変更します。
+
+//list[membus.core_inst][membusを2つに分けて接続する (top.veryl)]{
+#@maprange(scripts/04/lwsw-range/core/src/top.veryl,core_inst)
+    inst c: core (
+        clk       ,
+        rst       ,
+        i_membus  ,
+        d_membus  ,
+    );
+#@end
+//}
+
+memoryモジュールとmemunitを接続する準備が整ったので、memunitモジュールをインスタンス化します。
+
+//list[core.memunit.inst][memunitモジュールのインスタンス化 (core.veryl)]{
+#@maprange(scripts/04/lwsw-range/core/src/core.veryl,inst)
+    var memu_rdata: UIntX;
+    var memu_stall: logic;
+
+    inst memu: memunit (
+        clk                ,
+        rst                ,
+        valid : inst_valid ,
+        is_new: inst_is_new,
+        ctrl  : inst_ctrl  ,
+        addr  : alu_result ,
+        rs2   : rs2_data   ,
+        rdata : memu_rdata ,
+        stall : memu_stall ,
+        membus: d_membus   ,
+    );
+#@end
+//}
+
+
+==== memunitモジュールの処理待ちとライトバック
+
+最後に、
+memunitモジュールが処理中は命令をFIFOから取り出すのを止める処理と、
+LW命令で読み込んだデータがレジスタにライトバックする処理を実装します。
+
+//list[membus.rready][memunitモジュールの処理が終わるのを待つ (core.veryl)]{
+#@maprange(scripts/04/lwsw-range/core/src/core.veryl,rready)
+        // memunitが処理中ではないとき、FIFOから命令を取り出していい
+        if_fifo_rready = !memu_stall;
+#@end
+//}
+
+//list[membus.wb][memunitモジュールの結果をライトバックする (core.veryl)]{
+#@maprange(scripts/04/lwsw-range/core/src/core.veryl,rd)
+    let rd_addr: logic<5> = inst_bits[11:7];
+    let wb_data: UIntX    = if inst_ctrl.is_load {
+        memu_rdata
+    } else {
+        alu_result
+    };
+#@end
+//}
+
+memunitモジュールが処理中のとき、@<code>{memu_stall}が@<code>{1}になっています。
+そのため、@<code>{memu_stall}が@<code>{1}のときは、
+@<code>{if_fifo_rready}を@<code>{0}にすることで、
+FIFOからの命令の取り出しを停止します。
+
+ライトバック処理では、命令がロード命令のとき(@<code>{inst_ctrl.is_load})、
+@<code>{alu_result}ではなく@<code>{memu_rdata}を@<code>{wb_data}に設定します。
+
+ところで、現在のプログラムでは、memunitの処理が終了していないときもライトバックをし続けています。
+レジスタへのライトバックは命令の実行が終了したときのみで良いため、次のようにプログラムを変更します。
+
+//list[wb.ready.main][命令の実行が終了したときにのみライトバックする (core.veryl)]{
+#@maprange(scripts/04/lwsw-range/core/src/core.veryl,wb_ready)
+            if inst_valid && if_fifo_rready && inst_ctrl.rwb_en {
+                regfile[rd_addr] = wb_data;
+            }
+#@end
+//}
+
+//list[wb.ready.debug][ライトバックするときにのみデバッグ表示する (core.veryl)]{
+#@maprange(scripts/04/lwsw-range/core/src/core.veryl,wb_debug)
+                if if_fifo_rready && inst_ctrl.rwb_en {
+                    $display("  reg[%d] <= %h", rd_addr, wb_data);
+                }
+#@end
+//}
+
+==== LW, SW命令のテスト
+
+LW, SW命令が正しく動作していることを確認するために、デバッグ出力を次のように変更します。
+
+//list[membus.rready][メモリモジュールの状態を出力する (core.veryl)]{
+#@maprange(scripts/04/lwsw-range/core/src/core.veryl,mem)
+                $display("  mem stall : %b", memu_stall);
+                $display("  mem rdata : %h", memu_rdata);
+#@end
+//}
+
+また、ここからのテストは実行するクロック数が多くなるため、
+ログに何クロック目かを表示することで、ログを読みやすくします。
+
+//list[log.count][何クロック目かを出力する (core.veryl)]{
+#@maprange(scripts/04/lwsw-range/core/src/core.veryl,clock_count)
+    var clock_count: u64;
+
+    always_ff {
+        if_reset {
+            clock_count = 1;
+        } else {
+            clock_count = clock_count + 1;
+            if inst_valid {
+                $display("# %d", clock_count);
+                $display("%h : %h", inst_pc, inst_bits);
+                $display("  itype     : %b", inst_ctrl.itype);
+#@end
+//}
+
+LW, SW命令のテストのために、sample.hexを次のように変更します。
+
+//list[log.count][テスト用のプログラムを記述する (sample.hex)]{
+#@mapfile(scripts/04/lwsw-range/core/src/sample.hex)
+02002503 // lw x10, 0x20(x0)
+40000593 // addi x11, x0, 0x400
+02b02023 // sw x11, 0x20(x0)
+02002603 // lw x12, 0x20(x0)
+00000000
+00000000
+00000000
+00000000
+deadbeef // 0x20
+#@end
+//}
+
+プログラムは次のようになっています。
+
+//table[sample.hex.lwsw][メモリに格納するデータ]{
+アドレス	命令	意味
+-------------------------------------------------------------
+00000000	lw x10, 0x20(x0)	x10に、アドレスが0x20のデータを読み込む
+00000004	addi x11, x0, 0x400	x11 = 0x400		
+00000008	sw x11, 0x20(x0)	アドレス0x20にx11の値を書き込む
+0000000c	lw x12, 0x20(x0)	x12に、アドレスが0x20のデータを読み込む
+//}
+
+アドレス@<code>{0x20}には、データ@<code>{deadbeef}を格納しています。
+
+シミュレータを実行し、結果を確かめます。
+
+//terminal[lwsw.test][LW, SW命令のテスト]{
+$ @<userinput>{make build sim}
+$ @<userinput>{obj_dir/sim src/sample.hex 13}
+#                    3
+00000000 : 02002503
+  itype     : 000010
+  imm       : 00000020
+  rs1[ 0]   : 00000000
+  rs2[ 0]   : 00000000
+  op1       : 00000000
+  op2       : 00000020
+  alu res   : 00000020
+  mem stall : 1 @<balloon>{LW命令でストールしている}
+  mem rdata : 02b02023
+(省略)
+#                    5
+00000000 : 02002503
+  itype     : 000010
+  imm       : 00000020
+  rs1[ 0]   : 00000000
+  rs2[ 0]   : 00000000
+  op1       : 00000000
+  op2       : 00000020
+  alu res   : 00000020
+  mem stall : 0 @<balloon>{LWが終わったので0になった}
+  mem rdata : deadbeef
+  reg[10] <= deadbeef @<balloon>{0x20の値が読み込まれた}
+(省略)
+#                   12
+0000000c : 02002603
+  itype     : 000010
+  imm       : 00000020
+  rs1[ 0]   : 00000000
+  rs2[ 0]   : 00000000
+  op1       : 00000000
+  op2       : 00000020
+  alu res   : 00000020
+  mem stall : 0
+  mem rdata : 00000400
+  reg[12] <= 00000400 @<balloon>{書き込んだ値が読み込まれた}
+//}
+
 
 === LH[U], LB[U], SH, SB命令の実装
 
