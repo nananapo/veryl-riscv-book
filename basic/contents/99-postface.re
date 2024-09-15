@@ -9,4 +9,7 @@
 
 ===[notoc] 著者紹介
 
-ここに自己紹介を書きます
+kanataso
+
+X(Twitter) : @kanapipopipo
+GitHub : @nananapo
