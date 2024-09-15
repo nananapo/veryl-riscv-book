@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>MMIOの実装 | Verylで作るRISC-V CPU</title>
+    <link rel="stylesheet" type="text/css" href="css/normalize.css" />
+    <link rel="stylesheet" type="text/css" href="css/webstyle.css" />
+    <link rel="next" title="割り込みの実装" href="11-impl-interrupt.html">
+    <link rel="prev" title="C拡張の実装" href="09-impl-C.html">
+    <meta name="generator" content="Re:VIEW Starter">
+  </head>
+  <body>
+    <div class="page-outer">
+      <nav class="side-content">
+                <a class="nav-title" href="index.html">Verylで作るRISC-V CPU</a>
+<ul class="toc toc-1">
+    <li class="toc-chapter"><a href="./00-preface.html">まえがき / はじめに</a></li>
+    <li class="toc-chapter"><a href="./01-intro.html">Intro</a></li>
+<li class="toc-part">第I部 基本編
+  <ul class="toc toc-2">
+    <li class="toc-chapter"><a href="./02-setup.html">1 環境構築</a></li>
+    <li class="toc-chapter"><a href="./03-veryl.html">2 ハードウェア記述言語 Veryl</a></li>
+    <li class="toc-chapter"><a href="./04-impl-rv32i.html">3 RV32Iの実装</a></li>
+    <li class="toc-chapter"><a href="./05-impl-rv64i.html">4 RV64Iの実装</a></li>
+  </ul>
+</li>
+<li class="toc-part">第II部 基本的な拡張とトラップの実装
+  <ul class="toc toc-2">
+    <li class="toc-chapter"><a href="./06-impl-M.html">5 M拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./07-impl-exception.html">6 例外の実装</a></li>
+    <li class="toc-chapter"><a href="./08-impl-A.html">7 A拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./09-impl-C.html">8 C拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./10-impl-MMIO.html">9 MMIOの実装</a>
+      <ul class="toc toc-3">
+        <li class="toc-section"><a href="#h9-1">9.1 概要</a></li>
+        <li class="toc-section"><a href="#h9-2">9.2 実装方針</a></li>
+      </ul>
+    </li>
+    <li class="toc-chapter"><a href="./11-impl-interrupt.html">10 割り込みの実装</a></li>
+  </ul>
+</li>
+<li class="toc-part">第III部 privilege modeの実装
+  <ul class="toc toc-2">
+    <li class="toc-chapter"><a href="./12-impl-mmode-csr.html">11 M-modeの実装</a></li>
+    <li class="toc-chapter"><a href="./13-impl-smode-csr.html">12 S-modeの実装</a></li>
+    <li class="toc-chapter"><a href="./14-impl-paging.html">13 ページングの実装</a></li>
+  </ul>
+</li>
+<li class="toc-part">第IV部 OSを動かす
+  <ul class="toc toc-2">
+    <li class="toc-chapter"><a href="./15-impl-virtio.html">14 virtioの実装</a></li>
+    <li class="toc-chapter"><a href="./16-run-xv6.html">15 xv6の実行</a></li>
+  </ul>
+</li>
+    <li class="toc-chapter"><a href="./99-postface.html">あとがき / おわりに</a></li>
+</ul>
+      </nav>
+      <div class="page-inner">
+        <header class="page-header">
+        </header>
+        <main class="page-main">
+<h1 class="boldlines center twolines"><a id="h9"></a><span class="secno">第9章</span> <br/>MMIOの実装</h1>
+
+<h2 class="numbox"><a id="h9-1"></a><span class="secno">9.1</span> 概要</h2>
+<p>UART TX/RXを作ります</p>
+
+<h2 class="numbox"><a id="h9-2"></a><span class="secno">9.2</span> 実装方針</h2>
+
+        </main>
+        <nav class="page-navi">
+          <a href="09-impl-C.html" class="page-prev">&#9664;</a>
+          <a href="11-impl-interrupt.html" class="page-next">&#9654;</a>
+        </nav>
+        <footer>
+        </footer>
+      </div>
+    </div>
+  </body>
+</html>
+<!-- layout.html5.erb -->

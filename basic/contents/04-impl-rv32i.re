@@ -1750,10 +1750,11 @@ WaitValid	処理が終了していない(@<code>{!membus.rvalid})とき
 
 
 //caution[アドレスが4バイトに整列されていない場合の動作]{
+今のところ、memoryモジュールはアドレスの下位2ビットを無視するため、
 @<code>{addr}の下位2ビットが@<code>{00}ではない、
 つまり、4で割り切れないアドレスに対してLW, SW命令を実行する場合、
 memunitモジュールは正しい動作をしません。
-また、2で割り切れないアドレスに対するLH, LHU, SH命令についても同様です。
+2で割り切れないアドレスに対するLH, LHU, SH命令についても同様です。
 これらの問題については後の章で対策するため、今は無視します。
 //}
 
@@ -1772,7 +1773,7 @@ coreモジュール内にmemunitモジュールをインスタンス化します
 #@end
 //}
 
-//list[valid.new.inst][inst_is_newの実装 (core.veryl)]{
+//list[inst_is_new.impl][inst_is_newの実装 (core.veryl)]{
 #@maprange(scripts/04/lwsw-range/core/src/core.veryl,new_ff)
     always_ff {
         if_reset {
@@ -1806,8 +1807,7 @@ memunitモジュール用に使用することができません。
 
 この問題を、coreモジュールにメモリとの接続点を2つ用意し、それをtopモジュールで調停することにより回避します。
 
-
-//list[valid.new.inst][inst_is_newの実装 (core.veryl)]{
+//list[core.membus.two][coreモジュールのポート定義 (core.veryl)]{
 #@maprange(scripts/04/lwsw-range/core/src/core.veryl,port)
 module core (
     clk     : input   clock            ,
@@ -1980,7 +1980,7 @@ FIFOからの命令の取り出しを停止します。
 
 LW, SW命令が正しく動作していることを確認するために、デバッグ出力を次のように変更します。
 
-//list[membus.rready][メモリモジュールの状態を出力する (core.veryl)]{
+//list[debug.memunit.stall.rdata][メモリモジュールの状態を出力する (core.veryl)]{
 #@maprange(scripts/04/lwsw-range/core/src/core.veryl,mem)
                 $display("  mem stall : %b", memu_stall);
                 $display("  mem rdata : %h", memu_rdata);
@@ -2008,7 +2008,7 @@ LW, SW命令が正しく動作していることを確認するために、デ�
 
 LW, SW命令のテストのために、sample.hexを次のように変更します。
 
-//list[log.count][テスト用のプログラムを記述する (sample.hex)]{
+//list[sample.hex.lwsw][テスト用のプログラムを記述する (sample.hex)]{
 #@mapfile(scripts/04/lwsw-range/core/src/sample.hex)
 02002503 // lw x10, 0x20(x0)
 40000593 // addi x11, x0, 0x400
@@ -2080,27 +2080,307 @@ $ @<userinput>{obj_dir/sim src/sample.hex 13}
 //}
 
 
-=== LH[U], LB[U], SH, SB命令の実装
+=== LB, LBU, LH, LHU命令の実装
 
-ロード、ストア命令には、2バイト単位, 1バイト単位での読み書きを行う命令も存在します。
+LB, LBU, SB命令は8ビット単位、LH, LHU, SH命令は16ビット単位でロード/ストアを行う命令です。
 
 まずロード命令を実装します。
-ロード命令は32bit単位での読み込みをしたものの一部を切り取ってあげればよさそうです。
+ロード命令は32ビット単位でデータを読み込み、
+その結果の一部を切り取ることで実装することができます。
 
-プログラム
+まず、何度も記述することになる定数と変数を短い名前(@<code>{W}, @<code>{D})で定義します。
 
-次に、ストア命令を実装します。
-ここで32ビット単位で読み込んだ後に一部を書き換えて書き込んであげる方法、
-またはメモリモジュール側で一部のみを書き込む操作をサポートする方法が考えられます。
-本書では後者を採用します。
+//list[lbhsbh.wd][WとDの定義 (memunit.veryl)]{
+#@maprange(scripts/04/lbhsbh-range/core/src/memunit.veryl,wd)
+    const W: u32    = 32;
+    let D: UInt32 = membus.rdata;
+#@end
+//}
 
-memifインターフェースに、どこの書き込みを行うかをバイト単位で示すワイヤを追加します。
+LB, LBU, LH, LHU, LW命令は、funct3の値で区別することができます。
 
-プログラム
+//table[funct3.load][ロード命令のfunct3]{
+funct3	命令
+-------------------------------------------------------------
+000		LB
+100		LBU
+001		LH
+101		LHU
+010		LW
+//}
 
-これを利用して、読み込みして加工して書き込みという操作をサポートさせます。
+funct3をcase文で分岐し、
+アドレスの下位ビットを見ることで、
+命令とアドレスに応じた値をrdataに設定します。
 
-プログラム
+//list[lbhsbh.rdata][rdataをアドレスと読み込みサイズに応じて変更する (memunit.veryl)]{
+#@maprange(scripts/04/lbhsbh-range/core/src/memunit.veryl,load)
+        // loadの結果
+        rdata = case ctrl.funct3 {
+            3'b000 : case addr[1:0] {
+                0      : {D[7] repeat W - 8, D[7:0]},
+                1      : {D[15] repeat W - 8, D[15:8]},
+                2      : {D[23] repeat W - 8, D[23:16]},
+                3      : {D[31] repeat W - 8, D[31:24]},
+                default: 'x,
+            },
+            3'b100 : case addr[1:0] {
+                0      : {1'b0 repeat W - 8, D[7:0]},
+                1      : {1'b0 repeat W - 8, D[15:8]},
+                2      : {1'b0 repeat W - 8, D[23:16]},
+                3      : {1'b0 repeat W - 8, D[31:24]},
+                default: 'x,
+            },
+            3'b001 : case addr[1] {
+                0      : {D[15] repeat W - 16, D[15:0]},
+                1      : {D[31] repeat W - 16, D[31:16]},
+                default: 'x,
+            },
+            3'b101 : case addr[1] {
+                0      : {1'b0 repeat W - 16, D[15:0]},
+                1      : {1'b0 repeat W - 16, D[31:16]},
+                default: 'x,
+            },
+            3'b010 : D,
+            default: 'x,
+        };
+#@end
+//}
+
+=== SB, SH命令の実装
+
+次に、SB, SH命令を実装します。
+
+==== memoryモジュールで書き込みマスクをサポートする
+
+memoryモジュールは、32ビット単位の読み書きしかサポートしておらず、
+一部の書き込みもサポートしていません。
+本書では、一部のみ書き込む命令をmemoryモジュールでサポートすることで、SB, SH命令を実装します。
+
+まず、membus_ifインターフェースに、書き込む場所をバイト単位で示す信号@<code>{wmask}を追加します。
+@<code>{wmask}には、書き込む部分を1、書き込まない部分を0で指定します。
+このような挙動をする値を、書き込みマスクと呼びます。
+
+//list[wmask.define][wmaskの定義 (membus_if.veryl)]{
+#@maprange(scripts/04/lbhsbh-range/core/src/membus_if.veryl,wmask)
+    var wmask : logic <4>;
+#@end
+//}
+
+//list[wmask.master][modport masterにwmaskを追加する (membus_if.veryl)]{
+#@maprange(scripts/04/lbhsbh-range/core/src/membus_if.veryl,master)
+        wmask : output,
+#@end
+//}
+
+//list[wmask.slave][modport slaveにwmaskを追加する (membus_if.veryl)]{
+#@maprange(scripts/04/lbhsbh-range/core/src/membus_if.veryl,slave)
+        wmask : input ,
+#@end
+//}
+
+バイト単位で指定するため、@<code>{wmask}の幅は4ビットです。
+
+次に、memoryモジュールで書き込みマスクをサポートします。
+
+//list[wmask.memory][書き込みマスクをサポートするmemoryモジュール (memory.veryl)]{
+#@mapfile(scripts/04/lbhsbh/core/src/memory.veryl)
+import eei::*;
+
+module memory #(
+    param MEMORY_WIDTH: u32 = 20, // メモリのサイズ
+) (
+    clk      : input   clock           ,
+    rst      : input   reset           ,
+    membus   : modport membus_if::slave,
+    FILE_PATH: input   string          , // メモリの初期値が格納されたファイルのパス
+) {
+
+    var mem: UInt32 [2 ** MEMORY_WIDTH];
+
+    // Addrをmemのインデックスに変換する関数
+    function addr_to_memaddr (
+        addr: input Addr               ,
+    ) -> logic<MEMORY_WIDTH> {
+        return addr[MEMORY_WIDTH - 1 + 2:2];
+    }
+
+    // 書き込みマスクをUInt32に展開した値
+    var wmask_expand: UInt32;
+    for i in 0..32 :wm_expand_block {
+        assign wmask_expand[i] = wmask_saved[i / 8];
+    }
+
+    initial {
+        // memをFILE_PATHに格納されているデータで初期化
+        if FILE_PATH != "" {
+            $readmemh(FILE_PATH, mem);
+        }
+    }
+
+    // 状態
+    enum State {
+        Ready,
+        WriteValid,
+    }
+    var state: State;
+
+    var addr_saved : Addr     ;
+    var wdata_saved: UInt32   ;
+    var wmask_saved: logic <4>;
+    var rdata_saved: UInt32   ;
+
+    always_comb {
+        membus.ready = state == State::Ready;
+    }
+
+    always_ff {
+        if state == State::WriteValid {
+            mem[addr_to_memaddr(addr_saved)] = wdata_saved & wmask_expand | rdata_saved & ~wmask_expand;
+        }
+    }
+
+    always_ff {
+        if_reset {
+            state         = State::Ready;
+            membus.rvalid = 0;
+            membus.rdata  = 0;
+            addr_saved    = 0;
+            wdata_saved   = 0;
+            wmask_saved   = 0;
+            rdata_saved   = 0;
+        } else {
+            case state {
+                State::Ready: {
+                                  membus.rvalid = membus.valid & !membus.wen;
+                                  membus.rdata  = mem[addr_to_memaddr(membus.addr)];
+                                  addr_saved    = membus.addr;
+                                  wdata_saved   = membus.wdata;
+                                  wmask_saved   = membus.wmask;
+                                  rdata_saved   = mem[addr_to_memaddr(membus.addr)];
+                                  if membus.valid && membus.wen {
+                                      state = State::WriteValid;
+                                  }
+                              }
+                State::WriteValid: {
+                                       state         = State::Ready;
+                                       membus.rvalid = 1;
+                                   }
+            }
+        }
+    }
+}
+#@end
+//}
+
+書き込みマスクをサポートするmemoryモジュールは、次の2つの状態を持ちます。
+
+ : State::Ready
+	要求を受け付ける。
+	読み込み要求のとき、次のクロックで結果を返す。
+	書き込み要求のとき、要求の内容をレジスタに保存し、
+	状態を@<code>{State::WriteValid}に移動する。
+
+ : State::WriteValid
+	書き込みマスクつきの書き込みを行う。
+	状態を@<code>{State::Ready}に移動する。
+
+memoryモジュールは、書き込み要求が送られてきた場合、
+名前が@<code>{_saved}で終わるレジスタに要求の内容を保存します。
+また、@<code>{rdata_saved}に、指定されたアドレスのデータを保存します。
+次のクロックで、書き込みマスクを使った書き込みを行い、要求の処理を終了します。
+
+topモジュールの調停処理で、@<code>{wmask}も調停するようにします。
+
+//list[top.wmask][wmaskの設定 (top.veryl)]{
+#@maprange(scripts/04/lbhsbh-range/core/src/top.veryl,wmask)
+        membus.valid = i_membus.valid | d_membus.valid;
+        if d_membus.valid {
+            membus.addr  = d_membus.addr;
+            membus.wen   = d_membus.wen;
+            membus.wdata = d_membus.wdata;
+            membus.wmask = d_membus.wmask; @<balloon>{追加}
+        } else {
+            membus.addr  = i_membus.addr;
+            membus.wen   = i_membus.wen;
+            membus.wdata = i_membus.wdata;
+            membus.wmask = i_membus.wmask; @<balloon>{追加}
+        }
+#@end
+//}
+
+==== memunitモジュールの実装
+
+memoryモジュールが書き込みマスクをサポートするようになったので、
+memunitモジュールでwmaskを設定します。
+
+@<code>{req_wmask}レジスタを作成し、@<code>{membus.wmask}と接続します。
+
+//list[memu.wmask.define][req_wmaskの定義 (memunit.veryl)]{
+#@maprange(scripts/04/lbhsbh-range/core/src/memunit.veryl,def_wmask)
+    var req_wmask: logic<4>;
+#@end
+//}
+
+//list[memu.wmask.use][membusにwmaskを設定する (memunit.veryl)]{
+#@maprange(scripts/04/lbhsbh-range/core/src/memunit.veryl,mem_wmask)
+    membus.wmask = req_wmask;
+#@end
+//}
+
+@<code>{always_ff}の中で、req_wmaskの値を設定します。
+それぞれの命令のとき、wmaskがどうなるかを確認してください。
+
+//list[memu.wmask.init][if_resetでreq_wmaskを初期化する (memunit.veryl)]{
+#@maprange(scripts/04/lbhsbh-range/core/src/memunit.veryl,always_reset)
+    req_wmask = 0;
+#@end
+//}
+
+//list[memu.wmask.set][メモリにアクセスする命令のとき、wmaskを設定する (memunit.veryl)]{
+#@maprange(scripts/04/lbhsbh-range/core/src/memunit.veryl,always_wmask)
+    req_wmask = case ctrl.funct3[1:0] {
+        2'b00  : 4'b1 << addr[1:0], @<balloon>{LB, LBUのとき、アドレス下位2ビット分だけ1を左シフトする}
+        2'b01  : case addr[1:0] { @<balloon>{LH, LHU命令のとき}
+            2      : 4'b1100, @<balloon>{上位2バイトに書き込む}
+            0      : 4'b0011, @<balloon>{下位2バイトに書き込む}
+            default: 'x,
+        },
+        2'b10  : 4'b1111, @<balloon>{LW命令のとき、全体に書き込む}
+        default: 'x,
+    };
+#@end
+//}
+
+=== LB, LBU, LH, LHU, SB, SH命令のテスト
+
+簡単なテストを作成し、動作をテストします。
+
+2つテストを記載するので、正しく動いているか確認してください。
+
+//list[sample_lbh.hex][src/sample_lbh.hex]{
+#@mapfile(scripts/04/lbhsbh/core/src/sample_lbh.hex)
+02000083 // lb x1, 0x20(x0)  : x1 = ffffffef
+02104083 // lbu x1, 0x21(x0) : x1 = 000000be
+02201083 // lh x1, 0x22(x0)  : x1 = ffffdead
+02205083 // lhu x1, 0x22(x0) : x1 = 0000dead
+00000000
+00000000
+00000000
+00000000
+deadbeef // 0x0
+#@end
+//}
+
+//list[sample_sbsh.hex][src/sample_sbsh.hex]{
+#@mapfile(scripts/04/lbhsbh/core/src/sample_sbsh.hex)
+12300093 // addi x1, x0, 0x123
+02101023 // sh x1, 0x20(x0)
+02100123 // sb x1, 0x22(x0)
+02200103 // lb x2, 0x22(x0) : x2 = 00000023
+02001183 // lh x3, 0x20(x0) : x3 = 00000123
+#@end
+//}
 
 == 分岐, ジャンプ
 

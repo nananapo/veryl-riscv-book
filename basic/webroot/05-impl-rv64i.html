@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>RV64Iの実装 | Verylで作るRISC-V CPU</title>
+    <link rel="stylesheet" type="text/css" href="css/normalize.css" />
+    <link rel="stylesheet" type="text/css" href="css/webstyle.css" />
+    <link rel="next" title="M拡張の実装" href="06-impl-M.html">
+    <link rel="prev" title="RV32Iの実装" href="04-impl-rv32i.html">
+    <meta name="generator" content="Re:VIEW Starter">
+  </head>
+  <body>
+    <div class="page-outer">
+      <nav class="side-content">
+                <a class="nav-title" href="index.html">Verylで作るRISC-V CPU</a>
+<ul class="toc toc-1">
+    <li class="toc-chapter"><a href="./00-preface.html">まえがき / はじめに</a></li>
+    <li class="toc-chapter"><a href="./01-intro.html">Intro</a></li>
+<li class="toc-part">第I部 基本編
+  <ul class="toc toc-2">
+    <li class="toc-chapter"><a href="./02-setup.html">1 環境構築</a></li>
+    <li class="toc-chapter"><a href="./03-veryl.html">2 ハードウェア記述言語 Veryl</a></li>
+    <li class="toc-chapter"><a href="./04-impl-rv32i.html">3 RV32Iの実装</a></li>
+    <li class="toc-chapter"><a href="./05-impl-rv64i.html">4 RV64Iの実装</a>
+      <ul class="toc toc-3">
+        <li class="toc-section"><a href="#h4-1">4.1 メモリの幅を広げる</a></li>
+        <li class="toc-section"><a href="#h4-2">4.2 LW, LWU, LD命令の実装</a></li>
+        <li class="toc-section"><a href="#h4-3">4.3 SD命令の実装</a></li>
+        <li class="toc-section"><a href="#h4-4">4.4 LUI, AUIPC命令の実装</a></li>
+        <li class="toc-section"><a href="#h4-5">4.5 ADDW, ADDIW, SUBW命令の実装</a></li>
+        <li class="toc-section"><a href="#h4-6">4.6 シフト命令の実装</a></li>
+        <li class="toc-section"><a href="#h4-7">4.7 riscv-tests</a></li>
+      </ul>
+    </li>
+  </ul>
+</li>
+<li class="toc-part">第II部 基本的な拡張とトラップの実装
+  <ul class="toc toc-2">
+    <li class="toc-chapter"><a href="./06-impl-M.html">5 M拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./07-impl-exception.html">6 例外の実装</a></li>
+    <li class="toc-chapter"><a href="./08-impl-A.html">7 A拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./09-impl-C.html">8 C拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./10-impl-MMIO.html">9 MMIOの実装</a></li>
+    <li class="toc-chapter"><a href="./11-impl-interrupt.html">10 割り込みの実装</a></li>
+  </ul>
+</li>
+<li class="toc-part">第III部 privilege modeの実装
+  <ul class="toc toc-2">
+    <li class="toc-chapter"><a href="./12-impl-mmode-csr.html">11 M-modeの実装</a></li>
+    <li class="toc-chapter"><a href="./13-impl-smode-csr.html">12 S-modeの実装</a></li>
+    <li class="toc-chapter"><a href="./14-impl-paging.html">13 ページングの実装</a></li>
+  </ul>
+</li>
+<li class="toc-part">第IV部 OSを動かす
+  <ul class="toc toc-2">
+    <li class="toc-chapter"><a href="./15-impl-virtio.html">14 virtioの実装</a></li>
+    <li class="toc-chapter"><a href="./16-run-xv6.html">15 xv6の実行</a></li>
+  </ul>
+</li>
+    <li class="toc-chapter"><a href="./99-postface.html">あとがき / おわりに</a></li>
+</ul>
+      </nav>
+      <div class="page-inner">
+        <header class="page-header">
+        </header>
+        <main class="page-main">
+<h1 class="boldlines center twolines"><a id="h4"></a><span class="secno">第4章</span> <br/>RV64Iの実装</h1>
+<p>前章ではRISC-Vの32bit環境であるRV32IのCPUを実装しました。RISC-Vには64bit環境の基本整数命令セットとしてRV64Iが用意されています。本章ではRV32IのCPUをRV64Iにアップグレードします。</p>
+<p>では、具体的にRV32IとRV64Iは何が違うのでしょうか?RV64Iでは、レジスタの幅が32bitから64bitに変わり、各種演算命令の演算の幅も64ビットになります。</p>
+<p>それに伴い、次の命令が追加で定義されます。</p>
+<p>これらの命令は32ビット幅での演算を行うものか、64ビット幅でロードストアする命令です。</p>
+<p>本章では、ロードストア命令を実装した後、それ以外の命令を実装します。</p>
+<p>命令を実装したら、riscv-testsを実行することで、rv32ui-p-が正常に動くことを検証してください。64ビット向けのテストはrv64i-p-から始まるテストです。命令を実装するたびにテストを実行することで、命令が正しく実行できていることを確認してください。</p>
+
+<h2 class="numbox"><a id="h4-1"></a><span class="secno">4.1</span> メモリの幅を広げる</h2>
+<p>ロードストア命令を実装するにあたって、メモリの幅を広げます。現在のメモリの幅は32ビットですが、このままだと64ビットでロードストアを行う場合に最低2回のメモリアクセスが必要になってしまいます。これを1回のメモリアクセスで済ませるために、メモリ幅を32ビットから64ビットに広げます。</p>
+<p>プログラム</p>
+<p>命令フェッチ部では、64ビットの読み出しデータの上位32ビット, 下位32ビットをPCの下位3ビットで選択します。PC[2:0]が0のときは下位32ビット、4のときは上位32ビットになります。</p>
+<p>プログラム</p>
+<p>メモリ命令を処理する部分では、LW命令に新たにrdataの選択処理を追加します。LB[U], LH[U]については上位32ビットの場合について追加します。ストア命令では、マスクを変更し、アドレスに合わせてwdataを変更します。</p>
+<p>プログラム</p>
+
+<h2 class="numbox"><a id="h4-2"></a><span class="secno">4.2</span> LW, LWU, LD命令の実装</h2>
+<p>LW命令は、符号拡張するように変更します。LWU命令は、LHU, LBU命令と同様に0拡張すればよいです。LD命令は、メモリのrdataをそのまま結果に格納します。</p>
+
+<h2 class="numbox"><a id="h4-3"></a><span class="secno">4.3</span> SD命令の実装</h2>
+<p>SD命令は、マスクをすべて1で埋めて、wdataをレジスタの値をそのままにします。</p>
+
+<h2 class="numbox"><a id="h4-4"></a><span class="secno">4.4</span> LUI, AUIPC命令の実装</h2>
+<p>なんか変わったっけ？？？</p>
+
+<h2 class="numbox"><a id="h4-5"></a><span class="secno">4.5</span> ADDW, ADDIW, SUBW命令の実装</h2>
+<p>32ビット単位で足し算、引き算をする命令が追加されています。これに対応するためにALUを変更します。</p>
+<p>結果は符号拡張する必要があります。</p>
+
+<h2 class="numbox"><a id="h4-6"></a><span class="secno">4.6</span> シフト命令の実装</h2>
+<p>SLLIW, SRLIW, SRAIW, SLL, SRL, SRA, SLLW, SRLW, SRAW</p>
+<p>32ビット単位に対してシフトする命令が追加されています。これに対応するためにALUを変更します。</p>
+
+<h2 class="numbox"><a id="h4-7"></a><span class="secno">4.7</span> riscv-tests</h2>
+<p>RV64Iのテストがすべて正常に実行できることを確認してください。</p>
+
+        </main>
+        <nav class="page-navi">
+          <a href="04-impl-rv32i.html" class="page-prev">&#9664;</a>
+          <a href="06-impl-M.html" class="page-next">&#9654;</a>
+        </nav>
+        <footer>
+        </footer>
+      </div>
+    </div>
+  </body>
+</html>
+<!-- layout.html5.erb -->

@@ -1,0 +1,169 @@
+
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title> | Verylで作るRISC-V CPU</title>
+
+    <link rel="stylesheet" type="text/css" href="css/normalize.css" />
+
+    <link rel="stylesheet" type="text/css" href="css/webstyle.css" />
+
+
+    <link rel="next" title="まえがき / はじめに" href="00-preface.html">
+
+
+    <meta name="generator" content="Re:VIEW Starter">
+  </head>
+  <body>
+    <div class="page-outer">
+
+      <div class="page-inner">
+        <header class="page-header">
+        </header>
+        <main class="page-main">
+
+          <h1>Verylで作るRISC-V CPU</h1>
+<ul class="toc toc-1">
+    <li class="toc-chapter"><a href="./00-preface.html">まえがき / はじめに</a>
+      <ul class="toc toc-2">
+        <li class="toc-section"><a href="#h">凡例</a></li>
+      </ul>
+    </li>
+    <li class="toc-chapter"><a href="./01-intro.html">Intro</a></li>
+<li class="toc-part">第I部 基本編
+  <ul class="toc toc-2">
+    <li class="toc-chapter"><a href="./02-setup.html">1 環境構築</a>
+      <ul class="toc toc-3">
+        <li class="toc-section"><a href="#h1-1">1.1 Veryl</a></li>
+        <li class="toc-section"><a href="#h1-2">1.2 Verilator</a></li>
+        <li class="toc-section"><a href="#h1-3">1.3 riscv-gnu-toolchain</a></li>
+      </ul>
+    </li>
+    <li class="toc-chapter"><a href="./03-veryl.html">2 ハードウェア記述言語 Veryl</a>
+      <ul class="toc toc-3">
+        <li class="toc-section"><a href="#h2-1">2.1 あああ</a></li>
+      </ul>
+    </li>
+    <li class="toc-chapter"><a href="./04-impl-rv32i.html">3 RV32Iの実装</a>
+      <ul class="toc toc-3">
+        <li class="toc-section"><a href="#h3-1">3.1 CPUは何をやっているのか？</a></li>
+        <li class="toc-section"><a href="#h3-2">3.2 プロジェクトの作成</a></li>
+        <li class="toc-section"><a href="#h3-3">3.3 定数の定義</a></li>
+        <li class="toc-section"><a href="#h3-4">3.4 メモリ</a></li>
+        <li class="toc-section"><a href="#h3-5">3.5 topモジュールの作成</a></li>
+        <li class="toc-section"><a href="#h3-6">3.6 命令フェッチ</a></li>
+        <li class="toc-section"><a href="#h3-7">3.7 命令のデコードと即値の生成</a></li>
+        <li class="toc-section"><a href="#h3-8">3.8 レジスタの定義と読み込み</a></li>
+        <li class="toc-section"><a href="#h3-9">3.9 ALUを作り、計算する</a></li>
+        <li class="toc-section"><a href="#h3-10">3.10 レジスタに結果を書き込む</a></li>
+        <li class="toc-section"><a href="#h3-11">3.11 ロード命令とストア命令の実装</a></li>
+        <li class="toc-section"><a href="#h3-12">3.12 分岐, ジャンプ</a></li>
+        <li class="toc-section"><a href="#h3-13">3.13 riscv-testsでテストする</a></li>
+      </ul>
+    </li>
+    <li class="toc-chapter"><a href="./05-impl-rv64i.html">4 RV64Iの実装</a>
+      <ul class="toc toc-3">
+        <li class="toc-section"><a href="#h4-1">4.1 メモリの幅を広げる</a></li>
+        <li class="toc-section"><a href="#h4-2">4.2 LW, LWU, LD命令の実装</a></li>
+        <li class="toc-section"><a href="#h4-3">4.3 SD命令の実装</a></li>
+        <li class="toc-section"><a href="#h4-4">4.4 LUI, AUIPC命令の実装</a></li>
+        <li class="toc-section"><a href="#h4-5">4.5 ADDW, ADDIW, SUBW命令の実装</a></li>
+        <li class="toc-section"><a href="#h4-6">4.6 シフト命令の実装</a></li>
+        <li class="toc-section"><a href="#h4-7">4.7 riscv-tests</a></li>
+      </ul>
+    </li>
+  </ul>
+</li>
+<li class="toc-part">第II部 基本的な拡張とトラップの実装
+  <ul class="toc toc-2">
+    <li class="toc-chapter"><a href="./06-impl-M.html">5 M拡張の実装</a>
+      <ul class="toc toc-3">
+        <li class="toc-section"><a href="#h5-1">5.1 MUL[W]命令</a></li>
+        <li class="toc-section"><a href="#h5-2">5.2 MULH命令</a></li>
+        <li class="toc-section"><a href="#h5-3">5.3 MULHU命令</a></li>
+        <li class="toc-section"><a href="#h5-4">5.4 MULHSU命令</a></li>
+        <li class="toc-section"><a href="#h5-5">5.5 DIV[W]命令</a></li>
+        <li class="toc-section"><a href="#h5-6">5.6 DIVU[W]命令</a></li>
+        <li class="toc-section"><a href="#h5-7">5.7 REM[W]命令</a></li>
+        <li class="toc-section"><a href="#h5-8">5.8 REMU[W]命令</a></li>
+      </ul>
+    </li>
+    <li class="toc-chapter"><a href="./07-impl-exception.html">6 例外の実装</a>
+      <ul class="toc toc-3">
+        <li class="toc-section"><a href="#h6-1">6.1 例外とは何か？</a></li>
+        <li class="toc-section"><a href="#h6-2">6.2 illegal instruction</a></li>
+        <li class="toc-section"><a href="#h6-3">6.3 メモリのアドレスのやつ</a></li>
+      </ul>
+    </li>
+    <li class="toc-chapter"><a href="./08-impl-A.html">7 A拡張の実装</a>
+      <ul class="toc toc-3">
+        <li class="toc-section"><a href="#h7-1">7.1 概要</a></li>
+        <li class="toc-section"><a href="#h7-2">7.2 AMO系</a></li>
+        <li class="toc-section"><a href="#h7-3">7.3 LR / SC</a></li>
+        <li class="toc-section"><a href="#h7-4">7.4 例外</a></li>
+      </ul>
+    </li>
+    <li class="toc-chapter"><a href="./09-impl-C.html">8 C拡張の実装</a>
+      <ul class="toc toc-3">
+        <li class="toc-section"><a href="#h8-1">8.1 概要</a></li>
+        <li class="toc-section"><a href="#h8-2">8.2 実装方針</a></li>
+        <li class="toc-section"><a href="#h8-3">8.3 圧縮命令の変換</a></li>
+      </ul>
+    </li>
+    <li class="toc-chapter"><a href="./10-impl-MMIO.html">9 MMIOの実装</a>
+      <ul class="toc toc-3">
+        <li class="toc-section"><a href="#h9-1">9.1 概要</a></li>
+        <li class="toc-section"><a href="#h9-2">9.2 実装方針</a></li>
+      </ul>
+    </li>
+    <li class="toc-chapter"><a href="./11-impl-interrupt.html">10 割り込みの実装</a>
+      <ul class="toc toc-3">
+        <li class="toc-section"><a href="#h10-1">10.1 概要</a></li>
+        <li class="toc-section"><a href="#h10-2">10.2 UART RX</a></li>
+        <li class="toc-section"><a href="#h10-3">10.3 タイマ割り込み</a></li>
+      </ul>
+    </li>
+  </ul>
+</li>
+<li class="toc-part">第III部 privilege modeの実装
+  <ul class="toc toc-2">
+    <li class="toc-chapter"><a href="./12-impl-mmode-csr.html">11 M-modeの実装</a></li>
+    <li class="toc-chapter"><a href="./13-impl-smode-csr.html">12 S-modeの実装</a></li>
+    <li class="toc-chapter"><a href="./14-impl-paging.html">13 ページングの実装</a>
+      <ul class="toc toc-3">
+        <li class="toc-section"><a href="#h13-1">13.1 ページングとは何か</a></li>
+        <li class="toc-section"><a href="#h13-2">13.2 PTWの実装</a></li>
+        <li class="toc-section"><a href="#h13-3">13.3 Sv32</a></li>
+        <li class="toc-section"><a href="#h13-4">13.4 Sv39</a></li>
+        <li class="toc-section"><a href="#h13-5">13.5 Sv48</a></li>
+        <li class="toc-section"><a href="#h13-6">13.6 Sv54</a></li>
+      </ul>
+    </li>
+  </ul>
+</li>
+<li class="toc-part">第IV部 OSを動かす
+  <ul class="toc toc-2">
+    <li class="toc-chapter"><a href="./15-impl-virtio.html">14 virtioの実装</a></li>
+    <li class="toc-chapter"><a href="./16-run-xv6.html">15 xv6の実行</a></li>
+  </ul>
+</li>
+    <li class="toc-chapter"><a href="./99-postface.html">あとがき / おわりに</a></li>
+</ul>
+
+
+        </main>
+        <nav class="page-navi">
+
+
+          <a href="00-preface.html" class="page-next">&#9654;</a>
+
+        </nav>
+        <footer>
+
+        </footer>
+      </div>
+    </div>
+
+

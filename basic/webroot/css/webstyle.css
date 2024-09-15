@@ -1,0 +1,692 @@
+@charset "utf-8";
+
+
+/*
+ *  Starter
+ */
+body {
+	line-height: 150%;
+	font-family: serif;
+	font-size: 16px;
+}
+.page-outer {
+	max-width: 1000px;
+	margin: 0 auto;
+	padding: 10px;
+	position: relative;
+}
+.page-inner {
+	margin-right: 200px;
+}
+
+
+
+nav.side-content {
+	width: 200px;
+	float: right;
+	border: solid 1px #08c;
+	font-size: small;
+	position: fixed;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	overscroll-behavior-y: contain;
+	overflow-y: auto;
+}
+nav.side-content > .nav-title {
+	display: block;
+	font-size: large;
+	font-weight: bold;
+	font-family: sans-serif;
+	border: none;
+	border-width: 0px;
+	margin: 30px 0;
+	padding: 0;
+	color: #08c;
+	text-align: center;
+	text-decoration: none;
+}
+nav.side-content > .nav-title:hover {
+	text-decoration: underline;
+}
+ul.toc {
+	padding: 0 0 0 15px;
+}
+li.toc-part {
+	margin-top: 20px;
+	margin-left: -15px;
+	font-family: sans-serif;
+	font-weight: bold;
+	list-style-type: none;
+}
+li.toc-chapter {
+	font-family: sans-serif;
+	font-weight: normal;
+	list-style-type: disc;
+}
+li.toc-section {
+	font-family: serif;
+	font-weight: normal;
+	list-style-type: circle;
+}
+
+
+
+h1, h2, h3, h4, h5 {
+	font-family: sans-serif;
+	font-weight: bold;
+}
+h1.none {
+	line-height: 150%;
+	margin: 20px 0 40px 0;
+}
+h1.underline {
+	line-height: 150%;
+	margin: 40px 0 40px 0;
+	padding: 0 0 20px 0;
+	border: solid #08c;
+	border-width: 0 0 2px 0;
+}
+h1.boldlines {
+	line-height: 150%;
+	border: solid #08c;
+	border-width: 15px 0;
+	padding: 30px 0;
+	margin: 20px 0 40px 0;
+}
+h1.left {
+	text-align: left;
+}
+h1.right {
+	text-align: right;
+}
+h1.center {
+	text-align: center;
+}
+h1 > span.secno {
+	margin-right: 1rem;
+}
+h2.none {
+	margin: 60px 0 30px 0;
+}
+h2.none > span.secno {
+	margin-right: 5px;
+}
+h2.underline {
+	margin: 60px 0 30px 0;
+	border: solid #08c;
+	border-width: 0 0 1px 15px;
+	padding: 15px 0 10px 15px;
+}
+h2.underline > span.secno {
+	margin-right: 10px;
+}
+h2.grayback {
+	background: #eef;
+	margin: 60px 0 30px 0;
+}
+h2.grayback > span.secno {
+	background: #08c;
+	padding: 10px 20px;
+	display: inline-block;
+	width: 3.5rem;
+	text-align: center;
+	color: #fff;
+	margin: 0 20px 0 0;
+}
+h2.leftline {
+	margin: 60px 0 30px 0;
+	border: solid #08c;
+	border-width: 0 0 0 15px;
+	padding: 15px 0 15px 15px;
+}
+h2.leftline > span.secno {
+	margin-right: 10px;
+}
+h2.numbox {
+	margin: 60px 0 30px 0;
+}
+h2.numbox > span.secno {
+	background: #08c;
+	padding: 10px 20px;
+	display: inline-block;
+	width: 3.5rem;
+	text-align: center;
+	color: #fff;
+	margin: 0 20px 0 0;
+}
+h2.circle {
+	vertical-align: middle;
+}
+h2.circle > span.secno {
+	display: inline-block;
+	background: #08c;
+	color: #fff;
+	border-radius: 50%;
+	width: 3.0em;
+	height: 2.1em;
+	text-align: center;
+	vertical-align: middle;
+	padding-top: 0.9em;
+	margin-right: 0.3em;
+}
+h3 {
+	margin: 40px 0 5px 0;
+}
+h3.none {
+}
+h3.symbol:before {
+	content: "\2663  "; /* &hearts; */
+	color: #08c;
+}
+h4 {
+	font-size: large;
+}
+h5 {
+	font-size: medium;
+	margin: 10px 0 10px 0;
+}
+h5:before {
+	content: "\25A0";  /* ■ */
+}
+
+
+
+pre, code, tt, kdb, var, samp {
+	/* font-family: monospace, serif; /* not work. why? */
+	font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
+	font-size: 0.875;
+}
+pre.list, pre.emlist, pre.output {
+	padding: 3px 6px;
+	margin: 0;
+	border: solid 1px #ddd;
+	border-radius: 2px;
+	word-break: break-all;
+	white-space: pre-wrap;
+	line-height: 150%;
+}
+pre.list, pre.emlist {
+	background: #eee;
+}
+pre.output {
+	background: #fff;
+}
+
+
+code.inline-code {
+	background: #eee;
+	padding: 2px 4px;
+	white-space: pre;
+	border-radius: 2px;
+}
+h1 > code.inline-code, h2 > code.inline-code, h3 > code.inline-code, h4 > code.inline-code, h5 > code.inline-code {
+	background: none;
+}
+.toc code.inline-code {
+	background: none;
+}
+div.cmd-code > pre {
+	background: #111;
+	color: #fff;
+	border: solid 1px #000;
+}
+div.list-code, div.emlist-code, div.listnum-code, div.emlistnum-code, div.cmd-code, div.source-code {
+	margin: 15px 0;
+}
+pre > em.lineno {
+	color: #999;
+	font-family: monospace;
+	display: inline-block;
+	width: 6rem;
+	margin-left: -6rem;
+	text-align: right;
+}
+pre > em.linenowidth {
+	color: #999;
+	font-family: monospace;
+}
+pre > .startereolmark:after {
+	content: "\21B5";
+	color: #ccc;
+}
+div.cmd-code > pre > .startereolmark:after {
+	color: #444;
+}
+pre > .indentbar {
+	border-left: solid 1px #fcfcfc;
+	margin-right: -1px;
+}
+div.cmd-code > pre > .indentbar {
+	border-left: solid 1px #292929;
+	margin-right: -1px;
+}
+
+
+
+.caption {
+	margin: 0 0 5px 0;
+	display: inline-block;
+}
+p.caption {
+	display: block;
+}
+
+.caption:before {
+	content: '\25BC  ';  /* ▼ */
+	color: #777;
+}
+div.image > .caption:before {
+	content: '\25B2  ';   /* ▲ */
+}
+
+
+
+ul {
+	padding-left: 3rem;
+}
+ul > li {
+	margin: 4px 0;
+}
+
+
+
+ol {
+	padding-left: 3rem;
+}
+ol.ol-none {
+	list-style-type: none;
+	padding-left: 3rem;
+}
+.li-mark {
+	margin-left: -3rem;
+	display: inline-block;
+	min-width: 2.5rem;
+	padding-right: 0.5rem;
+	text-align: right;
+}
+
+
+
+div.abstract {
+	margin: 30px 70px;
+	font-family: gothic;
+	font-size: small;
+}
+
+
+div.chapterauthor {
+	text-align: right;
+}
+div.chapterauthor::before {
+	content: "［著］";
+}
+
+
+
+div.column {
+	border: solid 1px #08c;
+	margin: 50px 0;
+	padding: 10px 20px;
+}
+div.column > h2, div.column > h3 {
+	margin: 0 0 10px 0;
+	background: none;
+}
+div.column > h2:before, div.column > h3:before {
+	content: "【コラム】"
+}
+
+
+
+div.note {
+	margin: 40px 50px;
+	border: dotted #08c;
+	border-width: 5px 0;
+	font-family: gothic;
+	font-size: small;
+}
+div.note > h5 {
+	margin: 15px 0;
+	font-size: large;
+}
+div.note > h5:before {
+	content: "";
+}
+
+
+
+.miniblock {
+	border: solid 1px gray;
+	border-radius: 2px;
+	margin-top: 5ex;
+	margin-bottom: 5ex;
+	padding: 10px 15px 10px 15px;
+	background-repeat: no-repeat;
+	background-size: 64px;
+	background-position: 15px 15px;
+	font-size: small;
+}
+
+.miniblock.miniblock-info {
+	padding-left: 100px;
+	background-image: url("../images/info-icon.png")
+}
+
+.miniblock.miniblock-warning {
+	padding-left: 100px;
+	background-image: url("../images/warning-icon.png")
+}
+
+.miniblock.miniblock-caution {
+	padding-left: 100px;
+	background-image: url("../images/caution-icon.png")
+}
+
+.miniblock-caption {
+	font-family: sans-serif;
+	font-size: medium;
+	font-weight: bold;
+	margin-top: 0.5ex;
+	margin-bottom: -0.5ex;
+}
+
+
+
+div.table {
+	margin: 30px auto;
+	text-align: center;
+}
+
+div.table > table {
+	margin: auto auto;
+	border-collapse: collapse;
+}
+div.table > table td, div.table > table th {
+	border: solid 1px #ccc;
+	padding: 2px 4px;
+}
+div.table > table th {
+	font-family: sans-serif;
+	font-weight: bold;
+	background: #ddd;
+}
+
+div.table.table-nohline > table, div.table.table-nohline > table {
+	border: solid 1px #ccc !important;
+}
+div.table.table-nohline > table td, div.table.table-nohline > table th {
+	border: none;
+}
+div.table > table tr.hline, div.table > table tr.hline {
+	border-bottom: solid 1px #ccc;
+}
+
+
+strong {
+	font-family: sans-serif;
+	font-weight: bold;
+}
+em {
+	font-family: sans-serif;
+	font-weight: normal;
+	font-style: normal;
+}
+dt {
+	font-family: sans-serif;
+	font-weight: bold;
+}
+
+
+
+div.image {
+	margin: 30px 0;
+	text-align: center;
+}
+div.image > img {
+}
+div.image > img[border=on], div.image > img.border {
+	border: solid 1px #ccc;
+}
+.image-bordered {
+	border: solid 1px #ccc;
+}
+
+
+
+div.footnote-list {
+	font-size: small;
+	margin: 30px 0 30px 100px;
+}
+div.footnote {
+}
+p.footnote {
+	margin: 10px 0;
+}
+.footnote-mark {
+	display: inline-block;
+	margin-left: -6rem;
+	width: 5.5rem;
+	padding-right: 0.5rem;
+	text-align: right;
+}
+
+.noteref {
+	font-size: x-small;
+	vertical-align: top;
+	position: relative;
+	top: -0.2rem;
+}
+
+
+.talk-list {
+	list-style-type: none;
+	padding-left: 0px;
+	margin-top: 20px;
+	margin-bottom: 20px;
+}
+.talk-item {
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+.talk-item::after {
+	content: "";
+	display: block;
+	clear: both;
+}
+.talk-image {
+	width: 60px;
+}
+.talk-chara {
+	float: left;
+}
+.talk-name {
+	font-family: sans-serif;
+	font-weight: normal;
+	padding-top: 5px;
+	display: inline-block;
+}
+.talk-name::after {
+	content: "：";
+	display: inline-block;
+	width: 1.5em;
+}
+.talk-text {
+	display: block;
+	margin-left: 100px;
+	padding-top: 5px;
+}
+.talk-text > p:first-child {
+	/*margin-top: 0;*/
+	display: inline;
+}
+.talk-text::before {
+	content: "「";
+	display: inline-block;
+	text-align: right;
+	width: 1em;
+	margin-left: -1em;
+}
+.talk-text::after {
+	content: "」";
+	display: inline-block;
+	text-align: left;
+	width: 1em;
+}
+
+
+dl.desc-list {
+	margin-top: 20px;
+	margin-bottom: 20px;
+}
+dl.desc-list > dl.desc-list {
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+dt.desc {
+	display: inline-block;
+	font-weight: normal;
+	font-family: sans-serif;
+}
+dd.desc {
+	display: block;
+	margin-left: 40px;
+}
+dd.desc > p:first-child {
+	margin-top: 0;
+}
+dl.desc-list.item-bold > dt.desc {
+	font-weight: bold;
+}
+dl.desc-list.compact > dt.desc {
+	margin-right: 1em;
+	float: left;
+}
+dl.desc-list.compact > dd.desc {
+	margin-left: 80px;
+}
+dl.desc-list.compact > dd.desc::after {
+	content: "";
+	display: block;
+	clear: both;
+}
+
+
+.sampleoutput {
+	margin: 15px 0;
+}
+.sampleoutput-inner {
+	border: solid 1px #ccc;
+	border-radius: 2px;
+	padding: 10px;
+}
+
+
+.img		{ max-width: 100%; }
+
+.width-010per	{ max-width:  10%; }
+.width-015per	{ max-width:  15%; }
+.width-020per	{ max-width:  20%; }
+.width-025per	{ max-width:  25%; }
+.width-030per	{ max-width:  30%; }
+.width-035per	{ max-width:  35%; }
+.width-040per	{ max-width:  40%; }
+.width-045per	{ max-width:  45%; }
+.width-050per	{ max-width:  50%; }
+.width-055per	{ max-width:  55%; }
+.width-060per	{ max-width:  60%; }
+.width-065per	{ max-width:  65%; }
+.width-070per	{ max-width:  70%; }
+.width-075per	{ max-width:  75%; }
+.width-080per	{ max-width:  80%; }
+.width-085per	{ max-width:  85%; }
+.width-090per	{ max-width:  90%; }
+.width-095per	{ max-width:  95%; }
+.width-100per	{ max-width: 100%; }
+
+.width-033per	{ max-width:  33%; }
+.width-066per	{ max-width:  66%; }
+.width-067per	{ max-width:  67%; }
+
+
+
+.weak {
+	color: #999;
+}
+.file {
+	font-family: sans-serif;
+}
+.userinput {
+	text-decoration: underline;
+}
+.cursor {
+	color: #000;
+	background: #fff;
+}
+.review-signature {
+	display: none;
+}
+.center {
+	text-align: center;
+}
+.left {
+	text-align: left;
+}
+.right {
+	text-align: right;
+}
+.blockquote {
+	border: solid #999;
+	border-width: 0 0 0 5px;
+	padding-left: 15px;
+}
+.balloon {
+	color: #999;
+}
+.balloon:before {
+	content: "←";
+}
+.term {
+	font-family: sans-serif;
+}
+
+
+.rebuild {
+	background: #eee;
+	text-align: center;
+	font-family: sans-serif;
+}
+
+body.has-compile-error {
+	border: solid 10px #f00;
+}
+
+div.compile-error-message {
+	background: #fee;
+	border: solid 1px #f99;
+	padding: 3px 5px;
+	font-size: x-large;
+	color: #900;
+}
+div.compile-error-message > dl {
+	margin: 0;
+}
+div.compile-error-message > dl > dt {
+	font-weight: bold;
+	width: 6rem;
+	float: left;
+}
+div.compile-error-message > dl > dd {
+	padding-bottom: 5px;
+	color: #633;
+}
+div.compile-error-message > dl > dd:after {
+	clear: both;
+}
+pre.compile-error-backtrace {
+	font-size: small;
+	background: #eee;
+	padding: 3px 5px;
+	border: solid 1px #ccc;
+	overflow: auto;
+}

@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>まえがき / はじめに | Verylで作るRISC-V CPU</title>
+    <link rel="stylesheet" type="text/css" href="css/normalize.css" />
+    <link rel="stylesheet" type="text/css" href="css/webstyle.css" />
+    <link rel="next" title="Intro" href="01-intro.html">
+    <meta name="generator" content="Re:VIEW Starter">
+  </head>
+  <body>
+    <div class="page-outer">
+      <nav class="side-content">
+                <a class="nav-title" href="index.html">Verylで作るRISC-V CPU</a>
+<ul class="toc toc-1">
+    <li class="toc-chapter"><a href="./00-preface.html">まえがき / はじめに</a>
+      <ul class="toc toc-2">
+        <li class="toc-section"><a href="#h">凡例</a></li>
+      </ul>
+    </li>
+    <li class="toc-chapter"><a href="./01-intro.html">Intro</a></li>
+<li class="toc-part">第I部 基本編
+  <ul class="toc toc-2">
+    <li class="toc-chapter"><a href="./02-setup.html">1 環境構築</a></li>
+    <li class="toc-chapter"><a href="./03-veryl.html">2 ハードウェア記述言語 Veryl</a></li>
+    <li class="toc-chapter"><a href="./04-impl-rv32i.html">3 RV32Iの実装</a></li>
+    <li class="toc-chapter"><a href="./05-impl-rv64i.html">4 RV64Iの実装</a></li>
+  </ul>
+</li>
+<li class="toc-part">第II部 基本的な拡張とトラップの実装
+  <ul class="toc toc-2">
+    <li class="toc-chapter"><a href="./06-impl-M.html">5 M拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./07-impl-exception.html">6 例外の実装</a></li>
+    <li class="toc-chapter"><a href="./08-impl-A.html">7 A拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./09-impl-C.html">8 C拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./10-impl-MMIO.html">9 MMIOの実装</a></li>
+    <li class="toc-chapter"><a href="./11-impl-interrupt.html">10 割り込みの実装</a></li>
+  </ul>
+</li>
+<li class="toc-part">第III部 privilege modeの実装
+  <ul class="toc toc-2">
+    <li class="toc-chapter"><a href="./12-impl-mmode-csr.html">11 M-modeの実装</a></li>
+    <li class="toc-chapter"><a href="./13-impl-smode-csr.html">12 S-modeの実装</a></li>
+    <li class="toc-chapter"><a href="./14-impl-paging.html">13 ページングの実装</a></li>
+  </ul>
+</li>
+<li class="toc-part">第IV部 OSを動かす
+  <ul class="toc toc-2">
+    <li class="toc-chapter"><a href="./15-impl-virtio.html">14 virtioの実装</a></li>
+    <li class="toc-chapter"><a href="./16-run-xv6.html">15 xv6の実行</a></li>
+  </ul>
+</li>
+    <li class="toc-chapter"><a href="./99-postface.html">あとがき / おわりに</a></li>
+</ul>
+      </nav>
+      <div class="page-inner">
+        <header class="page-header">
+        </header>
+        <main class="page-main">
+<h1 class="none center"><a id="h"></a><br/>まえがき / はじめに</h1>
+<p>本書を手に取っていただき、ありがとうございます。</p>
+<p>本書は、OSを実行できる程度の機能を持ったRISC-VのCPUを、新しめのハードウェア記述言語であるVerylで記述する方法について解説した本です。本書は無料で、pdf版は<a href="https://github.com/nananapo/veryl-riscv-book" class="link">https://github.com/nananapo/veryl-riscv-book</a>で入手することができます。</p>
+
+<h4 id="id_00-preface_nonum1" notoc="true">本書の対象読者</h4>
+<p>本書はコンピュータアーキテクチャに興味があり、何らかのプログラミング言語を習得している人を対象としています。</p>
+
+<h4 id="id_00-preface_nonum2" notoc="true">前提とする知識</h4>
+<p>未定</p>
+
+<h4 id="id_00-preface_nonum3" notoc="true">問い合わせ先</h4>
+<p>本書に関する質問やお問い合わせは、以下のリポジトリにissueを立てて行ってください。</p>
+<ul>
+<li>URL: <a href="https://github.com/nananapo/veryl-riscv-book/issues" class="link">https://github.com/nananapo/veryl-riscv-book/issues</a>
+</li>
+</ul>
+
+<h4 id="id_00-preface_nonum4" notoc="true">謝辞</h4>
+<p>本書はXXXX氏とXXXX氏にレビューしていただきました。この場を借りて感謝します。ありがとうございました。</p>
+<p></p>
+<hr />
+<p></p>
+
+<h2 id="id_00-preface_nonum5" notoc="true">凡例</h2>
+<p>本書では、プログラムコードを次のように表示します。太字は強調を表します。</p>
+<div class="caption-code">
+<pre class="emlist">print(&quot;Hello, <b>world</b>!\n&quot;);       <span class="balloon">← 太字は強調</span>
+</pre>
+</div>
+<p>プログラムコードの差分を表示する場合は、追加されたコードを太字で、削除されたコードを取り消し線で表します。</p>
+<div class="caption-code">
+<pre class="emlist"><del>print(&quot;Hello, <b>world</b>!\n&quot;);</del>       <span class="balloon">← 取り消し線は削除したコード</span>
+<b>print(&quot;Hello, &quot;+name+&quot;!\n&quot;);</b>    <span class="balloon">← 太字は追加したコード</span>
+</pre>
+</div>
+<p>長い行が右端で折り返されると、折り返されたことを表す小さな記号がつきます。</p>
+<div class="caption-code">
+<pre class="emlist">123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_
+</pre>
+</div>
+<p>ターミナル画面は、次のように表示します。行頭の「<code class="inline-code">$ </code>」はプロンプトを表し、ユーザが入力するコマンドには薄い下線を引いています。</p>
+<div class="cmd-code">
+<pre class="emlist">$ <span class="userinput">echo Hello</span>       <span class="balloon">← 行頭の「$ 」はプロンプト、それ以降がユーザ入力</span>
+</pre>
+</div>
+<p>本文に対する補足情報や注意・警告は、次のようなノートや囲み枠で表示します。</p>
+<div class="note">
+<h5>ノートタイトル</h5>
+<p>ノートは本文に対する補足情報です。</p>
+</div>
+<div class="miniblock miniblock-info">
+<p class="miniblock-caption">タイトル</p>
+<p>本文に対する補足情報です。</p>
+</div>
+<div class="miniblock miniblock-caution">
+<p class="miniblock-caption">タイトル</p>
+<p>本文に対する注意・警告です。</p>
+</div>
+
+        </main>
+        <nav class="page-navi">
+          <a href="01-intro.html" class="page-next">&#9654;</a>
+        </nav>
+        <footer>
+        </footer>
+      </div>
+    </div>
+  </body>
+</html>
+<!-- layout.html5.erb -->

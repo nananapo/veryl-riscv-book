@@ -1,0 +1,2159 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>RV32Iの実装 | Verylで作るRISC-V CPU</title>
+    <link rel="stylesheet" type="text/css" href="css/normalize.css" />
+    <link rel="stylesheet" type="text/css" href="css/webstyle.css" />
+    <link rel="next" title="RV64Iの実装" href="05-impl-rv64i.html">
+    <link rel="prev" title="ハードウェア記述言語 Veryl" href="03-veryl.html">
+    <meta name="generator" content="Re:VIEW Starter">
+  </head>
+  <body>
+    <div class="page-outer">
+      <nav class="side-content">
+                <a class="nav-title" href="index.html">Verylで作るRISC-V CPU</a>
+<ul class="toc toc-1">
+    <li class="toc-chapter"><a href="./00-preface.html">まえがき / はじめに</a></li>
+    <li class="toc-chapter"><a href="./01-intro.html">Intro</a></li>
+<li class="toc-part">第I部 基本編
+  <ul class="toc toc-2">
+    <li class="toc-chapter"><a href="./02-setup.html">1 環境構築</a></li>
+    <li class="toc-chapter"><a href="./03-veryl.html">2 ハードウェア記述言語 Veryl</a></li>
+    <li class="toc-chapter"><a href="./04-impl-rv32i.html">3 RV32Iの実装</a>
+      <ul class="toc toc-3">
+        <li class="toc-section"><a href="#h3-1">3.1 CPUは何をやっているのか？</a></li>
+        <li class="toc-section"><a href="#h3-2">3.2 プロジェクトの作成</a></li>
+        <li class="toc-section"><a href="#h3-3">3.3 定数の定義</a></li>
+        <li class="toc-section"><a href="#h3-4">3.4 メモリ</a></li>
+        <li class="toc-section"><a href="#h3-5">3.5 topモジュールの作成</a></li>
+        <li class="toc-section"><a href="#h3-6">3.6 命令フェッチ</a></li>
+        <li class="toc-section"><a href="#h3-7">3.7 命令のデコードと即値の生成</a></li>
+        <li class="toc-section"><a href="#h3-8">3.8 レジスタの定義と読み込み</a></li>
+        <li class="toc-section"><a href="#h3-9">3.9 ALUを作り、計算する</a></li>
+        <li class="toc-section"><a href="#h3-10">3.10 レジスタに結果を書き込む</a></li>
+        <li class="toc-section"><a href="#h3-11">3.11 ロード命令とストア命令の実装</a></li>
+        <li class="toc-section"><a href="#h3-12">3.12 分岐, ジャンプ</a></li>
+        <li class="toc-section"><a href="#h3-13">3.13 riscv-testsでテストする</a></li>
+      </ul>
+    </li>
+    <li class="toc-chapter"><a href="./05-impl-rv64i.html">4 RV64Iの実装</a></li>
+  </ul>
+</li>
+<li class="toc-part">第II部 基本的な拡張とトラップの実装
+  <ul class="toc toc-2">
+    <li class="toc-chapter"><a href="./06-impl-M.html">5 M拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./07-impl-exception.html">6 例外の実装</a></li>
+    <li class="toc-chapter"><a href="./08-impl-A.html">7 A拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./09-impl-C.html">8 C拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./10-impl-MMIO.html">9 MMIOの実装</a></li>
+    <li class="toc-chapter"><a href="./11-impl-interrupt.html">10 割り込みの実装</a></li>
+  </ul>
+</li>
+<li class="toc-part">第III部 privilege modeの実装
+  <ul class="toc toc-2">
+    <li class="toc-chapter"><a href="./12-impl-mmode-csr.html">11 M-modeの実装</a></li>
+    <li class="toc-chapter"><a href="./13-impl-smode-csr.html">12 S-modeの実装</a></li>
+    <li class="toc-chapter"><a href="./14-impl-paging.html">13 ページングの実装</a></li>
+  </ul>
+</li>
+<li class="toc-part">第IV部 OSを動かす
+  <ul class="toc toc-2">
+    <li class="toc-chapter"><a href="./15-impl-virtio.html">14 virtioの実装</a></li>
+    <li class="toc-chapter"><a href="./16-run-xv6.html">15 xv6の実行</a></li>
+  </ul>
+</li>
+    <li class="toc-chapter"><a href="./99-postface.html">あとがき / おわりに</a></li>
+</ul>
+      </nav>
+      <div class="page-inner">
+        <header class="page-header">
+        </header>
+        <main class="page-main">
+<h1 class="boldlines center twolines"><a id="h3"></a><span class="secno">第3章</span> <br/>RV32Iの実装</h1>
+<p>本章では、RISC-Vの基本整数命令セットである<code class="inline-code">RV32I</code>を実装します。基本整数命令という名前の通り、整数の足し引きやビット演算、ジャンプ、分岐命令などの最小限の命令しか実装されていません。また、32ビット幅の汎用レジスタが32個定義されています。ただし、0番目のレジスタの値は常に0です。RISC-Vは基本整数命令セットに新しい命令を拡張として実装します。複雑な機能を持つCPUを実装する前に、まずは最小の機能を持つCPUを実装しましょう。</p>
+
+<h2 class="numbox"><a id="h3-1"></a><span class="secno">3.1</span> CPUは何をやっているのか？</h2>
+<p>上に書かれている文章の意味が分からなくても大丈夫。詳しく説明します。</p>
+<p>CPUを実装するには何が必要でしょうか？まずはCPUがどのような動作をするかについて考えてみます。一般的に、汎用のプログラムを実行するCPUは次の手順でプログラムを実行していきます。</p>
+<ol start="1" type="1">
+<li>メモリからプログラムを読み込む</li>
+<li>プログラムを実行する</li>
+<li>1, 2の繰り返し</li>
+</ol>
+<p>ここで、メモリから読み込まれる「プログラム」とは一体何を示しているのでしょうか？普通のプログラマが書くのはC言語やRustなどのプログラミング言語のプログラムですが、通常のCPUはそれをそのまま解釈して実行することはできません。そのため、メモリから読み込まれる「プログラム」とは、CPUが読み込んで実行することができる形式のプログラムです。これはよく「機械語」と呼ばれ、0と1で表される2進数のビット列で記述されています。</p>
+<p>メモリからプログラムを読み込んで実行するのがCPUの仕事ということが分かりました。これをもう少し掘り下げます。</p>
+<p>まず、プログラムをメモリから読み込むためには、メモリのどこを読み込みたいのかという情報(アドレス)をメモリに与える必要があります。また、当然ながらメモリが必要です。</p>
+<p>CPUはプログラムを実行しますが、一気にすべてのプログラムを読み込んだり実行するわけではなく、プログラムの最小単位である「命令」を一つずつ読み込んで実行します。命令をメモリに要求、取得することを、命令をフェッチするといいます。</p>
+<p>命令がCPUに供給されると、CPUは命令のビット列がどのような意味を持っていて何をすればいいかを判定します。このことを、命令をデコードするといいます。</p>
+<p>命令をデコードすると、いよいよ計算やメモリアクセスを行います。しかし、例えば足し算を計算するにも何と何を足し合わせればいいのか分かりません。この計算に使うデータは、次のように指定されます。</p>
+<ul>
+<li>レジスタ(= CPUに存在する小さなメモリ)の番号
+</li>
+<li>即値(= 命令のビット列から生成される数値)
+</li>
+</ul>
+<p>計算対象のデータにレジスタと即値のどれを使うかは命令によって異なります。レジスタの番号は命令のビット列の中に含まれています。</p>
+<p>計算を実行するユニット(部品)のことを、ALU(Arithmetic Logic Unit)といいます。</p>
+<p>計算やメモリアクセスが終わると、その結果をレジスタに格納します。例えば足し算を行う命令なら足し算の結果が、メモリから値を読み込む命令なら読み込まれた値が格納されます。</p>
+<p>これで命令の実行は終わりですが、CPUは次の命令を実行する必要があります。今現在実行している命令のアドレスを格納しているメモリのことをプログラムカウンタ(PC)と言い、CPUはPCの値をメモリに渡すことで命令をフェッチしています。CPUは次の命令を実行するために、PCの値を次の命令のアドレスに設定します。ジャンプ命令の場合は、PCの値をジャンプ先のアドレスに設定します。分岐命令の場合は、分岐の成否を計算で判定し、分岐が成立する場合は分岐先のアドレスをPCに設定します。分岐が成立しない場合は、通常の命令と同じように次の命令のアドレスをPCに設定します。</p>
+<p>ここまでの話をまとめると、CPUの動作は次のようになります。</p>
+<ul>
+<li>PCに格納されたアドレスにある命令をフェッチする
+</li>
+<li>命令を取得したらデコードする
+</li>
+<li>計算で使用するデータを取得する (レジスタの値を取得したり、即値を生成する)
+</li>
+<li>計算する命令の場合、計算を行う
+</li>
+<li>メモリにアクセスする命令の場合、メモリ操作を行う
+</li>
+<li>計算やメモリアクセスの結果をレジスタに格納する
+</li>
+<li>PCの値を次に実行する命令に設定する
+</li>
+</ul>
+<p>CPUが何をするものなのかが分かりましたか？実装を始めましょう。</p>
+
+<h2 class="numbox"><a id="h3-2"></a><span class="secno">3.2</span> プロジェクトの作成</h2>
+<p>まず、Verylのプロジェクトを作成します。ここでは適当にcoreという名前にしています。</p>
+<div id="veryl-new" class="cmd-code">
+<span class="caption">リスト3.1: リスト3.1: 新規プロジェクトの作成</span>
+<pre class="list">$ <span class="userinput">veryl new core</span>
+[INFO ]      Created &quot;core&quot; project
+</pre>
+</div>
+<p>すると、プロジェクト名のフォルダと、その中にVeryl.tomlが作成されます。</p>
+<p>TODO ソースマップがいらないので消す</p>
+<div id="Veryl.toml.first" class="caption-code">
+<span class="caption">リスト3.2: リスト3.2: 作成されたVeryl.toml</span>
+<pre class="list language-first">[project]
+name = &quot;core&quot;
+version = &quot;0.1.0&quot;
+</pre>
+</div>
+<p>Verylのプログラムを格納するために、プロジェクトのフォルダ内にsrcフォルダを作成しておいてください。</p>
+<div class="cmd-code">
+<pre class="emlist">$ <span class="userinput">cd core</span>
+$ <span class="userinput">mkdir src</span>
+</pre>
+</div>
+
+<h2 class="numbox"><a id="h3-3"></a><span class="secno">3.3</span> 定数の定義</h2>
+<p>いよいよプログラムを記述していきます。まず、CPU内で何度も使用する定数や型を記述するパッケージを作成します。</p>
+<p><code class="inline-code">src/eei.veryl</code>を作成し、次のように記述します。</p>
+<div id="eei.veryl" class="caption-code">
+<span class="caption">リスト3.3: リスト3.3: eei.veryl</span>
+<pre class="list language-veryl">package eei {
+    const XLEN: u32 = 32;
+    const ILEN: u32 = 32;
+
+    type UIntX  = logic&lt;XLEN&gt;;
+    type UInt32 = logic&lt;32&gt;  ;
+    type UInt64 = logic&lt;64&gt;  ;
+    type Inst   = logic&lt;ILEN&gt;;
+    type Addr   = logic&lt;XLEN&gt;;
+}
+</pre>
+</div>
+<p>EEIとは、RISC-V execution environment interfaceの略です。RISC-Vのプログラムの実行環境とインターフェースという広い意味があり、ISAの定義もEEIに含まれているため名前を使用しています。</p>
+<p>eeiパッケージには、次のパラメータを定義します。</p>
+<dl>
+<dt>XLEN</dt>
+<dd>
+    XLENは、RISC-Vにおいて整数レジスタの長さを示す数字として定義されています。
+    RV32Iのレジスタの長さは32ビットであるため、値を32にしています。
+</dd>
+<dt>ILEN</dt>
+<dd>
+    ILENは、RISC-VにおいてCPUの実装がサポートする命令の最大の幅を示す値として定義されています。
+    RISC-Vの命令の幅は、後の章で説明する圧縮命令を除けばすべて32ビットです。
+    そのため、値を32にしています。
+</dd>
+</dl>
+<p>また、何度も使用することになる型に別名を付けています。</p>
+<dl>
+<dt>UIntX, UInt32, UInt64</dt>
+<dd>
+    幅がそれぞれXLEN, 32, 64の符号なし整数型
+</dd>
+<dt>Inst</dt>
+<dd>
+    命令のビット列を格納するための型
+</dd>
+<dt>Addr</dt>
+<dd>
+    メモリのアドレスを格納するための型。
+    RISC-Vで使用できるメモリ空間の幅はXLENなのでUIntXでもいいですが、アドレスであることを明示するために別名を定義しています。
+</dd>
+</dl>
+
+<h2 class="numbox"><a id="h3-4"></a><span class="secno">3.4</span> メモリ</h2>
+<p>CPUはメモリに格納された命令を実行します。よって、CPUの実装のためにはメモリの実装が必要です。RV32Iにおいて命令の幅は32ビットです。また、メモリからのロード命令、ストア命令の最大の幅も32ビットです。</p>
+<p>これを実現するために、次のような要件のメモリを実装します。</p>
+<ul>
+<li>読み書きの単位は32ビット
+</li>
+<li>クロックに同期してメモリアクセスの要求を受け取る
+</li>
+<li>要求を受け取った次のクロックで結果を返す
+</li>
+</ul>
+
+<h3 class="none"><a id="h3-4-1"></a><span class="secno">3.4.1</span> メモリのインターフェースの定義</h3>
+<p>このメモリモジュールには、クロックとリセット信号の他に7個のポートを定義する必要があります(<span class="tableref"><a href="./04-impl-rv32i.html#memmodule-if">表3.1</a></span>)。これを一つ一つ定義、接続するのは面倒なため、次のようなinterfaceを定義します。</p>
+<p><code class="inline-code">src/membus_if.veryl</code>を作成し、次のように記述します。</p>
+<div id="membus_if.veryl" class="caption-code">
+<span class="caption">リスト3.4: リスト3.4: インターフェースの定義(membus_if.veryl)</span>
+<pre class="list language-veryl">import eei::*;
+
+interface membus_if {
+    var valid : logic ;
+    var ready : logic ;
+    var addr  : Addr  ;
+    var wen   : logic ;
+    var wdata : UInt32;
+    var rvalid: logic ;
+    var rdata : UInt32;
+
+    modport master {
+        valid : output,
+        ready : input ,
+        addr  : output,
+        wen   : output,
+        wdata : output,
+        rvalid: input ,
+        rdata : input ,
+    }
+
+    modport slave {
+        valid : input ,
+        ready : output,
+        addr  : input ,
+        wen   : input ,
+        wdata : input ,
+        rvalid: output,
+        rdata : output,
+    }
+}
+</pre>
+</div>
+<div id="memmodule-if" class="table">
+<p class="caption">表3.1: メモリモジュールに必要なポート</p>
+<table>
+<tr class="hline"><th>ポート名</th><th>型</th><th>向き</th><th>意味</th></tr>
+<tr class="hline"><td>clk</td><td>clock</td><td>input</td><td>クロック信号</td></tr>
+<tr class="hline"><td>rst </td><td>reset</td><td>input</td><td>リセット信号</td></tr>
+<tr class="hline"><td>valid</td><td>logic</td><td>input</td><td>メモリアクセスを要求しているかどうか</td></tr>
+<tr class="hline"><td>ready</td><td>logic</td><td>output</td><td>メモリアクセスを受容するかどうか</td></tr>
+<tr class="hline"><td>addr</td><td>Addr</td><td>input</td><td>アクセスするアドレス</td></tr>
+<tr class="hline"><td>wen</td><td>logic</td><td>input</td><td>書き込みかどうか (1なら書き込み)</td></tr>
+<tr class="hline"><td>wdata</td><td>UInt32</td><td>input</td><td>書き込むデータ</td></tr>
+<tr class="hline"><td>rvalid</td><td>logic</td><td>output</td><td>受容した要求の処理が終了したかどうか</td></tr>
+<tr class="hline"><td>rdata</td><td>UInt32</td><td>output</td><td>受容した読み込み命令の結果</td></tr>
+</table>
+</div>
+<p>interfaceを利用することで、レジスタやワイヤの定義が不要になり、さらにポートの相互接続を簡潔にすることができます。</p>
+
+<h3 class="none"><a id="h3-4-2"></a><span class="secno">3.4.2</span> メモリの実装</h3>
+<p>メモリを作る準備が整いました。<code class="inline-code">src/memory.veryl</code>を作成し、その中にメモリモジュールを記述します。</p>
+<div id="memory.veryl" class="caption-code">
+<span class="caption">リスト3.5: リスト3.5: memory.veryl</span>
+<pre class="list language-veryl">import eei::*;
+
+module memory #(
+    param MEMORY_WIDTH: u32 = 20, // メモリのサイズ
+) (
+    clk      : input   clock           ,
+    rst      : input   reset           ,
+    membus   : modport membus_if::slave,
+    FILE_PATH: input   string          , // メモリの初期値が格納されたファイルのパス
+) {
+
+    var mem: UInt32 [2 ** MEMORY_WIDTH];
+
+    // Addrをmemのインデックスに変換する関数
+    function addr_to_memaddr (
+        addr: input Addr               ,
+    ) -&gt; logic&lt;MEMORY_WIDTH&gt; {
+        return addr[MEMORY_WIDTH - 1 + 2:2];
+    }
+
+    initial {
+        // memをFILE_PATHに格納されているデータで初期化
+        if FILE_PATH != &quot;&quot; {
+            $readmemh(FILE_PATH, mem);
+        }
+    }
+
+    always_comb {
+        membus.ready = 1;
+    }
+
+    always_ff {
+        membus.rvalid = membus.valid;
+        membus.rdata  = mem[addr_to_memaddr(membus.addr)];
+        if membus.valid &amp;&amp; membus.wen {
+            mem[addr_to_memaddr(membus.addr)] = membus.wdata;
+        }
+    }
+}
+</pre>
+</div>
+<p>memoryモジュールには次のパラメータが定義されています。</p>
+<dl>
+<dt>MEMORY_WIDTH</dt>
+<dd>
+	メモリのサイズを指定するためのパラメータです。
+	メモリのサイズは32ビット * (2 ** MEMORY_WIDTH)になります。
+</dd>
+<dt>FILE_PATH</dt>
+<dd>
+    メモリの初期値が格納されたファイルのパスです。
+    初期化は$readmemhシステムタスクで行います。
+    (ポートとして定義していますが、本書ではパラメータとして扱います。)
+</dd>
+</dl>
+<p>読み込み、書き込み時の動作は次の通りです。</p>
+<dl>
+<dt>読み込み</dt>
+<dd>
+	読み込みが要求されるとき、
+	<code class="inline-code">membus.valid</code>が<code class="inline-code">1</code>、
+	<code class="inline-code">membus.wen</code>が<code class="inline-code">0</code>、
+	<code class="inline-code">membus.addr</code>が対象アドレスになっています。
+	次のクロックで、<code class="inline-code">membus.rvalid</code>が<code class="inline-code">1</code>になり、
+	<code class="inline-code">membus.rdata</code>はメモリのデータになります。
+</dd>
+<dt>書き込み</dt>
+<dd>
+	読み込みが要求されるとき、
+	<code class="inline-code">membus.valid</code>が<code class="inline-code">1</code>、
+	<code class="inline-code">membus.wen</code>が<code class="inline-code">1</code>、
+	<code class="inline-code">membus.addr</code>が対象アドレスになっています。
+	<code class="inline-code">always_ff</code>ブロックでは、
+	<code class="inline-code">membus.wen</code>が<code class="inline-code">1</code>であることを確認し、
+	<code class="inline-code">1</code>の場合は対象アドレスに<code class="inline-code">membus.wdata</code>を書き込みます。
+	次のクロックで<code class="inline-code">membus.rvalid</code>が<code class="inline-code">1</code>になります。
+</dd>
+</dl>
+<p>Addr型では1バイト単位でアドレスを指定しますが、memレジスタは32ビット(=4バイト)単位でデータを整列しています。そのため、Addr型のアドレスをそのままmemレジスタのインデックスとして利用することはできません。<code class="inline-code">addr_to_memaddr</code>関数は、1バイト単位のアドレスの下位2ビットを切り詰めることによって、memレジスタにおけるインデックスに変換しています。</p>
+
+<h2 class="numbox"><a id="h3-5"></a><span class="secno">3.5</span> topモジュールの作成</h2>
+<p>次に、最上位のモジュールを定義します。</p>
+<div id="top.veryl.memory.inst" class="caption-code">
+<span class="caption">リスト3.6: リスト3.6: top.veryl</span>
+<pre class="list language-inst">import eei::*;
+
+module top (
+    clk          : input clock ,
+    rst          : input reset ,
+    MEM_FILE_PATH: input string,
+) {
+    inst membus: membus_if;
+
+    inst mem: memory (
+        clk                     ,
+        rst                     ,
+        membus                  ,
+        FILE_PATH: MEM_FILE_PATH,
+    );
+}
+</pre>
+</div>
+<p>先ほど作ったmemoryモジュールをインスタンス化しています。また、memoryモジュールのポートに接続するためのmembus_ifインターフェースもインスタンス化しています。</p>
+
+<h2 class="numbox"><a id="h3-6"></a><span class="secno">3.6</span> 命令フェッチ</h2>
+<p>メモリを作成したため、命令フェッチ処理を作る準備が整いました。いよいよCPUのメイン部分を作成していきます。</p>
+
+<h3 class="none"><a id="h3-6-1"></a><span class="secno">3.6.1</span> 命令フェッチの実装</h3>
+<p><code class="inline-code">src/core.veryl</code>を作成し、次のように記述します。</p>
+<div id="core.veryl.all" class="caption-code">
+<span class="caption">リスト3.7: リスト3.7: core.veryl</span>
+<pre class="list language-all">import eei::*;
+
+module core (
+    clk   : input   clock            ,
+    rst   : input   reset            ,
+    membus: modport membus_if::master,
+) {
+
+    var if_pc          : Addr ;
+    var if_is_requested: logic; // フェッチ中かどうか
+    var if_pc_requested: Addr ; // 要求したアドレス
+
+    let if_pc_next: Addr = if_pc + 4;
+
+    // 命令フェッチ処理
+    always_comb {
+        membus.valid = 1;
+        membus.addr  = if_pc;
+        membus.wen   = 0;
+        membus.wdata = 'x; // wdataは使用しない
+    }
+
+    always_ff {
+        if_reset {
+            if_pc           = 0;
+            if_is_requested = 0;
+            if_pc_requested = 0;
+        } else {
+            if if_is_requested {
+                if membus.rvalid {
+                    if_is_requested = membus.ready;
+                    if membus.ready {
+                        if_pc           = if_pc_next;
+                        if_pc_requested = if_pc;
+                    }
+                }
+            } else {
+                if membus.ready {
+                    if_is_requested = 1;
+                    if_pc           = if_pc_next;
+                    if_pc_requested = if_pc;
+                }
+            }
+        }
+    }
+
+    always_ff {
+        if if_is_requested &amp;&amp; membus.rvalid {
+            $display(&quot;%h : %h&quot;, if_pc_requested, membus.rdata);
+        }
+    }
+}
+</pre>
+</div>
+<p><code class="inline-code">if_pc</code>レジスタはPC(プログラムカウンタ)です。ここで<code class="inline-code">if_</code>というprefixはinstruction fetchの略です。<code class="inline-code">if_is_requested</code>で現在フェッチ中かどうかを管理しており、フェッチ中のアドレスを<code class="inline-code">if_pc_requested</code>に格納しています。</p>
+<p><code class="inline-code">always_comb</code>ブロックでは、常にメモリにアドレス<code class="inline-code">if_pc</code>にある命令を要求しています。命令フェッチではメモリの読み込みしか行わないため、<code class="inline-code">membus.wen</code>は<code class="inline-code">0</code>になっています。</p>
+<p>上から1つめの<code class="inline-code">always_ff</code>ブロックでは、フェッチ中かどうか、メモリはready(要求を受け入れる)状態かどうかによって、<code class="inline-code">if_pc</code>, <code class="inline-code">if_is_requested</code>, <code class="inline-code">if_pc_requested</code>の値を変更しています。メモリに新しくフェッチを要求する時、<code class="inline-code">if_pc</code>を次の命令のアドレス(<code class="inline-code">4</code>を足したアドレス)に、<code class="inline-code">if_is_requested</code>を<code class="inline-code">1</code>に変更しています。フェッチ中かつ<code class="inline-code">membus.rvalid</code>が<code class="inline-code">1</code>のときは命令フェッチが完了しています。その場合は、メモリがreadyならすぐに次の命令フェッチを開始します。</p>
+<p>これにより、0,4,8,c,10,...という順番のアドレスの命令を次々にフェッチするようになっています。</p>
+<p>上から2つめの<code class="inline-code">always_ff</code>ブロックはデバッグ用のプログラムです。命令フェッチが完了したときにその結果を<code class="inline-code">$display</code>システムタスクによって出力します。</p>
+<p>次に、topモジュールでcoreモジュールをインスタンス化し、membus_ifインターフェースを接続します。これによって、メモリとCPUが接続されました。</p>
+<div id="top.veryl.core.instantiate" class="caption-code">
+<span class="caption">リスト3.8: リスト3.8: top.veryl内でcoreモジュールをインスタンス化する</span>
+<pre class="list language-instantiate">    inst c: core (
+        clk     ,
+        rst     ,
+        membus  ,
+    );
+</pre>
+</div>
+
+<h3 class="none"><a id="h3-6-2"></a><span class="secno">3.6.2</span> 命令フェッチのテスト</h3>
+<p>ここまでのプログラムが正しく動くかを検証します。</p>
+<p>Verylで記述されたプログラムは<code class="inline-code">veryl build</code>コマンドでSystemVerilogのプログラムに変換することができます。変換されたプログラムをオープンソースのVerilogシミュレータであるVerilatorで実行することで、命令フェッチが正しく動いていることを確認します。</p>
+<p>まず、プログラムをビルドします。</p>
+<div id="veryl.build.first" class="cmd-code">
+<span class="caption">リスト3.9: リスト3.9: Verylプログラムのビルド</span>
+<pre class="list language-first">$ <span class="userinput">veryl fmt</span> <span class="balloon">← フォーマットする</span>
+$ <span class="userinput">veryl build</span> <span class="balloon">← ビルドする</span>
+</pre>
+</div>
+<p>上記のコマンドを実行すると、verylプログラムと同名の<code class="inline-code">.sv</code>ファイルと<code class="inline-code">core.f</code>ファイルが生成されます。<code class="inline-code">core.f</code>は生成されたSystemVerilogのプログラムファイルのリストです。これをシミュレータのビルドに利用します。</p>
+<p>シミュレータのビルドにはVerilatorを利用します。Verilatorは与えられたSystemVerilogプログラムをC++プログラムに変換することでシミュレータを生成します。verilatorを利用するために、次のようなC++プログラムを書く必要があります。</p>
+<p><code class="inline-code">src/tb_verilator.cpp</code>を作成し、次のように記述します。</p>
+<div id="test_verilator.cpp" class="caption-code">
+<span class="caption">リスト3.10: リスト3.10: tb_verilator.cpp</span>
+<pre class="list language-cpp">#include &lt;iostream&gt;
+#include &lt;filesystem&gt;
+#include &lt;verilated.h&gt;
+#include &quot;Vcore_top.h&quot;
+
+namespace fs = std::filesystem;
+
+int main(int argc, char** argv) {
+    Verilated::commandArgs(argc, argv);
+
+    if (argc &lt; 2) {
+        std::cout &lt;&lt; &quot;Usage: &quot; &lt;&lt; argv[0] &lt;&lt; &quot; MEMORY_FILE_PATH [CYCLE]&quot; &lt;&lt; std::endl;
+        return 1;
+    }
+
+    // メモリの初期値を格納しているファイル名
+    std::string memory_file_path = argv[1];
+    try {
+        // 絶対パスに変換する
+        fs::path absolutePath = fs::absolute(memory_file_path);
+        memory_file_path = absolutePath.string();
+    } catch (const std::exception&amp; e) {
+        std::cerr &lt;&lt; &quot;Invalid memory file path : &quot; &lt;&lt; e.what() &lt;&lt; std::endl;
+        return 1;
+    }
+
+    // シミュレーションを実行するクロックサイクル数
+    unsigned long long cycles = 0;
+    if (argc &gt;= 3) {
+        std::string cycles_string = argv[2];
+        try {
+            cycles = stoull(cycles_string);
+        } catch (const std::exception&amp; e) {
+            std::cerr &lt;&lt; &quot;Invalid number: &quot; &lt;&lt; argv[2] &lt;&lt; std::endl;
+            return 1;
+        }
+    }
+
+    Vcore_top *dut = new Vcore_top();
+    dut-&gt;MEM_FILE_PATH = memory_file_path;
+
+    // reset
+    dut-&gt;clk = 0;
+    dut-&gt;rst = 1;
+    dut-&gt;eval();
+    dut-&gt;rst = 0;
+    dut-&gt;eval();
+
+    // loop
+    dut-&gt;rst = 1;
+    for (long long i=0; cycles == 0 || i / 2 &lt; cycles; i++) {
+        dut-&gt;clk = !dut-&gt;clk;
+        dut-&gt;eval();
+    }
+
+    dut-&gt;final();
+}
+</pre>
+</div>
+<p>このC++プログラムはtopモジュール(プログラム中ではVtop_coreクラス)をインスタンス化し、そのクロックを反転して実行するのを繰り返しています。</p>
+<p>このプログラムはコマンドライン引数として次の2つの値を受け取ります。</p>
+<dl>
+<dt>MEMORY_FILE_PATH</dt>
+<dd>
+	メモリの初期値のファイルへのパス。
+	実行時にtopモジュールのMEM_FILE_PATHパラメータに渡されます。
+</dd>
+<dt>CYCLE</dt>
+<dd>
+	何クロックで実行を終了するかを表す値。
+	0のときは終了しません。デフォルト値は0です。
+</dd>
+</dl>
+<p>Verilatorによるシミュレーションは、トップモジュールのクロック信号を変更して<code class="inline-code">eval</code>関数を呼び出すことにより実行します。プログラムでは<code class="inline-code">clk</code>を反転させて<code class="inline-code">eval</code>するループの前にtopモジュールをリセットする必要があるため、topモジュールの<code class="inline-code">rst</code>を1にして<code class="inline-code">eval</code>を実行し、<code class="inline-code">rst</code>を0にしてまた<code class="inline-code">eval</code>を実行し、<code class="inline-code">rst</code>を1にもどしてから<code class="inline-code">clk</code>を反転しています。</p>
+
+<h4><a id="h3-6-2-1"></a>シミュレータのビルド</h4>
+<p><code class="inline-code">verilator</code>コマンドを実行し、シミュレータをビルドします。</p>
+<div id="build.simulator" class="cmd-code">
+<span class="caption">リスト3.11: リスト3.11: シミュレータのビルド</span>
+<pre class="list language-simulator">$ verilator --cc -f core.f --exe src/tb_verialtor.cpp --top-module top --Mdir obj_dir
+$ make -C obj_dir -f Vcore_top.mk <span class="balloon">← シミュレータをビルドする</span>
+$ mv obj_dir/Vcore_top obj_dir/sim <span class="balloon">← シミュレータの名前をsimに変更する</span>
+</pre>
+</div>
+<p><code class="inline-code">verilator --cc</code>コマンドに次のコマンドライン引数を渡して実行することで、シミュレータを生成するためのプログラムが<code class="inline-code">obj_dir</code>に生成されます。</p>
+<dl>
+<dt>-f</dt>
+<dd>
+	SystemVerilogプログラムのファイルリストを指定します。
+	今回は<code class="inline-code">core.f</code>を指定しています。
+</dd>
+<dt>--exe</dt>
+<dd>
+	実行可能なシミュレータの生成に使用する、main関数が含まれたC++プログラムを指定します。
+	今回は<code class="inline-code">src/tb_verilator.cpp</code>を指定しています。
+</dd>
+<dt>--top-module</dt>
+<dd>
+	トップモジュールを指定します。
+	今回は<code class="inline-code">top</code>モジュールを指定しています。
+</dd>
+<dt>--Mdir</dt>
+<dd>
+	成果物の生成先を指定します。
+	今回は<code class="inline-code">obj_dir</code>フォルダに指定しています。
+</dd>
+</dl>
+<p>上記のコマンドの実行により、シミュレータが<code class="inline-code">obj_dir/sim</code>に生成されました。</p>
+
+<h4><a id="h3-6-2-2"></a>メモリの初期化用ファイルの作成</h4>
+<p>シミュレータを実行する前にメモリの初期値となるファイルを作成します。<code class="inline-code">src/sample.hex</code>を作成し、次のように記述します。</p>
+<div id="sample.hex" class="caption-code">
+<span class="caption">リスト3.12: リスト3.12: sample.hex</span>
+<pre class="list language-hex">01234567
+89abcdef
+deadbeef
+cafebebe
+<span class="balloon">← 必ず末尾に改行をいれてください</span>
+</pre>
+</div>
+<p>値は16進数で4バイトずつ記述されています。シミュレーションを実行すると、このファイルはmemoryモジュールの<code class="inline-code">$readmemh</code>システムタスクによって読み込みます。それにより、メモリは次のように初期化されます。</p>
+<div id="sample.hex.initial" class="table">
+<p class="caption">表3.2: sample.hexによって設定されるメモリの初期値</p>
+<table>
+<tr class="hline"><th>アドレス</th><th>値</th></tr>
+<tr class="hline"><td>00000000</td><td>01234567</td></tr>
+<tr class="hline"><td>00000004</td><td>89abcdef</td></tr>
+<tr class="hline"><td>00000008</td><td>deadbeef</td></tr>
+<tr class="hline"><td>0000000c</td><td>cafebebe</td></tr>
+<tr class="hline"><td>00000010~</td><td>不定</td></tr>
+</table>
+</div>
+
+<h4><a id="h3-6-2-3"></a>シミュレータの実行</h4>
+<p>生成されたシミュレータを実行し、アドレスが0, 4, 8, cのデータが正しくフェッチされていることを確認します。</p>
+<div id="check-memory" class="cmd-code">
+<span class="caption">リスト3.13: リスト3.13: 命令フェッチの動作チェック</span>
+<pre class="list">$ obj_dir/sim src/sample.hex 4
+00000000 : 01234567
+00000004 : 89abcdef
+00000008 : deadbeef
+0000000c : cafebebe
+</pre>
+</div>
+<p>メモリファイルのデータが4バイトずつ読み込まれていることが確認できます。</p>
+
+<h4><a id="h3-6-2-4"></a>Makefileの作成</h4>
+<p>ビルド、シミュレータのビルドのために一々コマンドを打つのは面倒です。これらの作業を一つのコマンドで済ますために、<code class="inline-code">Makefile</code>を作成し、次のように記述します。</p>
+<div id="Makefile" class="caption-code">
+<span class="caption">リスト3.14: リスト3.14: Makefile</span>
+<pre class="list">PROJECT = core
+FILELIST = $(PROJECT).f
+
+TOP_MODULE = top
+TB_PROGRAM = src/tb_verilator.cpp
+OBJ_DIR = obj_dir/
+SIM_NAME = sim
+
+build:
+        veryl fmt
+        veryl build
+
+clean:
+        veryl clean
+        rm -f src/*.sv.map
+        rm -rf $(OBJ_DIR)
+
+sim:
+        verilator --cc -f $(FILELIST) --exe $(TB_PROGRAM) --top-module $(PROJECT)_$(TOP_MODULE) --Mdir $(OBJ_DIR)
+        make -C $(OBJ_DIR) -f V$(PROJECT)_$(TOP_MODULE).mk
+        mv $(OBJ_DIR)/V$(PROJECT)_$(TOP_MODULE) $(OBJ_DIR)/$(SIM_NAME)
+</pre>
+</div>
+<p>これ以降、次のようにビルドやシミュレータのビルドができるようになります。</p>
+<div id="build.command" class="cmd-code">
+<span class="caption">リスト3.15: リスト3.15: Makefileによって追加されたコマンド</span>
+<pre class="list language-command">$ <span class="userinput">make build</span> <span class="balloon">← Verylプログラムのビルド</span>
+$ <span class="userinput">make sim</span> <span class="balloon">← シミュレータのビルド</span>
+$ <span class="userinput">make clean</span> <span class="balloon">← ビルドした成果物の削除</span>
+</pre>
+</div>
+
+<h3 class="none"><a id="h3-6-3"></a><span class="secno">3.6.3</span> フェッチした命令をFIFOに格納する</h3>
+
+<h4><a id="h3-6-3-1"></a>FIFOの作成</h4>
+<p>フェッチした命令は次々に実行されますが、その命令が何クロックで実行されるかは分かりません。命令が常に1クロックで実行される場合は現状の常にフェッチし続けるようなコードで問題ありませんが、例えばメモリにアクセスする命令は実行に何クロックかかるか分からないため、フェッチされた次の命令を保持しておくバッファを用意しておく必要があります。</p>
+<p>そこで、FIFOを作成して、フェッチした命令を格納します。<code class="inline-code">src/fifo.veryl</code>を作成し、次のように記述します。</p>
+<div id="fifo.veryl" class="caption-code">
+<span class="caption">リスト3.16: リスト3.16: fifo.veryl</span>
+<pre class="list language-veryl">module fifo #(
+    param DATA_TYPE: type = logic,
+    param WIDTH    : u32  = 2    ,
+) (
+    clk   : input  clock    ,
+    rst   : input  reset    ,
+    wready: output logic    ,
+    wvalid: input  logic    ,
+    wdata : input  DATA_TYPE,
+    rready: input  logic    ,
+    rvalid: output logic    ,
+    rdata : output DATA_TYPE,
+) {
+    type Ptr = logic&lt;WIDTH&gt;;
+
+    var mem : DATA_TYPE [2 ** WIDTH];
+    var head: Ptr                   ;
+    var tail: Ptr                   ;
+
+    let tail_plus1: Ptr = tail + 1;
+
+    always_comb {
+        rvalid = head != tail;
+        rdata  = mem[head];
+        wready = tail_plus1 != head;
+    }
+
+    always_ff {
+        if wready &amp;&amp; wvalid {
+            mem[tail] = wdata;
+            tail      = tail + 1;
+        }
+        if rready &amp;&amp; rvalid {
+            head = head + 1;
+        }
+    }
+}
+</pre>
+</div>
+<p>fifoモジュールは、<code class="inline-code">DATA_TYPE</code>型のデータを<code class="inline-code">2 ** WIDTH - 1</code>個格納することができるFIFOです。操作は次のように行います。</p>
+<dl>
+<dt>データを追加する</dt>
+<dd>
+    <code class="inline-code">wready</code>が<code class="inline-code">1</code>のとき、データを追加することができます。
+    データを追加するためには、追加したいデータを<code class="inline-code">wdata</code>に格納し、<code class="inline-code">wvalid</code>を<code class="inline-code">1</code>にします。
+    追加したデータは次のクロック以降に取り出すことができます。
+</dd>
+<dt>データを取り出す</dt>
+<dd>
+    <code class="inline-code">rready</code>が<code class="inline-code">1</code>のとき、データを取り出すことができます。
+    データを取り出すことができるとき、<code class="inline-code">rdata</code>にデータが出力されています。
+    <code class="inline-code">rvalid</code>を<code class="inline-code">1</code>にすることで、FIFOにデータを取り出したことを通知することができます。
+</dd>
+</dl>
+<p><code class="inline-code">head</code>レジスタと<code class="inline-code">tail</code>レジスタによってデータの格納状況を管理しています。データを書き込むとき、つまり<code class="inline-code">wready &amp;&amp; wvalid</code>のとき、<code class="inline-code">tail = tail + 1</code>しています。データを取り出すとき、つまり<code class="inline-code">rready &amp;&amp; rvalid</code>のとき、<code class="inline-code">head = head + 1</code>しています。</p>
+<p>データを書き込める状況とは、<code class="inline-code">tail</code>に1を足しても<code class="inline-code">head</code>を超えない、つまり、<code class="inline-code">tail</code>が指す場所が一周してしまわないときです。この制限から、FIFOには最大でも<code class="inline-code">2 ** WIDTH - 1</code>個しかデータを格納することができません。データを取り出せる状況とは、<code class="inline-code">head</code>と<code class="inline-code">tail</code>の指す場所が違うときです。</p>
+
+<h4><a id="h3-6-3-2"></a>命令フェッチ処理の変更</h4>
+<p>fifoモジュールを使って、次のように命令フェッチ処理を変更します。</p>
+<p>まず、fifoモジュールをインスタンス化します。</p>
+<div id="if-fifo-inst" class="caption-code">
+<span class="caption">リスト3.17: リスト3.17: fifoモジュールのインスタンス化</span>
+<pre class="list">    // ifのFIFOのデータ型
+    struct if_fifo_type {
+        addr: Addr,
+        bits: Inst,
+    }
+
+    // FIFOの制御用レジスタ
+    var if_fifo_wready: logic       ;
+    var if_fifo_wvalid: logic       ;
+    var if_fifo_wdata : if_fifo_type;
+    var if_fifo_rready: logic       ;
+    var if_fifo_rvalid: logic       ;
+    var if_fifo_rdata : if_fifo_type;
+
+    // フェッチした命令を格納するFIFO
+    inst if_fifo: fifo #(
+        DATA_TYPE: if_fifo_type,
+        WIDTH    : 3           ,
+    ) (
+        clk                   ,
+        rst                   ,
+        wready: if_fifo_wready,
+        wvalid: if_fifo_wvalid,
+        wdata : if_fifo_wdata ,
+        rready: if_fifo_rready,
+        rvalid: if_fifo_rvalid,
+        rdata : if_fifo_rdata ,
+    );
+</pre>
+</div>
+<p>まず、FIFOに入れるデータの型として<code class="inline-code">if_fifo_type</code>という構造体を定義します。<code class="inline-code">if_fifo_type</code>には、命令のアドレス(<code class="inline-code">addr</code>)と命令のビット列(<code class="inline-code">bits</code>)を格納するためのメンバーが含まれています。</p>
+<p>次に、fifoモジュールとデータの受け渡しをするための変数を定義し、fifoモジュールを<code class="inline-code">if_fifo</code>という名前でインスタンス化しています。<code class="inline-code">DATA_TYPE</code>パラメータに<code class="inline-code">if_fifo_type</code>を渡すことでアドレスと命令のペアを格納することができるようにし、<code class="inline-code">WIDTH</code>に<code class="inline-code">3</code>と指定することで、サイズを<code class="inline-code">2 ** 3 - 1 = 7</code>にしています。このサイズは適当です。</p>
+<p>fifoモジュールを用意したので、メモリへフェッチ指令を送る処理を変更します。</p>
+<div id="change-fetch-if" class="caption-code">
+<span class="caption">リスト3.18: リスト3.18: フェッチ処理の変更</span>
+<pre class="list">    // 命令フェッチ処理
+    always_comb {
+        // FIFOに空きがあるとき、命令をフェッチする
+        membus.valid = if_fifo_wready; <span class="balloon">← 1をif_fifo_wreadyに変更</span>
+        membus.addr  = if_pc;
+        membus.wen   = 0;
+        membus.wdata = 'x; // wdataは使用しない
+
+        // 常にFIFOから命令を受け取る
+        if_fifo_rready = 1;
+    }
+</pre>
+</div>
+<p>上のコードでは、メモリに命令フェッチを要求する条件を、FIFOに空きがあるという条件に変更しています。これにより、FIFOがあふれてしまうことがなくなります。また、とりあえずFIFOから常にデータを取り出すようにしています。</p>
+<p>次に、命令をフェッチできたらFIFOに格納するようにします。</p>
+<div id="fifo_ctrl" class="caption-code">
+<span class="caption">リスト3.19: リスト3.19: FIFOへのデータの格納</span>
+<pre class="list">    always_ff {
+            ...
+            // IFのFIFOの制御
+            if if_is_requested &amp;&amp; membus.rvalid { <span class="balloon">← フェッチできた時</span>
+                if_fifo_wvalid     = 1;
+                if_fifo_wdata.addr = if_pc_requested;
+                if_fifo_wdata.bits = membus.rdata;
+            } else {
+                if if_fifo_wvalid &amp;&amp; if_fifo_wready { <span class="balloon">← FIFOにデータを格納できる時</span>
+                    if_fifo_wvalid = 0;
+                }
+            }
+</pre>
+</div>
+<p>上のコードを<code class="inline-code">always_ff</code>ブロックの中に追加します。また、<code class="inline-code">if_fifo_wvalid</code>と<code class="inline-code">if_fifo_wdata</code>を<code class="inline-code">if_reset</code>内で0に初期化してください。</p>
+<p>フェッチができた時、<code class="inline-code">if_fifo_wvalid</code>レジスタの値を<code class="inline-code">1</code>にして、<code class="inline-code">if_fifo_wdata</code>レジスタにフェッチした命令とアドレスを格納します。これにより、次のクロック以降のFIFOに空きがあるタイミングでデータが追加されます。</p>
+<p>それ以外の時、FIFOにデータを格納しようとしていてFIFOに空きがあるとき、<code class="inline-code">if_fifo_wvalid</code>を<code class="inline-code">0</code>にすることでデータの追加を完了します。</p>
+<p>命令フェッチはFIFOに空きがあるときにのみ行うため、まだ追加されていないデータが<code class="inline-code">if_fifo_wdata</code>レジスタに格納されていても別のデータに上書きされてしまうことはありません。</p>
+<div id="fifo-debug" class="caption-code">
+<span class="caption">リスト3.20: リスト3.20: 命令を表示する</span>
+<pre class="list">    let inst_pc  : Addr = if_fifo_rdata.addr;
+    let inst_bits: Inst = if_fifo_rdata.bits;
+
+    always_ff {
+        if if_fifo_rvalid {
+            $display(&quot;%h : %h&quot;, inst_pc, inst_bits);
+        }
+    }
+</pre>
+</div>
+<p>命令を表示するコードを上のように変更し、シミュレータを実行しましょう。命令がフェッチされて表示されるまでに、FIFOに格納して取り出すクロック分だけ遅延があることに注意してください。</p>
+<div id="sim-fifo" class="cmd-code">
+<span class="caption">リスト3.21: リスト3.21: FIFOをテストする</span>
+<pre class="list">$ make build sim
+$ obj_dir/sim src/sample.hex 7
+00000000 : 01234567
+00000004 : 89abcdef
+00000008 : deadbeef
+0000000c : cafebebe
+</pre>
+</div>
+
+<h2 class="numbox"><a id="h3-7"></a><span class="secno">3.7</span> 命令のデコードと即値の生成</h2>
+<p>命令をフェッチすることができたら、フェッチした命令がどのような意味を持つかをチェックし、CPUが何をすればいいかを判断するためのフラグや値を生成します。この作業のことを、命令のデコードと呼びます。</p>
+<p>RISC-Vにはいくつかの命令の形式がありますが、RV32IにはR, I, S, B, U, Jの6つの形式の命令が存在しています。</p>
+<div id="riscv-inst-types" class="image">
+<img src="images/04-impl-rv32i/riscv-inst-types.png" alt="RISC-Vの命令形式 (引用元: The RISC-V Instruction Set Manual Volume I: Unprivileged Architecture version 20240411 2.3. Immediate Encoding Variants)" class="img" />
+<p class="caption">
+図3.1: RISC-Vの命令形式 (引用元: The RISC-V Instruction Set Manual Volume I: Unprivileged Architecture version 20240411 2.3. Immediate Encoding Variants)
+</p>
+</div>
+<dl>
+<dt>R形式</dt>
+<dd>
+	ソースレジスタ(rs1, rs2)が2つ、デスティネーションレジスタ(rd)が1つの命令形式です。
+	2つのソースレジスタの値を使って計算し、その結果をデスティネーションレジスタに格納します。
+	例えばADD, SUB命令に使用されています。
+</dd>
+<dt>I形式</dt>
+<dd>
+	ソースレジスタ(rs1)が1つ、デスティネーションレジスタ(rd)が1つの命令形式です。
+	12ビットの即値(<code class="inline-code">imm[11:0]</code>)が命令中に含まれており、これとrs1を使って計算し、
+	その結果をデスティネーションレジスタに格納します。
+	例えばADDI, SUBI命令に使用されています。
+</dd>
+<dt>S形式</dt>
+<dd>
+	ソースレジスタ(rs1, rs2)が2つ、デスティネーションレジスタ(rd)が1つの命令形式です。
+	12ビットの即値(<code class="inline-code">imm{11:5], imm[4:0]</code>)が命令中に含まれており、
+	これとソースレジスタを使って計算やメモリにアクセスし、
+	その結果をデスティネーションレジスタに格納します。
+	例えばSW命令(メモリにデータを格納する命令)に使用されています。
+</dd>
+<dt>B形式</dt>
+<dd>
+	ソースレジスタ(rs1, rs2)が2つの命令形式です。
+	12ビットの即値(<code class="inline-code">imm[12], imm[11], imm[10:5], imm[4:1]</code>)が命令中に含まれています。
+	分岐命令に使用されており、
+	ソースレジスタの計算の結果が分岐を成立させる場合、
+	即値を使ってジャンプします。
+</dd>
+<dt>U形式</dt>
+<dd>
+	デスティネーションレジスタ(rd)が1つの命令形式です。
+	20ビットの即値(<code class="inline-code">imm[31:12]</code>)が命令中に含まれています。
+	例えばLUI命令(レジスタの上位20ビットを設定する命令)に使用されています。
+</dd>
+<dt>J形式</dt>
+<dd>
+	デスティネーションレジスタ(rd)が1つの命令形式です。
+	20ビットの即値(<code class="inline-code">imm[20], imm[19:12], imm[11], imm[10:1]</code>)が命令中に含まれています。
+	例えばJAL命令(ジャンプ命令)に使用されており、
+	PCに即値を足した相対位置にジャンプします。
+</dd>
+</dl>
+<p>全ての命令形式には<code class="inline-code">opcode</code>が共通して存在しています。命令の判別には<code class="inline-code">opcode</code>、<code class="inline-code">funct3</code>、<code class="inline-code">funct7</code>を利用します。</p>
+
+<h3 class="none"><a id="h3-7-1"></a><span class="secno">3.7.1</span> 定数と型の定義</h3>
+<p>デコード処理を書く前に、デコードに利用する定数と型を定義します。<code class="inline-code">src/corectrl.veryl</code>を作成し、次のように記述します。</p>
+<div id="ctrl.veryl.decode" class="caption-code">
+<span class="caption">リスト3.22: リスト3.22: corectrl.veryl</span>
+<pre class="list language-decode">import eei::*;
+
+package corectrl {
+    // 命令形式を表す列挙型
+    enum InstType: logic&lt;6&gt; {
+        X = 6'b000000,
+        R = 6'b000001,
+        I = 6'b000010,
+        S = 6'b000100,
+        B = 6'b001000,
+        U = 6'b010000,
+        J = 6'b100000,
+    }
+
+    // 制御に使うフラグ用の構造体
+    struct InstCtrl {
+        itype    : InstType   , // 命令の形式
+        rwb_en   : logic      , // レジスタに書き込むかどうか
+        is_lui   : logic      , // LUI命令である
+        is_aluop : logic      , // ALUを利用する命令である
+        is_jump  : logic      , // ジャンプ命令である
+        is_load  : logic      , // ロード命令である
+        is_system: logic      , // CSR命令である
+        is_fence : logic      , // フェンス命令である
+        funct3   : logic   &lt;3&gt;, // 命令のfunct3フィールド
+        funct7   : logic   &lt;7&gt;, // 命令のfunct7フィールド
+    }
+}
+</pre>
+</div>
+<p><code class="inline-code">InstType</code>は、命令の形式を表すための列挙型です。<code class="inline-code">InstType</code>の幅は6ビットで、それぞれのビットに1つの命令形式が対応しています。どの命令形式にも対応しない場合、すべてのビットが0の<code class="inline-code">InstType::X</code>を対応させます。</p>
+<p><code class="inline-code">InstCtrl</code>は、制御に使うフラグを列挙するための構造体です。<code class="inline-code">itype</code>には命令の形式、<code class="inline-code">funct3</code>, <code class="inline-code">funct7</code>には、それぞれ命令の<code class="inline-code">funct3</code>, <code class="inline-code">funct3</code>フィールドを格納します。これ以外の構造体のメンバーについては、使用するときに説明します。</p>
+<p>命令をデコードするとき、まずopcodeを使って判別します。このために、デコードに使う定数を<code class="inline-code">eei</code>パッケージに記述します。</p>
+<div id="opcode.eei" class="caption-code">
+<span class="caption">リスト3.23: リスト3.23: eei.verylに追加で記述する</span>
+<pre class="list language-eei">    // opcode
+    const OP_OP_IMM  : logic&lt;7&gt; = 7'b0010011;
+    const OP_LUI     : logic&lt;7&gt; = 7'b0110111;
+    const OP_AUIPC   : logic&lt;7&gt; = 7'b0010111;
+    const OP_OP      : logic&lt;7&gt; = 7'b0110011;
+    const OP_JAL     : logic&lt;7&gt; = 7'b1101111;
+    const OP_JALR    : logic&lt;7&gt; = 7'b1100111;
+    const OP_BRANCH  : logic&lt;7&gt; = 7'b1100011;
+    const OP_LOAD    : logic&lt;7&gt; = 7'b0000011;
+    const OP_STORE   : logic&lt;7&gt; = 7'b0100011;
+    const OP_MISC_MEM: logic&lt;7&gt; = 7'b0001111;
+    const OP_SYSTEM  : logic&lt;7&gt; = 7'b1110011;
+</pre>
+</div>
+<p>これらの値とそれぞれの命令の対応については、仕様書Volume Iの<code class="inline-code">37. RV32/64G Instruction Set Listings</code>を確認してください。</p>
+
+<h3 class="none"><a id="h3-7-2"></a><span class="secno">3.7.2</span> デコードと即値の生成</h3>
+<p>デコード処理を書く準備が整いました。<code class="inline-code">src/inst_decoder.veryl</code>を作成し、次のように記述します。</p>
+<div id="inst_decoder.veryl" class="caption-code">
+<span class="caption">リスト3.24: リスト3.24: inst_decoder.veryl</span>
+<pre class="list language-veryl">import eei::*;
+import corectrl::*;
+
+module inst_decoder (
+    bits: input  Inst    ,
+    ctrl: output InstCtrl,
+    imm : output UIntX   ,
+) {
+    // 即値の生成
+    let imm_i_g: logic&lt;12&gt; = bits[31:20];
+    let imm_s_g: logic&lt;12&gt; = {bits[31:25], bits[11:7]};
+    let imm_b_g: logic&lt;12&gt; = {bits[31], bits[7], bits[30:25], bits[11:8]};
+    let imm_u_g: logic&lt;20&gt; = bits[31:12];
+    let imm_j_g: logic&lt;20&gt; = {bits[31], bits[19:12], bits[20], bits[30:21]};
+    let imm_z_g: logic&lt;17&gt; = bits[31:15]; // {csr address, uimm}
+
+    let imm_i: UIntX = {imm_i_g[msb] repeat XLEN - $bits(imm_i_g), imm_i_g};
+    let imm_s: UIntX = {imm_s_g[msb] repeat XLEN - $bits(imm_s_g), imm_s_g};
+    let imm_b: UIntX = {imm_b_g[msb] repeat XLEN - $bits(imm_b_g) - 1, imm_b_g, 1'b0};
+    let imm_u: UIntX = {imm_u_g[msb] repeat XLEN - $bits(imm_u_g) - 12, imm_u_g, 12'b0};
+    let imm_j: UIntX = {imm_j_g[msb] repeat XLEN - $bits(imm_j_g) - 1, imm_j_g, 1'b0};
+    let imm_z: UIntX = {1'b0 repeat XLEN - $bits(imm_z_g), imm_z_g};
+
+    let op: logic&lt;7&gt; = bits[6:0];
+    let f7: logic&lt;7&gt; = bits[31:25];
+    let f3: logic&lt;3&gt; = bits[14:12];
+
+    const T: logic = 1'b1;
+    const F: logic = 1'b0;
+
+    always_comb {
+        imm = case op {
+            OP_LUI, OP_AUIPC                        : imm_u,
+            OP_JAL                                  : imm_j,
+            OP_JALR, OP_LOAD, OP_OP_IMM, OP_MISC_MEM: imm_i,
+            OP_BRANCH                               : imm_b,
+            OP_STORE                                : imm_s,
+            OP_SYSTEM                               : imm_z,
+            default                                 : 'x,
+        };
+        ctrl = {case op {
+            OP_LUI     : {InstType::U, T, T, F, F, F, F, F},
+            OP_AUIPC   : {InstType::U, T, F, F, F, F, F, F},
+            OP_JAL     : {InstType::J, T, F, F, T, F, F, F},
+            OP_JALR    : {InstType::I, T, F, F, T, F, F, F},
+            OP_BRANCH  : {InstType::B, F, F, F, F, F, F, F},
+            OP_LOAD    : {InstType::I, T, F, F, F, T, F, F},
+            OP_STORE   : {InstType::S, F, F, F, F, F, F, F},
+            OP_OP      : {InstType::R, T, F, T, F, F, F, F},
+            OP_OP_IMM  : {InstType::I, T, F, T, F, F, F, F},
+            OP_MISC_MEM: {InstType::I, F, F, F, F, F, F, T},
+            OP_SYSTEM  : {InstType::I, T, F, F, F, F, T, F},
+            default    : {InstType::X, F, F, F, F, F, F, F},
+        }, f3, f7};
+    }
+}
+</pre>
+</div>
+<p>inst_decoderモジュールは、命令のビット列<code class="inline-code">bits</code>を受け取り、制御信号<code class="inline-code">ctrl</code>と即値<code class="inline-code">imm</code>を出力します。</p>
+
+<h4><a id="h3-7-2-1"></a>即値の生成</h4>
+<p>B形式の命令について考えます。まず、命令のビット列から即値部分を取り出して、<code class="inline-code">imm_b_g</code>ワイヤを生成します。B形式の命令内に含まれている即値は12ビットで、最上位ビットは符号ビットです。最上位ビットを繰り返す(符号拡張する)ことによって、32ビットの即値<code class="inline-code">imm_b</code>を生成します。</p>
+<p><code class="inline-code">imm_z</code>はCSR命令で使用する即値をまとめたものです。これについては後の章で説明します。</p>
+<p><code class="inline-code">always_comb</code>ブロックでは、opcodeをcase式で分岐することにより<code class="inline-code">imm</code>ポートに適切な即値を出力しています。</p>
+
+<h4><a id="h3-7-2-2"></a>制御フラグの生成</h4>
+<p>opcodeがOP-IMMな命令、例えばADDI命令について考えます。ADDI命令は、即値とソースレジスタの値を足し、デスティネーションレジスタに結果を格納する命令です。</p>
+<p><code class="inline-code">always_comb</code>ブロックでは、opcodeが<code class="inline-code">OP_OP_IMM</code>のとき、次のように制御信号<code class="inline-code">ctrl</code>を設定します。</p>
+<ul>
+<li>命令形式<code class="inline-code">itype</code>を<code class="inline-code">InstType::I</code>に設定します
+</li>
+<li><code class="inline-code">funct3</code>, <code class="inline-code">funct7</code>を命令中のビットをそのまま設定します 
+</li>
+<li>結果をレジスタに書き込むため、<code class="inline-code">rwb_en</code>を<code class="inline-code">1</code>に設定します
+</li>
+<li>ALU(計算を実行するユニット)を利用するため、<code class="inline-code">is_aluop</code>を<code class="inline-code">1</code>に設定します。
+</li>
+<li>それ以外のメンバーは<code class="inline-code">0</code>に設定します。
+</li>
+</ul>
+
+<h3 class="none"><a id="h3-7-3"></a><span class="secno">3.7.3</span> デコーダのインスタンス化</h3>
+<p>inst_decoderモジュールを、<code class="inline-code">core</code>モジュールでインスタンス化します。</p>
+<div id="core.veryl.id" class="caption-code">
+<span class="caption">リスト3.25: リスト3.25: inst_decoderのインスタンス化(core.veryl)</span>
+<pre class="list language-id">    let inst_pc  : Addr     = if_fifo_rdata.addr;
+    let inst_bits: Inst     = if_fifo_rdata.bits;
+    var inst_ctrl: InstCtrl;
+    var inst_imm : UIntX   ;
+
+    inst decoder: inst_decoder (
+        bits: inst_bits,
+        ctrl: inst_ctrl,
+        imm : inst_imm ,
+    );
+</pre>
+</div>
+<p>まず、デコーダとcoreモジュールを接続するために<code class="inline-code">inst_ctrl</code>と<code class="inline-code">inst_imm</code>を定義します。次に、inst_decoderモジュールをインスタンス化します。<code class="inline-code">bits</code>ポートに<code class="inline-code">inst_bits</code>を渡すことで、フェッチした命令をデコードします。</p>
+<div id="core.veryl.id.debug" class="caption-code">
+<span class="caption">リスト3.26: リスト3.26: デコード結果の表示プログラム(core.veryl)</span>
+<pre class="list language-debug">    always_ff {
+        if if_fifo_rvalid {
+            $display(&quot;%h : %h&quot;, inst_pc, inst_bits);
+            $display(&quot;  itype   : %b&quot;, inst_ctrl.itype);
+            $display(&quot;  imm     : %h&quot;, inst_imm);
+        }
+    }
+</pre>
+</div>
+<p>デバッグ用の<code class="inline-code">always_ff</code>ブロックに、デコードした結果を表示するプログラムを記述します。</p>
+<p><code class="inline-code">sample.hex</code>をメモリの初期値として使い、デコード結果を確認します。</p>
+<div id="sim-id" class="cmd-code">
+<span class="caption">リスト3.27: リスト3.27: デコーダのテスト</span>
+<pre class="list">$ <span class="userinput">make build sim</span>
+$ <span class="userinput">obj_dir/sim src/sample.hex 7</span>
+00000000 : 01234567
+  itype   : 000010
+  imm     : 00000012
+00000004 : 89abcdef
+  itype   : 100000
+  imm     : fffbc09a
+00000008 : deadbeef
+  itype   : 100000
+  imm     : fffdb5ea
+0000000c : cafebebe
+  itype   : 000000
+  imm     : 00000000
+</pre>
+</div>
+<p>例えば<code class="inline-code">01234567</code>は、<code class="inline-code">jalr x10, 18(x6)</code>という命令のビット列になります。命令の種類はJALRで、命令形式はI形式、即値は10進数で<code class="inline-code">18</code>です。デコード結果を確認すると、<code class="inline-code">itype</code>が<code class="inline-code">0000010</code>、<code class="inline-code">imm</code>が<code class="inline-code">00000012</code>に   なっており、正しくデコードできていることが確認できます。</p>
+
+<h2 class="numbox"><a id="h3-8"></a><span class="secno">3.8</span> レジスタの定義と読み込み</h2>
+<p>RV32Iの仕様では、32ビット幅のレジスタが32個用意されています。0番目のレジスタの値は常に0です。</p>
+<p>命令を実行するとき、実行に使うデータをレジスタ番号で指定することがあります。実行に使うデータとなるレジスタのことを、ソースレジスタと呼びます。また、命令の結果を、指定された番号のレジスタに格納することがあります。このために使われるレジスタのことを、デスティネーションレジスタと呼びます。</p>
+<p>coreモジュールに、レジスタを定義します。RV32Iのレジスタの幅はXLEN(=32)ビットです。よって、サイズが32の<code class="inline-code">UIntX</code>型のレジスタの配列を定義します。</p>
+<div id="core.reg.define" class="caption-code">
+<span class="caption">リスト3.28: リスト3.28: レジスタの定義 (core.veryl)</span>
+<pre class="list language-define">    // レジスタ
+    var regfile: UIntX&lt;32&gt;;
+</pre>
+</div>
+<p>レジスタをまとめたもののことをレジスタファイルと呼ぶため、<code class="inline-code">regfile</code>という名前をつけています。</p>
+<p><span class="imgref"><a href="./04-impl-rv32i.html#riscv-inst-types">図3.1</a></span>を見るとわかるように、RISC-Vの命令は形式によってソースレジスタの数が異なります。例えば、R形式はソースレジスタが2つで、2つのレジスタのデータを使って実行されます。それに対して、I形式のソースレジスタは1つです。I形式の命令の実行には、ソースレジスタのデータと即値を利用します。</p>
+<p>レジスタを定義したので、命令が使用するレジスタのデータを取得します。命令のビット列の中のソースレジスタの番号の場所は、命令形式が違っても共通の場所にあります。</p>
+<p>ここで、プログラムを簡単にするために、命令中のソースレジスタの番号にあたる場所に、常にソースレジスタの番号が書かれていると解釈します。更に、命令がレジスタのデータを利用するかどうかに関係なく、常にレジスタのデータを読み込むことにします。</p>
+<div id="core.reg.use" class="caption-code">
+<span class="caption">リスト3.29: リスト3.29: 命令が使うレジスタのデータを取得する (core.veryl)</span>
+<pre class="list language-use">    // レジスタ番号
+    let rs1_addr: logic&lt;5&gt; = inst_bits[19:15];
+    let rs2_addr: logic&lt;5&gt; = inst_bits[24:20];
+
+    // ソースレジスタのデータ
+    let rs1_data: UIntX = if rs1_addr == 0 {
+        0
+    } else {
+        regfile[rs1_addr]
+    };
+    let rs2_data: UIntX = if rs2_addr == 0 {
+        0
+    } else {
+        regfile[rs2_addr]
+    };
+</pre>
+</div>
+<p><code class="inline-code">if</code>式により、0番目のレジスタが指定されたときは、常に0になるようにします。</p>
+<p>レジスタの値を読み込めていることを確認するために、次のように記述します。</p>
+<div id="core.reg.debug" class="caption-code">
+<span class="caption">リスト3.30: リスト3.30: レジスタの値を表示する (core.veryl)</span>
+<pre class="list language-debug">    always_ff {
+        if if_fifo_rvalid {
+            $display(&quot;%h : %h&quot;, inst_pc, inst_bits);
+            $display(&quot;  itype   : %b&quot;, inst_ctrl.itype);
+            $display(&quot;  imm     : %h&quot;, inst_imm);
+            $display(&quot;  rs1[%d] : %h&quot;, rs1_addr, rs1_data);
+            $display(&quot;  rs2[%d] : %h&quot;, rs2_addr, rs2_data);
+        }
+    }
+</pre>
+</div>
+<p><code class="inline-code">$display</code>システムタスクで、命令のレジスタ番号とデータを表示します。早速動作のテストをしたいところですが、今のままだとレジスタのデータが初期化されておらず、0番目のレジスタのデータ以外は不定(0か1か分からない)になってしまいます。</p>
+<p>これではテストする意味がないため、レジスタの値を適当な値に初期化します。</p>
+<div id="core.reg.init" class="caption-code">
+<span class="caption">リスト3.31: リスト3.31: レジスタの値を初期化する (core.veryl)</span>
+<pre class="list language-init">    // レジスタの初期化
+    always_ff {
+        if_reset {
+            for i: i32 in 0..32 {
+                regfile[i] = i + 100;
+            }
+        }
+    }
+</pre>
+</div>
+<p>上のコードでは、<code class="inline-code">always_ff</code>ブロックの<code class="inline-code">if_reset</code>で、n番目(32 &gt; n &gt; 0)のレジスタの値を<code class="inline-code">n + 100</code>で初期化しています。</p>
+<div id="reg.debug" class="cmd-code">
+<span class="caption">リスト3.32: リスト3.32: レジスタ読み込みのデバッグ</span>
+<pre class="list language-debug">$ <span class="userinput">make build sim</span>
+$ <span class="userinput">obj_dir/sim sample.hex 7</span>
+TODO にゃ
+</pre>
+</div>
+<p><code class="inline-code">01234567</code>は<code class="inline-code">jalr x10, 18(x6)</code>です。JALR命令は、2つのソースレジスタ<code class="inline-code">x10</code>と<code class="inline-code">x6</code>を使用します。それぞれ、レジスタ番号が<code class="inline-code">10</code>, <code class="inline-code">6</code>であることを表しており、値は<code class="inline-code">110</code>, <code class="inline-code">106</code>になります。それぞれ16進数で<code class="inline-code">TODO</code>, <code class="inline-code">TODO</code>です。これが、シミュレーションと一致していることを確認してください。</p>
+
+<h2 class="numbox"><a id="h3-9"></a><span class="secno">3.9</span> ALUを作り、計算する</h2>
+<p>命令は足し算や引き算、ビット演算などの計算を行います。計算の対象となるデータが揃ったので、ALU(計算する部品)を作成します。</p>
+
+<h3 class="none"><a id="h3-9-1"></a><span class="secno">3.9.1</span> ALUの作成</h3>
+<p>データの幅は<code class="inline-code">XLEN</code>です。計算には、符号付き整数と符号なし整数向けの計算があります。これに利用するために、eeiモジュールに<code class="inline-code">XLEN</code>ビットの符号あり整数型を定義します。</p>
+<div id="eei.veryl.sint" class="caption-code">
+<span class="caption">リスト3.33: リスト3.33: XLENビットの符号付き整数を定義する (eei.veryl)</span>
+<pre class="list language-sint">    type SIntX  = signed logic&lt;XLEN&gt;;
+    type SInt32 = signed logic&lt;32&gt;  ;
+    type SInt64 = signed logic&lt;64&gt;  ;
+</pre>
+</div>
+<p>次に、<code class="inline-code">src/alu.veryl</code>を作成し、次のように記述します。</p>
+<div id="alu.veryl.all" class="caption-code">
+<span class="caption">リスト3.34: リスト3.34: alu.veryl</span>
+<pre class="list language-all">import eei::*;
+import corectrl::*;
+
+module alu (
+    ctrl  : input  InstCtrl,
+    op1   : input  UIntX   ,
+    op2   : input  UIntX   ,
+    result: output UIntX   ,
+) {
+    let add: UIntX = op1 + op2;
+    let sub: UIntX = op1 - op2;
+
+    let srl: UIntX = op1 &gt;&gt; op2[4:0];
+    let sra: SIntX = $signed(op1) &gt;&gt;&gt; op2[4:0];
+
+    always_comb {
+        if ctrl.is_aluop {
+            case ctrl.funct3 {
+                3'b000: result = if ctrl.itype == InstType::I | ctrl.funct7 == 0 {
+                            add // ADD, ADDI
+                        } else {
+                            sub // SUB
+                        };
+                3'b001: result = op1 &lt;&lt; op2[4:0]; // SLL, SLLI
+                3'b010: result = {1'b0 repeat XLEN - 1, $signed(op1) &lt;: $signed(op2)}; // SLT, SLTI
+                3'b011: result = {1'b0 repeat XLEN - 1, op1 &lt;: op2}; // SLTU, SLTUI
+                3'b100: result = op1 ^ op2; // XOR, XORI
+                3'b101: result = if ctrl.funct7 == 0 {
+                            srl // SRL, SRLI
+                        } else {
+                            sra // SRA, SRAI
+                        };
+                3'b110 : result = op1 | op2; // OR, ORI
+                3'b111 : result = op1 &amp; op2; // AND, ANDI
+                default: result = 'x;
+            }
+        } else {
+            result = add;
+        }
+    }
+}
+</pre>
+</div>
+<p><code class="inline-code">alu</code>モジュールには、次のポートを定義します。</p>
+<div id="alu.veryl.port" class="table">
+<p class="caption">表3.3: aluモジュールのポート定義</p>
+<table>
+<tr class="hline"><th>ポート名</th><th>方向</th><th>型</th><th>用途</th></tr>
+<tr class="hline"><td>ctrl</td><td>input</td><td>InstCtrl</td><td>制御用信号</td></tr>
+<tr class="hline"><td>op1</td><td>input</td><td>UIntX</td><td>1つ目のデータ</td></tr>
+<tr class="hline"><td>op2 </td><td>input</td><td>UIntX</td><td>2つ目のデータ</td></tr>
+<tr class="hline"><td>result</td><td>output</td><td>UIntX</td><td>結果</td></tr>
+</table>
+</div>
+<p>命令がALUでどのような計算を行うかは命令の種別によって異なります。RV32Iでは、仕様書の<code class="inline-code">2.4. Integer Computational Instructions</code>(整数演算命令)に定義されている命令は、命令のfunct3, funct7フィールドによって計算の種類を特定することができます。</p>
+<p>それ以外の命令は、CSR命令を除いて足し算しか行いません。そのため、デコード時に整数演算命令とそれ以外の命令を<code class="inline-code">InstCtrl.is_aluop</code>で区別し、整数演算命令以外は常に足し算を行うようにしています。具体的には、<code class="inline-code">opcode</code>がOPかOP-IMMの命令の<code class="inline-code">InstCtrl.is_aluop</code>を<code class="inline-code">1</code>にしています。(inst_decoderモジュールを確認してください)</p>
+<p><code class="inline-code">always_comb</code>ブロックでは、case文でfunct3によって計算を区別します。それだけでは区別できないとき、funct7を使用します。</p>
+<div id="core.veryl.alu.data" class="caption-code">
+<span class="caption">リスト3.35: リスト3.35: ALUに渡すデータの用意 (core.veryl)</span>
+<pre class="list language-data">    // ALU
+    var op1       : UIntX;
+    var op2       : UIntX;
+    var alu_result: UIntX;
+
+    always_comb {
+        case inst_ctrl.itype {
+            InstType::R, InstType::B: {
+                                          op1 = rs1_data;
+                                          op2 = rs2_data;
+                                      }
+            InstType::I, InstType::S: {
+                                          op1 = rs1_data;
+                                          op2 = inst_imm;
+                                      }
+            InstType::U, InstType::J: {
+                                          op1 = inst_pc;
+                                          op2 = inst_imm;
+                                      }
+            default: {
+                         op1 = 'x;
+                         op2 = 'x;
+                     }
+        }
+    }
+</pre>
+</div>
+<p>次に、ALUに渡すデータを用意します。<code class="inline-code">UIntX</code>型の変数<code class="inline-code">op1</code>, <code class="inline-code">op2</code>, <code class="inline-code">alu_result</code>を定義し、<code class="inline-code">always_comb</code>ブロックで値を割り当てます。割り当てるデータは命令形式によって次のように異なります。</p>
+<dl>
+<dt>R形式, B形式</dt>
+<dd>
+	R形式, B形式は、レジスタのデータとレジスタのデータの演算を行います。
+	<code class="inline-code">op1</code>, <code class="inline-code">op2</code>は、レジスタのデータ<code class="inline-code">rs1_data</code>, <code class="inline-code">rs2_data</code>になります。
+</dd>
+<dt>I形式, S形式</dt>
+<dd>
+	I形式, S形式は、レジスタのデータと即値の演算を行います。
+	<code class="inline-code">op1</code>, <code class="inline-code">op2</code>は、それぞれレジスタのデータ<code class="inline-code">rs1_data</code>, 即値<code class="inline-code">inst_imm</code>になります。
+	S形式はメモリのストア命令に利用されており、
+	レジスタのデータと即値を足し合わせた値がアクセスするアドレスになります。
+</dd>
+<dt>U形式, J形式</dt>
+<dd>
+	U形式, J形式は、即値とPCを足した値、または即値を使う命令に使われています。
+	<code class="inline-code">op1</code>, <code class="inline-code">op2</code>は、それぞれPC<code class="inline-code">inst_pc</code>, 即値<code class="inline-code">inst_imm</code>になります。
+	J形式はJAL命令に利用されており、即値とPCを足した値がジャンプ先になります。
+	U形式はAUIPC命令とLUI命令に利用されています。
+	AUIPC命令は、即値とPCを足した値をデスティネーションレジスタに格納します。
+	LUI命令は、即値をそのままデスティネーションレジスタに格納します。
+</dd>
+</dl>
+<div id="core.veryl.alu.inst" class="caption-code">
+<span class="caption">リスト3.36: リスト3.36: ALUのインスタンス化 (core.veryl)</span>
+<pre class="list language-inst">    inst alum: alu (
+        ctrl  : inst_ctrl ,
+        op1               ,
+        op2               ,
+        result: alu_result,
+    );
+</pre>
+</div>
+<p>ALUに渡すデータを用意したので、aluモジュールをインスタンス化します。結果を受け取る用の変数として、<code class="inline-code">alu_result</code>を指定します。</p>
+
+<h3 class="none"><a id="h3-9-2"></a><span class="secno">3.9.2</span> ALUのテスト</h3>
+<p>最後にALUが正しく動くことを確認します。<code class="inline-code">always_ff</code>ブロックで、<code class="inline-code">op1</code>, <code class="inline-code">op2</code>, <code class="inline-code">alu_result</code>を表示します。</p>
+<div id="core.veryl.alu.debug" class="caption-code">
+<span class="caption">リスト3.37: リスト3.37: ALUの結果表示 (core.veryl)</span>
+<pre class="list language-debug">    always_ff {
+        if if_fifo_rvalid {
+            $display(&quot;%h : %h&quot;, inst_pc, inst_bits);
+            $display(&quot;  itype   : %b&quot;, inst_ctrl.itype);
+            $display(&quot;  imm     : %h&quot;, inst_imm);
+            $display(&quot;  rs1[%d] : %h&quot;, rs1_addr, rs1_data);
+            $display(&quot;  rs2[%d] : %h&quot;, rs2_addr, rs2_data);
+            $display(&quot;  op1     : %h&quot;, op1); <span class="balloon">← 追加</span>
+            $display(&quot;  op2     : %h&quot;, op2); <span class="balloon">← 追加</span>
+            $display(&quot;  alu res : %h&quot;, alu_result); <span class="balloon">← 追加</span>
+        }
+    }
+</pre>
+</div>
+<p><code class="inline-code">sample.hex</code>を次のように書き換えます。</p>
+<div id="sample.hex.debug" class="caption-code">
+<span class="caption">リスト3.38: リスト3.38: sample.hexを書き換える</span>
+<pre class="list language-debug">02000093 // addi x1, x0, 32
+00100117 // auipc x2, 256
+002081b3 // add x3, x1, x2
+</pre>
+</div>
+<p>それぞれの命令の意味は次のとおりです。</p>
+<div id="sample.hex.alu" class="table">
+<p class="caption">表3.4: 命令の意味</p>
+<table>
+<tr class="hline"><th>アドレス</th><th>命令</th><th>意味</th></tr>
+<tr class="hline"><td>00000000</td><td>addi x1, x0, 32</td><td>x1 = x0 + 32</td></tr>
+<tr class="hline"><td>00000004</td><td>auipc x2, 256</td><td>x2 = pc + 256</td></tr>
+<tr class="hline"><td>00000008</td><td>add x3, x1, x2</td><td>x3 = x1 + x2</td></tr>
+</table>
+</div>
+<p>シミュレータを実行し、結果を確かめます。</p>
+<div id="alu.debug" class="cmd-code">
+<span class="caption">リスト3.39: リスト3.39: ALUのデバッグ</span>
+<pre class="list language-debug">$ <span class="userinput">make build sim</span>
+$ <span class="userinput">obj_dir/sim src/sample.hex 5</span>
+TODO
+</pre>
+</div>
+<p>まだ結果をディスティネーションレジスタに格納する処理を作成していません。そのため、レジスタの値は変わらないことに注意してください</p>
+<dl>
+<dt>addi x1, x0, 32</dt>
+<dd>
+	<code class="inline-code">op1</code>は0番目のレジスタの値です。
+	0番目のレジスタの値は常に0であるため、<code class="inline-code">00000000</code>と表示されています。
+	<code class="inline-code">op2</code>は即値です。
+	即値は32であるため、16進数で<code class="inline-code">00000020</code>と表示されています。
+	ALUの計算結果として、0と32を足した結果<code class="inline-code">00000020</code>が表示されています。
+</dd>
+<dt>auipc x2, 256</dt>
+<dd>
+	<code class="inline-code">op1</code>は2番目のレジスタの値です。
+	2番目のレジスタは<code class="inline-code">102</code>として初期化しているので、<code class="inline-code">TODO</code>と表示されています。
+	<code class="inline-code">op2</code>はPCです。
+	命令のアドレス<code class="inline-code">00000004</code>が表示されています。
+	ALUの計算結果として、これを足した結果<code class="inline-code">TODO</code>が表示されています。
+</dd>
+<dt>add x3, x1, x2</dt>
+<dd>
+	<code class="inline-code">op1</code>は1番目のレジスタの値です。
+	1番目のレジスタは<code class="inline-code">101</code>として初期化しているので、<code class="inline-code">TODO</code>と表示されています。
+	2番目のレジスタは<code class="inline-code">102</code>として初期化しているので、<code class="inline-code">TODO</code>と表示されています。
+	ALUの計算結果として、これを足した結果<code class="inline-code">TODO</code>が表示されています。
+</dd>
+</dl>
+
+<h2 class="numbox"><a id="h3-10"></a><span class="secno">3.10</span> レジスタに結果を書き込む</h2>
+<p>CPUはレジスタから値を読み込み、これを計算して、レジスタに結果の値を書き戻します。レジスタに値を書き戻すことを、ライトバックと言います。</p>
+<p>ライトバックする値は、計算やメモリアクセスの結果です。まだメモリにアクセスする処理を実装していませんが、先にライトバック処理を実装します。</p>
+
+<h3 class="none"><a id="h3-10-1"></a><span class="secno">3.10.1</span> ライトバックの実装</h3>
+<p>書き込む対象のレジスタは、命令の<code class="inline-code">rd</code>フィールドによって番号で指定します。デコード時に、ライトバックする命令かどうかを<code class="inline-code">InstCtrl.rwb_en</code>に格納しています。(inst_decoderモジュールを確認してください)</p>
+<div id="core.veryl.wb" class="caption-code">
+<span class="caption">リスト3.40: リスト3.40: ライトバック処理の実装 (core.veryl)</span>
+<pre class="list language-wb">    let rd_addr: logic&lt;5&gt; = inst_bits[11:7];
+    let wb_data: UIntX    = alu_result;
+
+    always_ff {
+        if_reset {
+            for i: i32 in 0..32 {
+                regfile[i] = i + 100;
+            }
+        } else {
+            if if_fifo_rvalid &amp;&amp; inst_ctrl.rwb_en {
+                regfile[rd_addr] = wb_data;
+            }
+        }
+    }
+</pre>
+</div>
+
+<h3 class="none"><a id="h3-10-2"></a><span class="secno">3.10.2</span> ライトバックのテスト</h3>
+<p><code class="inline-code">always_ff</code>ブロックに、ライトバック処理の概要を表示するプログラムを記述します。処理している命令がライトバックする命令のときにのみ、<code class="inline-code">$display</code>システムコールを呼び出します。</p>
+<div id="core.veryl.wb.test" class="caption-code">
+<span class="caption">リスト3.41: リスト3.41: 結果の表示 (core.veryl)</span>
+<pre class="list language-test">            if inst_ctrl.rwb_en {
+                $display(&quot;  reg[%d] &lt;= %h&quot;, rd_addr, wb_data);
+            }
+</pre>
+</div>
+<p>シミュレータを実行し、結果を確かめます。</p>
+<div id="wb.test" class="cmd-code">
+<span class="caption">リスト3.42: リスト3.42: ライトバックのデバッグ</span>
+<pre class="list language-test">$ <span class="userinput">make build sim</span>
+$ <span class="userinput">obj_dir/sim sample.hex 6</span>
+00000000 : 02000093
+  itype     : 000010
+  imm       : 00000020
+  rs1[ 0]   : 00000000
+  rs2[ 0]   : 00000000
+  op1       : 00000000
+  op2       : 00000020
+  alu res   : 00000020
+  reg[ 1] &lt;= 00000020
+00000004 : 00100117
+  itype     : 010000
+  imm       : 00100000
+  rs1[ 0]   : 00000000
+  rs2[ 1]   : 00000020
+  op1       : 00000004
+  op2       : 00100000
+  alu res   : 00100004
+  reg[ 2] &lt;= 00100004
+00000008 : 002081b3
+  itype     : 000001
+  imm       : 00000000
+  rs1[ 1]   : 00000020
+  rs2[ 2]   : 00100004
+  op1       : 00000020
+  op2       : 00100004
+  alu res   : 00100024
+  reg[ 3] &lt;= 00100024
+</pre>
+</div>
+<dl>
+<dt>addi x1, x0, 32</dt>
+<dd>
+    x1に、0と32を足した結果を格納しています。
+</dd>
+<dt>auipc x2, 256</dt>
+<dd>
+    x2に、PCと256を足した結果を格納しています。
+</dd>
+<dt>add x3, x1, x2</dt>
+<dd>
+    x1は1つ目の命令で<code class="inline-code">00000020</code>に、
+    x2は2つ目の命令で<code class="inline-code">00100004</code>にされています。
+    x3に、x1とx2を足した結果<code class="inline-code">00100024</code>を格納しています。
+</dd>
+</dl>
+<p>おめでとうございます！このCPUは整数演算命令の実行ができるようになりました。</p>
+
+<h2 class="numbox"><a id="h3-11"></a><span class="secno">3.11</span> ロード命令とストア命令の実装</h2>
+<p>RV32Iには、メモリのデータをロードする(読み込む),ストアする(書き込む)命令として次の命令があります。</p>
+<div id="ls.insts" class="table">
+<p class="caption">表3.5: ロード命令, ストア命令</p>
+<table>
+<tr class="hline"><th>命令</th><th>作用</th></tr>
+<tr class="hline"><td>LB</td><td>8ビットのデータを読み込む。上位24ビットは符号拡張する</td></tr>
+<tr class="hline"><td>LBU</td><td>8ビットのデータを読み込む。上位24ビットは0とする</td></tr>
+<tr class="hline"><td>LH</td><td>16ビットのデータを読み込む。上位16ビットは符号拡張する</td></tr>
+<tr class="hline"><td>LHU</td><td>16ビットのデータを読み込む。上位16ビットは0とする</td></tr>
+<tr class="hline"><td>LW</td><td>32ビットのデータを読み込む</td></tr>
+<tr class="hline"><td>SB</td><td>8ビットのデータを書き込む</td></tr>
+<tr class="hline"><td>SH</td><td>16ビットのデータを書き込む</td></tr>
+<tr class="hline"><td>SW</td><td>32ビットのデータを書き込む</td></tr>
+</table>
+</div>
+<p>ロード命令はI形式、ストア命令はS形式です。これらの命令で指定するメモリのアドレスは、rs1と即値の足し算です。ALUに渡すデータがrs1と即値になっていることを確認してください(<span class="listref"><a href="./04-impl-rv32i.html#core.reg.use">リスト3.29</a></span>)。ストア命令は、rs2の値をメモリに格納します。</p>
+
+<h3 class="none"><a id="h3-11-1"></a><span class="secno">3.11.1</span> LW, SW命令の実装</h3>
+<p>8ビット, 16ビット単位で読み書きを行う命令の実装は少し大変です。まず32ビット単位で読み書きを行うLW, SW命令を実装します。</p>
+
+<h4><a id="h3-11-1-1"></a>memunitモジュールの作成</h4>
+<p>メモリ操作を行うモジュールを<code class="inline-code">memunit.veryl</code>に記述します。</p>
+<div id="memunit.veryl.lwsw" class="caption-code">
+<span class="caption">リスト3.43: リスト3.43: memunit.veryl</span>
+<pre class="list language-lwsw">import eei::*;
+import corectrl::*;
+
+module memunit (
+    clk   : input   clock            ,
+    rst   : input   reset            ,
+    valid : input   logic            ,
+    is_new: input   logic            , // 命令が新しく供給されたかどうか
+    ctrl  : input   InstCtrl         , // 命令のInstCtrl
+    addr  : input   Addr             , // アクセスするアドレス
+    rs2   : input   UIntX            , // ストア命令で書き込むデータ
+    rdata : output  UIntX            , // ロード命令の結果 (stall = 0のときに有効)
+    stall : output  logic            , // メモリアクセス命令が完了していない
+    membus: modport membus_if::master, // メモリとのinterface
+) {
+
+    // 命令がメモリにアクセスする命令か判別する関数
+    function inst_is_memop (
+        ctrl: input InstCtrl,
+    ) -&gt; logic    {
+        return ctrl.itype == InstType::S || ctrl.is_load;
+    }
+
+    // 命令がストア命令か判別する関数
+    function inst_is_store (
+        ctrl: input InstCtrl,
+    ) -&gt; logic    {
+        return inst_is_memop(ctrl) &amp;&amp; !ctrl.is_load;
+    }
+
+    // memunitの状態を表す列挙型
+    enum State: logic&lt;2&gt; {
+        Init, // 命令を受け付ける状態
+        WaitReady, // メモリが操作可能になるのを待つ状態
+        WaitValid, // メモリ操作が終了するのを待つ状態
+    }
+
+    var state: State;
+
+    var req_wen  : logic ;
+    var req_addr : Addr  ;
+    var req_wdata: UInt32;
+
+    always_comb {
+        // メモリアクセス
+        membus.valid = state == State::WaitReady;
+        membus.addr  = req_addr;
+        membus.wen   = req_wen;
+        membus.wdata = req_wdata;
+        // loadの結果
+        rdata = membus.rdata;
+        // stall判定
+        stall = valid &amp; case state {
+            State::Init     : is_new &amp;&amp; inst_is_memop(ctrl),
+            State::WaitReady: 1,
+            State::WaitValid: !membus.rvalid,
+            default         : 0,
+        };
+    }
+
+    always_ff {
+        if_reset {
+            state     = State::Init;
+            req_wen   = 0;
+            req_addr  = 0;
+            req_wdata = 0;
+        } else {
+            if valid {
+                case state {
+                    State::Init: if is_new &amp; inst_is_memop(ctrl) {
+                                     state     = State::WaitReady;
+                                     req_wen   = inst_is_store(ctrl);
+                                     req_addr  = addr;
+                                     req_wdata = rs2;
+                                 }
+                    State::WaitReady: if membus.ready {
+                                          state = State::WaitValid;
+                                      }
+                    State::WaitValid: if membus.rvalid {
+                                          state = State::Init;
+                                      }
+                    default: {}
+                }
+            }
+        }
+    }
+}
+</pre>
+</div>
+<p>memunitモジュールでは、命令がメモリにアクセスする命令の時、ALUから受け取ったアドレスをメモリに渡して操作を実行します。</p>
+<p>命令がメモリにアクセスする命令かどうかは。<code class="inline-code">inst_is_memop</code>関数で判定します。ストア命令のとき、命令の形式はS形式です。ロード命令のとき、デコーダは<code class="inline-code">InstCtrl.is_load</code>を<code class="inline-code">1</code>にしています。</p>
+<p>memunitモジュールには、次の状態が定義されています。初期状態は<code class="inline-code">State::Init</code>です。</p>
+<dl>
+<dt>State::Init</dt>
+<dd>
+	memunitモジュールに新しく命令が供給されたとき、
+	<code class="inline-code">valid</code>と<code class="inline-code">is_new</code>が<code class="inline-code">1</code>になります。
+	新しく命令が供給されて、それがメモリにアクセスする命令のとき、
+	状態を<code class="inline-code">State::WaitReady</code>に移動します。
+	その際、<code class="inline-code">req_wen</code>にストア命令かどうか、
+	<code class="inline-code">req_addr</code>にアクセスするアドレス、
+	<code class="inline-code">req_wdata</code>に<code class="inline-code">rs2</code>を格納します。
+</dd>
+<dt>State::WaitReady</dt>
+<dd>
+	この状態の時、命令に応じた要求をメモリに送り続けます。
+	メモリが要求を受け付ける(<code class="inline-code">ready</code>)とき、
+	状態を<code class="inline-code">State::WaitValid</code>に移動します。
+</dd>
+<dt>State::WaitValid</dt>
+<dd>
+	メモリに送信した要求の処理が終了した(<code class="inline-code">rvalid</code>)とき、
+	状態を<code class="inline-code">State::Init</code>に移動します。
+</dd>
+</dl>
+<p>メモリにアクセスする命令のとき、memunitモジュールは<code class="inline-code">Init</code>, <code class="inline-code">WaitReady</code>, <code class="inline-code">WaitValid</code>の順で状態を移動するため、実行には少なくとも3クロックが必要です。その間、CPUはレジスタのライトバック処理やFIFOからの命令の取り出しを待つ必要があります。</p>
+<p>これを実現するために、memunitモジュールには処理中かどうかを表す<code class="inline-code">stall</code>フラグが存在します。有効な命令が供給されているとき、<code class="inline-code">state</code>やメモリの状態に応じて、次のように<code class="inline-code">stall</code>を決定します。</p>
+<div id="stall.cond" class="table">
+<p class="caption">表3.6: stallの値の決定方法</p>
+<table>
+<tr class="hline"><th>状態</th><th>stallが1になる条件</th></tr>
+<tr class="hline"><td>Init</td><td>新しく命令が供給されて、それがメモリにアクセスする命令のとき</td></tr>
+<tr class="hline"><td>WaitReady</td><td>常に1</td></tr>
+<tr class="hline"><td>WaitValid</td><td>処理が終了していない(<code class="inline-code">!membus.rvalid</code>)とき</td></tr>
+</table>
+</div>
+<div class="miniblock miniblock-caution">
+<p class="miniblock-caption">アドレスが4バイトに整列されていない場合の動作</p>
+<p>今のところ、memoryモジュールはアドレスの下位2ビットを無視するため、<code class="inline-code">addr</code>の下位2ビットが<code class="inline-code">00</code>ではない、つまり、4で割り切れないアドレスに対してLW, SW命令を実行する場合、memunitモジュールは正しい動作をしません。2で割り切れないアドレスに対するLH, LHU, SH命令についても同様です。これらの問題については後の章で対策するため、今は無視します。</p>
+</div>
+
+<h4><a id="h3-11-1-2"></a>memunitモジュールのインスタンス化</h4>
+<p>coreモジュール内にmemunitモジュールをインスタンス化します。</p>
+<p>まず、命令が供給されていることを示す信号<code class="inline-code">inst_valid</code>と、命令が現在のクロックで供給されたことを示す信号<code class="inline-code">inst_is_new</code>を作成します。</p>
+<div id="valid.new.inst" class="caption-code">
+<span class="caption">リスト3.44: リスト3.44: inst_valid, inst_is_newの定義 (core.veryl)</span>
+<pre class="list language-inst">    let inst_valid : logic    = if_fifo_rvalid;
+    var inst_is_new: logic   ; // 命令が今のクロックで供給されたかどうか
+</pre>
+</div>
+<div id="inst_is_new.impl" class="caption-code">
+<span class="caption">リスト3.45: リスト3.45: inst_is_newの実装 (core.veryl)</span>
+<pre class="list language-impl">    always_ff {
+        if_reset {
+            inst_is_new = 0;
+        } else {
+            if if_fifo_rvalid {
+                inst_is_new = if_fifo_rready;
+            } else {
+                inst_is_new = 1;
+            }
+        }
+    }
+</pre>
+</div>
+<p>命令が供給されているかどうかは、<code class="inline-code">if_fifo_rvalid</code>と同値です。これを機に、<code class="inline-code">if_fifo_rvalid</code>を使用しているところを<code class="inline-code">inst_valid</code>に置き換えましょう。</p>
+<p>命令が現在のクロックで供給されたかどうかは、FIFOの<code class="inline-code">rvalid</code>, <code class="inline-code">rready</code>を観測することでわかります。<code class="inline-code">rvalid</code>が<code class="inline-code">1</code>のとき、<code class="inline-code">ready</code>が<code class="inline-code">1</code>なら、次のクロックで供給される命令は新しく供給される命令です。<code class="inline-code">ready</code>が<code class="inline-code">0</code>なら、次のクロックで供給されている命令は現在のクロックと同じ命令になります。<code class="inline-code">rvalid</code>が<code class="inline-code">0</code>のとき、次のクロックで供給される命令は常に新しく供給される命令になります。(次のクロックで<code class="inline-code">rvalid</code>が<code class="inline-code">1</code>かどうかについては考えません)</p>
+<p>さて、memunitモジュールをインスタンス化する前に、メモリとの接続方法について考える必要があります。</p>
+<p>coreモジュールには、メモリとの接続点としてmembusポートが存在します。しかし、これは命令フェッチ用に使用されているため、memunitモジュール用に使用することができません。また、memoryモジュールは同時に2つの操作を受け付けることができません。</p>
+<p>この問題を、coreモジュールにメモリとの接続点を2つ用意し、それをtopモジュールで調停することにより回避します。</p>
+<div id="core.membus.two" class="caption-code">
+<span class="caption">リスト3.46: リスト3.46: coreモジュールのポート定義 (core.veryl)</span>
+<pre class="list language-two">module core (
+    clk     : input   clock            ,
+    rst     : input   reset            ,
+    i_membus: modport membus_if::master,
+    d_membus: modport membus_if::master,
+) {
+</pre>
+</div>
+<p>まず、coreモジュールに、命令フェッチ用のポート<code class="inline-code">i_membus</code>, ロードストア命令用のポート<code class="inline-code">d_membus</code>の2つのポートを用意します。命令フェッチ用のポートが<code class="inline-code">membus</code>から<code class="inline-code">i_membus</code>に変更されるため、既存の<code class="inline-code">membus</code>を<code class="inline-code">i_membus</code>に置き換えてください。</p>
+<div id="membus.to.i_membus" class="caption-code">
+<span class="caption">リスト3.47: リスト3.47: membusをi_membusに置き換える (core.veryl)</span>
+<pre class="list language-i_membus">        // FIFOに空きがあるとき、命令をフェッチする
+        i_membus.valid = if_fifo_wready;
+        i_membus.addr  = if_pc;
+        i_membus.wen   = 0;
+        i_membus.wdata = 'x; // wdataは使用しない
+</pre>
+</div>
+<p>次に、topモジュールでの調停を実装します。</p>
+<div id="top.arb" class="caption-code">
+<span class="caption">リスト3.48: リスト3.48: メモリへのアクセス要求の調停 (top.veryl)</span>
+<pre class="list language-arb">    inst membus  : membus_if;
+    inst i_membus: membus_if; // 命令フェッチ用
+    inst d_membus: membus_if; // ロードストア命令用
+
+    var memarb_last_i: logic;
+
+    // メモリアクセスを調停する
+    always_ff {
+        if_reset {
+            memarb_last_i = 0;
+        } else {
+            if membus.ready {
+                memarb_last_i = !d_membus.valid;
+            }
+        }
+    }
+
+    always_comb {
+        i_membus.ready  = membus.ready &amp;&amp; !d_membus.valid;
+        i_membus.rvalid = membus.rvalid &amp;&amp; memarb_last_i;
+        i_membus.rdata  = membus.rdata;
+
+        d_membus.ready  = membus.ready;
+        d_membus.rvalid = membus.rvalid &amp;&amp; !memarb_last_i;
+        d_membus.rdata  = membus.rdata;
+
+        membus.valid = i_membus.valid | d_membus.valid;
+        if d_membus.valid {
+            membus.addr  = d_membus.addr;
+            membus.wen   = d_membus.wen;
+            membus.wdata = d_membus.wdata;
+        } else {
+            membus.addr  = i_membus.addr;
+            membus.wen   = i_membus.wen;
+            membus.wdata = i_membus.wdata;
+        }
+    }
+</pre>
+</div>
+<p>新しく、<code class="inline-code">i_membus</code>と<code class="inline-code">d_membus</code>をインスタンス化し、それを<code class="inline-code">membus</code>と接続します。</p>
+<p>調停の仕組みは次のとおりです。</p>
+<ul>
+<li><code class="inline-code">i_membus</code>と<code class="inline-code">d_membus</code>の両方の<code class="inline-code">valid</code>が<code class="inline-code">1</code>のとき、<code class="inline-code">d_membus</code>を優先する
+</li>
+<li><code class="inline-code">memarb_last_i</code>レジスタに、受け入れた要求が<code class="inline-code">i_membus</code>からのものだったかどうかを記録する
+</li>
+<li>メモリが要求の結果を返すとき、<code class="inline-code">memarb_last_i</code>を見て、<code class="inline-code">i_membus</code>と<code class="inline-code">d_membus</code>のどちらか片方の<code class="inline-code">rvalid</code>を<code class="inline-code">1</code>にする
+</li>
+</ul>
+<p>命令フェッチを優先していると命令の処理が進まないため、<code class="inline-code">i_membus</code>よりも<code class="inline-code">d_membus</code>を優先します。</p>
+<p>coreモジュールとの接続を次のように変更します。</p>
+<div id="membus.core_inst" class="caption-code">
+<span class="caption">リスト3.49: リスト3.49: membusを2つに分けて接続する (top.veryl)</span>
+<pre class="list language-core_inst">    inst c: core (
+        clk       ,
+        rst       ,
+        i_membus  ,
+        d_membus  ,
+    );
+</pre>
+</div>
+<p>memoryモジュールとmemunitを接続する準備が整ったので、memunitモジュールをインスタンス化します。</p>
+<div id="core.memunit.inst" class="caption-code">
+<span class="caption">リスト3.50: リスト3.50: memunitモジュールのインスタンス化 (core.veryl)</span>
+<pre class="list language-inst">    var memu_rdata: UIntX;
+    var memu_stall: logic;
+
+    inst memu: memunit (
+        clk                ,
+        rst                ,
+        valid : inst_valid ,
+        is_new: inst_is_new,
+        ctrl  : inst_ctrl  ,
+        addr  : alu_result ,
+        rs2   : rs2_data   ,
+        rdata : memu_rdata ,
+        stall : memu_stall ,
+        membus: d_membus   ,
+    );
+</pre>
+</div>
+
+<h4><a id="h3-11-1-3"></a>memunitモジュールの処理待ちとライトバック</h4>
+<p>最後に、memunitモジュールが処理中は命令をFIFOから取り出すのを止める処理と、LW命令で読み込んだデータがレジスタにライトバックする処理を実装します。</p>
+<div id="membus.rready" class="caption-code">
+<span class="caption">リスト3.51: リスト3.51: memunitモジュールの処理が終わるのを待つ (core.veryl)</span>
+<pre class="list language-rready">        // memunitが処理中ではないとき、FIFOから命令を取り出していい
+        if_fifo_rready = !memu_stall;
+</pre>
+</div>
+<div id="membus.wb" class="caption-code">
+<span class="caption">リスト3.52: リスト3.52: memunitモジュールの結果をライトバックする (core.veryl)</span>
+<pre class="list language-wb">    let rd_addr: logic&lt;5&gt; = inst_bits[11:7];
+    let wb_data: UIntX    = if inst_ctrl.is_load {
+        memu_rdata
+    } else {
+        alu_result
+    };
+</pre>
+</div>
+<p>memunitモジュールが処理中のとき、<code class="inline-code">memu_stall</code>が<code class="inline-code">1</code>になっています。そのため、<code class="inline-code">memu_stall</code>が<code class="inline-code">1</code>のときは、<code class="inline-code">if_fifo_rready</code>を<code class="inline-code">0</code>にすることで、FIFOからの命令の取り出しを停止します。</p>
+<p>ライトバック処理では、命令がロード命令のとき(<code class="inline-code">inst_ctrl.is_load</code>)、<code class="inline-code">alu_result</code>ではなく<code class="inline-code">memu_rdata</code>を<code class="inline-code">wb_data</code>に設定します。</p>
+<p>ところで、現在のプログラムでは、memunitの処理が終了していないときもライトバックをし続けています。レジスタへのライトバックは命令の実行が終了したときのみで良いため、次のようにプログラムを変更します。</p>
+<div id="wb.ready.main" class="caption-code">
+<span class="caption">リスト3.53: リスト3.53: 命令の実行が終了したときにのみライトバックする (core.veryl)</span>
+<pre class="list language-main">            if inst_valid &amp;&amp; if_fifo_rready &amp;&amp; inst_ctrl.rwb_en {
+                regfile[rd_addr] = wb_data;
+            }
+</pre>
+</div>
+<div id="wb.ready.debug" class="caption-code">
+<span class="caption">リスト3.54: リスト3.54: ライトバックするときにのみデバッグ表示する (core.veryl)</span>
+<pre class="list language-debug">                if if_fifo_rready &amp;&amp; inst_ctrl.rwb_en {
+                    $display(&quot;  reg[%d] &lt;= %h&quot;, rd_addr, wb_data);
+                }
+</pre>
+</div>
+
+<h4><a id="h3-11-1-4"></a>LW, SW命令のテスト</h4>
+<p>LW, SW命令が正しく動作していることを確認するために、デバッグ出力を次のように変更します。</p>
+<div id="debug.memunit.stall.rdata" class="caption-code">
+<span class="caption">リスト3.55: リスト3.55: メモリモジュールの状態を出力する (core.veryl)</span>
+<pre class="list language-rdata">                $display(&quot;  mem stall : %b&quot;, memu_stall);
+                $display(&quot;  mem rdata : %h&quot;, memu_rdata);
+</pre>
+</div>
+<p>また、ここからのテストは実行するクロック数が多くなるため、ログに何クロック目かを表示することで、ログを読みやすくします。</p>
+<div id="log.count" class="caption-code">
+<span class="caption">リスト3.56: リスト3.56: 何クロック目かを出力する (core.veryl)</span>
+<pre class="list language-count">    var clock_count: u64;
+
+    always_ff {
+        if_reset {
+            clock_count = 1;
+        } else {
+            clock_count = clock_count + 1;
+            if inst_valid {
+                $display(&quot;# %d&quot;, clock_count);
+                $display(&quot;%h : %h&quot;, inst_pc, inst_bits);
+                $display(&quot;  itype     : %b&quot;, inst_ctrl.itype);
+</pre>
+</div>
+<p>LW, SW命令のテストのために、sample.hexを次のように変更します。</p>
+<div id="sample.hex.lwsw" class="caption-code">
+<span class="caption">リスト3.57: リスト3.57: テスト用のプログラムを記述する (sample.hex)</span>
+<pre class="list language-lwsw">02002503 // lw x10, 0x20(x0)
+40000593 // addi x11, x0, 0x400
+02b02023 // sw x11, 0x20(x0)
+02002603 // lw x12, 0x20(x0)
+00000000
+00000000
+00000000
+00000000
+deadbeef // 0x20
+</pre>
+</div>
+<p>プログラムは次のようになっています。</p>
+<div id="sample.hex.lwsw" class="table">
+<p class="caption">表3.7: メモリに格納するデータ</p>
+<table>
+<tr class="hline"><th>アドレス</th><th>命令</th><th>意味</th></tr>
+<tr class="hline"><td>00000000</td><td>lw x10, 0x20(x0)</td><td>x10に、アドレスが0x20のデータを読み込む</td></tr>
+<tr class="hline"><td>00000004</td><td>addi x11, x0, 0x400</td><td>x11 = 0x400</td></tr>
+<tr class="hline"><td>00000008</td><td>sw x11, 0x20(x0)</td><td>アドレス0x20にx11の値を書き込む</td></tr>
+<tr class="hline"><td>0000000c</td><td>lw x12, 0x20(x0)</td><td>x12に、アドレスが0x20のデータを読み込む</td></tr>
+</table>
+</div>
+<p>アドレス<code class="inline-code">0x20</code>には、データ<code class="inline-code">deadbeef</code>を格納しています。</p>
+<p>シミュレータを実行し、結果を確かめます。</p>
+<div id="lwsw.test" class="cmd-code">
+<span class="caption">リスト3.58: リスト3.58: LW, SW命令のテスト</span>
+<pre class="list language-test">$ <span class="userinput">make build sim</span>
+$ <span class="userinput">obj_dir/sim src/sample.hex 13</span>
+#                    3
+00000000 : 02002503
+  itype     : 000010
+  imm       : 00000020
+  rs1[ 0]   : 00000000
+  rs2[ 0]   : 00000000
+  op1       : 00000000
+  op2       : 00000020
+  alu res   : 00000020
+  mem stall : 1 <span class="balloon">← LW命令でストールしている</span>
+  mem rdata : 02b02023
+(省略)
+#                    5
+00000000 : 02002503
+  itype     : 000010
+  imm       : 00000020
+  rs1[ 0]   : 00000000
+  rs2[ 0]   : 00000000
+  op1       : 00000000
+  op2       : 00000020
+  alu res   : 00000020
+  mem stall : 0 <span class="balloon">← LWが終わったので0になった</span>
+  mem rdata : deadbeef
+  reg[10] &lt;= deadbeef <span class="balloon">← 0x20の値が読み込まれた</span>
+(省略)
+#                   12
+0000000c : 02002603
+  itype     : 000010
+  imm       : 00000020
+  rs1[ 0]   : 00000000
+  rs2[ 0]   : 00000000
+  op1       : 00000000
+  op2       : 00000020
+  alu res   : 00000020
+  mem stall : 0
+  mem rdata : 00000400
+  reg[12] &lt;= 00000400 <span class="balloon">← 書き込んだ値が読み込まれた</span>
+</pre>
+</div>
+
+<h3 class="none"><a id="h3-11-2"></a><span class="secno">3.11.2</span> LB, LBU, LH, LHU命令の実装</h3>
+<p>LB, LBU, SB命令は8ビット単位、LH, LHU, SH命令は16ビット単位でロード/ストアを行う命令です。</p>
+<p>まずロード命令を実装します。ロード命令は32ビット単位でデータを読み込み、その結果の一部を切り取ることで実装することができます。</p>
+<p>まず、何度も記述することになる定数と変数を短い名前(<code class="inline-code">W</code>, <code class="inline-code">D</code>)で定義します。</p>
+<div id="lbhsbh.wd" class="caption-code">
+<span class="caption">リスト3.59: リスト3.59: WとDの定義 (memunit.veryl)</span>
+<pre class="list language-wd">    const W: u32    = 32;
+    let D: UInt32 = membus.rdata;
+</pre>
+</div>
+<p>LB, LBU, LH, LHU, LW命令は、funct3の値で区別することができます。</p>
+<div id="funct3.load" class="table">
+<p class="caption">表3.8: ロード命令のfunct3</p>
+<table>
+<tr class="hline"><th>funct3</th><th>命令</th></tr>
+<tr class="hline"><td>000</td><td>LB</td></tr>
+<tr class="hline"><td>100</td><td>LBU</td></tr>
+<tr class="hline"><td>001</td><td>LH</td></tr>
+<tr class="hline"><td>101</td><td>LHU</td></tr>
+<tr class="hline"><td>010</td><td>LW</td></tr>
+</table>
+</div>
+<p>funct3をcase文で分岐し、アドレスの下位ビットを見ることで、命令とアドレスに応じた値をrdataに設定します。</p>
+<div id="lbhsbh.rdata" class="caption-code">
+<span class="caption">リスト3.60: リスト3.60: rdataをアドレスと読み込みサイズに応じて変更する (memunit.veryl)</span>
+<pre class="list language-rdata">        // loadの結果
+        rdata = case ctrl.funct3 {
+            3'b000 : case addr[1:0] {
+                0      : {D[7] repeat W - 8, D[7:0]},
+                1      : {D[15] repeat W - 8, D[15:8]},
+                2      : {D[23] repeat W - 8, D[23:16]},
+                3      : {D[31] repeat W - 8, D[31:24]},
+                default: 'x,
+            },
+            3'b100 : case addr[1:0] {
+                0      : {1'b0 repeat W - 8, D[7:0]},
+                1      : {1'b0 repeat W - 8, D[15:8]},
+                2      : {1'b0 repeat W - 8, D[23:16]},
+                3      : {1'b0 repeat W - 8, D[31:24]},
+                default: 'x,
+            },
+            3'b001 : case addr[1] {
+                0      : {D[15] repeat W - 16, D[15:0]},
+                1      : {D[31] repeat W - 16, D[31:16]},
+                default: 'x,
+            },
+            3'b101 : case addr[1] {
+                0      : {1'b0 repeat W - 16, D[15:0]},
+                1      : {1'b0 repeat W - 16, D[31:16]},
+                default: 'x,
+            },
+            3'b010 : D,
+            default: 'x,
+        };
+</pre>
+</div>
+
+<h3 class="none"><a id="h3-11-3"></a><span class="secno">3.11.3</span> SB, SH命令の実装</h3>
+<p>次に、SB, SH命令を実装します。</p>
+
+<h4><a id="h3-11-3-1"></a>memoryモジュールで書き込みマスクをサポートする</h4>
+<p>memoryモジュールは、32ビット単位の読み書きしかサポートしておらず、一部の書き込みもサポートしていません。本書では、一部のみ書き込む命令をmemoryモジュールでサポートすることで、SB, SH命令を実装します。</p>
+<p>まず、membus_ifインターフェースに、書き込む場所をバイト単位で示す信号<code class="inline-code">wmask</code>を追加します。<code class="inline-code">wmask</code>には、書き込む部分を1、書き込まない部分を0で指定します。このような挙動をする値を、書き込みマスクと呼びます。</p>
+<div id="wmask.define" class="caption-code">
+<span class="caption">リスト3.61: リスト3.61: wmaskの定義 (membus_if.veryl)</span>
+<pre class="list language-define">    var wmask : logic &lt;4&gt;;
+</pre>
+</div>
+<div id="wmask.master" class="caption-code">
+<span class="caption">リスト3.62: リスト3.62: modport masterにwmaskを追加する (membus_if.veryl)</span>
+<pre class="list language-master">        wmask : output,
+</pre>
+</div>
+<div id="wmask.slave" class="caption-code">
+<span class="caption">リスト3.63: リスト3.63: modport slaveにwmaskを追加する (membus_if.veryl)</span>
+<pre class="list language-slave">        wmask : input ,
+</pre>
+</div>
+<p>バイト単位で指定するため、<code class="inline-code">wmask</code>の幅は4ビットです。</p>
+<p>次に、memoryモジュールで書き込みマスクをサポートします。</p>
+<div id="wmask.memory" class="caption-code">
+<span class="caption">リスト3.64: リスト3.64: 書き込みマスクをサポートするmemoryモジュール (memory.veryl)</span>
+<pre class="list language-memory">import eei::*;
+
+module memory #(
+    param MEMORY_WIDTH: u32 = 20, // メモリのサイズ
+) (
+    clk      : input   clock           ,
+    rst      : input   reset           ,
+    membus   : modport membus_if::slave,
+    FILE_PATH: input   string          , // メモリの初期値が格納されたファイルのパス
+) {
+
+    var mem: UInt32 [2 ** MEMORY_WIDTH];
+
+    // Addrをmemのインデックスに変換する関数
+    function addr_to_memaddr (
+        addr: input Addr               ,
+    ) -&gt; logic&lt;MEMORY_WIDTH&gt; {
+        return addr[MEMORY_WIDTH - 1 + 2:2];
+    }
+
+    // 書き込みマスクをUInt32に展開した値
+    var wmask_expand: UInt32;
+    for i in 0..32 :wm_expand_block {
+        assign wmask_expand[i] = wmask_saved[i / 8];
+    }
+
+    initial {
+        // memをFILE_PATHに格納されているデータで初期化
+        if FILE_PATH != &quot;&quot; {
+            $readmemh(FILE_PATH, mem);
+        }
+    }
+
+    // 状態
+    enum State {
+        Ready,
+        WriteValid,
+    }
+    var state: State;
+
+    var addr_saved : Addr     ;
+    var wdata_saved: UInt32   ;
+    var wmask_saved: logic &lt;4&gt;;
+    var rdata_saved: UInt32   ;
+
+    always_comb {
+        membus.ready = state == State::Ready;
+    }
+
+    always_ff {
+        if state == State::WriteValid {
+            mem[addr_to_memaddr(addr_saved)] = wdata_saved &amp; wmask_expand | rdata_saved &amp; ~wmask_expand;
+        }
+    }
+
+    always_ff {
+        if_reset {
+            state         = State::Ready;
+            membus.rvalid = 0;
+            membus.rdata  = 0;
+            addr_saved    = 0;
+            wdata_saved   = 0;
+            wmask_saved   = 0;
+            rdata_saved   = 0;
+        } else {
+            case state {
+                State::Ready: {
+                                  membus.rvalid = membus.valid &amp; !membus.wen;
+                                  membus.rdata  = mem[addr_to_memaddr(membus.addr)];
+                                  addr_saved    = membus.addr;
+                                  wdata_saved   = membus.wdata;
+                                  wmask_saved   = membus.wmask;
+                                  rdata_saved   = mem[addr_to_memaddr(membus.addr)];
+                                  if membus.valid &amp;&amp; membus.wen {
+                                      state = State::WriteValid;
+                                  }
+                              }
+                State::WriteValid: {
+                                       state         = State::Ready;
+                                       membus.rvalid = 1;
+                                   }
+            }
+        }
+    }
+}
+</pre>
+</div>
+<p>書き込みマスクをサポートするmemoryモジュールは、次の2つの状態を持ちます。</p>
+<dl>
+<dt>State::Ready</dt>
+<dd>
+	要求を受け付ける。
+	読み込み要求のとき、次のクロックで結果を返す。
+	書き込み要求のとき、要求の内容をレジスタに保存し、
+	状態を<code class="inline-code">State::WriteValid</code>に移動する。
+</dd>
+<dt>State::WriteValid</dt>
+<dd>
+	書き込みマスクつきの書き込みを行う。
+	状態を<code class="inline-code">State::Ready</code>に移動する。
+</dd>
+</dl>
+<p>memoryモジュールは、書き込み要求が送られてきた場合、名前が<code class="inline-code">_saved</code>で終わるレジスタに要求の内容を保存します。また、<code class="inline-code">rdata_saved</code>に、指定されたアドレスのデータを保存します。次のクロックで、書き込みマスクを使った書き込みを行い、要求の処理を終了します。</p>
+<p>topモジュールの調停処理で、<code class="inline-code">wmask</code>も調停するようにします。</p>
+<div id="top.wmask" class="caption-code">
+<span class="caption">リスト3.65: リスト3.65: wmaskの設定 (top.veryl)</span>
+<pre class="list language-wmask">        membus.valid = i_membus.valid | d_membus.valid;
+        if d_membus.valid {
+            membus.addr  = d_membus.addr;
+            membus.wen   = d_membus.wen;
+            membus.wdata = d_membus.wdata;
+            membus.wmask = d_membus.wmask; <span class="balloon">← 追加</span>
+        } else {
+            membus.addr  = i_membus.addr;
+            membus.wen   = i_membus.wen;
+            membus.wdata = i_membus.wdata;
+            membus.wmask = i_membus.wmask; <span class="balloon">← 追加</span>
+        }
+</pre>
+</div>
+
+<h4><a id="h3-11-3-2"></a>memunitモジュールの実装</h4>
+<p>memoryモジュールが書き込みマスクをサポートするようになったので、memunitモジュールでwmaskを設定します。</p>
+<p><code class="inline-code">req_wmask</code>レジスタを作成し、<code class="inline-code">membus.wmask</code>と接続します。</p>
+<div id="memu.wmask.define" class="caption-code">
+<span class="caption">リスト3.66: リスト3.66: req_wmaskの定義 (memunit.veryl)</span>
+<pre class="list language-define">    var req_wmask: logic&lt;4&gt;;
+</pre>
+</div>
+<div id="memu.wmask.use" class="caption-code">
+<span class="caption">リスト3.67: リスト3.67: membusにwmaskを設定する (memunit.veryl)</span>
+<pre class="list language-use">    membus.wmask = req_wmask;
+</pre>
+</div>
+<p><code class="inline-code">always_ff</code>の中で、req_wmaskの値を設定します。それぞれの命令のとき、wmaskがどうなるかを確認してください。</p>
+<div id="memu.wmask.init" class="caption-code">
+<span class="caption">リスト3.68: リスト3.68: if_resetでreq_wmaskを初期化する (memunit.veryl)</span>
+<pre class="list language-init">    req_wmask = 0;
+</pre>
+</div>
+<div id="memu.wmask.set" class="caption-code">
+<span class="caption">リスト3.69: リスト3.69: メモリにアクセスする命令のとき、wmaskを設定する (memunit.veryl)</span>
+<pre class="list language-set">    req_wmask = case ctrl.funct3[1:0] {
+        2'b00  : 4'b1 &lt;&lt; addr[1:0], <span class="balloon">← LB, LBUのとき、アドレス下位2ビット分だけ1を左シフトする</span>
+        2'b01  : case addr[1:0] { <span class="balloon">← LH, LHU命令のとき</span>
+            2      : 4'b1100, <span class="balloon">← 上位2バイトに書き込む</span>
+            0      : 4'b0011, <span class="balloon">← 下位2バイトに書き込む</span>
+            default: 'x,
+        },
+        2'b10  : 4'b1111, <span class="balloon">← LW命令のとき、全体に書き込む</span>
+        default: 'x,
+    };
+</pre>
+</div>
+
+<h3 class="none"><a id="h3-11-4"></a><span class="secno">3.11.4</span> LB, LBU, LH, LHU, SB, SH命令のテスト</h3>
+<p>簡単なテストを作成し、動作をテストします。</p>
+<p>2つテストを記載するので、正しく動いているか確認してください。</p>
+<div id="sample_lbh.hex" class="caption-code">
+<span class="caption">リスト3.70: リスト3.70: src/sample_lbh.hex</span>
+<pre class="list language-hex">02000083 // lb x1, 0x20(x0)  : x1 = ffffffef
+02104083 // lbu x1, 0x21(x0) : x1 = 000000be
+02201083 // lh x1, 0x22(x0)  : x1 = ffffdead
+02205083 // lhu x1, 0x22(x0) : x1 = 0000dead
+00000000
+00000000
+00000000
+00000000
+deadbeef // 0x0
+</pre>
+</div>
+<div id="sample_sbsh.hex" class="caption-code">
+<span class="caption">リスト3.71: リスト3.71: src/sample_sbsh.hex</span>
+<pre class="list language-hex">12300093 // addi x1, x0, 0x123
+02101023 // sh x1, 0x20(x0)
+02100123 // sb x1, 0x22(x0)
+02200103 // lb x2, 0x22(x0) : x2 = 00000023
+02001183 // lh x3, 0x20(x0) : x3 = 00000123
+</pre>
+</div>
+
+<h2 class="numbox"><a id="h3-12"></a><span class="secno">3.12</span> 分岐, ジャンプ</h2>
+<p>まだ、重要な命令を実装できていません。分岐命令とジャンプ命令を実装します。</p>
+
+<h3 class="none"><a id="h3-12-1"></a><span class="secno">3.12.1</span> JAL, JALR命令</h3>
+<p>JAL(Jump And Link)命令は相対アドレスでジャンプ先を指定し、ジャンプします。ジャンプ命令である場合はPCの次の値をPC + 即値に設定するようにします。Linkとあるように、rdレジスタに現在のPC+4を格納します。</p>
+<p>プログラム</p>
+<p>JALR(Jump And Link Register)命令は、レジスタに格納されたジャンプ先にジャンプします。レジスタの値と即値を加算し、次のPCに設定します。JAL命令と同様に、rdレジスタに現在のPC+4を格納します。</p>
+<p>プログラム</p>
+
+<h3 class="none"><a id="h3-12-2"></a><span class="secno">3.12.2</span> 分岐命令</h3>
+<p>分岐命令には次の種類があります。全ての分岐命令は相対アドレスで分岐先を指定します。</p>
+<p>分岐するかどうかの判定を行うモジュールを作成します。</p>
+<p>プログラム</p>
+<p>alubrモジュールの＊が1かつ、分岐命令である場合、PCをPC+即値に指定します。分岐しない場合はそのままです。</p>
+
+<h2 class="numbox"><a id="h3-13"></a><span class="secno">3.13</span> riscv-testsでテストする</h2>
+<p>古いのをappendixにする。</p>
+<p>riscv-testsは、RISC-VのCPUが正しく動くかどうかを検証するためのテストセットです。これを実行することでCPUが正しく動いていることを確認します。</p>
+<p>riscv-testsのビルド方法については付録を参考にしてください。</p>
+
+<h3 class="none"><a id="h3-13-1"></a><span class="secno">3.13.1</span> 最小限のCSR命令の実装</h3>
+<p>riscv-testsを実行するためには、いくつかの制御用のレジスタ(CSR)と、それを読み書きする命令(CSR命令)が必要になります。それぞれの命令やレジスタについて、本章では深く立ち入りません。</p>
+
+<h4><a id="h3-13-1-1"></a>mtvec</h4>
+
+<h4><a id="h3-13-1-2"></a>ecall命令</h4>
+
+<h4><a id="h3-13-1-3"></a>mret命令</h4>
+
+<h3 class="none"><a id="h3-13-2"></a><span class="secno">3.13.2</span> 終了検知</h3>
+<p>riscv-testsが終了したことを検知し、それが成功か失敗かどうかを報告する必要があります。</p>
+<p>riscv-testsは終了したことを示すためにメモリのあああ番地に値を書き込みます。この値が1のとき、riscv-testsが正常に終了したことを示します。それ以外の時は、riscv-testsが失敗したことを示します。</p>
+<p>riscv-testsの終了の検知処理をtopモジュールに記述します。</p>
+<p>プログラム</p>
+
+<h3 class="none"><a id="h3-13-3"></a><span class="secno">3.13.3</span> テストの実行</h3>
+<p>試しにaddのテストを実行してみましょう。add命令のテストはrv32ui-p-add.bin.hexに格納されています。これを、メモリのreadmemhで読み込むファイルに指定します。</p>
+<p>プログラム</p>
+<p>ビルドして実行し、正常に動くことを確認します。</p>
+
+<h4><a id="h3-13-3-1"></a>複数のテストを自動で実行する</h4>
+<p>add以外の命令もテストしたいですが、そのためにreadmemhを書き換えるのは大変です。これを簡単にするために、readmemhにはマクロで指定する定数を渡します。</p>
+<p>プログラム</p>
+<p>自動でテストを実行し、その結果を報告するプログラムを作成します。</p>
+<p>プログラム</p>
+<p>このPythonプログラムは、riscv-testsフォルダにあるhexファイルについてテストを実行し、結果を報告します。引数に対象としたいプログラムの名前の一部を指定することができます。</p>
+<p>今回はRV32Iのテストを実行したいので、riscv-testsのRV32I向けのテストの接頭辞であるrv32ui-p-引数に指定すると、次のように表示されます。</p>
+
+        </main>
+        <nav class="page-navi">
+          <a href="03-veryl.html" class="page-prev">&#9664;</a>
+          <a href="05-impl-rv64i.html" class="page-next">&#9654;</a>
+        </nav>
+        <footer>
+        </footer>
+      </div>
+    </div>
+  </body>
+</html>
+<!-- layout.html5.erb -->
