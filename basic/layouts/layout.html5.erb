@@ -28,7 +28,7 @@ body_ext = @body_ext || (@error ? ' class="has-compile-error"' : nil)
   <body<%= body_ext %>>
     <div class="page-outer">
 <% if @chapter || @error %>
-      <nav class="side-content">
+      <div class="side-content">
         <% if rebuild_js %>
         <div class="rebuild">
           <a href="javascript:void(0)" onclick="rebuildAndReloadForcedly()">Rebuild and Reload</a>
@@ -36,7 +36,7 @@ body_ext = @body_ext || (@error ? ' class="has-compile-error"' : nil)
         <% end %>
         <a class="nav-title" href="index.html"><%=h @book.config.name_of("booktitle") %></a>
 <%= @toc %>
-      </nav>
+      </div>
 <% end %>
       <div class="page-inner">
         <header class="page-header">

@@ -12,7 +12,7 @@
   </head>
   <body>
     <div class="page-outer">
-      <nav class="side-content">
+      <div class="side-content">
                 <a class="nav-title" href="index.html">Verylで作るRISC-V CPU</a>
 <ul class="toc toc-1">
     <li class="toc-chapter"><a href="./00-preface.html">まえがき / はじめに</a></li>
@@ -66,7 +66,7 @@
 </li>
     <li class="toc-chapter"><a href="./99-postface.html">あとがき / おわりに</a></li>
 </ul>
-      </nav>
+      </div>
       <div class="page-inner">
         <header class="page-header">
         </header>
@@ -827,14 +827,14 @@ $ obj_dir/sim src/sample.hex 7
 <dt>I形式</dt>
 <dd>
 	ソースレジスタ(rs1)が1つ、デスティネーションレジスタ(rd)が1つの命令形式です。
-	12ビットの即値(<code class="inline-code">imm[11:0]</code>)が命令中に含まれており、これとrs1を使って計算し、
+	12ビットの即値(imm[11:0])が命令中に含まれており、これとrs1を使って計算し、
 	その結果をデスティネーションレジスタに格納します。
 	例えばADDI, SUBI命令に使用されています。
 </dd>
 <dt>S形式</dt>
 <dd>
 	ソースレジスタ(rs1, rs2)が2つ、デスティネーションレジスタ(rd)が1つの命令形式です。
-	12ビットの即値(<code class="inline-code">imm[11:5], imm[4:0]</code>)が命令中に含まれており、
+	12ビットの即値(imm[11:5], imm[4:0])が命令中に含まれており、
 	これとソースレジスタを使って計算やメモリにアクセスし、
 	その結果をデスティネーションレジスタに格納します。
 	例えばSW命令(メモリにデータを格納する命令)に使用されています。
@@ -842,7 +842,7 @@ $ obj_dir/sim src/sample.hex 7
 <dt>B形式</dt>
 <dd>
 	ソースレジスタ(rs1, rs2)が2つの命令形式です。
-	12ビットの即値(<code class="inline-code">imm[12], imm[11], imm[10:5], imm[4:1]</code>)が命令中に含まれています。
+	12ビットの即値(imm[12], imm[11], imm[10:5], imm[4:1])が命令中に含まれています。
 	分岐命令に使用されており、
 	ソースレジスタの計算の結果が分岐を成立させる場合、
 	即値を使ってジャンプします。
@@ -850,13 +850,13 @@ $ obj_dir/sim src/sample.hex 7
 <dt>U形式</dt>
 <dd>
 	デスティネーションレジスタ(rd)が1つの命令形式です。
-	20ビットの即値(<code class="inline-code">imm[31:12]</code>)が命令中に含まれています。
+	20ビットの即値(imm[31:12])が命令中に含まれています。
 	例えばLUI命令(レジスタの上位20ビットを設定する命令)に使用されています。
 </dd>
 <dt>J形式</dt>
 <dd>
 	デスティネーションレジスタ(rd)が1つの命令形式です。
-	20ビットの即値(<code class="inline-code">imm[20], imm[19:12], imm[11], imm[10:1]</code>)が命令中に含まれています。
+	20ビットの即値(imm[20], imm[19:12], imm[11], imm[10:1])が命令中に含まれています。
 	例えばJAL命令(ジャンプ命令)に使用されており、
 	PCに即値を足した相対位置にジャンプします。
 </dd>
@@ -916,7 +916,7 @@ package corectrl {
     const OP_SYSTEM  : logic&lt;7&gt; = 7'b1110011;
 </pre>
 </div>
-<p>これらの値とそれぞれの命令の対応については、仕様書Volume Iの<code class="inline-code">37. RV32/64G Instruction Set Listings</code>を確認してください。</p>
+<p>これらの値とそれぞれの命令の対応については、仕様書Volume Iの37. RV32/64G Instruction Set Listingsを確認してください。</p>
 
 <h3 class="none"><a id="h3-7-2"></a><span class="secno">3.7.2</span> デコードと即値の生成</h3>
 <p>デコード処理を書く準備が整いました。<code class="inline-code">src/inst_decoder.veryl</code>を作成し、次のように記述します。</p>
@@ -1214,7 +1214,7 @@ module alu (
 <tr class="hline"><td>result</td><td>output</td><td>UIntX</td><td>結果</td></tr>
 </table>
 </div>
-<p>命令がALUでどのような計算を行うかは命令の種別によって異なります。RV32Iでは、仕様書の<code class="inline-code">2.4. Integer Computational Instructions</code>(整数演算命令)に定義されている命令は、命令のfunct3, funct7フィールドによって計算の種類を特定することができます。</p>
+<p>命令がALUでどのような計算を行うかは命令の種別によって異なります。RV32Iでは、仕様書Volume Iの2.4. Integer Computational Instructions(整数演算命令)に定義されている命令は、命令のfunct3, funct7フィールドによって計算の種類を特定することができます。</p>
 <p>それ以外の命令は、CSR命令を除いて足し算しか行いません。そのため、デコード時に整数演算命令とそれ以外の命令を<code class="inline-code">InstCtrl.is_aluop</code>で区別し、整数演算命令以外は常に足し算を行うようにしています。具体的には、<code class="inline-code">opcode</code>がOPかOP-IMMの命令の<code class="inline-code">InstCtrl.is_aluop</code>を<code class="inline-code">1</code>にしています。(inst_decoderモジュールを確認してください)</p>
 <p><code class="inline-code">always_comb</code>ブロックでは、case文でfunct3によって計算を区別します。それだけでは区別できないとき、funct7を使用します。</p>
 <div id="core.veryl.alu.data" class="caption-code">
@@ -2147,7 +2147,7 @@ deadbeef // 0x0
 </div>
 
 <h2 class="numbox"><a id="h3-12"></a><span class="secno">3.12</span> ジャンプ命令、分岐命令の実装</h2>
-<p>まだ、重要な命令を実装できていません。プログラムでif文やループを実現するためには、ジャンプや分岐をする命令が必要です。RV32Iには、仕様書の<code class="inline-code">2.5. Control Transfer Instructions</code>に次の命令が定義されています。</p>
+<p>まだ、重要な命令を実装できていません。プログラムでif文やループを実現するためには、ジャンプや分岐をする命令が必要です。RV32Iには、仕様書Volume Iの2.5. Control Transfer Instructionsに次の命令が定義されています。</p>
 <div id="jump.br.insts" class="table">
 <p class="caption">表3.9: ジャンプ命令, 分岐命令</p>
 <table>
