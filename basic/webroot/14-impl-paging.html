@@ -22,39 +22,40 @@
     <li class="toc-chapter"><a href="./02-setup.html">1 環境構築</a></li>
     <li class="toc-chapter"><a href="./03-veryl.html">2 ハードウェア記述言語 Veryl</a></li>
     <li class="toc-chapter"><a href="./04-impl-rv32i.html">3 RV32Iの実装</a></li>
-    <li class="toc-chapter"><a href="./05-impl-rv64i.html">4 RV64Iの実装</a></li>
+    <li class="toc-chapter"><a href="./04a-riscvtests.html">4 riscv-testsによるテスト</a></li>
+    <li class="toc-chapter"><a href="./05-impl-rv64i.html">5 RV64Iの実装</a></li>
   </ul>
 </li>
 <li class="toc-part">第II部 基本的な拡張とトラップの実装
   <ul class="toc toc-2">
-    <li class="toc-chapter"><a href="./06-impl-M.html">5 M拡張の実装</a></li>
-    <li class="toc-chapter"><a href="./07-impl-exception.html">6 例外の実装</a></li>
-    <li class="toc-chapter"><a href="./08-impl-A.html">7 A拡張の実装</a></li>
-    <li class="toc-chapter"><a href="./09-impl-C.html">8 C拡張の実装</a></li>
-    <li class="toc-chapter"><a href="./10-impl-MMIO.html">9 MMIOの実装</a></li>
-    <li class="toc-chapter"><a href="./11-impl-interrupt.html">10 割り込みの実装</a></li>
+    <li class="toc-chapter"><a href="./06-impl-M.html">6 M拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./07-impl-exception.html">7 例外の実装</a></li>
+    <li class="toc-chapter"><a href="./08-impl-A.html">8 A拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./09-impl-C.html">9 C拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./10-impl-MMIO.html">10 MMIOの実装</a></li>
+    <li class="toc-chapter"><a href="./11-impl-interrupt.html">11 割り込みの実装</a></li>
   </ul>
 </li>
 <li class="toc-part">第III部 privilege modeの実装
   <ul class="toc toc-2">
-    <li class="toc-chapter"><a href="./12-impl-mmode-csr.html">11 M-modeの実装</a></li>
-    <li class="toc-chapter"><a href="./13-impl-smode-csr.html">12 S-modeの実装</a></li>
-    <li class="toc-chapter"><a href="./14-impl-paging.html">13 ページングの実装</a>
+    <li class="toc-chapter"><a href="./12-impl-mmode-csr.html">12 M-modeの実装</a></li>
+    <li class="toc-chapter"><a href="./13-impl-smode-csr.html">13 S-modeの実装</a></li>
+    <li class="toc-chapter"><a href="./14-impl-paging.html">14 ページングの実装</a>
       <ul class="toc toc-3">
-        <li class="toc-section"><a href="#h13-1">13.1 ページングとは何か</a></li>
-        <li class="toc-section"><a href="#h13-2">13.2 PTWの実装</a></li>
-        <li class="toc-section"><a href="#h13-3">13.3 Sv32</a></li>
-        <li class="toc-section"><a href="#h13-4">13.4 Sv39</a></li>
-        <li class="toc-section"><a href="#h13-5">13.5 Sv48</a></li>
-        <li class="toc-section"><a href="#h13-6">13.6 Sv54</a></li>
+        <li class="toc-section"><a href="#h14-1">14.1 ページングとは何か</a></li>
+        <li class="toc-section"><a href="#h14-2">14.2 PTWの実装</a></li>
+        <li class="toc-section"><a href="#h14-3">14.3 Sv32</a></li>
+        <li class="toc-section"><a href="#h14-4">14.4 Sv39</a></li>
+        <li class="toc-section"><a href="#h14-5">14.5 Sv48</a></li>
+        <li class="toc-section"><a href="#h14-6">14.6 Sv54</a></li>
       </ul>
     </li>
   </ul>
 </li>
 <li class="toc-part">第IV部 OSを動かす
   <ul class="toc toc-2">
-    <li class="toc-chapter"><a href="./15-impl-virtio.html">14 virtioの実装</a></li>
-    <li class="toc-chapter"><a href="./16-run-xv6.html">15 xv6の実行</a></li>
+    <li class="toc-chapter"><a href="./15-impl-virtio.html">15 virtioの実装</a></li>
+    <li class="toc-chapter"><a href="./16-run-xv6.html">16 xv6の実行</a></li>
   </ul>
 </li>
     <li class="toc-chapter"><a href="./99-postface.html">あとがき / おわりに</a></li>
@@ -64,19 +65,19 @@
         <header class="page-header">
         </header>
         <main class="page-main">
-<h1 class="boldlines center twolines"><a id="h13"></a><span class="secno">第13章</span> <br/>ページングの実装</h1>
+<h1 class="boldlines center twolines"><a id="h14"></a><span class="secno">第14章</span> <br/>ページングの実装</h1>
 
-<h2 class="numbox"><a id="h13-1"></a><span class="secno">13.1</span> ページングとは何か</h2>
+<h2 class="numbox"><a id="h14-1"></a><span class="secno">14.1</span> ページングとは何か</h2>
 
-<h2 class="numbox"><a id="h13-2"></a><span class="secno">13.2</span> PTWの実装</h2>
+<h2 class="numbox"><a id="h14-2"></a><span class="secno">14.2</span> PTWの実装</h2>
 
-<h2 class="numbox"><a id="h13-3"></a><span class="secno">13.3</span> Sv32</h2>
+<h2 class="numbox"><a id="h14-3"></a><span class="secno">14.3</span> Sv32</h2>
 
-<h2 class="numbox"><a id="h13-4"></a><span class="secno">13.4</span> Sv39</h2>
+<h2 class="numbox"><a id="h14-4"></a><span class="secno">14.4</span> Sv39</h2>
 
-<h2 class="numbox"><a id="h13-5"></a><span class="secno">13.5</span> Sv48</h2>
+<h2 class="numbox"><a id="h14-5"></a><span class="secno">14.5</span> Sv48</h2>
 
-<h2 class="numbox"><a id="h13-6"></a><span class="secno">13.6</span> Sv54</h2>
+<h2 class="numbox"><a id="h14-6"></a><span class="secno">14.6</span> Sv54</h2>
 
         </main>
         <nav class="page-navi">
