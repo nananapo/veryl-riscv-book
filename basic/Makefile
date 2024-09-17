@@ -1,3 +1,5 @@
+all: pdf html
+
 pdf: preproc
 	sudo docker run --rm -v $(PWD):/work -w /work kauplan/review2.5 rake pdf
 

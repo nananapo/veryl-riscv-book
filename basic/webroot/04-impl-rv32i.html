@@ -34,7 +34,7 @@
         <li class="toc-section"><a href="#h3-9">3.9 ALUを作り、計算する</a></li>
         <li class="toc-section"><a href="#h3-10">3.10 レジスタに結果を書き込む</a></li>
         <li class="toc-section"><a href="#h3-11">3.11 ロード命令とストア命令の実装</a></li>
-        <li class="toc-section"><a href="#h3-12">3.12 分岐, ジャンプ</a></li>
+        <li class="toc-section"><a href="#h3-12">3.12 ジャンプ命令、分岐命令の実装</a></li>
         <li class="toc-section"><a href="#h3-13">3.13 riscv-testsでテストする</a></li>
       </ul>
     </li>
@@ -674,12 +674,17 @@ $ <span class="userinput">make clean</span> <span class="balloon">← ビルド�
     }
 
     always_ff {
-        if wready &amp;&amp; wvalid {
-            mem[tail] = wdata;
-            tail      = tail + 1;
-        }
-        if rready &amp;&amp; rvalid {
-            head = head + 1;
+        if_reset {
+            head = 0;
+            tail = 0;
+        } else {
+            if wready &amp;&amp; wvalid {
+                mem[tail] = wdata;
+                tail      = tail + 1;
+            }
+            if rready &amp;&amp; rvalid {
+                head = head + 1;
+            }
         }
     }
 }
@@ -828,7 +833,7 @@ $ obj_dir/sim src/sample.hex 7
 <dt>S形式</dt>
 <dd>
 	ソースレジスタ(rs1, rs2)が2つ、デスティネーションレジスタ(rd)が1つの命令形式です。
-	12ビットの即値(<code class="inline-code">imm{11:5], imm[4:0]</code>)が命令中に含まれており、
+	12ビットの即値(<code class="inline-code">imm[11:5], imm[4:0]</code>)が命令中に含まれており、
 	これとソースレジスタを使って計算やメモリにアクセスし、
 	その結果をデスティネーションレジスタに格納します。
 	例えばSW命令(メモリにデータを格納する命令)に使用されています。
@@ -2097,20 +2102,296 @@ deadbeef // 0x0
 </pre>
 </div>
 
-<h2 class="numbox"><a id="h3-12"></a><span class="secno">3.12</span> 分岐, ジャンプ</h2>
-<p>まだ、重要な命令を実装できていません。分岐命令とジャンプ命令を実装します。</p>
+<h2 class="numbox"><a id="h3-12"></a><span class="secno">3.12</span> ジャンプ命令、分岐命令の実装</h2>
+<p>まだ、重要な命令を実装できていません。プログラムでif文やループを実現するためには、ジャンプや分岐をする命令が必要です。RV32Iには、仕様書の<code class="inline-code">2.5. Control Transfer Instructions</code>に次の命令が定義されています。</p>
+<div id="jump.br.insts" class="table">
+<p class="caption">表3.9: ジャンプ命令, 分岐命令</p>
+<table>
+<tr class="hline"><th>命令</th><th>形式</th><th>動作</th></tr>
+<tr class="hline"><td>JAL</td><td>J形式</td><td>PC+即値に無条件ジャンプする。rdにPC+4を格納する</td></tr>
+<tr class="hline"><td>JALR</td><td>I形式</td><td>rs1+即値に無条件ジャンプする。rdにPC+4を格納する</td></tr>
+<tr class="hline"><td>BEQ</td><td>B形式</td><td>rs1とrs2が等しいとき、PC+即値にジャンプする</td></tr>
+<tr class="hline"><td>BNE</td><td>B形式</td><td>rs1とrs2が異なるとき、PC+即値にジャンプする</td></tr>
+<tr class="hline"><td>BLT</td><td>B形式</td><td>rs1(符号付き整数)がrs2(符号付き整数)より小さいとき、PC+即値にジャンプする</td></tr>
+<tr class="hline"><td>BLTU</td><td>B形式</td><td>rs1(符号なし整数)がrs2(符号なし整数)より小さいとき、PC+即値にジャンプする</td></tr>
+<tr class="hline"><td>BGE</td><td>B形式</td><td>rs1(符号付き整数)がrs2(符号付き整数)より大きいとき、PC+即値にジャンプする</td></tr>
+<tr class="hline"><td>BGEU</td><td>B形式</td><td>rs1(符号なし整数)がrs2(符号なし整数)より大きいとき、PC+即値にジャンプする</td></tr>
+</table>
+</div>
+<p>ジャンプ命令は、無条件でジャンプするため、無条件ジャンプ(Unconditional Jump)と呼びます。分岐命令は、条件付きで分岐するため、条件分岐(Conditional Branch)と呼びます。</p>
 
 <h3 class="none"><a id="h3-12-1"></a><span class="secno">3.12.1</span> JAL, JALR命令</h3>
-<p>JAL(Jump And Link)命令は相対アドレスでジャンプ先を指定し、ジャンプします。ジャンプ命令である場合はPCの次の値をPC + 即値に設定するようにします。Linkとあるように、rdレジスタに現在のPC+4を格納します。</p>
-<p>プログラム</p>
-<p>JALR(Jump And Link Register)命令は、レジスタに格納されたジャンプ先にジャンプします。レジスタの値と即値を加算し、次のPCに設定します。JAL命令と同様に、rdレジスタに現在のPC+4を格納します。</p>
-<p>プログラム</p>
+<p>まず、無条件ジャンプを実装します。</p>
+<p>JAL(Jump And Link)命令は、PC+即値でジャンプ先を指定します。ここでLinkとは、rdレジスタにPC+4を記録しておくことで、分岐元に戻れるようにしておく操作のことを指しています。即値の幅は20ビットです。PCの下位1ビットは常に0なため、即値を1ビット左シフトして符号拡張した値をPCに加算します。(即値の生成についてはinst_decoderモジュールを確認してください)JAL命令でジャンプ可能な範囲は、PC±1MiBです。</p>
+<p>JALR (Jump And Link Register)命令は、rs1+即値でジャンプ先を指定します。即値はI形式の即値です。JAL命令と同様に、rdレジスタにPC+4を格納します。JALR命令でジャンプ可能な範囲は、rs1レジスタの値±4KiBです。</p>
+<p>inst_decoderモジュールは、JAL命令、JALR命令を次のようにデコードしています。</p>
+<ul>
+<li><code class="inline-code">InstCtrl.is_jump</code> = 1
+</li>
+<li><code class="inline-code">InstCtrl.is_aluop</code> = 0
+</li>
+</ul>
+<p>無条件ジャンプであるかどうかは<code class="inline-code">InstCtrl.is_jump</code>で確かめることができます。また、<code class="inline-code">InstCtrl.is_aluop</code>が<code class="inline-code">0</code>なため、ALUは常に加算を行います。加算の対象のデータが、JAL命令(J形式)ならPCと即値, JALR命令(I形式)ならrs1と即値になっていることを確認してください(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.alu.data">リスト3.35</a></span>)。</p>
 
-<h3 class="none"><a id="h3-12-2"></a><span class="secno">3.12.2</span> 分岐命令</h3>
-<p>分岐命令には次の種類があります。全ての分岐命令は相対アドレスで分岐先を指定します。</p>
-<p>分岐するかどうかの判定を行うモジュールを作成します。</p>
-<p>プログラム</p>
-<p>alubrモジュールの＊が1かつ、分岐命令である場合、PCをPC+即値に指定します。分岐しない場合はそのままです。</p>
+<h4><a id="h3-12-1-1"></a>無条件ジャンプの実装</h4>
+<p>それでは、無条件ジャンプを実装します。まず、ジャンプ命令を実行するとき、ライトバックする値を<code class="inline-code">inst_pc + 4</code>にします。</p>
+<div id="jump.wb" class="caption-code">
+<span class="caption">リスト3.72: リスト3.72: pc + 4を書き込む (core.veryl)</span>
+<pre class="list language-wb">    let wb_data: UIntX    = if inst_ctrl.is_jump {
+        inst_pc + 4
+    } else if inst_ctrl.is_load {
+        memu_rdata
+    } else {
+        alu_result
+    };
+</pre>
+</div>
+<p>次に、次にフェッチする命令をジャンプ先の命令に変更します。そのために、フェッチ先の変更が発生したことを表す信号<code class="inline-code">control_hazard</code>と、新しいフェッチ先を示す信号<code class="inline-code">control_hazard_pc_next</code>を作成します。</p>
+<div id="jump.ch" class="caption-code">
+<span class="caption">リスト3.73: リスト3.73: control_hazardとcontrol_hazard_pc_nextの定義 (core.veryl)</span>
+<pre class="list language-ch">    let control_hazard        : logic = inst_valid &amp;&amp; inst_ctrl.is_jump;
+    let control_hazard_pc_next: Addr  = alu_result;
+</pre>
+</div>
+<p><code class="inline-code">control_hazard</code>を利用して、<code class="inline-code">if_pc</code>を更新し、新しく命令をフェッチしなおすようにします。</p>
+<div id="jump.always" class="caption-code">
+<span class="caption">リスト3.74: リスト3.74: PCを変更する (core.veryl)</span>
+<pre class="list language-always">    always_ff {
+        if_reset {
+            ...
+        } else {
+            if control_hazard {
+                if_pc           = control_hazard_pc_next;
+                if_is_requested = 0;
+                if_fifo_wvalid  = 0;
+            } else {
+                if if_is_requested {
+                    ...
+                }
+                // IFのFIFOの制御
+                if if_is_requested &amp;&amp; i_membus.rvalid {
+                    ...
+                }
+            }
+        }
+    }
+</pre>
+</div>
+<p>ここで、新しく命令をフェッチしなおすようにしても、ジャンプ命令によって実行されることがなくなった命令がFIFOに残っていることがあることに注意する必要があります。実行しない命令を実行しないようにするために、ジャンプ命令を実行するときに、FIFOをリセットするようにします。</p>
+<p>FIFOに、内容をリセットするための信号<code class="inline-code">flush</code>を追加します。</p>
+<div id="jump.fifo.port" class="caption-code">
+<span class="caption">リスト3.75: リスト3.75: ポートにflushを追加する (fifo.veryl)</span>
+<pre class="list language-port">    flush : input  logic    ,
+</pre>
+</div>
+<div id="jump.fifo.always" class="caption-code">
+<span class="caption">リスト3.76: リスト3.76: flushが1のとき、FIFOを空にする (fifo.veryl)</span>
+<pre class="list language-always">    always_ff {
+        if_reset {
+            head = 0;
+            tail = 0;
+        } else {
+            if flush {
+                head = 0;
+                tail = 0;
+            } else {
+                if wready &amp;&amp; wvalid {
+                    mem[tail] = wdata;
+                    tail      = tail + 1;
+                }
+                if rready &amp;&amp; rvalid {
+                    head = head + 1;
+                }
+            }
+        }
+    }
+</pre>
+</div>
+<p>coreモジュールで、<code class="inline-code">control_hazard</code>が<code class="inline-code">1</code>のときに、FIFOをリセットするようにします。</p>
+<div id="jump.fifo.core" class="caption-code">
+<span class="caption">リスト3.77: リスト3.77: ジャンプ命令のとき、FIFOをリセットする (core.veryl)</span>
+<pre class="list language-core">    inst if_fifo: fifo #(
+        DATA_TYPE: if_fifo_type,
+        WIDTH    : 3           ,
+    ) (
+        clk                   ,
+        rst                   ,
+        flush : control_hazard, <span class="balloon">← 追加</span>
+        ...
+    );
+</pre>
+</div>
+
+<h4><a id="h3-12-1-2"></a>無条件ジャンプのテスト</h4>
+<p>簡単なテストを作成し、動作をテストします。</p>
+<div id="jump.test.hex" class="caption-code">
+<span class="caption">リスト3.78: リスト3.78: sample_jump.hex</span>
+<pre class="list language-hex">0100006f //  0: jal x0, 0x10 : 0x10にジャンプする
+deadbeef //  4:
+deadbeef //  8:
+deadbeef //  c:
+01800093 // 10: addi x1, x0, 0x18
+00808067 // 14: jalr x0, 8(x1) : x1+8=0x20にジャンプする
+deadbeef // 18:
+deadbeef // 1c:
+fe1ff06f // 20: jal x0, -0x20 : 0にジャンプする
+</pre>
+</div>
+<div id="jump.test" class="cmd-code">
+<span class="caption">リスト3.79: リスト3.79: テストの実行 (一部省略)</span>
+<pre class="list language-test">$ <span class="userinput">make build sim</span>
+$ <span class="userinput">obj_dir/sim src/sample_jump.hex 17</span>
+#                    4
+00000000 : 0100006f
+  reg[ 0] &lt;= 00000004 <span class="balloon">← rd = PC + 4</span>
+#                    8
+00000010 : 01800093 <span class="balloon">← 0x00 -&gt; 0x10にジャンプしている</span>
+  reg[ 1] &lt;= 00000018
+#                    9
+00000014 : 00808067
+  reg[ 0] &lt;= 00000018 <span class="balloon">← rd = PC + 4</span>
+#                   13
+00000020 : fe1ff06f <span class="balloon">← 0x14 -&gt; 0x20にジャンプしている</span>
+  reg[ 0] &lt;= 00000024 <span class="balloon">← rd = PC + 4</span>
+#                   17
+00000000 : 0100006f <span class="balloon">← 0x20 -&gt; 0x00にジャンプしている</span>
+  reg[ 0] &lt;= 00000004
+</pre>
+</div>
+<p>無条件ジャンプを正しく実行できていることを確認することができます。</p>
+
+<h3 class="none"><a id="h3-12-2"></a><span class="secno">3.12.2</span> 条件分岐命令</h3>
+<p>条件分岐命令はすべてB形式で、PC+即値で分岐先を指定します。それぞれの命令は、命令のfunct3フィールドで判別することができます。</p>
+<div id="br.funct3" class="table">
+<p class="caption">表3.10: 条件分岐命令とfunct3</p>
+<table>
+<tr class="hline"><th>funct3</th><th>命令</th></tr>
+<tr class="hline"><td>000</td><td>BEQ</td></tr>
+<tr class="hline"><td>001</td><td>BNE</td></tr>
+<tr class="hline"><td>100</td><td>BLT</td></tr>
+<tr class="hline"><td>101</td><td>BGE</td></tr>
+<tr class="hline"><td>110</td><td>BLTU</td></tr>
+<tr class="hline"><td>111</td><td>BGEU</td></tr>
+</table>
+</div>
+
+<h4><a id="h3-12-2-1"></a>条件分岐命令の実装</h4>
+<p>まず、分岐するかどうかの判定を行うモジュールを作成します。</p>
+<p><code class="inline-code">src/brunit.veryl</code>を作成し、次のように記述します。</p>
+<div id="brunit.veryl" class="caption-code">
+<span class="caption">リスト3.80: リスト3.80: brunit.veryl</span>
+<pre class="list language-veryl">import eei::*;
+import corectrl::*;
+
+module brunit (
+    funct3: input  logic&lt;3&gt;,
+    op1   : input  UIntX   ,
+    op2   : input  UIntX   ,
+    take  : output logic   , // 分岐が成立するか否か
+) {
+    let beq : logic = op1 == op2;
+    let blt : logic = $signed(op1) &lt;: $signed(op2);
+    let bltu: logic = op1 &lt;: op2;
+
+    always_comb {
+        case funct3 {
+            3'b000 : take = beq;
+            3'b001 : take = !beq;
+            3'b100 : take = blt;
+            3'b101 : take = !blt;
+            3'b110 : take = bltu;
+            3'b111 : take = !bltu;
+            default: take = 0;
+        }
+    }
+}
+</pre>
+</div>
+<p>brunitモジュールは、<code class="inline-code">funct3</code>に応じて<code class="inline-code">take</code>の条件を切り替えます。分岐が成立するとき、<code class="inline-code">take</code>は<code class="inline-code">1</code>になります。</p>
+<p>brunitモジュールを、coreモジュールでインスタンス化します。</p>
+<div id="inst.brunit" class="caption-code">
+<span class="caption">リスト3.81: リスト3.81: brunitのインスタンス化 (core.veryl)</span>
+<pre class="list language-brunit">    var brunit_take: logic;
+
+    inst bru: brunit (
+        funct3: inst_ctrl.funct3,
+        op1                     ,
+        op2                     ,
+        take  : brunit_take     ,
+    );
+</pre>
+</div>
+<p>命令がB形式のとき、<code class="inline-code">op1</code>は<code class="inline-code">rs1_data</code>、<code class="inline-code">op2</code>は<code class="inline-code">rs2_data</code>になっていることを確認してください(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.alu.data">リスト3.35</a></span>)。</p>
+<p>命令が条件分岐命令で、<code class="inline-code">brunit_take</code>が<code class="inline-code">1</code>のとき、次のPCをPC + 即値にするようにします。</p>
+<div id="br.function" class="caption-code">
+<span class="caption">リスト3.82: リスト3.82: 命令が条件分岐命令か判定する関数 (core.veryl)</span>
+<pre class="list language-function">    // 命令が分岐命令かどうかを判定する
+    function inst_is_br (
+        ctrl: input InstCtrl,
+    ) -&gt; logic    {
+        return ctrl.itype == InstType::B;
+    }
+</pre>
+</div>
+<div id="br.hazard" class="caption-code">
+<span class="caption">リスト3.83: リスト3.83: 分岐成立時のPCの設定 (core.veryl)</span>
+<pre class="list language-hazard">    let control_hazard        : logic = inst_valid &amp;&amp; (inst_ctrl.is_jump || inst_is_br(inst_ctrl) &amp;&amp; brunit_take);
+    let control_hazard_pc_next: Addr  = if inst_is_br(inst_ctrl) {
+        inst_pc + inst_imm
+    } else {
+        alu_result
+    };
+</pre>
+</div>
+<p><code class="inline-code">control_hazard</code>は、命令が無条件ジャンプ命令か、命令が条件分岐命令かつ分岐が成立するときに<code class="inline-code">1</code>になります。<code class="inline-code">control_hazard_pc_next</code>は、無条件ジャンプ命令のときは<code class="inline-code">alu_result</code>、条件分岐命令のときはPC + 即値になります。</p>
+
+<h4><a id="h3-12-2-2"></a>条件分岐命令のテスト</h4>
+<p>条件分岐命令を実行するとき、分岐の成否を表示するようにします。デバッグ表示を行っている<code class="inline-code">always_ff</code>ブロック内に、次のプログラムを追加します。</p>
+<div id="br.debug" class="caption-code">
+<span class="caption">リスト3.84: リスト3.84: デバッグ表示 (core.veryl)</span>
+<pre class="list language-debug">    if inst_is_br(inst_ctrl) {
+        $display(&quot;  br take   : %b&quot;, brunit_take);
+    }
+</pre>
+</div>
+<p>簡単なテストを作成し、動作をテストします。</p>
+<div id="sample_br.hex" class="caption-code">
+<span class="caption">リスト3.85: リスト3.85: sample_br.hex</span>
+<pre class="list language-hex">00100093 //  0: addi x1, x0, 1
+10100063 //  4: beq x0, x1, 0x100
+00101863 //  8: bne x0, x1, 0x10
+deadbeef //  c:
+deadbeef // 10:
+deadbeef // 14:
+0000d063 // 18: bge x1, x0, 0
+</pre>
+</div>
+<div id="br.test" class="cmd-code">
+<span class="caption">リスト3.86: リスト3.86: テストの実行 (一部省略)</span>
+<pre class="list language-test">$ <span class="userinput">make build sim</span>
+$ <span class="userinput">obj_dir/sim src/sample_br.hex 15</span>
+#                    4
+00000000 : 00100093
+  reg[ 1] &lt;= 00000001 <span class="balloon">← x1に1を代入</span>
+#                    5
+00000004 : 10100063
+  op1       : 00000000
+  op2       : 00000001
+  br take   : 0 <span class="balloon">← x0 != x1なので不成立</span>
+#                    6
+00000008 : 00101863
+  op1       : 00000000
+  op2       : 00000001
+  br take   : 1 <span class="balloon">← x0 != x1なので成立</span>
+#                   10
+00000018 : 0000d063 <span class="balloon">← 0x08 -&gt; 0x18にジャンプ</span>
+  br take   : 1 <span class="balloon">← x1 &gt; x0なので成立</span>
+#                   14
+00000018 : 0000d063 <span class="balloon">← 0x18 -&gt; 0x18にジャンプ</span>
+  br take   : 1
+</pre>
+</div>
+<p>BLT, BLTU, BGEU命令についてはテストできていませんが、次で紹介するriscv-testsでテストします。</p>
 
 <h2 class="numbox"><a id="h3-13"></a><span class="secno">3.13</span> riscv-testsでテストする</h2>
 <p>古いのをappendixにする。</p>

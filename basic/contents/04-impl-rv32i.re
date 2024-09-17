@@ -698,12 +698,17 @@ module fifo #(
     }
 
     always_ff {
-        if wready && wvalid {
-            mem[tail] = wdata;
-            tail      = tail + 1;
-        }
-        if rready && rvalid {
-            head = head + 1;
+        if_reset {
+            head = 0;
+            tail = 0;
+        } else {
+            if wready && wvalid {
+                mem[tail] = wdata;
+                tail      = tail + 1;
+            }
+            if rready && rvalid {
+                head = head + 1;
+            }
         }
     }
 }
@@ -884,7 +889,7 @@ RISC-Vにはいくつかの命令の形式がありますが、RV32IにはR, I, 
 
  : S形式
 	ソースレジスタ(rs1, rs2)が2つ、デスティネーションレジスタ(rd)が1つの命令形式です。
-	12ビットの即値(@<code>{imm{11:5], imm[4:0]})が命令中に含まれており、
+	12ビットの即値(@<code>{imm[11:5], imm[4:0]})が命令中に含まれており、
 	これとソースレジスタを使って計算やメモリにアクセスし、
 	その結果をデスティネーションレジスタに格納します。
 	例えばSW命令(メモリにデータを格納する命令)に使用されています。
@@ -2382,36 +2387,353 @@ deadbeef // 0x0
 #@end
 //}
 
-== 分岐, ジャンプ
+== ジャンプ命令、分岐命令の実装
 
 まだ、重要な命令を実装できていません。
-分岐命令とジャンプ命令を実装します。
+プログラムでif文やループを実現するためには、ジャンプや分岐をする命令が必要です。
+RV32Iには、仕様書の@<code>{2.5. Control Transfer Instructions}に次の命令が定義されています。
+
+//table[jump.br.insts][ジャンプ命令, 分岐命令]{
+命令	形式	動作
+-------------------------------------------------------------
+JAL		J形式	PC+即値に無条件ジャンプする。rdにPC+4を格納する
+JALR	I形式	rs1+即値に無条件ジャンプする。rdにPC+4を格納する
+BEQ		B形式	rs1とrs2が等しいとき、PC+即値にジャンプする
+BNE		B形式	rs1とrs2が異なるとき、PC+即値にジャンプする
+BLT		B形式	rs1(符号付き整数)がrs2(符号付き整数)より小さいとき、PC+即値にジャンプする
+BLTU	B形式	rs1(符号なし整数)がrs2(符号なし整数)より小さいとき、PC+即値にジャンプする
+BGE		B形式	rs1(符号付き整数)がrs2(符号付き整数)より大きいとき、PC+即値にジャンプする
+BGEU	B形式	rs1(符号なし整数)がrs2(符号なし整数)より大きいとき、PC+即値にジャンプする
+//}
+
+ジャンプ命令は、無条件でジャンプするため、無条件ジャンプ(Unconditional Jump)と呼びます。
+分岐命令は、条件付きで分岐するため、条件分岐(Conditional Branch)と呼びます。
 
 === JAL, JALR命令
 
-JAL(Jump And Link)命令は相対アドレスでジャンプ先を指定し、ジャンプします。
-ジャンプ命令である場合はPCの次の値をPC + 即値に設定するようにします。
-Linkとあるように、rdレジスタに現在のPC+4を格納します。
+まず、無条件ジャンプを実装します。
 
-プログラム
+JAL(Jump And Link)命令は、PC+即値でジャンプ先を指定します。
+ここでLinkとは、rdレジスタにPC+4を記録しておくことで、分岐元に戻れるようにしておく操作のことを指しています。
+即値の幅は20ビットです。
+PCの下位1ビットは常に0なため、即値を1ビット左シフトして符号拡張した値をPCに加算します。
+(即値の生成についてはinst_decoderモジュールを確認してください)
+JAL命令でジャンプ可能な範囲は、PC±1MiBです。
 
-JALR(Jump And Link Register)命令は、レジスタに格納されたジャンプ先にジャンプします。
-レジスタの値と即値を加算し、次のPCに設定します。
-JAL命令と同様に、rdレジスタに現在のPC+4を格納します。
+JALR (Jump And Link Register)命令は、rs1+即値でジャンプ先を指定します。
+即値はI形式の即値です。
+JAL命令と同様に、rdレジスタにPC+4を格納します。
+JALR命令でジャンプ可能な範囲は、rs1レジスタの値±4KiBです。
 
-プログラム
+inst_decoderモジュールは、JAL命令、JALR命令を次のようにデコードしています。
 
-=== 分岐命令
+ * @<code>{InstCtrl.is_jump} = 1
+ * @<code>{InstCtrl.is_aluop} = 0
 
-分岐命令には次の種類があります。
-全ての分岐命令は相対アドレスで分岐先を指定します。
+無条件ジャンプであるかどうかは@<code>{InstCtrl.is_jump}で確かめることができます。
+また、@<code>{InstCtrl.is_aluop}が@<code>{0}なため、ALUは常に加算を行います。
+加算の対象のデータが、JAL命令(J形式)ならPCと即値, JALR命令(I形式)ならrs1と即値になっていることを確認してください(@<list>{core.veryl.alu.data})。
 
-分岐するかどうかの判定を行うモジュールを作成します。
+==== 無条件ジャンプの実装
 
-プログラム
+それでは、無条件ジャンプを実装します。
+まず、ジャンプ命令を実行するとき、ライトバックする値を@<code>{inst_pc + 4}にします。
 
-alubrモジュールの＊が1かつ、分岐命令である場合、PCをPC+即値に指定します。
-分岐しない場合はそのままです。
+//list[jump.wb][pc + 4を書き込む (core.veryl)]{
+#@maprange(scripts/04/jump-range/core/src/core.veryl,wb)
+    let wb_data: UIntX    = if inst_ctrl.is_jump {
+        inst_pc + 4
+    } else if inst_ctrl.is_load {
+        memu_rdata
+    } else {
+        alu_result
+    };
+#@end
+//}
+
+次に、次にフェッチする命令をジャンプ先の命令に変更します。
+そのために、フェッチ先の変更が発生したことを表す信号@<code>{control_hazard}と、
+新しいフェッチ先を示す信号@<code>{control_hazard_pc_next}を作成します。
+
+//list[jump.ch][control_hazardとcontrol_hazard_pc_nextの定義 (core.veryl)]{
+#@maprange(scripts/04/jump-range/core/src/core.veryl,hazard)
+    let control_hazard        : logic = inst_valid && inst_ctrl.is_jump;
+    let control_hazard_pc_next: Addr  = alu_result;
+#@end
+//}
+
+@<code>{control_hazard}を利用して、@<code>{if_pc}を更新し、新しく命令をフェッチしなおすようにします。
+
+//list[jump.always][PCを変更する (core.veryl)]{
+#@maprange(scripts/04/jump-range/core/src/core.veryl,always)
+    always_ff {
+        if_reset {
+            ...
+        } else {
+            if control_hazard {
+                if_pc           = control_hazard_pc_next;
+                if_is_requested = 0;
+                if_fifo_wvalid  = 0;
+            } else {
+                if if_is_requested {
+                    ...
+                }
+                // IFのFIFOの制御
+                if if_is_requested && i_membus.rvalid {
+                    ...
+                }
+            }
+        }
+    }
+#@end
+//}
+
+ここで、新しく命令をフェッチしなおすようにしても、
+ジャンプ命令によって実行されることがなくなった命令がFIFOに残っていることがあることに注意する必要があります。
+実行しない命令を実行しないようにするために、
+ジャンプ命令を実行するときに、FIFOをリセットするようにします。
+
+FIFOに、内容をリセットするための信号@<code>{flush}を追加します。
+
+//list[jump.fifo.port][ポートにflushを追加する (fifo.veryl)]{
+#@maprange(scripts/04/jump-range/core/src/fifo.veryl,port)
+    flush : input  logic    ,
+#@end
+//}
+
+//list[jump.fifo.always][flushが1のとき、FIFOを空にする (fifo.veryl)]{
+#@maprange(scripts/04/jump-range/core/src/fifo.veryl,always)
+    always_ff {
+        if_reset {
+            head = 0;
+            tail = 0;
+        } else {
+            if flush {
+                head = 0;
+                tail = 0;
+            } else {
+                if wready && wvalid {
+                    mem[tail] = wdata;
+                    tail      = tail + 1;
+                }
+                if rready && rvalid {
+                    head = head + 1;
+                }
+            }
+        }
+    }
+#@end
+//}
+
+coreモジュールで、@<code>{control_hazard}が@<code>{1}のときに、
+FIFOをリセットするようにします。
+
+//list[jump.fifo.core][ジャンプ命令のとき、FIFOをリセットする (core.veryl)]{
+#@maprange(scripts/04/jump-range/core/src/core.veryl,fifo)
+    inst if_fifo: fifo #(
+        DATA_TYPE: if_fifo_type,
+        WIDTH    : 3           ,
+    ) (
+        clk                   ,
+        rst                   ,
+        flush : control_hazard, @<balloon>{追加}
+        ...
+    );
+#@end
+//}
+
+==== 無条件ジャンプのテスト
+
+簡単なテストを作成し、動作をテストします。
+
+//list[jump.test.hex][sample_jump.hex]{
+#@mapfile(scripts/04/jump-range/core/src/sample_jump.hex)
+0100006f //  0: jal x0, 0x10 : 0x10にジャンプする
+deadbeef //  4:
+deadbeef //  8:
+deadbeef //  c:
+01800093 // 10: addi x1, x0, 0x18
+00808067 // 14: jalr x0, 8(x1) : x1+8=0x20にジャンプする
+deadbeef // 18:
+deadbeef // 1c:
+fe1ff06f // 20: jal x0, -0x20 : 0にジャンプする
+#@end
+//}
+
+//terminal[jump.test][テストの実行 (一部省略)]{
+$ @<userinput>{make build sim}
+$ @<userinput>{obj_dir/sim src/sample_jump.hex 17}
+#                    4
+00000000 : 0100006f
+  reg[ 0] <= 00000004 @<balloon>{rd = PC + 4}
+#                    8
+00000010 : 01800093 @<balloon>{0x00 -> 0x10にジャンプしている}
+  reg[ 1] <= 00000018
+#                    9
+00000014 : 00808067
+  reg[ 0] <= 00000018 @<balloon>{rd = PC + 4}
+#                   13
+00000020 : fe1ff06f @<balloon>{0x14 -> 0x20にジャンプしている}
+  reg[ 0] <= 00000024 @<balloon>{rd = PC + 4}
+#                   17
+00000000 : 0100006f @<balloon>{0x20 -> 0x00にジャンプしている}
+  reg[ 0] <= 00000004
+//}
+
+無条件ジャンプを正しく実行できていることを確認することができます。
+
+=== 条件分岐命令
+
+条件分岐命令はすべてB形式で、PC+即値で分岐先を指定します。
+それぞれの命令は、命令のfunct3フィールドで判別することができます。
+
+//table[br.funct3][条件分岐命令とfunct3]{
+funct3	命令
+-------------------------------------------------------------
+000		BEQ
+001		BNE
+100		BLT
+101		BGE
+110		BLTU
+111		BGEU
+//}
+
+==== 条件分岐命令の実装
+
+まず、分岐するかどうかの判定を行うモジュールを作成します。
+
+@<code>{src/brunit.veryl}を作成し、次のように記述します。
+
+//list[brunit.veryl][brunit.veryl]{
+#@mapfile(scripts/04/br-range/core/src/brunit.veryl)
+import eei::*;
+import corectrl::*;
+
+module brunit (
+    funct3: input  logic<3>,
+    op1   : input  UIntX   ,
+    op2   : input  UIntX   ,
+    take  : output logic   , // 分岐が成立するか否か
+) {
+    let beq : logic = op1 == op2;
+    let blt : logic = $signed(op1) <: $signed(op2);
+    let bltu: logic = op1 <: op2;
+
+    always_comb {
+        case funct3 {
+            3'b000 : take = beq;
+            3'b001 : take = !beq;
+            3'b100 : take = blt;
+            3'b101 : take = !blt;
+            3'b110 : take = bltu;
+            3'b111 : take = !bltu;
+            default: take = 0;
+        }
+    }
+}
+#@end
+//}
+
+brunitモジュールは、@<code>{funct3}に応じて@<code>{take}の条件を切り替えます。
+分岐が成立するとき、@<code>{take}は@<code>{1}になります。
+
+brunitモジュールを、coreモジュールでインスタンス化します。
+
+//list[inst.brunit][brunitのインスタンス化 (core.veryl)]{
+#@maprange(scripts/04/br-range/core/src/core.veryl,inst)
+    var brunit_take: logic;
+
+    inst bru: brunit (
+        funct3: inst_ctrl.funct3,
+        op1                     ,
+        op2                     ,
+        take  : brunit_take     ,
+    );
+#@end
+//}
+
+命令がB形式のとき、@<code>{op1}は@<code>{rs1_data}、
+@<code>{op2}は@<code>{rs2_data}になっていることを確認してください(@<list>{core.veryl.alu.data})。
+
+命令が条件分岐命令で、@<code>{brunit_take}が@<code>{1}のとき、次のPCをPC + 即値にするようにします。
+
+//list[br.function][命令が条件分岐命令か判定する関数 (core.veryl)]{
+#@maprange(scripts/04/br-range/core/src/core.veryl,function)
+    // 命令が分岐命令かどうかを判定する
+    function inst_is_br (
+        ctrl: input InstCtrl,
+    ) -> logic    {
+        return ctrl.itype == InstType::B;
+    }
+#@end
+//}
+
+//list[br.hazard][分岐成立時のPCの設定 (core.veryl)]{
+#@maprange(scripts/04/br-range/core/src/core.veryl,hazard)
+    let control_hazard        : logic = inst_valid && (inst_ctrl.is_jump || inst_is_br(inst_ctrl) && brunit_take);
+    let control_hazard_pc_next: Addr  = if inst_is_br(inst_ctrl) {
+        inst_pc + inst_imm
+    } else {
+        alu_result
+    };
+#@end
+//}
+
+@<code>{control_hazard}は、命令が無条件ジャンプ命令か、命令が条件分岐命令かつ分岐が成立するときに@<code>{1}になります。
+@<code>{control_hazard_pc_next}は、無条件ジャンプ命令のときは@<code>{alu_result}、条件分岐命令のときはPC + 即値になります。
+
+==== 条件分岐命令のテスト
+
+条件分岐命令を実行するとき、分岐の成否を表示するようにします。
+デバッグ表示を行っている@<code>{always_ff}ブロック内に、次のプログラムを追加します。
+
+//list[br.debug][デバッグ表示 (core.veryl)]{
+#@maprange(scripts/04/br-range/core/src/core.veryl,debug)
+    if inst_is_br(inst_ctrl) {
+        $display("  br take   : %b", brunit_take);
+    }
+#@end
+//}
+
+簡単なテストを作成し、動作をテストします。
+
+//list[sample_br.hex][sample_br.hex]{
+#@mapfile(scripts/04/br-range/core/src/sample_br.hex)
+00100093 //  0: addi x1, x0, 1
+10100063 //  4: beq x0, x1, 0x100
+00101863 //  8: bne x0, x1, 0x10
+deadbeef //  c:
+deadbeef // 10:
+deadbeef // 14:
+0000d063 // 18: bge x1, x0, 0
+#@end
+//}
+
+//terminal[br.test][テストの実行 (一部省略)]{
+$ @<userinput>{make build sim}
+$ @<userinput>{obj_dir/sim src/sample_br.hex 15}
+#                    4
+00000000 : 00100093
+  reg[ 1] <= 00000001 @<balloon>{x1に1を代入}
+#                    5
+00000004 : 10100063
+  op1       : 00000000
+  op2       : 00000001
+  br take   : 0 @<balloon>{x0 != x1なので不成立}
+#                    6
+00000008 : 00101863
+  op1       : 00000000
+  op2       : 00000001
+  br take   : 1 @<balloon>{x0 != x1なので成立}
+#                   10
+00000018 : 0000d063 @<balloon>{0x08 -> 0x18にジャンプ}
+  br take   : 1 @<balloon>{x1 > x0なので成立}
+#                   14
+00000018 : 0000d063 @<balloon>{0x18 -> 0x18にジャンプ}
+  br take   : 1
+//}
+
+BLT, BLTU, BGEU命令についてはテストできていませんが、次で紹介するriscv-testsでテストします。
 
 == riscv-testsでテストする
 
