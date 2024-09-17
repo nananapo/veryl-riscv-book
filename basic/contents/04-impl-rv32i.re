@@ -89,14 +89,18 @@ $ @<userinput>{veryl new core}
 [INFO ]      Created "core" project
 //}
 
-すると、プロジェクト名のフォルダと、その中にVeryl.tomlが作成されます。
+すると、プロジェクト名のフォルダと、その中に@<code>{Veryl.toml}が作成されます。
+@<code>{Veryl.toml}を次のように変更してください。
 
-TODO ソースマップがいらないので消す
-
-//list[Veryl.toml.first][作成されたVeryl.toml]{
+//list[Veryl.toml.first][Veryl.toml]{
+#@mapfile(scripts/04/eei-param/core/Veryl.toml)
 [project]
 name = "core"
 version = "0.1.0"
+
+[build]
+sourcemap_target = {type ="none"}
+#@end
 //}
 
 Verylのプログラムを格納するために、プロジェクトのフォルダ内にsrcフォルダを作成しておいてください。
@@ -639,7 +643,6 @@ build:
 
 clean:
         veryl clean
-        rm -f src/*.sv.map
         rm -rf $(OBJ_DIR)
 
 sim:
@@ -1247,15 +1250,34 @@ n番目(32 > n > 0)のレジスタの値を@<code>{n + 100}で初期化してい
 //terminal[reg.debug][レジスタ読み込みのデバッグ]{
 $ @<userinput>{make build sim}
 $ @<userinput>{obj_dir/sim sample.hex 7}
-TODO にゃ
+00000000 : 01234567
+  itype   : 000010
+  imm     : 00000012
+  rs1[ 6] : 0000006a
+  rs2[18] : 00000076
+00000004 : 89abcdef
+  itype   : 100000
+  imm     : fffbc09a
+  rs1[23] : 0000007b
+  rs2[26] : 0000007e
+00000008 : deadbeef
+  itype   : 100000
+  imm     : fffdb5ea
+  rs1[27] : 0000007f
+  rs2[10] : 0000006e
+0000000c : cafebebe
+  itype   : 000000
+  imm     : 00000000
+  rs1[29] : 00000081
+  rs2[15] : 00000073
 //}
 
 @<code>{01234567}は@<code>{jalr x10, 18(x6)}です。
-JALR命令は、2つのソースレジスタ@<code>{x10}と@<code>{x6}を使用します。
-それぞれ、レジスタ番号が@<code>{10}, @<code>{6}であることを表しており、
-値は@<code>{110}, @<code>{106}になります。
-それぞれ16進数で@<code>{TODO}, @<code>{TODO}です。
-これが、シミュレーションと一致していることを確認してください。
+JALR命令は、ソースレジスタ@<code>{x6}を使用します。
+@<code>{x6}はレジスタ番号が@<code>{6}であることを表しており、
+値は@<code>{106}になります。これは16進数で@<code>{6a}です。
+
+シミュレーションと結果が一致していることを確認してください。
 
 == ALUを作り、計算する
 
@@ -1463,8 +1485,31 @@ ALUに渡すデータを用意したので、aluモジュールをインスタ�
 
 //terminal[alu.debug][ALUのデバッグ]{
 $ @<userinput>{make build sim}
-$ @<userinput>{obj_dir/sim src/sample.hex 5}
-TODO
+$ @<userinput>{obj_dir/sim src/sample.hex 6}
+00000000 : 02000093
+  itype   : 000010
+  imm     : 00000020
+  rs1[ 0] : 00000000
+  rs2[ 0] : 00000000
+  op1     : 00000000
+  op2     : 00000020
+  alu res : 00000020
+00000004 : 00100117
+  itype   : 010000
+  imm     : 00100000
+  rs1[ 0] : 00000000
+  rs2[ 1] : 00000065
+  op1     : 00000004
+  op2     : 00100000
+  alu res : 00100004
+00000008 : 002081b3
+  itype   : 000001
+  imm     : 00000000
+  rs1[ 1] : 00000065
+  rs2[ 2] : 00000066
+  op1     : 00000065
+  op2     : 00000066
+  alu res : 000000cb
 //}
 
 まだ結果をディスティネーションレジスタに格納する処理を作成していません。
@@ -1478,17 +1523,17 @@ TODO
 	ALUの計算結果として、0と32を足した結果@<code>{00000020}が表示されています。
 
  : auipc x2, 256
-	@<code>{op1}は2番目のレジスタの値です。
-	2番目のレジスタは@<code>{102}として初期化しているので、@<code>{TODO}と表示されています。
-	@<code>{op2}はPCです。
-	命令のアドレス@<code>{00000004}が表示されています。
-	ALUの計算結果として、これを足した結果@<code>{TODO}が表示されています。
+	@<code>{op1}はPCです。
+	@<code>{op1}には、命令のアドレス@<code>{00000004}が表示されています。
+	@<code>{op2}は即値です。
+	@<code>{256}を12bit左にシフトした値@<code>{00100000}が表示されています。
+	ALUの計算結果として、これを足した結果@<code>{00100004}が表示されています。
 
  : add x3, x1, x2
 	@<code>{op1}は1番目のレジスタの値です。
-	1番目のレジスタは@<code>{101}として初期化しているので、@<code>{TODO}と表示されています。
-	2番目のレジスタは@<code>{102}として初期化しているので、@<code>{TODO}と表示されています。
-	ALUの計算結果として、これを足した結果@<code>{TODO}が表示されています。
+	1番目のレジスタは@<code>{101}として初期化しているので、@<code>{00000065}と表示されています。
+	2番目のレジスタは@<code>{102}として初期化しているので、@<code>{00000066}と表示されています。
+	ALUの計算結果として、これを足した結果@<code>{000000cb}が表示されています。
 
 == レジスタに結果を書き込む
 

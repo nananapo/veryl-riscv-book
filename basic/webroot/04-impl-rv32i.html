@@ -125,13 +125,15 @@
 [INFO ]      Created &quot;core&quot; project
 </pre>
 </div>
-<p>すると、プロジェクト名のフォルダと、その中にVeryl.tomlが作成されます。</p>
-<p>TODO ソースマップがいらないので消す</p>
+<p>すると、プロジェクト名のフォルダと、その中に<code class="inline-code">Veryl.toml</code>が作成されます。<code class="inline-code">Veryl.toml</code>を次のように変更してください。</p>
 <div id="Veryl.toml.first" class="caption-code">
-<span class="caption">リスト3.2: リスト3.2: 作成されたVeryl.toml</span>
+<span class="caption">リスト3.2: リスト3.2: Veryl.toml</span>
 <pre class="list language-first">[project]
 name = &quot;core&quot;
 version = &quot;0.1.0&quot;
+
+[build]
+sourcemap_target = {type =&quot;none&quot;}
 </pre>
 </div>
 <p>Verylのプログラムを格納するために、プロジェクトのフォルダ内にsrcフォルダを作成しておいてください。</p>
@@ -621,7 +623,6 @@ build:
 
 clean:
         veryl clean
-        rm -f src/*.sv.map
         rm -rf $(OBJ_DIR)
 
 sim:
@@ -1119,10 +1120,30 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 7</span>
 <span class="caption">リスト3.32: リスト3.32: レジスタ読み込みのデバッグ</span>
 <pre class="list language-debug">$ <span class="userinput">make build sim</span>
 $ <span class="userinput">obj_dir/sim sample.hex 7</span>
-TODO にゃ
+00000000 : 01234567
+  itype   : 000010
+  imm     : 00000012
+  rs1[ 6] : 0000006a
+  rs2[18] : 00000076
+00000004 : 89abcdef
+  itype   : 100000
+  imm     : fffbc09a
+  rs1[23] : 0000007b
+  rs2[26] : 0000007e
+00000008 : deadbeef
+  itype   : 100000
+  imm     : fffdb5ea
+  rs1[27] : 0000007f
+  rs2[10] : 0000006e
+0000000c : cafebebe
+  itype   : 000000
+  imm     : 00000000
+  rs1[29] : 00000081
+  rs2[15] : 00000073
 </pre>
 </div>
-<p><code class="inline-code">01234567</code>は<code class="inline-code">jalr x10, 18(x6)</code>です。JALR命令は、2つのソースレジスタ<code class="inline-code">x10</code>と<code class="inline-code">x6</code>を使用します。それぞれ、レジスタ番号が<code class="inline-code">10</code>, <code class="inline-code">6</code>であることを表しており、値は<code class="inline-code">110</code>, <code class="inline-code">106</code>になります。それぞれ16進数で<code class="inline-code">TODO</code>, <code class="inline-code">TODO</code>です。これが、シミュレーションと一致していることを確認してください。</p>
+<p><code class="inline-code">01234567</code>は<code class="inline-code">jalr x10, 18(x6)</code>です。JALR命令は、ソースレジスタ<code class="inline-code">x6</code>を使用します。<code class="inline-code">x6</code>はレジスタ番号が<code class="inline-code">6</code>であることを表しており、値は<code class="inline-code">106</code>になります。これは16進数で<code class="inline-code">6a</code>です。</p>
+<p>シミュレーションと結果が一致していることを確認してください。</p>
 
 <h2 class="numbox"><a id="h3-9"></a><span class="secno">3.9</span> ALUを作り、計算する</h2>
 <p>命令は足し算や引き算、ビット演算などの計算を行います。計算の対象となるデータが揃ったので、ALU(計算する部品)を作成します。</p>
@@ -1301,8 +1322,31 @@ module alu (
 <div id="alu.debug" class="cmd-code">
 <span class="caption">リスト3.39: リスト3.39: ALUのデバッグ</span>
 <pre class="list language-debug">$ <span class="userinput">make build sim</span>
-$ <span class="userinput">obj_dir/sim src/sample.hex 5</span>
-TODO
+$ <span class="userinput">obj_dir/sim src/sample.hex 6</span>
+00000000 : 02000093
+  itype   : 000010
+  imm     : 00000020
+  rs1[ 0] : 00000000
+  rs2[ 0] : 00000000
+  op1     : 00000000
+  op2     : 00000020
+  alu res : 00000020
+00000004 : 00100117
+  itype   : 010000
+  imm     : 00100000
+  rs1[ 0] : 00000000
+  rs2[ 1] : 00000065
+  op1     : 00000004
+  op2     : 00100000
+  alu res : 00100004
+00000008 : 002081b3
+  itype   : 000001
+  imm     : 00000000
+  rs1[ 1] : 00000065
+  rs2[ 2] : 00000066
+  op1     : 00000065
+  op2     : 00000066
+  alu res : 000000cb
 </pre>
 </div>
 <p>まだ結果をディスティネーションレジスタに格納する処理を作成していません。そのため、レジスタの値は変わらないことに注意してください</p>
@@ -1317,18 +1361,18 @@ TODO
 </dd>
 <dt>auipc x2, 256</dt>
 <dd>
-	<code class="inline-code">op1</code>は2番目のレジスタの値です。
-	2番目のレジスタは<code class="inline-code">102</code>として初期化しているので、<code class="inline-code">TODO</code>と表示されています。
-	<code class="inline-code">op2</code>はPCです。
-	命令のアドレス<code class="inline-code">00000004</code>が表示されています。
-	ALUの計算結果として、これを足した結果<code class="inline-code">TODO</code>が表示されています。
+	<code class="inline-code">op1</code>はPCです。
+	<code class="inline-code">op1</code>には、命令のアドレス<code class="inline-code">00000004</code>が表示されています。
+	<code class="inline-code">op2</code>は即値です。
+	<code class="inline-code">256</code>を12bit左にシフトした値<code class="inline-code">00100000</code>が表示されています。
+	ALUの計算結果として、これを足した結果<code class="inline-code">00100004</code>が表示されています。
 </dd>
 <dt>add x3, x1, x2</dt>
 <dd>
 	<code class="inline-code">op1</code>は1番目のレジスタの値です。
-	1番目のレジスタは<code class="inline-code">101</code>として初期化しているので、<code class="inline-code">TODO</code>と表示されています。
-	2番目のレジスタは<code class="inline-code">102</code>として初期化しているので、<code class="inline-code">TODO</code>と表示されています。
-	ALUの計算結果として、これを足した結果<code class="inline-code">TODO</code>が表示されています。
+	1番目のレジスタは<code class="inline-code">101</code>として初期化しているので、<code class="inline-code">00000065</code>と表示されています。
+	2番目のレジスタは<code class="inline-code">102</code>として初期化しているので、<code class="inline-code">00000066</code>と表示されています。
+	ALUの計算結果として、これを足した結果<code class="inline-code">000000cb</code>が表示されています。
 </dd>
 </dl>
 
