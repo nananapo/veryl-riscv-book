@@ -3,11 +3,11 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width">
-    <title>xv6の実行 | Verylで作るRISC-V CPU</title>
+    <title>Zicsr拡張の実装 | Verylで作るRISC-V CPU</title>
     <link rel="stylesheet" type="text/css" href="css/normalize.css" />
     <link rel="stylesheet" type="text/css" href="css/webstyle.css" />
-    <link rel="next" title="あとがき / おわりに" href="99-postface.html">
-    <link rel="prev" title="virtioの実装" href="15-impl-virtio.html">
+    <link rel="next" title="riscv-testsによるテスト" href="04b-riscvtests.html">
+    <link rel="prev" title="RV32Iの実装" href="04-impl-rv32i.html">
     <meta name="generator" content="Re:VIEW Starter">
   </head>
   <body>
@@ -22,7 +22,15 @@
     <li class="toc-chapter"><a href="./02-setup.html">1 環境構築</a></li>
     <li class="toc-chapter"><a href="./03-veryl.html">2 ハードウェア記述言語 Veryl</a></li>
     <li class="toc-chapter"><a href="./04-impl-rv32i.html">3 RV32Iの実装</a></li>
-    <li class="toc-chapter"><a href="./04a-zicsr.html">4 Zicsr拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./04a-zicsr.html">4 Zicsr拡張の実装</a>
+      <ul class="toc toc-3">
+        <li class="toc-section"><a href="#h4-1">4.1 CSRとは何か？</a></li>
+        <li class="toc-section"><a href="#h4-2">4.2 CSRRW, CSRRWI命令の実装</a></li>
+        <li class="toc-section"><a href="#h4-3">4.3 CSRRS, CSRRSI命令の実装</a></li>
+        <li class="toc-section"><a href="#h4-4">4.4 CSRRC, CSRRCI命令の実装</a></li>
+        <li class="toc-section"><a href="#h4-5">4.5 ecall, mret命令の実装</a></li>
+      </ul>
+    </li>
     <li class="toc-chapter"><a href="./04b-riscvtests.html">5 riscv-testsによるテスト</a></li>
     <li class="toc-chapter"><a href="./05-impl-rv64i.html">6 RV64Iの実装</a></li>
   </ul>
@@ -57,12 +65,28 @@
         <header class="page-header">
         </header>
         <main class="page-main">
-<h1 class="boldlines center twolines"><a id="h17"></a><span class="secno">第17章</span> <br/>xv6の実行</h1>
+<h1 class="boldlines center twolines"><a id="h4"></a><span class="secno">第4章</span> <br/>Zicsr拡張の実装</h1>
+
+<h2 class="numbox"><a id="h4-1"></a><span class="secno">4.1</span> CSRとは何か？</h2>
+
+<h2 class="numbox"><a id="h4-2"></a><span class="secno">4.2</span> CSRRW, CSRRWI命令の実装</h2>
+
+<h2 class="numbox"><a id="h4-3"></a><span class="secno">4.3</span> CSRRS, CSRRSI命令の実装</h2>
+
+<h2 class="numbox"><a id="h4-4"></a><span class="secno">4.4</span> CSRRC, CSRRCI命令の実装</h2>
+
+<h2 class="numbox"><a id="h4-5"></a><span class="secno">4.5</span> ecall, mret命令の実装</h2>
+
+<h3 class="none"><a id="h4-5-1"></a><span class="secno">4.5.1</span> mtvec, mepc</h3>
+
+<h3 class="none"><a id="h4-5-2"></a><span class="secno">4.5.2</span> ecall命令の実装</h3>
+
+<h3 class="none"><a id="h4-5-3"></a><span class="secno">4.5.3</span> mret命令の実装</h3>
 
         </main>
         <nav class="page-navi">
-          <a href="15-impl-virtio.html" class="page-prev">&#9664;</a>
-          <a href="99-postface.html" class="page-next">&#9654;</a>
+          <a href="04-impl-rv32i.html" class="page-prev">&#9664;</a>
+          <a href="04b-riscvtests.html" class="page-next">&#9654;</a>
         </nav>
         <footer>
         </footer>

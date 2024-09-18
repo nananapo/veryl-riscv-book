@@ -6,7 +6,7 @@
     <title>RV32Iの実装 | Verylで作るRISC-V CPU</title>
     <link rel="stylesheet" type="text/css" href="css/normalize.css" />
     <link rel="stylesheet" type="text/css" href="css/webstyle.css" />
-    <link rel="next" title="riscv-testsによるテスト" href="04a-riscvtests.html">
+    <link rel="next" title="Zicsr拡張の実装" href="04a-zicsr.html">
     <link rel="prev" title="ハードウェア記述言語 Veryl" href="03-veryl.html">
     <meta name="generator" content="Re:VIEW Starter">
   </head>
@@ -37,31 +37,32 @@
         <li class="toc-section"><a href="#h3-12">3.12 ジャンプ命令、分岐命令の実装</a></li>
       </ul>
     </li>
-    <li class="toc-chapter"><a href="./04a-riscvtests.html">4 riscv-testsによるテスト</a></li>
-    <li class="toc-chapter"><a href="./05-impl-rv64i.html">5 RV64Iの実装</a></li>
+    <li class="toc-chapter"><a href="./04a-zicsr.html">4 Zicsr拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./04b-riscvtests.html">5 riscv-testsによるテスト</a></li>
+    <li class="toc-chapter"><a href="./05-impl-rv64i.html">6 RV64Iの実装</a></li>
   </ul>
 </li>
 <li class="toc-part">第II部 基本的な拡張とトラップの実装
   <ul class="toc toc-2">
-    <li class="toc-chapter"><a href="./06-impl-M.html">6 M拡張の実装</a></li>
-    <li class="toc-chapter"><a href="./07-impl-exception.html">7 例外の実装</a></li>
-    <li class="toc-chapter"><a href="./08-impl-A.html">8 A拡張の実装</a></li>
-    <li class="toc-chapter"><a href="./09-impl-C.html">9 C拡張の実装</a></li>
-    <li class="toc-chapter"><a href="./10-impl-MMIO.html">10 MMIOの実装</a></li>
-    <li class="toc-chapter"><a href="./11-impl-interrupt.html">11 割り込みの実装</a></li>
+    <li class="toc-chapter"><a href="./06-impl-M.html">7 M拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./07-impl-exception.html">8 例外の実装</a></li>
+    <li class="toc-chapter"><a href="./08-impl-A.html">9 A拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./09-impl-C.html">10 C拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./10-impl-MMIO.html">11 MMIOの実装</a></li>
+    <li class="toc-chapter"><a href="./11-impl-interrupt.html">12 割り込みの実装</a></li>
   </ul>
 </li>
 <li class="toc-part">第III部 privilege modeの実装
   <ul class="toc toc-2">
-    <li class="toc-chapter"><a href="./12-impl-mmode-csr.html">12 M-modeの実装</a></li>
-    <li class="toc-chapter"><a href="./13-impl-smode-csr.html">13 S-modeの実装</a></li>
-    <li class="toc-chapter"><a href="./14-impl-paging.html">14 ページングの実装</a></li>
+    <li class="toc-chapter"><a href="./12-impl-mmode-csr.html">13 M-modeの実装</a></li>
+    <li class="toc-chapter"><a href="./13-impl-smode-csr.html">14 S-modeの実装</a></li>
+    <li class="toc-chapter"><a href="./14-impl-paging.html">15 ページングの実装</a></li>
   </ul>
 </li>
 <li class="toc-part">第IV部 OSを動かす
   <ul class="toc toc-2">
-    <li class="toc-chapter"><a href="./15-impl-virtio.html">15 virtioの実装</a></li>
-    <li class="toc-chapter"><a href="./16-run-xv6.html">16 xv6の実行</a></li>
+    <li class="toc-chapter"><a href="./15-impl-virtio.html">16 virtioの実装</a></li>
+    <li class="toc-chapter"><a href="./16-run-xv6.html">17 xv6の実行</a></li>
   </ul>
 </li>
     <li class="toc-chapter"><a href="./99-postface.html">あとがき / おわりに</a></li>
@@ -2441,7 +2442,7 @@ $ <span class="userinput">obj_dir/sim src/sample_br.hex 15</span>
         </main>
         <nav class="page-navi">
           <a href="03-veryl.html" class="page-prev">&#9664;</a>
-          <a href="04a-riscvtests.html" class="page-next">&#9654;</a>
+          <a href="04a-zicsr.html" class="page-next">&#9654;</a>
         </nav>
         <footer>
         </footer>
