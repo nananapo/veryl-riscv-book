@@ -25,10 +25,10 @@
     <li class="toc-chapter"><a href="./04a-zicsr.html">4 Zicsr拡張の実装</a>
       <ul class="toc toc-3">
         <li class="toc-section"><a href="#h4-1">4.1 CSRとは何か？</a></li>
-        <li class="toc-section"><a href="#h4-2">4.2 CSRRW, CSRRWI命令の実装</a></li>
-        <li class="toc-section"><a href="#h4-3">4.3 CSRRS, CSRRSI命令の実装</a></li>
-        <li class="toc-section"><a href="#h4-4">4.4 CSRRC, CSRRCI命令の実装</a></li>
-        <li class="toc-section"><a href="#h4-5">4.5 ecall, mret命令の実装</a></li>
+        <li class="toc-section"><a href="#h4-2">4.2 CSRR(W|S|C)[I]命令のデコード</a></li>
+        <li class="toc-section"><a href="#h4-3">4.3 csrunitモジュールの実装</a></li>
+        <li class="toc-section"><a href="#h4-4">4.4 ECALL命令の実装</a></li>
+        <li class="toc-section"><a href="#h4-5">4.5 MRET命令の実装</a></li>
       </ul>
     </li>
     <li class="toc-chapter"><a href="./04b-riscvtests.html">5 riscv-testsによるテスト</a></li>
@@ -68,20 +68,172 @@
 <h1 class="boldlines center twolines"><a id="h4"></a><span class="secno">第4章</span> <br/>Zicsr拡張の実装</h1>
 
 <h2 class="numbox"><a id="h4-1"></a><span class="secno">4.1</span> CSRとは何か？</h2>
+<p>前の章では、RISC-Vの基本整数命令セットであるRV32Iを実装しました。既に簡単なプログラムを動かすことができますが、例外や割り込み,ページングなどの機能がありません。このような機能はCSRを利用して提供されます。</p>
+<p>RISC-Vには、CSR(Control and Status Register)というレジスタが4096個存在しています。例えば<code class="inline-code">mtvec</code>というレジスタは、例外や割り込みが発生したときのジャンプ先のアドレスを格納しています。RISC-VのCPUは、CSRの読み書きによって、制御(Control)や状態(Status)の読み取りを行います。</p>
+<p>CSRの読み書きを行う命令は、Zicsr拡張によって定義されています(<span class="tableref"><a href="./04a-zicsr.html#zicsr.insts">表4.1</a></span>)。本章では、Zicsrに定義されている命令,RV32Iに定義されているECALL命令,MRET命令,mtvec/mepc/mcauseレジスタを実装します。</p>
+<div id="zicsr.insts" class="table">
+<p class="caption">表4.1: Zicsr拡張に定義されている命令</p>
+<table>
+<tr class="hline"><th>命令</th><th>作用</th></tr>
+<tr class="hline"><td>CSRRW</td><td>CSRにrs1を書き込み、元のCSRの値をrdに書き込む</td></tr>
+<tr class="hline"><td>CSRRWI</td><td>CSRRWのrs1を、即値をゼロ拡張した値に置き換えた動作</td></tr>
+<tr class="hline"><td>CSRRS</td><td>CSRとrs1をビットORした値をCSRに書き込み、元のCSRの値をrdに書き込む</td></tr>
+<tr class="hline"><td>CSRRSI</td><td>CSRRSのrs1を、即値をゼロ拡張した値に置き換えた動作</td></tr>
+<tr class="hline"><td>CSRRC</td><td>CSRと~rs1(rs1のビットNOT)をビットANDした値をCSRに書き込み、元のCSRの値をrdに書き込む</td></tr>
+<tr class="hline"><td>CSRRCI</td><td>CSRRCのrs1を、即値をゼロ拡張した値に置き換えた動作</td></tr>
+</table>
+</div>
 
-<h2 class="numbox"><a id="h4-2"></a><span class="secno">4.2</span> CSRRW, CSRRWI命令の実装</h2>
+<h2 class="numbox"><a id="h4-2"></a><span class="secno">4.2</span> CSRR(W|S|C)[I]命令のデコード</h2>
+<p>まず、Zicsrに定義されている命令(<span class="tableref"><a href="./04a-zicsr.html#zicsr.insts">表4.1</a></span>)をデコードします。</p>
+<p>これらの命令のopcodeは<code class="inline-code">SYSTEM</code>(<code class="inline-code">1110011</code>)です。この値をeeiパッケージに定義します。</p>
+<div id="eei.veryl.system" class="caption-code">
+<span class="caption">リスト4.1: リスト4.1: opcode用の定数の定義 (eei.veryl)</span>
+<pre class="list language-system">    const OP_SYSTEM: logic&lt;7&gt; = 7'b1110011;
+</pre>
+</div>
+<p>次に、<code class="inline-code">InstCtrl</code>構造体に、CSRを制御する命令であることを示す<code class="inline-code">is_csr</code>フラグを追加します。</p>
+<div id="corectrl.veryl.is_csr" class="caption-code">
+<span class="caption">リスト4.2: リスト4.2: is_csrを追加する (corectrl.veryl)</span>
+<pre class="list language-is_csr">    // 制御に使うフラグ用の構造体
+    struct InstCtrl {
+        ...
+        is_csr  : logic      , // CSR命令である <span class="balloon">← 追加</span>
+        ...
+    }
+</pre>
+</div>
+<p>これでデコード処理を書く準備が整いました。inst_decoderモジュールの<code class="inline-code">InstCtrl</code>を生成している部分を変更します。</p>
+<div id="inst_decoder.veryl.decode" class="caption-code">
+<span class="caption">リスト4.3: リスト4.3: OP_SYSTEMとis_csrを追加する (inst_decoder.veryl)</span>
+<pre class="list language-decode">                                           is_csrを追加
+    ctrl = {case op {                           ↓
+        OP_LUI   : {InstType::U, T, T, F, F, F, F},
+        OP_AUIPC : {InstType::U, T, F, F, F, F, F},
+        OP_JAL   : {InstType::J, T, F, F, T, F, F},
+        OP_JALR  : {InstType::I, T, F, F, T, F, F},
+        OP_BRANCH: {InstType::B, F, F, F, F, F, F},
+        OP_LOAD  : {InstType::I, T, F, F, F, T, F},
+        OP_STORE : {InstType::S, F, F, F, F, F, F},
+        OP_OP    : {InstType::R, T, F, T, F, F, F},
+        OP_OP_IMM: {InstType::I, T, F, T, F, F, F},
+        OP_SYSTEM: {InstType::I, T, F, F, F, F, T}, <span class="balloon">← 追加</span>
+        default  : {InstType::X, F, F, F, F, F, F},
+    }, f3, f7};
+</pre>
+</div>
+<p>上のコードでは、opcodeが<code class="inline-code">OP_SYSTEM</code>な命令を、I形式で、レジスタに結果を書き込み、CSRを操作する命令であるということにしています。他のopcodeの命令については、CSRを操作しない命令であるということにしています。</p>
+<p>CSRRW, CSRRS, CSRRC命令は、rs1レジスタのデータを利用します。CSRRWI, CSRRSI, CSRRCI命令は、命令のビット中のrs1にあたるビット列(5ビット)をゼロ拡張した値を利用します。それぞれの命令はfunct3で区別することができます(<span class="tableref"><a href="./04a-zicsr.html#zicsr.f3">表4.2</a></span>)。</p>
+<div id="zicsr.f3" class="table">
+<p class="caption">表4.2: Zicsrに定義されている命令(funct3による区別)</p>
+<table>
+<tr class="hline"><th>funct3</th><th>命令</th></tr>
+<tr class="hline"><td>3'b001</td><td>CSRRW</td></tr>
+<tr class="hline"><td>3'b101</td><td>CSRRWI</td></tr>
+<tr class="hline"><td>3'b010</td><td>CSRRS</td></tr>
+<tr class="hline"><td>3'b110</td><td>CSRRSI</td></tr>
+<tr class="hline"><td>3'b011</td><td>CSRRC</td></tr>
+<tr class="hline"><td>3'b111</td><td>CSRRCI</td></tr>
+</table>
+</div>
+<p>操作対象のCSRのアドレス(12ビット)は、命令のビットの上位12ビットをそのまま利用します。</p>
 
-<h2 class="numbox"><a id="h4-3"></a><span class="secno">4.3</span> CSRRS, CSRRSI命令の実装</h2>
+<h2 class="numbox"><a id="h4-3"></a><span class="secno">4.3</span> csrunitモジュールの実装</h2>
+<p>CSRを操作する命令のデコードができたので、CSR関連の処理を行うcsrunitモジュールを作成します。</p>
 
-<h2 class="numbox"><a id="h4-4"></a><span class="secno">4.4</span> CSRRC, CSRRCI命令の実装</h2>
+<h3 class="none"><a id="h4-3-1"></a><span class="secno">4.3.1</span> csrunitモジュールの作成</h3>
+<p><code class="inline-code">src/csrunit.veryl</code>を作成し、次のように記述します。</p>
+<div id="csrunit.veryl.all" class="caption-code">
+<span class="caption">リスト4.4: リスト4.4: csrunit.veryl</span>
+<pre class="list language-all">import eei::*;
+import corectrl::*;
 
-<h2 class="numbox"><a id="h4-5"></a><span class="secno">4.5</span> ecall, mret命令の実装</h2>
+module csrunit (
+    clk     : input  clock       ,
+    rst     : input  reset       ,
+    valid   : input  logic       ,
+    ctrl    : input  InstCtrl    ,
+    csr_addr: input  logic   &lt;12&gt;,
+    rs1     : input  UIntX       ,
+    rdata   : output UIntX       ,
+) {
+    // CSRR(W|S|C)[I]命令かどうか
+    let is_wsc: logic = ctrl.is_csr &amp;&amp; ctrl.funct3[1:0] != 0;
+}
+</pre>
+</div>
+<p>csrunitモジュールの主要なポートの定義は次のとおりです。</p>
+<div id="csrunit.port" class="table">
+<p class="caption">表4.3: csrunitのポート定義</p>
+<table>
+<tr class="hline"><th>ポート名</th><th>型</th><th>向き</th><th>意味</th></tr>
+<tr class="hline"><td>valid</td><td>logic</td><td>input</td><td>命令が供給されているかどうか</td></tr>
+<tr class="hline"><td>ctrl</td><td>InstCtrl</td><td>input</td><td>命令のInstCtrl</td></tr>
+<tr class="hline"><td>csr_addr</td><td>logic&lt;12&gt;</td><td>input</td><td>命令が指定するCSRのアドレス (命令の上位12ビット)</td></tr>
+<tr class="hline"><td>rs1</td><td>UIntX</td><td>input</td><td>CSRR(W|S|C)のときrs1の値、CSRR(W|S|C)Iのとき即値(5ビット)をゼロで拡張した値</td></tr>
+<tr class="hline"><td>rdata</td><td>UIntX</td><td>output</td><td>CSRR(W|S|C)[I]によるCSR読み込みの結果</td></tr>
+</table>
+</div>
+<p>まだcsrunitモジュールにはCSRが一つもないため、中身が空になっています。</p>
+<p>このままの状態で、とりあえず、csrunitモジュールをcoreモジュールの中でインスタンス化します。</p>
+<div id="core.veryl.csru.inst" class="caption-code">
+<span class="caption">リスト4.5: リスト4.5: csrunitモジュールのインスタンス化 (core.veryl)</span>
+<pre class="list language-inst">    var csru_rdata: UIntX;
 
-<h3 class="none"><a id="h4-5-1"></a><span class="secno">4.5.1</span> mtvec, mepc</h3>
+    inst csru: csrunit (
+        clk                       ,
+        rst                       ,
+        valid   : inst_valid      ,
+        ctrl    : inst_ctrl       ,
+        csr_addr: inst_bits[31:20],
+        rs1     : if inst_ctrl.funct3[2] == 1 &amp;&amp; inst_ctrl[1:0] != 0 {
+            {1'b0 repeat XLEN - $bits(rs1_addr), rs1_addr} // rs1を0で拡張する
+        } else {
+            rs1_data
+        },
+        rdata: csru_rdata,
+    );
+</pre>
+</div>
+<p>上のコードでは、結果の受け取りのために<code class="inline-code">csru_rdata</code>レジスタを作成し、csrunitモジュールをインスタンス化しています。</p>
+<p>csr_addrポートには命令の上位12ビットを設定しています。rs1ポートには、即値を利用する命令(CSRR(W|S|C)I)の場合はrs1_addrを0で拡張した値を、それ以外の命令の場合はrs1のデータを設定しています。</p>
+<p>次に、csrunitの結果をレジスタにライトバックするようにします。具体的には、<code class="inline-code">InstCtrl.is_csr</code>が<code class="inline-code">1</code>のとき、<code class="inline-code">wb_data</code>が<code class="inline-code">csru_rdata</code>になるようにします。</p>
+<div id="core.veryl.csru.wb" class="caption-code">
+<span class="caption">リスト4.6: リスト4.6: CSR命令の結果がライトバックされるようにする (core.veryl)</span>
+<pre class="list language-wb">    let wb_data: UIntX    = if inst_ctrl.is_jump {
+        inst_pc + 4
+    } else if inst_ctrl.is_load {
+        memu_rdata
+    } else if inst_ctrl.is_csr {
+        csru_rdata
+    } else {
+        alu_result
+    };
+</pre>
+</div>
+<p>最後に、デバッグ用の表示を追加します。デバッグ表示用の<code class="inline-code">always_ff</code>ブロックに次のコードを追加してください。</p>
+<div id="core.veryl.csru.debug" class="caption-code">
+<span class="caption">リスト4.7: リスト4.7: デバッグ用にrdataを表示するようにする (core.veryl)</span>
+<pre class="list language-debug">    if inst_ctrl.is_csr {
+        $display(&quot;  csr rdata : %h&quot;, csru_rdata);
+    }
+</pre>
+</div>
+<p>これらのテストは、csrunitモジュールにレジスタを追加してから行います。</p>
 
-<h3 class="none"><a id="h4-5-2"></a><span class="secno">4.5.2</span> ecall命令の実装</h3>
+<h3 class="none"><a id="h4-3-2"></a><span class="secno">4.3.2</span> mtvecレジスタの実装</h3>
+<p>csrunitモジュールには、まだCSRが定義されていません。1つ目のCSRとして、mtvecレジスタを実装します。</p>
+<p>TODO</p>
 
-<h3 class="none"><a id="h4-5-3"></a><span class="secno">4.5.3</span> mret命令の実装</h3>
+<h3 class="none"><a id="h4-3-3"></a><span class="secno">4.3.3</span> CSRR(W|S|C)[I]命令の実装</h3>
+
+<h2 class="numbox"><a id="h4-4"></a><span class="secno">4.4</span> ECALL命令の実装</h2>
+
+<h3 class="none"><a id="h4-4-1"></a><span class="secno">4.4.1</span> mcause, mepcレジスタの実装</h3>
+
+<h3 class="none"><a id="h4-4-2"></a><span class="secno">4.4.2</span> 例外の実装</h3>
+
+<h2 class="numbox"><a id="h4-5"></a><span class="secno">4.5</span> MRET命令の実装</h2>
 
         </main>
         <nav class="page-navi">

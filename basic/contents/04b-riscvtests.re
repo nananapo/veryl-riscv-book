@@ -189,6 +189,10 @@ _startから実行を開始し、最終的にwrite_tohostに移動します。
 @<code>{mcause}, @<code>{mtvec}, @<code>{mepc}はCSRです。
 riscv-testsの実装には少なくともこの3つの実装が必要です。
 
+== mret
+
+== mepc
+
 == mcauseレジスタの実装
 
 == riscv-testsの終了を検知する

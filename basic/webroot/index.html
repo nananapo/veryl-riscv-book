@@ -61,10 +61,10 @@
     <li class="toc-chapter"><a href="./04a-zicsr.html">4 Zicsr拡張の実装</a>
       <ul class="toc toc-3">
         <li class="toc-section"><a href="#h4-1">4.1 CSRとは何か？</a></li>
-        <li class="toc-section"><a href="#h4-2">4.2 CSRRW, CSRRWI命令の実装</a></li>
-        <li class="toc-section"><a href="#h4-3">4.3 CSRRS, CSRRSI命令の実装</a></li>
-        <li class="toc-section"><a href="#h4-4">4.4 CSRRC, CSRRCI命令の実装</a></li>
-        <li class="toc-section"><a href="#h4-5">4.5 ecall, mret命令の実装</a></li>
+        <li class="toc-section"><a href="#h4-2">4.2 CSRR(W|S|C)[I]命令のデコード</a></li>
+        <li class="toc-section"><a href="#h4-3">4.3 csrunitモジュールの実装</a></li>
+        <li class="toc-section"><a href="#h4-4">4.4 ECALL命令の実装</a></li>
+        <li class="toc-section"><a href="#h4-5">4.5 MRET命令の実装</a></li>
       </ul>
     </li>
     <li class="toc-chapter"><a href="./04b-riscvtests.html">5 riscv-testsによるテスト</a>
@@ -72,10 +72,12 @@
         <li class="toc-section"><a href="#h5-1">5.1 riscv-testsとは何か？</a></li>
         <li class="toc-section"><a href="#h5-2">5.2 riscv-testsのビルド</a></li>
         <li class="toc-section"><a href="#h5-3">5.3 どのようにテストを実行するのか</a></li>
-        <li class="toc-section"><a href="#h5-4">5.4 mcauseレジスタの実装</a></li>
-        <li class="toc-section"><a href="#h5-5">5.5 riscv-testsの終了を検知する</a></li>
-        <li class="toc-section"><a href="#h5-6">5.6 テストの実行</a></li>
-        <li class="toc-section"><a href="#h5-7">5.7 複数のテストを自動で実行する</a></li>
+        <li class="toc-section"><a href="#h5-4">5.4 mret</a></li>
+        <li class="toc-section"><a href="#h5-5">5.5 mepc</a></li>
+        <li class="toc-section"><a href="#h5-6">5.6 mcauseレジスタの実装</a></li>
+        <li class="toc-section"><a href="#h5-7">5.7 riscv-testsの終了を検知する</a></li>
+        <li class="toc-section"><a href="#h5-8">5.8 テストの実行</a></li>
+        <li class="toc-section"><a href="#h5-9">5.9 複数のテストを自動で実行する</a></li>
       </ul>
     </li>
     <li class="toc-chapter"><a href="./05-impl-rv64i.html">6 RV64Iの実装</a>

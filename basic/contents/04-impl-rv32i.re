@@ -859,8 +859,9 @@ FIFOに空きがあるという条件に変更しています。
 命令がフェッチされて表示されるまでに、FIFOに格納して取り出すクロック分だけ遅延があることに注意してください。
 
 //terminal[sim-fifo][FIFOをテストする]{
-$ make build sim
-$ obj_dir/sim src/sample.hex 7
+$ @<userinput>{make build}
+$ @<userinput>{make sim}
+$ @<userinput>{obj_dir/sim src/sample.hex 7}
 00000000 : 01234567
 00000004 : 89abcdef
 00000008 : deadbeef
@@ -941,16 +942,14 @@ package corectrl {
 
     // 制御に使うフラグ用の構造体
     struct InstCtrl {
-        itype    : InstType   , // 命令の形式
-        rwb_en   : logic      , // レジスタに書き込むかどうか
-        is_lui   : logic      , // LUI命令である
-        is_aluop : logic      , // ALUを利用する命令である
-        is_jump  : logic      , // ジャンプ命令である
-        is_load  : logic      , // ロード命令である
-        is_system: logic      , // CSR命令である
-        is_fence : logic      , // フェンス命令である
-        funct3   : logic   <3>, // 命令のfunct3フィールド
-        funct7   : logic   <7>, // 命令のfunct7フィールド
+        itype   : InstType   , // 命令の形式
+        rwb_en  : logic      , // レジスタに書き込むかどうか
+        is_lui  : logic      , // LUI命令である
+        is_aluop: logic      , // ALUを利用する命令である
+        is_jump : logic      , // ジャンプ命令である
+        is_load : logic      , // ロード命令である
+        funct3  : logic   <3>, // 命令のfunct3フィールド
+        funct7  : logic   <7>, // 命令のfunct7フィールド
     }
 }
 #@end
@@ -980,8 +979,6 @@ package corectrl {
     const OP_BRANCH  : logic<7> = 7'b1100011;
     const OP_LOAD    : logic<7> = 7'b0000011;
     const OP_STORE   : logic<7> = 7'b0100011;
-    const OP_MISC_MEM: logic<7> = 7'b0001111;
-    const OP_SYSTEM  : logic<7> = 7'b1110011;
 #@end
 //}
 
@@ -1009,14 +1006,12 @@ module inst_decoder (
     let imm_b_g: logic<12> = {bits[31], bits[7], bits[30:25], bits[11:8]};
     let imm_u_g: logic<20> = bits[31:12];
     let imm_j_g: logic<20> = {bits[31], bits[19:12], bits[20], bits[30:21]};
-    let imm_z_g: logic<17> = bits[31:15]; // {csr address, uimm}
 
-    let imm_i: UIntX = {imm_i_g[msb] repeat XLEN - $bits(imm_i_g), imm_i_g};
-    let imm_s: UIntX = {imm_s_g[msb] repeat XLEN - $bits(imm_s_g), imm_s_g};
-    let imm_b: UIntX = {imm_b_g[msb] repeat XLEN - $bits(imm_b_g) - 1, imm_b_g, 1'b0};
-    let imm_u: UIntX = {imm_u_g[msb] repeat XLEN - $bits(imm_u_g) - 12, imm_u_g, 12'b0};
-    let imm_j: UIntX = {imm_j_g[msb] repeat XLEN - $bits(imm_j_g) - 1, imm_j_g, 1'b0};
-    let imm_z: UIntX = {1'b0 repeat XLEN - $bits(imm_z_g), imm_z_g};
+    let imm_i: UIntX = {bits[31] repeat XLEN - $bits(imm_i_g), imm_i_g};
+    let imm_s: UIntX = {bits[31] repeat XLEN - $bits(imm_s_g), imm_s_g};
+    let imm_b: UIntX = {bits[31] repeat XLEN - $bits(imm_b_g) - 1, imm_b_g, 1'b0};
+    let imm_u: UIntX = {bits[31] repeat XLEN - $bits(imm_u_g) - 12, imm_u_g, 12'b0};
+    let imm_j: UIntX = {bits[31] repeat XLEN - $bits(imm_j_g) - 1, imm_j_g, 1'b0};
 
     let op: logic<7> = bits[6:0];
     let f7: logic<7> = bits[31:25];
@@ -1027,27 +1022,24 @@ module inst_decoder (
 
     always_comb {
         imm = case op {
-            OP_LUI, OP_AUIPC                        : imm_u,
-            OP_JAL                                  : imm_j,
-            OP_JALR, OP_LOAD, OP_OP_IMM, OP_MISC_MEM: imm_i,
-            OP_BRANCH                               : imm_b,
-            OP_STORE                                : imm_s,
-            OP_SYSTEM                               : imm_z,
-            default                                 : 'x,
+            OP_LUI, OP_AUIPC           : imm_u,
+            OP_JAL                     : imm_j,
+            OP_JALR, OP_LOAD, OP_OP_IMM: imm_i,
+            OP_BRANCH                  : imm_b,
+            OP_STORE                   : imm_s,
+            default                    : 'x,
         };
         ctrl = {case op {
-            OP_LUI     : {InstType::U, T, T, F, F, F, F, F},
-            OP_AUIPC   : {InstType::U, T, F, F, F, F, F, F},
-            OP_JAL     : {InstType::J, T, F, F, T, F, F, F},
-            OP_JALR    : {InstType::I, T, F, F, T, F, F, F},
-            OP_BRANCH  : {InstType::B, F, F, F, F, F, F, F},
-            OP_LOAD    : {InstType::I, T, F, F, F, T, F, F},
-            OP_STORE   : {InstType::S, F, F, F, F, F, F, F},
-            OP_OP      : {InstType::R, T, F, T, F, F, F, F},
-            OP_OP_IMM  : {InstType::I, T, F, T, F, F, F, F},
-            OP_MISC_MEM: {InstType::I, F, F, F, F, F, F, T},
-            OP_SYSTEM  : {InstType::I, T, F, F, F, F, T, F},
-            default    : {InstType::X, F, F, F, F, F, F, F},
+            OP_LUI   : {InstType::U, T, T, F, F, F},
+            OP_AUIPC : {InstType::U, T, F, F, F, F},
+            OP_JAL   : {InstType::J, T, F, F, T, F},
+            OP_JALR  : {InstType::I, T, F, F, T, F},
+            OP_BRANCH: {InstType::B, F, F, F, F, F},
+            OP_LOAD  : {InstType::I, T, F, F, F, T},
+            OP_STORE : {InstType::S, F, F, F, F, F},
+            OP_OP    : {InstType::R, T, F, T, F, F},
+            OP_OP_IMM: {InstType::I, T, F, T, F, F},
+            default  : {InstType::X, F, F, F, F, F},
         }, f3, f7};
     }
 }
@@ -1064,9 +1056,6 @@ B形式の命令について考えます。
 まず、命令のビット列から即値部分を取り出して、@<code>{imm_b_g}ワイヤを生成します。
 B形式の命令内に含まれている即値は12ビットで、最上位ビットは符号ビットです。
 最上位ビットを繰り返す(符号拡張する)ことによって、32ビットの即値@<code>{imm_b}を生成します。
-
-@<code>{imm_z}はCSR命令で使用する即値をまとめたものです。
-これについては後の章で説明します。
 
 @<code>{always_comb}ブロックでは、
 opcodeをcase式で分岐することにより@<code>{imm}ポートに適切な即値を出力しています。
@@ -1126,7 +1115,8 @@ inst_decoderモジュールを、@<code>{core}モジュールでインスタン�
 @<code>{sample.hex}をメモリの初期値として使い、デコード結果を確認します。
 
 //terminal[sim-id][デコーダのテスト]{
-$ @<userinput>{make build sim}
+$ @<userinput>{make build}
+$ @<userinput>{make sim}
 $ @<userinput>{obj_dir/sim src/sample.hex 7}
 00000000 : 01234567
   itype   : 000010
@@ -1229,7 +1219,7 @@ I形式の命令の実行には、ソースレジスタのデータと即値を�
 早速動作のテストをしたいところですが、今のままだとレジスタのデータが初期化されておらず、
 0番目のレジスタのデータ以外は不定(0か1か分からない)になってしまいます。
 
-これではテストする意味がないため、レジスタの値を適当な値に初期化します。
+これではテストする意味がないため、レジスタの値を適当な値に初期化します。@<fn>{reset.reg.error}
 
 //list[core.reg.init][レジスタの値を初期化する (core.veryl)]{
 #@maprange(scripts/04/reg-range/core/src/core.veryl,init)
@@ -1247,8 +1237,11 @@ I形式の命令の実行には、ソースレジスタのデータと即値を�
 上のコードでは、@<code>{always_ff}ブロックの@<code>{if_reset}で、
 n番目(32 > n > 0)のレジスタの値を@<code>{n + 100}で初期化しています。
 
+//footnote[reset.reg.error][「iは変数だからif_resetで使えません」のようなエラーが出る場合、申し訳ありませんがfor文を使わずに1つずつ初期化してください。]
+
 //terminal[reg.debug][レジスタ読み込みのデバッグ]{
-$ @<userinput>{make build sim}
+$ @<userinput>{make build}
+$ @<userinput>{make sim}
 $ @<userinput>{obj_dir/sim sample.hex 7}
 00000000 : 01234567
   itype   : 000010
@@ -1361,7 +1354,7 @@ result	output	UIntX		結果
 RV32Iでは、仕様書Volume Iの2.4. Integer Computational Instructions(整数演算命令)に定義されている命令は、
 命令のfunct3, funct7フィールドによって計算の種類を特定することができます。
 
-それ以外の命令は、CSR命令を除いて足し算しか行いません。
+それ以外の命令は、足し算しか行いません。
 そのため、デコード時に整数演算命令とそれ以外の命令を@<code>{InstCtrl.is_aluop}で区別し、
 整数演算命令以外は常に足し算を行うようにしています。
 具体的には、@<code>{opcode}がOPかOP-IMMの命令の@<code>{InstCtrl.is_aluop}を@<code>{1}にしています。
@@ -1484,7 +1477,8 @@ ALUに渡すデータを用意したので、aluモジュールをインスタ�
 シミュレータを実行し、結果を確かめます。
 
 //terminal[alu.debug][ALUのデバッグ]{
-$ @<userinput>{make build sim}
+$ @<userinput>{make build}
+$ @<userinput>{make sim}
 $ @<userinput>{obj_dir/sim src/sample.hex 6}
 00000000 : 02000093
   itype   : 000010
@@ -1584,7 +1578,8 @@ CPUはレジスタから値を読み込み、これを計算して、レジス�
 シミュレータを実行し、結果を確かめます。
 
 //terminal[wb.test][ライトバックのデバッグ]{
-$ @<userinput>{make build sim}
+$ @<userinput>{make build}
+$ @<userinput>{make sim}
 $ @<userinput>{obj_dir/sim sample.hex 6}
 00000000 : 02000093
   itype     : 000010
@@ -1628,6 +1623,19 @@ $ @<userinput>{obj_dir/sim sample.hex 6}
 
 おめでとうございます！
 このCPUは整数演算命令の実行ができるようになりました。
+
+最後に、テストのためにレジスタの値を初期化するようにしていたコードを削除します。
+
+//list[reg.remove.reset][レジスタの初期化をやめる (core.veryl)]{
+#@maprange(scripts/04/wb-rm-reset-range/core/src/core.veryl,wb)
+    always_ff {
+        if if_fifo_rvalid && inst_ctrl.rwb_en {
+            regfile[rd_addr] = wb_data;
+        }
+    }
+#@end
+//} 
+
 
 == ロード命令とストア命令の実装
 
@@ -1757,7 +1765,7 @@ memunitモジュールでは、
 命令がメモリにアクセスする命令の時、
 ALUから受け取ったアドレスをメモリに渡して操作を実行します。
 
-命令がメモリにアクセスする命令かどうかは。@<code>{inst_is_memop}関数で判定します。
+命令がメモリにアクセスする命令かどうか  は。@<code>{inst_is_memop}関数で判定します。
 ストア命令のとき、命令の形式はS形式です。
 ロード命令のとき、デコーダは@<code>{InstCtrl.is_load}を@<code>{1}にしています。
 
@@ -2012,9 +2020,9 @@ FIFOからの命令の取り出しを停止します。
 
 //list[wb.ready.main][命令の実行が終了したときにのみライトバックする (core.veryl)]{
 #@maprange(scripts/04/lwsw-range/core/src/core.veryl,wb_ready)
-            if inst_valid && if_fifo_rready && inst_ctrl.rwb_en {
-                regfile[rd_addr] = wb_data;
-            }
+        if inst_valid && if_fifo_rready && inst_ctrl.rwb_en {
+            regfile[rd_addr] = wb_data;
+        }
 #@end
 //}
 
@@ -2088,7 +2096,8 @@ deadbeef // 0x20
 シミュレータを実行し、結果を確かめます。
 
 //terminal[lwsw.test][LW, SW命令のテスト]{
-$ @<userinput>{make build sim}
+$ @<userinput>{make build}
+$ @<userinput>{make sim}
 $ @<userinput>{obj_dir/sim src/sample.hex 13}
 #                    3
 00000000 : 02002503
@@ -2606,7 +2615,8 @@ fe1ff06f // 20: jal x0, -0x20 : 0にジャンプする
 //}
 
 //terminal[jump.test][テストの実行 (一部省略)]{
-$ @<userinput>{make build sim}
+$ @<userinput>{make build}
+$ @<userinput>{make sim}
 $ @<userinput>{obj_dir/sim src/sample_jump.hex 17}
 #                    4
 00000000 : 0100006f
@@ -2755,7 +2765,8 @@ deadbeef // 14:
 //}
 
 //terminal[br.test][テストの実行 (一部省略)]{
-$ @<userinput>{make build sim}
+$ @<userinput>{make build}
+$ @<userinput>{make sim}
 $ @<userinput>{obj_dir/sim src/sample_br.hex 15}
 #                    4
 00000000 : 00100093
@@ -2782,3 +2793,8 @@ BLT, BLTU, BGEU命令についてはテストできていませんが、次の�
 
 これでRV32Iの実装は終わりです。
 お疲れ様でした。
+
+//caution[実装していないRV32Iの命令について]{
+本章ではメモリフェンス命令, ECALL, EBREAK命令などを実装していません。
+これらの命令は後の章で実装します。
+//}
