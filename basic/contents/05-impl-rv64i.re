@@ -64,6 +64,8 @@ SLLIW, SRLIW, SRAIW, SLL, SRL, SRA, SLLW, SRLW, SRAW
 32ビット単位に対してシフトする命令が追加されています。
 これに対応するためにALUを変更します。
 
+== CSR
+
 == riscv-tests
 
 RV64Iのテストがすべて正常に実行できることを確認してください。

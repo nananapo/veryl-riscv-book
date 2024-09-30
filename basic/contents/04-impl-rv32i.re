@@ -2789,7 +2789,7 @@ $ @<userinput>{obj_dir/sim src/sample_br.hex 15}
   br take   : 1
 //}
 
-BLT, BLTU, BGEU命令についてはテストできていませんが、次の章で紹介するriscv-testsでテストします。
+BLT, BLTU, BGEU命令についてはテストできていませんが、後の章で紹介するriscv-testsでテストします。
 
 これでRV32Iの実装は終わりです。
 お疲れ様でした。
