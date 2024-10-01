@@ -337,7 +337,7 @@ mtvecレジスタの書き込み、読み込みができることをテストし
 テストでは、CSRRWI命令でmtvecに@<code>{'b10111}を書き込んだ後、CSRRS命令でmtvecの値を読み込んでいます。
 CSRRS命令で読み込むとき、rs1をx0(ゼロレジスタ)にすることで、mtvecの値を変更せずに読み込んでいます。
 
-シミュレータをビルドし、結果を確かめます。
+シミュレータを実行し、結果を確かめます。
 
 //terminal[mtvec.rw.test][mtvecの読み込み/書き込みテストの実行]{
 $ $<userinput>{make build}
@@ -540,9 +540,11 @@ module csrunit (
 	現在処理している命令のrdのアドレスを受け取ります。
 	現在処理している命令がECALL命令かどうかを判定するために使います。
 
- : raise_trap, trap_vector
-	例外が発生した時、raise_trapを1にして、
-	trap_vectorにジャンプ先のアドレスを出力します。
+ : raise_trap
+	例外が発生する時、値を1にします。
+
+ : trap_vector
+	例外が発生する時、ジャンプ先のアドレスを出力します。
 
 csrunitモジュールの中身を実装する前に、
 coreモジュールに例外発生時の動作を実装します。
@@ -623,7 +625,7 @@ ECALL命令は、I形式, 即値は0, rs1とrdは0, funct3は0, opcodeは@<code>
 今のところ、例外はECALL命令によってのみ発生するため、
 @<code>{expt_cause}は定数になっています。
 
-//list[csrrunit.veryl.csr.expt][ (csrunit.veryl)]{
+//list[csrrunit.veryl.csr.expt][例外とトラップの判定 (csrunit.veryl)]{
 #@maprange(scripts/04a/create-ecall-range/core/src/csrunit.veryl,expt)
     // Exception
     let raise_expt: logic = valid && is_ecall;
@@ -674,7 +676,141 @@ ECALL命令をテストする前に、デバッグのために@<code>{$display}�
 #@end
 //}
 
-TODO
+それでは簡単なテストを記述します。
+
+CSRRW命令でmtvecレジスタに値を書き込み、ecall命令で例外を発生させてジャンプします。
+ジャンプ先では、mcauseレジスタ, mepcレジスタの値を読み取ります。
+
+@<code>{test/sample_ecall.hex}を作成し、次のように記述します。
+
+//list[sample_ecall.hex][sample_ecall.hex]{
+#@mapfile(scripts/04a/create-ecall/core/test/sample_ecall.hex)
+30585073 //  0: csrrwi x0, mtvec, 0x10
+00000073 //  4: ecall
+00000000 //  8:
+00000000 //  c:
+342020f3 // 10: csrrs x1, mcause, x0
+34102173 // 14: csrrs x2, mepc, x0
+#@end
+//}
+
+シミュレータを実行し、結果を確かめます。
+
+//terminal[ecall.test][ECALL命令のテストの実行]{
+$ $<userinput>{make build}
+$ $<userinput>{make sim}
+$ $<userinput>{./obj_dir/sim test/sample_ecall.hex 10}
+#                    4
+00000000 : 30585073 @<balloon>{CSRRWIでmtvecに書き込み}
+  rs1[16]   : 00000000 @<balloon>{0x10(=16)をmtvecに書き込む}
+  csr trap  : 0
+  csr vec   : 00000000
+  reg[ 0] <= 00000000
+#                    5
+00000004 : 00000073
+  csr trap  : 1 @<balloon>{ECALL命令により、例外が発生する}
+  csr vec   : 00000010 @<balloon>{ジャンプ先は0x10}
+  reg[ 0] <= 00000000
+#                    9
+00000010 : 342020f3
+  csr rdata : 0000000b @<balloon>{CSRRSでmcauseを読み込む}
+  reg[ 1] <= 0000000b @<balloon>{Environment call from M-modeなのでb(=11)}
+#                   10
+00000014 : 34102173
+  csr rdata : 00000004 @<balloon>{CSRRSでmepcを読み込む}
+  reg[ 2] <= 00000004 @<balloon>{例外はアドレス4で発生したので4}
+//}
+
+ECALL命令によって例外が発生し、
+mcauseとmepcに書き込みが行われてからmtvecにジャンプしていることが確認できました。
+
+ECALL命令の実行時にレジスタに値がライトバックされてしまっていますが、
+ECALL命令のrdは常に0番目のレジスタであり、
+0番目のレジスタは常に値が0になるため問題ありません。
 
 == MRET命令の実装
 
+MRET命令@<fn>{mret.manual}は、トラップ先からトラップ元に戻るための命令です。
+具体的には、MRET命令を実行すると、
+mepcレジスタに格納されたアドレスにジャンプします@<fn>{mret.other}。
+
+MRET命令は、例えば、権限のあるOSから権限のないユーザー空間に戻るために利用します。
+
+//footnote[mret.manual][MRET命令はVolume IIの3.3.2. Trap-Return Instructionsに定義されています]
+//footnote[mret.other][他のCSRや権限レベルが実装されている場合は、他にも行うことがあります]
+
+=== MRET命令を実装する
+
+まず、csrunitモジュールに供給されている命令が、
+MRET命令かどうかを判定するためのワイヤ@<code>{is_mret}を作成します。
+MRET命令は、上位12ビットが@<code>{001100000010}, rs1は0, funct3は0, rdは0です。
+
+//list[csrunit.mret][MRET命令の判定 (csrunit.veryl)]{
+#@maprange(scripts/04a/create-mret-range/core/src/csrunit.veryl,is_mret)
+    // MRET命令かどうか
+    let is_mret: logic = ctrl.is_csr && csr_addr == 12'b0011000_00010 && rs1[4:0] == 0 && ctrl.funct3 == 0 && rd_addr == 0;
+#@end
+//}
+
+次に、MRET命令が供給されているときにmepcにジャンプするようにするロジックを作成します。
+ジャンプするためのロジックは、トラップによってジャンプする仕組みを利用します。
+
+//list[csrunit.mret.jump][MRET命令によってジャンプさせる (csrunit.veryl)]{
+#@maprange(scripts/04a/create-mret-range/core/src/csrunit.veryl,trap)
+    // Trap
+    assign raise_trap  = raise_expt || (valid && is_mret);
+    let trap_cause : UIntX = expt_cause;
+    assign trap_vector = if raise_expt {
+        mtvec
+    } else {
+        mepc
+    };
+#@end
+//}
+
+トラップが発生しているかどうかの条件@<code>{raise_mret}に@<code>{is_mret}を追加し、
+トラップ先を条件によって変更します。
+
+ここで、@<code>{is_mret}のときに@<code>{mepc}を割り当てるのではなく
+@<code>{raise_expt}のときに@<code>{mtvec}を割り当てています。
+これは、将来的にMRET命令によって例外が発生することがあるからです。
+MRET命令の判定を優先すると、例外が発生するのにmepcにジャンプしてしまいます。
+
+=== MRET命令のテスト
+
+MRET命令が正しく動作するかテストします。
+
+mepcに値を設定してからMRET命令を実行し、mepcにジャンプするかどうかを確認します。
+
+//list[sample_mret.hex][sample_mret.hex]{
+#@mapfile(scripts/04a/create-mret/core/test/sample_mret.hex)
+34185073 //  0: csrrwi x0, mepc, 0x10
+30200073 //  4: mret
+00000000 //  8:
+00000000 //  c:
+00000013 // 10: addi x0, x0, 0
+#@end
+//}
+
+//terminal[mret.test][MRET命令のテストの実行]{
+$ $<userinput>{make build}
+$ $<userinput>{make sim}
+$ $<userinput>{./obj_dir/sim test/sample_mret.hex 9}
+#                    4
+00000000 : 34185073 @<balloon>{CSRRWIでmepcに書き込み}
+  rs1[16]   : 00000000 @<balloon>{0x10(=16)をmepcに書き込む}
+  csr trap  : 0
+  csr vec   : 00000000
+  reg[ 0] <= 00000000
+#                    5
+00000004 : 30200073
+  csr trap  : 1 @<balloon>{MRET命令によってmepcにジャンプする}
+  csr vec   : 00000010 @<balloon>{10にジャンプする}
+#                    9
+00000010 : 00000013 @<balloon>{10にジャンプしている}
+//}
+
+MRET命令によってmepcにジャンプすることが確認できます。
+
+MRET命令は、レジスタに値をライトバックしていますが、
+ECALL命令と同じく0番目のレジスタが指定されるため問題ありません。
