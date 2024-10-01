@@ -1,5 +1,9 @@
 = 環境構築
 
+TODO
+
+WSLかMac, Linuxを前提とする
+
 == Veryl
 
 rustup
@@ -19,7 +23,7 @@ $ @<userinput>{verylup setup} @<balloon>{verylupのセットアップ}
 
 //terminal[veryl-version][verylがインストールされているかの確認]{
 $ @<userinput>{veryl --version}
-veryl 0.12.0
+veryl 0.13.0
 //}
 
 == Verilator
@@ -28,4 +32,4 @@ veryl 0.12.0
 
 == riscv-gnu-toolchain
 
-clone
+インストールするだけ

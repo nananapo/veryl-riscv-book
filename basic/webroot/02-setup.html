@@ -31,29 +31,7 @@
     <li class="toc-chapter"><a href="./04a-zicsr.html">4 Zicsr拡張の実装</a></li>
     <li class="toc-chapter"><a href="./04b-riscvtests.html">5 riscv-testsによるテスト</a></li>
     <li class="toc-chapter"><a href="./05-impl-rv64i.html">6 RV64Iの実装</a></li>
-  </ul>
-</li>
-<li class="toc-part">第II部 基本的な拡張とトラップの実装
-  <ul class="toc toc-2">
-    <li class="toc-chapter"><a href="./06-impl-M.html">7 M拡張の実装</a></li>
-    <li class="toc-chapter"><a href="./07-impl-exception.html">8 例外の実装</a></li>
-    <li class="toc-chapter"><a href="./08-impl-A.html">9 A拡張の実装</a></li>
-    <li class="toc-chapter"><a href="./09-impl-C.html">10 C拡張の実装</a></li>
-    <li class="toc-chapter"><a href="./10-impl-MMIO.html">11 MMIOの実装</a></li>
-    <li class="toc-chapter"><a href="./11-impl-interrupt.html">12 割り込みの実装</a></li>
-  </ul>
-</li>
-<li class="toc-part">第III部 privilege modeの実装
-  <ul class="toc toc-2">
-    <li class="toc-chapter"><a href="./12-impl-mmode-csr.html">13 M-modeの実装</a></li>
-    <li class="toc-chapter"><a href="./13-impl-smode-csr.html">14 S-modeの実装</a></li>
-    <li class="toc-chapter"><a href="./14-impl-paging.html">15 ページングの実装</a></li>
-  </ul>
-</li>
-<li class="toc-part">第IV部 OSを動かす
-  <ul class="toc toc-2">
-    <li class="toc-chapter"><a href="./15-impl-virtio.html">16 virtioの実装</a></li>
-    <li class="toc-chapter"><a href="./16-run-xv6.html">17 xv6の実行</a></li>
+    <li class="toc-chapter"><a href="./05a-pipeline.html">7 CPUのパイプライン処理化</a></li>
   </ul>
 </li>
     <li class="toc-chapter"><a href="./99-postface.html">あとがき / おわりに</a></li>
@@ -64,6 +42,8 @@
         </header>
         <main class="page-main">
 <h1 class="boldlines center twolines"><a id="h1"></a><span class="secno">第1章</span> <br/>環境構築</h1>
+<p>TODO</p>
+<p>WSLかMac, Linuxを前提とする</p>
 
 <h2 class="numbox"><a id="h1-1"></a><span class="secno">1.1</span> Veryl</h2>
 <p>rustupcargovscodeの拡張</p>
@@ -81,7 +61,7 @@ $ <span class="userinput">verylup setup</span> <span class="balloon">← verylup
 <div id="veryl-version" class="cmd-code">
 <span class="caption">リスト1.2: リスト1.2: verylがインストールされているかの確認</span>
 <pre class="list">$ <span class="userinput">veryl --version</span>
-veryl 0.12.0
+veryl 0.13.0
 </pre>
 </div>
 
@@ -89,7 +69,7 @@ veryl 0.12.0
 <p>インストールするだけ</p>
 
 <h2 class="numbox"><a id="h1-3"></a><span class="secno">1.3</span> riscv-gnu-toolchain</h2>
-<p>clone</p>
+<p>インストールするだけ</p>
 
         </main>
         <nav class="page-navi">

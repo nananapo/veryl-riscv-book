@@ -28,29 +28,7 @@
     <li class="toc-chapter"><a href="./04a-zicsr.html">4 Zicsr拡張の実装</a></li>
     <li class="toc-chapter"><a href="./04b-riscvtests.html">5 riscv-testsによるテスト</a></li>
     <li class="toc-chapter"><a href="./05-impl-rv64i.html">6 RV64Iの実装</a></li>
-  </ul>
-</li>
-<li class="toc-part">第II部 基本的な拡張とトラップの実装
-  <ul class="toc toc-2">
-    <li class="toc-chapter"><a href="./06-impl-M.html">7 M拡張の実装</a></li>
-    <li class="toc-chapter"><a href="./07-impl-exception.html">8 例外の実装</a></li>
-    <li class="toc-chapter"><a href="./08-impl-A.html">9 A拡張の実装</a></li>
-    <li class="toc-chapter"><a href="./09-impl-C.html">10 C拡張の実装</a></li>
-    <li class="toc-chapter"><a href="./10-impl-MMIO.html">11 MMIOの実装</a></li>
-    <li class="toc-chapter"><a href="./11-impl-interrupt.html">12 割り込みの実装</a></li>
-  </ul>
-</li>
-<li class="toc-part">第III部 privilege modeの実装
-  <ul class="toc toc-2">
-    <li class="toc-chapter"><a href="./12-impl-mmode-csr.html">13 M-modeの実装</a></li>
-    <li class="toc-chapter"><a href="./13-impl-smode-csr.html">14 S-modeの実装</a></li>
-    <li class="toc-chapter"><a href="./14-impl-paging.html">15 ページングの実装</a></li>
-  </ul>
-</li>
-<li class="toc-part">第IV部 OSを動かす
-  <ul class="toc toc-2">
-    <li class="toc-chapter"><a href="./15-impl-virtio.html">16 virtioの実装</a></li>
-    <li class="toc-chapter"><a href="./16-run-xv6.html">17 xv6の実行</a></li>
+    <li class="toc-chapter"><a href="./05a-pipeline.html">7 CPUのパイプライン処理化</a></li>
   </ul>
 </li>
     <li class="toc-chapter"><a href="./99-postface.html">あとがき / おわりに</a></li>
@@ -62,37 +40,41 @@
         <main class="page-main">
 <h1 class="none center"><a id="h"></a><br/>まえがき / はじめに</h1>
 <p>本書を手に取っていただき、ありがとうございます。</p>
-<p>本書は、OSを実行できる程度の機能を持ったRISC-VのCPUを、新しめのハードウェア記述言語であるVerylで記述する方法について解説した本です。本書は無料で、pdf版は<a href="https://github.com/nananapo/veryl-riscv-book" class="link">https://github.com/nananapo/veryl-riscv-book</a>で入手することができます。</p>
+<p>本書は、OSを実行できる程度の機能を持ったRISC-VのCPUを、新しめのハードウェア記述言語である<b>Veryl</b>で記述する方法について解説した本です。</p>
 
-<h4 id="id_00-preface_nonum1" notoc="true">本書の対象読者</h4>
+<h4 id="id_00-preface_nonum1" notoc="true">注意</h4>
+<p>本書は「Verylで作るRISC-V CPU 基本編」の基本編部分のみを発行したものです。本書のpdf, web版は無料で配布されており、<a href="https://github.com/nananapo/veryl-riscv-book" class="link">https://github.com/nananapo/veryl-riscv-book</a>でダウンロード, 閲覧することができます。</p>
+<p>続きが気になったり、誤植を見つけた場合は、GitHubをご確認ください。</p>
+
+<h4 id="id_00-preface_nonum2" notoc="true">本書の対象読者</h4>
 <p>本書はコンピュータアーキテクチャに興味があり、何らかのプログラミング言語を習得している人を対象としています。</p>
 
-<h4 id="id_00-preface_nonum2" notoc="true">前提とする知識</h4>
-<p>未定</p>
+<h4 id="id_00-preface_nonum3" notoc="true">前提とする知識</h4>
+<p>次の要件を満たしていると良いです。</p>
+<ul>
+<li>C, C++, C#, JavaScript, Python, Ruby Rustのような一般的なプログラミング言語をある程度使いこなすことができる
+</li>
+<li>論理演算を知っている
+</li>
+</ul>
 
-<h4 id="id_00-preface_nonum3" notoc="true">問い合わせ先</h4>
+<h4 id="id_00-preface_nonum4" notoc="true">問い合わせ先</h4>
 <p>本書に関する質問やお問い合わせは、以下のリポジトリにissueを立てて行ってください。</p>
 <ul>
 <li>URL: <a href="https://github.com/nananapo/veryl-riscv-book/issues" class="link">https://github.com/nananapo/veryl-riscv-book/issues</a>
 </li>
 </ul>
 
-<h4 id="id_00-preface_nonum4" notoc="true">謝辞</h4>
+<h4 id="id_00-preface_nonum5" notoc="true">謝辞</h4>
 <p>本書はXXXX氏とXXXX氏にレビューしていただきました。この場を借りて感謝します。ありがとうございました。</p>
 <p></p>
 <hr />
 <p></p>
 
-<h2 id="id_00-preface_nonum5" notoc="true">凡例</h2>
+<h2 id="id_00-preface_nonum6" notoc="true">凡例</h2>
 <p>本書では、プログラムコードを次のように表示します。太字は強調を表します。</p>
 <div class="caption-code">
 <pre class="emlist">print(&quot;Hello, <b>world</b>!\n&quot;);       <span class="balloon">← 太字は強調</span>
-</pre>
-</div>
-<p>プログラムコードの差分を表示する場合は、追加されたコードを太字で、削除されたコードを取り消し線で表します。</p>
-<div class="caption-code">
-<pre class="emlist"><del>print(&quot;Hello, <b>world</b>!\n&quot;);</del>       <span class="balloon">← 取り消し線は削除したコード</span>
-<b>print(&quot;Hello, &quot;+name+&quot;!\n&quot;);</b>    <span class="balloon">← 太字は追加したコード</span>
 </pre>
 </div>
 <p>長い行が右端で折り返されると、折り返されたことを表す小さな記号がつきます。</p>

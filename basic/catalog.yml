@@ -18,20 +18,21 @@ CHAPS:
     - 04a-zicsr.re
     - 04b-riscvtests.re
     - 05-impl-rv64i.re
-  - 基本的な拡張とトラップの実装:
-    - 06-impl-M.re
-    - 07-impl-exception.re
-    - 08-impl-A.re
-    - 09-impl-C.re
-    - 10-impl-MMIO.re
-    - 11-impl-interrupt.re
-  - privilege modeの実装:
-    - 12-impl-mmode-csr.re
-    - 13-impl-smode-csr.re
-    - 14-impl-paging.re
-  - OSを動かす:
-    - 15-impl-virtio.re
-    - 16-run-xv6.re
+    - 05a-pipeline.re
+  # - 基本的な拡張とトラップの実装:
+  #   - 06-impl-M.re
+  #   - 07-impl-exception.re
+  #   - 08-impl-A.re
+  #   - 09-impl-C.re
+  #   - 10-impl-MMIO.re
+  #   - 11-impl-interrupt.re
+  # - privilege modeの実装:
+  #   - 12-impl-mmode-csr.re
+  #   - 13-impl-smode-csr.re
+  #   - 14-impl-paging.re
+  # - OSを動かす:
+  #   - 15-impl-virtio.re
+  #   - 16-run-xv6.re
 ## 付録
 APPENDIX:
   # - old-04-bluecore.re
