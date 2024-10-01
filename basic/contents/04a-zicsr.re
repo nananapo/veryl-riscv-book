@@ -264,6 +264,16 @@ MXLEN=XLENとしているので、型は@<code>{UIntX}にします。
 #@end
 //}
 
+mtvecレジスタのMODEフィールドには書き込めないようにする必要があります。
+これを制御するためにmtvecレジスタの書き込みマスク用の定数を定義します。
+
+//list[][mtvecレジスタの書き込みマスクの定義 (csrunit.veryl)]{
+#@maprange(scripts/04a/create-mtvec-range/core/src/csrunit.veryl,wmask)
+    // wmasks
+    const MTVEC_WMASK: UIntX = 'hffff_fffc;
+#@end
+//}
+
 次に、書き込むべきデータ@<code>{wdata}の生成と、mtvecレジスタの読み込みをします。
 
 //list[csr.read_wdata][レジスタの読み込みと書き込みデータの作成 (csrunit.veryl)]{
@@ -344,9 +354,9 @@ CSRRS命令で読み込むとき、rs1をx0(ゼロレジスタ)にすること�
 シミュレータを実行し、結果を確かめます。
 
 //terminal[mtvec.rw.test][mtvecの読み込み/書き込みテストの実行]{
-$ $<userinput>{make build}
-$ $<userinput>{make sim}
-$ $<userinput>{./obj_dir/sim test/sample_csr.hex 5}
+$ @<userinput>{make build}
+$ @<userinput>{make sim}
+$ @<userinput>{./obj_dir/sim test/sample_csr.hex 5}
 #                    4
 00000000 : 305bd0f3 @<balloon>{mtvecに'b10111を書き込む}
   itype     : 000010
@@ -701,9 +711,9 @@ CSRRW命令でmtvecレジスタに値を書き込み、ecall命令で例外を�
 シミュレータを実行し、結果を確かめます。
 
 //terminal[ecall.test][ECALL命令のテストの実行]{
-$ $<userinput>{make build}
-$ $<userinput>{make sim}
-$ $<userinput>{./obj_dir/sim test/sample_ecall.hex 10}
+$ @<userinput>{make build}
+$ @<userinput>{make sim}
+$ @<userinput>{./obj_dir/sim test/sample_ecall.hex 10}
 #                    4
 00000000 : 30585073 @<balloon>{CSRRWIでmtvecに書き込み}
   rs1[16]   : 00000000 @<balloon>{0x10(=16)をmtvecに書き込む}
@@ -797,9 +807,9 @@ mepcに値を設定してからMRET命令を実行し、mepcにジャンプす�
 //}
 
 //terminal[mret.test][MRET命令のテストの実行]{
-$ $<userinput>{make build}
-$ $<userinput>{make sim}
-$ $<userinput>{./obj_dir/sim test/sample_mret.hex 9}
+$ @<userinput>{make build}
+$ @<userinput>{make sim}
+$ @<userinput>{./obj_dir/sim test/sample_mret.hex 9}
 #                    4
 00000000 : 34185073 @<balloon>{CSRRWIでmepcに書き込み}
   rs1[16]   : 00000000 @<balloon>{0x10(=16)をmepcに書き込む}

@@ -243,6 +243,13 @@ module csrunit (
     var mtvec: UIntX;
 </pre>
 </div>
+<p>mtvecレジスタのMODEフィールドには書き込めないようにする必要があります。これを制御するためにmtvecレジスタの書き込みマスク用の定数を定義します。</p>
+<div class="caption-code">
+<span class="caption">mtvecレジスタの書き込みマスクの定義 (csrunit.veryl)</span>
+<pre class="list">    // wmasks
+    const MTVEC_WMASK: UIntX = 'hffff_fffc;
+</pre>
+</div>
 <p>次に、書き込むべきデータ<code class="inline-code">wdata</code>の生成と、mtvecレジスタの読み込みをします。</p>
 <div id="csr.read_wdata" class="caption-code">
 <span class="caption">リスト4.10: リスト4.10: レジスタの読み込みと書き込みデータの作成 (csrunit.veryl)</span>
@@ -304,9 +311,9 @@ module csrunit (
 <p>シミュレータを実行し、結果を確かめます。</p>
 <div id="mtvec.rw.test" class="cmd-code">
 <span class="caption">リスト4.13: リスト4.13: mtvecの読み込み/書き込みテストの実行</span>
-<pre class="list language-test">$ $&lt;userinput&gt;{make build}
-$ $&lt;userinput&gt;{make sim}
-$ $&lt;userinput&gt;{./obj_dir/sim test/sample_csr.hex 5}
+<pre class="list language-test">$ <span class="userinput">make build</span>
+$ <span class="userinput">make sim</span>
+$ <span class="userinput">./obj_dir/sim test/sample_csr.hex 5</span>
 #                    4
 00000000 : 305bd0f3 <span class="balloon">← mtvecに'b10111を書き込む</span>
   itype     : 000010
@@ -586,9 +593,9 @@ $ $&lt;userinput&gt;{./obj_dir/sim test/sample_csr.hex 5}
 <p>シミュレータを実行し、結果を確かめます。</p>
 <div id="ecall.test" class="cmd-code">
 <span class="caption">リスト4.30: リスト4.30: ECALL命令のテストの実行</span>
-<pre class="list language-test">$ $&lt;userinput&gt;{make build}
-$ $&lt;userinput&gt;{make sim}
-$ $&lt;userinput&gt;{./obj_dir/sim test/sample_ecall.hex 10}
+<pre class="list language-test">$ <span class="userinput">make build</span>
+$ <span class="userinput">make sim</span>
+$ <span class="userinput">./obj_dir/sim test/sample_ecall.hex 10</span>
 #                    4
 00000000 : 30585073 <span class="balloon">← CSRRWIでmtvecに書き込み</span>
   rs1[16]   : 00000000 <span class="balloon">← 0x10(=16)をmtvecに書き込む</span>
@@ -659,9 +666,9 @@ $ $&lt;userinput&gt;{./obj_dir/sim test/sample_ecall.hex 10}
 </div>
 <div id="mret.test" class="cmd-code">
 <span class="caption">リスト4.34: リスト4.34: MRET命令のテストの実行</span>
-<pre class="list language-test">$ $&lt;userinput&gt;{make build}
-$ $&lt;userinput&gt;{make sim}
-$ $&lt;userinput&gt;{./obj_dir/sim test/sample_mret.hex 9}
+<pre class="list language-test">$ <span class="userinput">make build</span>
+$ <span class="userinput">make sim</span>
+$ <span class="userinput">./obj_dir/sim test/sample_mret.hex 9</span>
 #                    4
 00000000 : 34185073 <span class="balloon">← CSRRWIでmepcに書き込み</span>
   rs1[16]   : 00000000 <span class="balloon">← 0x10(=16)をmepcに書き込む</span>
