@@ -6,7 +6,7 @@
 
 ====[notoc] 注意
 
-本書は「Verylで作るRISC-V CPU 基本編」の基本編部分のみを発行したものです。
+本書は「Verylで作るRISC-V CPU 基本編」の第I部のみを発行したものです。
 本書のpdf, web版は無料で配布されており、
 @<href>{https://github.com/nananapo/veryl-riscv-book}でダウンロード, 閲覧することができます。
 

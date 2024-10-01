@@ -11,7 +11,7 @@ PREDEF:
 
 ## 本文
 CHAPS:
-  - 基本編:
+  - RV32I/RV64Iの実装:
     - 02-setup.re
     - 03-veryl.re
     - 04-impl-rv32i.re
