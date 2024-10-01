@@ -200,7 +200,10 @@ module csrunit (
 <p>次に、csrunitの結果をレジスタにライトバックするようにします。具体的には、<code class="inline-code">InstCtrl.is_csr</code>が<code class="inline-code">1</code>のとき、<code class="inline-code">wb_data</code>が<code class="inline-code">csru_rdata</code>になるようにします。</p>
 <div id="core.veryl.csru.wb" class="caption-code">
 <span class="caption">リスト4.6: リスト4.6: CSR命令の結果がライトバックされるようにする (core.veryl)</span>
-<pre class="list language-wb">    let wb_data: UIntX    = if inst_ctrl.is_jump {
+<pre class="list language-wb">    let rd_addr: logic&lt;5&gt; = inst_bits[11:7];
+    let wb_data: UIntX    = if inst_ctrl.is_lui {
+        inst_imm
+    } else if inst_ctrl.is_jump {
         inst_pc + 4
     } else if inst_ctrl.is_load {
         memu_rdata
@@ -312,7 +315,7 @@ module csrunit (
 
 <h3 class="none"><a id="h4-3-3"></a><span class="secno">4.3.3</span> CSRのテスト</h3>
 <p>mtvecレジスタの書き込み、読み込みができることをテストします。</p>
-<p><code class="inline-code">test/sample_csr.hex</code>を作成し、次のように記述します。</p>
+<p>プロジェクトのフォルダに<code class="inline-code">test</code>ディレクトリを作成してください。<code class="inline-code">test/sample_csr.hex</code>を作成し、次のように記述します。</p>
 <div id="sample_csr.hex" class="caption-code">
 <span class="caption">リスト4.12: リスト4.12: sample_csr.hex</span>
 <pre class="list language-hex">305bd0f3 // 0: csrrwi x1, mtvec, 0b10111

@@ -174,7 +174,10 @@ rs1ポートには、即値を利用する命令(CSRR(W|S|C)I)の場合はrs1_ad
 
 //list[core.veryl.csru.wb][CSR命令の結果がライトバックされるようにする (core.veryl)]{
 #@maprange(scripts/04a/create-csrunit-range/core/src/core.veryl,wb)
-    let wb_data: UIntX    = if inst_ctrl.is_jump {
+    let rd_addr: logic<5> = inst_bits[11:7];
+    let wb_data: UIntX    = if inst_ctrl.is_lui {
+        inst_imm
+    } else if inst_ctrl.is_jump {
         inst_pc + 4
     } else if inst_ctrl.is_load {
         memu_rdata
@@ -325,6 +328,7 @@ mtvecにwdataを書き込むとき、MODEが常に0になるようにしてい�
 
 mtvecレジスタの書き込み、読み込みができることをテストします。
 
+プロジェクトのフォルダに@<code>{test}ディレクトリを作成してください。
 @<code>{test/sample_csr.hex}を作成し、次のように記述します。
 
 //list[sample_csr.hex][sample_csr.hex]{

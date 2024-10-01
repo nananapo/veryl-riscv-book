@@ -1543,10 +1543,18 @@ CPUはレジスタから値を読み込み、これを計算して、レジス�
 デコード時に、ライトバックする命令かどうかを@<code>{InstCtrl.rwb_en}に格納しています。
 (inst_decoderモジュールを確認してください)
 
+今のところ、
+LUI命令のときは即値をそのまま、
+それ以外の命令のときはALUの結果をライトバックするようにします。
+
 //list[core.veryl.wb][ライトバック処理の実装 (core.veryl)]{
 #@maprange(scripts/04/wb-range/core/src/core.veryl,wb)
     let rd_addr: logic<5> = inst_bits[11:7];
-    let wb_data: UIntX    = alu_result;
+    let wb_data: UIntX    = if inst_ctrl.is_lui {
+        inst_imm
+    } else {
+        alu_result
+    };
 
     always_ff {
         if_reset {
@@ -1569,9 +1577,9 @@ CPUはレジスタから値を読み込み、これを計算して、レジス�
 
 //list[core.veryl.wb.test][結果の表示 (core.veryl)]{
 #@maprange(scripts/04/wb-range/core/src/core.veryl,debug)
-            if inst_ctrl.rwb_en {
-                $display("  reg[%d] <= %h", rd_addr, wb_data);
-            }
+    if inst_ctrl.rwb_en {
+        $display("  reg[%d] <= %h", rd_addr, wb_data);
+    }
 #@end
 //}
 
@@ -1999,7 +2007,9 @@ LW命令で読み込んだデータがレジスタにライトバックする処
 //list[membus.wb][memunitモジュールの結果をライトバックする (core.veryl)]{
 #@maprange(scripts/04/lwsw-range/core/src/core.veryl,rd)
     let rd_addr: logic<5> = inst_bits[11:7];
-    let wb_data: UIntX    = if inst_ctrl.is_load {
+    let wb_data: UIntX    = if inst_ctrl.is_lui {
+        inst_imm
+    } else if inst_ctrl.is_load {
         memu_rdata
     } else {
         alu_result
@@ -2495,7 +2505,9 @@ inst_decoderモジュールは、JAL命令、JALR命令を次のようにデコ�
 
 //list[jump.wb][pc + 4を書き込む (core.veryl)]{
 #@maprange(scripts/04/jump-range/core/src/core.veryl,wb)
-    let wb_data: UIntX    = if inst_ctrl.is_jump {
+    let wb_data: UIntX    = if inst_ctrl.is_lui {
+        inst_imm
+    } else if inst_ctrl.is_jump {
         inst_pc + 4
     } else if inst_ctrl.is_load {
         memu_rdata

@@ -1380,10 +1380,15 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 6</span>
 
 <h3 class="none"><a id="h3-10-1"></a><span class="secno">3.10.1</span> ライトバックの実装</h3>
 <p>書き込む対象のレジスタは、命令の<code class="inline-code">rd</code>フィールドによって番号で指定します。デコード時に、ライトバックする命令かどうかを<code class="inline-code">InstCtrl.rwb_en</code>に格納しています。(inst_decoderモジュールを確認してください)</p>
+<p>今のところ、LUI命令のときは即値をそのまま、それ以外の命令のときはALUの結果をライトバックするようにします。</p>
 <div id="core.veryl.wb" class="caption-code">
 <span class="caption">リスト3.40: リスト3.40: ライトバック処理の実装 (core.veryl)</span>
 <pre class="list language-wb">    let rd_addr: logic&lt;5&gt; = inst_bits[11:7];
-    let wb_data: UIntX    = alu_result;
+    let wb_data: UIntX    = if inst_ctrl.is_lui {
+        inst_imm
+    } else {
+        alu_result
+    };
 
     always_ff {
         if_reset {
@@ -1403,9 +1408,9 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 6</span>
 <p><code class="inline-code">always_ff</code>ブロックに、ライトバック処理の概要を表示するプログラムを記述します。処理している命令がライトバックする命令のときにのみ、<code class="inline-code">$display</code>システムコールを呼び出します。</p>
 <div id="core.veryl.wb.test" class="caption-code">
 <span class="caption">リスト3.41: リスト3.41: 結果の表示 (core.veryl)</span>
-<pre class="list language-test">            if inst_ctrl.rwb_en {
-                $display(&quot;  reg[%d] &lt;= %h&quot;, rd_addr, wb_data);
-            }
+<pre class="list language-test">    if inst_ctrl.rwb_en {
+        $display(&quot;  reg[%d] &lt;= %h&quot;, rd_addr, wb_data);
+    }
 </pre>
 </div>
 <p>シミュレータを実行し、結果を確かめます。</p>
@@ -1772,7 +1777,9 @@ module memunit (
 <div id="membus.wb" class="caption-code">
 <span class="caption">リスト3.53: リスト3.53: memunitモジュールの結果をライトバックする (core.veryl)</span>
 <pre class="list language-wb">    let rd_addr: logic&lt;5&gt; = inst_bits[11:7];
-    let wb_data: UIntX    = if inst_ctrl.is_load {
+    let wb_data: UIntX    = if inst_ctrl.is_lui {
+        inst_imm
+    } else if inst_ctrl.is_load {
         memu_rdata
     } else {
         alu_result
@@ -2191,7 +2198,9 @@ deadbeef // 0x0
 <p>それでは、無条件ジャンプを実装します。まず、ジャンプ命令を実行するとき、ライトバックする値を<code class="inline-code">inst_pc + 4</code>にします。</p>
 <div id="jump.wb" class="caption-code">
 <span class="caption">リスト3.73: リスト3.73: pc + 4を書き込む (core.veryl)</span>
-<pre class="list language-wb">    let wb_data: UIntX    = if inst_ctrl.is_jump {
+<pre class="list language-wb">    let wb_data: UIntX    = if inst_ctrl.is_lui {
+        inst_imm
+    } else if inst_ctrl.is_jump {
         inst_pc + 4
     } else if inst_ctrl.is_load {
         memu_rdata
