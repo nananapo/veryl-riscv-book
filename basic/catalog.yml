@@ -19,6 +19,7 @@ CHAPS:
     - 04b-riscvtests.re
     - 05-impl-rv64i.re
     - 05a-pipeline.re
+    - 05b-synth.re
   # - 基本的な拡張とトラップの実装:
   #   - 06-impl-M.re
   #   - 07-impl-exception.re

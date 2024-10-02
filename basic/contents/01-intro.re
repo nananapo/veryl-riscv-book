@@ -73,8 +73,8 @@ Verylの詳細や記法については@<chapref>{03-veryl}で解説します。
 本書(基本編の第I部)では、上の1から4までを実装, 解説します。
 
 プログラムのテストはシミュレーションと実機(FPGA)で行います。
-本書で使用しているFPGAはTangMega 138Kというボード(@<img>{tangmega138k})です。
-これはAliExpressで3万円程度で購入することができます。
+本書では、TangMega 138K(@<img>{tangmega138k})とPYNQ-Z1(@<img>{pynq_z1})というFPGAを利用します。
 ただし、実機がなくても実装を進めることができるので所有していなくても構いません。
 
-//image[tangmega138k][使用するFPGA(TangMega138K)][width=50%]
+//image[tangmega138k][TangMega138K][width=50%]
+//image[pynq_z1][PYNQ-Z1][width=50%]

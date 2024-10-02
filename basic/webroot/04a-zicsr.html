@@ -34,6 +34,7 @@
     <li class="toc-chapter"><a href="./04b-riscvtests.html">5 riscv-testsによるテスト</a></li>
     <li class="toc-chapter"><a href="./05-impl-rv64i.html">6 RV64Iの実装</a></li>
     <li class="toc-chapter"><a href="./05a-pipeline.html">7 CPUのパイプライン処理化</a></li>
+    <li class="toc-chapter"><a href="./05b-synth.html">8 CPUを合成する</a></li>
   </ul>
 </li>
     <li class="toc-chapter"><a href="./99-postface.html">あとがき / おわりに</a></li>
@@ -219,7 +220,7 @@ module csrunit (
 <p>mtvecは、MXLENビットのWARLなレジスタです。mtvecのアドレスは<code class="inline-code">12'h305</code>です。</p>
 <p>MXLENはmisaレジスタに定義されていますが、今のところはXLENと等しいという認識でOKです。WARLはWrite Any Values, Reads Legal Valuesの略です。その名の通り、好きな値を書き込めるが、読み出すときには合法な値になるという認識でOKです。</p>
 <p>mtvecは、トラップ(Trap)が発生したときのジャンプ先(Trap-Vector)の基準となるアドレスを格納するレジスタです。トラップとは、例外(Exception)、または割り込み(Interrupt)により、CPUの制御を変更することを言います<sup><a id="fnb-trap.define" href="#fn-trap.define" class="noteref" epub:type="noteref">*2</a></sup>。トラップが発生する時、CPUはCSRを変更した後、mtvecに格納されたアドレスにジャンプします。</p>
-<p>例外は、命令の実行によって引き起こされる異常な状態(unusual condition)を指します。例えば、不正な命令を実行しようとしたときにはIllegal Instruction例外が発生します。CPUは、例外が発生したときのジャンプ先(対処方法)を決めておくことで、CPUが異常な状態に陥ったままにならないようにしています。</p>
+<p>例外とは、命令の実行によって引き起こされる異常な状態(unusual condition)のことです。例えば、不正な命令を実行しようとしたときにはIllegal Instruction例外が発生します。CPUは、例外が発生したときのジャンプ先(対処方法)を決めておくことで、CPUが異常な状態に陥ったままにならないようにしています。</p>
 <p>mtvecはBASEとMODEの2つのフィールドで構成されています。MODEはジャンプ先の決め方を指定するためのフィールドですが、簡単のために常に0(Directモード)になるようにします。Directモードのとき、トラップ時のジャンプ先は<code class="inline-code">BASE &lt;&lt; 2</code>になります。</p>
 <div class="footnote-list">
 <div class="footnote" id="fn-trap.define" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*2] </span>トラップや例外, 割り込みはVolume Iの1.6Exceptions, Traps, and Interruptsに定義されています</p></div>
