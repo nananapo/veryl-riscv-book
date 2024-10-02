@@ -168,6 +168,8 @@ RV32Iにおいて命令の幅は32ビットです。
  * クロックに同期してメモリアクセスの要求を受け取る
  * 要求を受け取った次のクロックで結果を返す
 
+TODO めもりまわりを新しいコードに合わせて書き換え
+
 === メモリのインターフェースの定義
 
 このメモリモジュールには、クロックとリセット信号の他に7個のポートを定義する必要があります(@<table>{memmodule-if})。
@@ -179,14 +181,17 @@ RV32Iにおいて命令の幅は32ビットです。
 #@mapfile(scripts/04/memif/core/src/membus_if.veryl)
 import eei::*;
 
-interface membus_if {
-    var valid : logic ;
-    var ready : logic ;
-    var addr  : Addr  ;
-    var wen   : logic ;
-    var wdata : UInt32;
-    var rvalid: logic ;
-    var rdata : UInt32;
+interface membus_if #(
+    param DATA_WIDTH: u32 = 0,
+    param ADDR_WIDTH: u32 = 0,
+) {
+    var valid : logic            ;
+    var ready : logic            ;
+    var addr  : logic<ADDR_WIDTH>;
+    var wen   : logic            ;
+    var wdata : logic<DATA_WIDTH>;
+    var rvalid: logic            ;
+    var rdata : logic<DATA_WIDTH>;
 
     modport master {
         valid : output,
@@ -237,22 +242,17 @@ interfaceを利用することで、レジスタやワイヤの定義が不要�
 import eei::*;
 
 module memory #(
-    param MEMORY_WIDTH: u32 = 20, // メモリのサイズ
+    param DATA_WIDTH: u32 = 0, // データの幅
+    param ADDR_WIDTH: u32 = 0, // メモリのアドレスの幅
 ) (
     clk      : input   clock           ,
     rst      : input   reset           ,
     membus   : modport membus_if::slave,
     FILE_PATH: input   string          , // メモリの初期値が格納されたファイルのパス
 ) {
+    type DataType = logic<DATA_WIDTH>;
 
-    var mem: UInt32 [2 ** MEMORY_WIDTH];
-
-    // Addrをmemのインデックスに変換する関数
-    function addr_to_memaddr (
-        addr: input Addr               ,
-    ) -> logic<MEMORY_WIDTH> {
-        return addr[MEMORY_WIDTH - 1 + 2:2];
-    }
+    var mem: DataType [2 ** ADDR_WIDTH];
 
     initial {
         // memをFILE_PATHに格納されているデータで初期化
@@ -267,9 +267,9 @@ module memory #(
 
     always_ff {
         membus.rvalid = membus.valid;
-        membus.rdata  = mem[addr_to_memaddr(membus.addr)];
+        membus.rdata  = mem[membus.addr[ADDR_WIDTH - 1:0]];
         if membus.valid && membus.wen {
-            mem[addr_to_memaddr(membus.addr)] = membus.wdata;
+            mem[membus.addr[ADDR_WIDTH - 1:0]] = membus.wdata;
         }
     }
 }
@@ -278,9 +278,13 @@ module memory #(
 
 memoryモジュールには次のパラメータが定義されています。
 
- : MEMORY_WIDTH
+ : DATA_WIDTH
+    メモリのデータの単位の幅を指定するためのパラメータです。
+    この単位ビットでデータを読み書きします。
+
+ : MEMORY_SIZE
 	メモリのサイズを指定するためのパラメータです。
-	メモリのサイズは32ビット * (2 ** MEMORY_WIDTH)になります。
+	メモリのサイズはDATA_WIDTH * (2 ** MEMORY_SIZE)ビットになります。
 
  : FILE_PATH
     メモリの初期値が格納されたファイルのパスです。
@@ -327,9 +331,12 @@ module top (
     rst          : input reset ,
     MEM_FILE_PATH: input string,
 ) {
-    inst membus: membus_if;
+    inst membus: membus_if #(DATA_WIDTH: 32, ADDR_WIDTH: XLEN,);
 
-    inst mem: memory (
+    inst mem: memory #(
+        DATA_WIDTH: 32,
+        ADDR_WIDTH: 20,
+    ) (
         clk                     ,
         rst                     ,
         membus                  ,
@@ -1307,28 +1314,32 @@ module alu (
     let add: UIntX = op1 + op2;
     let sub: UIntX = op1 - op2;
 
+    let sll: UIntX = op1 << op2[4:0];
     let srl: UIntX = op1 >> op2[4:0];
     let sra: SIntX = $signed(op1) >>> op2[4:0];
+
+    let slt : UIntX = {1'b0 repeat XLEN - 1, $signed(op1) <: $signed(op2)};
+    let sltu: UIntX = {1'b0 repeat XLEN - 1, op1 <: op2};
 
     always_comb {
         if ctrl.is_aluop {
             case ctrl.funct3 {
                 3'b000: result = if ctrl.itype == InstType::I | ctrl.funct7 == 0 {
-                            add // ADD, ADDI
+                            add
                         } else {
-                            sub // SUB
+                            sub
                         };
-                3'b001: result = op1 << op2[4:0]; // SLL, SLLI
-                3'b010: result = {1'b0 repeat XLEN - 1, $signed(op1) <: $signed(op2)}; // SLT, SLTI
-                3'b011: result = {1'b0 repeat XLEN - 1, op1 <: op2}; // SLTU, SLTUI
-                3'b100: result = op1 ^ op2; // XOR, XORI
+                3'b001: result = sll;
+                3'b010: result = slt;
+                3'b011: result = sltu;
+                3'b100: result = op1 ^ op2;
                 3'b101: result = if ctrl.funct7 == 0 {
-                            srl // SRL, SRLI
+                            srl
                         } else {
-                            sra // SRA, SRAI
+                            sra
                         };
-                3'b110 : result = op1 | op2; // OR, ORI
-                3'b111 : result = op1 & op2; // AND, ANDI
+                3'b110 : result = op1 | op2;
+                3'b111 : result = op1 & op2;
                 default: result = 'x;
             }
         } else {
@@ -1903,9 +1914,9 @@ module core (
 
 //list[top.arb][メモリへのアクセス要求の調停 (top.veryl)]{
 #@maprange(scripts/04/lwsw-range/core/src/top.veryl,arb)
-    inst membus  : membus_if;
-    inst i_membus: membus_if; // 命令フェッチ用
-    inst d_membus: membus_if; // ロードストア命令用
+    inst membus  : membus_if #(DATA_WIDTH: 32, ADDR_WIDTH: XLEN,);
+    inst i_membus: membus_if #(DATA_WIDTH: 32, ADDR_WIDTH: XLEN,); // 命令フェッチ用
+    inst d_membus: membus_if #(DATA_WIDTH: 32, ADDR_WIDTH: XLEN,); // ロードストア命令用
 
     var memarb_last_i: logic;
 
@@ -2232,7 +2243,7 @@ memoryモジュールは、32ビット単位の読み書きしかサポートし
 
 //list[wmask.define][wmaskの定義 (membus_if.veryl)]{
 #@maprange(scripts/04/lbhsbh-range/core/src/membus_if.veryl,wmask)
-    var wmask : logic <4>;
+    var wmask : logic<DATA_WIDTH / 8>;
 #@end
 //}
 
@@ -2257,26 +2268,22 @@ memoryモジュールは、32ビット単位の読み書きしかサポートし
 import eei::*;
 
 module memory #(
-    param MEMORY_WIDTH: u32 = 20, // メモリのサイズ
+    param DATA_WIDTH: u32 = 0, // データの幅
+    param ADDR_WIDTH: u32 = 0, // メモリのアドレスの幅
 ) (
     clk      : input   clock           ,
     rst      : input   reset           ,
     membus   : modport membus_if::slave,
     FILE_PATH: input   string          , // メモリの初期値が格納されたファイルのパス
 ) {
+    type DataType = logic<DATA_WIDTH>    ;
+    type MaskType = logic<DATA_WIDTH / 8>;
 
-    var mem: UInt32 [2 ** MEMORY_WIDTH];
+    var mem: DataType [2 ** ADDR_WIDTH];
 
-    // Addrをmemのインデックスに変換する関数
-    function addr_to_memaddr (
-        addr: input Addr               ,
-    ) -> logic<MEMORY_WIDTH> {
-        return addr[MEMORY_WIDTH - 1 + 2:2];
-    }
-
-    // 書き込みマスクをUInt32に展開した値
-    var wmask_expand: UInt32;
-    for i in 0..32 :wm_expand_block {
+    // 書き込みマスクをDATA_WIDTHに展開した値
+    var wmask_expand: DataType;
+    for i in 0..DATA_WIDTH :wm_expand_block {
         assign wmask_expand[i] = wmask_saved[i / 8];
     }
 
@@ -2294,10 +2301,10 @@ module memory #(
     }
     var state: State;
 
-    var addr_saved : Addr     ;
-    var wdata_saved: UInt32   ;
-    var wmask_saved: logic <4>;
-    var rdata_saved: UInt32   ;
+    var addr_saved : Addr    ;
+    var wdata_saved: DataType;
+    var wmask_saved: MaskType;
+    var rdata_saved: DataType;
 
     always_comb {
         membus.ready = state == State::Ready;
@@ -2305,7 +2312,7 @@ module memory #(
 
     always_ff {
         if state == State::WriteValid {
-            mem[addr_to_memaddr(addr_saved)] = wdata_saved & wmask_expand | rdata_saved & ~wmask_expand;
+            mem[addr_saved[ADDR_WIDTH - 1:0]] = wdata_saved & wmask_expand | rdata_saved & ~wmask_expand;
         }
     }
 
@@ -2322,11 +2329,11 @@ module memory #(
             case state {
                 State::Ready: {
                                   membus.rvalid = membus.valid & !membus.wen;
-                                  membus.rdata  = mem[addr_to_memaddr(membus.addr)];
+                                  membus.rdata  = mem[membus.addr[ADDR_WIDTH - 1:0]];
                                   addr_saved    = membus.addr;
                                   wdata_saved   = membus.wdata;
                                   wmask_saved   = membus.wmask;
-                                  rdata_saved   = mem[addr_to_memaddr(membus.addr)];
+                                  rdata_saved   = mem[membus.addr[ADDR_WIDTH - 1:0]];
                                   if membus.valid && membus.wen {
                                       state = State::WriteValid;
                                   }

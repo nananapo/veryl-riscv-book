@@ -183,6 +183,7 @@ $ <span class="userinput">mkdir src</span>
 <li>要求を受け取った次のクロックで結果を返す
 </li>
 </ul>
+<p>TODO めもりまわりを新しいコードに合わせて書き換え</p>
 
 <h3 class="none"><a id="h3-4-1"></a><span class="secno">3.4.1</span> メモリのインターフェースの定義</h3>
 <p>このメモリモジュールには、クロックとリセット信号の他に7個のポートを定義する必要があります(<span class="tableref"><a href="./04-impl-rv32i.html#memmodule-if">表3.1</a></span>)。これを一つ一つ定義、接続するのは面倒なため、次のようなinterfaceを定義します。</p>
@@ -191,14 +192,17 @@ $ <span class="userinput">mkdir src</span>
 <span class="caption">リスト3.4: リスト3.4: インターフェースの定義(membus_if.veryl)</span>
 <pre class="list language-veryl">import eei::*;
 
-interface membus_if {
-    var valid : logic ;
-    var ready : logic ;
-    var addr  : Addr  ;
-    var wen   : logic ;
-    var wdata : UInt32;
-    var rvalid: logic ;
-    var rdata : UInt32;
+interface membus_if #(
+    param DATA_WIDTH: u32 = 0,
+    param ADDR_WIDTH: u32 = 0,
+) {
+    var valid : logic            ;
+    var ready : logic            ;
+    var addr  : logic&lt;ADDR_WIDTH&gt;;
+    var wen   : logic            ;
+    var wdata : logic&lt;DATA_WIDTH&gt;;
+    var rvalid: logic            ;
+    var rdata : logic&lt;DATA_WIDTH&gt;;
 
     modport master {
         valid : output,
@@ -246,22 +250,17 @@ interface membus_if {
 <pre class="list language-veryl">import eei::*;
 
 module memory #(
-    param MEMORY_WIDTH: u32 = 20, // メモリのサイズ
+    param DATA_WIDTH: u32 = 0, // データの幅
+    param ADDR_WIDTH: u32 = 0, // メモリのアドレスの幅
 ) (
     clk      : input   clock           ,
     rst      : input   reset           ,
     membus   : modport membus_if::slave,
     FILE_PATH: input   string          , // メモリの初期値が格納されたファイルのパス
 ) {
+    type DataType = logic&lt;DATA_WIDTH&gt;;
 
-    var mem: UInt32 [2 ** MEMORY_WIDTH];
-
-    // Addrをmemのインデックスに変換する関数
-    function addr_to_memaddr (
-        addr: input Addr               ,
-    ) -&gt; logic&lt;MEMORY_WIDTH&gt; {
-        return addr[MEMORY_WIDTH - 1 + 2:2];
-    }
+    var mem: DataType [2 ** ADDR_WIDTH];
 
     initial {
         // memをFILE_PATHに格納されているデータで初期化
@@ -276,9 +275,9 @@ module memory #(
 
     always_ff {
         membus.rvalid = membus.valid;
-        membus.rdata  = mem[addr_to_memaddr(membus.addr)];
+        membus.rdata  = mem[membus.addr[ADDR_WIDTH - 1:0]];
         if membus.valid &amp;&amp; membus.wen {
-            mem[addr_to_memaddr(membus.addr)] = membus.wdata;
+            mem[membus.addr[ADDR_WIDTH - 1:0]] = membus.wdata;
         }
     }
 }
@@ -286,10 +285,15 @@ module memory #(
 </div>
 <p>memoryモジュールには次のパラメータが定義されています。</p>
 <dl>
-<dt>MEMORY_WIDTH</dt>
+<dt>DATA_WIDTH</dt>
+<dd>
+    メモリのデータの単位の幅を指定するためのパラメータです。
+    この単位ビットでデータを読み書きします。
+</dd>
+<dt>MEMORY_SIZE</dt>
 <dd>
 	メモリのサイズを指定するためのパラメータです。
-	メモリのサイズは32ビット * (2 ** MEMORY_WIDTH)になります。
+	メモリのサイズはDATA_WIDTH * (2 ** MEMORY_SIZE)ビットになります。
 </dd>
 <dt>FILE_PATH</dt>
 <dd>
@@ -334,9 +338,12 @@ module top (
     rst          : input reset ,
     MEM_FILE_PATH: input string,
 ) {
-    inst membus: membus_if;
+    inst membus: membus_if #(DATA_WIDTH: 32, ADDR_WIDTH: XLEN,);
 
-    inst mem: memory (
+    inst mem: memory #(
+        DATA_WIDTH: 32,
+        ADDR_WIDTH: 20,
+    ) (
         clk                     ,
         rst                     ,
         membus                  ,
@@ -1148,28 +1155,32 @@ module alu (
     let add: UIntX = op1 + op2;
     let sub: UIntX = op1 - op2;
 
+    let sll: UIntX = op1 &lt;&lt; op2[4:0];
     let srl: UIntX = op1 &gt;&gt; op2[4:0];
     let sra: SIntX = $signed(op1) &gt;&gt;&gt; op2[4:0];
+
+    let slt : UIntX = {1'b0 repeat XLEN - 1, $signed(op1) &lt;: $signed(op2)};
+    let sltu: UIntX = {1'b0 repeat XLEN - 1, op1 &lt;: op2};
 
     always_comb {
         if ctrl.is_aluop {
             case ctrl.funct3 {
                 3'b000: result = if ctrl.itype == InstType::I | ctrl.funct7 == 0 {
-                            add // ADD, ADDI
+                            add
                         } else {
-                            sub // SUB
+                            sub
                         };
-                3'b001: result = op1 &lt;&lt; op2[4:0]; // SLL, SLLI
-                3'b010: result = {1'b0 repeat XLEN - 1, $signed(op1) &lt;: $signed(op2)}; // SLT, SLTI
-                3'b011: result = {1'b0 repeat XLEN - 1, op1 &lt;: op2}; // SLTU, SLTUI
-                3'b100: result = op1 ^ op2; // XOR, XORI
+                3'b001: result = sll;
+                3'b010: result = slt;
+                3'b011: result = sltu;
+                3'b100: result = op1 ^ op2;
                 3'b101: result = if ctrl.funct7 == 0 {
-                            srl // SRL, SRLI
+                            srl
                         } else {
-                            sra // SRA, SRAI
+                            sra
                         };
-                3'b110 : result = op1 | op2; // OR, ORI
-                3'b111 : result = op1 &amp; op2; // AND, ANDI
+                3'b110 : result = op1 | op2;
+                3'b111 : result = op1 &amp; op2;
                 default: result = 'x;
             }
         } else {
@@ -1663,9 +1674,9 @@ module memunit (
 <p>次に、topモジュールでの調停を実装します。</p>
 <div id="top.arb" class="caption-code">
 <span class="caption">リスト3.49: リスト3.49: メモリへのアクセス要求の調停 (top.veryl)</span>
-<pre class="list language-arb">    inst membus  : membus_if;
-    inst i_membus: membus_if; // 命令フェッチ用
-    inst d_membus: membus_if; // ロードストア命令用
+<pre class="list language-arb">    inst membus  : membus_if #(DATA_WIDTH: 32, ADDR_WIDTH: XLEN,);
+    inst i_membus: membus_if #(DATA_WIDTH: 32, ADDR_WIDTH: XLEN,); // 命令フェッチ用
+    inst d_membus: membus_if #(DATA_WIDTH: 32, ADDR_WIDTH: XLEN,); // ロードストア命令用
 
     var memarb_last_i: logic;
 
@@ -1944,7 +1955,7 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 13</span>
 <p>まず、membus_ifインターフェースに、書き込む場所をバイト単位で示す信号<code class="inline-code">wmask</code>を追加します。<code class="inline-code">wmask</code>には、書き込む部分を1、書き込まない部分を0で指定します。このような挙動をする値を、書き込みマスクと呼びます。</p>
 <div id="wmask.define" class="caption-code">
 <span class="caption">リスト3.62: リスト3.62: wmaskの定義 (membus_if.veryl)</span>
-<pre class="list language-define">    var wmask : logic &lt;4&gt;;
+<pre class="list language-define">    var wmask : logic&lt;DATA_WIDTH / 8&gt;;
 </pre>
 </div>
 <div id="wmask.master" class="caption-code">
@@ -1964,26 +1975,22 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 13</span>
 <pre class="list language-memory">import eei::*;
 
 module memory #(
-    param MEMORY_WIDTH: u32 = 20, // メモリのサイズ
+    param DATA_WIDTH: u32 = 0, // データの幅
+    param ADDR_WIDTH: u32 = 0, // メモリのアドレスの幅
 ) (
     clk      : input   clock           ,
     rst      : input   reset           ,
     membus   : modport membus_if::slave,
     FILE_PATH: input   string          , // メモリの初期値が格納されたファイルのパス
 ) {
+    type DataType = logic&lt;DATA_WIDTH&gt;    ;
+    type MaskType = logic&lt;DATA_WIDTH / 8&gt;;
 
-    var mem: UInt32 [2 ** MEMORY_WIDTH];
+    var mem: DataType [2 ** ADDR_WIDTH];
 
-    // Addrをmemのインデックスに変換する関数
-    function addr_to_memaddr (
-        addr: input Addr               ,
-    ) -&gt; logic&lt;MEMORY_WIDTH&gt; {
-        return addr[MEMORY_WIDTH - 1 + 2:2];
-    }
-
-    // 書き込みマスクをUInt32に展開した値
-    var wmask_expand: UInt32;
-    for i in 0..32 :wm_expand_block {
+    // 書き込みマスクをDATA_WIDTHに展開した値
+    var wmask_expand: DataType;
+    for i in 0..DATA_WIDTH :wm_expand_block {
         assign wmask_expand[i] = wmask_saved[i / 8];
     }
 
@@ -2001,10 +2008,10 @@ module memory #(
     }
     var state: State;
 
-    var addr_saved : Addr     ;
-    var wdata_saved: UInt32   ;
-    var wmask_saved: logic &lt;4&gt;;
-    var rdata_saved: UInt32   ;
+    var addr_saved : Addr    ;
+    var wdata_saved: DataType;
+    var wmask_saved: MaskType;
+    var rdata_saved: DataType;
 
     always_comb {
         membus.ready = state == State::Ready;
@@ -2012,7 +2019,7 @@ module memory #(
 
     always_ff {
         if state == State::WriteValid {
-            mem[addr_to_memaddr(addr_saved)] = wdata_saved &amp; wmask_expand | rdata_saved &amp; ~wmask_expand;
+            mem[addr_saved[ADDR_WIDTH - 1:0]] = wdata_saved &amp; wmask_expand | rdata_saved &amp; ~wmask_expand;
         }
     }
 
@@ -2029,11 +2036,11 @@ module memory #(
             case state {
                 State::Ready: {
                                   membus.rvalid = membus.valid &amp; !membus.wen;
-                                  membus.rdata  = mem[addr_to_memaddr(membus.addr)];
+                                  membus.rdata  = mem[membus.addr[ADDR_WIDTH - 1:0]];
                                   addr_saved    = membus.addr;
                                   wdata_saved   = membus.wdata;
                                   wmask_saved   = membus.wmask;
-                                  rdata_saved   = mem[addr_to_memaddr(membus.addr)];
+                                  rdata_saved   = mem[membus.addr[ADDR_WIDTH - 1:0]];
                                   if membus.valid &amp;&amp; membus.wen {
                                       state = State::WriteValid;
                                   }
