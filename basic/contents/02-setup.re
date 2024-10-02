@@ -113,3 +113,8 @@ riscv-gnu-toolchainには、RISC-V向けのコンパイラなどのtoolchainが�
 これの@<code>{Installation (Newlib)}を参考にインストールしてください。
 
  * riscv-collab/riscv-gnu-toolchain : @<href>{https://github.com/riscv-collab/riscv-gnu-toolchain}
+
+//info[FPGAを利用する方へ]{
+TangMega138Kを利用する人はGOWIN EDA,
+PYNQ-Z1を利用する人はVivadoのインストールが必要です。
+//}
