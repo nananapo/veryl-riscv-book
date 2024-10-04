@@ -38,6 +38,7 @@
   </ul>
 </li>
     <li class="toc-chapter"><a href="./99-postface.html">あとがき / おわりに</a></li>
+    <li class="toc-chapter"><a href="./bib.html">参考文献</a></li>
 </ul>
       </div>
       <div class="page-inner">
@@ -76,9 +77,15 @@
 <span class="caption">リスト4.2: リスト4.2: is_csrを追加する (corectrl.veryl)</span>
 <pre class="list language-is_csr">    // 制御に使うフラグ用の構造体
     struct InstCtrl {
-        ...
-        is_csr  : logic      , // CSR命令である <span class="balloon">← 追加</span>
-        ...
+        itype   : InstType   , // 命令の形式
+        rwb_en  : logic      , // レジスタに書き込むかどうか
+        is_lui  : logic      , // LUI命令である
+        is_aluop: logic      , // ALUを利用する命令である
+        is_jump : logic      , // ジャンプ命令である
+        is_load : logic      , // ロード命令である
+        <b>is_csr  : logic      , // CSR命令である</b> <span class="balloon">← 追加</span>
+        funct3  : logic   &lt;3&gt;, // 命令のfunct3フィールド
+        funct7  : logic   &lt;7&gt;, // 命令のfunct7フィールド
     }
 </pre>
 </div>
@@ -208,22 +215,19 @@ module csrunit (
 
 <h4><a id="h4-3-2-1"></a>mtvecレジスタとは何か?</h4>
 <div id="mtvec" class="image">
-<img src="images/04a-zicsr/mtvec.png" alt="mtvecのエンコーディング&lt;sup&gt;&lt;a id=&quot;fnb-mtvec.enc&quot; href=&quot;#fn-mtvec.enc&quot; class=&quot;noteref&quot; epub:type=&quot;noteref&quot;&gt;*1&lt;/a&gt;&lt;/sup&gt;" class="img" />
+<img src="images/04a-zicsr/mtvec.png" alt="mtvecのエンコーディング&lt;a href=&quot;bib.html#bib-isa-manual.2.fig10&quot;&gt;[5]&lt;/a&gt;" class="img" />
 <p class="caption">
-図4.1: mtvecのエンコーディング<sup><a id="fnb-mtvec.enc" href="#fn-mtvec.enc" class="noteref" epub:type="noteref">*1</a></sup>
+図4.1: mtvecのエンコーディング<a href="bib.html#bib-isa-manual.2.fig10">[5]</a>
 </p>
 </div>
-<div class="footnote-list">
-<div class="footnote" id="fn-mtvec.enc" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>引用元: The RISC-V Instruction Set Manual Volume II: Privileged Architecture version 20240411 Figure 10. Encoding of mtvec MODE field.</p></div>
-</div><!--/.footnote-list-->
-<p>mtvecレジスタは、仕様書Vol IIの3.1.7. Machine Trap-Vector Base-Address Registerに定義されています。</p>
+<p>mtvecレジスタは、仕様書<a href="bib.html#bib-isa-manual.2.3.1.7">[6]</a>に定義されています。</p>
 <p>mtvecは、MXLENビットのWARLなレジスタです。mtvecのアドレスは<code class="inline-code">12'h305</code>です。</p>
 <p>MXLENはmisaレジスタに定義されていますが、今のところはXLENと等しいという認識でOKです。WARLはWrite Any Values, Reads Legal Valuesの略です。その名の通り、好きな値を書き込めるが、読み出すときには合法な値になるという認識でOKです。</p>
-<p>mtvecは、トラップ(Trap)が発生したときのジャンプ先(Trap-Vector)の基準となるアドレスを格納するレジスタです。トラップとは、例外(Exception)、または割り込み(Interrupt)により、CPUの制御を変更することを言います<sup><a id="fnb-trap.define" href="#fn-trap.define" class="noteref" epub:type="noteref">*2</a></sup>。トラップが発生する時、CPUはCSRを変更した後、mtvecに格納されたアドレスにジャンプします。</p>
+<p>mtvecは、トラップ(Trap)が発生したときのジャンプ先(Trap-Vector)の基準となるアドレスを格納するレジスタです。トラップとは、例外(Exception)、または割り込み(Interrupt)により、CPUの制御を変更することを言います<sup><a id="fnb-trap.define" href="#fn-trap.define" class="noteref" epub:type="noteref">*1</a></sup>。トラップが発生する時、CPUはCSRを変更した後、mtvecに格納されたアドレスにジャンプします。</p>
 <p>例外とは、命令の実行によって引き起こされる異常な状態(unusual condition)のことです。例えば、不正な命令を実行しようとしたときにはIllegal Instruction例外が発生します。CPUは、例外が発生したときのジャンプ先(対処方法)を決めておくことで、CPUが異常な状態に陥ったままにならないようにしています。</p>
 <p>mtvecはBASEとMODEの2つのフィールドで構成されています。MODEはジャンプ先の決め方を指定するためのフィールドですが、簡単のために常に0(Directモード)になるようにします。Directモードのとき、トラップ時のジャンプ先は<code class="inline-code">BASE &lt;&lt; 2</code>になります。</p>
 <div class="footnote-list">
-<div class="footnote" id="fn-trap.define" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*2] </span>トラップや例外, 割り込みはVolume Iの1.6Exceptions, Traps, and Interruptsに定義されています</p></div>
+<div class="footnote" id="fn-trap.define" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>トラップや例外, 割り込みはVolume Iの1.6Exceptions, Traps, and Interruptsに定義されています</p></div>
 </div><!--/.footnote-list-->
 
 <h4><a id="h4-3-2-2"></a>mtvecレジスタを実装する</h4>
@@ -622,11 +626,11 @@ $ <span class="userinput">./obj_dir/sim test/sample_ecall.hex 10</span>
 <p>ECALL命令の実行時にレジスタに値がライトバックされてしまっていますが、ECALL命令のrdは常に0番目のレジスタであり、0番目のレジスタは常に値が0になるため問題ありません。</p>
 
 <h2 class="numbox"><a id="h4-5"></a><span class="secno">4.5</span> MRET命令の実装</h2>
-<p>MRET命令<sup><a id="fnb-mret.manual" href="#fn-mret.manual" class="noteref" epub:type="noteref">*3</a></sup>は、トラップ先からトラップ元に戻るための命令です。具体的には、MRET命令を実行すると、mepcレジスタに格納されたアドレスにジャンプします<sup><a id="fnb-mret.other" href="#fn-mret.other" class="noteref" epub:type="noteref">*4</a></sup>。</p>
+<p>MRET命令<sup><a id="fnb-mret.manual" href="#fn-mret.manual" class="noteref" epub:type="noteref">*2</a></sup>は、トラップ先からトラップ元に戻るための命令です。具体的には、MRET命令を実行すると、mepcレジスタに格納されたアドレスにジャンプします<sup><a id="fnb-mret.other" href="#fn-mret.other" class="noteref" epub:type="noteref">*3</a></sup>。</p>
 <p>MRET命令は、例えば、権限のあるOSから権限のないユーザー空間に戻るために利用します。</p>
 <div class="footnote-list">
-<div class="footnote" id="fn-mret.manual" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*3] </span>MRET命令はVolume IIの3.3.2. Trap-Return Instructionsに定義されています</p></div>
-<div class="footnote" id="fn-mret.other" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*4] </span>他のCSRや権限レベルが実装されている場合は、他にも行うことがあります</p></div>
+<div class="footnote" id="fn-mret.manual" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*2] </span>MRET命令はVolume IIの3.3.2. Trap-Return Instructionsに定義されています</p></div>
+<div class="footnote" id="fn-mret.other" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*3] </span>他のCSRや権限レベルが実装されている場合は、他にも行うことがあります</p></div>
 </div><!--/.footnote-list-->
 
 <h3 class="none"><a id="h4-5-1"></a><span class="secno">4.5.1</span> MRET命令を実装する</h3>

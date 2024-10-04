@@ -47,9 +47,15 @@ CSRRCI	CSRRCのrs1を、即値をゼロ拡張した値に置き換えた動作
 #@maprange(scripts/04a/create-csrunit-range/core/src/corectrl.veryl,is_csr)
     // 制御に使うフラグ用の構造体
     struct InstCtrl {
-        ...
-        is_csr  : logic      , // CSR命令である @<balloon>{追加}
-        ...
+        itype   : InstType   , // 命令の形式
+        rwb_en  : logic      , // レジスタに書き込むかどうか
+        is_lui  : logic      , // LUI命令である
+        is_aluop: logic      , // ALUを利用する命令である
+        is_jump : logic      , // ジャンプ命令である
+        is_load : logic      , // ロード命令である
+        @<b>|is_csr  : logic      , // CSR命令である| @<balloon>{追加}
+        funct3  : logic   <3>, // 命令のfunct3フィールド
+        funct7  : logic   <7>, // 命令のfunct7フィールド
     }
 #@end
 //}
@@ -209,12 +215,10 @@ csrunitモジュールには、まだCSRが定義されていません。
 
 ==== mtvecレジスタとは何か?
 
-//image[mtvec][mtvecのエンコーディング@<fn>{mtvec.enc}]{
+//image[mtvec][mtvecのエンコーディング@<bib>{isa-manual.2.fig10}]{
 //}
 
-//footnote[mtvec.enc][引用元: The RISC-V Instruction Set Manual Volume II: Privileged Architecture version 20240411 Figure 10. Encoding of mtvec MODE field.]
-
-mtvecレジスタは、仕様書Vol IIの3.1.7. Machine Trap-Vector Base-Address Registerに定義されています。
+mtvecレジスタは、仕様書@<bib>{isa-manual.2.3.1.7}に定義されています。
 
 mtvecは、MXLENビットのWARLなレジスタです。
 mtvecのアドレスは@<code>{12'h305}です。

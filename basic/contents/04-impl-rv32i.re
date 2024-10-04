@@ -168,7 +168,9 @@ RV32Iにおいて命令の幅は32ビットです。
  * クロックに同期してメモリアクセスの要求を受け取る
  * 要求を受け取った次のクロックで結果を返す
 
-TODO めもりまわりを新しいコードに合わせて書き換え
+TODO
+ * メモリを新しいコードに合わせて書き換え
+ * ジェネリクスのフォーマットが治るのを待つ
 
 === メモリのインターフェースの定義
 
@@ -179,12 +181,7 @@ TODO めもりまわりを新しいコードに合わせて書き換え
 
 //list[membus_if.veryl][インターフェースの定義(membus_if.veryl)]{
 #@mapfile(scripts/04/memif/core/src/membus_if.veryl)
-import eei::*;
-
-interface membus_if #(
-    param DATA_WIDTH: u32 = 0,
-    param ADDR_WIDTH: u32 = 0,
-) {
+interface membus_if::<DATA_WIDTH: const, ADDR_WIDTH: const> {
     var valid : logic            ;
     var ready : logic            ;
     var addr  : logic<ADDR_WIDTH>;
@@ -239,16 +236,11 @@ interfaceを利用することで、レジスタやワイヤの定義が不要�
 
 //list[memory.veryl][memory.veryl]{
 #@mapfile(scripts/04/memif/core/src/memory.veryl)
-import eei::*;
-
-module memory #(
-    param DATA_WIDTH: u32 = 0, // データの幅
-    param ADDR_WIDTH: u32 = 0, // メモリのアドレスの幅
-) (
-    clk      : input   clock           ,
-    rst      : input   reset           ,
-    membus   : modport membus_if::slave,
-    FILE_PATH: input   string          , // メモリの初期値が格納されたファイルのパス
+module memory::<DATA_WIDTH: const, ADDR_WIDTH: const> (
+    clk      : input   clock                                    ,
+    rst      : input   reset                                    ,
+    membus   : modport membus_if::<DATA_WIDTH, ADDR_WIDTH>::slave,
+    FILE_PATH: input   string                                   , // メモリの初期値が格納されたファイルのパス
 ) {
     type DataType = logic<DATA_WIDTH>;
 
@@ -331,12 +323,10 @@ module top (
     rst          : input reset ,
     MEM_FILE_PATH: input string,
 ) {
-    inst membus: membus_if #(DATA_WIDTH: 32, ADDR_WIDTH: XLEN,);
 
-    inst mem: memory #(
-        DATA_WIDTH: 32,
-        ADDR_WIDTH: 20,
-    ) (
+    inst membus: membus_if::<MEM_DATA_WIDTH, XLEN>;
+
+    inst mem: memory::<MEM_DATA_WIDTH, 20> (
         clk                     ,
         rst                     ,
         membus                  ,
@@ -363,9 +353,9 @@ module top (
 import eei::*;
 
 module core (
-    clk   : input   clock            ,
-    rst   : input   reset            ,
-    membus: modport membus_if::master,
+    clk   : input   clock                        ,
+    rst   : input   reset                        ,
+    membus: modport membus_if::<ILEN, XLEN>::slave,
 ) {
 
     var if_pc          : Addr ;
@@ -443,9 +433,9 @@ module core (
 //list[top.veryl.core.instantiate][top.veryl内でcoreモジュールをインスタンス化する]{
 #@mapoutput(tail scripts/04/create-core/core/src/top.veryl -n 6 | head -n 5)
     inst c: core (
-        clk     ,
-        rst     ,
-        membus  ,
+        clk                ,
+        rst                ,
+        membus: membus_core,
     );
 #@end
 //}
@@ -884,7 +874,7 @@ CPUが何をすればいいかを判断するためのフラグや値を生成�
 
 RISC-Vにはいくつかの命令の形式がありますが、RV32IにはR, I, S, B, U, Jの6つの形式の命令が存在しています。
 
-//image[riscv-inst-types][RISC-Vの命令形式 (引用元: The RISC-V Instruction Set Manual Volume I: Unprivileged Architecture version 20240411 2.3. Immediate Encoding Variants)]{
+//image[riscv-inst-types][RISC-Vの命令形式 @<bib>{isa-manual.1.2.3.enc}]{
 //}
 
  : R形式
@@ -977,20 +967,20 @@ package corectrl {
 //list[opcode.eei][eei.verylに追加で記述する]{
 #@maprange(scripts/04/id-range/core/src/eei.veryl, opcode)
     // opcode
-    const OP_OP_IMM  : logic<7> = 7'b0010011;
-    const OP_LUI     : logic<7> = 7'b0110111;
-    const OP_AUIPC   : logic<7> = 7'b0010111;
-    const OP_OP      : logic<7> = 7'b0110011;
-    const OP_JAL     : logic<7> = 7'b1101111;
-    const OP_JALR    : logic<7> = 7'b1100111;
-    const OP_BRANCH  : logic<7> = 7'b1100011;
-    const OP_LOAD    : logic<7> = 7'b0000011;
-    const OP_STORE   : logic<7> = 7'b0100011;
+    const OP_LUI   : logic<7> = 7'b0110111;
+    const OP_AUIPC : logic<7> = 7'b0010111;
+    const OP_OP    : logic<7> = 7'b0110011;
+    const OP_OP_IMM: logic<7> = 7'b0010011;
+    const OP_JAL   : logic<7> = 7'b1101111;
+    const OP_JALR  : logic<7> = 7'b1100111;
+    const OP_BRANCH: logic<7> = 7'b1100011;
+    const OP_LOAD  : logic<7> = 7'b0000011;
+    const OP_STORE : logic<7> = 7'b0100011;
 #@end
 //}
 
 これらの値とそれぞれの命令の対応については、
-仕様書Volume Iの37. RV32/64G Instruction Set Listingsを確認してください。
+仕様書@<bib>{isa-manual.1.37}を確認してください。
 
 === デコードと即値の生成
 
@@ -1029,12 +1019,13 @@ module inst_decoder (
 
     always_comb {
         imm = case op {
-            OP_LUI, OP_AUIPC           : imm_u,
-            OP_JAL                     : imm_j,
-            OP_JALR, OP_LOAD, OP_OP_IMM: imm_i,
-            OP_BRANCH                  : imm_b,
-            OP_STORE                   : imm_s,
-            default                    : 'x,
+            OP_LUI, OP_AUIPC: imm_u,
+            OP_JAL          : imm_j,
+            OP_JALR, OP_LOAD: imm_i,
+            OP_OP_IMM       : imm_i,
+            OP_BRANCH       : imm_b,
+            OP_STORE        : imm_s,
+            default         : 'x,
         };
         ctrl = {case op {
             OP_LUI   : {InstType::U, T, T, F, F, F},
@@ -1362,7 +1353,7 @@ result	output	UIntX		結果
 //}
 
 命令がALUでどのような計算を行うかは命令の種別によって異なります。
-RV32Iでは、仕様書Volume Iの2.4. Integer Computational Instructions(整数演算命令)に定義されている命令は、
+仕様書で整数演算命令として定義されている命令@<bib>{isa-manual.1.2.4}は、
 命令のfunct3, funct7フィールドによって計算の種類を特定することができます。
 
 それ以外の命令は、足し算しか行いません。
@@ -1694,16 +1685,16 @@ import eei::*;
 import corectrl::*;
 
 module memunit (
-    clk   : input   clock            ,
-    rst   : input   reset            ,
-    valid : input   logic            ,
-    is_new: input   logic            , // 命令が新しく供給されたかどうか
-    ctrl  : input   InstCtrl         , // 命令のInstCtrl
-    addr  : input   Addr             , // アクセスするアドレス
-    rs2   : input   UIntX            , // ストア命令で書き込むデータ
-    rdata : output  UIntX            , // ロード命令の結果 (stall = 0のときに有効)
-    stall : output  logic            , // メモリアクセス命令が完了していない
-    membus: modport membus_if::master, // メモリとのinterface
+    clk   : input   clock                                   ,
+    rst   : input   reset                                   ,
+    valid : input   logic                                   ,
+    is_new: input   logic                                   , // 命令が新しく供給されたかどうか
+    ctrl  : input   InstCtrl                                , // 命令のInstCtrl
+    addr  : input   Addr                                    , // アクセスするアドレス
+    rs2   : input   UIntX                                   , // ストア命令で書き込むデータ
+    rdata : output  UIntX                                   , // ロード命令の結果 (stall = 0のときに有効)
+    stall : output  logic                                   , // メモリアクセス命令が完了していない
+    membus: modport membus_if::<MEM_DATA_WIDTH, XLEN>::master, // メモリとのinterface
 ) {
 
     // 命令がメモリにアクセスする命令か判別する関数
@@ -1729,9 +1720,9 @@ module memunit (
 
     var state: State;
 
-    var req_wen  : logic ;
-    var req_addr : Addr  ;
-    var req_wdata: UInt32;
+    var req_wen  : logic                ;
+    var req_addr : Addr                 ;
+    var req_wdata: logic<MEM_DATA_WIDTH>;
 
     always_comb {
         // メモリアクセス
@@ -1887,10 +1878,10 @@ memunitモジュール用に使用することができません。
 //list[core.membus.two][coreモジュールのポート定義 (core.veryl)]{
 #@maprange(scripts/04/lwsw-range/core/src/core.veryl,port)
 module core (
-    clk     : input   clock            ,
-    rst     : input   reset            ,
-    i_membus: modport membus_if::master,
-    d_membus: modport membus_if::master,
+    clk     : input   clock                                   ,
+    rst     : input   reset                                   ,
+    i_membus: modport membus_if::<ILEN, XLEN>::master          ,
+    d_membus: modport membus_if::<MEM_DATA_WIDTH, XLEN>::master,
 ) {
 #@end
 //}
@@ -1914,9 +1905,9 @@ module core (
 
 //list[top.arb][メモリへのアクセス要求の調停 (top.veryl)]{
 #@maprange(scripts/04/lwsw-range/core/src/top.veryl,arb)
-    inst membus  : membus_if #(DATA_WIDTH: 32, ADDR_WIDTH: XLEN,);
-    inst i_membus: membus_if #(DATA_WIDTH: 32, ADDR_WIDTH: XLEN,); // 命令フェッチ用
-    inst d_membus: membus_if #(DATA_WIDTH: 32, ADDR_WIDTH: XLEN,); // ロードストア命令用
+    inst membus  : membus_if::<MEM_DATA_WIDTH, XLEN>;
+    inst i_membus: membus_if::<ILEN, XLEN>; // 命令フェッチ用
+    inst d_membus: membus_if::<MEM_DATA_WIDTH, XLEN>; // ロードストア命令用
 
     var memarb_last_i: logic;
 
@@ -1942,11 +1933,11 @@ module core (
 
         membus.valid = i_membus.valid | d_membus.valid;
         if d_membus.valid {
-            membus.addr  = d_membus.addr;
+            membus.addr  = addr_to_memaddr(d_membus.addr);
             membus.wen   = d_membus.wen;
             membus.wdata = d_membus.wdata;
         } else {
-            membus.addr  = i_membus.addr;
+            membus.addr  = addr_to_memaddr(i_membus.addr);
             membus.wen   = i_membus.wen;
             membus.wdata = i_membus.wdata;
         }
@@ -2172,8 +2163,9 @@ LB, LBU, SB命令は8ビット単位、LH, LHU, SH命令は16ビット単位で�
 
 //list[lbhsbh.wd][WとDの定義 (memunit.veryl)]{
 #@maprange(scripts/04/lbhsbh-range/core/src/memunit.veryl,wd)
-    const W: u32    = 32;
-    let D: UInt32 = membus.rdata;
+    const W   : u32                   = XLEN;
+    let D   : logic<MEM_DATA_WIDTH> = membus.rdata;
+    let sext: logic                 = ctrl.funct3[2] == 1'b0;
 #@end
 //}
 
@@ -2196,32 +2188,20 @@ funct3をcase文で分岐し、
 //list[lbhsbh.rdata][rdataをアドレスと読み込みサイズに応じて変更する (memunit.veryl)]{
 #@maprange(scripts/04/lbhsbh-range/core/src/memunit.veryl,load)
         // loadの結果
-        rdata = case ctrl.funct3 {
-            3'b000 : case addr[1:0] {
-                0      : {D[7] repeat W - 8, D[7:0]},
-                1      : {D[15] repeat W - 8, D[15:8]},
-                2      : {D[23] repeat W - 8, D[23:16]},
-                3      : {D[31] repeat W - 8, D[31:24]},
+        rdata = case ctrl.funct3[1:0] {
+            2'b00  : case addr[1:0] {
+                0      : {sext & D[7] repeat W - 8, D[7:0]},
+                1      : {sext & D[15] repeat W - 8, D[15:8]},
+                2      : {sext & D[23] repeat W - 8, D[23:16]},
+                3      : {sext & D[31] repeat W - 8, D[31:24]},
                 default: 'x,
             },
-            3'b100 : case addr[1:0] {
-                0      : {1'b0 repeat W - 8, D[7:0]},
-                1      : {1'b0 repeat W - 8, D[15:8]},
-                2      : {1'b0 repeat W - 8, D[23:16]},
-                3      : {1'b0 repeat W - 8, D[31:24]},
+            2'b01  : case addr[1:0] {
+                0      : {sext & D[15] repeat W - 16, D[15:0]},
+                2      : {sext & D[31] repeat W - 16, D[31:16]},
                 default: 'x,
             },
-            3'b001 : case addr[1] {
-                0      : {D[15] repeat W - 16, D[15:0]},
-                1      : {D[31] repeat W - 16, D[31:16]},
-                default: 'x,
-            },
-            3'b101 : case addr[1] {
-                0      : {1'b0 repeat W - 16, D[15:0]},
-                1      : {1'b0 repeat W - 16, D[31:16]},
-                default: 'x,
-            },
-            3'b010 : D,
+            2'b10  : D,
             default: 'x,
         };
 #@end
@@ -2265,16 +2245,11 @@ memoryモジュールは、32ビット単位の読み書きしかサポートし
 
 //list[wmask.memory][書き込みマスクをサポートするmemoryモジュール (memory.veryl)]{
 #@mapfile(scripts/04/lbhsbh/core/src/memory.veryl)
-import eei::*;
-
-module memory #(
-    param DATA_WIDTH: u32 = 0, // データの幅
-    param ADDR_WIDTH: u32 = 0, // メモリのアドレスの幅
-) (
-    clk      : input   clock           ,
-    rst      : input   reset           ,
-    membus   : modport membus_if::slave,
-    FILE_PATH: input   string          , // メモリの初期値が格納されたファイルのパス
+module memory::<DATA_WIDTH: const, ADDR_WIDTH: const> (
+    clk      : input   clock                                    ,
+    rst      : input   reset                                    ,
+    membus   : modport membus_if::<DATA_WIDTH, ADDR_WIDTH>::slave,
+    FILE_PATH: input   string                                   , // メモリの初期値が格納されたファイルのパス
 ) {
     type DataType = logic<DATA_WIDTH>    ;
     type MaskType = logic<DATA_WIDTH / 8>;
@@ -2301,10 +2276,10 @@ module memory #(
     }
     var state: State;
 
-    var addr_saved : Addr    ;
-    var wdata_saved: DataType;
-    var wmask_saved: MaskType;
-    var rdata_saved: DataType;
+    var addr_saved : logic   <ADDR_WIDTH>;
+    var wdata_saved: DataType            ;
+    var wmask_saved: MaskType            ;
+    var rdata_saved: DataType            ;
 
     always_comb {
         membus.ready = state == State::Ready;
@@ -2330,7 +2305,7 @@ module memory #(
                 State::Ready: {
                                   membus.rvalid = membus.valid & !membus.wen;
                                   membus.rdata  = mem[membus.addr[ADDR_WIDTH - 1:0]];
-                                  addr_saved    = membus.addr;
+                                  addr_saved    = membus.addr[ADDR_WIDTH - 1:0];
                                   wdata_saved   = membus.wdata;
                                   wmask_saved   = membus.wmask;
                                   rdata_saved   = mem[membus.addr[ADDR_WIDTH - 1:0]];
@@ -2372,12 +2347,12 @@ topモジュールの調停処理で、@<code>{wmask}も調停するようにし
 #@maprange(scripts/04/lbhsbh-range/core/src/top.veryl,wmask)
         membus.valid = i_membus.valid | d_membus.valid;
         if d_membus.valid {
-            membus.addr  = d_membus.addr;
+            membus.addr  = addr_to_memaddr(d_membus.addr);
             membus.wen   = d_membus.wen;
             membus.wdata = d_membus.wdata;
             membus.wmask = d_membus.wmask; @<balloon>{追加}
         } else {
-            membus.addr  = i_membus.addr;
+            membus.addr  = addr_to_memaddr(i_membus.addr);
             membus.wen   = i_membus.wen;
             membus.wdata = i_membus.wdata;
             membus.wmask = i_membus.wmask; @<balloon>{追加}
@@ -2394,7 +2369,7 @@ memunitモジュールでwmaskを設定します。
 
 //list[memu.wmask.define][req_wmaskの定義 (memunit.veryl)]{
 #@maprange(scripts/04/lbhsbh-range/core/src/memunit.veryl,def_wmask)
-    var req_wmask: logic<4>;
+    var req_wmask: logic<MEM_DATA_WIDTH / 8>;
 #@end
 //}
 
@@ -2462,7 +2437,7 @@ deadbeef // 0x0
 
 まだ、重要な命令を実装できていません。
 プログラムでif文やループを実現するためには、ジャンプや分岐をする命令が必要です。
-RV32Iには、仕様書Volume Iの2.5. Control Transfer Instructionsに次の命令が定義されています。
+RV32Iには、仕様書@<bib>{isa-manual.1.2.5}に次の命令が定義されています。
 
 //table[jump.br.insts][ジャンプ命令, 分岐命令]{
 命令	形式	動作
