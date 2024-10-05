@@ -27,10 +27,10 @@
       <ul class="toc toc-3">
         <li class="toc-section"><a href="#h5-1">5.1 riscv-testsとは何か？</a></li>
         <li class="toc-section"><a href="#h5-2">5.2 riscv-testsのビルド</a></li>
-        <li class="toc-section"><a href="#h5-3">5.3 どのようにテストが実行されるのか</a></li>
-        <li class="toc-section"><a href="#h5-4">5.4 テストの終了を検知する</a></li>
+        <li class="toc-section"><a href="#h5-3">5.3 テスト内容の確認</a></li>
+        <li class="toc-section"><a href="#h5-4">5.4 テストの終了検知</a></li>
         <li class="toc-section"><a href="#h5-5">5.5 テストの実行</a></li>
-        <li class="toc-section"><a href="#h5-6">5.6 複数のテストを自動で実行する</a></li>
+        <li class="toc-section"><a href="#h5-6">5.6 複数のテストの自動実行</a></li>
       </ul>
     </li>
     <li class="toc-chapter"><a href="./05-impl-rv64i.html">6 RV64Iの実装</a></li>
@@ -155,7 +155,7 @@ print(&quot;\n&quot;.join(results))
 </pre>
 </div>
 
-<h2 class="numbox"><a id="h5-3"></a><span class="secno">5.3</span> どのようにテストが実行されるのか</h2>
+<h2 class="numbox"><a id="h5-3"></a><span class="secno">5.3</span> テスト内容の確認</h2>
 <p>riscv-testsには複数のテストが用意されていますが、本章では、名前が<code class="inline-code">rv32ui-p-</code>から始まるRV32I向けのテストを利用します。</p>
 <p>例えば、ADD命令のテストである<code class="inline-code">rv32ui-p-add.dump</code>を読んでみます。<code class="inline-code">rv32ui-p-add.dump</code>は、<code class="inline-code">rv32ui-p-add</code>のダンプファイルです。</p>
 <div id="rv32ui-p-add.dump" class="caption-code">
@@ -240,7 +240,7 @@ SECTIONS
 </pre>
 </div>
 
-<h2 class="numbox"><a id="h5-4"></a><span class="secno">5.4</span> テストの終了を検知する</h2>
+<h2 class="numbox"><a id="h5-4"></a><span class="secno">5.4</span> テストの終了検知</h2>
 <p>テストを実行する場合、テストが終了したことを検知し、それが成功か失敗かどうかを報告する必要があります。</p>
 <p>riscv-testsはテストが終了したことを示すために、<code class="inline-code">.tohost</code>に値を書き込みます。この値が1のとき、riscv-testsが正常に終了したことを示します。それ以外の時は、riscv-testsが失敗したことを示します。</p>
 <p>riscv-testsが終了したことを検知する処理をtopモジュールに記述します。topモジュールでメモリへのアクセスを監視し、<code class="inline-code">.tohost</code>に値が書き込まれたら実行を終了します。</p>
@@ -297,7 +297,7 @@ riscv-tests success!
 <div class="footnote" id="fn-if_not_success" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>実行が終了しない場合はどこかしらにバグがあります。rv32ui-p-add.dumpと実行ログを見比べて、頑張って原因を探してください...</p></div>
 </div><!--/.footnote-list-->
 
-<h2 class="numbox"><a id="h5-6"></a><span class="secno">5.6</span> 複数のテストを自動で実行する</h2>
+<h2 class="numbox"><a id="h5-6"></a><span class="secno">5.6</span> 複数のテストの自動実行</h2>
 <p>ADD命令以外の命令もテストしたいですが、わざわざコマンドを手打ちしたくありません。本書では、自動でテストを実行し、その結果を報告するプログラムを作成します。</p>
 <p><code class="inline-code">test/test.py</code>を作成し、次のように記述します。</p>
 <div id="test.py" class="caption-code">

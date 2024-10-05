@@ -26,7 +26,7 @@
     <li class="toc-chapter"><a href="./04b-riscvtests.html">5 riscv-testsによるテスト</a></li>
     <li class="toc-chapter"><a href="./05-impl-rv64i.html">6 RV64Iの実装</a>
       <ul class="toc toc-3">
-        <li class="toc-section"><a href="#h6-1">6.1 XLENを変更する</a></li>
+        <li class="toc-section"><a href="#h6-1">6.1 XLENの変更</a></li>
         <li class="toc-section"><a href="#h6-2">6.2 ADD[I]W, SUBW命令の実装</a></li>
         <li class="toc-section"><a href="#h6-3">6.3 SLL[I]W, SRL[I]W, SRA[I]W命令の実装</a></li>
         <li class="toc-section"><a href="#h6-4">6.4 LWU命令の実装</a></li>
@@ -78,7 +78,7 @@
 </div>
 <p>実装のテストにはriscv-testsを利用します。RV64I向けのテストは<code class="inline-code">rv64i-p-</code>から始まるテストです。命令を実装するたびにテストを実行することで、命令が正しく実行できていることを確認します。</p>
 
-<h2 class="numbox"><a id="h6-1"></a><span class="secno">6.1</span> XLENを変更する</h2>
+<h2 class="numbox"><a id="h6-1"></a><span class="secno">6.1</span> XLENの変更</h2>
 <p>eeiパッケージに定義しているXLENを64に変更します。RV64Iになっても命令の幅(<code class="inline-code">ILEN</code>)は32ビットのままです。</p>
 <div id="xlen.change" class="caption-code">
 <span class="caption">リスト6.1: リスト6.1: XLENを変更する (eei.veryl)</span>
