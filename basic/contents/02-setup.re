@@ -91,8 +91,7 @@ Veryl側の問題によりプログラムをビルドできないことがあり
 
  * URL : @<href>{https://marketplace.visualstudio.com/items?itemName=dalance.vscode-veryl}
 
-//image[vscode-ext][VerylのVSCode拡張]{
-//}
+//image[vscode-ext][VerylのVSCode拡張]
 
 == Verilator
 

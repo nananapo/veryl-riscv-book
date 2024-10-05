@@ -90,9 +90,9 @@
 </pre>
 </div>
 <p>これでデコード処理を書く準備が整いました。inst_decoderモジュールの<code class="inline-code">InstCtrl</code>を生成している部分を変更します。</p>
-<div id="inst_decoder.veryl.decode" class="caption-code">
+<div id="id_inst__decoder.veryl.deco--de" class="caption-code">
 <span class="caption">リスト4.3: リスト4.3: OP_SYSTEMとis_csrを追加する (inst_decoder.veryl)</span>
-<pre class="list language-decode">                                           is_csrを追加
+<pre class="list language-deco  de">                                           is_csrを追加
     ctrl = {case op {                           ↓
         OP_LUI   : {InstType::U, T, T, F, F, F, F},
         OP_AUIPC : {InstType::U, T, F, F, F, F, F},

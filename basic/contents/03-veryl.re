@@ -24,7 +24,6 @@ module
  * const
  * initial
  * 関数
- * generics
 
 interface
 
@@ -34,6 +33,8 @@ interface
 package
 
  * import
+
+ジェネリクス
 
 SystemVerilogの機能
 

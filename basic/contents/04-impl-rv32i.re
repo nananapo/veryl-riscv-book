@@ -874,8 +874,7 @@ CPUが何をすればいいかを判断するためのフラグや値を生成�
 
 RISC-Vにはいくつかの命令の形式がありますが、RV32IにはR, I, S, B, U, Jの6つの形式の命令が存在しています。
 
-//image[riscv-inst-types][RISC-Vの命令形式 @<bib>{isa-manual.1.2.3.enc}]{
-//}
+//image[riscv-inst-types][RISC-Vの命令形式 @<bib>{isa-manual.1.2.3.enc}]
 
  : R形式
 	ソースレジスタ(rs1, rs2)が2つ、デスティネーションレジスタ(rd)が1つの命令形式です。
@@ -1938,8 +1937,8 @@ module core (
             membus.wdata = d_membus.wdata;
         } else {
             membus.addr  = addr_to_memaddr(i_membus.addr);
-            membus.wen   = i_membus.wen;
-            membus.wdata = i_membus.wdata;
+            membus.wen   = 0; // 命令フェッチは常に読み込み
+            membus.wdata = 'x;
         }
     }
 #@end
@@ -2187,23 +2186,23 @@ funct3をcase文で分岐し、
 
 //list[lbhsbh.rdata][rdataをアドレスと読み込みサイズに応じて変更する (memunit.veryl)]{
 #@maprange(scripts/04/lbhsbh-range/core/src/memunit.veryl,load)
-        // loadの結果
-        rdata = case ctrl.funct3[1:0] {
-            2'b00  : case addr[1:0] {
-                0      : {sext & D[7] repeat W - 8, D[7:0]},
-                1      : {sext & D[15] repeat W - 8, D[15:8]},
-                2      : {sext & D[23] repeat W - 8, D[23:16]},
-                3      : {sext & D[31] repeat W - 8, D[31:24]},
-                default: 'x,
-            },
-            2'b01  : case addr[1:0] {
-                0      : {sext & D[15] repeat W - 16, D[15:0]},
-                2      : {sext & D[31] repeat W - 16, D[31:16]},
-                default: 'x,
-            },
-            2'b10  : D,
+    // loadの結果
+    rdata = case ctrl.funct3[1:0] {
+        2'b00  : case addr[1:0] {
+            0      : {sext & D[7] repeat W - 8, D[7:0]},
+            1      : {sext & D[15] repeat W - 8, D[15:8]},
+            2      : {sext & D[23] repeat W - 8, D[23:16]},
+            3      : {sext & D[31] repeat W - 8, D[31:24]},
             default: 'x,
-        };
+        },
+        2'b01  : case addr[1:0] {
+            0      : {sext & D[15] repeat W - 16, D[15:0]},
+            2      : {sext & D[31] repeat W - 16, D[31:16]},
+            default: 'x,
+        },
+        2'b10  : D,
+        default: 'x,
+    };
 #@end
 //}
 
@@ -2229,13 +2228,21 @@ memoryモジュールは、32ビット単位の読み書きしかサポートし
 
 //list[wmask.master][modport masterにwmaskを追加する (membus_if.veryl)]{
 #@maprange(scripts/04/lbhsbh-range/core/src/membus_if.veryl,master)
-        wmask : output,
+    modport master {
+        ...
+        @<b>|wmask : output,|
+        ...
+    }
 #@end
 //}
 
 //list[wmask.slave][modport slaveにwmaskを追加する (membus_if.veryl)]{
 #@maprange(scripts/04/lbhsbh-range/core/src/membus_if.veryl,slave)
-        wmask : input ,
+    modport slave {
+        ...
+        @<b>|wmask : input ,|
+        ...
+    }
 #@end
 //}
 
@@ -2345,18 +2352,18 @@ topモジュールの調停処理で、@<code>{wmask}も調停するようにし
 
 //list[top.wmask][wmaskの設定 (top.veryl)]{
 #@maprange(scripts/04/lbhsbh-range/core/src/top.veryl,wmask)
-        membus.valid = i_membus.valid | d_membus.valid;
-        if d_membus.valid {
-            membus.addr  = addr_to_memaddr(d_membus.addr);
-            membus.wen   = d_membus.wen;
-            membus.wdata = d_membus.wdata;
-            membus.wmask = d_membus.wmask; @<balloon>{追加}
-        } else {
-            membus.addr  = addr_to_memaddr(i_membus.addr);
-            membus.wen   = i_membus.wen;
-            membus.wdata = i_membus.wdata;
-            membus.wmask = i_membus.wmask; @<balloon>{追加}
-        }
+    membus.valid = i_membus.valid | d_membus.valid;
+    if d_membus.valid {
+        membus.addr  = addr_to_memaddr(d_membus.addr);
+        membus.wen   = d_membus.wen;
+        membus.wdata = d_membus.wdata;
+        @<b>|membus.wmask = d_membus.wmask;|
+    } else {
+        membus.addr  = addr_to_memaddr(i_membus.addr);
+        membus.wen   = 0; // 命令フェッチは常に読み込み
+        membus.wdata = 'x;
+        @<b>|membus.wmask = 'x;|
+    }
 #@end
 //}
 
@@ -2375,7 +2382,12 @@ memunitモジュールでwmaskを設定します。
 
 //list[memu.wmask.use][membusにwmaskを設定する (memunit.veryl)]{
 #@maprange(scripts/04/lbhsbh-range/core/src/memunit.veryl,mem_wmask)
-    membus.wmask = req_wmask;
+    // メモリアクセス
+    membus.valid = state == State::WaitReady;
+    membus.addr  = req_addr;
+    membus.wen   = req_wen;
+    membus.wdata = req_wdata;
+    @<b>|membus.wmask = req_wmask;|
 #@end
 //}
 
@@ -2384,7 +2396,13 @@ memunitモジュールでwmaskを設定します。
 
 //list[memu.wmask.init][if_resetでreq_wmaskを初期化する (memunit.veryl)]{
 #@maprange(scripts/04/lbhsbh-range/core/src/memunit.veryl,always_reset)
-    req_wmask = 0;
+    if_reset {
+        state     = State::Init;
+        req_wen   = 0;
+        req_addr  = 0;
+        req_wdata = 0;
+        @<b>|req_wmask = 0;|
+    } else {
 #@end
 //}
 

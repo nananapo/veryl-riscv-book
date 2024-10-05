@@ -25,7 +25,13 @@
     <li class="toc-chapter"><a href="./04a-zicsr.html">4 Zicsr拡張の実装</a></li>
     <li class="toc-chapter"><a href="./04b-riscvtests.html">5 riscv-testsによるテスト</a></li>
     <li class="toc-chapter"><a href="./05-impl-rv64i.html">6 RV64Iの実装</a></li>
-    <li class="toc-chapter"><a href="./05a-pipeline.html">7 CPUのパイプライン処理化</a></li>
+    <li class="toc-chapter"><a href="./05a-pipeline.html">7 CPUのパイプライン処理化</a>
+      <ul class="toc toc-3">
+        <li class="toc-section"><a href="#h7-1">7.1 パイプライン処理とは何か？</a></li>
+        <li class="toc-section"><a href="#h7-2">7.2 処理の分割</a></li>
+        <li class="toc-section"><a href="#h7-3">7.3 フォワーディング</a></li>
+      </ul>
+    </li>
     <li class="toc-chapter"><a href="./05b-synth.html">8 CPUを合成する</a></li>
   </ul>
 </li>
@@ -39,6 +45,28 @@
         <main class="page-main">
 <h1 class="boldlines center twolines"><a id="h7"></a><span class="secno">第7章</span> <br/>CPUのパイプライン処理化</h1>
 <p>TODO</p>
+
+<h2 class="numbox"><a id="h7-1"></a><span class="secno">7.1</span> パイプライン処理とは何か？</h2>
+
+<h2 class="numbox"><a id="h7-2"></a><span class="secno">7.2</span> 処理の分割</h2>
+
+<h3 class="none"><a id="h7-2-1"></a><span class="secno">7.2.1</span> IFステージ</h3>
+
+<h3 class="none"><a id="h7-2-2"></a><span class="secno">7.2.2</span> IDステージ</h3>
+
+<h3 class="none"><a id="h7-2-3"></a><span class="secno">7.2.3</span> EXステージ</h3>
+
+<h3 class="none"><a id="h7-2-4"></a><span class="secno">7.2.4</span> MEMステージ</h3>
+
+<h3 class="none"><a id="h7-2-5"></a><span class="secno">7.2.5</span> CSRステージ</h3>
+
+<h3 class="none"><a id="h7-2-6"></a><span class="secno">7.2.6</span> WBステージ</h3>
+
+<h3 class="none"><a id="h7-2-7"></a><span class="secno">7.2.7</span> パイプライン処理のテスト</h3>
+
+<h2 class="numbox"><a id="h7-3"></a><span class="secno">7.3</span> フォワーディング</h2>
+
+<h3 class="none"><a id="h7-3-1"></a><span class="secno">7.3.1</span> フォワーディングのテスト</h3>
 
         </main>
         <nav class="page-navi">

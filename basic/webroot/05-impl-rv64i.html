@@ -111,7 +111,7 @@
 <p>しかし、mtvec, mepc, mcauseレジスタはXLENビットのレジスタ(<code class="inline-code">UIntX</code>)として定義しているため、変更の必要はありません。また、mtvec, mepc, mcauseレジスタはMXLENを基準に定義されており、RV32IからRV64Iに変わってもフィールドに変化はないため、対応は必要ありません。</p>
 <p>唯一、書き込みマスクの幅を広げる必要があります。</p>
 <div id="csrunit.wmask.expand" class="caption-code">
-<span class="caption">リスト6.5: リスト6.5: CSRの書き込みマスクの幅を広げる (csrunit.veryl)</span>
+<span class="caption">リスト6.4: リスト6.4: CSRの書き込みマスクの幅を広げる (csrunit.veryl)</span>
 <pre class="list language-expand">    const MTVEC_WMASK : UIntX = 'h<b>ffff_ffff_</b>ffff_fffc;
     const MEPC_WMASK  : UIntX = 'h<b>ffff_ffff_</b>ffff_fffc;
     const MCAUSE_WMASK: UIntX = 'h<b>ffff_ffff_</b>ffff_ffff;
@@ -120,32 +120,300 @@
 
 <h3 class="none"><a id="h6-1-4"></a><span class="secno">6.1.4</span> LW命令の対応</h3>
 <p>RV64Iでは、LW命令の結果が64ビットに符号拡張されるようになります。これに対応するため、memunitモジュールの<code class="inline-code">rdata</code>の割り当てのLW部分を変更します。</p>
-<div id="csrunit.wmask.expand" class="caption-code">
+<div id="lw.extend" class="caption-code">
 <span class="caption">リスト6.5: リスト6.5: LW命令のメモリの読み込み結果を符号拡張する (memunit.veryl)</span>
-<pre class="list language-expand">    2'b10  : <b>{D[31] repeat W - 32, D[31:0]}</b>,
+<pre class="list language-extend">    2'b10  : <b>{D[31] repeat W - 32, D[31:0]}</b>,
 </pre>
 </div>
 
+<h3 class="none"><a id="h6-1-5"></a><span class="secno">6.1.5</span> riscv-testsでテストする</h3>
+<p>TODO</p>
+
 <h2 class="numbox"><a id="h6-2"></a><span class="secno">6.2</span> ADD[I]W, SUBW命令の実装</h2>
-<p>32ビット単位で足し算、引き算をする命令が追加されています。これに対応するためにALUを変更します。</p>
-<p>結果は符号拡張する必要があります。</p>
+<p>RV64Iでは、ADD命令は64ビット単位で演算する命令になり、32ビットの加算をするADDW, ADDIW命令が追加されます。同様に、SUB命令は64ビッド単位の演算になり、32ビットの減算をするSUBW命令が追加されます。32ビットの演算結果は符号拡張します。</p>
+
+<h3 class="none"><a id="h6-2-1"></a><span class="secno">6.2.1</span> ADD[I]W, SUBW命令をデコードする</h3>
+<div id="addsubw" class="image">
+<img src="images/05-impl-rv64i/addsubw.png" alt="ADDW, ADDIW, SUBW命令のフォーマット&lt;a href=&quot;bib.html#bib-isa-manual.1.37&quot;&gt;[2]&lt;/a&gt;" class="img" />
+<p class="caption">
+図6.1: ADDW, ADDIW, SUBW命令のフォーマット<a href="bib.html#bib-isa-manual.1.37">[2]</a>
+</p>
+</div>
+<p>ADDW, SUBW命令はR形式で、opcodeは<code class="inline-code">OP-32</code>(<code class="inline-code">0111011</code>)です。ADDIW命令はI形式で、opcodeは<code class="inline-code">OP-IMM-32</code>(<code class="inline-code">0011011</code>)です。</p>
+<p>まず、eeiパッケージにopcodeの定数を定義します。</p>
+<div id="eei.veryl.op32" class="caption-code">
+<span class="caption">リスト6.6: リスト6.6: opcodeを定義する (eei.veryl)</span>
+<pre class="list language-op32">    const OP_OP_32    : logic&lt;7&gt; = 7'b0111011;
+    const OP_OP_IMM_32: logic&lt;7&gt; = 7'b0011011;
+</pre>
+</div>
+<p>次に、<code class="inline-code">InstCtrl</code>)構造体に、32ビット単位で演算を行う命令であることを示す<code class="inline-code">is_op32</code>フラグを追加します。</p>
+<div id="corectrl.veryl.is_op32" class="caption-code">
+<span class="caption">リスト6.7: リスト6.7: is_op32を追加する (corectrl.veryl)</span>
+<pre class="list language-is_op32">    struct InstCtrl {
+        itype   : InstType   , // 命令の形式
+        rwb_en  : logic      , // レジスタに書き込むかどうか
+        is_lui  : logic      , // LUI命令である
+        is_aluop: logic      , // ALUを利用する命令である
+        <b>is_op32 : logic      , // OP-32またはOP-IMM-32である</b> <span class="balloon">← 追加</span>
+        is_jump : logic      , // ジャンプ命令である
+        is_load : logic      , // ロード命令である
+        is_csr  : logic      , // CSR命令である
+        funct3  : logic   &lt;3&gt;, // 命令のfunct3フィールド
+        funct7  : logic   &lt;7&gt;, // 命令のfunct7フィールド
+    }
+</pre>
+</div>
+<p>inst_decoderモジュールの<code class="inline-code">InstCtrl</code>と即値を生成している部分を変更します。これでデコードは完了です。</p>
+<div id="inst_decoder.veryl.ctrl" class="caption-code">
+<span class="caption">リスト6.8: リスト6.8: OP-32, OP-IMM-32のInstCtrlの生成 (inst_decoder.veryl)</span>
+<pre class="list language-ctrl">                                       is_op32を追加
+    ctrl = {case op {                        ↓
+        OP_LUI      : {InstType::U, T, T, F, <b>F</b>, F, F, F},
+        OP_AUIPC    : {InstType::U, T, F, F, <b>F</b>, F, F, F},
+        OP_JAL      : {InstType::J, T, F, F, <b>F</b>, T, F, F},
+        OP_JALR     : {InstType::I, T, F, F, <b>F</b>, T, F, F},
+        OP_BRANCH   : {InstType::B, F, F, F, <b>F</b>, F, F, F},
+        OP_LOAD     : {InstType::I, T, F, F, <b>F</b>, F, T, F},
+        OP_STORE    : {InstType::S, F, F, F, <b>F</b>, F, F, F},
+        OP_OP       : {InstType::R, T, F, T, <b>F</b>, F, F, F},
+        OP_OP_IMM   : {InstType::I, T, F, T, <b>F</b>, F, F, F},
+        <b>OP_OP_32    : {InstType::R, T, F, T, <b>T</b>, F, F, F},</b> <span class="balloon">← 追加</span>
+        <b>OP_OP_IMM_32: {InstType::I, T, F, T, <b>T</b>, F, F, F},</b> <span class="balloon">← 追加</span>
+        OP_SYSTEM   : {InstType::I, T, F, F, <b>F</b>, F, F, T},
+        default     : {InstType::X, F, F, F, <b>F</b>, F, F, F},
+    }, f3, f7};
+</pre>
+</div>
+<div id="inst_decoder.veryl.imm" class="caption-code">
+<span class="caption">リスト6.9: リスト6.9: OP-32, OP-IMM-32の即値の生成 (inst_decoder.veryl)</span>
+<pre class="list language-imm">    imm = case op {
+        OP_LUI, OP_AUIPC       : imm_u,
+        OP_JAL                 : imm_j,
+        OP_JALR, OP_LOAD       : imm_i,
+        OP_OP_IMM, <b>OP_OP_IMM_32</b>: imm_i,
+        OP_BRANCH              : imm_b,
+        OP_STORE               : imm_s,
+        default                : 'x,
+    };
+</pre>
+</div>
+
+<h3 class="none"><a id="h6-2-2"></a><span class="secno">6.2.2</span> ALUにADDW, SUBWを実装する</h3>
+<p>制御フラグを生成できたので、それに応じて32ビットのADD, SUBを行うようにします。</p>
+<p>まず、32ビットの足し算と引き算の結果を生成します。</p>
+<div id="alu.veryl.addsubw" class="caption-code">
+<span class="caption">リスト6.10: リスト6.10: 32ビットの足し算と引き算をする (alu.veryl)</span>
+<pre class="list language-addsubw">    let add32: UInt32 = op1[31:0] + op2[31:0];
+    let sub32: UInt32 = op1[31:0] - op2[31:0];
+</pre>
+</div>
+<p>次に、フラグによって演算結果を選択する関数<code class="inline-code">sel_w</code>を作成します。この関数は、<code class="inline-code">is_op32</code>が<code class="inline-code">1</code>なら<code class="inline-code">value32</code>を64ビットに符号拡張した値を、<code class="inline-code">0</code>なら<code class="inline-code">value64</code>を返します。</p>
+<div id="alu.veryl.sel_w" class="caption-code">
+<span class="caption">リスト6.11: リスト6.11: 演算結果を選択する関数を作成する (alu.veryl)</span>
+<pre class="list language-sel_w">    function sel_w (
+        is_op32: input logic ,
+        value32: input UInt32,
+        value64: input UInt64,
+    ) -&gt; UInt64 {
+        if is_op32 {
+            return {value32[msb] repeat 32, value32};
+        } else {
+            return value64;
+        }
+    }
+</pre>
+</div>
+<p><code class="inline-code">sel_w</code>関数を使用し、aluモジュールの演算処理を変更します。case文の足し算と引き算の部分を次のように変更します。</p>
+<div id="alu.veryl.addw.case" class="caption-code">
+<span class="caption">リスト6.12: リスト6.12: 32ビットの演算結果を選択する (alu.veryl)</span>
+<pre class="list language-case">    3'b000: result = if ctrl.itype == InstType::I | ctrl.funct7 == 0 {
+                <b>sel_w(ctrl.is_op32, add32, add)</b>
+            } else {
+                <b>sel_w(ctrl.is_op32, sub32, sub)</b>
+            };
+</pre>
+</div>
+
+<h3 class="none"><a id="h6-2-3"></a><span class="secno">6.2.3</span> ADD[I]W, SUBW命令をテストする</h3>
+<p>TODO</p>
 
 <h2 class="numbox"><a id="h6-3"></a><span class="secno">6.3</span> SLL[I]W, SRL[I]W, SRA[I]W命令の実装</h2>
-<p>32ビット単位に対してシフトする命令が追加されています。これに対応するためにALUを変更します。</p>
+<p>RV64Iでは、SLL[I], SRL[I], SRA[I]命令はrs1を0 ~ 63ビットシフトする命令になり、rs1の下位32ビットを0 ~ 31ビットシフトするSLL[I]W, SRL[I]W, SRA[I]W命令が追加されます。32ビットの演算結果は符号拡張します。</p>
+<div id="sllsrlsraw" class="image">
+<img src="images/05-impl-rv64i/sllsrlsraw.png" alt="SLL[I]W, SRL[I]W, SRA[I]W命令のフォーマット &lt;a href=&quot;bib.html#bib-isa-manual.1.37&quot;&gt;[2]&lt;/a&gt;" class="img" />
+<p class="caption">
+図6.2: SLL[I]W, SRL[I]W, SRA[I]W命令のフォーマット <a href="bib.html#bib-isa-manual.1.37">[2]</a>
+</p>
+</div>
+<p>SLL[I]W, SRL[I]W, SRA[I]W命令のフォーマットは、RV32IのSLL[I], SRL[I], SRA[I]命令のopcodeを変えたものと同じです。SLLW, SRLW, SRAW命令はR形式で、opcodeは<code class="inline-code">OP-32</code>です。SLLIW, SRLIW, SRAIW命令はI形式で、opcodeは<code class="inline-code">OP-IMM-32</code>です。どちらのopcodeの命令も、ADD[I]W, SUBW命令の実装時にデコードが完了しています。</p>
+<p>aluモジュールで、シフト演算の結果を生成します。</p>
+<div id="alu.veryl.shiftw" class="caption-code">
+<span class="caption">リスト6.13: リスト6.13: 32ビットのシフト演算をする (alu.veryl)</span>
+<pre class="list language-shiftw">    let sll32: UInt32 = op1[31:0] &lt;&lt; op2[4:0];
+    let srl32: UInt32 = op1[31:0] &gt;&gt; op2[4:0];
+    let sra32: SInt32 = $signed(op1[31:0]) &gt;&gt;&gt; op2[4:0];
+</pre>
+</div>
+<p>生成したシフト演算の結果を、<code class="inline-code">sel_w</code>関数で選択するようにします。case文のシフト演算の部分を次のように変更します。</p>
+<div id="alu.veryl.shiftw.case" class="caption-code">
+<span class="caption">リスト6.14: リスト6.14: 32ビットの演算結果を選択する (alu.veryl)</span>
+<pre class="list language-case">    3'b001: result = <b>sel_w(ctrl.is_op32, sll32, sll)</b>;
+    ...
+    3'b101: result = if ctrl.funct7 == 0 {
+                <b>sel_w(ctrl.is_op32, srl32, srl)</b>
+            } else {
+                <b>sel_w(ctrl.is_op32, sra32, sra)</b>
+            };
+</pre>
+</div>
+
+<h3 class="none"><a id="h6-3-1"></a><span class="secno">6.3.1</span> SLL[I]W, SRL[I]W, SRA[I]W命令をテストする</h3>
+<p>TODO</p>
 
 <h2 class="numbox"><a id="h6-4"></a><span class="secno">6.4</span> LWU命令の実装</h2>
+<p>LB, LH命令は、ロードした値を符号拡張した値をレジスタに格納します。これに対して、LBU, LHU命令は、ロードした値をゼロで拡張した値をレジスタに格納します。</p>
+<p>同様に、LW命令は、ロードした値を符号拡張した値をレジスタに格納します。これに対して、RV64Iでは、ロードした32ビットの値をゼロで拡張した値をレジスタに格納するLWU命令が追加されます。</p>
+<div id="lwu" class="image">
+<img src="images/05-impl-rv64i/lwu.png" alt="LWU命令のフォーマット&lt;a href=&quot;bib.html#bib-isa-manual.1.37&quot;&gt;[2]&lt;/a&gt;" class="img" />
+<p class="caption">
+図6.3: LWU命令のフォーマット<a href="bib.html#bib-isa-manual.1.37">[2]</a>
+</p>
+</div>
+<p>LWU命令はI形式で、opcodeは<code class="inline-code">LOAD</code>です。ロード, ストア命令はfunct3によって区別することができます。LWU命令のfunct3は<code class="inline-code">110</code>です。デコード処理に変更は必要なく、メモリにアクセスする処理を変更する必要があります。</p>
+<p>memunitモジュールの、ロードする部分を変換します。32ビットを<code class="inline-code">rdata</code>に割り当てるとき、<code class="inline-code">sext</code>によって符号拡張かゼロで拡張するかを選択するようにします。</p>
+<div id="memunit.veryl.lwu.sext" class="caption-code">
+<span class="caption">リスト6.15: リスト6.15: LWU命令の実装 (memunit.veryl)</span>
+<pre class="list language-sext">    2'b10  : {<b>sext &amp; D[31]</b> repeat W - 32, D[31:0]},
+</pre>
+</div>
+
+<h3 class="none"><a id="h6-4-1"></a><span class="secno">6.4.1</span> LWU命令をテストする</h3>
+<p>TODO</p>
 
 <h2 class="numbox"><a id="h6-5"></a><span class="secno">6.5</span> LD, SD命令の実装</h2>
 <p>RV64Iには、64ビット単位でロード, ストアを行うLD命令, SD命令が定義されています。</p>
+<div id="ldsd" class="image">
+<img src="images/05-impl-rv64i/ldsd.png" alt="LD, SD命令のフォーマット" class="img" />
+<p class="caption">
+図6.4: LD, SD命令のフォーマット
+</p>
+</div>
+<p>LD命令はI形式で、opcodeは<code class="inline-code">LOAD</code>です。SD命令はS形式で、opcodeは<code class="inline-code">STORE</code>です。どちらの命令もfunct3は<code class="inline-code">011</code>です。デコード処理に変更は必要ありません。</p>
 
 <h3 class="none"><a id="h6-5-1"></a><span class="secno">6.5.1</span> メモリの幅を広げる</h3>
-<p>現在のメモリの1つのデータ<code class="inline-code">eei::MEM_DATA_WIDTH</code>の幅は32ビットですが、このままだと64ビットでロードストアを行うときに、最低2回のメモリアクセスが必要になってしまいます。</p>
-<p>これを1回のメモリアクセスで済ませるために、メモリ幅を32ビットから64ビットに広げておきます。</p>
-<p>命令フェッチ部では、64ビットの読み出しデータの上位32ビット, 下位32ビットをPCの下位3ビットで選択します。PC[2:0]が0のときは下位32ビット、4のときは上位32ビットになります。</p>
-<p>プログラム</p>
-<p>メモリ命令を処理する部分では、LW命令に新たにrdataの選択処理を追加します。LB[U], LH[U]については上位32ビットの場合について追加します。ストア命令では、マスクを変更し、アドレスに合わせてwdataを変更します。</p>
-<p>プログラム</p>
-<p>LWU命令は、LHU, LBU命令と同様に0拡張すればよいです。LD命令は、メモリのrdataをそのまま結果に格納します。SD命令は、マスクをすべて1で埋めて、wdataをレジスタの値をそのままにします。</p>
+<p>現在のメモリの1つのデータ<code class="inline-code">eei::MEM_DATA_WIDTH</code>の幅は32ビットですが、このままだと64ビットでロードやストアを行うときに、最低2回のメモリアクセスが必要になってしまいます。これを1回のメモリアクセスで済ませるために、データの幅を32ビットから64ビットに広げます。</p>
+<div id="eei.veryl.MEM_DATA_WIDTH.expand" class="caption-code">
+<span class="caption">リスト6.16: リスト6.16: MEM_DATA_WIDTHを64ビットに変更する (eei.veryl)</span>
+<pre class="list language-expand">    const MEM_DATA_WIDTH: u32 = <b>64</b>;
+</pre>
+</div>
+
+<h3 class="none"><a id="h6-5-2"></a><span class="secno">6.5.2</span> 命令フェッチの対応</h3>
+<p><code class="inline-code">XLEN</code>, <code class="inline-code">eei::MEM_DATA_WIDTH</code>が変わっても、命令の長さ(<code class="inline-code">ILEN</code>)は32ビットのままです。</p>
+<p>そのため、topモジュールの<code class="inline-code">i_membus.rdata</code>の幅は32ビット、<code class="inline-code">membus.rdata</code>は64ビットになり、<code class="inline-code">i_membus.rdata</code>に<code class="inline-code">membus.rdata</code>の下位32ビットが接続されます。よって、今のコードのままだとアドレスの下位3ビットが<code class="inline-code">100</code>(=4)であっても、下位3ビットが<code class="inline-code">000</code>(=0)の命令が<code class="inline-code">i_membus.rdata</code>に割り当てられてしまいます。</p>
+<p>正しく命令をフェッチするために、64ビットの読み出しデータの上位32ビット, 下位32ビットをアドレスの下位ビットで選択します。PC[2]が0のときは下位32ビット、1のときは上位32ビットを選択します。</p>
+<p>まず、命令フェッチの要求のアドレスをレジスタに保存します。</p>
+<div id="top.veryl.iaddr" class="caption-code">
+<span class="caption">リスト6.17: リスト6.17: アドレスを保存するためのレジスタの定義 (top.veryl)</span>
+<pre class="list language-iaddr">    var memarb_last_i    : logic;
+    <b>var memarb_last_iaddr: Addr ;</b>
+</pre>
+</div>
+<div id="top.veryl.always_arb" class="caption-code">
+<span class="caption">リスト6.18: リスト6.18: レジスタに命令フェッチの要求アドレスを保存する (top.veryl)</span>
+<pre class="list language-always_arb">    // メモリアクセスを調停する
+    always_ff {
+        if_reset {
+            memarb_last_i     = 0;
+            <b>memarb_last_iaddr = 0;</b>
+        } else {
+            if membus.ready {
+                memarb_last_i     = !d_membus.valid;
+                <b>memarb_last_iaddr = i_membus.addr;</b>
+            }
+        }
+    }
+</pre>
+</div>
+<p>このレジスタの値を利用し、<code class="inline-code">i_membus.rdata</code>に割り当てる値を選択します。</p>
+<div id="top.veryl.iaddr_rdata" class="caption-code">
+<span class="caption">リスト6.19: リスト6.19: アドレスによってデータを選択する (top.veryl)</span>
+<pre class="list language-iaddr_rdata">    i_membus.rdata  = if memarb_last_iaddr[2] == 0 {
+        membus.rdata[31:0]
+    } else {
+        membus.rdata[63:32]
+    };
+</pre>
+</div>
+
+<h3 class="none"><a id="h6-5-3"></a><span class="secno">6.5.3</span> ストア命令を実装する</h3>
+<p>SD命令の実装のためには、書き込むデータ(<code class="inline-code">wdata</code>)と書き込みマスク(<code class="inline-code">wmask</code>)を変更する必要があります。</p>
+<div id="memunit.veryl.iaddr_rdata" class="caption-code">
+<span class="caption">リスト6.21: リスト6.21: 書き込みデータの変更 (memunit.veryl)</span>
+<pre class="list language-iaddr_rdata">    req_wdata = rs2 &lt;&lt; {addr[<b>2</b>:0], 3'b0};
+</pre>
+</div>
+<p>書き込むデータは、アドレスの下位2ビットではなく下位3ビット分だけシフトするようにします。</p>
+<div id="memunit.veryl.iaddr_rdata" class="caption-code">
+<span class="caption">リスト6.21: リスト6.21: 書き込みマスクの変更 (memunit.veryl)</span>
+<pre class="list language-iaddr_rdata">    req_wmask = case ctrl.funct3[1:0] {
+        2'b00  : <b>8</b>'b1 &lt;&lt; addr[<b>2</b>:0],
+        2'b01  : case addr[<b>2</b>:0] {
+            <b>6      : 8'b11000000,</b>
+            <b>4      : 8'b00110000,</b>
+            2      : @&lt;b&lt;|8'b00001100|,
+            0      : <b>8'b00000011</b>,
+            default: 'x,
+        },
+        2'b10  : <b>case addr[2:0] {</b>
+            <b>0      : 8'b00001111,</b>
+            <b>4      : 8'b11110000,</b>
+            <b>default: 'x,</b>
+        <b>},</b>
+        <b>2'b11  : 8'b11111111,</b>
+        default: 'x,
+    };
+</pre>
+</div>
+<p>書き込みマスクは8ビットに拡張されます。それに伴い、アドレスの下位2ビットではなく下位3ビットで選択するようにするようにします。</p>
+
+<h3 class="none"><a id="h6-5-4"></a><span class="secno">6.5.4</span> ロード命令の実装</h3>
+<p>メモリのデータ幅が64ビットに広がるため、<code class="inline-code">rdata</code>に割り当てる値を、アドレスの下位2ビットではなく下位3ビットで選択するようにします。</p>
+<div id="memunit.veryl.rdata" class="caption-code">
+<span class="caption">リスト6.22: リスト6.22: rdataの変更 (memunit.veryl)</span>
+<pre class="list language-rdata">    rdata = case ctrl.funct3[1:0] {
+        2'b00  : case addr[<b>2</b>:0] {
+            0      : {sext &amp; D[7] repeat W - 8, D[7:0]},
+            1      : {sext &amp; D[15] repeat W - 8, D[15:8]},
+            2      : {sext &amp; D[23] repeat W - 8, D[23:16]},
+            3      : {sext &amp; D[31] repeat W - 8, D[31:24]},
+            <b>4      : {sext &amp; D[39] repeat W - 8, D[39:32]},</b>
+            <b>5      : {sext &amp; D[47] repeat W - 8, D[47:40]},</b>
+            <b>6      : {sext &amp; D[55] repeat W - 8, D[55:48]},</b>
+            <b>7      : {sext &amp; D[63] repeat W - 8, D[63:56]},</b>
+            default: 'x,
+        },
+        2'b01  : case addr[<b>2</b>:0] {
+            0      : {sext &amp; D[15] repeat W - 16, D[15:0]},
+            2      : {sext &amp; D[31] repeat W - 16, D[31:16]},
+            <b>4      : {sext &amp; D[47] repeat W - 16, D[47:32]},</b>
+            <b>6      : {sext &amp; D[63] repeat W - 16, D[63:48]},</b>
+            default: 'x,
+        },
+        2'b10  : <b>case addr[2:0] {</b>
+            <b>0      : {sext &amp; D[31] repeat W - 32, D[31:0]},</b>
+            <b>4      : {sext &amp; D[63] repeat W - 32, D[63:32]},</b>
+            <b>default: 'x,</b>
+        <b>},</b>
+        <b>2'b11  : D,</b>
+        default: 'x,
+    };
+</pre>
+</div>
+
+<h3 class="none"><a id="h6-5-5"></a><span class="secno">6.5.5</span> LD, SD命令をテストする</h3>
+<p>TODO</p>
 
         </main>
         <nav class="page-navi">

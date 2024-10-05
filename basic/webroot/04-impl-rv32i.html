@@ -1697,8 +1697,8 @@ module memunit (
             membus.wdata = d_membus.wdata;
         } else {
             membus.addr  = addr_to_memaddr(i_membus.addr);
-            membus.wen   = i_membus.wen;
-            membus.wdata = i_membus.wdata;
+            membus.wen   = 0; // 命令フェッチは常に読み込み
+            membus.wdata = 'x;
         }
     }
 </pre>
@@ -1906,23 +1906,23 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 13</span>
 <p>funct3をcase文で分岐し、アドレスの下位ビットを見ることで、命令とアドレスに応じた値をrdataに設定します。</p>
 <div id="lbhsbh.rdata" class="caption-code">
 <span class="caption">リスト3.61: リスト3.61: rdataをアドレスと読み込みサイズに応じて変更する (memunit.veryl)</span>
-<pre class="list language-rdata">        // loadの結果
-        rdata = case ctrl.funct3[1:0] {
-            2'b00  : case addr[1:0] {
-                0      : {sext &amp; D[7] repeat W - 8, D[7:0]},
-                1      : {sext &amp; D[15] repeat W - 8, D[15:8]},
-                2      : {sext &amp; D[23] repeat W - 8, D[23:16]},
-                3      : {sext &amp; D[31] repeat W - 8, D[31:24]},
-                default: 'x,
-            },
-            2'b01  : case addr[1:0] {
-                0      : {sext &amp; D[15] repeat W - 16, D[15:0]},
-                2      : {sext &amp; D[31] repeat W - 16, D[31:16]},
-                default: 'x,
-            },
-            2'b10  : D,
+<pre class="list language-rdata">    // loadの結果
+    rdata = case ctrl.funct3[1:0] {
+        2'b00  : case addr[1:0] {
+            0      : {sext &amp; D[7] repeat W - 8, D[7:0]},
+            1      : {sext &amp; D[15] repeat W - 8, D[15:8]},
+            2      : {sext &amp; D[23] repeat W - 8, D[23:16]},
+            3      : {sext &amp; D[31] repeat W - 8, D[31:24]},
             default: 'x,
-        };
+        },
+        2'b01  : case addr[1:0] {
+            0      : {sext &amp; D[15] repeat W - 16, D[15:0]},
+            2      : {sext &amp; D[31] repeat W - 16, D[31:16]},
+            default: 'x,
+        },
+        2'b10  : D,
+        default: 'x,
+    };
 </pre>
 </div>
 
@@ -1939,12 +1939,20 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 13</span>
 </div>
 <div id="wmask.master" class="caption-code">
 <span class="caption">リスト3.63: リスト3.63: modport masterにwmaskを追加する (membus_if.veryl)</span>
-<pre class="list language-master">        wmask : output,
+<pre class="list language-master">    modport master {
+        ...
+        <b>wmask : output,</b>
+        ...
+    }
 </pre>
 </div>
 <div id="wmask.slave" class="caption-code">
 <span class="caption">リスト3.64: リスト3.64: modport slaveにwmaskを追加する (membus_if.veryl)</span>
-<pre class="list language-slave">        wmask : input ,
+<pre class="list language-slave">    modport slave {
+        ...
+        <b>wmask : input ,</b>
+        ...
+    }
 </pre>
 </div>
 <p>バイト単位で指定するため、<code class="inline-code">wmask</code>の幅は4ビットです。</p>
@@ -2048,18 +2056,18 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 13</span>
 <p>topモジュールの調停処理で、<code class="inline-code">wmask</code>も調停するようにします。</p>
 <div id="top.wmask" class="caption-code">
 <span class="caption">リスト3.66: リスト3.66: wmaskの設定 (top.veryl)</span>
-<pre class="list language-wmask">        membus.valid = i_membus.valid | d_membus.valid;
-        if d_membus.valid {
-            membus.addr  = addr_to_memaddr(d_membus.addr);
-            membus.wen   = d_membus.wen;
-            membus.wdata = d_membus.wdata;
-            membus.wmask = d_membus.wmask; <span class="balloon">← 追加</span>
-        } else {
-            membus.addr  = addr_to_memaddr(i_membus.addr);
-            membus.wen   = i_membus.wen;
-            membus.wdata = i_membus.wdata;
-            membus.wmask = i_membus.wmask; <span class="balloon">← 追加</span>
-        }
+<pre class="list language-wmask">    membus.valid = i_membus.valid | d_membus.valid;
+    if d_membus.valid {
+        membus.addr  = addr_to_memaddr(d_membus.addr);
+        membus.wen   = d_membus.wen;
+        membus.wdata = d_membus.wdata;
+        <b>membus.wmask = d_membus.wmask;</b>
+    } else {
+        membus.addr  = addr_to_memaddr(i_membus.addr);
+        membus.wen   = 0; // 命令フェッチは常に読み込み
+        membus.wdata = 'x;
+        <b>membus.wmask = 'x;</b>
+    }
 </pre>
 </div>
 
@@ -2073,13 +2081,24 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 13</span>
 </div>
 <div id="memu.wmask.use" class="caption-code">
 <span class="caption">リスト3.68: リスト3.68: membusにwmaskを設定する (memunit.veryl)</span>
-<pre class="list language-use">    membus.wmask = req_wmask;
+<pre class="list language-use">    // メモリアクセス
+    membus.valid = state == State::WaitReady;
+    membus.addr  = req_addr;
+    membus.wen   = req_wen;
+    membus.wdata = req_wdata;
+    <b>membus.wmask = req_wmask;</b>
 </pre>
 </div>
 <p><code class="inline-code">always_ff</code>の中で、req_wmaskの値を設定します。それぞれの命令のとき、wmaskがどうなるかを確認してください。</p>
 <div id="memu.wmask.init" class="caption-code">
 <span class="caption">リスト3.69: リスト3.69: if_resetでreq_wmaskを初期化する (memunit.veryl)</span>
-<pre class="list language-init">    req_wmask = 0;
+<pre class="list language-init">    if_reset {
+        state     = State::Init;
+        req_wen   = 0;
+        req_addr  = 0;
+        req_wdata = 0;
+        <b>req_wmask = 0;</b>
+    } else {
 </pre>
 </div>
 <div id="memu.wmask.set" class="caption-code">

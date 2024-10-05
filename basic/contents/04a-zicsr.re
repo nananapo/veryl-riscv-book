@@ -63,7 +63,7 @@ CSRRCI	CSRRCのrs1を、即値をゼロ拡張した値に置き換えた動作
 これでデコード処理を書く準備が整いました。
 inst_decoderモジュールの@<code>{InstCtrl}を生成している部分を変更します。
 
-//list[inst_decoder.veryl.decode][OP_SYSTEMとis_csrを追加する (inst_decoder.veryl)]{
+//list[inst_decoder.veryl.deco  de][OP_SYSTEMとis_csrを追加する (inst_decoder.veryl)]{
 #@maprange(scripts/04a/create-csrunit-range/core/src/inst_decoder.veryl,decode)
                                            is_csrを追加
     ctrl = {case op {                           ↓
@@ -215,8 +215,7 @@ csrunitモジュールには、まだCSRが定義されていません。
 
 ==== mtvecレジスタとは何か?
 
-//image[mtvec][mtvecのエンコーディング@<bib>{isa-manual.2.fig10}]{
-//}
+//image[mtvec][mtvecのエンコーディング@<bib>{isa-manual.2.fig10}]
 
 mtvecレジスタは、仕様書@<bib>{isa-manual.2.3.1.7}に定義されています。
 
