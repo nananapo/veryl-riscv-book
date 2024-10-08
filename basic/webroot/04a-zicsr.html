@@ -518,12 +518,12 @@ $ <span class="userinput">./obj_dir/sim test/sample_csr.hex 5</span>
 <p><code class="inline-code">control_hazard</code>の条件に<code class="inline-code">csru_raise_trap</code>を追加し、トラップするときに<code class="inline-code">control_hazard_pc_next</code>を<code class="inline-code">csru_trap_vector</code>に設定します。</p>
 <div id="core.veryl.csr.hazard" class="caption-code">
 <span class="caption">リスト4.24: リスト4.24: 例外の発生時にジャンプするようにする (core.veryl)</span>
-<pre class="list language-hazard">    let control_hazard        : logic = inst_valid &amp;&amp; (
+<pre class="list language-hazard">    assign control_hazard = inst_valid &amp;&amp; (
         csru_raise_trap || <span class="balloon">← 追加</span>
         inst_ctrl.is_jump ||
         inst_is_br(inst_ctrl) &amp;&amp; brunit_take
     );
-    let control_hazard_pc_next: Addr  = if csru_raise_trap {
+    assign control_hazard_pc_next = if csru_raise_trap {
         csru_trap_vector <span class="balloon">← トラップするとき、trap_vectorに飛ぶ</span>
     } else if inst_is_br(inst_ctrl) {
         inst_pc + inst_imm

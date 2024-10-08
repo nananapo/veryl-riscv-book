@@ -415,7 +415,7 @@ PC[2]が0のときは下位32ビット、1のときは上位32ビットを選択
 SD命令の実装のためには、
 書き込むデータ(@<code>{wdata})と書き込みマスク(@<code>{wmask})を変更する必要があります。
 
-//list[memunit.veryl.iaddr_rdata][書き込みデータの変更 (memunit.veryl)]{
+//list[memunit.veryl.sd_wdata][書き込みデータの変更 (memunit.veryl)]{
 #@maprange(scripts/05/ldsd-range/core/src/memunit.veryl,wdata)
     req_wdata = rs2 << {addr[@<b>|2|:0], 3'b0};
 #@end
@@ -423,7 +423,7 @@ SD命令の実装のためには、
 
 書き込むデータは、アドレスの下位2ビットではなく下位3ビット分だけシフトするようにします。
 
-//list[memunit.veryl.iaddr_rdata][書き込みマスクの変更 (memunit.veryl)]{
+//list[memunit.veryl.sd_wmask][書き込みマスクの変更 (memunit.veryl)]{
 #@maprange(scripts/05/ldsd-range/core/src/memunit.veryl,wmask)
     req_wmask = case ctrl.funct3[1:0] {
         2'b00  : @<b>|8|'b1 << addr[@<b>|2|:0],

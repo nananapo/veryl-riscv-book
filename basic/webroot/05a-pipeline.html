@@ -27,9 +27,11 @@
     <li class="toc-chapter"><a href="./05-impl-rv64i.html">6 RV64Iの実装</a></li>
     <li class="toc-chapter"><a href="./05a-pipeline.html">7 CPUのパイプライン処理化</a>
       <ul class="toc toc-3">
-        <li class="toc-section"><a href="#h7-1">7.1 パイプライン処理とは何か？</a></li>
-        <li class="toc-section"><a href="#h7-2">7.2 処理の分割</a></li>
-        <li class="toc-section"><a href="#h7-3">7.3 フォワーディング</a></li>
+        <li class="toc-section"><a href="#h7-1">7.1 CPUの性能を考える</a></li>
+        <li class="toc-section"><a href="#h7-2">7.2 パイプライン処理の実装</a></li>
+        <li class="toc-section"><a href="#h7-3">7.3 データハザードの対処</a></li>
+        <li class="toc-section"><a href="#h7-4">7.4 パイプライン処理のテスト</a></li>
+        <li class="toc-section"><a href="#h7-5">7.5 フォワーディング</a></li>
       </ul>
     </li>
     <li class="toc-chapter"><a href="./05b-synth.html">8 CPUを合成する</a></li>
@@ -44,29 +46,152 @@
         </header>
         <main class="page-main">
 <h1 class="boldlines center twolines"><a id="h7"></a><span class="secno">第7章</span> <br/>CPUのパイプライン処理化</h1>
+<p>これまでの章では、同時に1つの命令のみを実行するCPUを実装しました。高機能なCPUを実装するのは面白いですが、プログラムの実行が遅くてはいけません。機能を増やす前に、一度性能のことを考えてみましょう。</p>
+
+<h2 class="numbox"><a id="h7-1"></a><span class="secno">7.1</span> CPUの性能を考える</h2>
+<p>CPUの性能指標は、例えば消費電力や実行速度が考えられます。本章では、プログラムの実行速度について考えます。</p>
+
+<h3 class="none"><a id="h7-1-1"></a><span class="secno">7.1.1</span> CPUの性能指標</h3>
+<p>プログラムの実行速度を比較する時、プログラムの実行にかかる時間のみが絶対的な指標になります。プログラムの実行時間は、簡単に、次のような式で表すことができます<a href="bib.html#bib-patahene">[7]</a>。</p>
+<div class="equation">
+<pre>CPU時間 = \frac{実行命令数 \times CPI}{クロック周波数}
+</pre>
+</div>
+<p>それぞれの用語の定義は次の通りです。</p>
+<dl>
+<dt>CPU時間 (CPU time)</dt>
+<dd>
+    プログラムの実行のためにCPUが費やした時間
+</dd>
+<dt>実行命令数</dt>
+<dd>
+    プログラムの実行で実行される命令数
+</dd>
+<dt>CPI (clock cycles per instruction)</dt>
+<dd>
+    プログラム全体またはプログラムの一部分の命令を実行した時の,
+    1命令当たりの平均クロック・サイクル数
+</dd>
+<dt>クロック周波数 (clock rate)</dt>
+<dd>
+    クロック・サイクル時間(clock cycle time)の逆数
+</dd>
+</dl>
+<p>今のところ、CPUには命令をスキップしたり無駄に実行することはありません。そのため、実行命令数はプログラムを1命令ずつ順に実行していった時の実行命令数になります。</p>
+<p>CPIを計測するためには、何の命令にどれだけのクロック・サイクル数がかかるかと、それぞれの命令の割合が必要です。メモリにアクセスする命令は3~4クロック、それ以外の命令は1クロックで実行されます。命令の割合については考えないでおきます。</p>
+<p>クロック周波数は、CPUの回路のクリティカルパスの長さによって決まります。クリティカルパスとは、組み合わせ回路の中で最も大きな遅延を持つパスのことです。</p>
+
+<h3 class="none"><a id="h7-1-2"></a><span class="secno">7.1.2</span> 実行速度を上げる方法を考える</h3>
+<p>CPU性能方程式の各項に注目すると、CPU時間を減らすためには、実行命令数を減らすか、CPIを減らすか、クロック周波数を増大させる必要があります。</p>
+
+<h4><a id="h7-1-2-1"></a>実行命令数に注目する</h4>
+<p>実行命令数を減らすためには、コンパイラによる最適化でプログラムの命令数を減らすソフトウェア的な方法と、命令セットアーキテクチャ(ISA)を変更することで必要な命令数を減らす方法が存在します。どちらも本書の目的とするところではないので、検討しません<sup><a id="fnb-other.runinst" href="#fn-other.runinst" class="noteref" epub:type="noteref">*1</a></sup>。</p>
+<div class="footnote-list">
+<div class="footnote" id="fn-other.runinst" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>他の方法として、関数呼び出しやループをCPU側で検知して結果を保存, 利用することで実行命令数を減らす手法があります。この手法についてはずっと後の章で検討します。</p></div>
+</div><!--/.footnote-list-->
+
+<h4><a id="h7-1-2-2"></a>CPIに注目する</h4>
+<p>CPIを減らすためには、1クロックで1つ以上の命令を実行開始し、1つ以上の命令を実行完了すればいいです。これを実現する手法として、スーパースカラやアウトオブオーダー実行が存在します。これらの手法は後の章で解説, 実装します。</p>
+
+<h4><a id="h7-1-2-3"></a>クロック周波数に注目する</h4>
+<p>クロック周波数を増大させるには、クリティカルパスの長さを短くする必要があります。</p>
+<p>今のところ、CPUは計算命令を1クロック(<b>シングルサイクル</b>)で実行します。例えばADD命令を実行する時、FIFOに保存されたADD命令をデコードし、命令のビット列をもとにレジスタのデータを選択し、ALUで足し算を実行し、その結果をレジスタにライトバックします。これらを1クロックで実行するということは、命令が保存されている32ビットのレジスタとレジスタファイルを入力に、64ビットのADD演算の結果を出力する組み合わせ回路が存在するということです。この回路は大変に段数の深い組み合わせ回路を必要とし、長いクリティカルパスを生成する原因になります。</p>
+<p>クロック周波数を増大させるもっとも単純な方法は、命令の処理をいくつかの<b>ステージ(段)</b>に分割し、複数クロックで1つの命令を実行することです。複数のサイクルで命令を実行することから、この形式のCPUは<b>マルチサイクル</b>CPUといいます。</p>
+<div id="multicycle" class="image">
+<img src="images/05a-pipeline/multicycle.png" alt="命令の実行 (マルチサイクル)" class="img" />
+<p class="caption">
+図7.1: 命令の実行 (マルチサイクル)
+</p>
+</div>
+<p>命令の処理をいくつかのステージに分割すると、それに合わせて回路の深さが軽減され、クロック周波数を増大させることができます。</p>
+<p><span class="imgref"><a href="./05a-pipeline.html#multicycle">図7.1</a></span>では、1つの命令を3クロック(ステージ)で実行しています。3クロックもかかるのであれば、CPIが3倍になり、CPU時間が増えてしまいそうです。しかし、処理を均等な3ステージに分割できた場合、クロック周波数は3分の1になる<sup><a id="fnb-multicycle.clock" href="#fn-multicycle.clock" class="noteref" epub:type="noteref">*2</a></sup>ため、それほどCPU時間は増えません。</p>
+<div class="footnote-list">
+<div class="footnote" id="fn-multicycle.clock" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*2] </span>実際のところは均等に分割することはできないため、Nステージに分割してもクロック周波数はN分の1になりません</p></div>
+</div><!--/.footnote-list-->
+<p>しかし、CPIがステージ分だけ増大してしまうのは問題です。これは、命令の処理を車の組立のように流れ作業で行うことで緩和することができます。このような処理のことを、<b>パイプライン処理</b>と言います。</p>
+<div id="pipeline" class="image">
+<img src="images/05a-pipeline/pipeline.png" alt="命令の実行 (パイプライン処理)" class="img" />
+<p class="caption">
+図7.2: 命令の実行 (パイプライン処理)
+</p>
+</div>
+<p>本章では、CPUをパイプライン処理化することで、性能の向上を図ります。</p>
+
+<h3 class="none"><a id="h7-1-3"></a><span class="secno">7.1.3</span> パイプライン処理のステージについて考える</h3>
+<p>では、具体的に処理をどのようなステージに分割し、パイプライン処理を実現すればいいでしょうか?これを考えるために、<a href="./04-impl-rv32i.html">第3章</a>の最初で検討したCPUの動作を振り返ります。<a href="./04-impl-rv32i.html">第3章</a>では、CPUの動作を次のように順序付けしました。</p>
+<ol start="1" type="1">
+<li>PCに格納されたアドレスにある命令をフェッチする</li>
+<li>命令を取得したらデコードする</li>
+<li>計算で使用するデータを取得する (レジスタの値を取得したり、即値を生成する)</li>
+<li>計算する命令の場合、計算を行う</li>
+<li>メモリにアクセスする命令の場合、メモリ操作を行う</li>
+<li>計算やメモリアクセスの結果をレジスタに格納する</li>
+<li>PCの値を次に実行する命令に設定する</li>
+</ol>
+<p>もう少し大きな処理単位に分割しなおすと、次の5つの処理(ステージ)を構成することができます。ステージ名の後ろに、それぞれ対応する上のリストの処理の番号を記載しています。</p>
+<dl>
+<dt>IF (Instruction Fetch) ステージ (1)</dt>
+<dd>
+    メモリから命令をフェッチします。<br />
+    フェッチした命令をIDステージに受け渡します
+</dd>
+<dt>ID (Instruction Decode) ステージ (2,3)</dt>
+<dd>
+    命令をデコードし、制御フラグと即値を生成します。<br />
+    生成したデータをEXステージに渡します。
+</dd>
+<dt>EX (EXecute) ステージ (3, 4)</dt>
+<dd>
+    制御フラグ, 即値, レジスタの値を利用し、ALUで計算します。<br />
+    分岐判定やジャンプ先の計算も行い、生成したデータをMEMステージに渡します。
+</dd>
+<dt>MEM (MEMory) ステージ (5, 7)</dt>
+<dd>
+    メモリにアクセスする命令とCSR命令を処理します。<br />
+    分岐命令かつ分岐が成立する, ジャンプ命令である, またはトラップが発生するとき、
+    IF, ID, EXステージにある命令をフラッシュして、ジャンプ先をIFステージに伝えます。
+    メモリ, CSRの読み込み結果等をWBステージに渡します。
+</dd>
+<dt>WB (WriteBack) ステージ (6)</dt>
+<dd>
+    ALUの演算結果, メモリやCSRの読み込み結果など、命令の処理結果をレジスタに書き込みます。
+</dd>
+</dl>
+<p>IF, ID, EX, MEM, WBの5段の構成を、5段パイプラインと呼ぶことがあります。</p>
+<div class="note">
+<h5>CSRをMEMステージで処理する</h5>
+<p>上記の5段のパイプライン処理では、CSRの処理をMEMステージで行っています。これはいったいなぜでしょうか？</p>
+<p>今のところCPUにはECALL命令による例外しか存在しないため、EXステージでCSRの処理を行ってしまっても問題ありません。しかし、他の例外、例えばメモリアクセスに伴う例外を実装するとき、問題が生じます。</p>
+<p>メモリアクセスに起因する例外が発生するのはMEMステージです。このとき、EXステージでCSRの処理を行っていて、EXステージに存在する命令がmtvecレジスタに書き込むCSRRW命令だった場合、本来はMEMステージで発生した例外によって実行されないはずであるCSRRW命令によって、既にmtvecレジスタが書き換えられているかもしれません。これを復元する機能を記述することを書くことはできますが、MEMステージ以降でCSRを処理することでもこの事態を回避できるため、無駄な複雑性を導入しないためにめに、MEMステージでCSRを処理しています。</p>
+</div>
+
+<h2 class="numbox"><a id="h7-2"></a><span class="secno">7.2</span> パイプライン処理の実装</h2>
+
+<h3 class="none"><a id="h7-2-1"></a><span class="secno">7.2.1</span> ステージに分割する準備</h3>
+<p>それでは、CPUをパイプライン処理化します。処理を複数に</p>
 <p>TODO</p>
 
-<h2 class="numbox"><a id="h7-1"></a><span class="secno">7.1</span> パイプライン処理とは何か？</h2>
+<h3 class="none"><a id="h7-2-2"></a><span class="secno">7.2.2</span> FIFOを作成する</h3>
 
-<h2 class="numbox"><a id="h7-2"></a><span class="secno">7.2</span> 処理の分割</h2>
+<h3 class="none"><a id="h7-2-3"></a><span class="secno">7.2.3</span> IFステージ</h3>
 
-<h3 class="none"><a id="h7-2-1"></a><span class="secno">7.2.1</span> IFステージ</h3>
+<h3 class="none"><a id="h7-2-4"></a><span class="secno">7.2.4</span> IDステージ</h3>
 
-<h3 class="none"><a id="h7-2-2"></a><span class="secno">7.2.2</span> IDステージ</h3>
+<h3 class="none"><a id="h7-2-5"></a><span class="secno">7.2.5</span> EXステージ</h3>
 
-<h3 class="none"><a id="h7-2-3"></a><span class="secno">7.2.3</span> EXステージ</h3>
+<h3 class="none"><a id="h7-2-6"></a><span class="secno">7.2.6</span> MEMステージ</h3>
 
-<h3 class="none"><a id="h7-2-4"></a><span class="secno">7.2.4</span> MEMステージ</h3>
+<h3 class="none"><a id="h7-2-7"></a><span class="secno">7.2.7</span> CSRステージ</h3>
 
-<h3 class="none"><a id="h7-2-5"></a><span class="secno">7.2.5</span> CSRステージ</h3>
+<h3 class="none"><a id="h7-2-8"></a><span class="secno">7.2.8</span> WBステージ</h3>
 
-<h3 class="none"><a id="h7-2-6"></a><span class="secno">7.2.6</span> WBステージ</h3>
+<h2 class="numbox"><a id="h7-3"></a><span class="secno">7.3</span> データハザードの対処</h2>
 
-<h3 class="none"><a id="h7-2-7"></a><span class="secno">7.2.7</span> パイプライン処理のテスト</h3>
+<h2 class="numbox"><a id="h7-4"></a><span class="secno">7.4</span> パイプライン処理のテスト</h2>
 
-<h2 class="numbox"><a id="h7-3"></a><span class="secno">7.3</span> フォワーディング</h2>
+<h2 class="numbox"><a id="h7-5"></a><span class="secno">7.5</span> フォワーディング</h2>
 
-<h3 class="none"><a id="h7-3-1"></a><span class="secno">7.3.1</span> フォワーディングのテスト</h3>
+<h3 class="none"><a id="h7-5-1"></a><span class="secno">7.5.1</span> フォワーディングのテスト</h3>
 
         </main>
         <nav class="page-navi">

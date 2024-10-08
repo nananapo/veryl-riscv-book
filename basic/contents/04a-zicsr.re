@@ -610,12 +610,12 @@ csrunitモジュールと接続するための変数を定義し、
 
 //list[core.veryl.csr.hazard][例外の発生時にジャンプするようにする (core.veryl)]{
 #@maprange(scripts/04a/create-ecall-range/core/src/core.veryl,hazard)
-    let control_hazard        : logic = inst_valid && (
+    assign control_hazard = inst_valid && (
         csru_raise_trap || @<balloon>{追加}
         inst_ctrl.is_jump ||
         inst_is_br(inst_ctrl) && brunit_take
     );
-    let control_hazard_pc_next: Addr  = if csru_raise_trap {
+    assign control_hazard_pc_next = if csru_raise_trap {
         csru_trap_vector @<balloon>{トラップするとき、trap_vectorに飛ぶ}
     } else if inst_is_br(inst_ctrl) {
         inst_pc + inst_imm

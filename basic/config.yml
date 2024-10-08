@@ -402,3 +402,6 @@ webmaker:
   stylesheet:          # 「css」フォルダ内のCSSファイル
     - normalize.css
     - webstyle.css
+
+
+math_format: imgmath

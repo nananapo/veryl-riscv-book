@@ -87,7 +87,7 @@
 </div>
 
 <h3 class="none"><a id="h6-1-1"></a><span class="secno">6.1.1</span> SLL[I], SRL[I], SRA[I]命令の対応</h3>
-<p>RV32Iでは、シフト命令はrs1の値を0 ~ 31ビットシフトする命令として定義されています。これが、RV64Iでは、rs1の値を0 ~ 64ビットシフトする命令に変更されます。</p>
+<p>RV32Iでは、シフト命令はrs1の値を0 ~ 31ビットシフトする命令として定義されています。これが、RV64Iでは、rs1の値を0 ~ 63ビットシフトする命令に変更されます。</p>
 <p>これに対応するために、ALUのシフト演算する量を5ビットから6ビットに変更します。</p>
 <div id="shift.change" class="caption-code">
 <span class="caption">リスト6.2: リスト6.2: シフト命令でシフトする量を変更する (alu.veryl)</span>
@@ -303,7 +303,7 @@
 <p>LD命令はI形式で、opcodeは<code class="inline-code">LOAD</code>です。SD命令はS形式で、opcodeは<code class="inline-code">STORE</code>です。どちらの命令もfunct3は<code class="inline-code">011</code>です。デコード処理に変更は必要ありません。</p>
 
 <h3 class="none"><a id="h6-5-1"></a><span class="secno">6.5.1</span> メモリの幅を広げる</h3>
-<p>現在のメモリの1つのデータ<code class="inline-code">eei::MEM_DATA_WIDTH</code>の幅は32ビットですが、このままだと64ビットでロードやストアを行うときに、最低2回のメモリアクセスが必要になってしまいます。これを1回のメモリアクセスで済ませるために、データの幅を32ビットから64ビットに広げます。</p>
+<p>現在のメモリの1つのデータの幅(<code class="inline-code">eei::MEM_DATA_WIDTH</code>)は32ビットですが、このままだと64ビットでロードやストアを行うときに、最低2回のメモリアクセスが必要になってしまいます。これを1回のメモリアクセスで済ませるために、データの幅を32ビットから64ビットに広げます。</p>
 <div id="eei.veryl.MEM_DATA_WIDTH.expand" class="caption-code">
 <span class="caption">リスト6.16: リスト6.16: MEM_DATA_WIDTHを64ビットに変更する (eei.veryl)</span>
 <pre class="list language-expand">    const MEM_DATA_WIDTH: u32 = <b>64</b>;
@@ -350,15 +350,15 @@
 
 <h3 class="none"><a id="h6-5-3"></a><span class="secno">6.5.3</span> ストア命令を実装する</h3>
 <p>SD命令の実装のためには、書き込むデータ(<code class="inline-code">wdata</code>)と書き込みマスク(<code class="inline-code">wmask</code>)を変更する必要があります。</p>
-<div id="memunit.veryl.iaddr_rdata" class="caption-code">
-<span class="caption">リスト6.21: リスト6.21: 書き込みデータの変更 (memunit.veryl)</span>
-<pre class="list language-iaddr_rdata">    req_wdata = rs2 &lt;&lt; {addr[<b>2</b>:0], 3'b0};
+<div id="memunit.veryl.sd_wdata" class="caption-code">
+<span class="caption">リスト6.20: リスト6.20: 書き込みデータの変更 (memunit.veryl)</span>
+<pre class="list language-sd_wdata">    req_wdata = rs2 &lt;&lt; {addr[<b>2</b>:0], 3'b0};
 </pre>
 </div>
 <p>書き込むデータは、アドレスの下位2ビットではなく下位3ビット分だけシフトするようにします。</p>
-<div id="memunit.veryl.iaddr_rdata" class="caption-code">
+<div id="memunit.veryl.sd_wmask" class="caption-code">
 <span class="caption">リスト6.21: リスト6.21: 書き込みマスクの変更 (memunit.veryl)</span>
-<pre class="list language-iaddr_rdata">    req_wmask = case ctrl.funct3[1:0] {
+<pre class="list language-sd_wmask">    req_wmask = case ctrl.funct3[1:0] {
         2'b00  : <b>8</b>'b1 &lt;&lt; addr[<b>2</b>:0],
         2'b01  : case addr[<b>2</b>:0] {
             <b>6      : 8'b11000000,</b>

@@ -23,3 +23,7 @@ The RISC-V Instruction Set Manual Volume II: Privileged Architecture version 202
 //bibpaper[isa-manual.2.3.1.7][]{
 The RISC-V Instruction Set Manual Volume II: Privileged Architecture version 20240411 3.1.7. Machine Trap-Vector Base-Address Register
 //}
+
+//bibpaper[patahene][]{
+David Patterson, John Hennessy(著),成田 光彰 訳, コンピュータの構成と設計 MIPS Edition 第6版 [上] ～ハードウエアとソフトウエアのインタフェース～, 日経BP
+//}
