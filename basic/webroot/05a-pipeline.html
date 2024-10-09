@@ -52,7 +52,7 @@
 <p>CPUの性能指標は、例えば消費電力や実行速度が考えられます。本章では、プログラムの実行速度について考えます。</p>
 
 <h3 class="none"><a id="h7-1-1"></a><span class="secno">7.1.1</span> CPUの性能指標</h3>
-<p>プログラムの実行速度を比較する時、プログラムの実行にかかる時間のみが絶対的な指標になります。プログラムの実行時間は、簡単に、次のような式で表すことができます<a href="bib.html#bib-patahene">[7]</a>。</p>
+<p>プログラムの実行速度を比較する時、プログラムの実行にかかる時間のみが絶対的な指標になります。プログラムの実行時間は、簡単に、次のような式<a href="bib.html#bib-patahene">[7]</a>で表すことができます。</p>
 <div class="equation">
 <pre>CPU時間 = \frac{実行命令数 \times CPI}{クロック周波数}
 </pre>
@@ -162,28 +162,476 @@
 <h5>CSRをMEMステージで処理する</h5>
 <p>上記の5段のパイプライン処理では、CSRの処理をMEMステージで行っています。これはいったいなぜでしょうか？</p>
 <p>今のところCPUにはECALL命令による例外しか存在しないため、EXステージでCSRの処理を行ってしまっても問題ありません。しかし、他の例外、例えばメモリアクセスに伴う例外を実装するとき、問題が生じます。</p>
-<p>メモリアクセスに起因する例外が発生するのはMEMステージです。このとき、EXステージでCSRの処理を行っていて、EXステージに存在する命令がmtvecレジスタに書き込むCSRRW命令だった場合、本来はMEMステージで発生した例外によって実行されないはずであるCSRRW命令によって、既にmtvecレジスタが書き換えられているかもしれません。これを復元する機能を記述することを書くことはできますが、MEMステージ以降でCSRを処理することでもこの事態を回避できるため、無駄な複雑性を導入しないためにめに、MEMステージでCSRを処理しています。</p>
+<p>メモリアクセスに起因する例外が発生するのはMEMステージです。このとき、EXステージでCSRの処理を行っていて、EXステージに存在する命令がmtvecレジスタに書き込むCSRRW命令だった場合、本来はMEMステージで発生した例外によって実行されないはずであるCSRRW命令によって、既にmtvecレジスタが書き換えられているかもしれません。これを復元する処理を記述することを書くことはできますが、MEMステージ以降でCSRを処理することでもこの事態を回避できるため、無駄な複雑性を導入しないために、MEMステージでCSRを処理しています。</p>
 </div>
 
 <h2 class="numbox"><a id="h7-2"></a><span class="secno">7.2</span> パイプライン処理の実装</h2>
 
-<h3 class="none"><a id="h7-2-1"></a><span class="secno">7.2.1</span> ステージに分割する準備</h3>
-<p>それでは、CPUをパイプライン処理化します。処理を複数に</p>
-<p>TODO</p>
+<h3 class="none"><a id="h7-2-1"></a><span class="secno">7.2.1</span> ステージに分割する準備をする</h3>
+<p>それでは、CPUをパイプライン処理化します。</p>
+<p>パイプライン処理では、複数のステージが、それぞれ違う命令を処理します。そのため、それぞれのステージのために、現在処理している命令を保持するためのレジスタ(<b>パイプラインレジスタ</b>)を用意してあげる必要があります。</p>
+<div id="pipeline_reg" class="image">
+<img src="images/05a-pipeline/pipeline_reg.png" alt="パイプライン処理の概略図" class="img" />
+<p class="caption">
+図7.3: パイプライン処理の概略図
+</p>
+</div>
+<p>まず、処理を複数ステージに分割する前に、既存のレジスタの名前を変更します。</p>
+<p>現状のcoreモジュールでは、命令をフェッチする処理に使う変数の名前の先頭に<code class="inline-code">if_</code>、FIFOから取り出した命令の情報を表す変数の名前の先頭に<code class="inline-code">inst_</code>をつけています。</p>
+<p>命令をフェッチする処理はIFステージに該当します。名前はこのままで問題ありません。しかし、<code class="inline-code">inst_</code>から始まる変数は、CPUの処理を複数ステージに分けたとき、どのステージのレジスタか分からなくなります。IFステージの次はIDステージであるため、とりあえず、変数がIDステージのものであることを示す名前に変えてしまいましょう。</p>
+<div id="ready.id_prefix" class="caption-code">
+<span class="caption">リスト7.1: リスト7.1: 変数名を変更する (core.veryl)</span>
+<pre class="list language-id_prefix">    let ids_valid    : logic    = if_fifo_rvalid;
+    var ids_is_new   : logic   ; // 命令が今のクロックで供給されたかどうか
+    let ids_pc       : Addr     = if_fifo_rdata.addr;
+    let ids_inst_bits: Inst     = if_fifo_rdata.bits;
+    var ids_ctrl     : InstCtrl;
+    var ids_imm      : UIntX   ;
+</pre>
+</div>
+<p><code class="inline-code">inst_valid</code>, <code class="inline-code">inst_is_new</code>, <code class="inline-code">inst_pc</code>,<code class="inline-code">inst_bits</code>, <code class="inline-code">inst_ctrl</code>, <code class="inline-code">inst_imm</code>の名前を<span class="listref"><a href="./05a-pipeline.html#ready.id_prefix">リスト7.1</a></span>のように変更します。定義だけではなく、変数を使用しているところもすべて変更してください。</p>
 
 <h3 class="none"><a id="h7-2-2"></a><span class="secno">7.2.2</span> FIFOを作成する</h3>
+<p>命令フェッチ処理とそれ以降の処理は、それぞれ独立して動作しています。実は既にCPUは、IF, IDステージ(命令フェッチ以外の処理を行うステージ)の2ステージのパイプライン処理を行っています。</p>
+<p>IFステージとIDステージはFIFOで区切られており、FIFOのレジスタを経由して命令の受け渡しを行います。</p>
+<p>これと同様に、5ステージのパイプライン処理の実装では、それぞれのステージをFIFOで接続します(<span class="imgref"><a href="./05a-pipeline.html#pipeline_fifo">図7.4</a></span>)。ただし、FIFOのサイズは1とします。この場合、FIFOはただの1つのレジスタです。</p>
+<div id="pipeline_fifo" class="image">
+<img src="images/05a-pipeline/pipeline_fifo.png" alt="FIFOを利用したパイプライン処理" class="img" />
+<p class="caption">
+図7.4: FIFOを利用したパイプライン処理
+</p>
+</div>
+<p>IFからIDへのFIFOは存在するため、IDからEX, EXからMEM, MEMからWBへのFIFOを作成します。</p>
 
-<h3 class="none"><a id="h7-2-3"></a><span class="secno">7.2.3</span> IFステージ</h3>
+<h4><a id="h7-2-2-1"></a>構造体の定義</h4>
+<div id="fifo_type" class="image">
+<img src="images/05a-pipeline/fifo_type.png" alt="メンバーの生存区間" class="img" />
+<p class="caption">
+図7.5: メンバーの生存区間
+</p>
+</div>
+<p>まず、FIFOに格納するデータの型を定義します。それぞれのメンバーが存在する区間は<span class="imgref"><a href="./05a-pipeline.html#fifo_type">図7.5</a></span>の通りです。</p>
+<div id="fifo.type.ex" class="caption-code">
+<span class="caption">リスト7.2: リスト7.2: ID -&amp;gt; EXの間のFIFOのデータ型 (core.veryl)</span>
+<pre class="list language-ex">    struct exq_type {
+        addr: Addr    ,
+        bits: Inst    ,
+        ctrl: InstCtrl,
+        imm : UIntX   ,
+    }
+</pre>
+</div>
+<p>IDステージは、IFステージから命令のアドレスと命令のビット列を受け取ります。命令のビット列をデコードして、制御フラグと即値を生成し、EXステージに渡します。</p>
+<div id="fifo.type.mem" class="caption-code">
+<span class="caption">リスト7.3: リスト7.3: EX -&amp;gt; NENの間のFIFOのデータ型 (core.veryl)</span>
+<pre class="list language-mem">    struct memq_type {
+        addr      : Addr       ,
+        bits      : Inst       ,
+        ctrl      : InstCtrl   ,
+        imm       : UIntX      ,
+        alu_result: UIntX      ,
+        rs1_addr  : logic   &lt;5&gt;,
+        rs1_data  : UIntX      ,
+        rs2_data  : UIntX      ,
+        br_taken  : logic      ,
+        jump_addr : logic      ,
+    }
+</pre>
+</div>
+<p>EXステージは、IDステージで生成された制御フラグと即値と受け取ります。整数演算命令の時、レジスタのデータを読み取り、ALUで計算します。分岐命令のとき、分岐判定を行います。CSRやメモリアクセスでrs1, rs2のデータを利用するため、演算の結果とともにMEMステージに渡します。</p>
+<div id="fifo.type.wb" class="caption-code">
+<span class="caption">リスト7.4: リスト7.4: MEM -&amp;gt; WBの間のFIFOのデータ型 (core.veryl)</span>
+<pre class="list language-wb">    struct wbq_type {
+        addr      : Addr    ,
+        bits      : Inst    ,
+        ctrl      : InstCtrl,
+        imm       : UIntX   ,
+        alu_result: UIntX   ,
+        mem_rdata : UIntX   ,
+        csr_rdata : UIntX   ,
+    }
+</pre>
+</div>
+<p>MEMステージは、メモリのロード結果とCSRの読み込みデータを生成し、WBステージに渡します。</p>
+<p>WBステージでは、命令がライトバックする命令の時、即値, ALUの計算結果, メモリのロード結果, CSRの読み込みデータから1つを選択し、レジスタに値を書き込みます。</p>
+<p>構造体のメンバーの生存区間が<span class="imgref"><a href="./05a-pipeline.html#fifo_type">図7.5</a></span>のようになっている理由が、なんとなく分かったでしょうか?</p>
 
-<h3 class="none"><a id="h7-2-4"></a><span class="secno">7.2.4</span> IDステージ</h3>
+<h4><a id="h7-2-2-2"></a>FIFOのインスタンス化</h4>
+<p>FIFOをインスタンス化します。<code class="inline-code">DATA_TYPE</code>パラメータには、先ほど作成した構造体を設定します。FIFOのデータの個数は1であるため、<code class="inline-code">WIDTH</code>パラメータには<code class="inline-code">1</code>を設定します<sup><a id="fnb-fifo.width" href="#fn-fifo.width" class="noteref" epub:type="noteref">*3</a></sup>。<code class="inline-code">mem_wb_fifo</code>の<code class="inline-code">flush</code>が<code class="inline-code">0</code>になっていることに注意してください。</p>
+<div class="footnote-list">
+<div class="footnote" id="fn-fifo.width" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*3] </span>FIFOのデータ個数は2 ** WIDTH - 1です</p></div>
+</div><!--/.footnote-list-->
+<div id="fifo.inst" class="caption-code">
+<span class="caption">リスト7.5: リスト7.5: FIFOのインスタンス化 (core.veryl)</span>
+<pre class="list language-inst">    inst id_ex_fifo: fifo #(
+        DATA_TYPE: exq_type,
+        WIDTH    : 1       ,
+    ) (
+        clk                   ,
+        rst                   ,
+        flush : control_hazard,
+        wready: exq_wready    ,
+        wvalid: exq_wvalid    ,
+        wdata : exq_wdata     ,
+        rready: exq_rready    ,
+        rvalid: exq_rvalid    ,
+        rdata : exq_rdata     ,
+    );
 
-<h3 class="none"><a id="h7-2-5"></a><span class="secno">7.2.5</span> EXステージ</h3>
+    inst ex_mem_fifo: fifo #(
+        DATA_TYPE: memq_type,
+        WIDTH    : 1        ,
+    ) (
+        clk                   ,
+        rst                   ,
+        flush : control_hazard,
+        wready: memq_wready   ,
+        wvalid: memq_wvalid   ,
+        wdata : memq_wdata    ,
+        rready: memq_rready   ,
+        rvalid: memq_rvalid   ,
+        rdata : memq_rdata    ,
+    );
 
-<h3 class="none"><a id="h7-2-6"></a><span class="secno">7.2.6</span> MEMステージ</h3>
+    inst mem_wb_fifo: fifo #(
+        DATA_TYPE: wbq_type,
+        WIDTH    : 1       ,
+    ) (
+        clk               ,
+        rst               ,
+        <b>flush : 0</b>         ,
+        wready: wbq_wready,
+        wvalid: wbq_wvalid,
+        wdata : wbq_wdata ,
+        rready: wbq_rready,
+        rvalid: wbq_rvalid,
+        rdata : wbq_rdata ,
+    );
+</pre>
+</div>
 
-<h3 class="none"><a id="h7-2-7"></a><span class="secno">7.2.7</span> CSRステージ</h3>
+<h3 class="none"><a id="h7-2-3"></a><span class="secno">7.2.3</span> IFステージを実装する</h3>
+<p>まず、IFステージを実装します。...といっても、既にIFステージ(=命令フェッチ処理)は独立に動くものとして実装されているため、手を加える必要はありません。</p>
+<p>ステージの区間を示すために、<span class="listref"><a href="./05a-pipeline.html#mark_if">リスト7.6</a></span>のようなコメントを挿入すると良いです。ID, EX, MEM, WBステージを実装する時にも同様のコメントを挿入し、ステージの処理のコードをまとまった場所に配置しましょう。</p>
+<div id="mark_if" class="caption-code">
+<span class="caption">リスト7.6: リスト7.6: IFステージが始まることを示すコメントを挿入する (core.veryl)</span>
+<pre class="list">    ///////////////////////////////// IF Stage /////////////////////////////////
 
-<h3 class="none"><a id="h7-2-8"></a><span class="secno">7.2.8</span> WBステージ</h3>
+    var if_pc          : Addr ;
+    ...
+</pre>
+</div>
+
+<h3 class="none"><a id="h7-2-4"></a><span class="secno">7.2.4</span> IDステージを実装する</h3>
+<p>IDステージでは、命令をデコードします。</p>
+<p>既に<code class="inline-code">ids_ctrl</code>, <code class="inline-code">ids_imm</code>には、デコード結果の制御フラグと即値が割り当てられています。そのため、既存のコードの変更は必要ありません。</p>
+<p>デコード結果はEXステージに渡す必要があります。EXステージにデータを渡すには、<code class="inline-code">exq_wdata</code>にデータを割り当てます。</p>
+<div id="always_comb_id" class="caption-code">
+<span class="caption">リスト7.7: リスト7.7: EXステージに値を渡す (core.veryl)</span>
+<pre class="list">    always_comb {
+        // ID -&gt; EX
+        if_fifo_rready = exq_wready;
+        exq_wvalid     = if_fifo_rvalid;
+        exq_wdata.addr = if_fifo_rdata.addr;
+        exq_wdata.bits = if_fifo_rdata.bits;
+        exq_wdata.ctrl = ids_ctrl;
+        exq_wdata.imm  = ids_imm;
+    }
+</pre>
+</div>
+<p>IDステージにある命令は、EXステージが命令を受け付けることができるとき(<code class="inline-code">exq_wready</code>)、IDステージを完了してEXステージに処理を進めることができます。このロジックは、<code class="inline-code">if_fifo_rready</code>に<code class="inline-code">exq_wready</code>を割り当てることで実現できます。</p>
+<p>最後に、命令が今のクロックで供給されたかどうかを示す変数<code class="inline-code">id_is_new</code>は必要ないため削除します。</p>
+<div id="id_is_new" class="caption-code">
+<span class="caption">リスト7.8: リスト7.8: id_is_newを削除する (core.veryl)</span>
+<pre class="list">    <del>var ids_is_new   : logic   ;</del>
+</pre>
+</div>
+
+<h3 class="none"><a id="h7-2-5"></a><span class="secno">7.2.5</span> EXステージを実装する</h3>
+<p>EXステージでは、整数演算命令の時はALUで計算し、分岐命令の時は分岐判定を行います。</p>
+<div id="var_ex" class="caption-code">
+<span class="caption">リスト7.9: リスト7.9: 変数の定義 (core.veryl)</span>
+<pre class="list">    let exs_valid    : logic    = exq_rvalid;
+    let exs_pc       : Addr     = exq_rdata.addr;
+    let exs_inst_bits: Inst     = exq_rdata.bits;
+    let exs_ctrl     : InstCtrl = exq_rdata.ctrl;
+    let exs_imm      : UIntX    = exq_rdata.imm;
+</pre>
+</div>
+<div id="ex_prefix" class="caption-code">
+<span class="caption">リスト7.10: リスト7.10:  (core.veryl)</span>
+<pre class="list">    // レジスタ番号
+    let <b>exs_</b>rs1_addr: logic&lt;5&gt; = <b>exs</b>_inst_bits[19:15];
+    let <b>exs_</b>rs2_addr: logic&lt;5&gt; = <b>exs</b>_inst_bits[24:20];
+
+    // ソースレジスタのデータ
+    let <b>exs_</b>rs1_data: UIntX = if <b>exs_</b>rs1_addr == 0 {
+        0
+    } else {
+        regfile[<b>exs_</b>rs1_addr]
+    };
+    let <b>exs_</b>rs2_data: UIntX = if <b>exs_</b>rs2_addr == 0 {
+        0
+    } else {
+        regfile[<b>exs_</b>rs2_addr]
+    };
+
+    // ALU
+    var <b>exs_</b>op1       : UIntX;
+    var <b>exs_</b>op2       : UIntX;
+    var <b>exs_</b>alu_result: UIntX;
+
+    always_comb {
+        case <b>exs</b>_ctrl.itype {
+            InstType::R, InstType::B: {
+                                          <b>exs_</b>op1 = <b>exs_</b>rs1_data;
+                                          <b>exs_</b>op2 = <b>exs_</b>rs2_data;
+                                      }
+            InstType::I, InstType::S: {
+                                          <b>exs_</b>op1 = <b>exs_</b>rs1_data;
+                                          <b>exs_</b>op2 = <b>exs</b>_imm;
+                                      }
+            InstType::U, InstType::J: {
+                                          <b>exs_</b>op1 = <b>exs</b>_pc;
+                                          <b>exs_</b>op2 = <b>exs</b>_imm;
+                                      }
+            default: {
+                         <b>exs_</b>op1 = 'x;
+                         <b>exs_</b>op2 = 'x;
+                     }
+        }
+    }
+
+    inst alum: alu (
+        ctrl  : <b>exs</b>_ctrl      ,
+        op1   : <b>exs_</b>op1       ,
+        op2   : <b>exs_</b>op2       ,
+        result: <b>exs_</b>alu_result,
+    );
+
+    var <b>exs_</b>brunit_take: logic;
+
+    inst bru: brunit (
+        funct3: <b>exs</b>_ctrl.funct3,
+        op1   : <b>exs_</b>op1        ,
+        op2   : <b>exs_</b>op2        ,
+        take  : <b>exs_</b>brunit_take,
+    );
+</pre>
+</div>
+<div id="always_comb_ex" class="caption-code">
+<span class="caption">リスト7.11: リスト7.11:  (core.veryl)</span>
+<pre class="list">    always_comb {
+        // EX -&gt; MEM
+        exq_rready            = memq_wready;
+        memq_wvalid           = exq_wvalid;
+        memq_wdata.addr       = exq_rdata.addr;
+        memq_wdata.bits       = exq_rdata.bits;
+        memq_wdata.ctrl       = exq_rdata.ctrl;
+        memq_wdata.imm        = exq_rdata.imm;
+        memq_wdata.rs1_addr   = exs_rs1_addr;
+        memq_wdata.rs1_data   = exs_rs1_data;
+        memq_wdata.rs2_data   = exs_rs2_data;
+        memq_wdata.alu_result = exs_alu_result;
+        <span class="balloon">← ジャンプ命令、または、分岐命令かつ分岐が成立するとき、1にする</span>
+        memq_wdata.br_taken   = exs_ctrl.is_jump || inst_is_br(exs_ctrl) &amp;&amp; exs_brunit_take;
+        memq_wdata.jump_addr  = if inst_is_br(exs_ctrl) {
+            exs_pc + exs_imm <span class="balloon">← 分岐命令の分岐先アドレス</span>
+        } else {
+            exs_alu_result <span class="balloon">← ジャンプ命令のジャンプ先アドレス</span>
+        };
+    }
+</pre>
+</div>
+
+<h3 class="none"><a id="h7-2-6"></a><span class="secno">7.2.6</span> MEMステージを実装する</h3>
+<div id="var_mem" class="caption-code">
+<span class="caption">リスト7.12: リスト7.12:  (core.veryl)</span>
+<pre class="list">    var mems_is_new   : logic      ;
+    let mems_valid    : logic       = memq_rvalid;
+    let mems_pc       : Addr        = memq_rdata.addr;
+    let mems_inst_bits: Inst        = memq_rdata.bits;
+    let mems_ctrl     : InstCtrl    = memq_rdata.ctrl;
+    let mems_rd_addr  : logic   &lt;5&gt; = mems_inst_bits[11:7];
+</pre>
+</div>
+<div id="mem_prefix1" class="caption-code">
+<span class="caption">リスト7.13: リスト7.13:  (core.veryl)</span>
+<pre class="list">    assign control_hazard         = <b>mems</b>_valid &amp;&amp; (csru_raise_trap || <b>mems</b>_ctrl.is_jump || <b>memq_rdata.</b>br_taken);
+    assign control_hazard_pc_next = if csru_raise_trap {
+        csru_trap_vector
+    } else {
+        <b>memq_rdata.</b>jump_addr
+    };
+</pre>
+</div>
+<div id="mem_prefix2" class="caption-code">
+<span class="caption">リスト7.14: リスト7.14:  (core.veryl)</span>
+<pre class="list">    var memu_rdata: UIntX;
+    var memu_stall: logic;
+
+    inst memu: memunit (
+        clk                          ,
+        rst                          ,
+        valid : <b>mems</b>_valid           ,
+        is_new: <b>mems</b>_is_new          ,
+        ctrl  : <b>mems</b>_ctrl            ,
+        addr  : <b>memq_rdata.</b>alu_result,
+        rs2   : <b>memq_rdata.</b>rs2_data  ,
+        rdata : memu_rdata           ,
+        stall : memu_stall           ,
+        membus: d_membus             ,
+    );
+
+    var csru_rdata      : UIntX;
+    var csru_raise_trap : logic;
+    var csru_trap_vector: Addr ;
+
+    inst csru: csrunit (
+        clk                            ,
+        rst                            ,
+        valid   : <b>mems</b>_valid           ,
+        pc      : <b>mems</b>_pc              ,
+        ctrl    : <b>mems</b>_ctrl            ,
+        rdaddr  : <b>mems</b>_rd_addr         ,
+        csr_addr: <b>mems</b>_inst_bits[31:20],
+        rs1     : if <b>mems</b>_ctrl.funct3[2] == 1 &amp;&amp; <b>mems</b>_ctrl.funct3[1:0] != 0 {
+            {1'b0 repeat XLEN - $bits(<b>memq_rdata.</b>rs1_addr), <b>memq_rdata.</b>rs1_addr} // rs1を0で拡張する
+        } else {
+            <b>memq_rdata.</b>rs1_data
+        },
+        rdata      : csru_rdata,
+        raise_trap : csru_raise_trap,
+        trap_vector: csru_trap_vector,
+    );
+</pre>
+</div>
+<div id="mem_is_new" class="caption-code">
+<span class="caption">リスト7.15: リスト7.15:  (core.veryl)</span>
+<pre class="list">    always_ff {
+        if_reset {
+            <b>mems</b>_is_new = 0;
+        } else {
+            if memq_rvalid {
+                <b>mems</b>_is_new = memq_rready;
+            } else {
+                <b>mems</b>_is_new = 1;
+            }
+        }
+    }
+</pre>
+</div>
+<div id="always_comb_mem" class="caption-code">
+<span class="caption">リスト7.16: リスト7.16:  (core.veryl)</span>
+<pre class="list">    always_comb {
+        // MEM -&gt; WB
+        memq_rready          = wbq_wready &amp;&amp; !memu_stall;
+        wbq_wvalid           = memq_rvalid &amp;&amp; !memu_stall;
+        wbq_wdata.addr       = memq_rdata.addr;
+        wbq_wdata.bits       = memq_rdata.bits;
+        wbq_wdata.ctrl       = memq_rdata.ctrl;
+        wbq_wdata.imm        = memq_rdata.imm;
+        wbq_wdata.alu_result = memq_rdata.alu_result;
+        wbq_wdata.mem_rdata  = memu_rdata;
+        wbq_wdata.csr_rdata  = csru_rdata;
+    }
+</pre>
+</div>
+
+<h3 class="none"><a id="h7-2-7"></a><span class="secno">7.2.7</span> WBステージを実装する</h3>
+<div id="var_wb" class="caption-code">
+<span class="caption">リスト7.17: リスト7.17:  (core.veryl)</span>
+<pre class="list">    let wbs_valid    : logic    = wbq_rvalid;
+    let wbs_pc       : Addr     = wbq_rdata.addr;
+    let wbs_inst_bits: Inst     = wbq_rdata.bits;
+    let wbs_ctrl     : InstCtrl = wbq_rdata.ctrl;
+    let wbs_imm      : UIntX    = wbq_rdata.imm;
+</pre>
+</div>
+<div id="wb_prefix" class="caption-code">
+<span class="caption">リスト7.18: リスト7.18:  (core.veryl)</span>
+<pre class="list">    let <b>wbs_</b>rd_addr: logic&lt;5&gt; = <b>wbs</b>_inst_bits[11:7];
+    let <b>wbs_</b>wb_data: UIntX    = if <b>wbs</b>_ctrl.is_lui {
+        <b>wbs</b>_imm
+    } else if <b>wbs</b>_ctrl.is_jump {
+        <b>wbs_pc</b> + 4
+    } else if <b>wbs</b>_ctrl.is_load {
+        <b>wbq_rdata.</b>mem_rdata
+    } else if <b>wbs</b>_ctrl.is_csr {
+        <b>wbq_rdata.</b>csr_rdata
+    } else {
+        <b>wbq_rdata.</b>alu_result
+    };
+
+    always_ff {
+        if <b>wbs</b>_valid &amp;&amp; <b>wbs</b>_ctrl.rwb_en {
+            regfile[<b>wbs_</b>rd_addr] = <b>wbs_</b>wb_data;
+        }
+    }
+</pre>
+</div>
+<div id="always_comb_wb" class="caption-code">
+<span class="caption">リスト7.19: リスト7.19:  (core.veryl)</span>
+<pre class="list">    always_comb {
+        // WB -&gt; END
+        wbq_rready = 1;
+    }
+</pre>
+</div>
+
+<h3 class="none"><a id="h7-2-8"></a><span class="secno">7.2.8</span> デバッグ用に情報を表示する</h3>
+<div id="debug" class="caption-code">
+<span class="caption">リスト7.20: リスト7.20:  (core.veryl)</span>
+<pre class="list">    ///////////////////////////////// DEBUG /////////////////////////////////
+    var clock_count: u64;
+
+    always_ff {
+        if_reset {
+            clock_count = 1;
+        } else {
+            clock_count = clock_count + 1;
+
+            $display(&quot;\n&quot;);
+            $display(&quot;# %d&quot;, clock_count);
+
+            $display(&quot;ID ------&quot;);
+            if ids_valid {
+                $display(&quot;  %h : %h&quot;, if_fifo_rdata.addr, if_fifo_rdata.bits);
+                $display(&quot;  itype : %b&quot;, ids_ctrl.itype);
+                $display(&quot;  imm   : %h&quot;, ids_imm);
+            }
+            $display(&quot;EX -----&quot;);
+            if exq_rvalid {
+                $display(&quot;  %h : %h&quot;, exq_rdata.addr, exq_rdata.bits);
+                $display(&quot;  op1     : %h&quot;, exs_op1);
+                $display(&quot;  op2     : %h&quot;, exs_op2);
+                $display(&quot;  alu     : %h&quot;, exs_alu_result);
+                if inst_is_br(exs_ctrl) {
+                    $display(&quot;  br take : &quot;, exs_brunit_take);
+                }
+            }
+            $display(&quot;MEM -----&quot;);
+            if memq_rvalid {
+                $display(&quot;  %h : %h&quot;, memq_rdata.addr, memq_rdata.bits);
+                $display(&quot;  mem stall : %b&quot;, memu_stall);
+                $display(&quot;  mem rdata : %h&quot;, memu_rdata);
+                if mems_ctrl.is_csr {
+                    $display(&quot;  csr rdata : %h&quot;, csru_rdata);
+                    $display(&quot;  csr trap  : %b&quot;, csru_raise_trap);
+                    $display(&quot;  csr vec   : %h&quot;, csru_trap_vector);
+                }
+            }
+            $display(&quot;WB ----&quot;);
+            if memq_rvalid {
+                $display(&quot;  %h : %h&quot;, wbq_rdata.addr, wbq_rdata.bits);
+                if wbs_ctrl.rwb_en {
+                    $display(&quot;  reg[%d] &lt;= %h&quot;, wbs_rd_addr, wbs_wb_data);
+                }
+            }
+        }
+    }
+</pre>
+</div>
 
 <h2 class="numbox"><a id="h7-3"></a><span class="secno">7.3</span> データハザードの対処</h2>
 
