@@ -181,7 +181,7 @@ EXステージでCSRの処理を行ってしまっても問題ありません。
 EXステージに存在する命令がmtvecレジスタに書き込むCSRRW命令だった場合、
 本来はMEMステージで発生した例外によって実行されないはずであるCSRRW命令によって、
 既にmtvecレジスタが書き換えられているかもしれません。
-これを復元する処理を記述することを書くことはできますが、
+これを復元する処理を書くことはできますが、
 MEMステージ以降でCSRを処理することでもこの事態を回避できるため、
 無駄な複雑性を導入しないために、MEMステージでCSRを処理しています。
 //}
@@ -443,6 +443,8 @@ EXステージでは、
 整数演算命令の時はALUで計算し、
 分岐命令の時は分岐判定を行います。
 
+まず、EXステージに存在する命令の情報を@<code>{exq_rdata}から取り出します。
+
 //list[var_ex][変数の定義 (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,var_ex)
     let exs_valid    : logic    = exq_rvalid;
@@ -453,7 +455,10 @@ EXステージでは、
 #@end
 //}
 
-//list[ex_prefix][ (core.veryl)]{
+次に、EXステージで扱う変数の名前を変更します。
+変数の名前に@<code>{exs_}をつけます。
+
+//list[ex_prefix][変数名の変更対応 (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,ex_prefix)
     // レジスタ番号
     let @<b>|exs_|rs1_addr: logic<5> = @<b>|exs|_inst_bits[19:15];
@@ -515,7 +520,11 @@ EXステージでは、
 #@end
 //}
 
-//list[always_comb_ex][ (core.veryl)]{
+最後に、MEMステージに命令とデータを渡します。
+MEMステージにデータを渡すには、
+@<code>{memq_wdata}にデータを割り当てます。
+
+//list[always_comb_ex][MEMステージにデータを渡す (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,always_comb_ex)
     always_comb {
         // EX -> MEM
@@ -540,11 +549,31 @@ EXステージでは、
 #@end
 //}
 
+@<code>{br_taken}には、
+ジャンプ命令かどうか、または分岐命令かつ分岐が成立するか、
+という条件を割り当てます。
+@<code>{jump_addr}には、
+分岐命令、またはジャンプ命令のジャンプ先を割り当てます。
+これを利用することで、MEMステージでジャンプと分岐を処理します。
+
+EXステージにある命令は、
+MEMステージが命令を受け付けることができるとき(@<code>{memq_wready})、
+EXステージを完了してMEMステージに処理を進めることができます。
+このロジックは、
+@<code>{exq_rready}に@<code>{memq_wready}を割り当てることで実現できます。
+
 === MEMステージを実装する
 
+MEMステージでは、メモリにアクセスする命令とCSR命令を処理します。
+また、ジャンプ命令, 分岐命令かつ分岐が成立, またはトラップが発生する時、
+次の命令のアドレスを変更します。
 
+まず、MEMステージに存在する命令の情報を@<code>{memq_rdata}から取り出します。
+MEMステージでは、csrunitモジュールに、
+命令が今のクロックでMEMステージに供給されたかどうかの情報を渡す必要があります。
+そのため、変数@<code>{mem_is_new}を定義しています。
 
-//list[var_mem][ (core.veryl)]{
+//list[var_mem][変数の定義 (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,var_mem)
     var mems_is_new   : logic      ;
     let mems_valid    : logic       = memq_rvalid;
@@ -555,18 +584,29 @@ EXステージでは、
 #@end
 //}
 
-//list[mem_prefix1][ (core.veryl)]{
-#@maprange(scripts/05a/pipeline-range/core/src/core.veryl,mem_prefix1)
-    assign control_hazard         = @<b>|mems|_valid && (csru_raise_trap || @<b>|mems|_ctrl.is_jump || @<b>|memq_rdata.|br_taken);
-    assign control_hazard_pc_next = if csru_raise_trap {
-        csru_trap_vector
-    } else {
-        @<b>|memq_rdata.|jump_addr
-    };
+@<code>{mem_is_new}には、
+もともと@<code>{id_is_new}の更新に利用していたロジックを利用します。
+
+//list[mem_is_new][mem_is_newの更新 (core.veryl)]{
+#@maprange(scripts/05a/pipeline-range/core/src/core.veryl,mem_is_new)
+    always_ff {
+        if_reset {
+            @<b>|mems|_is_new = 0;
+        } else {
+            if memq_rvalid {
+                @<b>|mems|_is_new = memq_rready;
+            } else {
+                @<b>|mems|_is_new = 1;
+            }
+        }
+    }
 #@end
 //}
 
-//list[mem_prefix2][ (core.veryl)]{
+次に、MEMモジュールで使う変数に合わせて、
+ポートなどに割り当てている変数名を変更します。
+
+//list[mem_prefix2][変数名の変更対応 (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,mem_prefix2)
     var memu_rdata: UIntX;
     var memu_stall: logic;
@@ -608,23 +648,35 @@ EXステージでは、
 #@end
 //}
 
-//list[mem_is_new][ (core.veryl)]{
-#@maprange(scripts/05a/pipeline-range/core/src/core.veryl,mem_is_new)
-    always_ff {
-        if_reset {
-            @<b>|mems|_is_new = 0;
-        } else {
-            if memq_rvalid {
-                @<b>|mems|_is_new = memq_rready;
-            } else {
-                @<b>|mems|_is_new = 1;
-            }
-        }
-    }
+フェッチ先が変わったことを表す変数@<code>{control_hazard}と、
+新しいフェッチ先を示す信号@<code>{control_hazard_pc_next}には、
+EXステージで計算したデータとCSRステージのトラップ情報を利用するようにします。
+
+//list[mem_prefix1][ジャンプ判定処理 (core.veryl)]{
+#@maprange(scripts/05a/pipeline-range/core/src/core.veryl,mem_prefix1)
+    assign control_hazard         = @<b>|mems|_valid && (csru_raise_trap || @<b>|mems|_ctrl.is_jump || @<b>|memq_rdata.|br_taken);
+    assign control_hazard_pc_next = if csru_raise_trap {
+        csru_trap_vector
+    } else {
+        @<b>|memq_rdata.|jump_addr
+    };
 #@end
 //}
 
-//list[always_comb_mem][ (core.veryl)]{
+@<code>{control_hazard}が@<code>{1}になったとき、
+ID, EX, MEMステージに命令を供給するFIFOをフラッシュします。
+@<code>{control_hazard}が@<code>{1}になるとき、
+MEMステージの処理は完了しています。
+後述しますが、WBステージの処理は必ず
+
+
+MEMステージにある命令は、
+memunitが処理中ではなく(@<code>{!memy_stall})、
+WBステージが命令を受け付けることができるとき(@<code>{wbq_wready})、
+MEMステージを完了してWBステージに処理を進めることができます。
+このロジックについては、@<code>{memq_rready}と@<code>{wbq_wvalid}を確認してください。
+
+//list[always_comb_mem][WBステージにデータを渡す (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,always_comb_mem)
     always_comb {
         // MEM -> WB
@@ -643,7 +695,12 @@ EXステージでは、
 
 === WBステージを実装する
 
-//list[var_wb][ (core.veryl)]{
+WBステージでは、命令の結果をレジスタに書き込みます。
+WBステージが完了したら命令の処理は終わりなので、命令を破棄します。
+
+まず、MEMステージに存在する命令の情報を@<code>{wbq_rdata}から取り出します。
+
+//list[var_wb][変数の定義 (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,var_wb)
     let wbs_valid    : logic    = wbq_rvalid;
     let wbs_pc       : Addr     = wbq_rdata.addr;
@@ -653,7 +710,10 @@ EXステージでは、
 #@end
 //}
 
-//list[wb_prefix][ (core.veryl)]{
+次に、WBステージで扱う変数の名前を変更します。
+変数の名前には@<code>{wbs_}をつけます。
+
+//list[wb_prefix][変数名の変更対応 (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,wb_prefix)
     let @<b>|wbs_|rd_addr: logic<5> = @<b>|wbs|_inst_bits[11:7];
     let @<b>|wbs_|wb_data: UIntX    = if @<b>|wbs|_ctrl.is_lui {
@@ -676,7 +736,13 @@ EXステージでは、
 #@end
 //}
 
-//list[always_comb_wb][ (core.veryl)]{
+最後に、命令をFIFOから取り出します。
+WBステージでは命令を複数クロックで処理することはなく、
+WBステージの次のステージを待つ必要もないため、
+@<code>{wbq_rready}に@<code>{1}を割り当てることで、
+常にFIFOから命令を取り出します。
+
+//list[always_comb_wb][命令をFIFOから取り出す (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,always_comb_wb)
     always_comb {
         // WB -> END
@@ -685,9 +751,18 @@ EXステージでは、
 #@end
 //}
 
+IF, ID, EX, MEM, WBステージを作成できたので、
+5段パイプラインのCPUは完成です。
+
 === デバッグ用に情報を表示する
 
-//list[debug][ (core.veryl)]{
+今までは同時に1つの命令しか処理していませんでしたが、
+これからは全てのステージで別の命令を処理することになります。
+デバッグ用の表示を変更しておきましょう。
+
+@<list>{debug}のように、デバッグ表示のalways_ffブロックを変更します。
+
+//list[debug][各ステージの情報を表示する (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,debug)
     ///////////////////////////////// DEBUG /////////////////////////////////
     var clock_count: u64;
@@ -740,10 +815,47 @@ EXステージでは、
 #@end
 //}
 
+=== パイプライン処理のテスト
+
+それでは、riscv-testsを実行してみましょう。
+RV32I, RV64I向けのテストを実行します。
+
+//terminal[pipeline.test][riscv-testsの実行]{
+//}
+
+おや?テストにパスしません。
+一体何が起きているのでしょうか?
+
 == データハザードの対処
 
-== パイプライン処理のテスト
+実は、
+ただIF, ID, EX, MEM, WBステージに処理を分割するだけでは、
+正しく命令を実行することができません。
 
-== フォワーディング
+=== 正しく動かないプログラムを実行する
 
-=== フォワーディングのテスト
+例えば、@<list>{dh.example}のようなプログラムは正しく動きません。
+@<code>{test/dh.hex}として、プログラムを記述します。
+
+//list[dh.example][正しく動かないプログラムの例 (test/dh.hex)]{
+//}
+
+=== データ依存
+
+=== データ依存の対処
+
+=== パイプライン処理をテストする
+
+それでは、@<code>{test/dh.hex}を実行して、
+正しく動くことを確認します。
+
+//terminal[dh.test.successful][test/dh.hexが正しく動くことを確認する]{
+//}
+
+riscv-testsも実行しましょう。
+
+//terminal[riscvtests.successful][riscv-testsを実行する]{
+//}
+
+テストにパスすることを確認できました。
+
