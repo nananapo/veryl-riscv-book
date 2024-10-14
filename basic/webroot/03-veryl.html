@@ -20,7 +20,17 @@
 <li class="toc-part">第I部 RV32I/RV64Iの実装
   <ul class="toc toc-2">
     <li class="toc-chapter"><a href="./02-setup.html">1 環境構築</a></li>
-    <li class="toc-chapter"><a href="./03-veryl.html">2 ハードウェア記述言語 Veryl</a></li>
+    <li class="toc-chapter"><a href="./03-veryl.html">2 ハードウェア記述言語 Veryl</a>
+      <ul class="toc toc-3">
+        <li class="toc-section"><a href="#h2-1">2.1 Verylとは何か?</a></li>
+        <li class="toc-section"><a href="#h2-2">2.2 基本</a></li>
+        <li class="toc-section"><a href="#h2-3">2.3 module</a></li>
+        <li class="toc-section"><a href="#h2-4">2.4 interface</a></li>
+        <li class="toc-section"><a href="#h2-5">2.5 package</a></li>
+        <li class="toc-section"><a href="#h2-6">2.6 ジェネリクス</a></li>
+        <li class="toc-section"><a href="#h2-7">2.7 サンプルプログラム</a></li>
+      </ul>
+    </li>
     <li class="toc-chapter"><a href="./04-impl-rv32i.html">3 RV32Iの実装</a></li>
     <li class="toc-chapter"><a href="./04a-zicsr.html">4 Zicsr拡張の実装</a></li>
     <li class="toc-chapter"><a href="./04b-riscvtests.html">5 riscv-testsによるテスト</a></li>
@@ -38,25 +48,127 @@
         </header>
         <main class="page-main">
 <h1 class="boldlines center twolines"><a id="h2"></a><span class="secno">第2章</span> <br/>ハードウェア記述言語 Veryl</h1>
+
+<h2 class="numbox"><a id="h2-1"></a><span class="secno">2.1</span> Verylとは何か?</h2>
+<p>CPUを記述するといっても、いったいどうやって記述するのでしょうか?まずは、論理回路を構成する方法から考えます。</p>
+
+<h3 class="none"><a id="h2-1-1"></a><span class="secno">2.1.1</span> 論理回路の構成</h3>
+<p><b>論理回路</b>とは、デジタル(例えば0と1だけ)なデータを利用して、データを加工、保持する回路のことです。論理回路は、組み合わせ回路と順序回路に分類することができます。</p>
+<p><b>組み合わせ回路</b>とは、入力に対して、一意に出力の決まる回路<a href="bib.html#bib-ronrikairo">[1]</a>のことです。例えば、<span class="imgref"><a href="./03-veryl.html#halfadder">図2.1</a></span>は半加算器です。半加算器は、入力X, Yが決まると、出力C, Sが一意に決まります(<span class="tableref"><a href="./03-veryl.html#halfadder.truth">表2.1</a></span>)。</p>
+<div id="halfadder" class="image">
+<img src="images/03-veryl/halfadder.png" alt="半加算器 (MIL記法)" class="img" style="width:50%" />
+<p class="caption">
+図2.1: 半加算器 (MIL記法)
+</p>
+</div>
+<div id="halfadder.truth" class="table">
+<p class="caption">表2.1: 半加算器 (真理値表)</p>
+<table>
+<tr class="hline"><th>X</th><th>Y</th><th>C</th><th>S</th></tr>
+<tr class="hline"><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+<tr class="hline"><td>0</td><td>1</td><td>0</td><td>1</td></tr>
+<tr class="hline"><td>1</td><td>0</td><td>0</td><td>1</td></tr>
+<tr class="hline"><td>1</td><td>1</td><td>1</td><td>0</td></tr>
+</table>
+</div>
+<p><b>順序回路</b>とは、入力と回路自身の状態によって一意に出力の決まる回路<a href="bib.html#bib-ronrikairo">[1]</a>です。例えば、入力が1になるたびにカウントダウンするカウンタを考えます。カウントダウンするためには、今のカウンタの値(状態)を保持する必要があります。よって、このカウンタは、入力と状態によって一意に出力の決まる回路です。</p>
+<p>1ビットの値はフリップフロップという回路によって保持することができます。フロップフロップをN個並列に並べると、Nビットの値を保持することができます。フリップフロップを並列に並べた記憶装置のことを、<b>レジスタ</b>(置数器)といいます。基本的に、レジスタの値はリセット信号によって初期化し、クロック信号に同期したタイミングで変更します。</p>
+<p>論理回路を設計するには、真理値表を作成し、それを実現する論理演算を構成します。入力数や状態数が数十個ならどうにか設計できるかもしれませんが、数千, 数万の入力や状態があるとき、手作業で設計するのはほとんど不可能です。これを設計するために、ハードウェア記述言語を利用します。</p>
+
+<h3 class="none"><a id="h2-1-2"></a><span class="secno">2.1.2</span> ハードウェア記述言語</h3>
+<p><b>ハードウェア記述言語</b>(Hardware Description Language, HDL)とは、デジタル回路を設計するための言語です。有名なHDLとしては、SystemVerilogが挙げられます。</p>
+<p>SystemVerilogを利用すると、半加算器は<span class="listref"><a href="./03-veryl.html#halfadder.sv">リスト2.1</a></span>のように記述することができます。</p>
+<div id="halfadder.sv" class="caption-code">
+<span class="caption">リスト2.1: リスト2.1: SystemVerilogによる半加算器の記述</span>
+<pre class="list language-sv">module HalfAdder(
+  input logic x,        // 入力値X
+  input logic y,        // 入力値Y
+  output logic c,       // 出力地C
+  output logic s        // 出力地S
+);
+  assign s = x ^ y; // ^はXOR演算
+  assign c = x &amp; y; // &amp;はAND演算
+endmodule
+</pre>
+</div>
+<p>また、レジスタを利用した回路を<span class="listref"><a href="./03-veryl.html#counter.sv">リスト2.2</a></span>のように記述することができます。レジスタの値を、リセット信号<code class="inline-code">rst</code>が<code class="inline-code">0</code>になったタイミングで<code class="inline-code">0</code>に初期化し、クロック信号<code class="inline-code">clk</code>が<code class="inline-code">1</code>になったタイミングでカウントアップします。</p>
+<div id="counter.sv" class="caption-code">
+<span class="caption">リスト2.2: リスト2.2: SystemVerilogによるカウンタの記述</span>
+<pre class="list language-sv">module Counter(
+  input logic clk, // クロック信号
+  input logic rst  // リセット信号
+);
+  // 32ビットのレジスタの定義
+  logic [31:0] count;
+
+  always_ff @(posedge clk, negedge rst) begin
+    if (!rst) begin
+      // rstが0になったとき、countを0に初期化する
+      count &lt;= 0;
+    end else begin
+      // clkが1になったとき、countの値をcount + 1にする
+      count &lt;= count + 1;
+    end
+  end
+endmodule
+</pre>
+</div>
+<p>HDLを使用すると、論理回路を、レジスタの値と入力値を使った組み合わせ回路と、その結果をレジスタに値を格納する操作として記述できます。このような、レジスタからレジスタに、組み合わせ回路を通したデータを転送する抽象度のことを、<b>レジスタ転送レベル</b>(Register Transfer Level, RTL)といいます。</p>
+<p>HDLで記述された論理回路は、<b>合成系</b>によって、RTLから実際の回路のデータに変換されます。</p>
+
+<h3 class="none"><a id="h2-1-3"></a><span class="secno">2.1.3</span> Veryl</h3>
+<p>メジャーなHDLといえば、Verilog, SystemVerilogなどが挙げられます<sup><a id="fnb-vhdl" href="#fn-vhdl" class="noteref" epub:type="noteref">*1</a></sup>。</p>
+<div class="footnote-list">
+<div class="footnote" id="fn-vhdl" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>VHDLが無いじゃないかと思った方、すみません。VHDLのことを私はよく知らないので無いことにしました。</p></div>
+</div><!--/.footnote-list-->
+<p>Verilogは1980年代に開発された言語であり、最近のプログラミング言語と比べると機能が少なく、冗長な記述が必要です。</p>
+<p>SystemVerilogはVerilogのスーパーセットです。言語機能が増えて便利になっていますが、スーパーセットであることから、あまり推奨されない古い書き方が可能だったり、(バグの原因となるような)良くない仕様<sup><a id="fnb-nettype" href="#fn-nettype" class="noteref" epub:type="noteref">*2</a></sup>を受け継いでいます。</p>
+<div class="footnote-list">
+<div class="footnote" id="fn-nettype" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*2] </span>例えば、未定義の変数が1ビット幅の信号線として解釈される仕様があります。ヤバすぎる</p></div>
+</div><!--/.footnote-list-->
+<p>本書では、CPUの実装にVerylというHDLを使用します。Verylは2022年12月に公開された言語です。</p>
+<p>Verylの抽象度は、Verilogと同じくレジスタ転送レベルです。Verylの文法や機能は、Verilog, SystemVerilogに似通ったものになっています。しかし、if式やcase式,クロックとリセットの抽象化,ジェネリクスなど、痒い所に手が届く機能が提供されており、高い生産性を発揮します。</p>
+<p>Verylプログラムは、コンパイラ(トランスパイラ)によって、自然で読みやすいSystemVerilogプログラムに変換されます。よって、Verylは旧来のSystemVerilogの環境と共存することができ、SystemVerilogの資産を利用することができます。</p>
+
+<h2 class="numbox"><a id="h2-2"></a><span class="secno">2.2</span> 基本</h2>
+<p>それでは、Verylの書き方を簡単に学んでいきましょう。Verylのドキュメントは<a href="https://doc.veryl-lang.org/book/ja/" class="link">https://doc.veryl-lang.org/book/ja/</a>に存在します。</p>
 <p>TODO</p>
-<p>基本</p>
 <ul>
-<li>型 (logic,リテラル,struct,enum)
+<li>リテラル
 </li>
-<li>レジスタとワイヤ
+<li>型 (logic,リテラル,struct,enum,clock,reset)
 </li>
-<li>基本的な演算
+<li>type
 </li>
-<li>if, case, for
+<li>const
 </li>
-<li>連接とか
+<li>連接, repeat
 </li>
 </ul>
-<p>module</p>
 <ul>
-<li>clock, reset
+<li>変数 (var, let)
 </li>
-<li>always_*, assign
+</ul>
+<ul>
+<li>式 (演算子)
+</li>
+<li>if式, case式
+</li>
+</ul>
+<ul>
+<li>文 (if, case, for)
+</li>
+</ul>
+<ul>
+<li>function
+</li>
+<li>SystemVerilogの機能(システムタスク)
+</li>
+</ul>
+
+<h2 class="numbox"><a id="h2-3"></a><span class="secno">2.3</span> module</h2>
+<ul>
+<li>module宣言
 </li>
 <li>ポート
 </li>
@@ -64,37 +176,43 @@
 </li>
 <li>インスタンス化
 </li>
-</ul>
-<p>いろいろ</p>
-<ul>
-<li>type
+<li>always_comb, assign
 </li>
-<li>const
+<li>always_ff, if_reset
 </li>
-<li>initial
-</li>
-<li>関数
+<li>initial, final
 </li>
 </ul>
-<p>interface</p>
+
+<h2 class="numbox"><a id="h2-4"></a><span class="secno">2.4</span> interface</h2>
 <ul>
+<li>パラメータ化
+</li>
 <li>modport
 </li>
 <li>インスタンス化
 </li>
 </ul>
-<p>package</p>
+
+<h2 class="numbox"><a id="h2-5"></a><span class="secno">2.5</span> package</h2>
 <ul>
 <li>import
 </li>
 </ul>
-<p>ジェネリクス</p>
-<p>SystemVerilogの機能</p>
+
+<h2 class="numbox"><a id="h2-6"></a><span class="secno">2.6</span> ジェネリクス</h2>
 <ul>
-<li>システムタスク
+<li>function
+</li>
+<li>module
+</li>
+<li>interface
+</li>
+<li>package
 </li>
 </ul>
-<p>例</p>
+
+<h2 class="numbox"><a id="h2-7"></a><span class="secno">2.7</span> サンプルプログラム</h2>
 <ul>
 <li>半加算器
 </li>

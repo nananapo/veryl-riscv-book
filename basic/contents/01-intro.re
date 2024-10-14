@@ -13,7 +13,9 @@ ISAとしての歴史はまだ浅く、仕様書の初版は2011年に公開さ�
 研究目的で利用されたり既に何種類もマイコンが市販されているなど、着実に広まっていっています。
 
 インターネット上には多くのRISC-Vの実装が公開されています。
-例として、rocket-chip(Chiselによる実装)、Shakti(Bluespec SVによる実装)、
+例として、
+rocket-chip(Chiselによる実装),
+Shakti(Bluespec SVによる実装),
 rsd(SystemVerilogによる実装)が挙げられます。
 これらを参考にして実装するのもいいと思います。
 
@@ -30,7 +32,7 @@ Eの場合はレジスタの数が16個になります。
 CPUが何を実装しているかを示す表現にISA Stringというものがあり、
 例えばかけ算と割り算, 不可分操作ができるRV32IのCPUは@<code>{RV32IMA}と表現されます。
 
-本書では、まず@<code>{RV32I}のCPUを作成し、
+本書では、まず、@<code>{RV32I}のCPUを作成します。
 これを@<code>{RV64IMACFD_Zicond_Zicsr_Zifencei}に進化させることを目標に実装を進めます。
 
 == 使用する言語
@@ -38,10 +40,10 @@ CPUが何を実装しているかを示す表現にISA Stringというものが�
 ハードウェア記述言語とは、文字通り、
 ハードウェアを記述するための言語です。
 ハードウェアとは具体的には論理回路のことで、
-ハードウェア記述言語を使うと論理回路を記述/生成することができます。
+ハードウェア記述言語を使うと論理回路を記述, 生成することができます。
 これ以降、ハードウェア記述言語のことをHDL(Hardware Description Language)と書きます。
 
-有名なHDLとしてはVerilog HDLとSystemVerilogが挙げられますが、
+有名なHDLとしてはVerilog HDL, SystemVerilog, VHDLが挙げられますが、
 本書では、CPUの実装にVerylというHDLを使用します。
 VerylはSystemVerilogの構文を書きやすくしたような言語で、
 VerylのプログラムはSystemVerilogに変換することができます。

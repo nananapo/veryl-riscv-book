@@ -6,7 +6,7 @@
 そこで、riscv-testsというテストを利用することで、
 CPUがある程度正しく動いているらしいことを確かめます。
 
-== riscv-testsとは何か？
+== riscv-testsとは何か?
 
 riscv-testsは、次のURLからソースコードをダウンロードすることができます。
 

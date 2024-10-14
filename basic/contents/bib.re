@@ -1,5 +1,9 @@
 = 参考文献
 
+//bibpaper[ronrikairo][]{
+坂井 修一, 論理回路入門, 培風館
+//}
+
 //bibpaper[isa-manual.1.2.3.enc][]{
 The RISC-V Instruction Set Manual Volume I: Unprivileged Architecture version 20240411 2.3. Immediate Encoding Variants
 //}

@@ -24,7 +24,7 @@
     <li class="toc-chapter"><a href="./04-impl-rv32i.html">3 RV32Iの実装</a></li>
     <li class="toc-chapter"><a href="./04a-zicsr.html">4 Zicsr拡張の実装</a>
       <ul class="toc toc-3">
-        <li class="toc-section"><a href="#h4-1">4.1 CSRとは何か？</a></li>
+        <li class="toc-section"><a href="#h4-1">4.1 CSRとは何か?</a></li>
         <li class="toc-section"><a href="#h4-2">4.2 CSRR(W|S|C)[I]命令のデコード</a></li>
         <li class="toc-section"><a href="#h4-3">4.3 csrunitモジュールの実装</a></li>
         <li class="toc-section"><a href="#h4-4">4.4 ECALL命令の実装</a></li>
@@ -47,7 +47,7 @@
         <main class="page-main">
 <h1 class="boldlines center twolines"><a id="h4"></a><span class="secno">第4章</span> <br/>Zicsr拡張の実装</h1>
 
-<h2 class="numbox"><a id="h4-1"></a><span class="secno">4.1</span> CSRとは何か？</h2>
+<h2 class="numbox"><a id="h4-1"></a><span class="secno">4.1</span> CSRとは何か?</h2>
 <p>前の章では、RISC-Vの基本整数命令セットであるRV32Iを実装しました。既に簡単なプログラムを動かすことができますが、例外や割り込み,ページングなどの機能がありません。このような機能はCSRを利用して提供されます。</p>
 <p>RISC-Vには、CSR(Control and Status Register)というレジスタが4096個存在しています。例えば<code class="inline-code">mtvec</code>というレジスタは、例外や割り込みが発生したときのジャンプ先のアドレスを格納しています。RISC-VのCPUは、CSRの読み書きによって、制御(Control)や状態(Status)の読み取りを行います。</p>
 <p>CSRの読み書きを行う命令は、Zicsr拡張によって定義されています(<span class="tableref"><a href="./04a-zicsr.html#zicsr.insts">表4.1</a></span>)。本章では、Zicsrに定義されている命令,RV32Iに定義されているECALL命令,MRET命令,mtvec/mepc/mcauseレジスタを実装します。</p>
@@ -215,12 +215,12 @@ module csrunit (
 
 <h4><a id="h4-3-2-1"></a>mtvecレジスタとは何か?</h4>
 <div id="mtvec" class="image">
-<img src="images/04a-zicsr/mtvec.png" alt="mtvecのエンコーディング&lt;a href=&quot;bib.html#bib-isa-manual.2.fig10&quot;&gt;[5]&lt;/a&gt;" class="img" />
+<img src="images/04a-zicsr/mtvec.png" alt="mtvecのエンコーディング&lt;a href=&quot;bib.html#bib-isa-manual.2.fig10&quot;&gt;[6]&lt;/a&gt;" class="img" />
 <p class="caption">
-図4.1: mtvecのエンコーディング<a href="bib.html#bib-isa-manual.2.fig10">[5]</a>
+図4.1: mtvecのエンコーディング<a href="bib.html#bib-isa-manual.2.fig10">[6]</a>
 </p>
 </div>
-<p>mtvecレジスタは、仕様書<a href="bib.html#bib-isa-manual.2.3.1.7">[6]</a>に定義されています。</p>
+<p>mtvecレジスタは、仕様書<a href="bib.html#bib-isa-manual.2.3.1.7">[7]</a>に定義されています。</p>
 <p>mtvecは、MXLENビットのWARLなレジスタです。mtvecのアドレスは<code class="inline-code">12'h305</code>です。</p>
 <p>MXLENはmisaレジスタに定義されていますが、今のところはXLENと等しいという認識でOKです。WARLはWrite Any Values, Reads Legal Valuesの略です。その名の通り、好きな値を書き込めるが、読み出すときには合法な値になるという認識でOKです。</p>
 <p>mtvecは、トラップ(Trap)が発生したときのジャンプ先(Trap-Vector)の基準となるアドレスを格納するレジスタです。トラップとは、例外(Exception)、または割り込み(Interrupt)により、CPUの制御を変更することを言います<sup><a id="fnb-trap.define" href="#fn-trap.define" class="noteref" epub:type="noteref">*1</a></sup>。トラップが発生する時、CPUはCSRを変更した後、mtvecに格納されたアドレスにジャンプします。</p>
@@ -533,7 +533,7 @@ $ <span class="userinput">./obj_dir/sim test/sample_csr.hex 5</span>
 </pre>
 </div>
 <p>それでは、csrunitモジュールにトラップの処理を実装します。</p>
-<p>ECALL命令は、I形式, 即値は0, rs1とrdは0, funct3は0, opcodeは<code class="inline-code">SYSTEM</code>な命令です。これを判定するためのワイヤを作成します。</p>
+<p>ECALL命令は、I形式, 即値は0, rs1とrdは0, funct3は0, opcodeは<code class="inline-code">SYSTEM</code>な命令です。これを判定するための変数を作成します。</p>
 <div id="is_ecall" class="caption-code">
 <span class="caption">リスト4.25: リスト4.25: ecall命令かどうかの判定 (csrunit.veryl)</span>
 <pre class="list">    // ECALL命令かどうか
@@ -634,7 +634,7 @@ $ <span class="userinput">./obj_dir/sim test/sample_ecall.hex 10</span>
 </div><!--/.footnote-list-->
 
 <h3 class="none"><a id="h4-5-1"></a><span class="secno">4.5.1</span> MRET命令を実装する</h3>
-<p>まず、csrunitモジュールに供給されている命令が、MRET命令かどうかを判定するためのワイヤ<code class="inline-code">is_mret</code>を作成します。MRET命令は、上位12ビットが<code class="inline-code">001100000010</code>, rs1は0, funct3は0, rdは0です。</p>
+<p>まず、csrunitモジュールに供給されている命令が、MRET命令かどうかを判定するための変数<code class="inline-code">is_mret</code>を作成します。MRET命令は、上位12ビットが<code class="inline-code">001100000010</code>, rs1は0, funct3は0, rdは0です。</p>
 <div id="csrunit.mret" class="caption-code">
 <span class="caption">リスト4.31: リスト4.31: MRET命令の判定 (csrunit.veryl)</span>
 <pre class="list language-mret">    // MRET命令かどうか

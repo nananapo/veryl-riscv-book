@@ -1,6 +1,6 @@
 = Zicsr拡張の実装
 
-== CSRとは何か？
+== CSRとは何か?
 
 前の章では、RISC-Vの基本整数命令セットであるRV32Iを実装しました。
 既に簡単なプログラムを動かすことができますが、
@@ -628,7 +628,7 @@ csrunitモジュールと接続するための変数を定義し、
 それでは、csrunitモジュールにトラップの処理を実装します。
 
 ECALL命令は、I形式, 即値は0, rs1とrdは0, funct3は0, opcodeは@<code>{SYSTEM}な命令です。
-これを判定するためのワイヤを作成します。
+これを判定するための変数を作成します。
 
 //list[is_ecall][ecall命令かどうかの判定 (csrunit.veryl)]{
 #@maprange(scripts/04a/create-ecall-range/core/src/csrunit.veryl,is_ecall)
@@ -759,7 +759,7 @@ MRET命令は、例えば、権限のあるOSから権限のないユーザー�
 === MRET命令を実装する
 
 まず、csrunitモジュールに供給されている命令が、
-MRET命令かどうかを判定するためのワイヤ@<code>{is_mret}を作成します。
+MRET命令かどうかを判定するための変数@<code>{is_mret}を作成します。
 MRET命令は、上位12ビットが@<code>{001100000010}, rs1は0, funct3は0, rdは0です。
 
 //list[csrunit.mret][MRET命令の判定 (csrunit.veryl)]{
