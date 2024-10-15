@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width">
-    <title>Intro | Verylで作るRISC-V CPU</title>
+    <title>Intro | Verylで作るCPU</title>
     <link rel="stylesheet" type="text/css" href="css/normalize.css" />
     <link rel="stylesheet" type="text/css" href="css/webstyle.css" />
     <link rel="next" title="環境構築" href="02-setup.html">
@@ -13,11 +13,12 @@
   <body>
     <div class="page-outer">
       <div class="side-content">
-                <a class="nav-title" href="index.html">Verylで作るRISC-V CPU</a>
+                <a class="nav-title" href="index.html">Verylで作るCPU</a>
 <ul class="toc toc-1">
     <li class="toc-chapter"><a href="./00-preface.html">まえがき / はじめに</a></li>
     <li class="toc-chapter"><a href="./01-intro.html">Intro</a>
       <ul class="toc toc-2">
+        <li class="toc-section"><a href="#h">CPUの自作</a></li>
         <li class="toc-section"><a href="#h">RISC-V</a></li>
         <li class="toc-section"><a href="#h">使用する言語</a></li>
         <li class="toc-section"><a href="#h">本書の構成</a></li>
@@ -44,23 +45,29 @@
         </header>
         <main class="page-main">
 <h1 class="none center"><a id="h"></a><br/>Intro</h1>
-<p>こんにちは! あなたはCPUを作成したことがありますか!作成したことがあってもなくても大歓迎、この本はCPU自作の面白さVerylを世に広めるために執筆されました。実装を始める前に、まずはRISC-Vや使用する言語、本書の構成について簡単に解説します。RISC-VやVerylのことを知っているという方は、本書の構成だけ読んでいただければOKです。それでは始めましょう。</p>
+<p>こんにちは!あなたはCPUを作成したことがありますか?作成したことがあってもなくても大歓迎、この本はCPU自作の面白さとVerylを世に広めるために執筆されました。実装を始める前に、まずはRISC-Vや使用する言語、本書の構成について簡単に解説します。RISC-VやVerylのことを知っているという方は、本書の構成だけ読んでいただければOKです。それでは始めましょう。</p>
 
-<h2 class="numbox"><a id="h-1"></a>RISC-V</h2>
-<p>RISC-Vはカリフォルニア大学バークレー校で開発されたRISCのISA(命令セットアーキテクチャ)です。ISAとしての歴史はまだ浅く、仕様書の初版は2011年に公開されました。それにも関わらず、RISC-Vは仕様がオープンでカスタマイズ可能であるという特徴もあって、研究目的で利用されたり既に何種類もマイコンが市販されているなど、着実に広まっていっています。</p>
-<p>インターネット上には多くのRISC-Vの実装が公開されています。例として、rocket-chip(Chiselによる実装),Shakti(Bluespec SVによる実装),rsd(SystemVerilogによる実装)が挙げられます。これらを参考にして実装するのもいいと思います。</p>
-<p>本書では、RISC-Vのバージョンriscv-isa-release-87edab7-2024-05-04を利用します。RISC-Vの最新の仕様は、GitHubのriscv/riscv-isa-manual (<a href="https://github.com/riscv/riscv-isa-manual/" class="link">https://github.com/riscv/riscv-isa-manual/</a>) で確認することができます。</p>
-<p>RISC-Vには、基本整数命令セットとしてRV32I, RV64I, RV32E, RV64E(, RV128I)が定義されています。RVの後ろにつく数字はレジスタの長さ(XLEN)が何ビットかです。数字の後ろにつく文字がIの場合、XLENビットのレジスタが32個存在します。Eの場合はレジスタの数が16個になります。</p>
+<h2 class="numbox"><a id="h-1"></a>CPUの自作</h2>
+<p>TODO</p>
+
+<h2 class="numbox"><a id="h-2"></a>RISC-V</h2>
+<p>RISC-Vは、カリフォルニア大学バークレー校で開発されたRISCのISA(命令セットアーキテクチャ)です。仕様書の初版は2011年に公開されました。ISAとしての歴史はまだ浅いですが、RISC-Vは仕様がオープンでカスタマイズ可能であるという特徴もあって、研究で利用されたり既に何種類もマイコンが市販されているなど、着実に広まっていっています。</p>
+<p>インターネット上には多くのRISC-Vの実装が公開されています。例として、rocket-chip(Chiselによる実装),Shakti(Bluespec SVによる実装),rsd(SystemVerilogによる実装)が挙げられます。</p>
+<p>本書では、RISC-Vのバージョンriscv-isa-release-87edab7-2024-05-04 TODOを利用します。RISC-Vの最新の仕様は、GitHubの<a href="https://github.com/riscv/riscv-isa-manual/" class="link">riscv/riscv-isa-manual</a>で確認することができます。</p>
+<p>RISC-Vには、基本整数命令セットとしてRV32I, RV64I, RV32E, RV64E<sup><a id="fnb-rv128i" href="#fn-rv128i" class="noteref" epub:type="noteref">*1</a></sup>が定義されています。RVの後ろにつく数字はレジスタの長さ(XLEN)が何ビットかです。数字の後ろにつく文字がIの場合、XLENビットのレジスタが32個存在します。Eの場合はレジスタの数が16個になります。</p>
+<div class="footnote-list">
+<div class="footnote" id="fn-rv128i" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>RV128Iもありますが、まだDraft段階です</p></div>
+</div><!--/.footnote-list-->
 <p>基本整数命令セットには最低限の命令しか定義されていません。それ以外のかけ算や割り算, 不可分操作, CSRなどの追加の命令や機能は拡張として定義されています。CPUが何を実装しているかを示す表現にISA Stringというものがあり、例えばかけ算と割り算, 不可分操作ができるRV32IのCPUは<code class="inline-code">RV32IMA</code>と表現されます。</p>
 <p>本書では、まず、<code class="inline-code">RV32I</code>のCPUを作成します。これを<code class="inline-code">RV64IMACFD_Zicond_Zicsr_Zifencei</code>に進化させることを目標に実装を進めます。</p>
 
-<h2 class="numbox"><a id="h-2"></a>使用する言語</h2>
-<p>ハードウェア記述言語とは、文字通り、ハードウェアを記述するための言語です。ハードウェアとは具体的には論理回路のことで、ハードウェア記述言語を使うと論理回路を記述, 生成することができます。これ以降、ハードウェア記述言語のことをHDL(Hardware Description Language)と書きます。</p>
+<h2 class="numbox"><a id="h-3"></a>使用する言語</h2>
+<p>ハードウェア記述言語とは、文字通り、ハードウェアを記述するための言語です。ハードウェアとは論理回路のことで、ハードウェア記述言語を使うと論理回路を記述, 生成することができます。これ以降、ハードウェア記述言語のことをHDL (Hardware Description Language) と書くことがあります。</p>
 <p>有名なHDLとしてはVerilog HDL, SystemVerilog, VHDLが挙げられますが、本書では、CPUの実装にVerylというHDLを使用します。VerylはSystemVerilogの構文を書きやすくしたような言語で、VerylのプログラムはSystemVerilogに変換することができます。そのため、SystemVerilogを利用できる環境でVerylを使用することができます。</p>
-<p>Verylの構文や機能はSystemVerilogと似通っており、SystemVerilogが分かる人は殆ど時間をかけずにVerylを書けるようになると思います。本書はSystemVerilogを知らない人を対象にしているため、SystemVerilogを知っている必要はありません。Verylの詳細や記法については<a href="./03-veryl.html">第2章「ハードウェア記述言語 Veryl」</a>で解説します。</p>
-<p>他には、シミュレーションやテストのためにC++, Pythonを利用します。プログラムがどのような意味や機能を持つかについては解説しますが、言語の仕様や書き方、ライブラリなどについては説明しません。</p>
+<p>Verylの構文や機能はSystemVerilogと似通っており、SystemVerilogが分かる人は殆ど時間をかけずにVerylを書けるようになると思います。本書はSystemVerilogを知らない人を対象にしているため、SystemVerilogを知っている必要はありません。HDLやVerylの記法は<a href="./03-veryl.html">第2章「ハードウェア記述言語 Veryl」</a>で解説します。</p>
+<p>他には、回路のシミュレーションやテストのためにC++, Pythonを利用します。プログラムがどのような意味や機能を持つかについては解説しますが、言語の仕様や書き方、ライブラリなどについては説明しません。</p>
 
-<h2 class="numbox"><a id="h-3"></a>本書の構成</h2>
+<h2 class="numbox"><a id="h-4"></a>本書の構成</h2>
 <p>本シリーズ(基本編)では、次のようにCPUを実装していきます。</p>
 <ol start="1" type="1">
 <li>RV32IのCPUを実装する (<a href="./04-impl-rv32i.html">第3章</a>)</li>
@@ -68,12 +75,12 @@
 <li>RV64Iを実装する (<a href="./05-impl-rv64i.html">第6章</a>)</li>
 <li>パイプライン化する (<a href="./05a-pipeline.html">第7章</a>)</li>
 <li>M, A, C拡張を実装する</li>
-<li>UARTの仕組みと割り込みを実装する</li>
+<li>UARTと割り込みを実装する</li>
 <li>OSを実行するために必要なCSRを実装する</li>
 <li>OSを実行する</li>
 </ol>
 <p>本書(基本編の第I部)では、上の1から4までを実装, 解説します。</p>
-<p>プログラムのテストはシミュレーションと実機(FPGA)で行います。本書では、TangMega 138KとPYNQ-Z1というFPGAを利用します。ただし、実機がなくても実装を進めることができるので所有していなくても構いません。</p>
+<p>CPUのテストはシミュレーションと実機(FPGA)で行います。本書では、TangMega 138KとPYNQ-Z1というFPGAを利用します。ただし、実機がなくても実装を進めることができるので所有していなくても構いません。</p>
 
         </main>
         <nav class="page-navi">

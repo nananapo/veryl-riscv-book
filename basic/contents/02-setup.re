@@ -1,31 +1,31 @@
 = 環境構築
 
-最低限必要なソフトウェアをインストールします。
+本書で使用するソフトウェアをインストールします。
 
 次のいずれかの環境を用意してください。
+筆者はWindowsを推奨します。
 
  * WSLが使えるWindows
- * そこそこ新しめのMac
+ * Mac
  * Linux
 
 == Veryl
 
-Verylは本書で利用するHDLです。
-まず、Verylのコンパイラをインストールします。
-
 === Verylのインストール
 
-まず、Verylをインストールします。
+Verylは本書で利用するHDLです。
+まず、Verylのトランスパイラをインストールします。
 Verylには、Verylupというインストーラが用意されており、
 これを利用することでverylをインストールすることができます。
 
 Verylupはcargo, またはGitHubのReleaseページから入手することができます。
 cargoが入っている方は@<code>{cargo install verylup}でインストールしてください。
-cargoが入っていない場合は、以下のURLから入手方法を確認することができます。
+cargoが入っていない場合は、
+@<href>{https://github.com/veryl-lang/verylup, veryl-lang/verylup}
+から入手方法を確認することができます。
 
- * veryl-lang/verylup : @<href>{https://github.com/veryl-lang/verylup}
-
-Verylupを入手したら、次のようにVerylの最新版をインストールします。
+Verylupを入手したら、
+次のようにVerylの最新版をインストールします。
 
 //terminal[Verylup-install][Verylのインストール]{
 $ @<userinput>{verylup setup}
@@ -48,8 +48,8 @@ $ @<userinput>{verylup update}
 
 特定のバージョンのVerylをインストールするには、次のようなコマンドを実行します。
 
-//terminal[veryl-specific][Verylのバージョン0.13.0をインストールする]{
-$ @<userinput>{verylup install 0.13.0}
+//terminal[veryl-specific][VerylのバージョンTODOをインストールする]{
+$ @<userinput>{verylup install TODO}
 //}
 
 インストールされているバージョン一覧は次のように確認できます。
@@ -58,7 +58,7 @@ $ @<userinput>{verylup install 0.13.0}
 $ @<userinput>{verylup show}
 installed toolchains
 --------------------
-0.13.0
+TODO
 latest (default)
 //}
 
@@ -68,17 +68,17 @@ latest (default)
 
 //terminal[veryl-version][verylのバージョン確認]{
 $ @<userinput>{veryl --version}
-veryl 0.13.0
+veryl TODO
 //}
 
 特定のバージョンのVerylを使用するには、次のようにverylコマンドを実行します。
 
-//terminal[veryl-use-ver][Verylのバージョン0.13.0を使用する]{
-$ @<userinput>{veryl +0.13.0} @<balloon>{+でバージョンを指定する}
+//terminal[veryl-use-ver][VerylのバージョンTODOを使用する]{
+$ @<userinput>{veryl +TODO} @<balloon>{+でバージョンを指定する}
 //}
 
 //caution[本書で利用するVerylのバージョン]{
-本書ではバージョン0.13.0を利用しますが、
+本書ではバージョンTODOを利用しますが、
 Veryl側の問題によりプログラムをビルドできないことがあります。
 これの対処方法についてはサポートページを確認してください。
 
@@ -89,15 +89,14 @@ Veryl側の問題によりプログラムをビルドできないことがあり
 
 エディタにVSCodeを利用している方は、@<img>{vscode-ext}の拡張をインストールすることをお勧めします。
 
- * URL : @<href>{https://marketplace.visualstudio.com/items?itemName=dalance.vscode-veryl}
+ * @<href>{https://marketplace.visualstudio.com/items?itemName=dalance.vscode-veryl}
 
 //image[vscode-ext][VerylのVSCode拡張]
 
 == Verilator
 
-VerilatorはSystemVerilogのシミュレータを生成するためのソフトウェアです。
-
- * verilator/verilator : @<href>{https://github.com/verilator/verilator}
+@<href>{https://github.com/verilator/verilator, Verilator}は、
+SystemVerilogのシミュレータを生成するためのソフトウェアです。
 
 @<code>{apt}、または@<code>{brew}を利用してインストールすることができます。
 パッケージマネージャが入っていない場合は、以下のページを参考にインストールしてください。
@@ -108,10 +107,9 @@ VerilatorはSystemVerilogのシミュレータを生成するためのソフト�
 
 riscv-gnu-toolchainには、RISC-V向けのコンパイラなどのtoolchainが含まれています。
 
-以下のリポジトリのREADMEにインストール方法が書かれています。
-これの@<code>{Installation (Newlib)}を参考にインストールしてください。
-
- * riscv-collab/riscv-gnu-toolchain : @<href>{https://github.com/riscv-collab/riscv-gnu-toolchain}
+@<href>{https://github.com/riscv-collab/riscv-gnu-toolchain, riscv-collab/riscv-gnu-toolchain}
+のREADMEにインストール方法が書かれています。
+READMEの@<code>{Installation (Newlib)}を参考にインストールしてください。
 
 //info[FPGAを利用する方へ]{
 TangMega138Kを利用する人はGOWIN EDA,

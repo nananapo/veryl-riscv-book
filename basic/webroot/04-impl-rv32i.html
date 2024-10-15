@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width">
-    <title>RV32Iの実装 | Verylで作るRISC-V CPU</title>
+    <title>RV32Iの実装 | Verylで作るCPU</title>
     <link rel="stylesheet" type="text/css" href="css/normalize.css" />
     <link rel="stylesheet" type="text/css" href="css/webstyle.css" />
     <link rel="next" title="Zicsr拡張の実装" href="04a-zicsr.html">
@@ -13,7 +13,7 @@
   <body>
     <div class="page-outer">
       <div class="side-content">
-                <a class="nav-title" href="index.html">Verylで作るRISC-V CPU</a>
+                <a class="nav-title" href="index.html">Verylで作るCPU</a>
 <ul class="toc toc-1">
     <li class="toc-chapter"><a href="./00-preface.html">まえがき / はじめに</a></li>
     <li class="toc-chapter"><a href="./01-intro.html">Intro</a></li>
@@ -53,49 +53,53 @@
         </header>
         <main class="page-main">
 <h1 class="boldlines center twolines"><a id="h3"></a><span class="secno">第3章</span> <br/>RV32Iの実装</h1>
-<p>本章では、RISC-Vの基本整数命令セットである<code class="inline-code">RV32I</code>を実装します。基本整数命令という名前の通り、整数の足し引きやビット演算、ジャンプ、分岐命令などの最小限の命令しか実装されていません。また、32ビット幅の汎用レジスタが32個定義されています。ただし、0番目のレジスタの値は常に0です。RISC-Vは基本整数命令セットに新しい命令を拡張として実装します。複雑な機能を持つCPUを実装する前に、まずは最小の機能を持つCPUを実装しましょう。</p>
+<p>本章では、RISC-Vの基本整数命令セットである<b>RV32I</b>を実装します。基本整数命令という名前の通り、整数の足し引きやビット演算、ジャンプ、分岐命令などの最小限の命令しか実装されていません。また、32ビット幅の汎用レジスタが32個定義されています。ただし、0番目のレジスタの値は常に0です。</p>
+<p>RISC-VのCPUは基本整数命令セットを必ず実装して、他の命令や機能は拡張として実装します。複雑な機能を持つCPUを実装する前に、まずは最小限の命令を実行できるCPUを実装しましょう。</p>
 
 <h2 class="numbox"><a id="h3-1"></a><span class="secno">3.1</span> CPUは何をやっているのか?</h2>
-<p>上に書かれている文章の意味が分からなくても大丈夫。詳しく説明します。</p>
-<p>CPUを実装するには何が必要でしょうか?まずはCPUがどのような動作をするかについて考えてみます。一般的に、汎用のプログラムを実行するCPUは次の手順でプログラムを実行していきます。</p>
+<p>上に書かれている文章の意味が分からなくても大丈夫です。詳しく説明します。</p>
+<p>CPUを実装するには何が必要でしょうか?まずはCPUがどのような動作をするかについて考えてみます。一般的に、汎用のプログラムを実行するCPUは、次の手順でプログラムを実行していきます。</p>
 <ol start="1" type="1">
 <li>メモリからプログラムを読み込む</li>
 <li>プログラムを実行する</li>
 <li>1, 2の繰り返し</li>
 </ol>
-<p>ここで、メモリから読み込まれる「プログラム」とは一体何を示しているのでしょうか?普通のプログラマが書くのはC言語やRustなどのプログラミング言語のプログラムですが、通常のCPUはそれをそのまま解釈して実行することはできません。そのため、メモリから読み込まれる「プログラム」とは、CPUが読み込んで実行することができる形式のプログラムです。これはよく「機械語」と呼ばれ、0と1で表される2進数のビット列で記述されています。</p>
+<p>ここで、メモリから読み込まれる「プログラム」とは一体何を示しているのでしょうか?普通のプログラマが書くのはC言語やRustなどのプログラミング言語のプログラムですが、通常のCPUはそれをそのまま解釈して実行することはできません。そのため、メモリから読み込まれる「プログラム」とは、CPUが読み込んで実行することができる形式のプログラムです。これはよく「機械語」と呼ばれ、0と1で表される2進数のビット列<sup><a id="fnb-trit.computer" href="#fn-trit.computer" class="noteref" epub:type="noteref">*1</a></sup>で記述されています。</p>
+<div class="footnote-list">
+<div class="footnote" id="fn-trit.computer" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>その昔、Setunという3進数のコンピュータが存在したらしく、機械語は3進数のトリット(trit)で構成されていたようです</p></div>
+</div><!--/.footnote-list-->
 <p>メモリからプログラムを読み込んで実行するのがCPUの仕事ということが分かりました。これをもう少し掘り下げます。</p>
 <p>まず、プログラムをメモリから読み込むためには、メモリのどこを読み込みたいのかという情報(アドレス)をメモリに与える必要があります。また、当然ながらメモリが必要です。</p>
 <p>CPUはプログラムを実行しますが、一気にすべてのプログラムを読み込んだり実行するわけではなく、プログラムの最小単位である「命令」を一つずつ読み込んで実行します。命令をメモリに要求、取得することを、命令をフェッチするといいます。</p>
-<p>命令がCPUに供給されると、CPUは命令のビット列がどのような意味を持っていて何をすればいいかを判定します。このことを、命令をデコードするといいます。</p>
-<p>命令をデコードすると、いよいよ計算やメモリアクセスを行います。しかし、例えば足し算を計算するにも何と何を足し合わせればいいのか分かりません。この計算に使うデータは、次のように指定されます。</p>
+<p>命令がCPUに供給されると、CPUは命令のビット列がどのような意味を持っていて、何をすればいいかを判定します。このことを、命令をデコードするといいます。</p>
+<p>命令をデコードすると、いよいよ計算やメモリアクセスを行います。しかし、例えば足し算を計算するにも、何と何を足し合わせればいいのか分かりません。この計算に使うデータは、次のいずれかで指定されます。</p>
 <ul>
 <li>レジスタ(= CPUに存在する小さなメモリ)の番号
 </li>
 <li>即値(= 命令のビット列から生成される数値)
 </li>
 </ul>
-<p>計算対象のデータにレジスタと即値のどれを使うかは命令によって異なります。レジスタの番号は命令のビット列の中に含まれています。</p>
+<p>計算対象のデータにレジスタと即値のどちらを使うかは命令によって異なります。レジスタの番号は命令のビット列の中に含まれています。</p>
 <p>計算を実行するユニット(部品)のことを、ALU(Arithmetic Logic Unit)といいます。</p>
-<p>計算やメモリアクセスが終わると、その結果をレジスタに格納します。例えば足し算を行う命令なら足し算の結果が、メモリから値を読み込む命令なら読み込まれた値が格納されます。</p>
-<p>これで命令の実行は終わりですが、CPUは次の命令を実行する必要があります。今現在実行している命令のアドレスを格納しているメモリのことをプログラムカウンタ(PC)と言い、CPUはPCの値をメモリに渡すことで命令をフェッチしています。CPUは次の命令を実行するために、PCの値を次の命令のアドレスに設定します。ジャンプ命令の場合は、PCの値をジャンプ先のアドレスに設定します。分岐命令の場合は、分岐の成否を計算で判定し、分岐が成立する場合は分岐先のアドレスをPCに設定します。分岐が成立しない場合は、通常の命令と同じように次の命令のアドレスをPCに設定します。</p>
+<p>計算やメモリアクセスが終わると、その結果をレジスタに格納します。例えば、足し算を行う命令なら足し算の結果、メモリから値を読み込む命令なら読み込まれた値を格納します。</p>
+<p>これで命令の実行は終わりですが、CPUは次の命令を実行する必要があります。今現在実行している命令のアドレスを格納しているレジスタのことをプログラムカウンタ(PC)と言い、CPUはPCの値をメモリに渡すことで命令をフェッチしています。</p>
+<p>CPUは次の命令を実行するために、PCの値を次の命令のアドレスに設定します。ジャンプ命令の場合は、PCの値をジャンプ先のアドレスに設定します。分岐命令の場合は、まず、分岐の成否を判定します。分岐が成立する場合は、PCの値を分岐先のアドレスに設定します。分岐が成立しない場合は、通常の命令と同じように、PCの値を次の命令のアドレスに設定します。</p>
 <p>ここまでの話をまとめると、CPUの動作は次のようになります。</p>
-<ul>
-<li>PCに格納されたアドレスにある命令をフェッチする
-</li>
-<li>命令を取得したらデコードする
-</li>
-<li>計算で使用するデータを取得する (レジスタの値を取得したり、即値を生成する)
-</li>
-<li>計算する命令の場合、計算を行う
-</li>
-<li>メモリにアクセスする命令の場合、メモリ操作を行う
-</li>
-<li>計算やメモリアクセスの結果をレジスタに格納する
-</li>
-<li>PCの値を次に実行する命令に設定する
-</li>
-</ul>
+<ol start="1" type="1">
+<li>PCに格納されたアドレスにある命令をフェッチする</li>
+<li>命令を取得したらデコードする</li>
+<li>計算で使用するデータを取得する (レジスタの値を取得したり、即値を生成する)</li>
+<li>計算する命令の場合、計算を行う</li>
+<li>メモリにアクセスする命令の場合、メモリ操作を行う</li>
+<li>計算やメモリアクセスの結果をレジスタに格納する</li>
+<li>PCの値を次に実行する命令に設定する</li>
+</ol>
+<div id="cpu-arch" class="image">
+<img src="images/04-impl-rv32i/cpu-arch.png" alt="雑なCPUの図" class="img" />
+<p class="caption">
+図3.1: 雑なCPUの図
+</p>
+</div>
 <p>CPUが何をするものなのかが分かりましたか?実装を始めましょう。</p>
 
 <h2 class="numbox"><a id="h3-2"></a><span class="secno">3.2</span> プロジェクトの作成</h2>
@@ -141,8 +145,8 @@ $ <span class="userinput">mkdir src</span>
 }
 </pre>
 </div>
-<p>EEIとは、RISC-V execution environment interfaceの略です。RISC-Vのプログラムの実行環境とインターフェースという広い意味があり、ISAの定義もEEIに含まれているため名前を使用しています。</p>
-<p>eeiパッケージには、次のパラメータを定義します。</p>
+<p>EEIとは、RISC-V execution environment interfaceの略です。RISC-Vのプログラムの実行環境とインターフェースという広い意味があり、ISAの定義もEEIに含まれているため、この名前を使用しています。</p>
+<p>eeiパッケージには、次の定数を定義します。</p>
 <dl>
 <dt>XLEN</dt>
 <dd>
@@ -156,7 +160,7 @@ $ <span class="userinput">mkdir src</span>
     そのため、値を32にしています。
 </dd>
 </dl>
-<p>また、何度も使用することになる型に別名を付けています。</p>
+<p>また、何度も使用することになる型に、type文によって別名を付けています。</p>
 <dl>
 <dt>UIntX, UInt32, UInt64</dt>
 <dd>
@@ -185,7 +189,7 @@ $ <span class="userinput">mkdir src</span>
 </li>
 </ul>
 
-<h3 class="none"><a id="h3-4-1"></a><span class="secno">3.4.1</span> メモリのインターフェースの定義</h3>
+<h3 class="none"><a id="h3-4-1"></a><span class="secno">3.4.1</span> メモリのインターフェースを定義する</h3>
 <p>このメモリモジュールには、クロックとリセット信号の他に7個のポートを定義する必要があります(<span class="tableref"><a href="./04-impl-rv32i.html#memmodule-if">表3.1</a></span>)。これを一つ一つ定義、接続するのは面倒なため、次のようなinterfaceを定義します。</p>
 <p><code class="inline-code">src/membus_if.veryl</code>を作成し、次のように記述します。</p>
 <div id="membus_if.veryl" class="caption-code">
@@ -229,16 +233,17 @@ $ <span class="userinput">mkdir src</span>
 <tr class="hline"><td>rst </td><td>reset</td><td>input</td><td>リセット信号</td></tr>
 <tr class="hline"><td>valid</td><td>logic</td><td>input</td><td>メモリアクセスを要求しているかどうか</td></tr>
 <tr class="hline"><td>ready</td><td>logic</td><td>output</td><td>メモリアクセスを受容するかどうか</td></tr>
-<tr class="hline"><td>addr</td><td>Addr</td><td>input</td><td>アクセスするアドレス</td></tr>
+<tr class="hline"><td>addr</td><td>logic&lt;ADDR_WIDTH&gt;</td><td>input</td><td>アクセスするアドレス</td></tr>
 <tr class="hline"><td>wen</td><td>logic</td><td>input</td><td>書き込みかどうか (1なら書き込み)</td></tr>
-<tr class="hline"><td>wdata</td><td>UInt32</td><td>input</td><td>書き込むデータ</td></tr>
+<tr class="hline"><td>wdata</td><td>logic&lt;DATA_WIDTH&gt;</td><td>input</td><td>書き込むデータ</td></tr>
 <tr class="hline"><td>rvalid</td><td>logic</td><td>output</td><td>受容した要求の処理が終了したかどうか</td></tr>
-<tr class="hline"><td>rdata</td><td>UInt32</td><td>output</td><td>受容した読み込み命令の結果</td></tr>
+<tr class="hline"><td>rdata</td><td>logic&lt;DATA_WIDTH&gt;</td><td>output</td><td>受容した読み込み命令の結果</td></tr>
 </table>
 </div>
+<p>membus_ifはジェネリックインターフェースです。ジェネリックパラメータとして、<code class="inline-code">ADDR_WIDTH</code>, <code class="inline-code">DATA_WIDTH</code>が定義されています。<code class="inline-code">ADDR_WIDTH</code>はアドレスの幅、<code class="inline-code">DATA_WIDTH</code>は1つのデータの幅です。</p>
 <p>interfaceを利用することで、変数の定義が不要になり、さらにポートの相互接続を簡潔にすることができます。</p>
 
-<h3 class="none"><a id="h3-4-2"></a><span class="secno">3.4.2</span> メモリの実装</h3>
+<h3 class="none"><a id="h3-4-2"></a><span class="secno">3.4.2</span> メモリモジュールを実装する</h3>
 <p>メモリを作る準備が整いました。<code class="inline-code">src/memory.veryl</code>を作成し、その中にメモリモジュールを記述します。</p>
 <div id="memory.veryl" class="caption-code">
 <span class="caption">リスト3.5: リスト3.5: memory.veryl</span>
@@ -273,25 +278,23 @@ $ <span class="userinput">mkdir src</span>
 }
 </pre>
 </div>
-<p>memoryモジュールには次のパラメータが定義されています。</p>
+<p>memoryモジュールはジェネリックモジュールです。次のジェネリックパラメータを定義しています。</p>
 <dl>
 <dt>DATA_WIDTH</dt>
 <dd>
-    メモリのデータの単位の幅を指定するためのパラメータです。
+    メモリのデータの単位の幅を指定するためのパラメータです。<br />
     この単位ビットでデータを読み書きします。
 </dd>
-<dt>MEMORY_SIZE</dt>
+<dt>ADDR_WIDTH</dt>
 <dd>
-	メモリのサイズを指定するためのパラメータです。
-	メモリのサイズはDATA_WIDTH * (2 ** MEMORY_SIZE)ビットになります。
-</dd>
-<dt>FILE_PATH</dt>
-<dd>
-    メモリの初期値が格納されたファイルのパスです。
-    初期化は$readmemhシステムタスクで行います。
-    (ポートとして定義していますが、本書ではパラメータとして扱います。)
+	メモリのサイズを指定するためのパラメータです。<br />
+	メモリのサイズはDATA_WIDTH * (2 ** ADDR_WIDTH)ビットになります。
 </dd>
 </dl>
+<p>ポートには、クロック信号とリセット信号以外に、membus_ifインターフェースとstring型の<code class="inline-code">FILE_PATH</code>を定義しています。memoryモジュールを利用する時、<code class="inline-code">FILE_PATH</code>ポート<sup><a id="fnb-filepath.port" href="#fn-filepath.port" class="noteref" epub:type="noteref">*2</a></sup>には、メモリの初期値が格納されたファイルのパスを指定します。初期化は<code class="inline-code">$readmemh</code>システムタスクで行います。</p>
+<div class="footnote-list">
+<div class="footnote" id="fn-filepath.port" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*2] </span>本来はパラメータとして定義するべきですが、シミュレータの都合上ポートとして定義しています</p></div>
+</div><!--/.footnote-list-->
 <p>読み込み、書き込み時の動作は次の通りです。</p>
 <dl>
 <dt>読み込み</dt>
@@ -315,7 +318,6 @@ $ <span class="userinput">mkdir src</span>
 	次のクロックで<code class="inline-code">membus.rvalid</code>が<code class="inline-code">1</code>になります。
 </dd>
 </dl>
-<p>Addr型では1バイト単位でアドレスを指定しますが、memレジスタは32ビット(=4バイト)単位でデータを整列しています。そのため、Addr型のアドレスをそのままmemレジスタのインデックスとして利用することはできません。<code class="inline-code">addr_to_memaddr</code>関数は、1バイト単位のアドレスの下位2ビットを切り詰めることによって、memレジスタにおけるインデックスに変換しています。</p>
 
 <h2 class="numbox"><a id="h3-5"></a><span class="secno">3.5</span> topモジュールの作成</h2>
 <p>次に、最上位のモジュールを定義します。</p>
@@ -340,6 +342,7 @@ module top (
 }
 </pre>
 </div>
+<p>TODO</p>
 <p>先ほど作ったmemoryモジュールをインスタンス化しています。また、memoryモジュールのポートに接続するためのmembus_ifインターフェースもインスタンス化しています。</p>
 
 <h2 class="numbox"><a id="h3-6"></a><span class="secno">3.6</span> 命令フェッチ</h2>
@@ -409,6 +412,7 @@ module core (
 <p>これにより、0,4,8,c,10,...という順番のアドレスの命令を次々にフェッチするようになっています。</p>
 <p>上から2つめの<code class="inline-code">always_ff</code>ブロックはデバッグ用のプログラムです。命令フェッチが完了したときにその結果を<code class="inline-code">$display</code>システムタスクによって出力します。</p>
 <p>次に、topモジュールでcoreモジュールをインスタンス化し、membus_ifインターフェースを接続します。これによって、メモリとCPUが接続されました。</p>
+<p>アドレスは1バイト単位のアドレスです。memレジスタは、32ビット(=4バイト)単位でデータを整列しています。そのため、Addr型のアドレスをそのままmemレジスタのインデックスとして利用することはできません。<code class="inline-code">addr_to_memaddr</code>関数は、1バイト単位のアドレスの下位2ビットを切り詰めることによって、memレジスタにおけるインデックスに変換しています。</p>
 <div id="top.veryl.core.instantiate" class="caption-code">
 <span class="caption">リスト3.8: リスト3.8: top.veryl内でcoreモジュールをインスタンス化する</span>
 <pre class="list language-instantiate">    inst c: core (
@@ -790,7 +794,7 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 7</span>
 <div id="riscv-inst-types" class="image">
 <img src="images/04-impl-rv32i/riscv-inst-types.png" alt="RISC-Vの命令形式 &lt;a href=&quot;bib.html#bib-isa-manual.1.2.3.enc&quot;&gt;[2]&lt;/a&gt;" class="img" />
 <p class="caption">
-図3.1: RISC-Vの命令形式 <a href="bib.html#bib-isa-manual.1.2.3.enc">[2]</a>
+図3.2: RISC-Vの命令形式 <a href="bib.html#bib-isa-manual.1.2.3.enc">[2]</a>
 </p>
 </div>
 <dl>
@@ -1032,7 +1036,7 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 7</span>
 </pre>
 </div>
 <p>レジスタをまとめたもののことをレジスタファイルと呼ぶため、<code class="inline-code">regfile</code>という名前をつけています。</p>
-<p><span class="imgref"><a href="./04-impl-rv32i.html#riscv-inst-types">図3.1</a></span>を見るとわかるように、RISC-Vの命令は形式によってソースレジスタの数が異なります。例えば、R形式はソースレジスタが2つで、2つのレジスタのデータを使って実行されます。それに対して、I形式のソースレジスタは1つです。I形式の命令の実行には、ソースレジスタのデータと即値を利用します。</p>
+<p><span class="imgref"><a href="./04-impl-rv32i.html#riscv-inst-types">図3.2</a></span>を見るとわかるように、RISC-Vの命令は形式によってソースレジスタの数が異なります。例えば、R形式はソースレジスタが2つで、2つのレジスタのデータを使って実行されます。それに対して、I形式のソースレジスタは1つです。I形式の命令の実行には、ソースレジスタのデータと即値を利用します。</p>
 <p>レジスタを定義したので、命令が使用するレジスタのデータを取得します。命令のビット列の中のソースレジスタの番号の場所は、命令形式が違っても共通の場所にあります。</p>
 <p>ここで、プログラムを簡単にするために、命令中のソースレジスタの番号にあたる場所に、常にソースレジスタの番号が書かれていると解釈します。更に、命令がレジスタのデータを利用するかどうかに関係なく、常にレジスタのデータを読み込むことにします。</p>
 <div id="core.reg.use" class="caption-code">
@@ -1070,7 +1074,7 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 7</span>
 </pre>
 </div>
 <p><code class="inline-code">$display</code>システムタスクで、命令のレジスタ番号とデータを表示します。早速動作のテストをしたいところですが、今のままだとレジスタのデータが初期化されておらず、0番目のレジスタのデータ以外は不定(0か1か分からない)になってしまいます。</p>
-<p>これではテストする意味がないため、レジスタの値を適当な値に初期化します。<sup><a id="fnb-reset.reg.error" href="#fn-reset.reg.error" class="noteref" epub:type="noteref">*1</a></sup></p>
+<p>これではテストする意味がないため、レジスタの値を適当な値に初期化します。<sup><a id="fnb-reset.reg.error" href="#fn-reset.reg.error" class="noteref" epub:type="noteref">*3</a></sup></p>
 <div id="core.reg.init" class="caption-code">
 <span class="caption">リスト3.31: リスト3.31: レジスタの値を初期化する (core.veryl)</span>
 <pre class="list language-init">    // レジスタの初期化
@@ -1085,7 +1089,7 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 7</span>
 </div>
 <p>上のコードでは、<code class="inline-code">always_ff</code>ブロックの<code class="inline-code">if_reset</code>で、n番目(32 &gt; n &gt; 0)のレジスタの値を<code class="inline-code">n + 100</code>で初期化しています。</p>
 <div class="footnote-list">
-<div class="footnote" id="fn-reset.reg.error" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>「iは変数だからif_resetで使えません」のようなエラーが出る場合、申し訳ありませんがfor文を使わずに1つずつ初期化してください。</p></div>
+<div class="footnote" id="fn-reset.reg.error" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*3] </span>「iは変数だからif_resetで使えません」のようなエラーが出る場合、申し訳ありませんがfor文を使わずに1つずつ初期化してください。</p></div>
 </div><!--/.footnote-list-->
 <div id="reg.debug" class="cmd-code">
 <span class="caption">リスト3.32: リスト3.32: レジスタ読み込みのデバッグ</span>
@@ -1190,7 +1194,21 @@ module alu (
 <tr class="hline"><td>result</td><td>output</td><td>UIntX</td><td>結果</td></tr>
 </table>
 </div>
-<p>命令がALUでどのような計算を行うかは命令の種別によって異なります。仕様書で整数演算命令として定義されている命令<a href="bib.html#bib-isa-manual.1.2.4">[4]</a>は、命令のfunct3, funct7フィールドによって計算の種類を特定することができます。</p>
+<p>命令がALUでどのような計算を行うかは命令の種別によって異なります。仕様書で整数演算命令として定義されている命令<a href="bib.html#bib-isa-manual.1.2.4">[4]</a>は、命令のfunct3<span class="tableref"><a href="./04-impl-rv32i.html#alu_funct3">表3.4</a></span>, funct7フィールドによって計算の種類を特定することができます。</p>
+<div id="alu_funct3" class="table">
+<p class="caption">表3.4: ALUの演算の種類</p>
+<table>
+<tr class="hline"><th>funct3</th><th>演算</th></tr>
+<tr class="hline"><td>3'b000</td><td>加算、または減算</td></tr>
+<tr class="hline"><td>3'b001</td><td>左シフト</td></tr>
+<tr class="hline"><td>3'b010</td><td>符号あり &lt;=</td></tr>
+<tr class="hline"><td>3'b011</td><td>符号なし &lt;=</td></tr>
+<tr class="hline"><td>3'b100</td><td>ビット単位XOR</td></tr>
+<tr class="hline"><td>3'b101</td><td>右(論理|算術)シフト</td></tr>
+<tr class="hline"><td>3'b110</td><td>ビット単位OR</td></tr>
+<tr class="hline"><td>3'b111</td><td>ビット単位AND</td></tr>
+</table>
+</div>
 <p>それ以外の命令は、足し算しか行いません。そのため、デコード時に整数演算命令とそれ以外の命令を<code class="inline-code">InstCtrl.is_aluop</code>で区別し、整数演算命令以外は常に足し算を行うようにしています。具体的には、<code class="inline-code">opcode</code>がOPかOP-IMMの命令の<code class="inline-code">InstCtrl.is_aluop</code>を<code class="inline-code">1</code>にしています。(inst_decoderモジュールを確認してください)</p>
 <p><code class="inline-code">always_comb</code>ブロックでは、case文でfunct3によって計算を区別します。それだけでは区別できないとき、funct7を使用します。</p>
 <div id="core.veryl.alu.data" class="caption-code">
@@ -1286,7 +1304,7 @@ module alu (
 </div>
 <p>それぞれの命令の意味は次のとおりです。</p>
 <div id="sample.hex.alu" class="table">
-<p class="caption">表3.4: 命令の意味</p>
+<p class="caption">表3.5: 命令の意味</p>
 <table>
 <tr class="hline"><th>アドレス</th><th>命令</th><th>意味</th></tr>
 <tr class="hline"><td>00000000</td><td>addi x1, x0, 32</td><td>x1 = x0 + 32</td></tr>
@@ -1458,7 +1476,7 @@ $ <span class="userinput">obj_dir/sim sample.hex 6</span>
 <h2 class="numbox"><a id="h3-11"></a><span class="secno">3.11</span> ロード命令とストア命令の実装</h2>
 <p>RV32Iには、メモリのデータをロードする(読み込む),ストアする(書き込む)命令として次の命令があります。</p>
 <div id="ls.insts" class="table">
-<p class="caption">表3.5: ロード命令, ストア命令</p>
+<p class="caption">表3.6: ロード命令, ストア命令</p>
 <table>
 <tr class="hline"><th>命令</th><th>作用</th></tr>
 <tr class="hline"><td>LB</td><td>8ビットのデータを読み込む。上位24ビットは符号拡張する</td></tr>
@@ -1598,7 +1616,7 @@ module memunit (
 <p>メモリにアクセスする命令のとき、memunitモジュールは<code class="inline-code">Init</code>, <code class="inline-code">WaitReady</code>, <code class="inline-code">WaitValid</code>の順で状態を移動するため、実行には少なくとも3クロックが必要です。その間、CPUはレジスタのライトバック処理やFIFOからの命令の取り出しを待つ必要があります。</p>
 <p>これを実現するために、memunitモジュールには処理中かどうかを表す<code class="inline-code">stall</code>フラグが存在します。有効な命令が供給されているとき、<code class="inline-code">state</code>やメモリの状態に応じて、次のように<code class="inline-code">stall</code>を決定します。</p>
 <div id="stall.cond" class="table">
-<p class="caption">表3.6: stallの値の決定方法</p>
+<p class="caption">表3.7: stallの値の決定方法</p>
 <table>
 <tr class="hline"><th>状態</th><th>stallが1になる条件</th></tr>
 <tr class="hline"><td>Init</td><td>新しく命令が供給されて、それがメモリにアクセスする命令のとき</td></tr>
@@ -1823,7 +1841,7 @@ deadbeef // 0x20
 </div>
 <p>プログラムは次のようになっています。</p>
 <div id="sample.hex.lwsw" class="table">
-<p class="caption">表3.7: メモリに格納するデータ</p>
+<p class="caption">表3.8: メモリに格納するデータ</p>
 <table>
 <tr class="hline"><th>アドレス</th><th>命令</th><th>意味</th></tr>
 <tr class="hline"><td>00000000</td><td>lw x10, 0x20(x0)</td><td>x10に、アドレスが0x20のデータを読み込む</td></tr>
@@ -1892,7 +1910,7 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 13</span>
 </div>
 <p>LB, LBU, LH, LHU, LW命令は、funct3の値で区別することができます。</p>
 <div id="funct3.load" class="table">
-<p class="caption">表3.8: ロード命令のfunct3</p>
+<p class="caption">表3.9: ロード命令のfunct3</p>
 <table>
 <tr class="hline"><th>funct3</th><th>命令</th></tr>
 <tr class="hline"><td>000</td><td>LB</td></tr>
@@ -2144,7 +2162,7 @@ deadbeef // 0x0
 <h2 class="numbox"><a id="h3-12"></a><span class="secno">3.12</span> ジャンプ命令、分岐命令の実装</h2>
 <p>まだ、重要な命令を実装できていません。プログラムでif文やループを実現するためには、ジャンプや分岐をする命令が必要です。RV32Iには、仕様書<a href="bib.html#bib-isa-manual.1.2.5">[5]</a>に次の命令が定義されています。</p>
 <div id="jump.br.insts" class="table">
-<p class="caption">表3.9: ジャンプ命令, 分岐命令</p>
+<p class="caption">表3.10: ジャンプ命令, 分岐命令</p>
 <table>
 <tr class="hline"><th>命令</th><th>形式</th><th>動作</th></tr>
 <tr class="hline"><td>JAL</td><td>J形式</td><td>PC+即値に無条件ジャンプする。rdにPC+4を格納する</td></tr>
@@ -2305,15 +2323,15 @@ $ <span class="userinput">obj_dir/sim src/sample_jump.hex 17</span>
 <h3 class="none"><a id="h3-12-2"></a><span class="secno">3.12.2</span> 条件分岐命令</h3>
 <p>条件分岐命令はすべてB形式で、PC+即値で分岐先を指定します。それぞれの命令は、命令のfunct3フィールドで判別することができます。</p>
 <div id="br.funct3" class="table">
-<p class="caption">表3.10: 条件分岐命令とfunct3</p>
+<p class="caption">表3.11: 条件分岐命令とfunct3</p>
 <table>
-<tr class="hline"><th>funct3</th><th>命令</th></tr>
-<tr class="hline"><td>000</td><td>BEQ</td></tr>
-<tr class="hline"><td>001</td><td>BNE</td></tr>
-<tr class="hline"><td>100</td><td>BLT</td></tr>
-<tr class="hline"><td>101</td><td>BGE</td></tr>
-<tr class="hline"><td>110</td><td>BLTU</td></tr>
-<tr class="hline"><td>111</td><td>BGEU</td></tr>
+<tr class="hline"><th>funct3</th><th>命令</th><th>演算</th></tr>
+<tr class="hline"><td>000</td><td>BEQ</td><td>==</td></tr>
+<tr class="hline"><td>001</td><td>BNE</td><td>!=</td></tr>
+<tr class="hline"><td>100</td><td>BLT</td><td>符号あり &lt;=</td></tr>
+<tr class="hline"><td>101</td><td>BGE</td><td>符号あり &gt;</td></tr>
+<tr class="hline"><td>110</td><td>BLTU</td><td>符号なし &lt;=</td></tr>
+<tr class="hline"><td>111</td><td>BGEU</td><td>符号なし &gt;</td></tr>
 </table>
 </div>
 
