@@ -397,7 +397,7 @@ memoryモジュールのメモリ容量には、
 === 命令フェッチを実装する
 
 @<code>{src/core.veryl}を作成し、
-次のように記述します(@<code>{core.veryl.all})。
+次のように記述します(@<list>{core.veryl.all})。
 
 //list[core.veryl.all][core.veryl]{
 #@mapfile(scripts/04/create-core/core/src/core.veryl)
@@ -518,14 +518,49 @@ memoryモジュールは32ビット(=4バイト)単位でデータを整列し�
 #@maprange(scripts/04/create-core-range/core/src/top.veryl,addr_to_memaddr)
     // アドレスをメモリのデータ単位でのアドレスに変換する
     function addr_to_memaddr (
-        addr: input logic<XLEN>          ,
-    ) -> logic<MEM_DATA_WIDTH> {
-        return addr >> $clog2(MEM_DATA_WIDTH / 8);
+        addr: input logic<XLEN>,
+    ) -> logic<20>   {
+        return addr[20 + $clog2(MEM_DATA_WIDTH / 8) - 1:$clog2(MEM_DATA_WIDTH / 8)];
     }
 #@end
 //}
 
-実装は、
+addr_to_memaddr関数は、
+@<code>{MEM_DATA_WIDTH}(=32)をバイトに変換した値(=4)のlog2をとった値(=2)を使って、
+@<code>{addr[21:2]}を切り取っています。
+
+次に、coreモジュール用のmembus_ifインターフェースを作成します(@<list>{top.veryl.create-core-range.membus})。
+ジェネリックパラメータには、
+coreモジュールのインターフェースのジェネリックパラメータと同じく、
+ILENとXLENを割り当てます。
+
+//list[top.veryl.create-core-range.membus][coreモジュール用のmembus_ifインターフェースをインスタンス化する (top.veryl)]{
+#@maprange(scripts/04/create-core-range/core/src/top.veryl,membus)
+    inst membus     : membus_if::<MEM_DATA_WIDTH, 20>;
+    @<b>|inst membus_core: membus_if::<ILEN, XLEN>;|
+#@end
+//}
+
+@<code>{membus}と@<code>{membus_core}を接続します(@<list>{top.veryl.create-core-range.connect})。
+アドレスは、@<code>{addr_to_memaddr}関数で変換した値を割り当てます。
+
+//list[top.veryl.create-core-range.connect][membusとmembus_coreを接続する (top.veryl)]{
+#@maprange(scripts/04/create-core-range/core/src/top.veryl,connect)
+    always_comb {
+        membus.valid      = membus_core.valid;
+        membus_core.ready = membus.ready;
+        // アドレスをデータ幅単位のアドレスに変換する
+        membus.addr        = addr_to_memaddr(membus_core.addr);
+        membus.wen         = 0; // 命令フェッチは常に読み込み
+        membus.wdata       = 'x;
+        membus_core.rvalid = membus.rvalid;
+        membus_core.rdata  = membus.rdata;
+    }
+#@end
+//}
+
+最後に、coreモジュールをインスタンス化します。
+これによって、メモリとCPUが接続されました。
 
 //list[top.veryl.create-core-range.core][top.veryl内でcoreモジュールをインスタンス化する]{
 #@maprange(scripts/04/create-core-range/core/src/top.veryl,core)
@@ -536,9 +571,6 @@ memoryモジュールは32ビット(=4バイト)単位でデータを整列し�
     );
 #@end
 //}
-
-これによって、
-メモリとCPUが接続されました。
 
 === 命令フェッチをテストする
 
@@ -559,9 +591,11 @@ $ @<userinput>{veryl build} @<balloon>{ビルドする}
 
 シミュレータのビルドにはVerilatorを利用します。
 Verilatorは与えられたSystemVerilogプログラムをC++プログラムに変換することでシミュレータを生成します。
-verilatorを利用するために、次のようなC++プログラムを書く必要があります。
+verilatorを利用するために、次のようなC++プログラムを書く必要があります@<fn>{verilator.only.verilog}。
 
-@<code>{src/tb_verilator.cpp}を作成し、次のように記述します。
+//footnote[verilator.only.verilog][Verilogプログラムだけでビルドすることもできます]
+
+@<code>{src/tb_verilator.cpp}を作成し、次のように記述します(@<list>{test_verilator.cpp})。
 
 //list[test_verilator.cpp][tb_verilator.cpp]{
 #@mapfile(scripts/04/verilator-tb/core/src/tb_verilator.cpp)
@@ -625,28 +659,35 @@ int main(int argc, char** argv) {
 #@end
 //}
 
-このC++プログラムはtopモジュール(プログラム中ではVtop_coreクラス)をインスタンス化し、
+このC++プログラムは、
+topモジュール(プログラム中ではVtop_coreクラス)をインスタンス化し、
 そのクロックを反転して実行するのを繰り返しています。
 
-このプログラムはコマンドライン引数として次の2つの値を受け取ります。
+このプログラムは、コマンドライン引数として次の2つの値を受け取ります。
 
  : MEMORY_FILE_PATH
-	メモリの初期値のファイルへのパス。
-	実行時にtopモジュールのMEM_FILE_PATHパラメータに渡されます。
+	メモリの初期値のファイルへのパス。@<br>{}
+	実行時にtopモジュールのMEM_FILE_PATHポートに渡されます。
 
  : CYCLE
-	何クロックで実行を終了するかを表す値。
+	何クロックで実行を終了するかを表す値。@<br>{}
 	0のときは終了しません。デフォルト値は0です。
 
-Verilatorによるシミュレーションは、トップモジュールのクロック信号を変更して@<code>{eval}関数を呼び出すことにより実行します。
-プログラムでは@<code>{clk}を反転させて@<code>{eval}するループの前にtopモジュールをリセットする必要があるため、
-topモジュールの@<code>{rst}を1にして@<code>{eval}を実行し、
+Verilatorによるシミュレーションは、
+topモジュールのクロック信号を更新して、
+@<code>{eval}関数を呼び出すことにより実行します。
+プログラムでは、
+@<code>{clk}を反転させて@<code>{eval}するループの前に、
+topモジュールをリセット信号によりリセットする必要があります。
+そのため、
+topモジュールの@<code>{rst}を1にしてから@<code>{eval}を実行し、
 @<code>{rst}を0にしてまた@<code>{eval}を実行し、
 @<code>{rst}を1にもどしてから@<code>{clk}を反転しています。
 
 ==== シミュレータのビルド
 
-@<code>{verilator}コマンドを実行し、シミュレータをビルドします。
+@<code>{verilator}コマンドを実行し、
+シミュレータをビルドします(@<list>{build.simulator})。
 
 //terminal[build.simulator][シミュレータのビルド]{
 $ verilator --cc -f core.f --exe src/tb_verialtor.cpp --top-module top --Mdir obj_dir
@@ -654,7 +695,8 @@ $ make -C obj_dir -f Vcore_top.mk @<balloon>{シミュレータをビルドす�
 $ mv obj_dir/Vcore_top obj_dir/sim @<balloon>{シミュレータの名前をsimに変更する}
 //}
 
-@<code>{verilator --cc}コマンドに次のコマンドライン引数を渡して実行することで、
+@<code>{verilator --cc}コマンドに、
+次のコマンドライン引数を渡して実行することで、
 シミュレータを生成するためのプログラムが@<code>{obj_dir}に生成されます。
 
  : -f
@@ -673,13 +715,13 @@ $ mv obj_dir/Vcore_top obj_dir/sim @<balloon>{シミュレータの名前をsim�
 	成果物の生成先を指定します。
 	今回は@<code>{obj_dir}フォルダに指定しています。
 
-
-上記のコマンドの実行により、シミュレータが@<code>{obj_dir/sim}に生成されました。
+上記のコマンドの実行により、
+シミュレータが@<code>{obj_dir/sim}に生成されました。
 
 ==== メモリの初期化用ファイルの作成
 
 シミュレータを実行する前にメモリの初期値となるファイルを作成します。
-@<code>{src/sample.hex}を作成し、次のように記述します。
+@<code>{src/sample.hex}を作成し、次のように記述します(@<list>{sample.hex})。
 
 //list[sample.hex][sample.hex]{
 #@mapfile(scripts/04/memif/core/src/sample.hex)
@@ -692,8 +734,9 @@ cafebebe
 //}
 
 値は16進数で4バイトずつ記述されています。
-シミュレーションを実行すると、このファイルはmemoryモジュールの@<code>{$readmemh}システムタスクによって読み込みます。
-それにより、メモリは次のように初期化されます。
+シミュレータを実行すると、
+memoryモジュールは@<code>{$readmemh}システムタスクでsample.hexを読み込みます。
+それにより、メモリは次のように初期化されます(@<table>{sample.hex.initial})。
 
 //table[sample.hex.initial][sample.hexによって設定されるメモリの初期値]{
 アドレス	値
@@ -707,22 +750,26 @@ cafebebe
 
 ==== シミュレータの実行
 
-生成されたシミュレータを実行し、アドレスが0, 4, 8, cのデータが正しくフェッチされていることを確認します。
+生成されたシミュレータを実行し、
+アドレスが0, 4, 8, cのデータが正しくフェッチされていることを確認します(@<list>{check-memory})。
 
 //terminal[check-memory][命令フェッチの動作チェック]{
-$ obj_dir/sim src/sample.hex 4
+$ obj_dir/sim src/sample.hex 5
 00000000 : 01234567
 00000004 : 89abcdef
 00000008 : deadbeef
 0000000c : cafebebe
 //}
 
-メモリファイルのデータが4バイトずつ読み込まれていることが確認できます。
+メモリファイルのデータが、
+4バイトずつ読み込まれていることが確認できます。
 
 ==== Makefileの作成
 
-ビルド、シミュレータのビルドのために一々コマンドを打つのは面倒です。
-これらの作業を一つのコマンドで済ますために、@<code>{Makefile}を作成し、次のように記述します。
+ビルド、シミュレータのビルドのために一々コマンドを打つのは非常に面倒です。
+これらの作業を一つのコマンドで済ますために、
+@<code>{Makefile}を作成し、
+次のように記述します(@<list>{Makefile})。
 
 //list[Makefile][Makefile]{
 #@mapfile(scripts/04/verilator-tb/core/Makefile)
@@ -749,7 +796,10 @@ sim:
 #@end
 //}
 
-これ以降、次のようにビルドやシミュレータのビルドができるようになります。
+これ以降、
+次のようにVerylプログラムのビルド,
+シミュレータのビルド,
+成果物の削除ができるようになります(@<list>{build.command})。
 
 //terminal[build.command][Makefileによって追加されたコマンド]{
 $ @<userinput>{make build} @<balloon>{Verylプログラムのビルド}
@@ -758,6 +808,8 @@ $ @<userinput>{make clean} @<balloon>{ビルドした成果物の削除}
 //}
 
 === フェッチした命令をFIFOに格納する
+
+TODO
 
 ==== FIFOの作成
 
