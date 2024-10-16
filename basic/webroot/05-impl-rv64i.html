@@ -229,10 +229,10 @@
 <div id="alu.veryl.addw.case" class="caption-code">
 <span class="caption">リスト6.12: リスト6.12: 32ビットの演算結果を選択する (alu.veryl)</span>
 <pre class="list language-case">    3'b000: result = if ctrl.itype == InstType::I | ctrl.funct7 == 0 {
-                <b>sel_w(ctrl.is_op32, add32, add)</b>
-            } else {
-                <b>sel_w(ctrl.is_op32, sub32, sub)</b>
-            };
+        <b>sel_w(ctrl.is_op32, add32, add)</b>
+    } else {
+        <b>sel_w(ctrl.is_op32, sub32, sub)</b>
+    };
 </pre>
 </div>
 
@@ -262,10 +262,10 @@
 <pre class="list language-case">    3'b001: result = <b>sel_w(ctrl.is_op32, sll32, sll)</b>;
     ...
     3'b101: result = if ctrl.funct7 == 0 {
-                <b>sel_w(ctrl.is_op32, srl32, srl)</b>
-            } else {
-                <b>sel_w(ctrl.is_op32, sra32, sra)</b>
-            };
+        <b>sel_w(ctrl.is_op32, srl32, srl)</b>
+    } else {
+        <b>sel_w(ctrl.is_op32, sra32, sra)</b>
+    };
 </pre>
 </div>
 

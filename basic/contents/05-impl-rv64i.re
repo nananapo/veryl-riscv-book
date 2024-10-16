@@ -244,10 +244,10 @@ case文の足し算と引き算の部分を次のように変更します。
 //list[alu.veryl.addw.case][32ビットの演算結果を選択する (alu.veryl)]{
 #@maprange(scripts/05/addsubw-range/core/src/alu.veryl,case)
     3'b000: result = if ctrl.itype == InstType::I | ctrl.funct7 == 0 {
-                @<b>|sel_w(ctrl.is_op32, add32, add)|
-            } else {
-                @<b>|sel_w(ctrl.is_op32, sub32, sub)|
-            };
+        @<b>|sel_w(ctrl.is_op32, add32, add)|
+    } else {
+        @<b>|sel_w(ctrl.is_op32, sub32, sub)|
+    };
 #@end
 //}
 
@@ -288,10 +288,10 @@ case文のシフト演算の部分を次のように変更します。
     3'b001: result = @<b>|sel_w(ctrl.is_op32, sll32, sll)|;
     ...
     3'b101: result = if ctrl.funct7 == 0 {
-                @<b>|sel_w(ctrl.is_op32, srl32, srl)|
-            } else {
-                @<b>|sel_w(ctrl.is_op32, sra32, sra)|
-            };
+        @<b>|sel_w(ctrl.is_op32, srl32, srl)|
+    } else {
+        @<b>|sel_w(ctrl.is_op32, sra32, sra)|
+    };
 #@end
 //}
 

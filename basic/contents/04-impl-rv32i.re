@@ -108,7 +108,7 @@ $ @<userinput>{veryl new core}
 //}
 
 すると、プロジェクト名のフォルダと、その中に@<code>{Veryl.toml}が作成されます。
-@<code>{Veryl.toml}を次のように変更してください。
+@<code>{Veryl.toml}を次のように変更してください(@<list>{Veryl.toml.first})。
 
 //list[Veryl.toml.first][Veryl.toml]{
 #@mapfile(scripts/04/eei-param/core/Veryl.toml)
@@ -132,7 +132,7 @@ $ @<userinput>{mkdir src}
 いよいよプログラムを記述していきます。
 まず、CPU内で何度も使用する定数や型を記述するパッケージを作成します。
 
-@<code>{src/eei.veryl}を作成し、次のように記述します。
+@<code>{src/eei.veryl}を作成し、次のように記述します(@<list>{eei.veryl})。
 
 //list[eei.veryl][eei.veryl]{
 #@mapfile(scripts/04/eei-param/core/src/eei.veryl)
@@ -191,9 +191,9 @@ RV32Iにおいて命令の幅は32ビットです。
 このメモリモジュールには、クロックとリセット信号の他に7個のポートを定義する必要があります(@<table>{memmodule-if})。
 これを一つ一つ定義、接続するのは面倒なため、次のようなinterfaceを定義します。
 
-@<code>{src/membus_if.veryl}を作成し、次のように記述します。
+@<code>{src/membus_if.veryl}を作成し、次のように記述します(@<list>{membus_if.veryl})。
 
-//list[membus_if.veryl][インターフェースの定義(membus_if.veryl)]{
+//list[membus_if.veryl][インターフェースの定義 (membus_if.veryl)]{
 #@mapfile(scripts/04/memif/core/src/membus_if.veryl)
 interface membus_if::<DATA_WIDTH: const, ADDR_WIDTH: const> {
     var valid : logic            ;
@@ -254,16 +254,15 @@ interfaceを利用することで、
 === メモリモジュールを実装する
 
 メモリを作る準備が整いました。
-@<code>{src/memory.veryl}を作成し、
-その中にメモリモジュールを記述します。
+@<code>{src/memory.veryl}を作成し、次のように記述します(@<list>{memory.veryl})。
 
-//list[memory.veryl][memory.veryl]{
+//list[memory.veryl][メモリモジュールの定義 (memory.veryl)]{
 #@mapfile(scripts/04/memif/core/src/memory.veryl)
 module memory::<DATA_WIDTH: const, ADDR_WIDTH: const> (
-    clk      : input   clock                                    ,
-    rst      : input   reset                                    ,
+    clk      : input   clock                                     ,
+    rst      : input   reset                                     ,
     membus   : modport membus_if::<DATA_WIDTH, ADDR_WIDTH>::slave,
-    FILE_PATH: input   string                                   , // メモリの初期値が格納されたファイルのパス
+    FILE_PATH: input   string                                    , // メモリの初期値が格納されたファイルのパス
 ) {
     type DataType = logic<DATA_WIDTH>;
 
@@ -299,18 +298,16 @@ memoryモジュールはジェネリックモジュールです。
     この単位ビットでデータを読み書きします。
 
  : ADDR_WIDTH
-	メモリのサイズを指定するためのパラメータです。@<br>{}
-	メモリのサイズはDATA_WIDTH * (2 ** ADDR_WIDTH)ビットになります。
+	メモリの容量を指定するためのパラメータです。@<br>{}
+	メモリの容量はDATA_WIDTH * (2 ** ADDR_WIDTH)ビットになります。
 
 ポートには、
 クロック信号とリセット信号以外に、
 membus_ifインターフェースとstring型の@<code>{FILE_PATH}を定義しています。
 memoryモジュールを利用する時、
-@<code>{FILE_PATH}ポート@<fn>{filepath.port}には、
+@<code>{FILE_PATH}ポートには、
 メモリの初期値が格納されたファイルのパスを指定します。
 初期化は@<code>{$readmemh}システムタスクで行います。
-
-//footnote[filepath.port][本来はパラメータとして定義するべきですが、シミュレータの都合上ポートとして定義しています]
 
 読み込み、書き込み時の動作は次の通りです。
 
@@ -332,11 +329,32 @@ memoryモジュールを利用する時、
 	@<code>{1}の場合は対象アドレスに@<code>{membus.wdata}を書き込みます。
 	次のクロックで@<code>{membus.rvalid}が@<code>{1}になります。
 
-== topモジュールの作成
+== 最上位モジュールの作成
 
-次に、最上位のモジュールを定義します。
+次に、
+最上位のモジュール(Top Module)を作成して、
+memoryモジュールをインスタンス化します。
 
-//list[top.veryl.memory.inst][top.veryl]{
+最上位のモジュールとは、
+デザインの階層の最上位に位置するモジュールのことです。
+論理設計では、最上位モジュールの中に、
+あらゆるモジュールやレジスタなどをインスタンス化します。
+
+memoryモジュールはジェネリックモジュールであるため、
+1つのデータのビット幅とメモリのサイズを指定する必要があります。
+2つの内、データのビット幅を示す定数をeeiパッケージに定義します(@<list>{eei.veryl.memif.width})。
+
+//list[eei.veryl.memif.width][1つのデータのビット幅を示す定数を定義する (eei.veryl)]{
+#@maprange(scripts/04/memif-range/core/src/eei.veryl,width)
+    // メモリのデータ幅
+    const MEM_DATA_WIDTH: u32 = 32;
+#@end
+//}
+
+それでは、最上位のモジュールを作成します。
+@<code>{src/top.veryl}を作成し、次のように記述します(@<list>{top.veryl.memory.inst})。
+
+//list[top.veryl.memory.inst][最上位モジュールの定義 (top.veryl)]{
 #@mapfile(scripts/04/memif/core/src/top.veryl)
 import eei::*;
 
@@ -346,7 +364,7 @@ module top (
     MEM_FILE_PATH: input string,
 ) {
 
-    inst membus: membus_if::<MEM_DATA_WIDTH, XLEN>;
+    inst membus: membus_if::<MEM_DATA_WIDTH, 20>;
 
     inst mem: memory::<MEM_DATA_WIDTH, 20> (
         clk                     ,
@@ -358,28 +376,37 @@ module top (
 #@end
 //}
 
-TODO
+先ほど作成したmemoryモジュールと、
+membus_ifインターフェースをインスタンス化しています。
 
-先ほど作ったmemoryモジュールをインスタンス化しています。
-また、memoryモジュールのポートに接続するためのmembus_ifインターフェースもインスタンス化しています。
+ジェネリックパラメータの@<code>{DATA_WIDTH}には、
+@<code>{eei::MEM_DATA_WIDTH}を指定しています。
+@<code>{membus}インターフェースのアドレスの幅と、
+memoryモジュールのメモリ容量には、
+適当に20を指定しています。
+これにより、
+メモリ容量は32ビット * (2 ** 20) = 4メビバイトになります。
 
 == 命令フェッチ
 
-メモリを作成したため、命令フェッチ処理を作る準備が整いました。
-いよいよCPUのメイン部分を作成していきます。
+メモリを作成したので、
+命令フェッチ処理を作ることができるようになりました。
 
-=== 命令フェッチの実装
+いよいよ、CPUのメインの部分を作成していきます。
 
-@<code>{src/core.veryl}を作成し、次のように記述します。
+=== 命令フェッチを実装する
+
+@<code>{src/core.veryl}を作成し、
+次のように記述します(@<code>{core.veryl.all})。
 
 //list[core.veryl.all][core.veryl]{
 #@mapfile(scripts/04/create-core/core/src/core.veryl)
 import eei::*;
 
 module core (
-    clk   : input   clock                        ,
-    rst   : input   reset                        ,
-    membus: modport membus_if::<ILEN, XLEN>::slave,
+    clk   : input   clock                          ,
+    rst   : input   reset                          ,
+    membus: modport membus_if::<ILEN, XLEN>::master,
 ) {
 
     var if_pc          : Addr ;
@@ -429,42 +456,79 @@ module core (
 #@end
 //}
 
+coreモジュールは、
+クロック信号,
+リセット信号,
+membus_ifインターフェースをポートに持ちます。
+membus_ifのジェネリックパラメータには、
+データ単位としてILEN(1つの命令のビット幅),
+アドレスの幅としてXLENを指定しています。
+
 @<code>{if_pc}レジスタはPC(プログラムカウンタ)です。
-ここで@<code>{if_}というprefixはinstruction fetchの略です。
-@<code>{if_is_requested}で現在フェッチ中かどうかを管理しており、
+ここで@<code>{if_}というprefixはinstruction fetch(命令フェッチ)の略です。
+@<code>{if_is_requested}は現在フェッチ中かどうかを管理しており、
 フェッチ中のアドレスを@<code>{if_pc_requested}に格納しています。
 
-@<code>{always_comb}ブロックでは、常にメモリにアドレス@<code>{if_pc}にある命令を要求しています。
-命令フェッチではメモリの読み込みしか行わないため、@<code>{membus.wen}は@<code>{0}になっています。
+@<code>{always_comb}ブロックでは、
+アドレス@<code>{if_pc}にあるデータを、
+常にメモリに要求しています。
+命令フェッチではメモリの読み込みしか行わないため、
+@<code>{membus.wen}は@<code>{0}にしています。
 
 上から1つめの@<code>{always_ff}ブロックでは、
-フェッチ中かどうか、メモリはready(要求を受け入れる)状態かどうかによって、
-@<code>{if_pc}, @<code>{if_is_requested}, @<code>{if_pc_requested}の値を変更しています。
-メモリに新しくフェッチを要求する時、
-@<code>{if_pc}を次の命令のアドレス(@<code>{4}を足したアドレス)に、
+フェッチ中かどうか,
+メモリがready(要求を受け入れる)状態かどうかによって、
+@<code>{if_pc},
+@<code>{if_is_requested},
+@<code>{if_pc_requested}の値を変更しています。
+
+メモリにデータを要求する時、
+@<code>{if_pc}を次の命令のアドレス(@<code>{4}を足したアドレス)に変更して、
 @<code>{if_is_requested}を@<code>{1}に変更しています。
-フェッチ中かつ@<code>{membus.rvalid}が@<code>{1}のときは命令フェッチが完了しています。
-その場合は、メモリがreadyならすぐに次の命令フェッチを開始します。
+フェッチ中かつ@<code>{membus.rvalid}が@<code>{1}のとき、
+命令フェッチが完了し、データが@<code>{membus.rdata}に供給されています。
+このとき、メモリがready状態なら、
+すぐに次の命令フェッチを開始します。
+この状態遷移を繰り返すことによって、
+0,4,8,c,10,...という順番のアドレスの命令を、
+次々にフェッチするようになっています。
 
-これにより、0,4,8,c,10,...という順番のアドレスの命令を次々にフェッチするようになっています。
+上から2つめの@<code>{always_ff}ブロックは、
+デバッグ用の表示を行うプログラムです。
+命令フェッチが完了したとき、
+その結果を@<code>{$display}システムタスクによって出力します。
 
-上から2つめの@<code>{always_ff}ブロックはデバッグ用のプログラムです。
-命令フェッチが完了したときにその結果を@<code>{$display}システムタスクによって出力します。
+=== memoryモジュールとcoreモジュールを接続する
 
-次に、topモジュールでcoreモジュールをインスタンス化し、membus_ifインターフェースを接続します。
-これによって、メモリとCPUが接続されました。
+次に、
+topモジュールでcoreモジュールをインスタンス化し、
+membus_ifインターフェースを接続します。
 
+coreモジュールが指定するアドレスは1バイト単位のアドレスです。
+それに対して、
+memoryモジュールは32ビット(=4バイト)単位でデータを整列しているため、
+データは4バイト単位のアドレスで指定する必要があります。
 
-アドレスは1バイト単位のアドレスです。
-memレジスタは、32ビット(=4バイト)単位でデータを整列しています。
-そのため、Addr型のアドレスをそのままmemレジスタのインデックスとして利用することはできません。
-@<code>{addr_to_memaddr}関数は、
-1バイト単位のアドレスの下位2ビットを切り詰めることによって、
-memレジスタにおけるインデックスに変換しています。
+まず、1バイト単位のアドレスを、
+4バイト単位のアドレスに変換する関数を作成します
+(@<list>{top.veryl.create-core-range.addr_to_memaddr})。
+これは、1バイト単位のアドレスの下位2ビットを切り詰めることによって実現できます。
 
+//list[top.veryl.create-core-range.addr_to_memaddr][アドレスを変換する関数を作成する (top.veryl)]{
+#@maprange(scripts/04/create-core-range/core/src/top.veryl,addr_to_memaddr)
+    // アドレスをメモリのデータ単位でのアドレスに変換する
+    function addr_to_memaddr (
+        addr: input logic<XLEN>          ,
+    ) -> logic<MEM_DATA_WIDTH> {
+        return addr >> $clog2(MEM_DATA_WIDTH / 8);
+    }
+#@end
+//}
 
-//list[top.veryl.core.instantiate][top.veryl内でcoreモジュールをインスタンス化する]{
-#@mapoutput(tail scripts/04/create-core/core/src/top.veryl -n 6 | head -n 5)
+実装は、
+
+//list[top.veryl.create-core-range.core][top.veryl内でcoreモジュールをインスタンス化する]{
+#@maprange(scripts/04/create-core-range/core/src/top.veryl,core)
     inst c: core (
         clk                ,
         rst                ,
@@ -473,7 +537,10 @@ memレジスタにおけるインデックスに変換しています。
 #@end
 //}
 
-=== 命令フェッチのテスト
+これによって、
+メモリとCPUが接続されました。
+
+=== 命令フェッチをテストする
 
 ここまでのプログラムが正しく動くかを検証します。
 
@@ -727,7 +794,12 @@ module fifo #(
     always_comb {
         rvalid = head != tail;
         rdata  = mem[head];
-        wready = tail_plus1 != head;
+    }
+
+    if WIDTH == 1 :wready_block {
+        assign wready = head == tail && rready;
+    } else {
+        assign wready = tail_plus1 != head;
     }
 
     always_ff {
@@ -777,7 +849,7 @@ fifoモジュールを使って、次のように命令フェッチ処理を変�
 まず、fifoモジュールをインスタンス化します。
 
 //list[if-fifo-inst][fifoモジュールのインスタンス化]{
-#@maprange(scripts/04/if-fifo-range/core/src/core.veryl,inst_fifo)
+#@# #@maprange(scripts/04/if-fifo-range/core/src/core.veryl,inst_fifo)
     // ifのFIFOのデータ型
     struct if_fifo_type {
         addr: Addr,
@@ -806,7 +878,8 @@ fifoモジュールを使って、次のように命令フェッチ処理を変�
         rvalid: if_fifo_rvalid,
         rdata : if_fifo_rdata ,
     );
-#@end
+#@# #@end
+TODO
 //}
 
 まず、FIFOに入れるデータの型として@<code>{if_fifo_type}という構造体を定義します。
@@ -1730,15 +1803,15 @@ import eei::*;
 import corectrl::*;
 
 module memunit (
-    clk   : input   clock                                   ,
-    rst   : input   reset                                   ,
-    valid : input   logic                                   ,
-    is_new: input   logic                                   , // 命令が新しく供給されたかどうか
-    ctrl  : input   InstCtrl                                , // 命令のInstCtrl
-    addr  : input   Addr                                    , // アクセスするアドレス
-    rs2   : input   UIntX                                   , // ストア命令で書き込むデータ
-    rdata : output  UIntX                                   , // ロード命令の結果 (stall = 0のときに有効)
-    stall : output  logic                                   , // メモリアクセス命令が完了していない
+    clk   : input   clock                                    ,
+    rst   : input   reset                                    ,
+    valid : input   logic                                    ,
+    is_new: input   logic                                    , // 命令が新しく供給されたかどうか
+    ctrl  : input   InstCtrl                                 , // 命令のInstCtrl
+    addr  : input   Addr                                     , // アクセスするアドレス
+    rs2   : input   UIntX                                    , // ストア命令で書き込むデータ
+    rdata : output  UIntX                                    , // ロード命令の結果 (stall = 0のときに有効)
+    stall : output  logic                                    , // メモリアクセス命令が完了していない
     membus: modport membus_if::<MEM_DATA_WIDTH, XLEN>::master, // メモリとのinterface
 ) {
 
@@ -1796,17 +1869,17 @@ module memunit (
             if valid {
                 case state {
                     State::Init: if is_new & inst_is_memop(ctrl) {
-                                     state     = State::WaitReady;
-                                     req_wen   = inst_is_store(ctrl);
-                                     req_addr  = addr;
-                                     req_wdata = rs2;
-                                 }
+                        state     = State::WaitReady;
+                        req_wen   = inst_is_store(ctrl);
+                        req_addr  = addr;
+                        req_wdata = rs2;
+                    }
                     State::WaitReady: if membus.ready {
-                                          state = State::WaitValid;
-                                      }
+                        state = State::WaitValid;
+                    }
                     State::WaitValid: if membus.rvalid {
-                                          state = State::Init;
-                                      }
+                        state = State::Init;
+                    }
                     default: {}
                 }
             }
@@ -1923,8 +1996,8 @@ memunitモジュール用に使用することができません。
 //list[core.membus.two][coreモジュールのポート定義 (core.veryl)]{
 #@maprange(scripts/04/lwsw-range/core/src/core.veryl,port)
 module core (
-    clk     : input   clock                                   ,
-    rst     : input   reset                                   ,
+    clk     : input   clock                                    ,
+    rst     : input   reset                                    ,
     i_membus: modport membus_if::<ILEN, XLEN>::master          ,
     d_membus: modport membus_if::<MEM_DATA_WIDTH, XLEN>::master,
 ) {
@@ -1938,11 +2011,11 @@ module core (
 
 //list[membus.to.i_membus][membusをi_membusに置き換える (core.veryl)]{
 #@maprange(scripts/04/lwsw-range/core/src/core.veryl,fetch)
-        // FIFOに空きがあるとき、命令をフェッチする
-        i_membus.valid = if_fifo_wready;
-        i_membus.addr  = if_pc;
-        i_membus.wen   = 0;
-        i_membus.wdata = 'x; // wdataは使用しない
+    // FIFOに空きがあるとき、命令をフェッチする
+    i_membus.valid = if_fifo_wready;
+    i_membus.addr  = if_pc;
+    i_membus.wen   = 0;
+    i_membus.wdata = 'x; // wdataは使用しない
 #@end
 //}
 
@@ -1950,7 +2023,7 @@ module core (
 
 //list[top.arb][メモリへのアクセス要求の調停 (top.veryl)]{
 #@maprange(scripts/04/lwsw-range/core/src/top.veryl,arb)
-    inst membus  : membus_if::<MEM_DATA_WIDTH, XLEN>;
+    inst membus  : membus_if::<MEM_DATA_WIDTH, 20>;
     inst i_membus: membus_if::<ILEN, XLEN>; // 命令フェッチ用
     inst d_membus: membus_if::<MEM_DATA_WIDTH, XLEN>; // ロードストア命令用
 
@@ -2046,8 +2119,8 @@ LW命令で読み込んだデータがレジスタにライトバックする処
 
 //list[membus.rready][memunitモジュールの処理が終わるのを待つ (core.veryl)]{
 #@maprange(scripts/04/lwsw-range/core/src/core.veryl,rready)
-        // memunitが処理中ではないとき、FIFOから命令を取り出していい
-        if_fifo_rready = !memu_stall;
+    // memunitが処理中ではないとき、FIFOから命令を取り出していい
+    if_fifo_rready = !memu_stall;
 #@end
 //}
 
@@ -2077,17 +2150,19 @@ FIFOからの命令の取り出しを停止します。
 
 //list[wb.ready.main][命令の実行が終了したときにのみライトバックする (core.veryl)]{
 #@maprange(scripts/04/lwsw-range/core/src/core.veryl,wb_ready)
+    always_ff {
         if inst_valid && if_fifo_rready && inst_ctrl.rwb_en {
             regfile[rd_addr] = wb_data;
         }
+    }
 #@end
 //}
 
 //list[wb.ready.debug][ライトバックするときにのみデバッグ表示する (core.veryl)]{
 #@maprange(scripts/04/lwsw-range/core/src/core.veryl,wb_debug)
-                if if_fifo_rready && inst_ctrl.rwb_en {
-                    $display("  reg[%d] <= %h", rd_addr, wb_data);
-                }
+    if if_fifo_rready && inst_ctrl.rwb_en {
+        $display("  reg[%d] <= %h", rd_addr, wb_data);
+    }
 #@end
 //}
 
@@ -2097,8 +2172,8 @@ LW, SW命令が正しく動作していることを確認するために、デ�
 
 //list[debug.memunit.stall.rdata][メモリモジュールの状態を出力する (core.veryl)]{
 #@maprange(scripts/04/lwsw-range/core/src/core.veryl,mem)
-                $display("  mem stall : %b", memu_stall);
-                $display("  mem rdata : %h", memu_rdata);
+    $display("  mem stall : %b", memu_stall);
+    $display("  mem rdata : %h", memu_rdata);
 #@end
 //}
 
@@ -2299,10 +2374,10 @@ memoryモジュールは、32ビット単位の読み書きしかサポートし
 //list[wmask.memory][書き込みマスクをサポートするmemoryモジュール (memory.veryl)]{
 #@mapfile(scripts/04/lbhsbh/core/src/memory.veryl)
 module memory::<DATA_WIDTH: const, ADDR_WIDTH: const> (
-    clk      : input   clock                                    ,
-    rst      : input   reset                                    ,
+    clk      : input   clock                                     ,
+    rst      : input   reset                                     ,
     membus   : modport membus_if::<DATA_WIDTH, ADDR_WIDTH>::slave,
-    FILE_PATH: input   string                                   , // メモリの初期値が格納されたファイルのパス
+    FILE_PATH: input   string                                    , // メモリの初期値が格納されたファイルのパス
 ) {
     type DataType = logic<DATA_WIDTH>    ;
     type MaskType = logic<DATA_WIDTH / 8>;
@@ -2568,10 +2643,11 @@ inst_decoderモジュールは、JAL命令、JALR命令を次のようにデコ�
 新しいフェッチ先を示す信号@<code>{control_hazard_pc_next}を作成します。
 
 //list[jump.ch][control_hazardとcontrol_hazard_pc_nextの定義 (core.veryl)]{
-#@maprange(scripts/04/jump-range/core/src/core.veryl,hazard)
+#@# #@maprange(scripts/04/jump-range/core/src/core.veryl,hazard)
     let control_hazard        : logic = inst_valid && inst_ctrl.is_jump;
     let control_hazard_pc_next: Addr  = alu_result;
-#@end
+#@# #@end
+TODO
 //}
 
 @<code>{control_hazard}を利用して、@<code>{if_pc}を更新し、新しく命令をフェッチしなおすようにします。
@@ -2783,8 +2859,8 @@ brunitモジュールを、coreモジュールでインスタンス化します�
 
 //list[br.hazard][分岐成立時のPCの設定 (core.veryl)]{
 #@maprange(scripts/04/br-range/core/src/core.veryl,hazard)
-    let control_hazard        : logic = inst_valid && (inst_ctrl.is_jump || inst_is_br(inst_ctrl) && brunit_take);
-    let control_hazard_pc_next: Addr  = if inst_is_br(inst_ctrl) {
+    assign control_hazard         = inst_valid && (inst_ctrl.is_jump || inst_is_br(inst_ctrl) && brunit_take);
+    assign control_hazard_pc_next = if inst_is_br(inst_ctrl) {
         inst_pc + inst_imm
     } else {
         alu_result
