@@ -431,14 +431,14 @@ module core (
         } else {
             if if_is_requested {
                 if membus.rvalid {
-                    if_is_requested = membus.ready;
-                    if membus.ready {
+                    if_is_requested = membus.ready && membus.valid;
+                    if membus.ready && membus.valid {
                         if_pc           = if_pc_next;
                         if_pc_requested = if_pc;
                     }
                 }
             } else {
-                if membus.ready {
+                if membus.ready && membus.valid {
                     if_is_requested = 1;
                     if_pc           = if_pc_next;
                     if_pc_requested = if_pc;
@@ -809,18 +809,39 @@ $ @<userinput>{make clean} @<balloon>{ビルドした成果物の削除}
 
 === フェッチした命令をFIFOに格納する
 
-TODO
+フェッチした命令は次々に実行されますが、
+その命令が何クロックで実行されるかは分かりません。
+命令が常に1クロックで実行される場合は、
+現状の常にフェッチし続けるようなコードで問題ありませんが、
+例えばメモリにアクセスする命令は実行に何クロックかかるか分かりません。
+
+複数クロックかかる命令に対応するために、
+命令の処理が終わったら次の命令をフェッチするようにします。
+すると、命令の実行の流れは次のようになります。
+
+ 1. 命令の処理が終わる
+ 2. 次の命令のフェッチ要求をメモリに送る
+ 3. 命令がフェッチされ、命令の処理を開始する
+
+この場合、
+命令の処理が終わってから次の命令をフェッチするため、
+次々にフェッチするよりも多くのクロックサイクルが必要です。
+これはCPUの性能を露骨に悪化させるので許容できません。
 
 ==== FIFOの作成
 
-フェッチした命令は次々に実行されますが、その命令が何クロックで実行されるかは分かりません。
-命令が常に1クロックで実行される場合は現状の常にフェッチし続けるようなコードで問題ありませんが、
-例えばメモリにアクセスする命令は実行に何クロックかかるか分からないため、
-フェッチされた次の命令を保持しておくバッファを用意しておく必要があります。
+//image[fifo][FIFO][width=40%]
 
-そこで、FIFOを作成して、フェッチした命令を格納します。@<code>{src/fifo.veryl}を作成し、次のように記述します。
+そこで、
+@<b>{FIFO}(First In First Out, ファイフォ)を作成して、
+フェッチした命令を格納します。
+FIFOとは、先に入れたデータが先に出されるデータ構造のことです。
+命令をフェッチしたらFIFOに格納(enqueue)し、
+命令を処理するときにFIFOから取り出し(dequeue)ます。
 
-//list[fifo.veryl][fifo.veryl]{
+@<code>{src/fifo.veryl}を作成し、次のように記述します(@<list>{fifo.veryl})。
+
+//list[fifo.veryl][FIFOモジュールの実装 (fifo.veryl)]{
 #@mapfile(scripts/04/if-fifo/core/src/fifo.veryl)
 module fifo #(
     param DATA_TYPE: type = logic,
@@ -872,42 +893,57 @@ module fifo #(
 #@end
 //}
 
-fifoモジュールは、@<code>{DATA_TYPE}型のデータを@<code>{2 ** WIDTH - 1}個格納することができるFIFOです。
+fifoモジュールは、
+@<code>{DATA_TYPE}型のデータを
+@<code>{2 ** WIDTH - 1}個格納することができるFIFOです。
 操作は次のように行います。
 
  : データを追加する
-    @<code>{wready}が@<code>{1}のとき、データを追加することができます。
-    データを追加するためには、追加したいデータを@<code>{wdata}に格納し、@<code>{wvalid}を@<code>{1}にします。
+    @<code>{wready}が@<code>{1}のとき、データを追加することができます。@<b>{}
+    データを追加するためには、追加したいデータを@<code>{wdata}に格納し、@<code>{wvalid}を@<code>{1}にします。@<b>{}
     追加したデータは次のクロック以降に取り出すことができます。
 
  : データを取り出す
-    @<code>{rready}が@<code>{1}のとき、データを取り出すことができます。
-    データを取り出すことができるとき、@<code>{rdata}にデータが出力されています。
+    @<code>{rready}が@<code>{1}のとき、データを取り出すことができます。@<b>{}
+    データを取り出すことができるとき、@<code>{rdata}にデータが供給されています。@<b>{}
     @<code>{rvalid}を@<code>{1}にすることで、FIFOにデータを取り出したことを通知することができます。
 
-@<code>{head}レジスタと@<code>{tail}レジスタによってデータの格納状況を管理しています。
-データを書き込むとき、つまり@<code>{wready && wvalid}のとき、@<code>{tail = tail + 1}しています。
+データの格納状況は、@<code>{head}レジスタと@<code>{tail}レジスタで管理します。
+データを追加するとき、つまり@<code>{wready && wvalid}のとき、@<code>{tail = tail + 1}しています。
 データを取り出すとき、つまり@<code>{rready && rvalid}のとき、@<code>{head = head + 1}しています。
 
-データを書き込める状況とは、@<code>{tail}に1を足しても@<code>{head}を超えない、
+データを追加できる状況とは、
+@<code>{tail}に1を足しても@<code>{head}を超えないとき、
 つまり、@<code>{tail}が指す場所が一周してしまわないときです。
 この制限から、FIFOには最大でも@<code>{2 ** WIDTH - 1}個しかデータを格納することができません。
 データを取り出せる状況とは、@<code>{head}と@<code>{tail}の指す場所が違うときです。
 
+特別に、@<code>{WIDTH}が1のときは、既にデータが1つ入っていても、
+@<code>{rready}が@<code>{1}のときはデータを追加することができるようにしています。
+
 ==== 命令フェッチ処理の変更
 
-fifoモジュールを使って、次のように命令フェッチ処理を変更します。
+fifoモジュールを使って、命令フェッチ処理を変更します。
 
-まず、fifoモジュールをインスタンス化します。
+まず、FIFOに格納する型を定義します(@<list>{core.veryl.if-fifo-range.fifo_type})。
+@<code>{if_fifo_type}には、
+命令のアドレス(@<code>{addr})と命令のビット列(@<code>{bits})を格納するためのメンバーを含めます。
 
-//list[if-fifo-inst][fifoモジュールのインスタンス化]{
-#@# #@maprange(scripts/04/if-fifo-range/core/src/core.veryl,inst_fifo)
+//list[core.veryl.if-fifo-range.fifo_type][FIFOで格納する型を定義する (core.veryl)]{
+#@maprange(scripts/04/if-fifo-range/core/src/core.veryl,fifo_type)
     // ifのFIFOのデータ型
     struct if_fifo_type {
         addr: Addr,
         bits: Inst,
     }
+#@end
+//}
 
+次に、FIFOと接続するための変数を定義します(@<list>{core.veryl.if-fifo-range.fifo_reg})。
+wdataとrdataのデータ型は@<code>{if_fifo_type}にしています。
+
+//list[core.veryl.if-fifo-range.fifo_reg][FIFOと接続するための変数を定義する (core.veryl)]{
+#@maprange(scripts/04/if-fifo-range/core/src/core.veryl,fifo_reg)
     // FIFOの制御用レジスタ
     var if_fifo_wready: logic       ;
     var if_fifo_wvalid: logic       ;
@@ -915,7 +951,18 @@ fifoモジュールを使って、次のように命令フェッチ処理を変�
     var if_fifo_rready: logic       ;
     var if_fifo_rvalid: logic       ;
     var if_fifo_rdata : if_fifo_type;
+#@end
+//}
 
+FIFOモジュールをインスタンス化します(@<list>{core.veryl.if-fifo-range.inst_if_fifo})。
+@<code>{DATA_TYPE}パラメータに@<code>{if_fifo_type}を渡すことで、
+アドレスと命令のペアを格納することができるようにします。
+@<code>{WIDTH}パラメータには@<code>{3}を指定することで、
+サイズを@<code>{2 ** 3 - 1 = 7}にしています。
+このサイズは適当です。
+
+//list[core.veryl.if-fifo-range.inst_if_fifo][FIFOをインスタンス化する (core.veryl)]{
+#@maprange(scripts/04/if-fifo-range/core/src/core.veryl,inst_if_fifo)
     // フェッチした命令を格納するFIFO
     inst if_fifo: fifo #(
         DATA_TYPE: if_fifo_type,
@@ -930,74 +977,83 @@ fifoモジュールを使って、次のように命令フェッチ処理を変�
         rvalid: if_fifo_rvalid,
         rdata : if_fifo_rdata ,
     );
-#@# #@end
-TODO
+#@end
 //}
 
-まず、FIFOに入れるデータの型として@<code>{if_fifo_type}という構造体を定義します。
-@<code>{if_fifo_type}には、命令のアドレス(@<code>{addr})と命令のビット列(@<code>{bits})を格納するためのメンバーが含まれています。
+fifoモジュールをインスタンス化したので、
+メモリへデータを要求する処理を変更します(@<list>{core.veryl.if-fifo-range.fetch})。
 
-次に、fifoモジュールとデータの受け渡しをするための変数を定義し、fifoモジュールを@<code>{if_fifo}という名前でインスタンス化しています。
-@<code>{DATA_TYPE}パラメータに@<code>{if_fifo_type}を渡すことでアドレスと命令のペアを格納することができるようにし、
-@<code>{WIDTH}に@<code>{3}と指定することで、サイズを@<code>{2 ** 3 - 1 = 7}にしています。
-このサイズは適当です。
-
-fifoモジュールを用意したので、メモリへフェッチ指令を送る処理を変更します。
-
-//list[change-fetch-if][フェッチ処理の変更]{
+//list[core.veryl.if-fifo-range.fetch][フェッチ処理の変更 (core.veryl)]{
 #@maprange(scripts/04/if-fifo-range/core/src/core.veryl,fetch)
     // 命令フェッチ処理
     always_comb {
         // FIFOに空きがあるとき、命令をフェッチする
-        membus.valid = if_fifo_wready; @<balloon>{1をif_fifo_wreadyに変更}
+        membus.valid = @<b>|if_fifo_wready|; @<balloon>{1をif_fifo_wreadyに変更}
         membus.addr  = if_pc;
         membus.wen   = 0;
         membus.wdata = 'x; // wdataは使用しない
 
-        // 常にFIFOから命令を受け取る
-        if_fifo_rready = 1;
+        @<b>|// 常にFIFOから命令を受け取る|
+        @<b>|if_fifo_rready = 1;|
     }
 #@end
 //}
 
-上のコードでは、メモリに命令フェッチを要求する条件を、
+@<list>{core.veryl.if-fifo-range.fetch}では、
+メモリに命令フェッチを要求する条件を、
 FIFOに空きがあるという条件に変更しています。
 これにより、FIFOがあふれてしまうことがなくなります。
 また、とりあえずFIFOから常にデータを取り出すようにしています。
 
-次に、命令をフェッチできたらFIFOに格納するようにします。
+最後に、命令をフェッチできたらFIFOに格納するコードを@<code>{always_ff}ブロックの中に追加します(@<list>{core.veryl.if-fifo-range.fifo_ctrl})。
 
-//list[fifo_ctrl][FIFOへのデータの格納]{
-    always_ff {
-            ...
+//list[core.veryl.if-fifo-range.fifo_ctrl][FIFOへのデータの格納 (core.veryl)]{
 #@maprange(scripts/04/if-fifo-range/core/src/core.veryl,fifo_ctrl)
-            // IFのFIFOの制御
-            if if_is_requested && membus.rvalid { @<balloon>{フェッチできた時}
-                if_fifo_wvalid     = 1;
-                if_fifo_wdata.addr = if_pc_requested;
-                if_fifo_wdata.bits = membus.rdata;
-            } else {
-                if if_fifo_wvalid && if_fifo_wready { @<balloon>{FIFOにデータを格納できる時}
-                    if_fifo_wvalid = 0;
-                }
-            }
+    // IFのFIFOの制御
+    if if_is_requested && membus.rvalid { @<balloon>{フェッチできた時}
+        if_fifo_wvalid     = 1;
+        if_fifo_wdata.addr = if_pc_requested;
+        if_fifo_wdata.bits = membus.rdata;
+    } else {
+        if if_fifo_wvalid && if_fifo_wready { @<balloon>{FIFOにデータを格納できる時}
+            if_fifo_wvalid = 0;
+        }
+    }
 #@end
 //}
 
-上のコードを@<code>{always_ff}ブロックの中に追加します。
-また、@<code>{if_fifo_wvalid}と@<code>{if_fifo_wdata}を@<code>{if_reset}内で0に初期化してください。
+また、@<code>{if_fifo_wvalid}と@<code>{if_fifo_wdata}を0に初期化します(@<list>{core.veryl.if-fifo-range.if_reset})。
 
-フェッチができた時、@<code>{if_fifo_wvalid}レジスタの値を@<code>{1}にして、
-@<code>{if_fifo_wdata}レジスタにフェッチした命令とアドレスを格納します。
+//list[core.veryl.if-fifo-range.if_reset][変数の初期化 (core.veryl)]{
+#@maprange(scripts/04/if-fifo-range/core/src/core.veryl,if_reset)
+    if_reset {
+        if_pc           = 0;
+        if_is_requested = 0;
+        if_pc_requested = 0;
+        @<b>|if_fifo_wvalid  = 0;|
+        @<b>|if_fifo_wdata   = 0;|
+    } else {
+#@end
+//}
+
+命令をフェッチできた時、
+@<code>{if_fifo_wvalid}の値を@<code>{1}にして、
+@<code>{if_fifo_wdata}にフェッチした命令とアドレスを格納します。
 これにより、次のクロック以降のFIFOに空きがあるタイミングでデータが追加されます。
 
-それ以外の時、FIFOにデータを格納しようとしていてFIFOに空きがあるとき、
+それ以外の時、
+FIFOにデータを格納しようとしていてFIFOに空きがあるとき、
 @<code>{if_fifo_wvalid}を@<code>{0}にすることでデータの追加を完了します。
 
 命令フェッチはFIFOに空きがあるときにのみ行うため、
-まだ追加されていないデータが@<code>{if_fifo_wdata}レジスタに格納されていても別のデータに上書きされてしまうことはありません。
+まだ追加されていないデータが@<code>{if_fifo_wdata}に格納されていても、
+別のデータに上書きされてしまうことはありません。
 
-//list[fifo-debug][命令を表示する]{
+==== FIFOのテスト
+
+FIFOをテストする前に、命令のデバッグ表示を行うコードを変更します(@<list>{core.veryl.if-fifo-range.debug})。
+
+//list[core.veryl.if-fifo-range.debug][命令のデバッグ表示を変更する (core.veryl)]{
 #@maprange(scripts/04/if-fifo-range/core/src/core.veryl,debug)
     let inst_pc  : Addr = if_fifo_rdata.addr;
     let inst_bits: Inst = if_fifo_rdata.bits;
@@ -1010,8 +1066,9 @@ FIFOに空きがあるという条件に変更しています。
 #@end
 //}
 
-命令を表示するコードを上のように変更し、シミュレータを実行しましょう。
-命令がフェッチされて表示されるまでに、FIFOに格納して取り出すクロック分だけ遅延があることに注意してください。
+それでは、シミュレータを実行します(@<list>{sim-fifo})。
+命令がフェッチされて表示されるまでに、
+FIFOに格納して取り出すクロック分だけ遅延があることに注意してください。
 
 //terminal[sim-fifo][FIFOをテストする]{
 $ @<userinput>{make build}
@@ -1024,6 +1081,8 @@ $ @<userinput>{obj_dir/sim src/sample.hex 7}
 //}
 
 == 命令のデコードと即値の生成
+
+TODO
 
 命令をフェッチすることができたら、
 フェッチした命令がどのような意味を持つかをチェックし、
