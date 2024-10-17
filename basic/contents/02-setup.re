@@ -25,7 +25,8 @@ cargoが入っていない場合は、
 から入手方法を確認することができます。
 
 Verylupを入手したら、
-次のようにVerylの最新版をインストールします。
+次のようにVerylの最新版をインストールします
+(@<list>{Verylup-install})。
 
 //terminal[Verylup-install][Verylのインストール]{
 $ @<userinput>{verylup setup}
@@ -38,7 +39,8 @@ $ @<userinput>{verylup setup}
 ==== Verylの更新
 
 verylはまだ開発途上の言語であり、頻繁にバージョンが更新されます。
-最新のVerylに更新するには、次のようなコマンドを実行します。
+最新のVerylに更新するには、次のようなコマンドを実行します
+(@<list>{veryl-update})。
 
 //terminal[veryl-update][Verylの更新]{
 $ @<userinput>{verylup update}
@@ -46,43 +48,50 @@ $ @<userinput>{verylup update}
 
 ==== インストールするバージョンの指定
 
-特定のバージョンのVerylをインストールするには、次のようなコマンドを実行します。
+特定のバージョンのVerylをインストールするには、
+次のようなコマンドを実行します
+(@<list>{veryl-specific})。
 
-//terminal[veryl-specific][VerylのバージョンTODOをインストールする]{
-$ @<userinput>{verylup install TODO}
+//terminal[veryl-specific][Verylのバージョン@<w>{veryl-version}をインストールする]{
+$ verylup install 0.13.1
 //}
 
-インストールされているバージョン一覧は次のように確認できます。
+インストールされているバージョン一覧は次のように確認できます
+(@<list>{veryl-show})。
 
 //terminal[veryl-show][インストール済みのVerylのバージョン一覧を表示する]{
 $ @<userinput>{verylup show}
 installed toolchains
 --------------------
-TODO
+0.13.1
 latest (default)
 //}
 
 ==== 使用するバージョンの指定
 
-バージョンを指定しない場合は、最新版のVerylが使用されます。
+バージョンを指定しない場合は、
+最新版のVerylが使用されます
+(@<list>{veryl-version})。
 
 //terminal[veryl-version][verylのバージョン確認]{
 $ @<userinput>{veryl --version}
-veryl TODO
+veryl 0.13.1
 //}
 
-特定のバージョンのVerylを使用するには、次のようにverylコマンドを実行します。
+特定のバージョンのVerylを使用するには、
+次のようにverylコマンドを実行します
+(@<list>{veryl-use-ver})。
 
-//terminal[veryl-use-ver][VerylのバージョンTODOを使用する]{
-$ @<userinput>{veryl +TODO} @<balloon>{+でバージョンを指定する}
+//terminal[veryl-use-ver][Verylのバージョン@<w>{veryl-version}を使用する]{
+$ @<userinput>{veryl +0.13.1} @<balloon>{+でバージョンを指定する}
 //}
 
 //caution[本書で利用するVerylのバージョン]{
-本書ではバージョンTODOを利用しますが、
+本書ではバージョン@<w>{veryl-version}を利用しますが、
 Veryl側の問題によりプログラムをビルドできないことがあります。
 これの対処方法についてはサポートページを確認してください。
 
- * サポートページ : @<href>{TODO}
+ * @<w>{support-page}
 //}
 
 === VSCodeの拡張のインストール
@@ -105,7 +114,7 @@ SystemVerilogのシミュレータを生成するためのソフトウェアで�
 
 == riscv-gnu-toolchain
 
-riscv-gnu-toolchainには、RISC-V向けのコンパイラなどのtoolchainが含まれています。
+riscv-gnu-toolchainは、RISC-V向けのコンパイラなどが含まれるtoolchainです。
 
 @<href>{https://github.com/riscv-collab/riscv-gnu-toolchain, riscv-collab/riscv-gnu-toolchain}
 のREADMEにインストール方法が書かれています。

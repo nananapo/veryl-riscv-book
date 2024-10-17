@@ -1,5 +1,10 @@
 = 参考文献
 
+//bibpaper[amano.fpga][]{
+天野 英晴, FPGAの原理と構成, オーム社
+//}
+
+
 //bibpaper[ronrikairo][]{
 坂井 修一, 論理回路入門, 培風館
 //}

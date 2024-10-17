@@ -13,21 +13,57 @@ RISC-VやVerylのことを知っているという方は、
 
 == CPUの自作
 
-TODO
+CPUって自作できるのでしょうか?
+そもそもCPUの自作って何でしょうか?
 
- * できるのか?できます
- * VLSIお高い
- * Efabless
- * OpenMPW, TinyTapeout
- * FPGA
+CPUの自作について一般的な定義はありませんが、
+筆者は
+「命令セットアーキテクチャの設計」
+「論理設計」
+「物理的に製造する」
+に分類できると考えています。
 
-CPUのテストはシミュレーションと実機(FPGA)で行います。
+@<b>{命令セットアーキテクチャ}(Instruction Set Architecture, @<b>{ISA})とは、
+CPUがどのような命令を実行することができるかを定めたもの(仕様)です。
+ISAの設計は考えるだけなので、紙とペンさえあればできます。
+@<b>{論理設計}とは、簡単に言うと、論理回路を設計することです。
+CPUは論理回路で構成されているため、CPUの設計には論理設計が必要になります。
+最近のCPUは、物理的には
+@<b>{VLSI}(Very Large Scale Integration, 超大規模集積回路)
+によって実装されています。
+VLSIの製造には莫大なお金が必要です@<fn>{vlsi}。
+
+//footnote[vlsi][小さいチップなら安く(※安くない)製造することができます。EfablessやTinyTapeout, OpenMPWで検索してください]
+
+ISAの設計は簡単@<fn>{not-easy}なので、
+CPUの自作を難しくしているのは、
+論理設計と物理的な製造です。
+
+論理設計については、最近では、
+論理設計に使う言語やシミュレータ,
+回路に落とし込むツールなどがオープンに公開されており、
+昔よりは自作のハードルが下がっています@<fn>{not-know}。
+
+物理的な製造のハードルは高いですが、
+FPGAを使うことで簡単にお試しすることができます。
+@<b>{FPGA}(Field Programmable Gate Array)とは、
+任意の論理回路を実現できる集積回路のことです@<bib>{amano.fpga}。
+最近は安価にFPGAを入手することができます。
+
+//footnote[not-easy][簡単ではない。論理設計より難しいかもしれない]
+//footnote[not-know][筆者は最近にCPUの自作を始めたので最近のことしか知りません。嘘だったらごめん]
+
+本書は、ISAの設計は行わず、
+論理設計は無料でオープンなツールを利用し、
+安価(数千 ～ 数万円)なFPGAを利用してCPUを自作します。
+
+CPUのテストはシミュレータとFPGAで行います。
 本書では、TangMega 138KとPYNQ-Z1というFPGAを利用します。
 ただし、実機がなくても実装を進めることができるので所有していなくても構いません。
 
 == RISC-V
 
-RISC-Vは、カリフォルニア大学バークレー校で開発されたRISCのISA(命令セットアーキテクチャ)です。
+@<b>{RISC-V}は、カリフォルニア大学バークレー校で開発されたISAです。
 仕様書の初版は2011年に公開されました。
 ISAとしての歴史はまだ浅いですが、
 RISC-Vは仕様がオープンでカスタマイズ可能であるという特徴もあって、
@@ -40,7 +76,7 @@ rocket-chip(Chiselによる実装),
 Shakti(Bluespec SVによる実装),
 rsd(SystemVerilogによる実装)が挙げられます。
 
-本書では、RISC-Vのバージョンriscv-isa-release-87edab7-2024-05-04 TODOを利用します。
+本書では、RISC-Vのバージョン@<w>{riscv-version}を利用します。
 RISC-Vの最新の仕様は、GitHubの
 @<href>{https://github.com/riscv/riscv-isa-manual/, riscv/riscv-isa-manual}
 で確認することができます。

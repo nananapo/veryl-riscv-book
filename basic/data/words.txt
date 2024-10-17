@@ -9,7 +9,10 @@
 ## ・行頭が `#` なら行コメント。
 ##
 
-apple		アップル
-amazon		アマゾン
-google		グーグル
-facebook	フェイスブック
+apple			アップル
+amazon			アマゾン
+google			グーグル
+facebook		フェイスブック
+veryl-version	0.13.1
+support-page	https://github.com/nananapo/veryl-riscv-book/wiki/techbookfest17-support-page
+riscv-version	RISC-V ISA Manual, version 20240411 

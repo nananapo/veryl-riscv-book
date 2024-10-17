@@ -48,28 +48,29 @@
 <p>こんにちは!あなたはCPUを作成したことがありますか?作成したことがあってもなくても大歓迎、この本はCPU自作の面白さとVerylを世に広めるために執筆されました。実装を始める前に、まずはRISC-Vや使用する言語、本書の構成について簡単に解説します。RISC-VやVerylのことを知っているという方は、本書の構成だけ読んでいただければOKです。それでは始めましょう。</p>
 
 <h2 class="numbox"><a id="h-1"></a>CPUの自作</h2>
-<p>TODO</p>
-<ul>
-<li>できるのか?できます
-</li>
-<li>VLSIお高い
-</li>
-<li>Efabless
-</li>
-<li>OpenMPW, TinyTapeout
-</li>
-<li>FPGA
-</li>
-</ul>
-<p>CPUのテストはシミュレーションと実機(FPGA)で行います。本書では、TangMega 138KとPYNQ-Z1というFPGAを利用します。ただし、実機がなくても実装を進めることができるので所有していなくても構いません。</p>
+<p>CPUって自作できるのでしょうか?そもそもCPUの自作って何でしょうか?</p>
+<p>CPUの自作について一般的な定義はありませんが、筆者は「命令セットアーキテクチャの設計」「論理設計」「物理的に製造する」に分類できると考えています。</p>
+<p><b>命令セットアーキテクチャ</b>(Instruction Set Architecture, <b>ISA</b>)とは、CPUがどのような命令を実行することができるかを定めたもの(仕様)です。ISAの設計は考えるだけなので、紙とペンさえあればできます。<b>論理設計</b>とは、簡単に言うと、論理回路を設計することです。CPUは論理回路で構成されているため、CPUの設計には論理設計が必要になります。最近のCPUは、物理的には<b>VLSI</b>(Very Large Scale Integration, 超大規模集積回路)によって実装されています。VLSIの製造には莫大なお金が必要です<sup><a id="fnb-vlsi" href="#fn-vlsi" class="noteref" epub:type="noteref">*1</a></sup>。</p>
+<div class="footnote-list">
+<div class="footnote" id="fn-vlsi" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>小さいチップなら安く(※安くない)製造することができます。EfablessやTinyTapeout, OpenMPWで検索してください</p></div>
+</div><!--/.footnote-list-->
+<p>ISAの設計は簡単<sup><a id="fnb-not-easy" href="#fn-not-easy" class="noteref" epub:type="noteref">*2</a></sup>なので、CPUの自作を難しくしているのは、論理設計と物理的な製造です。</p>
+<p>論理設計については、最近では、論理設計に使う言語やシミュレータ,回路に落とし込むツールなどがオープンに公開されており、昔よりは自作のハードルが下がっています<sup><a id="fnb-not-know" href="#fn-not-know" class="noteref" epub:type="noteref">*3</a></sup>。</p>
+<p>物理的な製造のハードルは高いですが、FPGAを使うことで簡単にお試しすることができます。<b>FPGA</b>(Field Programmable Gate Array)とは、任意の論理回路を実現できる集積回路のことです<a href="bib.html#bib-amano.fpga">[1]</a>。最近は安価にFPGAを入手することができます。</p>
+<div class="footnote-list">
+<div class="footnote" id="fn-not-easy" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*2] </span>簡単ではない。論理設計より難しいかもしれない</p></div>
+<div class="footnote" id="fn-not-know" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*3] </span>筆者は最近にCPUの自作を始めたので最近のことしか知りません。嘘だったらごめん</p></div>
+</div><!--/.footnote-list-->
+<p>本書は、ISAの設計は行わず、論理設計は無料でオープンなツールを利用し、安価(数千 ～ 数万円)なFPGAを利用してCPUを自作します。</p>
+<p>CPUのテストはシミュレータとFPGAで行います。本書では、TangMega 138KとPYNQ-Z1というFPGAを利用します。ただし、実機がなくても実装を進めることができるので所有していなくても構いません。</p>
 
 <h2 class="numbox"><a id="h-2"></a>RISC-V</h2>
-<p>RISC-Vは、カリフォルニア大学バークレー校で開発されたRISCのISA(命令セットアーキテクチャ)です。仕様書の初版は2011年に公開されました。ISAとしての歴史はまだ浅いですが、RISC-Vは仕様がオープンでカスタマイズ可能であるという特徴もあって、研究で利用されたり既に何種類もマイコンが市販されているなど、着実に広まっていっています。</p>
+<p><b>RISC-V</b>は、カリフォルニア大学バークレー校で開発されたISAです。仕様書の初版は2011年に公開されました。ISAとしての歴史はまだ浅いですが、RISC-Vは仕様がオープンでカスタマイズ可能であるという特徴もあって、研究で利用されたり既に何種類もマイコンが市販されているなど、着実に広まっていっています。</p>
 <p>インターネット上には多くのRISC-Vの実装が公開されています。例として、rocket-chip(Chiselによる実装),Shakti(Bluespec SVによる実装),rsd(SystemVerilogによる実装)が挙げられます。</p>
-<p>本書では、RISC-Vのバージョンriscv-isa-release-87edab7-2024-05-04 TODOを利用します。RISC-Vの最新の仕様は、GitHubの<a href="https://github.com/riscv/riscv-isa-manual/" class="link">riscv/riscv-isa-manual</a>で確認することができます。</p>
-<p>RISC-Vには、基本整数命令セットとしてRV32I, RV64I, RV32E, RV64E<sup><a id="fnb-rv128i" href="#fn-rv128i" class="noteref" epub:type="noteref">*1</a></sup>が定義されています。RVの後ろにつく数字はレジスタの長さ(XLEN)が何ビットかです。数字の後ろにつく文字がIの場合、XLENビットのレジスタが32個存在します。Eの場合はレジスタの数が16個になります。</p>
+<p>本書では、RISC-VのバージョンRISC-V ISA Manual, version 20240411 を利用します。RISC-Vの最新の仕様は、GitHubの<a href="https://github.com/riscv/riscv-isa-manual/" class="link">riscv/riscv-isa-manual</a>で確認することができます。</p>
+<p>RISC-Vには、基本整数命令セットとしてRV32I, RV64I, RV32E, RV64E<sup><a id="fnb-rv128i" href="#fn-rv128i" class="noteref" epub:type="noteref">*4</a></sup>が定義されています。RVの後ろにつく数字はレジスタの長さ(XLEN)が何ビットかです。数字の後ろにつく文字がIの場合、XLENビットのレジスタが32個存在します。Eの場合はレジスタの数が16個になります。</p>
 <div class="footnote-list">
-<div class="footnote" id="fn-rv128i" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>RV128Iもありますが、まだDraft段階です</p></div>
+<div class="footnote" id="fn-rv128i" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*4] </span>RV128Iもありますが、まだDraft段階です</p></div>
 </div><!--/.footnote-list-->
 <p>基本整数命令セットには最低限の命令しか定義されていません。それ以外のかけ算や割り算, 不可分操作, CSRなどの追加の命令や機能は拡張として定義されています。CPUが何を実装しているかを示す表現にISA Stringというものがあり、例えばかけ算と割り算, 不可分操作ができるRV32IのCPUは<code class="inline-code">RV32IMA</code>と表現されます。</p>
 <p>本書では、まず、<code class="inline-code">RV32I</code>のCPUを作成します。これを<code class="inline-code">RV64IMACFD_Zicond_Zicsr_Zifencei</code>に進化させることを目標に実装を進めます。</p>

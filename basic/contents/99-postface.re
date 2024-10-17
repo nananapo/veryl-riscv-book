@@ -9,6 +9,8 @@
 
 続きが気になったり、誤植を見つけた場合は、GitHubをご確認ください。
 
+ * サポートページ : @<w>{support-page}
+
 //blankline
 //blankline
 
