@@ -33,17 +33,18 @@ CSRRCI	CSRRCのrs1を、即値をゼロ拡張した値に置き換えた動作
 まず、Zicsrに定義されている命令(@<table>{zicsr.insts})をデコードします。
 
 これらの命令のopcodeは@<code>{SYSTEM}(@<code>{1110011})です。
-この値をeeiパッケージに定義します。
+この値をeeiパッケージに定義します(@<list>{eei.veryl.create-csrunit-range.opcode})。
 
-//list[eei.veryl.system][opcode用の定数の定義 (eei.veryl)]{
+//list[eei.veryl.create-csrunit-range.opcode][opcode用の定数の定義 (eei.veryl)]{
 #@maprange(scripts/04a/create-csrunit-range/core/src/eei.veryl,opcode)
     const OP_SYSTEM: logic<7> = 7'b1110011;
 #@end
 //}
 
-次に、@<code>{InstCtrl}構造体に、CSRを制御する命令であることを示す@<code>{is_csr}フラグを追加します。
+次に、@<code>{InstCtrl}構造体に、
+CSRを制御する命令であることを示す@<code>{is_csr}フラグを追加します(@<list>{corectrl.veryl.create-csrunit-range.is_csr})。
 
-//list[corectrl.veryl.is_csr][is_csrを追加する (corectrl.veryl)]{
+//list[corectrl.veryl.create-csrunit-range.is_csr][is_csrを追加する (corectrl.veryl)]{
 #@maprange(scripts/04a/create-csrunit-range/core/src/corectrl.veryl,is_csr)
     // 制御に使うフラグ用の構造体
     struct InstCtrl {
@@ -53,7 +54,7 @@ CSRRCI	CSRRCのrs1を、即値をゼロ拡張した値に置き換えた動作
         is_aluop: logic      , // ALUを利用する命令である
         is_jump : logic      , // ジャンプ命令である
         is_load : logic      , // ロード命令である
-        @<b>|is_csr  : logic      , // CSR命令である| @<balloon>{追加}
+        @<b>|is_csr  : logic      , // CSR命令である|
         funct3  : logic   <3>, // 命令のfunct3フィールド
         funct7  : logic   <7>, // 命令のfunct7フィールド
     }
@@ -61,32 +62,37 @@ CSRRCI	CSRRCのrs1を、即値をゼロ拡張した値に置き換えた動作
 //}
 
 これでデコード処理を書く準備が整いました。
-inst_decoderモジュールの@<code>{InstCtrl}を生成している部分を変更します。
+inst_decoderモジュールの@<code>{InstCtrl}を生成している部分を変更します(@<list>{inst_decoder.veryl.create-csrunit-range.decode})。
 
-//list[inst_decoder.veryl.deco  de][OP_SYSTEMとis_csrを追加する (inst_decoder.veryl)]{
+//list[inst_decoder.veryl.create-csrunit-range.decode][OP_SYSTEMとis_csrを追加する (inst_decoder.veryl)]{
 #@maprange(scripts/04a/create-csrunit-range/core/src/inst_decoder.veryl,decode)
                                            is_csrを追加
     ctrl = {case op {                           ↓
-        OP_LUI   : {InstType::U, T, T, F, F, F, F},
-        OP_AUIPC : {InstType::U, T, F, F, F, F, F},
-        OP_JAL   : {InstType::J, T, F, F, T, F, F},
-        OP_JALR  : {InstType::I, T, F, F, T, F, F},
-        OP_BRANCH: {InstType::B, F, F, F, F, F, F},
-        OP_LOAD  : {InstType::I, T, F, F, F, T, F},
-        OP_STORE : {InstType::S, F, F, F, F, F, F},
-        OP_OP    : {InstType::R, T, F, T, F, F, F},
-        OP_OP_IMM: {InstType::I, T, F, T, F, F, F},
-        OP_SYSTEM: {InstType::I, T, F, F, F, F, T}, @<balloon>{追加}
-        default  : {InstType::X, F, F, F, F, F, F},
+        OP_LUI   : {InstType::U, T, T, F, F, F, @<b>|F|},
+        OP_AUIPC : {InstType::U, T, F, F, F, F, @<b>|F|},
+        OP_JAL   : {InstType::J, T, F, F, T, F, @<b>|F|},
+        OP_JALR  : {InstType::I, T, F, F, T, F, @<b>|F|},
+        OP_BRANCH: {InstType::B, F, F, F, F, F, @<b>|F|},
+        OP_LOAD  : {InstType::I, T, F, F, F, T, @<b>|F|},
+        OP_STORE : {InstType::S, F, F, F, F, F, @<b>|F|},
+        OP_OP    : {InstType::R, T, F, T, F, F, @<b>|F|},
+        OP_OP_IMM: {InstType::I, T, F, T, F, F, @<b>|F|},
+        @<b>|OP_SYSTEM: {InstType::I, T, F, F, F, F, T},|
+        default  : {InstType::X, F, F, F, F, F, @<b>|F|},
     }, f3, f7};
 #@end
 //}
 
-上のコードでは、opcodeが@<code>{OP_SYSTEM}な命令を、I形式で、レジスタに結果を書き込み、CSRを操作する命令であるということにしています。
-他のopcodeの命令については、CSRを操作しない命令であるということにしています。
+@<list>{inst_decoder.veryl.create-csrunit-range.decode}では、
+opcodeが@<code>{OP_SYSTEM}な命令を、
+I形式, レジスタに結果を書き込む, CSRを操作する命令であるということにしています。
+他のopcodeの命令については、
+CSRを操作しない命令であるということにしています。
 
-CSRRW, CSRRS, CSRRC命令は、rs1レジスタのデータを利用します。
-CSRRWI, CSRRSI, CSRRCI命令は、命令のビット中のrs1にあたるビット列(5ビット)をゼロ拡張した値を利用します。
+CSRRW, CSRRS, CSRRC命令は、
+rs1レジスタのデータを利用します。
+CSRRWI, CSRRSI, CSRRCI命令は、
+命令のビット中のrs1にあたるビット列(5ビット)をゼロ拡張した値を利用します。
 それぞれの命令はfunct3で区別することができます(@<table>{zicsr.f3})。
 
 //table[zicsr.f3][Zicsrに定義されている命令(funct3による区別)]{
@@ -100,18 +106,20 @@ funct3	命令
 3'b111	CSRRCI
 //}
 
-操作対象のCSRのアドレス(12ビット)は、命令のビットの上位12ビットをそのまま利用します。
+操作対象のCSRのアドレス(12ビット)は、
+命令のビットの上位12ビット(I形式の即値)をそのまま利用します。
 
 == csrunitモジュールの実装
 
 CSRを操作する命令のデコードができたので、
-CSR関連の処理を行うcsrunitモジュールを作成します。
+CSR関連の処理を行うモジュールを作成します。
 
-=== csrunitモジュールの作成
+=== csrunitモジュールを作成する
 
-@<code>{src/csrunit.veryl}を作成し、次のように記述します。
+@<code>{src/csrunit.veryl}を作成し、
+次のように記述します(@<list>{csrunit.veryl.create-csrunit})。
 
-//list[csrunit.veryl.all][csrunit.veryl]{
+//list[csrunit.veryl.create-csrunit][csrunit.veryl]{
 #@mapfile(scripts/04a/create-csrunit/core/src/csrunit.veryl)
 import eei::*;
 import corectrl::*;
@@ -131,7 +139,7 @@ module csrunit (
 #@end
 //}
 
-csrunitモジュールの主要なポートの定義は次のとおりです。
+csrunitモジュールの主要なポートの定義は@<table>{csrunit.port}のとおりです。
 
 //table[csrunit.port][csrunitのポート定義]{
 ポート名	型			向き	意味
@@ -143,11 +151,14 @@ rs1			UIntX		input	CSRR(W|S|C)のときrs1の値、@<br>{}CSRR(W|S|C)Iのとき�
 rdata		UIntX		output	CSRR(W|S|C)[I]によるCSR読み込みの結果
 //}
 
-まだcsrunitモジュールにはCSRが一つもないため、中身が空になっています。
+まだ、csrunitモジュールにはCSRが一つもありません。
+そのため、中身が空になっています。
+このままの状態で、
+とりあえず、
+csrunitモジュールをcoreモジュールの中でインスタンス化します
+(@<list>{core.veryl.create-csrunit-range.csru})。
 
-このままの状態で、とりあえず、csrunitモジュールをcoreモジュールの中でインスタンス化します。
-
-//list[core.veryl.csru.inst][csrunitモジュールのインスタンス化 (core.veryl)]{
+//list[core.veryl.create-csrunit-range.csru][csrunitモジュールのインスタンス化 (core.veryl)]{
 #@maprange(scripts/04a/create-csrunit-range/core/src/core.veryl,csru)
     var csru_rdata: UIntX;
 
@@ -167,18 +178,23 @@ rdata		UIntX		output	CSRR(W|S|C)[I]によるCSR読み込みの結果
 #@end
 //}
 
-上のコードでは、結果の受け取りのために@<code>{csru_rdata}レジスタを作成し、
+CSR命令の結果の受け取りのために変数@<code>{csru_rdata}を作成し、
 csrunitモジュールをインスタンス化しています。
 
-csr_addrポートには命令の上位12ビットを設定しています。
-rs1ポートには、即値を利用する命令(CSRR(W|S|C)I)の場合はrs1_addrを0で拡張した値を、
+@<code>{csr_addr}ポートには、
+命令の上位12ビットを設定しています。
+rs1ポートには、
+即値を利用する命令(CSRR(W|S|C)I)の場合はrs1_addrを0で拡張した値を、
 それ以外の命令の場合はrs1のデータを設定しています。
 
-次に、csrunitの結果をレジスタにライトバックするようにします。
-具体的には、@<code>{InstCtrl.is_csr}が@<code>{1}のとき、
-@<code>{wb_data}が@<code>{csru_rdata}になるようにします。
+次に、csrunitの結果を、
+レジスタにライトバックするようにします。
+具体的には、
+@<code>{InstCtrl.is_csr}が@<code>{1}のとき、
+@<code>{wb_data}が@<code>{csru_rdata}になるようにします
+(@<list>{core.veryl.create-csrunit-range.wb})。
 
-//list[core.veryl.csru.wb][CSR命令の結果がライトバックされるようにする (core.veryl)]{
+//list[core.veryl.create-csrunit-range.wb][CSR命令の結果がライトバックされるようにする (core.veryl)]{
 #@maprange(scripts/04a/create-csrunit-range/core/src/core.veryl,wb)
     let rd_addr: logic<5> = inst_bits[11:7];
     let wb_data: UIntX    = if inst_ctrl.is_lui {
@@ -187,18 +203,19 @@ rs1ポートには、即値を利用する命令(CSRR(W|S|C)I)の場合はrs1_ad
         inst_pc + 4
     } else if inst_ctrl.is_load {
         memu_rdata
-    } else if inst_ctrl.is_csr {
-        csru_rdata
-    } else {
+    } @<b>|else if inst_ctrl.is_csr {|
+        @<b>|csru_rdata|
+    @<b>|}| else {
         alu_result
     };
 #@end
 //}
 
 最後に、デバッグ用の表示を追加します。
-デバッグ表示用の@<code>{always_ff}ブロックに次のコードを追加してください。
+デバッグ表示用の@<code>{always_ff}ブロックに、
+次のコードを追加してください(@<list>{core.veryl.create-csrunit-range.debug})。
 
-//list[core.veryl.csru.debug][デバッグ用にrdataを表示するようにする (core.veryl)]{
+//list[core.veryl.create-csrunit-range.debug][デバッグ用にrdataを表示するようにする (core.veryl)]{
 #@maprange(scripts/04a/create-csrunit-range/core/src/core.veryl,debug)
     if inst_ctrl.is_csr {
         $display("  csr rdata : %h", csru_rdata);
@@ -206,31 +223,35 @@ rs1ポートには、即値を利用する命令(CSRR(W|S|C)I)の場合はrs1_ad
 #@end
 //}
 
-これらのテストは、csrunitモジュールにレジスタを追加してから行います。
+これらのテストは、
+csrunitモジュールにレジスタを追加してから行います。
 
-=== mtvecレジスタの実装
+=== mtvecレジスタを実装する
 
 csrunitモジュールには、まだCSRが定義されていません。
 1つ目のCSRとして、mtvecレジスタを実装します。
 
-==== mtvecレジスタとは何か?
+==== mtvecレジスタ, トラップ
 
 //image[mtvec][mtvecのエンコーディング@<bib>{isa-manual.2.fig10}]
 
 mtvecレジスタは、仕様書@<bib>{isa-manual.2.3.1.7}に定義されています。
-
 mtvecは、MXLENビットのWARLなレジスタです。
 mtvecのアドレスは@<code>{12'h305}です。
 
-MXLENはmisaレジスタに定義されていますが、今のところはXLENと等しいという認識でOKです。
+MXLENはmisaレジスタに定義されていますが、
+今のところはXLENと等しいという認識で問題ありません。
 WARLはWrite Any Values, Reads Legal Valuesの略です。
-その名の通り、好きな値を書き込めるが、読み出すときには合法な値になるという認識でOKです。
+その名の通り、好きな値を書き込めるが、
+読み出すときには合法な値になっているという認識で問題ありません。
 
 mtvecは、トラップ(Trap)が発生したときのジャンプ先(Trap-Vector)の基準となるアドレスを格納するレジスタです。
-トラップとは、例外(Exception)、または割り込み(Interrupt)により、CPUの制御を変更することを言います@<fn>{trap.define}。
-トラップが発生する時、CPUはCSRを変更した後、mtvecに格納されたアドレスにジャンプします。
+@<b>{トラップ}とは、例外(Exception)、または割り込み(Interrupt)により、
+CPUの制御を変更することを言います@<fn>{trap.define}。
+トラップが発生する時、CPUはCSRを変更した後、
+mtvecに格納されたアドレスにジャンプします。
 
-例外とは、命令の実行によって引き起こされる異常な状態(unusual condition)のことです。
+@<b>{例外}とは、命令の実行によって引き起こされる異常な状態(unusual condition)のことです。
 例えば、不正な命令を実行しようとしたときにはIllegal Instruction例外が発生します。
 CPUは、例外が発生したときのジャンプ先(対処方法)を決めておくことで、
 CPUが異常な状態に陥ったままにならないようにしています。
@@ -242,13 +263,13 @@ Directモードのとき、トラップ時のジャンプ先は@<code>{BASE << 2
 
 //footnote[trap.define][トラップや例外, 割り込みはVolume Iの1.6Exceptions, Traps, and Interruptsに定義されています]
 
-==== mtvecレジスタを実装する
+==== mtvecレジスタの実装
 
 それでは、mtvecレジスタを実装します。
+まず、CSRのアドレスを表す列挙型を定義します
+(@<list>{csrunit.veryl.create-mtvec-range.csr_addr})。
 
-まず、CSRのアドレスを表す列挙型を定義します。
-
-//list[csraddr.define][CsrAddr型を定義する (csrunit.veryl)]{
+//list[csrunit.veryl.create-mtvec-range.csr_addr][CsrAddr型を定義する (csrunit.veryl)]{
 #@maprange(scripts/04a/create-mtvec-range/core/src/csrunit.veryl,csr_addr)
     // CSRのアドレス
     enum CsrAddr: logic<12> {
@@ -257,29 +278,35 @@ Directモードのとき、トラップ時のジャンプ先は@<code>{BASE << 2
 #@end
 //}
 
-mtvecレジスタを作成します。
-MXLEN=XLENとしているので、型は@<code>{UIntX}にします。
+次に、mtvecレジスタを作成します。
+MXLEN=XLENとしているので、
+型は@<code>{UIntX}にします
+(@<list>{csrunit.veryl.create-mtvec-range.mtvec})。
 
-//list[mtvec.define][mtvecレジスタの定義 (csrunit.veryl)]{
+//list[csrunit.veryl.create-mtvec-range.mtvec][mtvecレジスタの定義 (csrunit.veryl)]{
 #@maprange(scripts/04a/create-mtvec-range/core/src/csrunit.veryl,mtvec)
     // CSR
     var mtvec: UIntX;
 #@end
 //}
 
-mtvecレジスタのMODEフィールドには書き込めないようにする必要があります。
-これを制御するためにmtvecレジスタの書き込みマスク用の定数を定義します。
+MODEはDirectモード(@<code>{00})しか対応していません。
+mtvecはWARLなレジスタなので、
+MODEフィールドには書き込めないようにする必要があります。
+これを制御するためにmtvecレジスタの書き込みマスク用の定数を定義します
+(@<list>{csrunit.veryl.create-mtvec-range.wmask})。
 
-//list[][mtvecレジスタの書き込みマスクの定義 (csrunit.veryl)]{
+//list[csrunit.veryl.create-mtvec-range.wmask][mtvecレジスタの書き込みマスクの定義 (csrunit.veryl)]{
 #@maprange(scripts/04a/create-mtvec-range/core/src/csrunit.veryl,wmask)
     // wmasks
     const MTVEC_WMASK: UIntX = 'hffff_fffc;
 #@end
 //}
 
-次に、書き込むべきデータ@<code>{wdata}の生成と、mtvecレジスタの読み込みをします。
+次に、書き込むべきデータ@<code>{wdata}の生成と、
+mtvecレジスタの読み込みを実装します(@<list>{csrunit.veryl.create-mtvec-range.rw})。
 
-//list[csr.read_wdata][レジスタの読み込みと書き込みデータの作成 (csrunit.veryl)]{
+//list[csrunit.veryl.create-mtvec-range.rw][レジスタの読み込みと書き込みデータの作成 (csrunit.veryl)]{
 #@maprange(scripts/04a/create-mtvec-range/core/src/csrunit.veryl,rw)
     var wmask: UIntX; // write mask
     var wdata: UIntX; // write data
@@ -308,14 +335,19 @@ mtvecレジスタのMODEフィールドには書き込めないようにする�
 @<code>{always_comb}ブロックで、
 @<code>{rdata}ポートに@<code>{csr_addr}に応じてCSRの値を割り当てます。
 @<code>{wdata}には、CSRに書き込むべきデータを割り当てます。
-CSRに書き込むべきデータは、書き込む命令(CSRRW[I], CSRRS[I], CSRRC[I])によって異なります。
-rs1にはrs1の値か即値が格納されているため、これと@<code>{rdata}を利用して@<code>{wdata}を生成しています。
-@<code>{funct3}と演算の種類の関係については、@<table>{zicsr.f3}を参照してください。
+CSRに書き込むべきデータは、
+書き込む命令(CSRRW[I], CSRRS[I], CSRRC[I])によって異なります。
+rs1には、rs1の値か即値が供給されているため、
+これと@<code>{rdata}を利用して@<code>{wdata}を生成しています。
+@<code>{funct3}と演算の種類の関係については、
+@<table>{zicsr.f3}を参照してください。
 
-最後にmtvecレジスタへの書き込み処理を記述します。
-mtvecへの書き込みは、命令がCSR命令である場合(@<code>{is_wsc})にのみ行います。
+最後に、mtvecレジスタへの書き込み処理を実装します。
+mtvecへの書き込みは、
+命令がCSR命令である場合(@<code>{is_wsc})にのみ行います
+(@<list>{csrunit.veryl.create-mtvec-range.always})。
 
-//list[csru.write][CSRへの書き込み処理 (csrunit.veryl)]{
+//list[csrunit.veryl.create-mtvec-range.always][CSRへの書き込み処理 (csrunit.veryl)]{
 #@maprange(scripts/04a/create-mtvec-range/core/src/csrunit.veryl,always)
     always_ff {
         if_reset {
@@ -335,14 +367,18 @@ mtvecへの書き込みは、命令がCSR命令である場合(@<code>{is_wsc})�
 //}
 
 mtvecの初期値は0です。
-mtvecにwdataを書き込むとき、MODEが常に0になるようにしています。
+mtvecにwdataを書き込むとき、
+MODEが常に0になるようにしています。
 
-=== CSRのテスト
+=== csrunitモジュールをテストする
 
-mtvecレジスタの書き込み、読み込みができることをテストします。
+mtvecレジスタの書き込み、
+読み込みができることを確認します。
 
-プロジェクトのフォルダに@<code>{test}ディレクトリを作成してください。
-@<code>{test/sample_csr.hex}を作成し、次のように記述します。
+プロジェクトのフォルダに、
+@<code>{test}ディレクトリを作成してください。
+@<code>{test/sample_csr.hex}を作成し、
+次のように記述します(@<list>{sample_csr.hex})。
 
 //list[sample_csr.hex][sample_csr.hex]{
 #@mapfile(scripts/04a/create-mtvec/core/test/sample_csr.hex)
@@ -351,10 +387,14 @@ mtvecレジスタの書き込み、読み込みができることをテストし
 #@end
 //}
 
-テストでは、CSRRWI命令でmtvecに@<code>{'b10111}を書き込んだ後、CSRRS命令でmtvecの値を読み込んでいます。
-CSRRS命令で読み込むとき、rs1をx0(ゼロレジスタ)にすることで、mtvecの値を変更せずに読み込んでいます。
+テストでは、
+CSRRWI命令でmtvecに@<code>{'b10111}を書き込んだ後、
+CSRRS命令でmtvecの値を読み込んでいます。
+CSRRS命令で読み込むとき、
+rs1をx0(ゼロレジスタ)にすることで、
+mtvecの値を変更せずに読み込んでいます。
 
-シミュレータを実行し、結果を確かめます。
+シミュレータを実行し、結果を確かめます(@<list>{mtvec.rw.test})。
 
 //terminal[mtvec.rw.test][mtvecの読み込み/書き込みテストの実行]{
 $ @<userinput>{make build}
@@ -373,23 +413,28 @@ $ @<userinput>{./obj_dir/sim test/sample_csr.hex 5}
   reg[ 2] <= 00000014 @<balloon>{'b10111のMODE部分がマスクされて、'b10100 = 14になっている}
 //}
 
-mtvecのBASEフィールドにのみ書き込みが行われ、@<code>{00000014}が読み込まれることが確認できます。
+mtvecのBASEフィールドにのみ書き込みが行われ、
+@<code>{00000014}が読み込まれることが確認できます。
 
 == ECALL命令の実装
 
-せっかくmtvecレジスタを実装したので、これを使う命令を実装します。
+せっかくmtvecレジスタを実装したので、これを使う命令, 機能を実装します。
 
 === ECALL命令とは何か?
 
 RV32Iには、意図的に例外を発生させる命令としてECALL命令が定義されています。
-ECALL命令を実行すると、現在の権限レベル(Privilege Level)に応じて@<table>{ecall.expts}のような例外が発生します。
+ECALL命令を実行すると、
+現在の権限レベル(Privilege Level)に応じて@<table>{ecall.expts}のような例外が発生します。
 
-権限レベルとは、CPU上で動く権限(特権, 機能)を持つソフトウェアを実装するための機能です。
+@<b>{権限レベル}とは、
+権限(特権, 機能)を持つソフトウェアを実装するための機能です。
 例えばOS上で動くソフトウェアは、
 セキュリティのために、他のソフトウェアのメモリを侵害できないようにする必要があります。
-権限レベル機能があると、このような保護を、権限のあるOSが権限のないソフトウェアを管理するという風に実現できます。
+権限レベル機能があると、このような保護を、
+権限のあるOSが権限のないソフトウェアを管理するという風に実現できます。
 
-権限レベルはいくつか定義されていますが、本章では最高の権限レベルであるMachineレベル(M-mode)しかないものとします。
+権限レベルはいくつか定義されていますが、
+本章では、最高の権限レベルであるMachineレベル(M-mode)しかないものとします。
 
 //table[ecall.expts][権限レベルとECALLによる例外]{
 権限レベル	ECALLによって発生する例外
@@ -418,6 +463,7 @@ Environment call from M-mode例外には11が割り当てられています。
 
 === トラップの実装
 
+TODO
 それでは、ECALL命令とトラップの仕組みを実装します。
 
 ==== 定数の定義
@@ -429,8 +475,8 @@ Environment call from M-mode例外には11が割り当てられています。
     // CSRのアドレス
     enum CsrAddr: logic<12> {
         MTVEC = 12'h305,
-        MEPC = 12'h341,   @<balloon>{追加}
-        MCAUSE = 12'h342, @<balloon>{追加}
+        @<b>|MEPC = 12'h341,|
+        @<b>|MCAUSE = 12'h342,|
     }
 #@end
 //}
@@ -454,8 +500,8 @@ mepcに格納されるのは例外が発生した時の命令のアドレスで�
 //list[csr.wmask.mepc_mcause][mepc, mcauseの書き込みマスクの定義 (csrunit.veryl)]{
 #@maprange(scripts/04a/create-ecall-range/core/src/csrunit.veryl,wmask)
     const MTVEC_WMASK : UIntX = 'hffff_fffc;
-    const MEPC_WMASK  : UIntX = 'hffff_fffc; @<balloon>{追加}
-    const MCAUSE_WMASK: UIntX = 'hffff_ffff; @<balloon>{追加}
+    @<b>|const MEPC_WMASK  : UIntX = 'hffff_fffc;|
+    @<b>|const MCAUSE_WMASK: UIntX = 'hffff_ffff;|
 #@end
 //}
 
@@ -468,8 +514,8 @@ mepcに格納されるのは例外が発生した時の命令のアドレスで�
 #@maprange(scripts/04a/create-ecall-range/core/src/csrunit.veryl,reg)
     // CSR
     var mtvec : UIntX;
-    var mepc  : UIntX; @<balloon>{追加}
-    var mcause: UIntX; @<balloon>{追加}
+    @<b>|var mepc  : UIntX;|
+    @<b>|var mcause: UIntX;|
 #@end
 //}
 
@@ -480,8 +526,8 @@ mepcに格納されるのは例外が発生した時の命令のアドレスで�
 #@maprange(scripts/04a/create-ecall-range/core/src/csrunit.veryl,rdata)
     rdata = case csr_addr {
         CsrAddr::MTVEC : mtvec,
-        CsrAddr::MEPC  : mepc,
-        CsrAddr::MCAUSE: mcause,
+        @<b>|CsrAddr::MEPC  : mepc,|
+        @<b>|CsrAddr::MCAUSE: mcause,|
         default        : 'x,
     };
 #@end
@@ -491,8 +537,8 @@ mepcに格納されるのは例外が発生した時の命令のアドレスで�
 #@maprange(scripts/04a/create-ecall-range/core/src/csrunit.veryl,always_wmask)
     wmask = case csr_addr {
         CsrAddr::MTVEC : MTVEC_WMASK,
-        CsrAddr::MEPC  : MEPC_WMASK,
-        CsrAddr::MCAUSE: MCAUSE_WMASK,
+        @<b>|CsrAddr::MEPC  : MEPC_WMASK,|
+        @<b>|CsrAddr::MCAUSE: MCAUSE_WMASK,|
         default        : 0,
     };
 #@end
@@ -506,15 +552,15 @@ mepcに格納されるのは例外が発生した時の命令のアドレスで�
 always_ff {
     if_reset {
         mtvec  = 0;
-        mepc   = 0;
-        mcause = 0;
+        @<b>|mepc   = 0;|
+        @<b>|mcause = 0;|
     } else {
         if valid {
             if is_wsc {
                 case csr_addr {
                     CsrAddr::MTVEC : mtvec  = wdata;
-                    CsrAddr::MEPC  : mepc   = wdata;
-                    CsrAddr::MCAUSE: mcause = wdata;
+                    @<b>|CsrAddr::MEPC  : mepc   = wdata;|
+                    @<b>|CsrAddr::MCAUSE: mcause = wdata;|
                     default        : {}
                 }
             }
@@ -535,14 +581,14 @@ module csrunit (
     clk        : input  clock       ,
     rst        : input  reset       ,
     valid      : input  logic       ,
-    pc         : input  Addr        , @<balloon>{追加}
+    @<b>|pc         : input  Addr        ,|
     ctrl       : input  InstCtrl    ,
-    rd_addr    : input  logic   <5> , @<balloon>{追加}
+    @<b>|rd_addr    : input  logic   <5> ,|
     csr_addr   : input  logic   <12>,
     rs1        : input  UIntX       ,
     rdata      : output UIntX       ,
-    raise_trap : output logic       , @<balloon>{追加}
-    trap_vector: output Addr        , @<balloon>{追加}
+    @<b>|raise_trap : output logic       ,|
+    @<b>|trap_vector: output Addr        ,|
 ) {
 #@end
 //}
@@ -571,8 +617,8 @@ csrunitモジュールと接続するための変数を定義し、
 //list[core.veryl.trap.reg][csrunitのポートの定義を変更する ① (core.veryl)]{
 #@maprange(scripts/04a/create-ecall-range/core/src/core.veryl,reg)
     var csru_rdata      : UIntX;
-    var csru_raise_trap : logic; @<balloon>{追加}
-    var csru_trap_vector: Addr ; @<balloon>{追加}
+    @<b>|var csru_raise_trap : logic;|
+    @<b>|var csru_trap_vector: Addr ;|
 #@end
 //}
 
@@ -582,9 +628,9 @@ csrunitモジュールと接続するための変数を定義し、
         clk                       ,
         rst                       ,
         valid   : inst_valid      ,
-        pc      : inst_pc         , @<balloon>{追加}
+        @<b>|pc      : inst_pc         ,|
         ctrl    : inst_ctrl       ,
-        rd_addr                   , @<balloon>{追加}
+        @<b>|rd_addr                   ,|
         csr_addr: inst_bits[31:20],
         rs1     : if inst_ctrl.funct3[2] == 1 && inst_ctrl.funct3[1:0] != 0 {
             {1'b0 repeat XLEN - $bits(rs1_addr), rs1_addr} // rs1を0で拡張する
@@ -592,8 +638,8 @@ csrunitモジュールと接続するための変数を定義し、
             rs1_data
         },
         rdata      : csru_rdata,
-        raise_trap : csru_raise_trap, @<balloon>{追加}
-        trap_vector: csru_trap_vector,@<balloon>{追加}
+        @<b>|raise_trap : csru_raise_trap,|
+        @<b>|trap_vector: csru_trap_vector,|
     );
 #@end
 //}
@@ -611,13 +657,13 @@ csrunitモジュールと接続するための変数を定義し、
 //list[core.veryl.csr.hazard][例外の発生時にジャンプするようにする (core.veryl)]{
 #@maprange(scripts/04a/create-ecall-range/core/src/core.veryl,hazard)
     assign control_hazard = inst_valid && (
-        csru_raise_trap || @<balloon>{追加}
+        @<b>{csru_raise_trap ||}
         inst_ctrl.is_jump ||
         inst_is_br(inst_ctrl) && brunit_take
     );
-    assign control_hazard_pc_next = if csru_raise_trap {
-        csru_trap_vector @<balloon>{トラップするとき、trap_vectorに飛ぶ}
-    } else if inst_is_br(inst_ctrl) {
+    assign control_hazard_pc_next = @<b>|if csru_raise_trap {|
+        @<b>|csru_trap_vector| @<balloon>{トラップするとき、trap_vectorに飛ぶ}
+    @<b>|} else |if inst_is_br(inst_ctrl) {
         inst_pc + inst_imm
     } else {
         alu_result
@@ -669,10 +715,10 @@ always_ff {
         ...
     } else {
         if valid {
-            if raise_trap { @<balloon>{トラップ時の動作}
-                mepc   = pc;
-                mcause = trap_cause;
-            } else {
+            @<b>|if raise_trap {| @<balloon>{トラップ時の動作}
+                @<b>|mepc   = pc;|
+                @<b>|mcause = trap_cause;|
+            @<b>|} else {|
                 if is_wsc {
                     ...
 #@end
@@ -687,8 +733,8 @@ ECALL命令をテストする前に、デバッグのために@<code>{$display}�
 #@maprange(scripts/04a/create-ecall-range/core/src/core.veryl,debug)
     if inst_ctrl.is_csr {
         $display("  csr rdata : %h", csru_rdata);
-        $display("  csr trap  : %b", csru_raise_trap);
-        $display("  csr vec   : %h", csru_trap_vector);
+        @<b>|$display("  csr trap  : %b", csru_raise_trap);|
+        @<b>|$display("  csr vec   : %h", csru_trap_vector);|
     }
 #@end
 //}

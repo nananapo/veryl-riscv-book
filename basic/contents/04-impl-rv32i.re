@@ -1201,8 +1201,6 @@ package corectrl {
 命令をデコードするとき、まずopcodeを使って判別します。
 このために、デコードに使う定数を@<code>{eei}パッケージに記述します(@<list>{eei.very.id-range.opcode})。
 
-#@# TODO opcodeをenumにする
-
 //list[eei.very.id-range.opcode][eei.verylに追加で記述する (eei.veryl)]{
 #@maprange(scripts/04/id-range/core/src/eei.veryl, opcode)
     // opcode
@@ -2431,8 +2429,6 @@ deadbeef // 0x20
 
 シミュレーションを実行し、結果を確かめます(@<list>{lwsw.test})。
 
-TODO
-
 //terminal[lwsw.test][LW, SW命令のテスト (一部省略)]{
 $ @<userinput>{make build}
 $ @<userinput>{make sim}
@@ -2926,7 +2922,7 @@ JALR命令(I形式)ならrs1と即値になっていることを確認してく�
 ここで、新しく命令をフェッチしなおすようにしても、
 ジャンプ命令によって実行されることがなくなった命令がFIFOに残っていることがあることに注意する必要があります(@<img>{fifo-flush})。
 
-//image[fifo-flush][FIFOに余計な命令が入ってしまっている][width=50%]
+//image[fifo-flush][FIFOに余計な命令が入ってしまっている][width=80%]
 
 実行するべきではない命令を実行しないようにするために、
 ジャンプ命令を実行するときに、FIFOをリセットするようにします。

@@ -1981,7 +1981,6 @@ deadbeef // 0x20
 </div>
 <p>アドレス<code class="inline-code">0x20</code>には、データ<code class="inline-code">deadbeef</code>を格納しています。1つ目の命令で<code class="inline-code">deadbeef</code>が読み込まれ、3つ目の命令で<code class="inline-code">00000400</code>を書き込み、4つ目の命令で<code class="inline-code">00000400</code>が読み込まれます。</p>
 <p>シミュレーションを実行し、結果を確かめます(<span class="listref"><a href="./04-impl-rv32i.html#lwsw.test">リスト3.66</a></span>)。</p>
-<p>TODO</p>
 <div id="lwsw.test" class="cmd-code">
 <span class="caption">リスト3.66: リスト3.66: LW, SW命令のテスト (一部省略)</span>
 <pre class="list language-test">$ <span class="userinput">make build</span>
@@ -2370,7 +2369,7 @@ deadbeef // 0x0
 </div>
 <p>ここで、新しく命令をフェッチしなおすようにしても、ジャンプ命令によって実行されることがなくなった命令がFIFOに残っていることがあることに注意する必要があります(<span class="imgref"><a href="./04-impl-rv32i.html#fifo-flush">図3.4</a></span>)。</p>
 <div id="fifo-flush" class="image">
-<img src="images/04-impl-rv32i/fifo-flush.png" alt="FIFOに余計な命令が入ってしまっている" class="img" style="width:50%" />
+<img src="images/04-impl-rv32i/fifo-flush.png" alt="FIFOに余計な命令が入ってしまっている" class="img" style="width:80%" />
 <p class="caption">
 図3.4: FIFOに余計な命令が入ってしまっている
 </p>
