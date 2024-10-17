@@ -1086,7 +1086,7 @@ module inst_decoder (
 </li>
 </ul>
 
-<h3 class="none"><a id="h3-7-3"></a><span class="secno">3.7.3</span> デコーダのインスタンス化</h3>
+<h3 class="none"><a id="h3-7-3"></a><span class="secno">3.7.3</span> デコーダをインスタンス化する</h3>
 <p>inst_decoderモジュールを、<code class="inline-code">core</code>モジュールでインスタンス化します(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.id-range.inst">リスト3.32</a></span>)。</p>
 <div id="core.veryl.id-range.inst" class="caption-code">
 <span class="caption">リスト3.32: リスト3.32: inst_decoderのインスタンス化 (core.veryl)</span>
@@ -1980,7 +1980,7 @@ deadbeef // 0x20
 </table>
 </div>
 <p>アドレス<code class="inline-code">0x20</code>には、データ<code class="inline-code">deadbeef</code>を格納しています。1つ目の命令で<code class="inline-code">deadbeef</code>が読み込まれ、3つ目の命令で<code class="inline-code">00000400</code>を書き込み、4つ目の命令で<code class="inline-code">00000400</code>が読み込まれます。</p>
-<p>シミュレーションを実行し、結果を確かめます(<span class="listref"><a href="./04-impl-rv32i.html#lwsw.test">リスト3.66</a></span>)。</p>
+<p>シミュレータを実行し、結果を確かめます(<span class="listref"><a href="./04-impl-rv32i.html#lwsw.test">リスト3.66</a></span>)。</p>
 <div id="lwsw.test" class="cmd-code">
 <span class="caption">リスト3.66: リスト3.66: LW, SW命令のテスト (一部省略)</span>
 <pre class="list language-test">$ <span class="userinput">make build</span>

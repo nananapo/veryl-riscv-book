@@ -1,6 +1,6 @@
 = riscv-testsによるテスト
 
-前の章で、RV32IのCPUを実装しました。
+@<chap>{04-impl-rv32i}では、RV32IのCPUを実装しました。
 簡単なテストを作成して操作を確かめましたが、
 まだテストできていない命令が複数あります。
 そこで、riscv-testsというテストを利用することで、
@@ -8,9 +8,9 @@ CPUがある程度正しく動いているらしいことを確かめます。
 
 == riscv-testsとは何か?
 
-riscv-testsは、次のURLからソースコードをダウンロードすることができます。
-
-riscv-software-src/riscv-tests : @<href>{https://github.com/riscv-software-src/riscv-tests}
+riscv-testsは、
+GitHubの@<href>{https://github.com/riscv-software-src/riscv-tests, riscv-software-src/riscv-tests}
+からソースコードをダウンロードすることができます。
 
 riscv-testsは、RISC-Vのプロセッサ向けのユニットテストやベンチマークの集合です。
 命令や機能ごとにテストが用意されており、
@@ -29,9 +29,10 @@ core/test以下にコピーしてください。
 
 === riscv-testsのビルド
 
-riscv-testsをcloneします。
+まず、riscv-testsをcloneします
+(@<list>{riscv-tests.build})。
 
-//terminal[riscvtests.build][riscv-testsのclone]{
+//terminal[riscv-tests.build][riscv-testsのclone]{
 $ @<userinput>{git clone https://github.com/riscv-software-src/riscv-tests}
 $ @<userinput>{cd riscv-tests}
 $ @<userinput>{git submodule update --init --recursive}
@@ -40,7 +41,7 @@ $ @<userinput>{git submodule update --init --recursive}
 riscv-testsは、
 プログラムの実行が@<code>{0x80000000}から始まると仮定した設定になっています。
 しかし、今のところ、CPUはアドレス@<code>{0x00000000}から実行を開始するため、
-リンカにわたす設定ファイル@<code>{env/p/link.ld}を変更します。
+リンカにわたす設定ファイル@<code>{env/p/link.ld}を変更する必要があります(@<list>{link.ld})。
 
 //list[link.ld][riscv-tests/env/p/link.ld]{
 OUTPUT_ARCH( "riscv" )
@@ -48,11 +49,12 @@ ENTRY(_start)
 
 SECTIONS
 {
-  . = 0x00000000; @<balloon>{先頭を0x00000000に変更する}
+  . = @<b>|0x00000000|; @<balloon>{先頭を0x00000000に変更する}
 //}
 
 riscv-testsをビルドします。
-必要なソフトウェアがインストールされていない場合、適宜インストールしてください。
+必要なソフトウェアがインストールされていない場合、適宜インストールしてください
+(@<list>{riscvtests.autoconf})。
 
 //terminal[riscvtests.autoconf][riscv-testsのビルド]{
 $ @<userinput>{cd riscv-testsをcloneしたディレクトリ}
@@ -72,7 +74,7 @@ riscv-testsをビルドすることができましたが、
 CPUでテストを実行できるように、
 ビルドしたテストのバイナリファイルをHEX形式に変換します。
 
-まず、バイナリファイルをHEX形式に変換するPythonプログラム@<code>{test/bin2hex.py}を作成します。
+まず、バイナリファイルをHEX形式に変換するPythonプログラム@<code>{test/bin2hex.py}を作成します(@<list>{bin2hex.py})。
 
 //list[bin2hex.py][core/test/bin2hex.py]{
 #@mapfile(scripts/04b/bin2hex/core/test/bin2hex.py)
@@ -128,14 +130,14 @@ HEXファイルに変換する前に、ビルドした成果物を確認する�
 例えば@<code>{test/share/riscv-tests/isa/rv32ui-p-add}はELFファイルです。
 CPUはELFを直接に実行する機能を持っていないため、
 @<code>{riscv64-unknown-elf-objcopy}を利用して、
-ELFファイルから余計な情報を取り除いたバイナリファイルに変換します。
+ELFファイルを余計な情報を取り除いたバイナリファイルに変換します(@<list>{elf.bin})。
 
 //terminal[elf.bin][ELFファイルを変換する]{
 $ @<userinput>{find share/ -type f -not -name "*.dump" -exec riscv32-unknown-elf-objcopy -O binary {\} {\}.bin \;}
 //}
 
-objcopyで生成されたbinファイルを、
-PythonプログラムでHEXファイルに変換します。
+最後に、objcopyで生成されたbinファイルを、
+PythonプログラムでHEXファイルに変換します(@<list>{bin.hex})。
 
 //terminal[bin.hex][バイナリファイルをHEXファイルに変換する]{
 $ @<userinput>{find share/ -type f -name "*.bin" -exec sh -c "python3 bin2hex.py 4 {\} > {\}.hex" \;}
@@ -239,21 +241,23 @@ SECTIONS
 テストが終了したことを検知し、
 それが成功か失敗かどうかを報告する必要があります。
 
-riscv-testsはテストが終了したことを示すために、
+riscv-testsは、
+テストが終了したことを示すために、
 @<code>{.tohost}に値を書き込みます。
 この値が1のとき、riscv-testsが正常に終了したことを示します。
 それ以外の時は、riscv-testsが失敗したことを示します。
 
 riscv-testsが終了したことを検知する処理をtopモジュールに記述します。
 topモジュールでメモリへのアクセスを監視し、
-@<code>{.tohost}に値が書き込まれたら実行を終了します。
+@<code>{.tohost}に値が書き込まれたら実行を終了します
+(@<list>{top.veryl.detect-finish-range.detect})。
 
-//list[detect-finish][メモリアクセスを監視して終了を検知する (top.veryl)]{
+//list[top.veryl.detect-finish-range.detect][メモリアクセスを監視して終了を検知する (top.veryl)]{
 #@maprange(scripts/04b/detect-finish-range/core/src/top.veryl,detect)
     // riscv-testsの終了を検知する
     const RISCVTESTS_TOHOST_ADDR: Addr = 32'h1000;
     always_ff {
-        if membus.valid && membus.wen == 1 && membus.addr == RISCVTESTS_TOHOST_ADDR {
+        if membus.valid && membus.wen == 1 && membus.addr == addr_to_memaddr(RISCVTESTS_TOHOST_ADDR) {
             if membus.wdata == 1 {
                 $display("riscv-tests success!");
             } else {
@@ -276,7 +280,7 @@ topモジュールでメモリへのアクセスを監視し、
 試しにADD命令のテストを実行してみましょう。
 ADD命令のテストのHEXファイルは@<code>{test/share/riscv-tests/isa/rv32ui-p-add.bin.hex}です。
 
-シミュレータを実行し、正常に動くことを確認します。
+シミュレータを実行し、正常に動くことを確認します(@<list>{test.add.sim})。
 
 //terminal[test.add.sim][ADD命令のriscv-testsを実行する]{
 $ @<userinput>{make build}
@@ -312,7 +316,7 @@ riscv-tests success!
 ADD命令以外の命令もテストしたいですが、わざわざコマンドを手打ちしたくありません。
 本書では、自動でテストを実行し、その結果を報告するプログラムを作成します。
 
-@<code>{test/test.py}を作成し、次のように記述します。
+@<code>{test/test.py}を作成し、次のように記述します(@<list>{test.py})。
 
 //list[test.py][test.py]{
 #@mapfile(scripts/04b/create-test-py/core/test/test.py)
@@ -397,9 +401,6 @@ if __name__ == '__main__':
 第1引数で指定したシミュレータで実行し、
 その結果を報告します。
 
-今回はRV32Iのテストを実行したいので、
-riscv-testsのRV32I向けのテストの接頭辞であるrv32ui-p-引数に指定します。
-
 このPythonプログラムには、次のオプションの引数が存在します。
 
  : -r
@@ -420,8 +421,9 @@ riscv-testsのRV32I向けのテストの接頭辞であるrv32ui-p-引数に指�
     0を指定すると時間制限はなくなります。
     デフォルト値は10(秒)です。
 
-
 それでは、RV32Iのテストを実行しましょう。
+今回はRV32Iのテストを実行したいので、
+riscv-testsのRV32I向けのテストの接頭辞であるrv32ui-p-引数に指定します。
 
 //terminal[python.test.py][rv32ui-pから始まるテストを実行する]{
 $ @<userinput>{python3 test.py ../obj_dir/sim share rv32ui-p- -r}
@@ -471,5 +473,6 @@ Test Result : 39 / 40
 rv32ui-p-から始まる40個のテストの内、39個のテストにパスしました。
 テストの詳細な結果はresultsディレクトリに格納されています。
 
-rv32ui-p-ma_dataは、ロードストアするサイズにアラインされていないアドレスへのロードストア命令のテストです。
+rv32ui-p-ma_dataは、
+ロードストアするサイズにアラインされていないアドレスへのロードストア命令のテストです。
 これについては後の章で例外として対処するため、今は無視します。

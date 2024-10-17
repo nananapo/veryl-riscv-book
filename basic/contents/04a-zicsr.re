@@ -461,16 +461,16 @@ mepcに現在のPCを、mcauseに発生原因を格納します。
 例外の発生原因は数値で表現されており、
 Environment call from M-mode例外には11が割り当てられています。
 
-=== トラップの実装
+=== トラップを実装する
 
-TODO
 それでは、ECALL命令とトラップの仕組みを実装します。
 
 ==== 定数の定義
 
-まず、mepcとmcauseのアドレスを@<code>{CsrAddr}型に追加します。
+まず、mepcとmcauseのアドレスを@<code>{CsrAddr}型に追加します
+(@<list>{csrunit.veryl.create-ecall-range.addr})。
 
-//list[mpec.mcause.csraddr][mepc, mcauseのアドレスを追加する (csrunit.veryl)]{
+//list[csrunit.veryl.create-ecall-range.addr][mepc, mcauseのアドレスを追加する (csrunit.veryl)]{
 #@maprange(scripts/04a/create-ecall-range/core/src/csrunit.veryl,addr)
     // CSRのアドレス
     enum CsrAddr: logic<12> {
@@ -481,10 +481,11 @@ TODO
 #@end
 //}
 
-次に、例外の原因を表現する型@<code>{CsrCause}を定義します。
-今のところ、発生原因はECALL命令によるEnvironment Call From M-mode例外しかありません。
+次に、トラップの発生原因を表現する型@<code>{CsrCause}を定義します。
+今のところ、発生原因はECALL命令によるEnvironment Call From M-mode例外しかありません
+(@<list>{csrunit.veryl.create-ecall-range.cause})。
 
-//list[csrcause][CsrCause型の定義 (csrunit.veryl)]{
+//list[csrunit.veryl.create-ecall-range.cause][CsrCause型の定義 (csrunit.veryl)]{
 #@maprange(scripts/04a/create-ecall-range/core/src/csrunit.veryl,cause)
     enum CsrCause: UIntX {
         ENVIRONMENT_CALL_FROM_M_MODE = 11,
@@ -492,12 +493,13 @@ TODO
 #@end
 //}
 
-最後に、mepc, mcauseの書き込みマスクを定義します。
-
+最後に、mepc, mcauseの書き込みマスクを定義します
+(@<list>{csrunit.veryl.create-ecall-range.wmask})。
 mepcに格納されるのは例外が発生した時の命令のアドレスです。
-命令は4バイトに整列して配置されているので、mepcの下位2ビットは常に0になるようにします。
+命令は4バイトに整列して配置されているため、
+mepcの下位2ビットは常に0になるようにします。
 
-//list[csr.wmask.mepc_mcause][mepc, mcauseの書き込みマスクの定義 (csrunit.veryl)]{
+//list[csrunit.veryl.create-ecall-range.wmask][mepc, mcauseの書き込みマスクの定義 (csrunit.veryl)]{
 #@maprange(scripts/04a/create-ecall-range/core/src/csrunit.veryl,wmask)
     const MTVEC_WMASK : UIntX = 'hffff_fffc;
     @<b>|const MEPC_WMASK  : UIntX = 'hffff_fffc;|
@@ -507,10 +509,11 @@ mepcに格納されるのは例外が発生した時の命令のアドレスで�
 
 ==== mepc, mcauseレジスタの実装
 
-まず、mepc, mcauseレジスタを作成します。
-サイズはMXLEN(=XLEN)なため、型はUIntXとします。
+mepc, mcauseレジスタを作成します。
+サイズはMXLEN(=XLEN)なため、型はUIntXとします
+(@<list>{csrunit.veryl.create-ecall-range.reg})。
 
-//list[mepc.mcause.reg][mepc, mcauseレジスタの定義 (csrunit.veryl)]{
+//list[csrunit.veryl.create-ecall-range.reg][mepc, mcauseレジスタの定義 (csrunit.veryl)]{
 #@maprange(scripts/04a/create-ecall-range/core/src/csrunit.veryl,reg)
     // CSR
     var mtvec : UIntX;
@@ -519,10 +522,14 @@ mepcに格納されるのは例外が発生した時の命令のアドレスで�
 #@end
 //}
 
-次に、mepc, mcauseの読み込みと書き込みマスクの割り当てを実装します。
-どちらもcase文にアドレスと値のペアを追加するだけです。
+次に、mepc, mcauseの読み込み, 書き込みマスクの割り当てを実装します。
+どちらもcase文にアドレスと値のペアを追加するだけです
+(
+@<list>{csrunit.veryl.create-ecall-range.rdata},
+@<list>{csrunit.veryl.create-ecall-range.always_wmask}
+)。
 
-//list[mepc.mcause.rdata][mepc, mcauseの読み込み (csrunit.veryl)]{
+//list[csrunit.veryl.create-ecall-range.rdata][mepc, mcauseの読み込み (csrunit.veryl)]{
 #@maprange(scripts/04a/create-ecall-range/core/src/csrunit.veryl,rdata)
     rdata = case csr_addr {
         CsrAddr::MTVEC : mtvec,
@@ -533,7 +540,7 @@ mepcに格納されるのは例外が発生した時の命令のアドレスで�
 #@end
 //}
 
-//list[mepc.mcause.always_wmask][mepc, mcauseの書き込みマスクの設定 (csrunit.veryl)]{
+//list[csrunit.veryl.create-ecall-range.always_wmask][mepc, mcauseの書き込みマスクの設定 (csrunit.veryl)]{
 #@maprange(scripts/04a/create-ecall-range/core/src/csrunit.veryl,always_wmask)
     wmask = case csr_addr {
         CsrAddr::MTVEC : MTVEC_WMASK,
@@ -545,9 +552,10 @@ mepcに格納されるのは例外が発生した時の命令のアドレスで�
 //}
 
 最後に、mepc, mcauseの書き込みを実装します。
-まずif_resetで値を0に初期化し、case文にmepc, mcauseの場合を追加します。
+if_resetで値を0に初期化し、case文にmepc, mcauseの場合を実装します
+(@<list>{csrunit.veryl.create-ecall-range.always_ff_csr})。
 
-//list[mepc.mcause.always_ff_csr][mepc, mcauseの書き込み (csrunit.veryl)]{
+//list[csrunit.veryl.create-ecall-range.always_ff_csr][mepc, mcauseの書き込み (csrunit.veryl)]{
 #@maprange(scripts/04a/create-ecall-range/core/src/csrunit.veryl,always_ff_csr)
 always_ff {
     if_reset {
@@ -570,12 +578,13 @@ always_ff {
 #@end
 //}
 
-==== 例外を実装する
+==== 例外の実装
 
-いよいよECALL命令とトラップを実装します。
-まず、csrunitモジュールにポートを追加します。
+いよいよECALL命令と、それによって発生するトラップを実装します。
+まず、csrunitモジュールにポートを追加します
+(@<list>{csrunit.veryl.create-ecall-range.port})。
 
-//list[csrunit.port.add][csrunitモジュールにポートを追加する (csrunit.veryl)]{
+//list[csrunit.veryl.create-ecall-range.port][csrunitモジュールにポートを追加する (csrunit.veryl)]{
 #@maprange(scripts/04a/create-ecall-range/core/src/csrunit.veryl,port)
 module csrunit (
     clk        : input  clock       ,
@@ -596,11 +605,11 @@ module csrunit (
 それぞれの用途は次の通りです。
 
  : pc
-	現在処理している命令のアドレスを受け取ります。
+	現在処理している命令のアドレスを受け取ります。@<br>{}
 	例外が発生した時、mepcにPCを格納するために使います。
 
  : rd_addr
-	現在処理している命令のrdのアドレスを受け取ります。
+	現在処理している命令のrdのアドレスを受け取ります。@<br>{}
 	現在処理している命令がECALL命令かどうかを判定するために使います。
 
  : raise_trap
@@ -610,11 +619,16 @@ module csrunit (
 	例外が発生する時、ジャンプ先のアドレスを出力します。
 
 csrunitモジュールの中身を実装する前に、
-coreモジュールに例外発生時の動作を実装します。
-csrunitモジュールと接続するための変数を定義し、
-ポートを接続します。
+coreモジュールに、例外発生時の動作を実装します。
 
-//list[core.veryl.trap.reg][csrunitのポートの定義を変更する ① (core.veryl)]{
+csrunitモジュールと接続するための変数を定義し、
+csrunitモジュールと接続します
+(
+@<list>{core.veryl.create-ecall-range.reg},
+@<list>{core.veryl.create-ecall-range.inst}
+)。
+
+//list[core.veryl.create-ecall-range.reg][csrunitのポートの定義を変更する ① (core.veryl)]{
 #@maprange(scripts/04a/create-ecall-range/core/src/core.veryl,reg)
     var csru_rdata      : UIntX;
     @<b>|var csru_raise_trap : logic;|
@@ -622,7 +636,7 @@ csrunitモジュールと接続するための変数を定義し、
 #@end
 //}
 
-//list[core.veryl.trap.inst][csrunitのポートの定義を変更する ② (core.veryl)]{
+//list[core.veryl.create-ecall-range.inst][csrunitのポートの定義を変更する ② (core.veryl)]{
 #@maprange(scripts/04a/create-ecall-range/core/src/core.veryl,inst)
     inst csru: csrunit (
         clk                       ,
@@ -644,17 +658,20 @@ csrunitモジュールと接続するための変数を定義し、
 #@end
 //}
 
-次に、トラップするときに、トラップ先にジャンプするようにします。
-例外が発生する時、@<code>{csru_raise_trap}が@<code>{1}になり、
+次に、トラップするときに、
+トラップ先にジャンプするようにします。
+
+例外が発生する時、
+@<code>{csru_raise_trap}が@<code>{1}になり、
 @<code>{csru_trap_vector}がトラップ先になります。
 
 トラップするときの動作には、
 ジャンプや分岐命令の実装に利用したロジックを利用します。
+@<code>{control_hazard}の条件に@<code>{csru_raise_trap}を追加して、
+トラップするときに@<code>{control_hazard_pc_next}を@<code>{csru_trap_vector}に設定します
+(@<list>{core.veryl.create-ecall-range.hazard})。
 
-@<code>{control_hazard}の条件に@<code>{csru_raise_trap}を追加し、
-トラップするときに@<code>{control_hazard_pc_next}を@<code>{csru_trap_vector}に設定します。
-
-//list[core.veryl.csr.hazard][例外の発生時にジャンプするようにする (core.veryl)]{
+//list[core.veryl.create-ecall-range.hazard][例外の発生時にジャンプするようにする (core.veryl)]{
 #@maprange(scripts/04a/create-ecall-range/core/src/core.veryl,hazard)
     assign control_hazard = inst_valid && (
         @<b>{csru_raise_trap ||}
@@ -671,24 +688,33 @@ csrunitモジュールと接続するための変数を定義し、
 #@end
 //}
 
+//image[ecall_enc][ECALL命令のフォーマット@<bib>{isa-manual.1.37}]
+
 それでは、csrunitモジュールにトラップの処理を実装します。
 
-ECALL命令は、I形式, 即値は0, rs1とrdは0, funct3は0, opcodeは@<code>{SYSTEM}な命令です。
-これを判定するための変数を作成します。
+ECALL命令は、
+I形式, 
+即値は0, 
+rs1とrdは0, 
+funct3は0, 
+opcodeは@<code>{SYSTEM}な命令(@<img>{ecall_enc})です。
 
-//list[is_ecall][ecall命令かどうかの判定 (csrunit.veryl)]{
+これを判定するための変数を作成します(@<list>{csrunit.veryl.create-ecall-range.is_ecall})。
+
+//list[csrunit.veryl.create-ecall-range.is_ecall][ecall命令かどうかの判定 (csrunit.veryl)]{
 #@maprange(scripts/04a/create-ecall-range/core/src/csrunit.veryl,is_ecall)
     // ECALL命令かどうか
     let is_ecall: logic = ctrl.is_csr && csr_addr == 0 && rs1[4:0] == 0 && ctrl.funct3 == 0 && rd_addr == 0;
 #@end
 //}
 
-まず、例外が発生するかどうかを示す@<code>{raise_expt}と、
+例外が発生するかどうかを示す@<code>{raise_expt}と、
 例外が発生の原因を示す@<code>{expt_cause}を作成します。
 今のところ、例外はECALL命令によってのみ発生するため、
-@<code>{expt_cause}は定数になっています。
+@<code>{expt_cause}は実質的に定数になっています
+(@<list>{csrunit.veryl.create-ecall-range.expt})。
 
-//list[csrrunit.veryl.csr.expt][例外とトラップの判定 (csrunit.veryl)]{
+//list[csrunit.veryl.create-ecall-range.expt][例外とトラップの判定 (csrunit.veryl)]{
 #@maprange(scripts/04a/create-ecall-range/core/src/csrunit.veryl,expt)
     // Exception
     let raise_expt: logic = valid && is_ecall;
@@ -701,14 +727,19 @@ ECALL命令は、I形式, 即値は0, rs1とrdは0, funct3は0, opcodeは@<code>
 #@end
 //}
 
-トラップが発生するかどうかを示す@<code>{raise_trap}には、例外が発生するかどうかを割り当てます。
-トラップの原因を示す@<code>{trap_cause}には、例外の発生原因を割り当てます。
-また、トラップ先には@<code>{mtvec}を割り当てます。
+トラップが発生するかどうかを示す@<code>{raise_trap}には、
+例外が発生するかどうかを割り当てています。
+トラップの原因を示す@<code>{trap_cause}には、
+例外の発生原因を割り当てています。
+また、トラップ先には@<code>{mtvec}を割り当てています。
 
-最後に、トラップ処理を記述します。
-トラップが発生する時、mepcレジスタにpcを、mcauseレジスタにトラップの発生原因を格納します。
+最後に、トラップに伴うCSRの変更を実装します。
+トラップが発生する時、
+mepcレジスタにpc、
+mcauseレジスタにトラップの発生原因を格納します
+(@<list>{csrunit.veryl.create-ecall-range.always_ff_trap})。
 
-//list[csrrunit.veryl.csr.always_ff_trap][ (csrunit.veryl)]{
+//list[csrunit.veryl.create-ecall-range.always_ff_trap][トラップが発生したらCSRを変更する (csrunit.veryl)]{
 #@maprange(scripts/04a/create-ecall-range/core/src/csrunit.veryl,always_ff_trap)
 always_ff {
     if_reset {
@@ -724,12 +755,15 @@ always_ff {
 #@end
 //}
 
-=== ECALL命令のテスト
+=== ECALL命令をテストする
 
-ECALL命令をテストする前に、デバッグのために@<code>{$display}システムタスクで、
-例外が発生したかどうかと、トラップ先を表示します。
+ECALL命令をテストする前に、
+デバッグのために@<code>{$display}システムタスクで、
+例外が発生したかどうかと、
+トラップ先を表示します
+(@<list>{core.veryl.create-ecall-range.debug})。
 
-//list[core.veryl.csr.debug][デバッグ用の表示を追加する (core.veryl)]{
+//list[core.veryl.create-ecall-range.debug][デバッグ用の表示を追加する (core.veryl)]{
 #@maprange(scripts/04a/create-ecall-range/core/src/core.veryl,debug)
     if inst_ctrl.is_csr {
         $display("  csr rdata : %h", csru_rdata);
@@ -739,12 +773,10 @@ ECALL命令をテストする前に、デバッグのために@<code>{$display}�
 #@end
 //}
 
-それでは簡単なテストを記述します。
-
-CSRRW命令でmtvecレジスタに値を書き込み、ecall命令で例外を発生させてジャンプします。
-ジャンプ先では、mcauseレジスタ, mepcレジスタの値を読み取ります。
-
-@<code>{test/sample_ecall.hex}を作成し、次のように記述します。
+簡単なテストを記述します。
+@<code>{test/sample_ecall.hex}を作成し、
+次のように記述します
+(@<list>{sample_ecall.hex})。
 
 //list[sample_ecall.hex][sample_ecall.hex]{
 #@mapfile(scripts/04a/create-ecall/core/test/sample_ecall.hex)
@@ -757,7 +789,12 @@ CSRRW命令でmtvecレジスタに値を書き込み、ecall命令で例外を�
 #@end
 //}
 
-シミュレータを実行し、結果を確かめます。
+CSRRW命令でmtvecレジスタに値を書き込み、
+ecall命令で例外を発生させてジャンプします。
+ジャンプ先では、
+mcauseレジスタ, mepcレジスタの値を読み取ります。
+
+シミュレータを実行し、結果を確かめます(@<list>{ecall.test})。
 
 //terminal[ecall.test][ECALL命令のテストの実行]{
 $ @<userinput>{make build}
@@ -785,7 +822,7 @@ $ @<userinput>{./obj_dir/sim test/sample_ecall.hex 10}
 //}
 
 ECALL命令によって例外が発生し、
-mcauseとmepcに書き込みが行われてからmtvecにジャンプしていることが確認できました。
+mcauseとmepcに書き込みが行われてからmtvecにジャンプしていることが確認できます。
 
 ECALL命令の実行時にレジスタに値がライトバックされてしまっていますが、
 ECALL命令のrdは常に0番目のレジスタであり、
@@ -793,7 +830,8 @@ ECALL命令のrdは常に0番目のレジスタであり、
 
 == MRET命令の実装
 
-MRET命令@<fn>{mret.manual}は、トラップ先からトラップ元に戻るための命令です。
+MRET命令@<fn>{mret.manual}は、
+トラップ先からトラップ元に戻るための命令です。
 具体的には、MRET命令を実行すると、
 mepcレジスタに格納されたアドレスにジャンプします@<fn>{mret.other}。
 
@@ -804,46 +842,59 @@ MRET命令は、例えば、権限のあるOSから権限のないユーザー�
 
 === MRET命令を実装する
 
-まず、csrunitモジュールに供給されている命令が、
-MRET命令かどうかを判定するための変数@<code>{is_mret}を作成します。
-MRET命令は、上位12ビットが@<code>{001100000010}, rs1は0, funct3は0, rdは0です。
+//image[mret_enc][MRET命令のフォーマット@<bib>{isa-manual.2.15}]
 
-//list[csrunit.mret][MRET命令の判定 (csrunit.veryl)]{
+まず、
+csrunitモジュールに供給されている命令がMRET命令かどうかを判定する変数@<code>{is_mret}を作成します
+(@<list>{csrunit.veryl.create-mret-range.is_mret})。
+MRET命令は、上位12ビットが@<code>{001100000010},
+rs1は0, funct3は0, rdは0です(@<img>{mret_enc})。
+
+//list[csrunit.veryl.create-mret-range.is_mret][MRET命令の判定 (csrunit.veryl)]{
 #@maprange(scripts/04a/create-mret-range/core/src/csrunit.veryl,is_mret)
     // MRET命令かどうか
     let is_mret: logic = ctrl.is_csr && csr_addr == 12'b0011000_00010 && rs1[4:0] == 0 && ctrl.funct3 == 0 && rd_addr == 0;
 #@end
 //}
 
-次に、MRET命令が供給されているときにmepcにジャンプするようにするロジックを作成します。
-ジャンプするためのロジックは、トラップによってジャンプする仕組みを利用します。
+次に、
+csrunitモジュールにMRET命令が供給されているときに、
+mepcにジャンプするようにするロジックを作成します。
+ジャンプするためのロジックは、
+トラップによってジャンプする仕組みを利用します
+(@<list>{csrunit.veryl.create-mret-range.trap})。
 
-//list[csrunit.mret.jump][MRET命令によってジャンプさせる (csrunit.veryl)]{
+//list[csrunit.veryl.create-mret-range.trap][MRET命令によってジャンプさせる (csrunit.veryl)]{
 #@maprange(scripts/04a/create-mret-range/core/src/csrunit.veryl,trap)
     // Trap
-    assign raise_trap  = raise_expt || (valid && is_mret);
+    assign raise_trap  = raise_expt @<b>{|| (valid && is_mret)};
     let trap_cause : UIntX = expt_cause;
-    assign trap_vector = if raise_expt {
+    assign trap_vector = @<b>|if raise_expt {|
         mtvec
-    } else {
-        mepc
-    };
+    @<b>|} else {|
+        @<b>|mepc|
+    @<b>|}|;
 #@end
 //}
 
 トラップが発生しているかどうかの条件@<code>{raise_mret}に@<code>{is_mret}を追加し、
 トラップ先を条件によって変更します。
 
-ここで、@<code>{is_mret}のときに@<code>{mepc}を割り当てるのではなく
+//note[例外が優先]{
+trap_vectorには、
+@<code>{is_mret}のときに@<code>{mepc}を割り当てるのではなく
 @<code>{raise_expt}のときに@<code>{mtvec}を割り当てています。
-これは、将来的にMRET命令によって例外が発生することがあるからです。
+これは、MRET命令によって発生する例外があるからです。
 MRET命令の判定を優先すると、例外が発生するのにmepcにジャンプしてしまいます。
+//}
 
-=== MRET命令のテスト
+=== MRET命令をテストする
 
 MRET命令が正しく動作するかテストします。
 
-mepcに値を設定してからMRET命令を実行し、mepcにジャンプするかどうかを確認します。
+mepcに値を設定してからMRET命令を実行することで
+mepcにジャンプするようなテストを作成します
+(@<list>{sample_mret.hex})。
 
 //list[sample_mret.hex][sample_mret.hex]{
 #@mapfile(scripts/04a/create-mret/core/test/sample_mret.hex)
@@ -854,6 +905,8 @@ mepcに値を設定してからMRET命令を実行し、mepcにジャンプす�
 00000013 // 10: addi x0, x0, 0
 #@end
 //}
+
+シミュレータを実行し、結果を確かめます(@<list>{mret.test})。
 
 //terminal[mret.test][MRET命令のテストの実行]{
 $ @<userinput>{make build}
@@ -875,5 +928,5 @@ $ @<userinput>{./obj_dir/sim test/sample_mret.hex 9}
 
 MRET命令によってmepcにジャンプすることが確認できます。
 
-MRET命令は、レジスタに値をライトバックしていますが、
+MRET命令はレジスタに値をライトバックしていますが、
 ECALL命令と同じく0番目のレジスタが指定されるため問題ありません。

@@ -1314,7 +1314,7 @@ opcodeが@<code>{OP_OP_IMM}(OP-IMM)のとき、
  * @<code>{funct3}, @<code>{funct7}を命令中のビットをそのまま設定します 
  * それ以外のメンバーは@<code>{0}に設定します。
 
-=== デコーダのインスタンス化
+=== デコーダをインスタンス化する
 
 inst_decoderモジュールを、
 @<code>{core}モジュールでインスタンス化します(@<list>{core.veryl.id-range.inst})。
@@ -2427,7 +2427,7 @@ deadbeef // 0x20
 3つ目の命令で@<code>{00000400}を書き込み、
 4つ目の命令で@<code>{00000400}が読み込まれます。
 
-シミュレーションを実行し、結果を確かめます(@<list>{lwsw.test})。
+シミュレータを実行し、結果を確かめます(@<list>{lwsw.test})。
 
 //terminal[lwsw.test][LW, SW命令のテスト (一部省略)]{
 $ @<userinput>{make build}
