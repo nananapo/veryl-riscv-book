@@ -2330,9 +2330,9 @@ FIFOからの命令の取り出しを停止します。
     let rd_addr: logic<5> = inst_bits[11:7];
     let wb_data: UIntX    = if inst_ctrl.is_lui {
         inst_imm
-    } else if inst_ctrl.is_load {
-        memu_rdata
-    } else {
+    } @<b>|else if inst_ctrl.is_load {|
+        @<b>|memu_rdata|
+    @<b>|}| else {
         alu_result
     };
 #@end
@@ -2367,7 +2367,7 @@ memunitの処理が終了していないときも値をライトバックし続�
 ==== LW, SW命令のテスト
 
 LW, SW命令が正しく動作していることを確認するために、
-デバッグ出力を次のように変更します(@<list>{core.veryl.lwsw-range.mem})。
+デバッグ出力に次のコードを追加します(@<list>{core.veryl.lwsw-range.mem})。
 
 //list[core.veryl.lwsw-range.mem][メモリモジュールの状態を出力する (core.veryl)]{
 #@maprange(scripts/04/lwsw-range/core/src/core.veryl,mem)
@@ -2376,8 +2376,8 @@ LW, SW命令が正しく動作していることを確認するために、
 #@end
 //}
 
-また、ここからのテストは実行するクロック数が多くなるため、
-ログに何クロック目かを表示することで、
+ここからのテストは実行するクロック数が多くなります。
+そこで、ログに何クロック目かを表示することで、
 ログを読みやすくします(@<list>{core.veryl.lwsw-range.clock_count})。
 
 //list[core.veryl.lwsw-range.clock_count][何クロック目かを出力する (core.veryl)]{
@@ -2385,12 +2385,12 @@ LW, SW命令が正しく動作していることを確認するために、
     var clock_count: u64;
 
     always_ff {
-        if_reset {
-            clock_count = 1;
-        } else {
-            clock_count = clock_count + 1;
+        @<b>|if_reset {|
+            @<b>|clock_count = 1;|
+        @<b>|} else {|
+            @<b>|clock_count = clock_count + 1;|
             if inst_valid {
-                $display("# %d", clock_count);
+                @<b>|$display("# %d", clock_count);|
                 $display("%h : %h", inst_pc, inst_bits);
                 $display("  itype     : %b", inst_ctrl.itype);
 #@end
@@ -2433,11 +2433,12 @@ deadbeef // 0x20
 
 TODO
 
-//terminal[lwsw.test][LW, SW命令のテスト]{
+//terminal[lwsw.test][LW, SW命令のテスト (一部省略)]{
 $ @<userinput>{make build}
 $ @<userinput>{make sim}
 $ @<userinput>{obj_dir/sim src/sample.hex 13}
-#                    3
+
+#                    4
 00000000 : 02002503
   itype     : 000010
   imm       : 00000020
@@ -2448,8 +2449,8 @@ $ @<userinput>{obj_dir/sim src/sample.hex 13}
   alu res   : 00000020
   mem stall : 1 @<balloon>{LW命令でストールしている}
   mem rdata : 02b02023
-(省略)
-#                    5
+...
+#                    6
 00000000 : 02002503
   itype     : 000010
   imm       : 00000020
@@ -2461,8 +2462,8 @@ $ @<userinput>{obj_dir/sim src/sample.hex 13}
   mem stall : 0 @<balloon>{LWが終わったので0になった}
   mem rdata : deadbeef
   reg[10] <= deadbeef @<balloon>{0x20の値が読み込まれた}
-(省略)
-#                   12
+...
+#                   13
 0000000c : 02002603
   itype     : 000010
   imm       : 00000020
@@ -2476,25 +2477,15 @@ $ @<userinput>{obj_dir/sim src/sample.hex 13}
   reg[12] <= 00000400 @<balloon>{書き込んだ値が読み込まれた}
 //}
 
-=== LB, LBU, LH, LHU命令の実装
+=== LB, LBU, LH, LHU命令を実装する
 
 LB, LBU, SB命令は8ビット単位、LH, LHU, SH命令は16ビット単位でロード/ストアを行う命令です。
 
-まずロード命令を実装します。
+まず、ロード命令を実装します。
 ロード命令は32ビット単位でデータを読み込み、
 その結果の一部を切り取ることで実装することができます。
 
-まず、何度も記述することになる定数と変数を短い名前(@<code>{W}, @<code>{D})で定義します。
-
-//list[lbhsbh.wd][WとDの定義 (memunit.veryl)]{
-#@maprange(scripts/04/lbhsbh-range/core/src/memunit.veryl,wd)
-    const W   : u32                   = XLEN;
-    let D   : logic<MEM_DATA_WIDTH> = membus.rdata;
-    let sext: logic                 = ctrl.funct3[2] == 1'b0;
-#@end
-//}
-
-LB, LBU, LH, LHU, LW命令は、funct3の値で区別することができます。
+LB, LBU, LH, LHU, LW命令は、funct3の値で区別することができます(@<table>{funct3.load})。
 
 //table[funct3.load][ロード命令のfunct3]{
 funct3	命令
@@ -2506,11 +2497,24 @@ funct3	命令
 010		LW
 //}
 
+何度も記述することになる値を短い名前(@<code>{W}, @<code>{D})で定義します(@<list>{memunit.veryl.lbhsbh-range.wd})。
+
+//list[memunit.veryl.lbhsbh-range.wd][WとDの定義 (memunit.veryl)]{
+#@maprange(scripts/04/lbhsbh-range/core/src/memunit.veryl,wd)
+    const W   : u32                   = XLEN;
+    let D   : logic<MEM_DATA_WIDTH> = membus.rdata;
+    let sext: logic                 = ctrl.funct3[2] == 1'b0;
+#@end
+//}
+
+@<code>{sext}は、符号拡張を行うかどうかを示す変数です。
+funct3の上位1ビットが1のとき、符号拡張を行います。
+
 funct3をcase文で分岐し、
 アドレスの下位ビットを見ることで、
-命令とアドレスに応じた値をrdataに設定します。
+命令とアドレスに応じた値をrdataに設定します(@<list>{memunit.veryl.lbhsbh-range.load})。
 
-//list[lbhsbh.rdata][rdataをアドレスと読み込みサイズに応じて変更する (memunit.veryl)]{
+//list[memunit.veryl.lbhsbh-range.load][rdataをアドレスと読み込みサイズに応じて変更する (memunit.veryl)]{
 #@maprange(scripts/04/lbhsbh-range/core/src/memunit.veryl,load)
     // loadの結果
     rdata = case ctrl.funct3[1:0] {
@@ -2532,7 +2536,12 @@ funct3をcase文で分岐し、
 #@end
 //}
 
-=== SB, SH命令の実装
+ロードした値の拡張を行うとき、
+値の最上位ビットを@<code>{sext}とAND演算した値を使って拡張します。
+これにより、符号拡張するときは最上位ビットの値が、
+ゼロで拡張するときは0が拡張に利用されます。
+
+=== SB, SH命令を実装する
 
 次に、SB, SH命令を実装します。
 
@@ -2542,17 +2551,23 @@ memoryモジュールは、32ビット単位の読み書きしかサポートし
 一部の書き込みもサポートしていません。
 本書では、一部のみ書き込む命令をmemoryモジュールでサポートすることで、SB, SH命令を実装します。
 
-まず、membus_ifインターフェースに、書き込む場所をバイト単位で示す信号@<code>{wmask}を追加します。
+まず、membus_ifインターフェースに、
+書き込む場所をバイト単位で示す信号@<code>{wmask}を追加します
+(
+@<list>{membus_if.veryl.lbhsbh-range.wmask}, 
+@<list>{membus_if.veryl.lbhsbh-range.master},
+@<list>{membus_if.veryl.lbhsbh-range.slave}
+)。
 @<code>{wmask}には、書き込む部分を1、書き込まない部分を0で指定します。
 このような挙動をする値を、書き込みマスクと呼びます。
 
-//list[wmask.define][wmaskの定義 (membus_if.veryl)]{
+//list[membus_if.veryl.lbhsbh-range.wmask][wmaskの定義 (membus_if.veryl)]{
 #@maprange(scripts/04/lbhsbh-range/core/src/membus_if.veryl,wmask)
     var wmask : logic<DATA_WIDTH / 8>;
 #@end
 //}
 
-//list[wmask.master][modport masterにwmaskを追加する (membus_if.veryl)]{
+//list[membus_if.veryl.lbhsbh-range.master][modport masterにwmaskを追加する (membus_if.veryl)]{
 #@maprange(scripts/04/lbhsbh-range/core/src/membus_if.veryl,master)
     modport master {
         ...
@@ -2562,7 +2577,7 @@ memoryモジュールは、32ビット単位の読み書きしかサポートし
 #@end
 //}
 
-//list[wmask.slave][modport slaveにwmaskを追加する (membus_if.veryl)]{
+//list[membus_if.veryl.lbhsbh-range.slave][modport slaveにwmaskを追加する (membus_if.veryl)]{
 #@maprange(scripts/04/lbhsbh-range/core/src/membus_if.veryl,slave)
     modport slave {
         ...
@@ -2572,11 +2587,11 @@ memoryモジュールは、32ビット単位の読み書きしかサポートし
 #@end
 //}
 
-バイト単位で指定するため、@<code>{wmask}の幅は4ビットです。
+バイト単位で指定するため、@<code>{wmask}の幅は@<code>{DATA_WIDTH / 8}ビットです。
 
-次に、memoryモジュールで書き込みマスクをサポートします。
+次に、memoryモジュールで書き込みマスクをサポートします(@<list>{memory.veryl.lbhsbh})。
 
-//list[wmask.memory][書き込みマスクをサポートするmemoryモジュール (memory.veryl)]{
+//list[memory.veryl.lbhsbh][書き込みマスクをサポートするmemoryモジュール (memory.veryl)]{
 #@mapfile(scripts/04/lbhsbh/core/src/memory.veryl)
 module memory::<DATA_WIDTH: const, ADDR_WIDTH: const> (
     clk      : input   clock                                     ,
@@ -2674,9 +2689,10 @@ memoryモジュールは、書き込み要求が送られてきた場合、
 また、@<code>{rdata_saved}に、指定されたアドレスのデータを保存します。
 次のクロックで、書き込みマスクを使った書き込みを行い、要求の処理を終了します。
 
-topモジュールの調停処理で、@<code>{wmask}も調停するようにします。
+topモジュールの調停処理で、
+@<code>{wmask}も調停するようにします(@<list>{top.veryl.lbhsbh-range.wmask})。
 
-//list[top.wmask][wmaskの設定 (top.veryl)]{
+//list[top.veryl.lbhsbh-range.wmask][wmaskの設定 (top.veryl)]{
 #@maprange(scripts/04/lbhsbh-range/core/src/top.veryl,wmask)
     membus.valid = i_membus.valid | d_membus.valid;
     if d_membus.valid {
@@ -2698,15 +2714,20 @@ topモジュールの調停処理で、@<code>{wmask}も調停するようにし
 memoryモジュールが書き込みマスクをサポートするようになったので、
 memunitモジュールでwmaskを設定します。
 
-@<code>{req_wmask}レジスタを作成し、@<code>{membus.wmask}と接続します。
+@<code>{req_wmask}レジスタを作成し、
+@<code>{membus.wmask}と接続します
+(
+@<list>{memunit.veryl.lbhsbh-range.def_wmask},
+@<list>{memunit.veryl.lbhsbh-range.mem_wmask}
+)。
 
-//list[memu.wmask.define][req_wmaskの定義 (memunit.veryl)]{
+//list[memunit.veryl.lbhsbh-range.def_wmask][req_wmaskの定義 (memunit.veryl)]{
 #@maprange(scripts/04/lbhsbh-range/core/src/memunit.veryl,def_wmask)
     var req_wmask: logic<MEM_DATA_WIDTH / 8>;
 #@end
 //}
 
-//list[memu.wmask.use][membusにwmaskを設定する (memunit.veryl)]{
+//list[memunit.veryl.lbhsbh-range.mem_wmask][membusにwmaskを設定する (memunit.veryl)]{
 #@maprange(scripts/04/lbhsbh-range/core/src/memunit.veryl,mem_wmask)
     // メモリアクセス
     membus.valid = state == State::WaitReady;
@@ -2717,10 +2738,13 @@ memunitモジュールでwmaskを設定します。
 #@end
 //}
 
-@<code>{always_ff}の中で、req_wmaskの値を設定します。
-それぞれの命令のとき、wmaskがどうなるかを確認してください。
+@<code>{always_ff}の中で、@<code>{req_wmask}の値を設定します。
+それぞれの命令のとき、wmaskがどうなるかを確認してください(
+@<list>{memunit.veryl.lbhsbh-range.always_reset},
+@<list>{memunit.veryl.lbhsbh-range.always_wmask}
+)。
 
-//list[memu.wmask.init][if_resetでreq_wmaskを初期化する (memunit.veryl)]{
+//list[memunit.veryl.lbhsbh-range.always_reset][if_resetでreq_wmaskを初期化する (memunit.veryl)]{
 #@maprange(scripts/04/lbhsbh-range/core/src/memunit.veryl,always_reset)
     if_reset {
         state     = State::Init;
@@ -2732,7 +2756,7 @@ memunitモジュールでwmaskを設定します。
 #@end
 //}
 
-//list[memu.wmask.set][メモリにアクセスする命令のとき、wmaskを設定する (memunit.veryl)]{
+//list[memunit.veryl.lbhsbh-range.always_wmask][メモリにアクセスする命令のとき、wmaskを設定する (memunit.veryl)]{
 #@maprange(scripts/04/lbhsbh-range/core/src/memunit.veryl,always_wmask)
     req_wmask = case ctrl.funct3[1:0] {
         2'b00  : 4'b1 << addr[1:0], @<balloon>{LB, LBUのとき、アドレス下位2ビット分だけ1を左シフトする}
@@ -2747,10 +2771,9 @@ memunitモジュールでwmaskを設定します。
 #@end
 //}
 
-=== LB, LBU, LH, LHU, SB, SH命令のテスト
+=== LB, LBU, LH, LHU, SB, SH命令をテストする
 
 簡単なテストを作成し、動作をテストします。
-
 2つテストを記載するので、正しく動いているか確認してください。
 
 //list[sample_lbh.hex][src/sample_lbh.hex]{
@@ -2781,7 +2804,7 @@ deadbeef // 0x0
 
 まだ、重要な命令を実装できていません。
 プログラムでif文やループを実現するためには、ジャンプや分岐をする命令が必要です。
-RV32Iには、仕様書@<bib>{isa-manual.1.2.5}に次の命令が定義されています。
+RV32Iには、仕様書@<bib>{isa-manual.1.2.5}に次の命令が定義されています(@<table>{jump.br.insts})。
 
 //table[jump.br.insts][ジャンプ命令, 分岐命令]{
 命令	形式	動作
@@ -2796,18 +2819,20 @@ BGE		B形式	rs1(符号付き整数)がrs2(符号付き整数)より大きいと
 BGEU	B形式	rs1(符号なし整数)がrs2(符号なし整数)より大きいとき、PC+即値にジャンプする
 //}
 
-ジャンプ命令は、無条件でジャンプするため、無条件ジャンプ(Unconditional Jump)と呼びます。
-分岐命令は、条件付きで分岐するため、条件分岐(Conditional Branch)と呼びます。
+ジャンプ命令は、無条件でジャンプするため、
+@<b>{無条件ジャンプ}(Unconditional Jump)と呼びます。
+分岐命令は、条件付きで分岐するため、
+@<b>{条件分岐}(Conditional Branch)と呼びます。
 
-=== JAL, JALR命令
+=== JAL, JALR命令を実装する
 
 まず、無条件ジャンプを実装します。
 
 JAL(Jump And Link)命令は、PC+即値でジャンプ先を指定します。
 ここでLinkとは、rdレジスタにPC+4を記録しておくことで、分岐元に戻れるようにしておく操作のことを指しています。
 即値の幅は20ビットです。
-PCの下位1ビットは常に0なため、即値を1ビット左シフトして符号拡張した値をPCに加算します。
-(即値の生成についてはinst_decoderモジュールを確認してください)
+PCの下位1ビットは常に0なため、即値を1ビット左シフトして符号拡張した値をPCに加算します
+(即値の生成については@<list>{inst_decoder.veryl.id}を確認してください)。
 JAL命令でジャンプ可能な範囲は、PC±1MiBです。
 
 JALR (Jump And Link Register)命令は、rs1+即値でジャンプ先を指定します。
@@ -2815,27 +2840,32 @@ JALR (Jump And Link Register)命令は、rs1+即値でジャンプ先を指定�
 JAL命令と同様に、rdレジスタにPC+4を格納します。
 JALR命令でジャンプ可能な範囲は、rs1レジスタの値±4KiBです。
 
-inst_decoderモジュールは、JAL命令、JALR命令を次のようにデコードしています。
-
- * @<code>{InstCtrl.is_jump} = 1
- * @<code>{InstCtrl.is_aluop} = 0
+inst_decoderモジュールは、
+JAL命令,JALR命令のとき、
+@<code>{InstCtrl.rwb_en}を@<code>{1},
+@<code>{InstCtrl.is_aluop}を@<code>{0},
+@<code>{InstCtrl.is_jump}を@<code>{1}
+としてデコードします。
 
 無条件ジャンプであるかどうかは@<code>{InstCtrl.is_jump}で確かめることができます。
 また、@<code>{InstCtrl.is_aluop}が@<code>{0}なため、ALUは常に加算を行います。
-加算の対象のデータが、JAL命令(J形式)ならPCと即値, JALR命令(I形式)ならrs1と即値になっていることを確認してください(@<list>{core.veryl.alu-range.data})。
+加算の対象のデータが、
+JAL命令(J形式)ならPCと即値,
+JALR命令(I形式)ならrs1と即値になっていることを確認してください(@<list>{core.veryl.alu-range.data})。
 
 ==== 無条件ジャンプの実装
 
 それでは、無条件ジャンプを実装します。
-まず、ジャンプ命令を実行するとき、ライトバックする値を@<code>{inst_pc + 4}にします。
+まず、ジャンプ命令を実行するとき、
+ライトバックする値を@<code>{inst_pc + 4}にします(@<list>{core.veryl.jump-range.wb})。
 
-//list[jump.wb][pc + 4を書き込む (core.veryl)]{
+//list[core.veryl.jump-range.wb][pc + 4を書き込む (core.veryl)]{
 #@maprange(scripts/04/jump-range/core/src/core.veryl,wb)
     let wb_data: UIntX    = if inst_ctrl.is_lui {
         inst_imm
-    } else if inst_ctrl.is_jump {
-        inst_pc + 4
-    } else if inst_ctrl.is_load {
+    } @<b>|else if inst_ctrl.is_jump {|
+        @<b>|inst_pc + 4|
+    @<b>|}| else if inst_ctrl.is_load {
         memu_rdata
     } else {
         alu_result
@@ -2845,29 +2875,41 @@ inst_decoderモジュールは、JAL命令、JALR命令を次のようにデコ�
 
 次に、次にフェッチする命令をジャンプ先の命令に変更します。
 そのために、フェッチ先の変更が発生したことを表す信号@<code>{control_hazard}と、
-新しいフェッチ先を示す信号@<code>{control_hazard_pc_next}を作成します。
+新しいフェッチ先を示す信号@<code>{control_hazard_pc_next}を作成します
+(
+@<list>{core.veryl.jump-range.hazard_reg},
+@<list>{core.veryl.jump-range.hazard_assign},
+)。
 
-//list[jump.ch][control_hazardとcontrol_hazard_pc_nextの定義 (core.veryl)]{
-#@# #@maprange(scripts/04/jump-range/core/src/core.veryl,hazard)
-    let control_hazard        : logic = inst_valid && inst_ctrl.is_jump;
-    let control_hazard_pc_next: Addr  = alu_result;
-#@# #@end
-TODO
+//list[core.veryl.jump-range.hazard_reg][control_hazardとcontrol_hazard_pc_nextの定義 (core.veryl)]{
+#@maprange(scripts/04/jump-range/core/src/core.veryl,hazard_reg)
+    var control_hazard        : logic;
+    var control_hazard_pc_next: Addr ;
+#@end
 //}
 
-@<code>{control_hazard}を利用して、@<code>{if_pc}を更新し、新しく命令をフェッチしなおすようにします。
+//list[core.veryl.jump-range.hazard_assign][control_hazardとcontrol_hazard_pc_nextの割り当て (core.veryl)]{
+#@maprange(scripts/04/jump-range/core/src/core.veryl,hazard_assign)
+    assign control_hazard         = inst_valid && inst_ctrl.is_jump;
+    assign control_hazard_pc_next = alu_result;
+#@end
+//}
 
-//list[jump.always][PCを変更する (core.veryl)]{
+@<code>{control_hazard}を利用して、
+@<code>{if_pc}を更新し、
+新しく命令をフェッチしなおすようにします(@<list>{core.veryl.jump-range.always})。
+
+//list[core.veryl.jump-range.always][PCを変更する (core.veryl)]{
 #@maprange(scripts/04/jump-range/core/src/core.veryl,always)
     always_ff {
         if_reset {
             ...
         } else {
-            if control_hazard {
-                if_pc           = control_hazard_pc_next;
-                if_is_requested = 0;
-                if_fifo_wvalid  = 0;
-            } else {
+            @<b>|if control_hazard {|
+            @<b>|    if_pc           = control_hazard_pc_next;|
+            @<b>|    if_is_requested = 0;|
+            @<b>|    if_fifo_wvalid  = 0;|
+            @<b>|} else {|
                 if if_is_requested {
                     ...
                 }
@@ -2875,36 +2917,49 @@ TODO
                 if if_is_requested && i_membus.rvalid {
                     ...
                 }
-            }
+            @<b>|}|
         }
     }
 #@end
 //}
 
 ここで、新しく命令をフェッチしなおすようにしても、
-ジャンプ命令によって実行されることがなくなった命令がFIFOに残っていることがあることに注意する必要があります。
-実行しない命令を実行しないようにするために、
+ジャンプ命令によって実行されることがなくなった命令がFIFOに残っていることがあることに注意する必要があります(@<img>{fifo-flush})。
+
+//image[fifo-flush][FIFOに余計な命令が入ってしまっている][width=50%]
+
+実行するべきではない命令を実行しないようにするために、
 ジャンプ命令を実行するときに、FIFOをリセットするようにします。
 
-FIFOに、内容をリセットするための信号@<code>{flush}を追加します。
+FIFOに、中身をリセットするための信号@<code>{flush}を実装します(@<list>{fifo.veryl.jump-range.port})。
 
-//list[jump.fifo.port][ポートにflushを追加する (fifo.veryl)]{
+//list[fifo.veryl.jump-range.port][ポートにflushを追加する (fifo.veryl)]{
 #@maprange(scripts/04/jump-range/core/src/fifo.veryl,port)
-    flush : input  logic    ,
+module fifo #(
+    param DATA_TYPE: type = logic,
+    param WIDTH    : u32  = 2    ,
+) (
+    clk   : input  clock    ,
+    rst   : input  reset    ,
+    @<b>|flush : input  logic    ,|
+    wready: output logic    ,
 #@end
 //}
 
-//list[jump.fifo.always][flushが1のとき、FIFOを空にする (fifo.veryl)]{
+@<code>{flush}が@<code>{1}のとき、
+@<code>{head}と@<code>{tail}を0に初期化することでFIFOを空にします(@<list>{fifo.veryl.jump-range.always})。
+
+//list[fifo.veryl.jump-range.always][flushが1のとき、FIFOを空にする (fifo.veryl)]{
 #@maprange(scripts/04/jump-range/core/src/fifo.veryl,always)
     always_ff {
         if_reset {
             head = 0;
             tail = 0;
         } else {
-            if flush {
-                head = 0;
-                tail = 0;
-            } else {
+            @<b>|if flush {|
+            @<b>|    head = 0;|
+            @<b>|    tail = 0;|
+            @<b>|} else {|
                 if wready && wvalid {
                     mem[tail] = wdata;
                     tail      = tail + 1;
@@ -2912,16 +2967,17 @@ FIFOに、内容をリセットするための信号@<code>{flush}を追加し�
                 if rready && rvalid {
                     head = head + 1;
                 }
-            }
+            @<b>|}|
         }
     }
 #@end
 //}
 
-coreモジュールで、@<code>{control_hazard}が@<code>{1}のときに、
-FIFOをリセットするようにします。
+coreモジュールで、
+@<code>{control_hazard}が@<code>{1}のときに、
+FIFOをリセットするようにします(@<list>{core.veryl.jump-range.fifo})。
 
-//list[jump.fifo.core][ジャンプ命令のとき、FIFOをリセットする (core.veryl)]{
+//list[core.veryl.jump-range.fifo][ジャンプ命令のとき、FIFOをリセットする (core.veryl)]{
 #@maprange(scripts/04/jump-range/core/src/core.veryl,fifo)
     inst if_fifo: fifo #(
         DATA_TYPE: if_fifo_type,
@@ -2929,7 +2985,7 @@ FIFOをリセットするようにします。
     ) (
         clk                   ,
         rst                   ,
-        flush : control_hazard, @<balloon>{追加}
+        @<b>|flush : control_hazard,|
         ...
     );
 #@end
@@ -2937,9 +2993,9 @@ FIFOをリセットするようにします。
 
 ==== 無条件ジャンプのテスト
 
-簡単なテストを作成し、動作をテストします。
+簡単なテストを作成し、動作をテストします(@<list>{sample_jump.hex})。
 
-//list[jump.test.hex][sample_jump.hex]{
+//list[sample_jump.hex][sample_jump.hex]{
 #@mapfile(scripts/04/jump-range/core/src/sample_jump.hex)
 0100006f //  0: jal x0, 0x10 : 0x10にジャンプする
 deadbeef //  4:
@@ -2976,7 +3032,7 @@ $ @<userinput>{obj_dir/sim src/sample_jump.hex 17}
 
 無条件ジャンプを正しく実行できていることを確認することができます。
 
-=== 条件分岐命令
+=== 条件分岐命令を実装する
 
 条件分岐命令はすべてB形式で、PC+即値で分岐先を指定します。
 それぞれの命令は、命令のfunct3フィールドで判別することができます。
@@ -2992,13 +3048,13 @@ funct3	命令	演算
 111		BGEU	符号なし >
 //}
 
-==== 条件分岐命令の実装
+==== 条件分岐の実装
 
 まず、分岐するかどうかの判定を行うモジュールを作成します。
 
-@<code>{src/brunit.veryl}を作成し、次のように記述します。
+@<code>{src/brunit.veryl}を作成し、次のように記述します(@<list>{brunit.veryl.br-range})。
 
-//list[brunit.veryl][brunit.veryl]{
+//list[brunit.veryl.br-range][brunit.veryl]{
 #@mapfile(scripts/04/br-range/core/src/brunit.veryl)
 import eei::*;
 import corectrl::*;
@@ -3028,12 +3084,15 @@ module brunit (
 #@end
 //}
 
-brunitモジュールは、@<code>{funct3}に応じて@<code>{take}の条件を切り替えます。
-分岐が成立するとき、@<code>{take}は@<code>{1}になります。
+brunitモジュールは、
+@<code>{funct3}に応じて@<code>{take}の条件を切り替えます。
+分岐が成立するとき、
+@<code>{take}は@<code>{1}になるようにします。
 
-brunitモジュールを、coreモジュールでインスタンス化します。
+brunitモジュールを、
+coreモジュールでインスタンス化します(@<list>{core.veryl.br-range.inst})。
 
-//list[inst.brunit][brunitのインスタンス化 (core.veryl)]{
+//list[core.veryl.br-range.inst][brunitのインスタンス化 (core.veryl)]{
 #@maprange(scripts/04/br-range/core/src/core.veryl,inst)
     var brunit_take: logic;
 
@@ -3046,12 +3105,19 @@ brunitモジュールを、coreモジュールでインスタンス化します�
 #@end
 //}
 
-命令がB形式のとき、@<code>{op1}は@<code>{rs1_data}、
+命令がB形式のとき、
+@<code>{op1}は@<code>{rs1_data}、
 @<code>{op2}は@<code>{rs2_data}になっていることを確認してください(@<list>{core.veryl.alu-range.data})。
 
-命令が条件分岐命令で、@<code>{brunit_take}が@<code>{1}のとき、次のPCをPC + 即値にするようにします。
+命令が条件分岐命令で、
+@<code>{brunit_take}が@<code>{1}のとき、
+次のPCをPC + 即値にするようにします
+(
+@<list>{core.veryl.br-range.function}, 
+@<list>{core.veryl.br-range.hazard}
+)。
 
-//list[br.function][命令が条件分岐命令か判定する関数 (core.veryl)]{
+//list[core.veryl.br-range.function][命令が条件分岐命令か判定する関数 (core.veryl)]{
 #@maprange(scripts/04/br-range/core/src/core.veryl,function)
     // 命令が分岐命令かどうかを判定する
     function inst_is_br (
@@ -3062,14 +3128,14 @@ brunitモジュールを、coreモジュールでインスタンス化します�
 #@end
 //}
 
-//list[br.hazard][分岐成立時のPCの設定 (core.veryl)]{
+//list[core.veryl.br-range.hazard][分岐成立時のPCの設定 (core.veryl)]{
 #@maprange(scripts/04/br-range/core/src/core.veryl,hazard)
-    assign control_hazard         = inst_valid && (inst_ctrl.is_jump || inst_is_br(inst_ctrl) && brunit_take);
-    assign control_hazard_pc_next = if inst_is_br(inst_ctrl) {
-        inst_pc + inst_imm
-    } else {
+    assign control_hazard         = inst_valid && @<b>|(|inst_ctrl.is_jump @<b>{|| inst_is_br(inst_ctrl) && brunit_take)};
+    assign control_hazard_pc_next = @<b>|if inst_is_br(inst_ctrl) {|
+        @<b>|inst_pc + inst_imm|
+    @<b>|} else {|
         alu_result
-    };
+    @<b>|}|;
 #@end
 //}
 
@@ -3079,9 +3145,9 @@ brunitモジュールを、coreモジュールでインスタンス化します�
 ==== 条件分岐命令のテスト
 
 条件分岐命令を実行するとき、分岐の成否を表示するようにします。
-デバッグ表示を行っている@<code>{always_ff}ブロック内に、次のプログラムを追加します。
+デバッグ表示を行っている@<code>{always_ff}ブロック内に、次のプログラムを追加します(@<list>{core.very.br-range.debug})。
 
-//list[br.debug][デバッグ表示 (core.veryl)]{
+//list[core.very.br-range.debug][デバッグ表示 (core.veryl)]{
 #@maprange(scripts/04/br-range/core/src/core.veryl,debug)
     if inst_is_br(inst_ctrl) {
         $display("  br take   : %b", brunit_take);
@@ -3089,7 +3155,7 @@ brunitモジュールを、coreモジュールでインスタンス化します�
 #@end
 //}
 
-簡単なテストを作成し、動作をテストします。
+簡単なテストを作成し、動作をテストします(@<list>{sample_br.hex})。
 
 //list[sample_br.hex][sample_br.hex]{
 #@mapfile(scripts/04/br-range/core/src/sample_br.hex)
