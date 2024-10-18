@@ -5,10 +5,9 @@ RISC-Vには64ビットの基本整数命令セットとしてRV64Iが定義さ�
 本章では、RV32IのCPUをRV64Iにアップグレードします。
 
 では、具体的にRV32IとRV64Iは何が違うのでしょうか?
-
 まず、RV64IではXLENが32ビットから64ビットに変更され、レジスタの幅や各種演算命令の演算の幅が64ビットになります。
 それに伴い、
-32ビット幅での演算を行う命令、
+32ビット幅での整数演算を行う命令、
 64ビット幅でロードストアを行う命令が追加されます(@<table>{rv64i.new_insts})。
 また、演算の幅が64ビットに広がるだけではなく、
 動作が少し変わる命令が存在します(@<table>{rv64i.change})。
@@ -27,7 +26,7 @@ SD		メモリに64ビット書き込む
 //}
 
 //table[rv64i.change][RV64Iで変更される命令]{
-命令	動作
+命令	変更後の動作
 -------------------------------------------------------------
 SLL[I]	0 ～ 63ビット左論理シフトする
 SRL[I]	0 ～ 63ビット右論理シフトする
@@ -38,28 +37,34 @@ LW		メモリから32ビット読み込む。結果は符号拡張する
 //}
 
 実装のテストにはriscv-testsを利用します。
-RV64I向けのテストは@<code>{rv64i-p-}から始まるテストです。
-命令を実装するたびにテストを実行することで、命令が正しく実行できていることを確認します。
+RV64I向けのテストは@<code>{rv64ui-p-}から始まるテストです。
+命令を実装するたびにテストを実行することで、
+命令が正しく実行できていることを確認します。
 
 == XLENの変更
 
-eeiパッケージに定義しているXLENを64に変更します。
+レジスタの幅が32ビットから64ビットに変わるということは、
+XLENが32から64に変わるということです。
+eeiパッケージに定義しているXLENを64に変更します(@<list>{eei.veryl.xlen-shift-range.xlen})。
 RV64Iになっても命令の幅(@<code>{ILEN})は32ビットのままです。
 
-//list[xlen.change][XLENを変更する (eei.veryl)]{
+//list[eei.veryl.xlen-shift-range.xlen][XLENを変更する (eei.veryl)]{
 #@maprange(scripts/05/xlen-shift-range/core/src/eei.veryl,xlen)
     const XLEN: u32 = @<b>|64|;
 #@end
 //}
 
-=== SLL[I], SRL[I], SRA[I]命令の対応
+=== SLL[I], SRL[I], SRA[I]命令を変更する
 
 RV32Iでは、シフト命令はrs1の値を0 ～ 31ビットシフトする命令として定義されています。
-これが、RV64Iでは、rs1の値を0 ～ 63ビットシフトする命令に変更されます。
+これがRV64Iでは、rs1の値を0 ～ 63ビットシフトする命令に変更されます。
 
-これに対応するために、ALUのシフト演算する量を5ビットから6ビットに変更します。
+これに対応するために、ALUのシフト演算する量を5ビットから6ビットに変更します
+(@<list>{alu.veryl.xlen-shift-range.shift})。
+I形式の命令(SLLI, SRLI, SRAI)のときは即値の下位6ビット、
+R形式の命令(SLL, SRL, SRA)のときはレジスタの下位6ビットが利用されるようにします。
 
-//list[shift.change][シフト命令でシフトする量を変更する (alu.veryl)]{
+//list[alu.veryl.xlen-shift-range.shift][シフト命令でシフトする量を変更する (alu.veryl)]{
 #@maprange(scripts/05/xlen-shift-range/core/src/alu.veryl,shift)
     let sll: UIntX = op1 << op2[@<b>|5|:0];
     let srl: UIntX = op1 >> op2[@<b>|5|:0];
@@ -67,25 +72,23 @@ RV32Iでは、シフト命令はrs1の値を0 ～ 31ビットシフトする命�
 #@end
 //}
 
-I形式の命令(SLLI, SRLI, SRAI)のときは即値、
-R形式の命令(SLL, SRL, SRA)のときはレジスタの下位6ビットが利用されるようになります。
 
-=== LUI, AUIPC命令の対応
+=== LUI, AUIPC命令を変更する
 
 RV32Iでは、LUI命令は32ビットの即値をそのまま保存する命令として定義されています。
-これが、RV64Iでは、32ビットの即値を64ビットに符号拡張した値を保存する命令に変更されます。
+これがRV64Iでは、32ビットの即値を64ビットに符号拡張した値を保存する命令に変更されます。
 AUIPC命令も同様で、即値にPCを足す前に、即値を64ビットに符号拡張します。
 
-この対応ですが、XLENを64に変更した時点ですでに完了しています。
+この対応ですが、XLENを64に変更した時点ですでに完了しています(@<list>{inst_decoder.veryl.xlen-shift-range.imm})。
 よって、コードの変更の必要はありません。
 
-//list[imm.not.change][U形式の即値はXLENビットに拡張されている (inst_decoder.veryl)]{
+//list[inst_decoder.veryl.xlen-shift-range.imm][U形式の即値はXLENビットに拡張されている (inst_decoder.veryl)]{
 #@maprange(scripts/05/xlen-shift-range/core/src/inst_decoder.veryl,imm)
     let imm_u: UIntX = {bits[31] repeat XLEN - $bits(imm_u_g) - 12, imm_u_g, 12'b0};
 #@end
 //}
 
-=== CSRの対応
+=== CSRを変更する
 
 MXLEN(=XLEN)が64ビットに変更されると、CSRの幅も64ビットに変更されます。
 そのため、mtvec, mepc, mcauseレジスタの幅を64ビットに変更する必要があります。
@@ -94,11 +97,13 @@ MXLEN(=XLEN)が64ビットに変更されると、CSRの幅も64ビットに変�
 XLENビットのレジスタ(@<code>{UIntX})として定義しているため、
 変更の必要はありません。
 また、mtvec, mepc, mcauseレジスタはMXLENを基準に定義されており、
-RV32IからRV64Iに変わってもフィールドに変化はないため、対応は必要ありません。
+RV32IからRV64Iに変わってもフィールドに変化はないため、
+対応は必要ありません。
 
-唯一、書き込みマスクの幅を広げる必要があります。
+唯一、書き込みマスクの幅を広げる必要があります
+(@<list>{csrunit.veryl.xlen-csrunit-range.wmask})。
 
-//list[csrunit.wmask.expand][CSRの書き込みマスクの幅を広げる (csrunit.veryl)]{
+//list[csrunit.veryl.xlen-csrunit-range.wmask][CSRの書き込みマスクの幅を広げる (csrunit.veryl)]{
 #@maprange(scripts/05/xlen-csrunit-range/core/src/csrunit.veryl,wmask)
     const MTVEC_WMASK : UIntX = 'h@<b>|ffff_ffff_|ffff_fffc;
     const MEPC_WMASK  : UIntX = 'h@<b>|ffff_ffff_|ffff_fffc;
@@ -106,20 +111,104 @@ RV32IからRV64Iに変わってもフィールドに変化はないため、対�
 #@end
 //}
 
-=== LW命令の対応
+=== LW命令を変更する
 
+LW命令は32ビットの値をロードする命令です。
 RV64Iでは、LW命令の結果が64ビットに符号拡張されるようになります。
-これに対応するため、memunitモジュールの@<code>{rdata}の割り当てのLW部分を変更します。
+これに対応するため、memunitモジュールの@<code>{rdata}の割り当てのLW部分を変更します
+(@<list>{memunit.veryl.xlen-memunit-range.lw})。
 
-//list[lw.extend][LW命令のメモリの読み込み結果を符号拡張する (memunit.veryl)]{
+//list[memunit.veryl.xlen-memunit-range.lw][LW命令のメモリの読み込み結果を符号拡張する (memunit.veryl)]{
 #@maprange(scripts/05/xlen-memunit-range/core/src/memunit.veryl,lw)
     2'b10  : @<b>|{D[31] repeat W - 32, D[31:0]}|,
 #@end
 //}
 
+また、XLENが64に変更されたことで、
+幅を@<code>{MEM_DATA_WIDTH}(=32)として定義している@<code>{req_wdata}の代入文のビット幅が左右で合わなくなってしまっています。
+ビット幅を合わせるために、rs2の下位@<code>{MEM_DATA_WIDTH}ビットだけを切り取ります
+(@<list>{memunit.veryl.xlen-memunit-range.req_wdata})。
+
+//list[memunit.veryl.xlen-memunit-range.req_wdata][左辺と右辺でビット幅を合わせる (memunit.veryl)]{
+#@maprange(scripts/05/xlen-memunit-range/core/src/memunit.veryl,req_wdata)
+    case state {
+        State::Init: if is_new & inst_is_memop(ctrl) {
+            state     = State::WaitReady;
+            req_wen   = inst_is_store(ctrl);
+            req_addr  = addr;
+            req_wdata = rs2@<b>|[MEM_DATA_WIDTH - 1:0]| << {addr[1:0], 3'b0};
+#@end
+//}
+
 === riscv-testsでテストする
 
-TODO
+==== RV32I向けのテストの実行
+
+まず、RV32I向けのテストが正しく動くことを確認します。
+
+//terminal[rv32ui-p.first][RV32I向けのテストを実行する]{
+$ @<userinput>{make build}
+$ @<userinput>{make sim}
+$ @<userinput>{python3 test/test.py -r obj_dir/sim test/share rv32ui-p-}
+...
+PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-srl.bin.hex
+Test Result : 40 / 40
+//}
+
+RV32I向けのテストにすべてPASSしました。
+しかし、rv32ui-p-ma_dataはFAILするはず(@<list>{04b-riscvtests|python.test.py})です。
+これは、riscv-testsのRV32I向けのテストは、
+XLENが64のときはテストを実行せずにPASSとするためです(@<list>{riscvtests.rv32i.xlen})。
+
+//list[riscvtests.rv32i.xlen][rv32ui-p-addはXLENが64のときにPASSする (rv32ui-p-add.dump)]{
+00000050 <reset_vector>:
+ ...
+ 13c:	00100513          	li	a0,1 @<balloon>{a0 = 1}
+ 140:	01f51513          	slli	a0,a0,0x1f @<balloon>{a0を31ビット左シフト}
+ 144:	00054c63          	bltz	a0,15c <reset_vector+0x10c> @<balloon>{a0が0より小さかったらジャンプ}
+ 148:	0ff0000f          	fence
+ 14c:	00100193          	li	gp,1 @<balloon>{gp=1 (テスト成功) にする}
+ 150:	05d00893          	li	a7,93
+ 154:	00000513          	li	a0,0
+ 158:	00000073          	ecall @<balloon>{trap_vectorにジャンプして終了}
+//}
+
+riscv-testsは、a0に1を代入した後、a0を31ビット左シフトします。
+XLENが32のとき、a0の最上位ビット(符号ビット)が1になり、a0は0より小さくなります。
+XLENが64のとき、a0の符号は変わらないため、a0は0より大きくなります。
+これを利用して、XLENが32ではないときは@<code>{trap_vector}にジャンプして、テスト成功として終了しています。
+
+==== RV64I向けのテストの実行
+
+それでは、RV64I向けのテストを実行します(@<list>{rv64ui-p.xlen})。
+RV64I向けのテストは、名前が@<code>{rv64ui-p-}から始まります、
+
+//terminal[rv64ui-p.xlen][RV64I向けのテストを実行する]{
+$ @<userinput>{make build}
+$ @<userinput>{make sim}
+$ @<userinput>{python3 test/test.py -r obj_dir/sim test/share rv64ui-p-}
+...
+FAIL : ~/core/test/share/riscv-tests/isa/rv64ui-p-add.bin.hex
+...
+Test Result : 14 / 52
+//}
+
+ADD命令のテストを含む、ほとんどのテストにFAILしてしまいました。
+これは、riscv-testsのテストが、まだ未実装の命令を含むためです(@<list>{riscvtests.rv64ui-p-add.dump.addiw})。
+
+//list[riscvtests.rv64ui-p-add.dump.addiw][ADD命令のテストは未実装の命令(ADDIW命令)を含む (rv64ui-p-add.dump)]{
+0000000000000208 <test_7>:
+ 208:	00700193          	li	gp,7
+ 20c:	800005b7          	lui	a1,0x80000
+ 210:	ffff8637          	lui	a2,0xffff8
+ 214:	00c58733          	add	a4,a1,a2
+ 218:	ffff03b7          	lui	t2,0xffff0
+ 21c:	fff3839b          	@<b>|addiw	t2,t2,-1| # fffffffffffeffff <_end+0xfffffffffffedfff>
+ 220:	00f39393          	slli	t2,t2,0xf
+ 224:	46771063          	bne	a4,t2,684 <fail>
+//}
+
+というわけで、FAILしていることを気にせずに実装を進めていきます。
 
 == ADD[I]W, SUBW命令の実装
 
@@ -136,26 +225,28 @@ RV64Iでは、ADD命令は64ビット単位で演算する命令になり、
 ADDW, SUBW命令はR形式で、opcodeは@<code>{OP-32}(@<code>{0111011})です。
 ADDIW命令はI形式で、opcodeは@<code>{OP-IMM-32}(@<code>{0011011})です。
 
-まず、eeiパッケージにopcodeの定数を定義します。
+まず、eeiパッケージにopcodeの定数を定義します
+(@<list>{eei.veryl.addsubw-range.op})。
 
-//list[eei.veryl.op32][opcodeを定義する (eei.veryl)]{
+//list[eei.veryl.addsubw-range.op][opcodeを定義する (eei.veryl)]{
 #@maprange(scripts/05/addsubw-range/core/src/eei.veryl,op)
     const OP_OP_32    : logic<7> = 7'b0111011;
     const OP_OP_IMM_32: logic<7> = 7'b0011011;
 #@end
 //}
 
-次に、@<code>{InstCtrl})構造体に、
-32ビット単位で演算を行う命令であることを示す@<code>{is_op32}フラグを追加します。
+次に、@<code>{InstCtrl}構造体に、
+32ビット単位で演算を行う命令であることを示す@<code>{is_op32}フラグを追加します
+(@<list>{corectrl.veryl.addsubw-range.is_op32})。
 
-//list[corectrl.veryl.is_op32][is_op32を追加する (corectrl.veryl)]{
+//list[corectrl.veryl.addsubw-range.is_op32][is_op32を追加する (corectrl.veryl)]{
 #@maprange(scripts/05/addsubw-range/core/src/corectrl.veryl,is_op32)
     struct InstCtrl {
         itype   : InstType   , // 命令の形式
         rwb_en  : logic      , // レジスタに書き込むかどうか
         is_lui  : logic      , // LUI命令である
         is_aluop: logic      , // ALUを利用する命令である
-        @<b>|is_op32 : logic      , // OP-32またはOP-IMM-32である| @<balloon>{追加}
+        @<b>|is_op32 : logic      , // OP-32またはOP-IMM-32である|
         is_jump : logic      , // ジャンプ命令である
         is_load : logic      , // ロード命令である
         is_csr  : logic      , // CSR命令である
@@ -165,10 +256,14 @@ ADDIW命令はI形式で、opcodeは@<code>{OP-IMM-32}(@<code>{0011011})です�
 #@end
 //}
 
-inst_decoderモジュールの@<code>{InstCtrl}と即値を生成している部分を変更します。
+inst_decoderモジュールの@<code>{InstCtrl}と即値を生成している部分を変更します
+(
+@<list>{inst_decoder.veryl.addsubw-range.ctrl},
+@<list>{inst_decoder.veryl.addsubw-range.imm}
+)。
 これでデコードは完了です。
 
-//list[inst_decoder.veryl.ctrl][OP-32, OP-IMM-32のInstCtrlの生成 (inst_decoder.veryl)]{
+//list[inst_decoder.veryl.addsubw-range.ctrl][OP-32, OP-IMM-32のInstCtrlの生成 (inst_decoder.veryl)]{
 #@maprange(scripts/05/addsubw-range/core/src/inst_decoder.veryl,ctrl)
                                        is_op32を追加
     ctrl = {case op {                        ↓
@@ -181,15 +276,15 @@ inst_decoderモジュールの@<code>{InstCtrl}と即値を生成している部
         OP_STORE    : {InstType::S, F, F, F, @<b>|F|, F, F, F},
         OP_OP       : {InstType::R, T, F, T, @<b>|F|, F, F, F},
         OP_OP_IMM   : {InstType::I, T, F, T, @<b>|F|, F, F, F},
-        @<b>|OP_OP_32    : {InstType::R, T, F, T, @<b>|T|, F, F, F},| @<balloon>{追加}
-        @<b>|OP_OP_IMM_32: {InstType::I, T, F, T, @<b>|T|, F, F, F},| @<balloon>{追加}
+        @<b>|OP_OP_32    : {InstType::R, T, F, T, T, F, F, F},|
+        @<b>|OP_OP_IMM_32: {InstType::I, T, F, T, T, F, F, F},|
         OP_SYSTEM   : {InstType::I, T, F, F, @<b>|F|, F, F, T},
         default     : {InstType::X, F, F, F, @<b>|F|, F, F, F},
     }, f3, f7};
 #@end
 //}
 
-//list[inst_decoder.veryl.imm][OP-32, OP-IMM-32の即値の生成 (inst_decoder.veryl)]{
+//list[inst_decoder.veryl.addsubw-range.imm][OP-32, OP-IMM-32の即値の生成 (inst_decoder.veryl)]{
 #@maprange(scripts/05/addsubw-range/core/src/inst_decoder.veryl,imm)
     imm = case op {
         OP_LUI, OP_AUIPC       : imm_u,
@@ -206,23 +301,25 @@ inst_decoderモジュールの@<code>{InstCtrl}と即値を生成している部
 === ALUにADDW, SUBWを実装する
 
 制御フラグを生成できたので、
-それに応じて32ビットのADD, SUBを行うようにします。
+それに応じて32ビットのADD, SUBを計算するようにします。
 
-まず、32ビットの足し算と引き算の結果を生成します。
+まず、32ビットの足し算と引き算の結果を生成します
+(@<list>{alu.veryl.addsubw-range.32})。
 
-//list[alu.veryl.addsubw][32ビットの足し算と引き算をする (alu.veryl)]{
+//list[alu.veryl.addsubw-range.32][32ビットの足し算と引き算をする (alu.veryl)]{
 #@maprange(scripts/05/addsubw-range/core/src/alu.veryl,32)
     let add32: UInt32 = op1[31:0] + op2[31:0];
     let sub32: UInt32 = op1[31:0] - op2[31:0];
 #@end
 //}
 
-次に、フラグによって演算結果を選択する関数@<code>{sel_w}を作成します。
+次に、フラグによって演算結果を選択する関数@<code>{sel_w}を作成します
+(@<list>{alu.veryl.addsubw-range.sel})。
 この関数は、
-@<code>{is_op32}が@<code>{1}なら@<code>{value32}を64ビットに符号拡張した値を、
+@<code>{is_op32}が@<code>{1}なら@<code>{value32}を64ビットに符号拡張した値、
 @<code>{0}なら@<code>{value64}を返します。
 
-//list[alu.veryl.sel_w][演算結果を選択する関数を作成する (alu.veryl)]{
+//list[alu.veryl.addsubw-range.sel][演算結果を選択する関数を作成する (alu.veryl)]{
 #@maprange(scripts/05/addsubw-range/core/src/alu.veryl,sel)
     function sel_w (
         is_op32: input logic ,
@@ -239,9 +336,10 @@ inst_decoderモジュールの@<code>{InstCtrl}と即値を生成している部
 //}
 
 @<code>{sel_w}関数を使用し、aluモジュールの演算処理を変更します。
-case文の足し算と引き算の部分を次のように変更します。
+case文の足し算と引き算の部分を次のように変更します
+(@<list>{alu.veryl.addsubw-range.case})。
 
-//list[alu.veryl.addw.case][32ビットの演算結果を選択する (alu.veryl)]{
+//list[alu.veryl.addsubw-range.case][32ビットの演算結果を選択する (alu.veryl)]{
 #@maprange(scripts/05/addsubw-range/core/src/alu.veryl,case)
     3'b000: result = if ctrl.itype == InstType::I | ctrl.funct7 == 0 {
         @<b>|sel_w(ctrl.is_op32, add32, add)|
@@ -253,7 +351,41 @@ case文の足し算と引き算の部分を次のように変更します。
 
 === ADD[I]W, SUBW命令をテストする
 
-TODO
+RV64I向けのテストを実行し、生成される結果ファイルを確認します
+(
+@<list>{rv64ui-p.test.addsubw},
+@<list>{results.txt.addsubw}
+)。
+
+//terminal[rv64ui-p.test.addsubw][RV64I向けのテストを実行する]{
+$ @<userinput>{make build}
+$ @<userinput>{make sim}
+$ @<userinput>{python3 test/test.py -r obj_dir/sim test/share rv64ui-p-}
+//}
+
+//list[results.txt.addsubw][テストの実行結果 (results/result.txt)]{
+Test Result : 42 / 52
+FAIL : ~/core/test/share/riscv-tests/isa/rv64ui-p-ld.bin.hex
+FAIL : ~/core/test/share/riscv-tests/isa/rv64ui-p-lwu.bin.hex
+FAIL : ~/core/test/share/riscv-tests/isa/rv64ui-p-ma_data.bin.hex
+FAIL : ~/core/test/share/riscv-tests/isa/rv64ui-p-sd.bin.hex
+FAIL : ~/core/test/share/riscv-tests/isa/rv64ui-p-slliw.bin.hex
+FAIL : ~/core/test/share/riscv-tests/isa/rv64ui-p-sllw.bin.hex
+FAIL : ~/core/test/share/riscv-tests/isa/rv64ui-p-sraiw.bin.hex
+FAIL : ~/core/test/share/riscv-tests/isa/rv64ui-p-sraw.bin.hex
+FAIL : ~/core/test/share/riscv-tests/isa/rv64ui-p-srliw.bin.hex
+FAIL : ~/core/test/share/riscv-tests/isa/rv64ui-p-srlw.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-add.bin.hex
+...
+PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-addiw.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-addw.bin.hex
+...
+PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-subw.bin.hex
+...
+//}
+
+ADDIW, ADDW, SUBW命令のテストに成功していることを確認できます、
+また、未実装の命令以外のテストがPASSするようになっています。
 
 == SLL[I]W, SRL[I]W, SRA[I]W命令の実装
 
@@ -270,9 +402,10 @@ SLLIW, SRLIW, SRAIW命令はI形式で、opcodeは@<code>{OP-IMM-32}です。
 どちらのopcodeの命令も、
 ADD[I]W, SUBW命令の実装時にデコードが完了しています。
 
-aluモジュールで、シフト演算の結果を生成します。
+aluモジュールで、シフト演算の結果を生成します
+(@<list>{alu.veryl.sllsrlsraw-range.let})。
 
-//list[alu.veryl.shiftw][32ビットのシフト演算をする (alu.veryl)]{
+//list[alu.veryl.sllsrlsraw-range.let][32ビットのシフト演算をする (alu.veryl)]{
 #@maprange(scripts/05/sllsrlsraw-range/core/src/alu.veryl,let)
     let sll32: UInt32 = op1[31:0] << op2[4:0];
     let srl32: UInt32 = op1[31:0] >> op2[4:0];
@@ -280,10 +413,11 @@ aluモジュールで、シフト演算の結果を生成します。
 #@end
 //}
 
-生成したシフト演算の結果を、@<code>{sel_w}関数で選択するようにします。
-case文のシフト演算の部分を次のように変更します。
+生成したシフト演算の結果を@<code>{sel_w}関数で選択するようにします。
+case文のシフト演算の部分を次のように変更します
+(@<list>{alu.veryl.sllsrlsraw-range.case})。
 
-//list[alu.veryl.shiftw.case][32ビットの演算結果を選択する (alu.veryl)]{
+//list[alu.veryl.sllsrlsraw-range.case][32ビットの演算結果を選択する (alu.veryl)]{
 #@maprange(scripts/05/sllsrlsraw-range/core/src/alu.veryl,case)
     3'b001: result = @<b>|sel_w(ctrl.is_op32, sll32, sll)|;
     ...
@@ -297,7 +431,34 @@ case文のシフト演算の部分を次のように変更します。
 
 === SLL[I]W, SRL[I]W, SRA[I]W命令をテストする
 
-TODO
+
+RV64I向けのテストを実行し、生成される結果ファイルを確認します
+(@<list>{results.txt.sllsrlsraw})。
+
+//list[results.txt.sllsrlsraw][テストの実行結果 (results/result.txt)]{
+Test Result : 48 / 52
+FAIL : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-ld.bin.hex
+FAIL : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-lwu.bin.hex
+FAIL : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-ma_data.bin.hex
+FAIL : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-sd.bin.hex
+PASS : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-add.bin.hex
+...
+PASS : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-sll.bin.hex
+PASS : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-slli.bin.hex
+PASS : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-slliw.bin.hex
+PASS : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-sllw.bin.hex
+PASS : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-sra.bin.hex
+PASS : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-srai.bin.hex
+PASS : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-sraiw.bin.hex
+PASS : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-sraw.bin.hex
+PASS : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-srl.bin.hex
+PASS : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-srli.bin.hex
+PASS : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-srliw.bin.hex
+PASS : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-srlw.bin.hex
+...
+//}
+
+SLLW, SLLIW, SRLW, SRLIW, SRAW, SRAIW命令のテストに成功していることを確認できます。
 
 == LWU命令の実装
 
@@ -319,9 +480,10 @@ LWU命令のfunct3は@<code>{110}です。
 
 memunitモジュールの、ロードする部分を変換します。
 32ビットを@<code>{rdata}に割り当てるとき、
-@<code>{sext}によって符号拡張かゼロで拡張するかを選択するようにします。
+@<code>{sext}によって符号拡張かゼロで拡張するかを選択するようにします
+(@<list>{memunit.veryl.lwu-range.lwu})。
 
-//list[memunit.veryl.lwu.sext][LWU命令の実装 (memunit.veryl)]{
+//list[memunit.veryl.lwu-range.lwu][LWU命令の実装 (memunit.veryl)]{
 #@maprange(scripts/05/lwu-range/core/src/memunit.veryl,lwu)
     2'b10  : {@<b>|sext & D[31]| repeat W - 32, D[31:0]},
 #@end
@@ -329,7 +491,15 @@ memunitモジュールの、ロードする部分を変換します。
 
 === LWU命令をテストする
 
-TODO
+LWU命令のテストを実行します(@<list>{rv64ui-p-lwu.test})。
+
+//terminal[rv64ui-p-lwu.test][LWU命令をテストする]{
+$ @<userinput>{make build}
+$ @<userinput>{make sim}
+$ @<userinput>{python3 test/test.py -r obj_dir/sim test/share rv64ui-p-lwu}
+PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-lwu.bin.hex
+Test Result : 1 / 1
+//}
 
 == LD, SD命令の実装
 
@@ -344,44 +514,46 @@ SD命令はS形式で、opcodeは@<code>{STORE}です。
 
 === メモリの幅を広げる
 
-現在のメモリの1つのデータの幅(@<code>{eei::MEM_DATA_WIDTH})は32ビットですが、
+現在のメモリの1つのデータの幅(@<code>{MEM_DATA_WIDTH})は32ビットですが、
 このままだと64ビットでロードやストアを行うときに、
-最低2回のメモリアクセスが必要になってしまいます。
+最低2回のメモリアクセスが必要です。
 これを1回のメモリアクセスで済ませるために、
-データの幅を32ビットから64ビットに広げます。
+データの幅を32ビットから64ビットに広げます
+(@<list>{eei.veryl.ldsd-range.width})。
 
-//list[eei.veryl.MEM_DATA_WIDTH.expand][MEM_DATA_WIDTHを64ビットに変更する (eei.veryl)]{
+//list[eei.veryl.ldsd-range.width][MEM_DATA_WIDTHを64ビットに変更する (eei.veryl)]{
 #@maprange(scripts/05/ldsd-range/core/src/eei.veryl,width)
     const MEM_DATA_WIDTH: u32 = @<b>|64|;
 #@end
 //}
 
-=== 命令フェッチの対応
+=== 命令フェッチ処理を修正する
 
-@<code>{XLEN}, @<code>{eei::MEM_DATA_WIDTH}が変わっても、
+@<code>{XLEN}, @<code>{MEM_DATA_WIDTH}が変わっても、
 命令の長さ(@<code>{ILEN})は32ビットのままです。
+そのため、topモジュールの@<code>{i_membus.rdata}の幅は32ビットなのに対し、
+@<code>{membus.rdata}は64ビットになり、ビット幅が一致しません。
 
-そのため、
-topモジュールの@<code>{i_membus.rdata}の幅は32ビット、
-@<code>{membus.rdata}は64ビットになり、
-@<code>{i_membus.rdata}に@<code>{membus.rdata}の下位32ビットが接続されます。
-よって、今のコードのままだとアドレスの下位3ビットが@<code>{100}(=4)であっても、
-下位3ビットが@<code>{000}(=0)の命令が@<code>{i_membus.rdata}に割り当てられてしまいます。
+ビット幅を合わせ、正しく命令をフェッチするために、
+64ビットの読み出しデータの上位32ビット,
+下位32ビットをアドレスの下位ビットで選択します。
+アドレスが8の倍数のときは下位32ビット,
+それ以外のときは上位32ビットを選択します。
 
-正しく命令をフェッチするために、
-64ビットの読み出しデータの上位32ビット, 下位32ビットをアドレスの下位ビットで選択します。
-PC[2]が0のときは下位32ビット、1のときは上位32ビットを選択します。
+まず、命令フェッチの要求のアドレスをレジスタに保存します
+(
+@<list>{top.veryl.ldsd-range.last_iaddr},
+@<list>{top.veryl.ldsd-range.always_arb}
+)。
 
-まず、命令フェッチの要求のアドレスをレジスタに保存します。
-
-//list[top.veryl.iaddr][アドレスを保存するためのレジスタの定義 (top.veryl)]{
+//list[top.veryl.ldsd-range.last_iaddr][アドレスを保存するためのレジスタの定義 (top.veryl)]{
 #@maprange(scripts/05/ldsd-range/core/src/top.veryl,last_iaddr)
     var memarb_last_i    : logic;
     @<b>|var memarb_last_iaddr: Addr ;|
 #@end
 //}
 
-//list[top.veryl.always_arb][レジスタに命令フェッチの要求アドレスを保存する (top.veryl)]{
+//list[top.veryl.ldsd-range.always_arb][レジスタに命令フェッチの要求アドレスを保存する (top.veryl)]{
 #@maprange(scripts/05/ldsd-range/core/src/top.veryl,always_arb)
     // メモリアクセスを調停する
     always_ff {
@@ -398,9 +570,11 @@ PC[2]が0のときは下位32ビット、1のときは上位32ビットを選択
 #@end
 //}
 
-このレジスタの値を利用し、@<code>{i_membus.rdata}に割り当てる値を選択します。
+このレジスタの値を利用し、
+@<code>{i_membus.rdata}に割り当てる値を選択します
+(@<list>{top.veryl.ldsd-range.rdata})。
 
-//list[top.veryl.iaddr_rdata][アドレスによってデータを選択する (top.veryl)]{
+//list[top.veryl.ldsd-range.rdata][アドレスによってデータを選択する (top.veryl)]{
 #@maprange(scripts/05/ldsd-range/core/src/top.veryl,rdata)
     i_membus.rdata  = if memarb_last_iaddr[2] == 0 {
         membus.rdata[31:0]
@@ -410,27 +584,32 @@ PC[2]が0のときは下位32ビット、1のときは上位32ビットを選択
 #@end
 //}
 
-=== ストア命令を実装する
+=== SD命令を実装する
 
 SD命令の実装のためには、
 書き込むデータ(@<code>{wdata})と書き込みマスク(@<code>{wmask})を変更する必要があります。
 
-//list[memunit.veryl.sd_wdata][書き込みデータの変更 (memunit.veryl)]{
+書き込むデータは、アドレスの下位2ビットではなく下位3ビット分だけシフトするようにします
+(@<list>{memunit.veryl.ldsd-range.wdata})。
+
+//list[memunit.veryl.ldsd-range.wdata][書き込みデータの変更 (memunit.veryl)]{
 #@maprange(scripts/05/ldsd-range/core/src/memunit.veryl,wdata)
     req_wdata = rs2 << {addr[@<b>|2|:0], 3'b0};
 #@end
 //}
 
-書き込むデータは、アドレスの下位2ビットではなく下位3ビット分だけシフトするようにします。
+書き込みマスクは4ビットから8ビットに拡張されるため、
+アドレスの下位2ビットではなく下位3ビットで選択するようにします
+(@<list>{memunit.veryl.ldsd-range.wmask})。
 
-//list[memunit.veryl.sd_wmask][書き込みマスクの変更 (memunit.veryl)]{
+//list[memunit.veryl.ldsd-range.wmask][書き込みマスクの変更 (memunit.veryl)]{
 #@maprange(scripts/05/ldsd-range/core/src/memunit.veryl,wmask)
     req_wmask = case ctrl.funct3[1:0] {
         2'b00  : @<b>|8|'b1 << addr[@<b>|2|:0],
         2'b01  : case addr[@<b>|2|:0] {
             @<b>|6      : 8'b11000000,|
             @<b>|4      : 8'b00110000,|
-            2      : @<b<|8'b00001100|,
+            2      : @<b>|8'b00001100|,
             0      : @<b>|8'b00000011|,
             default: 'x,
         },
@@ -445,16 +624,14 @@ SD命令の実装のためには、
 #@end
 //}
 
-書き込みマスクは8ビットに拡張されます。
-それに伴い、アドレスの下位2ビットではなく下位3ビットで選択するようにするようにします。
-
-=== ロード命令の実装
+=== LD命令を実装する
 
 メモリのデータ幅が64ビットに広がるため、
 @<code>{rdata}に割り当てる値を、
-アドレスの下位2ビットではなく下位3ビットで選択するようにします。
+アドレスの下位2ビットではなく下位3ビットで選択するようにします
+(@<list>{memunit.veryl.ldsd-range.rdata})。
 
-//list[memunit.veryl.rdata][rdataの変更 (memunit.veryl)]{
+//list[memunit.veryl.ldsd-range.rdata][rdataの変更 (memunit.veryl)]{
 #@maprange(scripts/05/ldsd-range/core/src/memunit.veryl,rdata)
     rdata = case ctrl.funct3[1:0] {
         2'b00  : case addr[@<b>|2|:0] {
@@ -486,12 +663,31 @@ SD命令の実装のためには、
 #@end
 //}
 
-
 === LD, SD命令をテストする
 
-TODO
+LD, SD命令のテストを実行する前に、
+テストのHEXファイルを4バイト単位の改行から8バイト単位の改行に変更します
+(@<list>{hex.8})。
 
+//terminal[hex.8][HEXファイルを8バイト単位に変更する]{
+$ @<userinput>{cd test}
+$ @<userinput>{find share/ -type f -name "*.bin" -exec sh -c "python3 bin2hex.py 8 {\} > {\}.hex" \;}
+//}
 
-== RV64Iのテスト
+riscv-testsを実行します(@<list>{riscv-tests.ldsd})。
 
-TODO
+//terminal[riscv-tests.ldsd][RV32I, RV64Iをテストする]{
+$ @<userinput>{python3 test/test~st/share rv32ui-p-}
+...
+Test Result : 40 / 40
+$ @<userinput>{python3 test/test.py -r obj_dir/sim test/share rv64ui-p-}
+...
+FAIL : ~/core/test/share/riscv-tests/isa/rv64ui-p-ma_data.bin.hex
+...
+PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-ld.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-sd.bin.hex
+...
+Test Result : 51 / 52
+//}
+
+RV64IのCPUを実装することができました。

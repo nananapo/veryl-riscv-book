@@ -27,7 +27,7 @@ riscv-testsをパスしても、確実に実装が正しいとは言えないこ
 core/test以下にコピーしてください。
 //}
 
-=== riscv-testsのビルド
+=== riscv-testsをビルドする
 
 まず、riscv-testsをcloneします
 (@<list>{riscv-tests.build})。
@@ -255,14 +255,14 @@ topモジュールでメモリへのアクセスを監視し、
 //list[top.veryl.detect-finish-range.detect][メモリアクセスを監視して終了を検知する (top.veryl)]{
 #@maprange(scripts/04b/detect-finish-range/core/src/top.veryl,detect)
     // riscv-testsの終了を検知する
-    const RISCVTESTS_TOHOST_ADDR: Addr = 32'h1000;
+    const RISCVTESTS_TOHOST_ADDR: Addr = 'h1000 as Addr;
     always_ff {
-        if membus.valid && membus.wen == 1 && membus.addr == addr_to_memaddr(RISCVTESTS_TOHOST_ADDR) {
-            if membus.wdata == 1 {
+        if d_membus.valid && d_membus.ready && d_membus.wen == 1 && d_membus.addr == RISCVTESTS_TOHOST_ADDR {
+            if d_membus.wdata == 1 {
                 $display("riscv-tests success!");
             } else {
                 $display("riscv-tests failed!");
-                $error  ("wdata : %h", membus.wdata);
+                $error  ("wdata : %h", d_membus.wdata);
             }
             $finish();
         }
@@ -341,7 +341,7 @@ def test(file_name):
     success = False
     with open(result_file_path, "w") as f:
         no = f.fileno()
-        p = subprocess.Popen(cmd, shell=True, stdout=no, stderr=no)
+        p = subprocess.Popen("exec " + cmd, shell=True, stdout=no, stderr=no)
         try:
             p.wait(None if args.time_limit == 0 else args.time_limit)
             success = p.returncode == 0
@@ -426,7 +426,7 @@ if __name__ == '__main__':
 riscv-testsのRV32I向けのテストの接頭辞であるrv32ui-p-引数に指定します。
 
 //terminal[python.test.py][rv32ui-pから始まるテストを実行する]{
-$ @<userinput>{python3 test.py ../obj_dir/sim share rv32ui-p- -r}
+$ @<userinput>{python3 test/test.py obj_dir/sim test/share rv32ui-p- -r}
 PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-lh.bin.hex
 PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-sb.bin.hex
 PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-sltiu.bin.hex

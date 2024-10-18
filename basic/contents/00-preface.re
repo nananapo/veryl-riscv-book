@@ -28,9 +28,9 @@
 
 ====[notoc] 問い合わせ先
 
-本書に関する質問やお問い合わせは、以下のリポジトリにissueを立てて行ってください。
+本書に関する質問やお問い合わせは、以下のGitHubのリポジトリにissueを立てて行ってください。
 
- * リポジトリ: @<href>{https://github.com/nananapo/veryl-riscv-book}
+ * @<href>{https://github.com/nananapo/veryl-riscv-book}
 
 サポートページも用意しています。
 
@@ -72,6 +72,8 @@ print("Hello, @<b>|world|!\n");       @<balloon>{太字は強調}
 //terminal{
 $ @<userinput>|echo Hello|       @<balloon>{行頭の「$ 」はプロンプト、それ以降がユーザ入力}
 //}
+
+プログラムコードやターミナル画面は、@<code>{...}などの複数の点で省略を表すことがあります。
 
 本文に対する補足情報や注意・警告は、次のようなノートや囲み枠で表示します。
 

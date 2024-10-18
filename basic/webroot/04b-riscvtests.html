@@ -60,7 +60,7 @@
 <p>完成品を上記のURLにおいておきます。core/test以下にコピーしてください。</p>
 </div>
 
-<h3 class="none"><a id="h5-2-1"></a><span class="secno">5.2.1</span> riscv-testsのビルド</h3>
+<h3 class="none"><a id="h5-2-1"></a><span class="secno">5.2.1</span> riscv-testsをビルドする</h3>
 <p>まず、riscv-testsをcloneします(<span class="listref"><a href="./04b-riscvtests.html#riscv-tests.build">リスト5.1</a></span>)。</p>
 <div id="riscv-tests.build" class="cmd-code">
 <span class="caption">リスト5.1: リスト5.1: riscv-testsのclone</span>
@@ -246,14 +246,14 @@ SECTIONS
 <div id="top.veryl.detect-finish-range.detect" class="caption-code">
 <span class="caption">リスト5.9: リスト5.9: メモリアクセスを監視して終了を検知する (top.veryl)</span>
 <pre class="list language-detect">    // riscv-testsの終了を検知する
-    const RISCVTESTS_TOHOST_ADDR: Addr = 32'h1000;
+    const RISCVTESTS_TOHOST_ADDR: Addr = 'h1000 as Addr;
     always_ff {
-        if membus.valid &amp;&amp; membus.wen == 1 &amp;&amp; membus.addr == addr_to_memaddr(RISCVTESTS_TOHOST_ADDR) {
-            if membus.wdata == 1 {
+        if d_membus.valid &amp;&amp; d_membus.ready &amp;&amp; d_membus.wen == 1 &amp;&amp; d_membus.addr == RISCVTESTS_TOHOST_ADDR {
+            if d_membus.wdata == 1 {
                 $display(&quot;riscv-tests success!&quot;);
             } else {
                 $display(&quot;riscv-tests failed!&quot;);
-                $error  (&quot;wdata : %h&quot;, membus.wdata);
+                $error  (&quot;wdata : %h&quot;, d_membus.wdata);
             }
             $finish();
         }
@@ -322,7 +322,7 @@ def test(file_name):
     success = False
     with open(result_file_path, &quot;w&quot;) as f:
         no = f.fileno()
-        p = subprocess.Popen(cmd, shell=True, stdout=no, stderr=no)
+        p = subprocess.Popen(&quot;exec &quot; + cmd, shell=True, stdout=no, stderr=no)
         try:
             p.wait(None if args.time_limit == 0 else args.time_limit)
             success = p.returncode == 0
@@ -404,7 +404,7 @@ if __name__ == '__main__':
 <p>それでは、RV32Iのテストを実行しましょう。今回はRV32Iのテストを実行したいので、riscv-testsのRV32I向けのテストの接頭辞であるrv32ui-p-引数に指定します。</p>
 <div id="python.test.py" class="cmd-code">
 <span class="caption">リスト5.12: リスト5.12: rv32ui-pから始まるテストを実行する</span>
-<pre class="list language-py">$ <span class="userinput">python3 test.py ../obj_dir/sim share rv32ui-p- -r</span>
+<pre class="list language-py">$ <span class="userinput">python3 test/test.py obj_dir/sim test/share rv32ui-p- -r</span>
 PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-lh.bin.hex
 PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-sb.bin.hex
 PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-sltiu.bin.hex
