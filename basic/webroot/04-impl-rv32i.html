@@ -16,7 +16,6 @@
                 <a class="nav-title" href="index.html">Verylで作るCPU</a>
 <ul class="toc toc-1">
     <li class="toc-chapter"><a href="./00-preface.html">まえがき / はじめに</a></li>
-    <li class="toc-chapter"><a href="./01-intro.html">Intro</a></li>
 <li class="toc-part">第I部 RV32I/RV64Iの実装
   <ul class="toc toc-2">
     <li class="toc-chapter"><a href="./02-setup.html">1 環境構築</a></li>
@@ -70,8 +69,8 @@
 </div><!--/.footnote-list-->
 <p>メモリからプログラムを読み込んで実行するのがCPUの仕事ということが分かりました。これをもう少し掘り下げます。</p>
 <p>まず、プログラムをメモリから読み込むためには、メモリのどこを読み込みたいのかという情報(アドレス)をメモリに与える必要があります。また、当然ながらメモリが必要です。</p>
-<p>CPUはプログラムを実行しますが、一気にすべてのプログラムを読み込んだり実行するわけではなく、プログラムの最小単位である「命令」を一つずつ読み込んで実行します。命令をメモリに要求、取得することを、命令をフェッチするといいます。</p>
-<p>命令がCPUに供給されると、CPUは命令のビット列がどのような意味を持っていて、何をすればいいかを判定します。このことを、命令をデコードするといいます。</p>
+<p>CPUはプログラムを実行しますが、一気にすべてのプログラムを読み込んだり実行するわけではなく、プログラムの最小単位である「命令」を一つずつ読み込んで実行します。命令をメモリに要求、取得することを、命令をフェッチすると呼びます。</p>
+<p>命令がCPUに供給されると、CPUは命令のビット列がどのような意味を持っていて、何をすればいいかを判定します。このことを、命令をデコードすると呼びます。</p>
 <p>命令をデコードすると、いよいよ計算やメモリアクセスを行います。しかし、例えば足し算を計算するにも、何と何を足し合わせればいいのか分かりません。この計算に使うデータは、次のいずれかで指定されます。</p>
 <ul>
 <li>レジスタ(= CPUに存在する小さなメモリ)の番号
@@ -80,7 +79,7 @@
 </li>
 </ul>
 <p>計算対象のデータにレジスタと即値のどちらを使うかは命令によって異なります。レジスタの番号は命令のビット列の中に含まれています。</p>
-<p>計算を実行するユニット(部品)のことを、ALU(Arithmetic Logic Unit)といいます。</p>
+<p>計算を実行するユニット(部品)のことを、ALU(Arithmetic Logic Unit)と呼びます。</p>
 <p>計算やメモリアクセスが終わると、その結果をレジスタに格納します。例えば、足し算を行う命令なら足し算の結果、メモリから値を読み込む命令なら読み込まれた値を格納します。</p>
 <p>これで命令の実行は終わりですが、CPUは次の命令を実行する必要があります。今現在実行している命令のアドレスを格納しているレジスタのことをプログラムカウンタ(PC)と言い、CPUはPCの値をメモリに渡すことで命令をフェッチしています。</p>
 <p>CPUは次の命令を実行するために、PCの値を次の命令のアドレスに設定します。ジャンプ命令の場合は、PCの値をジャンプ先のアドレスに設定します。分岐命令の場合は、まず、分岐の成否を判定します。分岐が成立する場合は、PCの値を分岐先のアドレスに設定します。分岐が成立しない場合は、通常の命令と同じように、PCの値を次の命令のアドレスに設定します。</p>
@@ -707,7 +706,8 @@ $ <span class="userinput">make clean</span> <span class="balloon">← ビルド�
     var head: Ptr                   ;
     var tail: Ptr                   ;
 
-    let tail_plus1: Ptr = tail + 1;
+    let tail_plus1: Ptr = tail + 1 as Ptr;
+    let tail_plus2: Ptr = tail + 2 as Ptr;
 
     always_comb {
         rvalid = head != tail;
@@ -715,10 +715,13 @@ $ <span class="userinput">make clean</span> <span class="balloon">← ビルド�
     }
 
     if WIDTH == 1 :wready_block {
-        assign wready = head == tail &amp;&amp; rready;
+        assign wready = head == tail || rready;
     } else {
         assign wready = tail_plus1 != head;
     }
+
+    // 2つ以上空きがあるかどうか
+    let wready_two: logic = wready &amp;&amp; tail_plus2 != head;
 
     always_ff {
         if_reset {
@@ -804,8 +807,8 @@ $ <span class="userinput">make clean</span> <span class="balloon">← ビルド�
 <span class="caption">リスト3.24: リスト3.24: フェッチ処理の変更 (core.veryl)</span>
 <pre class="list language-fetch">    // 命令フェッチ処理
     always_comb {
-        // FIFOに空きがあるとき、命令をフェッチする
-        membus.valid = <b>if_fifo_wready</b>; <span class="balloon">← 1をif_fifo_wreadyに変更</span>
+        // FIFOに2個以上空きがあるとき、命令をフェッチする
+        membus.valid = <b>if_fifo.wready_two;</b>
         membus.addr  = if_pc;
         membus.wen   = 0;
         membus.wdata = 'x; // wdataは使用しない
@@ -815,7 +818,7 @@ $ <span class="userinput">make clean</span> <span class="balloon">← ビルド�
     }
 </pre>
 </div>
-<p><span class="listref"><a href="./04-impl-rv32i.html#core.veryl.if-fifo-range.fetch">リスト3.24</a></span>では、メモリに命令フェッチを要求する条件を、FIFOに空きがあるという条件に変更しています。これにより、FIFOがあふれてしまうことがなくなります。また、とりあえずFIFOから常にデータを取り出すようにしています。</p>
+<p><span class="listref"><a href="./04-impl-rv32i.html#core.veryl.if-fifo-range.fetch">リスト3.24</a></span>では、メモリに命令フェッチを要求する条件を、FIFOに2つ以上空きがあるという条件に変更しています。これにより、FIFOがあふれてしまうことがなくなります。また、とりあえずFIFOから常にデータを取り出すようにしています。</p>
 <p>最後に、命令をフェッチできたらFIFOに格納するコードを<code class="inline-code">always_ff</code>ブロックの中に追加します(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.if-fifo-range.fifo_ctrl">リスト3.25</a></span>)。</p>
 <div id="core.veryl.if-fifo-range.fifo_ctrl" class="caption-code">
 <span class="caption">リスト3.25: リスト3.25: FIFOへのデータの格納 (core.veryl)</span>
@@ -1325,7 +1328,7 @@ module alu (
 <tr class="hline"><td>3'b010</td><td>符号付き &lt;=</td></tr>
 <tr class="hline"><td>3'b011</td><td>符号なし &lt;=</td></tr>
 <tr class="hline"><td>3'b100</td><td>ビット単位XOR</td></tr>
-<tr class="hline"><td>3'b101</td><td>右(論理|算術)シフト</td></tr>
+<tr class="hline"><td>3'b101</td><td>右論理, 右算術シフト</td></tr>
 <tr class="hline"><td>3'b110</td><td>ビット単位OR</td></tr>
 <tr class="hline"><td>3'b111</td><td>ビット単位AND</td></tr>
 </table>
@@ -1496,7 +1499,7 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 6</span>
 </dl>
 
 <h2 class="numbox"><a id="h3-10"></a><span class="secno">3.10</span> レジスタに結果を書き込む</h2>
-<p>CPUは、レジスタから値を読み込み、これを計算して、レジスタに結果の値を書き戻します。レジスタに値を書き戻すことを、値を<b>ライトバック</b>すると言います。</p>
+<p>CPUは、レジスタから値を読み込み、これを計算して、レジスタに結果の値を書き戻します。レジスタに値を書き戻すことを、値を<b>ライトバック</b>すると呼びます。</p>
 <p>ライトバックする値は、計算やメモリアクセスの結果です。まだ、メモリにアクセスする処理を実装していませんが、先にライトバック処理を実装します。</p>
 
 <h3 class="none"><a id="h3-10-1"></a><span class="secno">3.10.1</span> ライトバック処理を実装する</h3>
@@ -1739,7 +1742,7 @@ module memunit (
 </dd>
 </dl>
 <p>メモリにアクセスする命令のとき、memunitモジュールは<code class="inline-code">Init</code>, <code class="inline-code">WaitReady</code>, <code class="inline-code">WaitValid</code>の順で状態を移動するため、実行には少なくとも3クロックが必要です。その間、CPUはレジスタのライトバック処理やFIFOからの命令の取り出しを待つ必要があります。</p>
-<p>CPUの実行が止まることを、CPUが<b>ストール</b>(Stall)すると言います。メモリアクセス中のストールを実現するために、memunitモジュールには処理中かどうかを表す<code class="inline-code">stall</code>フラグが存在します。有効な命令が供給されているとき、<code class="inline-code">state</code>やメモリの状態に応じて、次のように<code class="inline-code">stall</code>の値を決定します(<span class="tableref"><a href="./04-impl-rv32i.html#stall.cond">表3.7</a></span>)。</p>
+<p>CPUの実行が止まることを、CPUが<b>ストール</b>(Stall)すると呼びます。メモリアクセス中のストールを実現するために、memunitモジュールには処理中かどうかを表す<code class="inline-code">stall</code>フラグが存在します。有効な命令が供給されているとき、<code class="inline-code">state</code>やメモリの状態に応じて、次のように<code class="inline-code">stall</code>の値を決定します(<span class="tableref"><a href="./04-impl-rv32i.html#stall.cond">表3.7</a></span>)。</p>
 <div id="stall.cond" class="table">
 <p class="caption">表3.7: stallの値の決定方法</p>
 <table>
@@ -1797,8 +1800,8 @@ module memunit (
 <p>命令フェッチ用のポートが<code class="inline-code">membus</code>から<code class="inline-code">i_membus</code>に変更されるため、既存の<code class="inline-code">membus</code>を<code class="inline-code">i_membus</code>に置き換えてください(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.lwsw-range.fetch">リスト3.55</a></span>)。</p>
 <div id="core.veryl.lwsw-range.fetch" class="caption-code">
 <span class="caption">リスト3.55: リスト3.55: membusをi_membusに置き換える (core.veryl)</span>
-<pre class="list language-fetch">    // FIFOに空きがあるとき、命令をフェッチする
-    <b>i_</b>membus.valid = if_fifo_wready;
+<pre class="list language-fetch">    // FIFOに2個以上空きがあるとき、命令をフェッチする
+    <b>i_</b>membus.valid = if_fifo.wready_two;
     <b>i_</b>membus.addr  = if_pc;
     <b>i_</b>membus.wen   = 0;
     <b>i_</b>membus.wdata = 'x; // wdataは使用しない

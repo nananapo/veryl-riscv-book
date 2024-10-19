@@ -16,7 +16,6 @@
                 <a class="nav-title" href="index.html">Verylで作るCPU</a>
 <ul class="toc toc-1">
     <li class="toc-chapter"><a href="./00-preface.html">まえがき / はじめに</a></li>
-    <li class="toc-chapter"><a href="./01-intro.html">Intro</a></li>
 <li class="toc-part">第I部 RV32I/RV64Iの実装
   <ul class="toc toc-2">
     <li class="toc-chapter"><a href="./02-setup.html">1 環境構築</a></li>
@@ -25,7 +24,7 @@
     <li class="toc-chapter"><a href="./04a-zicsr.html">4 Zicsr拡張の実装</a>
       <ul class="toc toc-3">
         <li class="toc-section"><a href="#h4-1">4.1 CSRとは何か?</a></li>
-        <li class="toc-section"><a href="#h4-2">4.2 CSRR(W|S|C)[I]命令のデコード</a></li>
+        <li class="toc-section"><a href="#h4-2">4.2 CSR命令のデコード</a></li>
         <li class="toc-section"><a href="#h4-3">4.3 csrunitモジュールの実装</a></li>
         <li class="toc-section"><a href="#h4-4">4.4 ECALL命令の実装</a></li>
         <li class="toc-section"><a href="#h4-5">4.5 MRET命令の実装</a></li>
@@ -64,7 +63,7 @@
 </table>
 </div>
 
-<h2 class="numbox"><a id="h4-2"></a><span class="secno">4.2</span> CSRR(W|S|C)[I]命令のデコード</h2>
+<h2 class="numbox"><a id="h4-2"></a><span class="secno">4.2</span> CSR命令のデコード</h2>
 <p>まず、Zicsrに定義されている命令(<span class="tableref"><a href="./04a-zicsr.html#zicsr.insts">表4.1</a></span>)をデコードします。</p>
 <p>これらの命令のopcodeは<code class="inline-code">SYSTEM</code>(<code class="inline-code">1110011</code>)です。この値をeeiパッケージに定義します(<span class="listref"><a href="./04a-zicsr.html#eei.veryl.create-csrunit-range.opcode">リスト4.1</a></span>)。</p>
 <div id="eei.veryl.create-csrunit-range.opcode" class="caption-code">
@@ -157,7 +156,7 @@ module csrunit (
 <tr class="hline"><td>ctrl</td><td>InstCtrl</td><td>input</td><td>命令のInstCtrl</td></tr>
 <tr class="hline"><td>csr_addr</td><td>logic&lt;12&gt;</td><td>input</td><td>命令が指定するCSRのアドレス (命令の上位12ビット)</td></tr>
 <tr class="hline"><td>rs1</td><td>UIntX</td><td>input</td><td>CSRR(W|S|C)のときrs1の値、<br />CSRR(W|S|C)Iのとき即値(5ビット)をゼロで拡張した値</td></tr>
-<tr class="hline"><td>rdata</td><td>UIntX</td><td>output</td><td>CSRR(W|S|C)[I]によるCSR読み込みの結果</td></tr>
+<tr class="hline"><td>rdata</td><td>UIntX</td><td>output</td><td>CSR命令よるCSR読み込みの結果</td></tr>
 </table>
 </div>
 <p>まだ、csrunitモジュールにはCSRが一つもありません。そのため、中身が空になっています。このままの状態で、とりあえず、csrunitモジュールをcoreモジュールの中でインスタンス化します(<span class="listref"><a href="./04a-zicsr.html#core.veryl.create-csrunit-range.csru">リスト4.5</a></span>)。</p>
@@ -221,7 +220,7 @@ module csrunit (
 </div>
 <p>mtvecレジスタは、仕様書<a href="bib.html#bib-isa-manual.2.3.1.7">[8]</a>に定義されています。mtvecは、MXLENビットのWARLなレジスタです。mtvecのアドレスは<code class="inline-code">12'h305</code>です。</p>
 <p>MXLENはmisaレジスタに定義されていますが、今のところはXLENと等しいという認識で問題ありません。WARLはWrite Any Values, Reads Legal Valuesの略です。その名の通り、好きな値を書き込めるが、読み出すときには合法な値になっているという認識で問題ありません。</p>
-<p>mtvecは、トラップ(Trap)が発生したときのジャンプ先(Trap-Vector)の基準となるアドレスを格納するレジスタです。<b>トラップ</b>とは、例外(Exception)、または割り込み(Interrupt)により、CPUの制御を変更することを言います<sup><a id="fnb-trap.define" href="#fn-trap.define" class="noteref" epub:type="noteref">*1</a></sup>。トラップが発生する時、CPUはCSRを変更した後、mtvecに格納されたアドレスにジャンプします。</p>
+<p>mtvecは、トラップ(Trap)が発生したときのジャンプ先(Trap-Vector)の基準となるアドレスを格納するレジスタです。<b>トラップ</b>とは、例外(Exception)、または割り込み(Interrupt)により、CPUの制御を変更することです<sup><a id="fnb-trap.define" href="#fn-trap.define" class="noteref" epub:type="noteref">*1</a></sup>。トラップが発生する時、CPUはCSRを変更した後、mtvecに格納されたアドレスにジャンプします。</p>
 <p><b>例外</b>とは、命令の実行によって引き起こされる異常な状態(unusual condition)のことです。例えば、不正な命令を実行しようとしたときにはIllegal Instruction例外が発生します。CPUは、例外が発生したときのジャンプ先(対処方法)を決めておくことで、CPUが異常な状態に陥ったままにならないようにしています。</p>
 <p>mtvecはBASEとMODEの2つのフィールドで構成されています。MODEはジャンプ先の決め方を指定するためのフィールドですが、簡単のために常に0(Directモード)になるようにします。Directモードのとき、トラップ時のジャンプ先は<code class="inline-code">BASE &lt;&lt; 2</code>になります。</p>
 <div class="footnote-list">

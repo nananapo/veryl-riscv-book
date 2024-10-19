@@ -28,7 +28,7 @@ CSRRC	CSRと~rs1(rs1のビットNOT)をビットANDした値をCSRに書き込�
 CSRRCI	CSRRCのrs1を、即値をゼロ拡張した値に置き換えた動作
 //}
 
-== CSRR(W|S|C)[I]命令のデコード
+== CSR命令のデコード
 
 まず、Zicsrに定義されている命令(@<table>{zicsr.insts})をデコードします。
 
@@ -148,7 +148,7 @@ valid		logic		input	命令が供給されているかどうか
 ctrl		InstCtrl	input	命令のInstCtrl
 csr_addr	logic<12>	input	命令が指定するCSRのアドレス (命令の上位12ビット)
 rs1			UIntX		input	CSRR(W|S|C)のときrs1の値、@<br>{}CSRR(W|S|C)Iのとき即値(5ビット)をゼロで拡張した値
-rdata		UIntX		output	CSRR(W|S|C)[I]によるCSR読み込みの結果
+rdata		UIntX		output	CSR命令よるCSR読み込みの結果
 //}
 
 まだ、csrunitモジュールにはCSRが一つもありません。
@@ -247,7 +247,7 @@ WARLはWrite Any Values, Reads Legal Valuesの略です。
 
 mtvecは、トラップ(Trap)が発生したときのジャンプ先(Trap-Vector)の基準となるアドレスを格納するレジスタです。
 @<b>{トラップ}とは、例外(Exception)、または割り込み(Interrupt)により、
-CPUの制御を変更することを言います@<fn>{trap.define}。
+CPUの制御を変更することです@<fn>{trap.define}。
 トラップが発生する時、CPUはCSRを変更した後、
 mtvecに格納されたアドレスにジャンプします。
 

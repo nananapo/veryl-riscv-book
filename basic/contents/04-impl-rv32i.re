@@ -46,12 +46,12 @@ CPUが読み込んで実行することができる形式のプログラムで�
 CPUはプログラムを実行しますが、
 一気にすべてのプログラムを読み込んだり実行するわけではなく、
 プログラムの最小単位である「命令」を一つずつ読み込んで実行します。
-命令をメモリに要求、取得することを、命令をフェッチするといいます。
+命令をメモリに要求、取得することを、命令をフェッチすると呼びます。
 
 命令がCPUに供給されると、
 CPUは命令のビット列がどのような意味を持っていて、
 何をすればいいかを判定します。
-このことを、命令をデコードするといいます。
+このことを、命令をデコードすると呼びます。
 
 命令をデコードすると、いよいよ計算やメモリアクセスを行います。
 しかし、例えば足し算を計算するにも、
@@ -64,7 +64,7 @@ CPUは命令のビット列がどのような意味を持っていて、
 計算対象のデータにレジスタと即値のどちらを使うかは命令によって異なります。
 レジスタの番号は命令のビット列の中に含まれています。
 
-計算を実行するユニット(部品)のことを、ALU(Arithmetic Logic Unit)といいます。
+計算を実行するユニット(部品)のことを、ALU(Arithmetic Logic Unit)と呼びます。
 
 計算やメモリアクセスが終わると、その結果をレジスタに格納します。
 例えば、足し算を行う命令なら足し算の結果、
@@ -862,7 +862,8 @@ module fifo #(
     var head: Ptr                   ;
     var tail: Ptr                   ;
 
-    let tail_plus1: Ptr = tail + 1;
+    let tail_plus1: Ptr = tail + 1 as Ptr;
+    let tail_plus2: Ptr = tail + 2 as Ptr;
 
     always_comb {
         rvalid = head != tail;
@@ -870,10 +871,13 @@ module fifo #(
     }
 
     if WIDTH == 1 :wready_block {
-        assign wready = head == tail && rready;
+        assign wready = head == tail || rready;
     } else {
         assign wready = tail_plus1 != head;
     }
+
+    // 2つ以上空きがあるかどうか
+    let wready_two: logic = wready && tail_plus2 != head;
 
     always_ff {
         if_reset {
@@ -987,8 +991,8 @@ fifoモジュールをインスタンス化したので、
 #@maprange(scripts/04/if-fifo-range/core/src/core.veryl,fetch)
     // 命令フェッチ処理
     always_comb {
-        // FIFOに空きがあるとき、命令をフェッチする
-        membus.valid = @<b>|if_fifo_wready|; @<balloon>{1をif_fifo_wreadyに変更}
+        // FIFOに2個以上空きがあるとき、命令をフェッチする
+        membus.valid = @<b>|if_fifo.wready_two;|
         membus.addr  = if_pc;
         membus.wen   = 0;
         membus.wdata = 'x; // wdataは使用しない
@@ -1001,7 +1005,7 @@ fifoモジュールをインスタンス化したので、
 
 @<list>{core.veryl.if-fifo-range.fetch}では、
 メモリに命令フェッチを要求する条件を、
-FIFOに空きがあるという条件に変更しています。
+FIFOに2つ以上空きがあるという条件に変更しています。
 これにより、FIFOがあふれてしまうことがなくなります。
 また、とりあえずFIFOから常にデータを取り出すようにしています。
 
@@ -1629,7 +1633,7 @@ funct3			演算
 3'b010			符号付き <=
 3'b011			符号なし <=
 3'b100			ビット単位XOR
-3'b101			右(論理|算術)シフト
+3'b101			右論理, 右算術シフト
 3'b110			ビット単位OR
 3'b111			ビット単位AND
 //}
@@ -1819,7 +1823,7 @@ $ @<userinput>{obj_dir/sim src/sample.hex 6}
 CPUは、レジスタから値を読み込み、これを計算して、
 レジスタに結果の値を書き戻します。
 レジスタに値を書き戻すことを、
-値を@<b>{ライトバック}すると言います。
+値を@<b>{ライトバック}すると呼びます。
 
 ライトバックする値は、計算やメモリアクセスの結果です。
 まだ、メモリにアクセスする処理を実装していませんが、
@@ -2098,7 +2102,7 @@ memunitモジュールは@<code>{Init}, @<code>{WaitReady}, @<code>{WaitValid}�
 実行には少なくとも3クロックが必要です。
 その間、CPUはレジスタのライトバック処理やFIFOからの命令の取り出しを待つ必要があります。
 
-CPUの実行が止まることを、CPUが@<b>{ストール}(Stall)すると言います。
+CPUの実行が止まることを、CPUが@<b>{ストール}(Stall)すると呼びます。
 メモリアクセス中のストールを実現するために、
 memunitモジュールには処理中かどうかを表す@<code>{stall}フラグが存在します。
 有効な命令が供給されているとき、@<code>{state}やメモリの状態に応じて、
@@ -2200,8 +2204,8 @@ module core (
 
 //list[core.veryl.lwsw-range.fetch][membusをi_membusに置き換える (core.veryl)]{
 #@maprange(scripts/04/lwsw-range/core/src/core.veryl,fetch)
-    // FIFOに空きがあるとき、命令をフェッチする
-    @<b>|i_|membus.valid = if_fifo_wready;
+    // FIFOに2個以上空きがあるとき、命令をフェッチする
+    @<b>|i_|membus.valid = if_fifo.wready_two;
     @<b>|i_|membus.addr  = if_pc;
     @<b>|i_|membus.wen   = 0;
     @<b>|i_|membus.wdata = 'x; // wdataは使用しない

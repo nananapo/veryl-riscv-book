@@ -1,15 +1,23 @@
 = あとがき / おわりに
 
 いかがだったでしょうか。
-質問はGitHubのissueにお願いします。
+本書が自作CPUの助けになれば幸いです。
+
+//blankline
 
 本書は「Verylで作るCPU 基本編」の第I部のみを発行したものです。
 本書のpdf, web版は無料で配布されており、
 @<href>{https://github.com/nananapo/veryl-riscv-book}でダウンロード, 閲覧することができます。
 
-続きが気になったり、誤植を見つけた場合は、GitHubをご確認ください。
+本書に関する質問やお問い合わせは、以下の GitHub のリポジトリに issue を⽴てて⾏ってくだ
+さい。
 
- * サポートページ : @<w>{support-page}
+ * https://github.com/nananapo/veryl-riscv-book
+
+サポートページも⽤意しています。
+
+ * @<w>{support-page}
+
 
 //blankline
 //blankline

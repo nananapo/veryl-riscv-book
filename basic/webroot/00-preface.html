@@ -6,7 +6,7 @@
     <title>まえがき / はじめに | Verylで作るCPU</title>
     <link rel="stylesheet" type="text/css" href="css/normalize.css" />
     <link rel="stylesheet" type="text/css" href="css/webstyle.css" />
-    <link rel="next" title="Intro" href="01-intro.html">
+    <link rel="next" title="環境構築" href="02-setup.html">
     <meta name="generator" content="Re:VIEW Starter">
   </head>
   <body>
@@ -16,10 +16,10 @@
 <ul class="toc toc-1">
     <li class="toc-chapter"><a href="./00-preface.html">まえがき / はじめに</a>
       <ul class="toc toc-2">
+        <li class="toc-section"><a href="#h">Intro</a></li>
         <li class="toc-section"><a href="#h">凡例</a></li>
       </ul>
     </li>
-    <li class="toc-chapter"><a href="./01-intro.html">Intro</a></li>
 <li class="toc-part">第I部 RV32I/RV64Iの実装
   <ul class="toc toc-2">
     <li class="toc-chapter"><a href="./02-setup.html">1 環境構築</a></li>
@@ -79,7 +79,60 @@
 <hr />
 <p></p>
 
-<h2 id="id_00-preface_nonum6" notoc="true">凡例</h2>
+<h2 id="id_00-preface_nonum6" notoc="true">Intro</h2>
+<p>こんにちは!あなたはCPUを作成したことがありますか?作成したことがあってもなくても大歓迎、この本はCPU自作の面白さとVerylを世に広めるために執筆されました。実装を始める前に、まずはRISC-Vや使用する言語、本書の構成について簡単に解説します。RISC-VやVerylのことを知っているという方は、本書の構成だけ読んでいただければOKです。それでは始めましょう。</p>
+
+<h4 id="id_00-preface_nonum7" notoc="true">CPUの自作</h4>
+<p>CPUって自作できるのでしょうか?そもそもCPUの自作って何でしょうか?CPUの自作について一般的な定義はありませんが、筆者は「命令セットアーキテクチャの設計」「論理設計」「物理的に製造する」に分類できると考えています。</p>
+<p><b>命令セットアーキテクチャ</b>(Instruction Set Architecture, <b>ISA</b>)とは、CPUがどのような命令を実行することができるかを定めたもの(仕様)です。ISAの設計は考えるだけなので、紙とペンさえあればできます。<b>論理設計</b>とは、簡単に言うと、論理回路を設計することです。CPUは論理回路で構成されているため、CPUの設計には論理設計が必要になります。最近のCPUは、物理的には<b>VLSI</b>(Very Large Scale Integration, 超大規模集積回路)によって実装されています。VLSIの製造には莫大なお金が必要です<sup><a id="fnb-vlsi" href="#fn-vlsi" class="noteref" epub:type="noteref">*1</a></sup>。</p>
+<div class="footnote-list">
+<div class="footnote" id="fn-vlsi" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>小さいチップなら安く(※安くない)製造することができます。efablessやTinyTapeout, OpenMPWで検索してください</p></div>
+</div><!--/.footnote-list-->
+<p>ISAの設計は簡単<sup><a id="fnb-not-easy" href="#fn-not-easy" class="noteref" epub:type="noteref">*2</a></sup>なので、CPUの自作を難しくしているのは、論理設計と物理的な製造です。論理設計については、最近では、論理設計に使う言語やシミュレータ,回路に落とし込むツールなどがオープンに公開されており、昔よりは自作のハードルが下がっています<sup><a id="fnb-not-know" href="#fn-not-know" class="noteref" epub:type="noteref">*3</a></sup>。物理的な製造のハードルは高いですが、FPGAを使うことで簡単にお試しすることができます。<b>FPGA</b>(Field Programmable Gate Array)とは、任意の論理回路を実現できる集積回路のことです<a href="bib.html#bib-amano.fpga">[1]</a>。最近は安価にFPGAを入手することができます。</p>
+<div class="footnote-list">
+<div class="footnote" id="fn-not-easy" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*2] </span>簡単ではない。論理設計より難しいかもしれない</p></div>
+<div class="footnote" id="fn-not-know" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*3] </span>筆者は最近にCPUの自作を始めたので最近のことしか知りません。嘘だったらごめん</p></div>
+</div><!--/.footnote-list-->
+<p>本書は、ISAの設計は行わず、論理設計は無料でオープンなツールを利用し、安価(数千 ～ 数万円)なFPGAを利用してCPUを実装します。</p>
+<p>CPUのテストはシミュレータとFPGAで行います。本書では、TangMega 138KとPYNQ-Z1というFPGAを利用します。ただし、実機がなくても実装を進めることができるので所有していなくても構いません。</p>
+
+<h4 id="id_00-preface_nonum8" notoc="true">RISC-V</h4>
+<p><b>RISC-V</b>は、カリフォルニア大学バークレー校で開発されたISAです。仕様書の初版は2011年に公開されました。ISAとしての歴史はまだ浅いですが、RISC-Vは仕様がオープンでカスタマイズ可能であるという特徴もあって、研究で利用されたり既に何種類もCPUが市販されているなど、着実に広まっていっています。</p>
+<p>インターネット上には多くのRISC-Vの実装が公開されています。例として、rocket-chip(Chiselによる実装),Shakti(Bluespec SVによる実装),rsd(SystemVerilogによる実装)が挙げられます。</p>
+<p>本書では、RISC-VのバージョンRISC-V ISA Manual, version 20240411 を利用します。RISC-Vの最新の仕様は、GitHubの<a href="https://github.com/riscv/riscv-isa-manual/" class="link">riscv/riscv-isa-manual</a>で確認することができます。</p>
+<p>RISC-Vには、基本整数命令セットとしてRV32I, RV64I, RV32E, RV64E<sup><a id="fnb-rv128i" href="#fn-rv128i" class="noteref" epub:type="noteref">*4</a></sup>が定義されています。RVの後ろにつく数字はレジスタの長さ(XLEN)が何ビットかです。数字の後ろにつく文字がIの場合、XLENビットのレジスタが32個存在します。Eの場合はレジスタの数が16個になります。</p>
+<div class="footnote-list">
+<div class="footnote" id="fn-rv128i" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*4] </span>RV128Iもありますが、まだDraft段階です</p></div>
+</div><!--/.footnote-list-->
+<p>基本整数命令セットには最低限の命令しか定義されていません。それ以外のかけ算や割り算, 不可分操作, CSRなどの追加の命令や機能は拡張として定義されています。CPUが何を実装しているかを示す表現にISA Stringというものがあり、例えばかけ算と割り算, 不可分操作ができるRV32IのCPUは<code class="inline-code">RV32IMA</code>と表現されます。</p>
+<p>本書では、まず、<code class="inline-code">RV32I</code>のCPUを作成します。これを、OSを実行できる程度までに進化させることを目標に実装を進めます。</p>
+
+<h4 id="id_00-preface_nonum9" notoc="true">使用する言語</h4>
+<p>CPUの論理設計にはハードウェア記述言語を使用します。ハードウェア記述言語とは、文字通り、ハードウェアを記述するための言語です。ハードウェアとは論理回路のことで、ハードウェア記述言語を使うと論理回路を記述, 生成することができます。これ以降、ハードウェア記述言語のことをHDL (Hardware Description Language) と書くことがあります。</p>
+<p>有名なHDLとしてはVerilog HDL, SystemVerilog, VHDLが挙げられますが、本書では、CPUの実装にVerylというHDLを使用します。VerylはSystemVerilogの構文を書きやすくしたような言語で、VerylのプログラムはSystemVerilogに変換することができます。そのため、SystemVerilogを利用できる環境でVerylを使用することができます。</p>
+<p>Verylの構文や機能はSystemVerilogと似通っており、SystemVerilogが分かる人は殆ど時間をかけずにVerylを書けるようになると思います。本書はSystemVerilogを知らない人を対象にしているため、SystemVerilogを知っている必要はありません。HDLやVerylの記法は<a href="./03-veryl.html">第2章「ハードウェア記述言語 Veryl」</a>で解説します。</p>
+<p>他には、回路のシミュレーションやテストのためにC++, Pythonを利用します。プログラムがどのような意味や機能を持つかについては解説しますが、言語の仕様や書き方、ライブラリなどについては説明しません。</p>
+
+<h4 id="id_00-preface_nonum10" notoc="true">本書の構成</h4>
+<p>本シリーズ(基本編)では、次のようにCPUを実装していきます。</p>
+<ol start="1" type="1">
+<li>RV32IのCPUを実装する (<a href="./04-impl-rv32i.html">第3章</a>)</li>
+<li>Zicsr拡張を実装する (<a href="./04a-zicsr.html">第4章</a>)</li>
+<li>CPUをテストする (<a href="./04b-riscvtests.html">第5章</a>)</li>
+<li>RV64Iを実装する (<a href="./05-impl-rv64i.html">第6章</a>)</li>
+<li>パイプライン処理化する (<a href="./05a-pipeline.html">第7章</a>)</li>
+<li>実機でテストする (<a href="./05b-synth.html">第8章</a>)</li>
+<li>M, A, C拡張を実装する</li>
+<li>UARTと割り込みを実装する</li>
+<li>OSを実行するために必要なCSRを実装する</li>
+<li>OSを実行する</li>
+</ol>
+<p>本書(基本編の第I部)では、上の1から4までを実装, 解説します。</p>
+<p></p>
+<hr />
+<p></p>
+
+<h2 id="id_00-preface_nonum11" notoc="true">凡例</h2>
 <p>本書では、プログラムコードを次のように表示します。太字は強調を表します。</p>
 <div class="caption-code">
 <pre class="emlist">print(&quot;Hello, <b>world</b>!\n&quot;);       <span class="balloon">← 太字は強調</span>
@@ -118,7 +171,7 @@
 
         </main>
         <nav class="page-navi">
-          <a href="01-intro.html" class="page-next">&#9654;</a>
+          <a href="02-setup.html" class="page-next">&#9654;</a>
         </nav>
         <footer>
         </footer>

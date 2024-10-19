@@ -6,19 +6,20 @@
 プログラムの実行が遅くてはいけません。
 機能を増やす前に、一度性能のことを考えてみましょう。
 
-== CPUの性能を考える
+== CPUの速度
 
 CPUの性能指標は、
 例えば消費電力や実行速度が考えられます。
 本章では、プログラムの実行速度について考えます。
 
-=== CPUの性能指標
+=== CPUの性能を考える
 
-プログラムの実行速度を比較する時、
+性能の比較にはクロック周波数やコア数などが用いられますが、
+プログラムの実行速度を比較する場合、
 プログラムの実行にかかる時間のみが絶対的な指標になります。
-プログラムの実行時間は、簡単に、次のような式@<bib>{patahene}で表すことができます。
+プログラムの実行時間は、簡単に、次のような式で表すことができます(@<eq>{cpu-seino-houteisiki})。
 
-//texequation[][]{
+//texequation[cpu-seino-houteisiki][CPU性能方程式@<bib>{patahene}]{
 CPU時間 = \frac{実行命令数 \times CPI}{クロック周波数}
 //}
 
@@ -30,19 +31,19 @@ CPU時間 = \frac{実行命令数 \times CPI}{クロック周波数}
  : 実行命令数
     プログラムの実行で実行される命令数
 
- : CPI (clock cycles per instruction)
-    プログラム全体またはプログラムの一部分の命令を実行した時の,
-    1命令当たりの平均クロック・サイクル数
+ : CPI (Clock cycles Per Instruction)
+    プログラム全体またはプログラムの一部分の命令を実行した時の1命令当たりの平均クロック・サイクル数
 
  : クロック周波数 (clock rate)
     クロック・サイクル時間(clock cycle time)の逆数
 
-今のところ、CPUには命令をスキップしたり無駄に実行することはありません。
-そのため、実行命令数はプログラムを1命令ずつ順に実行していった時の実行命令数になります。
+今のところ、CPUは命令をスキップしたり無駄に実行することはありません。
+そのため、実行命令数は、プログラムを1命令ずつ順に実行していった時の実行命令数になります。
 
 CPIを計測するためには、
 何の命令にどれだけのクロック・サイクル数がかかるかと、
 それぞれの命令の割合が必要です。
+今のところ、
 メモリにアクセスする命令は3 ～ 4クロック、
 それ以外の命令は1クロックで実行されます。
 命令の割合については考えないでおきます。
@@ -69,8 +70,14 @@ CPIを減らすか、
 
 ==== CPIに注目する
 
-CPIを減らすためには、
-1クロックで1つ以上の命令を実行開始し、1つ以上の命令を実行完了すればいいです。
+CPIを減らすために1クロックの計算量を増やすと、
+その分クリティカルパスが長くなってしまう場合があります。
+また、1クロックに1命令しか実行しない場合、
+どう頑張ってもCPIは1より小さくなりません。
+
+CPIをより効果的に減らすためには、
+1クロックで1つ以上の命令を実行開始し、
+1つ以上の命令を実行完了すればいいです。
 これを実現する手法として、
 スーパースカラやアウトオブオーダー実行が存在します。
 これらの手法は後の章で解説, 実装します。
@@ -96,7 +103,7 @@ ALUで足し算を実行し、
 命令の処理をいくつかの@<b>{ステージ(段)}に分割し、
 複数クロックで1つの命令を実行することです。
 複数のサイクルで命令を実行することから、
-この形式のCPUは@<b>{マルチサイクル}CPUといいます。
+この形式のCPUは@<b>{マルチサイクル}CPUと呼びます。
 
 //image[multicycle][命令の実行 (マルチサイクル)]
 
@@ -117,7 +124,8 @@ CPU時間が増えてしまいそうです。
 
 しかし、CPIがステージ分だけ増大してしまうのは問題です。
 これは、命令の処理を車の組立のように流れ作業で行うことで緩和することができます。
-このような処理のことを、@<b>{パイプライン処理}と言います。
+このような処理のことを、@<b>{パイプライン処理}と呼びます
+(@<img>{pipeline})。
 
 //image[pipeline][命令の実行 (パイプライン処理)]
 
@@ -127,7 +135,7 @@ CPUをパイプライン処理化することで、
 
 === パイプライン処理のステージについて考える
 
-では、具体的に処理をどのようなステージに分割し、パイプライン処理を実現すればいいでしょうか?
+具体的に処理をどのようなステージに分割し、パイプライン処理を実現すればいいでしょうか?
 これを考えるために、@<chap>{04-impl-rv32i}の最初で検討したCPUの動作を振り返ります。
 @<chap>{04-impl-rv32i}では、CPUの動作を次のように順序付けしました。
 
@@ -137,7 +145,7 @@ CPUをパイプライン処理化することで、
  4. 計算する命令の場合、計算を行う
  5. メモリにアクセスする命令の場合、メモリ操作を行う
  6. 計算やメモリアクセスの結果をレジスタに格納する
- 7. PCの値を次に実行する命令に設定する
+ 7. PCの値を次に実行する命令に設定する  
 
 もう少し大きな処理単位に分割しなおすと、
 次の5つの処理(ステージ)を構成することができます。
@@ -145,7 +153,7 @@ CPUをパイプライン処理化することで、
 
  : IF (Instruction Fetch) ステージ (1)
     メモリから命令をフェッチします。@<br>{}
-    フェッチした命令をIDステージに受け渡します
+    フェッチした命令をIDステージに受け渡します。
 
  : ID (Instruction Decode) ステージ (2,3)
     命令をデコードし、制御フラグと即値を生成します。@<br>{}
@@ -164,8 +172,14 @@ CPUをパイプライン処理化することで、
  : WB (WriteBack) ステージ (6)
     ALUの演算結果, メモリやCSRの読み込み結果など、命令の処理結果をレジスタに書き込みます。
 
+MEMステージではジャンプするときにIF, ID, EXステージにある命令をフラッシュ(無効化)します。
+これは、IF, ID, EXステージにある命令は、
+ジャンプによって実行されない命令になるためです。
+
 IF, ID, EX, MEM, WBの5段の構成を、
-5段パイプラインと呼ぶことがあります。
+@<b>{5段パイプライン}(Five Stage Pipeline)と呼ぶことがあります。
+
+#@# https://docs.amd.com/r/en-US/ug984-vivado-microblaze-ref/Five-Stage-Pipeline
 
 //note[CSRをMEMステージで処理する]{
 上記の5段のパイプライン処理では、CSRの処理をMEMステージで行っています。
@@ -193,29 +207,29 @@ MEMステージ以降でCSRを処理することでもこの事態を回避で�
 それでは、CPUをパイプライン処理化します。
 
 パイプライン処理では、
-複数のステージが、それぞれ違う命令を処理します。
+複数のステージがそれぞれ違う命令を処理します。
 そのため、それぞれのステージのために、
 現在処理している命令を保持するためのレジスタ(@<b>{パイプラインレジスタ})を用意してあげる必要があります。
 
 //image[pipeline_reg][パイプライン処理の概略図]
 
 まず、処理を複数ステージに分割する前に、
-既存のレジスタの名前を変更します。
+既存の変数の名前を変更します。
 
 現状のcoreモジュールでは、
 命令をフェッチする処理に使う変数の名前の先頭に@<code>{if_}、
 FIFOから取り出した命令の情報を表す変数の名前の先頭に@<code>{inst_}をつけています。
 
-命令をフェッチする処理はIFステージに該当します。
-名前はこのままで問題ありません。
+命令をフェッチする処理はIFステージに該当するため、
+@<code>{if_}から始まる変数はこのままで問題ありません。
 しかし、@<code>{inst_}から始まる変数は、
 CPUの処理を複数ステージに分けたとき、
-どのステージのレジスタか分からなくなります。
+どのステージの変数か分からなくなります。
 IFステージの次はIDステージであるため、
 とりあえず、
-変数がIDステージのものであることを示す名前に変えてしまいましょう。
+変数がIDステージのものであることを示す名前に変えてしまいます。
 
-//list[ready.id_prefix][変数名を変更する (core.veryl)]{
+//list[core.veryl.ifs-range.ifs][変数名を変更する (core.veryl)]{
 #@maprange(scripts/05a/ifs-range/core/src/core.veryl,ifs)
     let ids_valid    : logic    = if_fifo_rvalid;
     var ids_is_new   : logic   ; // 命令が今のクロックで供給されたかどうか
@@ -227,7 +241,7 @@ IFステージの次はIDステージであるため、
 //}
 
 @<code>{inst_valid}, @<code>{inst_is_new}, @<code>{inst_pc}, 
-@<code>{inst_bits}, @<code>{inst_ctrl}, @<code>{inst_imm}の名前を@<list>{ready.id_prefix}のように変更します。
+@<code>{inst_bits}, @<code>{inst_ctrl}, @<code>{inst_imm}の名前を@<list>{core.veryl.ifs-range.ifs}のように変更します。
 定義だけではなく、変数を使用しているところもすべて変更してください。
 
 === FIFOを作成する
@@ -237,7 +251,6 @@ IFステージの次はIDステージであるため、
 
 IFステージとIDステージはFIFOで区切られており、
 FIFOのレジスタを経由して命令の受け渡しを行います。
-
 これと同様に、
 5ステージのパイプライン処理の実装では、
 それぞれのステージをFIFOで接続します(@<img>{pipeline_fifo})。
@@ -270,7 +283,7 @@ IDからEX, EXからMEM, MEMからWBへのFIFOを作成します。
 IDステージは、IFステージから命令のアドレスと命令のビット列を受け取ります。
 命令のビット列をデコードして、制御フラグと即値を生成し、EXステージに渡します。
 
-//list[fifo.type.mem][EX -> NENの間のFIFOのデータ型 (core.veryl)]{
+//list[fifo.type.mem][EX -> MEMの間のFIFOのデータ型 (core.veryl)]{
 #@maprange(scripts/05a/create-fifo-range/core/src/core.veryl,memtype)
     struct memq_type {
         addr      : Addr       ,
@@ -282,7 +295,7 @@ IDステージは、IFステージから命令のアドレスと命令のビッ�
         rs1_data  : UIntX      ,
         rs2_data  : UIntX      ,
         br_taken  : logic      ,
-        jump_addr : logic      ,
+        jump_addr : Addr       ,
     }
 #@end
 //}
@@ -407,7 +420,8 @@ IDステージでは、命令をデコードします。
 
 デコード結果はEXステージに渡す必要があります。
 EXステージにデータを渡すには、
-@<code>{exq_wdata}にデータを割り当てます。
+@<code>{exq_wdata}にデータを割り当てます
+(@<list>{always_comb_id})。
 
 //list[always_comb_id][EXステージに値を渡す (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,always_comb_id)
@@ -429,7 +443,8 @@ IDステージを完了してEXステージに処理を進めることができ�
 このロジックは、
 @<code>{if_fifo_rready}に@<code>{exq_wready}を割り当てることで実現できます。
 
-最後に、命令が今のクロックで供給されたかどうかを示す変数@<code>{id_is_new}は必要ないため削除します。
+最後に、命令が今のクロックで供給されたかどうかを示す変数@<code>{id_is_new}は必要ないため削除します
+(@<list>{id_is_new})。
 
 //list[id_is_new][id_is_newを削除する (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,id_is_new)
@@ -443,7 +458,7 @@ EXステージでは、
 整数演算命令の時はALUで計算し、
 分岐命令の時は分岐判定を行います。
 
-まず、EXステージに存在する命令の情報を@<code>{exq_rdata}から取り出します。
+まず、EXステージに存在する命令の情報を@<code>{exq_rdata}から取り出します(@<list>{var_ex})。
 
 //list[var_ex][変数の定義 (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,var_ex)
@@ -456,7 +471,8 @@ EXステージでは、
 //}
 
 次に、EXステージで扱う変数の名前を変更します。
-変数の名前に@<code>{exs_}をつけます。
+変数の名前に@<code>{exs_}をつけます
+(@<list>{ex_prefix})。
 
 //list[ex_prefix][変数名の変更対応 (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,ex_prefix)
@@ -521,15 +537,16 @@ EXステージでは、
 //}
 
 最後に、MEMステージに命令とデータを渡します。
-MEMステージにデータを渡すには、
-@<code>{memq_wdata}にデータを割り当てます。
+MEMステージにデータを渡すために、
+@<code>{memq_wdata}にデータを割り当てます
+(@<list>{always_comb_ex})。
 
 //list[always_comb_ex][MEMステージにデータを渡す (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,always_comb_ex)
     always_comb {
         // EX -> MEM
         exq_rready            = memq_wready;
-        memq_wvalid           = exq_wvalid;
+        memq_wvalid           = exq_rvalid;
         memq_wdata.addr       = exq_rdata.addr;
         memq_wdata.bits       = exq_rdata.bits;
         memq_wdata.ctrl       = exq_rdata.ctrl;
@@ -554,7 +571,7 @@ MEMステージにデータを渡すには、
 という条件を割り当てます。
 @<code>{jump_addr}には、
 分岐命令、またはジャンプ命令のジャンプ先を割り当てます。
-これを利用することで、MEMステージでジャンプと分岐を処理します。
+MEMステージではこれを利用してジャンプと分岐を処理します。
 
 EXステージにある命令は、
 MEMステージが命令を受け付けることができるとき(@<code>{memq_wready})、
@@ -566,9 +583,15 @@ EXステージを完了してMEMステージに処理を進めることができ
 
 MEMステージでは、メモリにアクセスする命令とCSR命令を処理します。
 また、ジャンプ命令, 分岐命令かつ分岐が成立, またはトラップが発生する時、
-次の命令のアドレスを変更します。
+次に実行する命令のアドレスを変更します。
 
-まず、MEMステージに存在する命令の情報を@<code>{memq_rdata}から取り出します。
+MEMステージではメモリにアクセスする命令を処理します。
+メモリにアクセスしているとき、
+新しくEXステージからMEMステージに命令の処理を進めることはできず、
+パイプライン処理は止まってしまいます。
+パイプライン処理を進めることができない状態のことを@<b>{パイプラインハザード}(pipeline hazard)と呼びます。
+
+まず、MEMステージに存在する命令の情報を@<code>{memq_rdata}から取り出します(@<list>{var_mem})。
 MEMステージでは、csrunitモジュールに、
 命令が今のクロックでMEMステージに供給されたかどうかの情報を渡す必要があります。
 そのため、変数@<code>{mem_is_new}を定義しています。
@@ -585,7 +608,7 @@ MEMステージでは、csrunitモジュールに、
 //}
 
 @<code>{mem_is_new}には、
-もともと@<code>{id_is_new}の更新に利用していたロジックを利用します。
+もともと@<code>{id_is_new}の更新に利用していたロジックを利用します(@<list>{mem_is_new})。
 
 //list[mem_is_new][mem_is_newの更新 (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,mem_is_new)
@@ -604,7 +627,7 @@ MEMステージでは、csrunitモジュールに、
 //}
 
 次に、MEMモジュールで使う変数に合わせて、
-ポートなどに割り当てている変数名を変更します。
+ポートなどに割り当てている変数名を変更します(@<list>{mem_prefix2})。
 
 //list[mem_prefix2][変数名の変更対応 (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,mem_prefix2)
@@ -634,7 +657,7 @@ MEMステージでは、csrunitモジュールに、
         valid   : @<b>|mems|_valid           ,
         pc      : @<b>|mems|_pc              ,
         ctrl    : @<b>|mems|_ctrl            ,
-        rdaddr  : @<b>|mems|_rd_addr         ,
+        rd_addr : @<b>|mems|_rd_addr         ,
         csr_addr: @<b>|mems|_inst_bits[31:20],
         rs1     : if @<b>|mems|_ctrl.funct3[2] == 1 && @<b>|mems|_ctrl.funct3[1:0] != 0 {
             {1'b0 repeat XLEN - $bits(@<b>|memq_rdata.|rs1_addr), @<b>|memq_rdata.|rs1_addr} // rs1を0で拡張する
@@ -649,8 +672,9 @@ MEMステージでは、csrunitモジュールに、
 //}
 
 フェッチ先が変わったことを表す変数@<code>{control_hazard}と、
-新しいフェッチ先を示す信号@<code>{control_hazard_pc_next}には、
-EXステージで計算したデータとCSRステージのトラップ情報を利用するようにします。
+新しいフェッチ先を示す信号@<code>{control_hazard_pc_next}では、
+EXステージで計算したデータとCSRステージのトラップ情報を利用するようにします
+(@<list>{mem_prefix1})。
 
 //list[mem_prefix1][ジャンプ判定処理 (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,mem_prefix1)
@@ -667,14 +691,11 @@ EXステージで計算したデータとCSRステージのトラップ情報を
 ID, EX, MEMステージに命令を供給するFIFOをフラッシュします。
 @<code>{control_hazard}が@<code>{1}になるとき、
 MEMステージの処理は完了しています。
-後述しますが、WBステージの処理は必ず
+後述しますが、WBステージの処理は必ず1クロックで終了します。
+そのため、フラッシュするとき、
+MEMステージにある命令は必ずWBステージに移動します。
 
-
-MEMステージにある命令は、
-memunitが処理中ではなく(@<code>{!memy_stall})、
-WBステージが命令を受け付けることができるとき(@<code>{wbq_wready})、
-MEMステージを完了してWBステージに処理を進めることができます。
-このロジックについては、@<code>{memq_rready}と@<code>{wbq_wvalid}を確認してください。
+最後に、WBステージに命令とデータを渡します(@<list>{always_comb_mem})。
 
 //list[always_comb_mem][WBステージにデータを渡す (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,always_comb_mem)
@@ -693,12 +714,19 @@ MEMステージを完了してWBステージに処理を進めることができ
 #@end
 //}
 
+MEMステージにある命令は、
+memunitが処理中ではなく(@<code>{!memy_stall})、
+WBステージが命令を受け付けることができるとき(@<code>{wbq_wready})、
+MEMステージを完了してWBステージに処理を進めることができます。
+このロジックについては、@<code>{memq_rready}と@<code>{wbq_wvalid}を確認してください。
+
 === WBステージを実装する
 
 WBステージでは、命令の結果をレジスタに書き込みます。
 WBステージが完了したら命令の処理は終わりなので、命令を破棄します。
 
-まず、MEMステージに存在する命令の情報を@<code>{wbq_rdata}から取り出します。
+まず、MEMステージに存在する命令の情報を@<code>{wbq_rdata}から取り出します
+(@<list>{var_wb})。
 
 //list[var_wb][変数の定義 (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,var_wb)
@@ -711,7 +739,8 @@ WBステージが完了したら命令の処理は終わりなので、命令を
 //}
 
 次に、WBステージで扱う変数の名前を変更します。
-変数の名前には@<code>{wbs_}をつけます。
+変数の名前には@<code>{wbs_}をつけます
+(@<list>{wb_prefix})。
 
 //list[wb_prefix][変数名の変更対応 (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,wb_prefix)
@@ -738,9 +767,9 @@ WBステージが完了したら命令の処理は終わりなので、命令を
 
 最後に、命令をFIFOから取り出します。
 WBステージでは命令を複数クロックで処理することはなく、
-WBステージの次のステージを待つ必要もないため、
+WBステージの次のステージを待つ必要もありません。
 @<code>{wbq_rready}に@<code>{1}を割り当てることで、
-常にFIFOから命令を取り出します。
+常にFIFOから命令を取り出します(@<list>{always_comb_wb})。
 
 //list[always_comb_wb][命令をFIFOから取り出す (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,always_comb_wb)
@@ -751,8 +780,7 @@ WBステージの次のステージを待つ必要もないため、
 #@end
 //}
 
-IF, ID, EX, MEM, WBステージを作成できたので、
-5段パイプラインのCPUは完成です。
+これで、IF, ID, EX, MEM, WBステージを作成できました。
 
 === デバッグ用に情報を表示する
 
@@ -773,17 +801,21 @@ IF, ID, EX, MEM, WBステージを作成できたので、
         } else {
             clock_count = clock_count + 1;
 
-            $display("\n");
+            $display("");
             $display("# %d", clock_count);
 
+            $display("IF ------");
+            $display("     pc : %h", if_pc);
+            $display(" is req : %b", if_is_requested);
+            $display(" pc req : %h", if_pc_requested);
             $display("ID ------");
             if ids_valid {
-                $display("  %h : %h", if_fifo_rdata.addr, if_fifo_rdata.bits);
+                $display("  %h : %h", ids_pc, if_fifo_rdata.bits);
                 $display("  itype : %b", ids_ctrl.itype);
                 $display("  imm   : %h", ids_imm);
             }
             $display("EX -----");
-            if exq_rvalid {
+            if exs_valid {
                 $display("  %h : %h", exq_rdata.addr, exq_rdata.bits);
                 $display("  op1     : %h", exs_op1);
                 $display("  op2     : %h", exs_op2);
@@ -793,7 +825,7 @@ IF, ID, EX, MEM, WBステージを作成できたので、
                 }
             }
             $display("MEM -----");
-            if memq_rvalid {
+            if mems_valid {
                 $display("  %h : %h", memq_rdata.addr, memq_rdata.bits);
                 $display("  mem stall : %b", memu_stall);
                 $display("  mem rdata : %h", memu_rdata);
@@ -802,9 +834,12 @@ IF, ID, EX, MEM, WBステージを作成できたので、
                     $display("  csr trap  : %b", csru_raise_trap);
                     $display("  csr vec   : %h", csru_trap_vector);
                 }
+                if memq_rdata.br_taken {
+                    $display("  JUMP TO   : %h", memq_rdata.jump_addr);
+                }
             }
             $display("WB ----");
-            if memq_rvalid {
+            if wbs_valid {
                 $display("  %h : %h", wbq_rdata.addr, wbq_rdata.bits);
                 if wbs_ctrl.rwb_en {
                     $display("  reg[%d] <= %h", wbs_rd_addr, wbs_wb_data);
@@ -815,12 +850,17 @@ IF, ID, EX, MEM, WBステージを作成できたので、
 #@end
 //}
 
-=== パイプライン処理のテスト
+=== パイプライン処理をテストする
 
 それでは、riscv-testsを実行してみましょう。
-RV32I, RV64I向けのテストを実行します。
+RV64IのADDのテストを実行します。
 
-//terminal[pipeline.test][riscv-testsの実行]{
+//terminal[pipeline.test][パイプライン処理のテスト]{
+$ @<userinput>{make build}
+$ @<userinput>{make sim}
+$ @<userinput>{python3 test/test.py -r obj_dir/sim test/share rv64ui-p-add.bin.hex}
+FAIL : ~/core/test/share/riscv-tests/isa/rv64ui-p-add.bin.hex
+Test Result : 0 / 1
 //}
 
 おや?テストにパスしません。
@@ -828,34 +868,195 @@ RV32I, RV64I向けのテストを実行します。
 
 == データハザードの対処
 
-実は、
-ただIF, ID, EX, MEM, WBステージに処理を分割するだけでは、
+=== 正しく動かないプログラムを確認する
+
+実は、ただIF, ID, EX, MEM, WBステージに処理を分割するだけでは、
 正しく命令を実行することができません。
-
-=== 正しく動かないプログラム
-
 例えば、@<list>{dh.example}のようなプログラムは正しく動きません。
-@<code>{test/dh.hex}として、プログラムを記述します。
+@<code>{test/sample_datahazard.hex}として保存します
+(@<list>{dh.example}, @<list>{dh.test})。
 
-//list[dh.example][正しく動かないプログラムの例 (test/dh.hex)]{
+//list[dh.example][正しく動かないプログラムの例 (test/sample_datahazard.hex)]{
+#@mapfile(scripts/05a/datahazard/core/test/sample_datahazard.hex)
+0010811300100093 // 0:addi x1, x0, 1    4: addi x2, x1, 1
+#@end
 //}
 
-=== データ依存
+このプログラムでは、
+x1にx0 + 1を代入した後、x2にx1 + 1を代入します。
+シミュレータを実行し、どのように実行されるかを確かめます。
 
-=== データ依存の対処
+//terminal[dh.test][sample_datahazard.hexを実行する]{
+$ @<userinput>{make build}
+$ @<userinput>{make sim}
+$ @<userinput>{./obj_dir/sim test/sample_datahazard.hex 7}
+...
+
+#                    5
+ID ------
+  0000000000000004 : 00108113
+  itype : 000010
+  imm   : 0000000000000001
+EX -----
+  0000000000000000 : 00100093
+  op1     : 0000000000000000 @<balloon>{x0}
+  op2     : 0000000000000001 @<balloon>{即値}
+  alu     : 0000000000000001 @<balloon>{ゼロレジスタ + 1 = 1}
+
+#                    6
+ID ------
+  0000000000000008 : 00000000
+  itype : 000000
+  imm   : 0000000000000000
+EX -----
+  0000000000000004 : 00108113
+  op1     : 0000000000000000 @<balloon>{x1}
+  op2     : 0000000000000001 @<balloon>{即値}
+  alu     : 0000000000000001 @<balloon>{x1 + 1 = 2のはずだが1になっている}
+MEM -----
+  0000000000000000 : 00100093
+  ...
+//}
+
+ログを確認すると、
+アドレス0の命令でx1が1になっているはずですが、
+アドレス4の命令でx1を読み込むときにx1は0になっています。
+
+この問題は、
+アドレス0の命令の結果がレジスタファイルに書き込まれていないのに、
+アドレス4の命令でレジスタファイルで結果を読み出しているために発生しています。
+
+=== データ依存とは何か？
+
+//image[datahazard][データ依存関係のあるプログラム][width=40%]
+
+ある命令Aの実行結果の値を利用する命令Bが存在するとき、
+命令Aと命令Bの間には@<b>{データ依存}(data dependence)があると呼びます。
+データ依存に対処するためには、
+命令Aの結果がレジスタに書き込まれるのを待つ必要があります。
+データ依存があることにより発生するパイプラインハザードのことを
+@<b>{データハザード}(data hazard)と呼びます。
+
+=== データ依存に対処する
+
+データ依存に対処するために、
+データ依存関係があるときにEXステージをストールさせます。
+
+まず、MEMとEXかWBとEXステージにある命令の間にデータ依存があることを検知します
+(@<list>{core.veryl.datahazard-range.hazard})。
+例えばMEMステージとデータ依存の関係にあるとき、
+MEMステージの命令はライトバックする命令で、
+rdがEXステージのrs1, またはrs2と一致しています。
+
+//list[core.veryl.datahazard-range.hazard][データ依存の検知 (core.veryl)]{
+#@maprange(scripts/05a/datahazard-range/core/src/core.veryl,hazard)
+    // データハザード
+    let exs_mem_data_hazard: logic = mems_valid && mems_ctrl.rwb_en && (mems_rd_addr == exs_rs1_addr || mems_rd_addr == exs_rs2_addr);
+    let exs_wb_data_hazard : logic = wbs_valid && wbs_ctrl.rwb_en && (wbs_rd_addr == exs_rs1_addr || wbs_rd_addr == exs_rs2_addr);
+    let exs_data_hazard    : logic = exs_mem_data_hazard || exs_wb_data_hazard;
+#@end
+//}
+
+次に、データ依存があるときに、データハザードを発生させます
+(@<list>{core.veryl.datahazard-range.ready})。
+データハザードを起こすためには、
+EXステージのFIFOの@<code>{rready}とMEMステージの@<code>{wvalid}に、
+データハザードが発生していないという条件を加えます。
+
+//list[core.veryl.datahazard-range.ready][データ依存があるときにデータハザードを起こす (core.veryl)]{
+#@maprange(scripts/05a/datahazard-range/core/src/core.veryl,ready)
+    always_comb {
+        // EX -> MEM
+        exq_rready            = memq_wready@<b>| && !exs_data_hazard|;
+        memq_wvalid           = exq_rvalid@<b>| && !exs_data_hazard|;
+#@end
+//}
+
+最後に、データハザードが発生しているかどうかをデバッグ表示するようにします
+(@<list>{core.veryl.datahazard-range.debug})。
+
+//list[core.veryl.datahazard-range.debug][データハザードが発生しているかをデバッグ表示する (core.veryl)]{
+#@maprange(scripts/05a/datahazard-range/core/src/core.veryl,debug)
+    $display("EX -----");
+    if exs_valid {
+        $display("  %h : %h", exq_rdata.addr, exq_rdata.bits);
+        $display("  op1     : %h", exs_op1);
+        $display("  op2     : %h", exs_op2);
+        $display("  alu     : %h", exs_alu_result);
+        @<b>|$display("  dhazard : %b", exs_data_hazard);|
+#@end
+//}
 
 === パイプライン処理をテストする
 
-それでは、@<code>{test/dh.hex}を実行して、
-正しく動くことを確認します。
+@<code>{test/sample_datahazard.hex}が正しく動くことを確認します。
 
 //terminal[dh.test.successful][test/dh.hexが正しく動くことを確認する]{
+#                    5
+...
+ID ------
+  0000000000000004 : 00108113
+  itype : 000010
+  imm   : 0000000000000001
+EX -----
+  0000000000000000 : 00100093
+  op1     : 0000000000000000
+  op2     : 0000000000000001
+  alu     : 0000000000000001
+  dhazard : 0
+...
+
+#                    6
+...
+EX -----
+  0000000000000004 : 00108113
+  op1     : 0000000000000000
+  op2     : 0000000000000001
+  alu     : 0000000000000001
+  dhazard : 1 @<balloon>{データハザードが発生している}
+MEM -----
+  0000000000000000 : 00100093
+  mem stall : 0
+  mem rdata : 0000000000000000
+WB ----
+
+#                    7
+...
+EX -----
+  0000000000000004 : 00108113
+  op1     : 0000000000000000
+  op2     : 0000000000000001
+  alu     : 0000000000000001
+  dhazard : 1
+MEM -----
+WB ----
+  0000000000000000 : 00100093
+  reg[ 1] <= 0000000000000001 @<balloon>{1が書き込まれる}
+
+#                    8
+...
+EX -----
+  0000000000000004 : 00108113
+  op1     : 0000000000000001 @<balloon>{x1=1が読み込まれた}
+  op2     : 0000000000000001
+  alu     : 0000000000000002 @<balloon>{正しい計算が行われている}
+  dhazard : 0 @<balloon>{データハザードが解消された}
+MEM -----
+WB ----
 //}
 
-riscv-testsも実行しましょう。
+アドレス4の命令が、
+6,7クロック目にEXステージでデータハザードが発生し、
+アドレス0の命令が実行終了するのを待っているのを確認できます。
+
+RV64Iのriscv-testsも実行します。
 
 //terminal[riscvtests.successful][riscv-testsを実行する]{
+$ python3 test/test.py -r obj_dir/sim test/share rv64ui-p-
+...
+FAIL : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-ma_data.bin.hex
+...
+Test Result : 51 / 52
 //}
 
-テストにパスすることを確認できました。
-
+正しくパイプライン処理が動いていることを確認できました。

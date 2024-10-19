@@ -1,5 +1,11 @@
 = CPUを合成する
 
-TangMega138KとPYNQ-Z1
+本章ではFPGAでCPUを動作させます。
 
-TODO
+本章は、web版, もしくはpdf版で提供します。
+以下のサポートページを確認してください。
+
+ * @<w>{support-page}
+
+//image[pynq_z1][PYNQ-Z1][width=55%]
+//image[tangmega138k][TangMega138K][width=55%]

@@ -44,7 +44,7 @@ additional:
   - key:     発行者   # サークル名ではなく個人名（ペンネーム可）
     value:   kanataso
   - key:     連絡先   # メールアドレス推奨
-    value:   kanapipopipo@X
+    value:   kanastudio@oekaki.chat
     ### 連絡先の例：
     #value:
     #  - xxxxx@example.com          # メールアドレス

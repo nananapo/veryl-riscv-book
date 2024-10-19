@@ -11,7 +11,7 @@
 
 == Veryl
 
-=== Verylのインストール
+===[notoc] Verylのインストール
 
 Verylは本書で利用するHDLです。
 まず、Verylのトランスパイラをインストールします。
@@ -94,9 +94,10 @@ Veryl側の問題によりプログラムをビルドできないことがあり
  * @<w>{support-page}
 //}
 
-=== VSCodeの拡張のインストール
+===[notoc] VSCodeの拡張のインストール
 
-エディタにVSCodeを利用している方は、@<img>{vscode-ext}の拡張をインストールすることをお勧めします。
+エディタにVSCodeを利用している方は、
+@<img>{vscode-ext}の拡張をインストールするとシンタックスハイライト等の機能を利用することができます。
 
  * @<href>{https://marketplace.visualstudio.com/items?itemName=dalance.vscode-veryl}
 
