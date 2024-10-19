@@ -212,7 +212,7 @@ rs1ポートには、
 //}
 
 最後に、デバッグ用の表示を追加します。
-デバッグ表示用の@<code>{always_ff}ブロックに、
+デバッグ表示用のalways_ffブロックに、
 次のコードを追加してください(@<list>{core.veryl.create-csrunit-range.debug})。
 
 //list[core.veryl.create-csrunit-range.debug][デバッグ用にrdataを表示するようにする (core.veryl)]{
@@ -332,7 +332,7 @@ mtvecレジスタの読み込みを実装します(@<list>{csrunit.veryl.create-
 #@end
 //}
 
-@<code>{always_comb}ブロックで、
+always_combブロックで、
 @<code>{rdata}ポートに@<code>{csr_addr}に応じてCSRの値を割り当てます。
 @<code>{wdata}には、CSRに書き込むべきデータを割り当てます。
 CSRに書き込むべきデータは、

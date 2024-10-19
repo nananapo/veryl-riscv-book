@@ -198,7 +198,7 @@ module csrunit (
     };
 </pre>
 </div>
-<p>最後に、デバッグ用の表示を追加します。デバッグ表示用の<code class="inline-code">always_ff</code>ブロックに、次のコードを追加してください(<span class="listref"><a href="./04a-zicsr.html#core.veryl.create-csrunit-range.debug">リスト4.7</a></span>)。</p>
+<p>最後に、デバッグ用の表示を追加します。デバッグ表示用のalways_ffブロックに、次のコードを追加してください(<span class="listref"><a href="./04a-zicsr.html#core.veryl.create-csrunit-range.debug">リスト4.7</a></span>)。</p>
 <div id="core.veryl.create-csrunit-range.debug" class="caption-code">
 <span class="caption">リスト4.7: リスト4.7: デバッグ用にrdataを表示するようにする (core.veryl)</span>
 <pre class="list language-debug">    if inst_ctrl.is_csr {
@@ -277,7 +277,7 @@ module csrunit (
     }
 </pre>
 </div>
-<p><code class="inline-code">always_comb</code>ブロックで、<code class="inline-code">rdata</code>ポートに<code class="inline-code">csr_addr</code>に応じてCSRの値を割り当てます。<code class="inline-code">wdata</code>には、CSRに書き込むべきデータを割り当てます。CSRに書き込むべきデータは、書き込む命令(CSRRW[I], CSRRS[I], CSRRC[I])によって異なります。rs1には、rs1の値か即値が供給されているため、これと<code class="inline-code">rdata</code>を利用して<code class="inline-code">wdata</code>を生成しています。<code class="inline-code">funct3</code>と演算の種類の関係については、<span class="tableref"><a href="./04a-zicsr.html#zicsr.f3">表4.2</a></span>を参照してください。</p>
+<p>always_combブロックで、<code class="inline-code">rdata</code>ポートに<code class="inline-code">csr_addr</code>に応じてCSRの値を割り当てます。<code class="inline-code">wdata</code>には、CSRに書き込むべきデータを割り当てます。CSRに書き込むべきデータは、書き込む命令(CSRRW[I], CSRRS[I], CSRRC[I])によって異なります。rs1には、rs1の値か即値が供給されているため、これと<code class="inline-code">rdata</code>を利用して<code class="inline-code">wdata</code>を生成しています。<code class="inline-code">funct3</code>と演算の種類の関係については、<span class="tableref"><a href="./04a-zicsr.html#zicsr.f3">表4.2</a></span>を参照してください。</p>
 <p>最後に、mtvecレジスタへの書き込み処理を実装します。mtvecへの書き込みは、命令がCSR命令である場合(<code class="inline-code">is_wsc</code>)にのみ行います(<span class="listref"><a href="./04a-zicsr.html#csrunit.veryl.create-mtvec-range.always">リスト4.12</a></span>)。</p>
 <div id="csrunit.veryl.create-mtvec-range.always" class="caption-code">
 <span class="caption">リスト4.12: リスト4.12: CSRへの書き込み処理 (csrunit.veryl)</span>

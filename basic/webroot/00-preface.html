@@ -45,9 +45,8 @@
 <p>本書は、OSを実行できる程度の機能を持ったRISC-VのCPUを、新しめのハードウェア記述言語である<b>Veryl</b>で記述する方法について解説した本です。</p>
 
 <h4 id="id_00-preface_nonum1" notoc="true">注意</h4>
-<p>本書は「Verylで作るCPU 基本編」の第I部のみを発行したものです。例えば本文に「後の章」と書かれていても、本書には含まれない場合があります。</p>
+<p>本書は「Verylで作るCPU 基本編」の第I部のみを発行したものです。そのため、本文に「後の章」と書かれていても、本書には含まれない場合があります。</p>
 <p>本書のpdf, web版は無料で配布されており、<a href="https://github.com/nananapo/veryl-riscv-book" class="link">https://github.com/nananapo/veryl-riscv-book</a>でダウンロード, 閲覧することができます。</p>
-<p>続きが気になったり、誤植を見つけた場合は、GitHubをご確認ください。</p>
 
 <h4 id="id_00-preface_nonum2" notoc="true">本書の対象読者</h4>
 <p>本書はコンピュータアーキテクチャに興味があり、何らかのプログラミング言語を習得している人を対象としています。</p>
@@ -75,6 +74,7 @@
 
 <h4 id="id_00-preface_nonum5" notoc="true">謝辞</h4>
 <p>本書はTODO氏とTODO氏にレビューしていただきました。また、本書の一部はサイボウズ・ラボ株式会社のサイボウズ・ラボユースの支援を受けて執筆されたものです。この場を借りて感謝します。</p>
+<p>TODO issueの数でも書くか</p>
 <p></p>
 <hr />
 <p></p>
@@ -84,7 +84,7 @@
 
 <h4 id="id_00-preface_nonum7" notoc="true">CPUの自作</h4>
 <p>CPUって自作できるのでしょうか?そもそもCPUの自作って何でしょうか?CPUの自作について一般的な定義はありませんが、筆者は「命令セットアーキテクチャの設計」「論理設計」「物理的に製造する」に分類できると考えています。</p>
-<p><b>命令セットアーキテクチャ</b>(Instruction Set Architecture, <b>ISA</b>)とは、CPUがどのような命令を実行することができるかを定めたもの(仕様)です。ISAの設計は考えるだけなので、紙とペンさえあればできます。<b>論理設計</b>とは、簡単に言うと、論理回路を設計することです。CPUは論理回路で構成されているため、CPUの設計には論理設計が必要になります。最近のCPUは、物理的には<b>VLSI</b>(Very Large Scale Integration, 超大規模集積回路)によって実装されています。VLSIの製造には莫大なお金が必要です<sup><a id="fnb-vlsi" href="#fn-vlsi" class="noteref" epub:type="noteref">*1</a></sup>。</p>
+<p><b>命令セットアーキテクチャ</b>(Instruction Set Architecture, <b>ISA</b>)とは、CPUがどのような命令を実行することができるかを定めたもの(仕様)です。ISAの設計は考えるだけなので、紙とペンさえあればできます。<b>論理設計</b>とは、簡単に言うと、仕様の動作を実現する論理回路を設計することです。CPUは論理回路で構成されているため、CPUの設計には論理設計が必要になります。最近のCPUは、物理的には<b>VLSI</b>(Very Large Scale Integration, 超大規模集積回路)によって実装されています。VLSIの製造には莫大なお金が必要です<sup><a id="fnb-vlsi" href="#fn-vlsi" class="noteref" epub:type="noteref">*1</a></sup>。</p>
 <div class="footnote-list">
 <div class="footnote" id="fn-vlsi" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>小さいチップなら安く(※安くない)製造することができます。efablessやTinyTapeout, OpenMPWで検索してください</p></div>
 </div><!--/.footnote-list-->
@@ -97,7 +97,7 @@
 <p>CPUのテストはシミュレータとFPGAで行います。本書では、TangMega 138KとPYNQ-Z1というFPGAを利用します。ただし、実機がなくても実装を進めることができるので所有していなくても構いません。</p>
 
 <h4 id="id_00-preface_nonum8" notoc="true">RISC-V</h4>
-<p><b>RISC-V</b>は、カリフォルニア大学バークレー校で開発されたISAです。仕様書の初版は2011年に公開されました。ISAとしての歴史はまだ浅いですが、RISC-Vは仕様がオープンでカスタマイズ可能であるという特徴もあって、研究で利用されたり既に何種類もCPUが市販されているなど、着実に広まっていっています。</p>
+<p><b>RISC-V</b>は、カリフォルニア大学バークレー校で開発されたISAです。仕様書の初版は2011年に公開されました。ISAとしての歴史はまだ浅いですが、仕様がオープンでカスタマイズ可能であるという特徴もあって、研究で利用されたり既に何種類もCPUが市販されているなど、着実に広まっていっています。</p>
 <p>インターネット上には多くのRISC-Vの実装が公開されています。例として、rocket-chip(Chiselによる実装),Shakti(Bluespec SVによる実装),rsd(SystemVerilogによる実装)が挙げられます。</p>
 <p>本書では、RISC-VのバージョンRISC-V ISA Manual, version 20240411 を利用します。RISC-Vの最新の仕様は、GitHubの<a href="https://github.com/riscv/riscv-isa-manual/" class="link">riscv/riscv-isa-manual</a>で確認することができます。</p>
 <p>RISC-Vには、基本整数命令セットとしてRV32I, RV64I, RV32E, RV64E<sup><a id="fnb-rv128i" href="#fn-rv128i" class="noteref" epub:type="noteref">*4</a></sup>が定義されています。RVの後ろにつく数字はレジスタの長さ(XLEN)が何ビットかです。数字の後ろにつく文字がIの場合、XLENビットのレジスタが32個存在します。Eの場合はレジスタの数が16個になります。</p>

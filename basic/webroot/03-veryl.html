@@ -22,12 +22,7 @@
     <li class="toc-chapter"><a href="./03-veryl.html">2 ハードウェア記述言語 Veryl</a>
       <ul class="toc toc-3">
         <li class="toc-section"><a href="#h2-1">2.1 ハードウェア記述言語</a></li>
-        <li class="toc-section"><a href="#h2-2">2.2 基本</a></li>
-        <li class="toc-section"><a href="#h2-3">2.3 module</a></li>
-        <li class="toc-section"><a href="#h2-4">2.4 interface</a></li>
-        <li class="toc-section"><a href="#h2-5">2.5 package</a></li>
-        <li class="toc-section"><a href="#h2-6">2.6 ジェネリクス</a></li>
-        <li class="toc-section"><a href="#h2-7">2.7 サンプルプログラム</a></li>
+        <li class="toc-section"><a href="#h2-2">2.2 Verylの基本文法, 機能</a></li>
       </ul>
     </li>
     <li class="toc-chapter"><a href="./04-impl-rv32i.html">3 RV32Iの実装</a></li>
@@ -132,62 +127,190 @@ endmodule
 </div><!--/.footnote-list-->
 <p>本書では、CPUの実装にVerylというHDLを使用します。Verylは2022年12月に公開された言語です。Verylの抽象度は、Verilogと同じくレジスタ転送レベルです。Verylの文法や機能は、Verilog, SystemVerilogに似通ったものになっています。しかし、if式やcase式,クロックとリセットの抽象化,ジェネリクスなど、痒い所に手が届く機能が提供されており、高い生産性を発揮します。</p>
 <p>Verylプログラムは、コンパイラ(トランスパイラ)によって、自然で読みやすいSystemVerilogプログラムに変換されます。よって、Verylは旧来のSystemVerilogの環境と共存することができ、SystemVerilogの資産を利用することができます。</p>
+<div class="miniblock miniblock-caution">
+<p class="miniblock-caption">注意</p>
+<p>本書は2024/10/19時点のVeryl(バージョン0.13.1)について、本書で利用する範囲の文法, 機能を解説しています。Verylはまだ開発途上(正式版, 安定版がリリースされていない)状態の言語です。破壊的変更が入り、記載しているコードが使えなくなる可能性があります。</p>
+<p>本書に記載しているコードの中には、バージョン0.13.1では不具合によって実行できないものがあります。不具合の回避手段についてはサポートページ<sup><a id="fnb-support" href="#fn-support" class="noteref" epub:type="noteref">*3</a></sup>をご覧ください。また、最新のVerylに対応した解説はweb版, pdf版を確認してください。</p>
+</div>
+<div class="footnote-list">
+<div class="footnote" id="fn-support" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*3] </span>https://github.com/nananapo/veryl-riscv-book/wiki/techbookfest17-support-page</p></div>
+</div><!--/.footnote-list-->
 
-<h2 class="numbox"><a id="h2-2"></a><span class="secno">2.2</span> 基本</h2>
-<p>それでは、Verylの書き方を簡単に学んでいきましょう。Verylのドキュメントは<a href="https://doc.veryl-lang.org/book/ja/" class="link">https://doc.veryl-lang.org/book/ja/</a>に存在します。</p>
-<p>TODO</p>
+<h2 class="numbox"><a id="h2-2"></a><span class="secno">2.2</span> Verylの基本文法, 機能</h2>
+<p>それでは、Verylの書き方を簡単に学んでいきましょう。Verylのドキュメントは<a href="https://doc.veryl-lang.org/book/ja/" class="link">https://doc.veryl-lang.org/book/ja/</a>に存在します。また、<a href="https://doc.veryl-lang.org/playground/" class="link">Veryl Playground</a>では、VerylプログラムのSystemVerilogプログラムへのトランスパイルを試すことができます。</p>
+
+<h3 class="none"><a id="h2-2-1"></a><span class="secno">2.2.1</span> コメント, 空白</h3>
+<p>Verylでは次のようにコメントを記述することができます(<span class="listref"><a href="./03-veryl.html#code.comment">リスト2.3</a></span>)。</p>
+<div id="code.comment" class="caption-code">
+<span class="caption">リスト2.3: リスト2.3: コメント</span>
+<pre class="list language-comment">  // 1行のコメント
+  /* 範囲コメント */
+</pre>
+</div>
+
+<h3 class="none"><a id="h2-2-2"></a><span class="secno">2.2.2</span> 値, 数値リテラル</h3>
+<p>論理回路では、デジタルな値を扱います。デジタルな値は<code class="inline-code">0</code>と<code class="inline-code">1</code>の二値(2-state)で表現されますが、一般的なハードウェア記述言語では、<code class="inline-code">0</code>と<code class="inline-code">1</code>に<code class="inline-code">x</code>, <code class="inline-code">z</code>を加えた四値(4-state)が利用されます(<span class="tableref"><a href="./03-veryl.html#table.fourstate">表2.2</a></span>)。</p>
+<div id="table.fourstate" class="table">
+<p class="caption">表2.2: 4-stateの値</p>
+<table>
+<tr class="hline"><th>値</th><th>意味</th><th>真偽</th></tr>
+<tr class="hline"><td>0</td><td>0</td><td>偽</td></tr>
+<tr class="hline"><td>1</td><td>1</td><td>真</td></tr>
+<tr class="hline"><td>x</td><td>unknown</td><td>偽</td></tr>
+<tr class="hline"><td>z</td><td>high-inpedance</td><td>偽</td></tr>
+</table>
+</div>
+<p><b>不定値</b>(unknown value)とは、0か1のどちらか分からない値です。不定値は、未初期化のレジスタの値の表現に利用されたり、不定値との演算の結果として生成されます。<b>ハイインピーダンス</b>(high-inpedance)とは、どのレジスタ, 信号とも接続されていないことを表す値です。物理的なハードウェア上では、全ての値は0か1の二値として解釈されます。不定値とハイインピーダンスはシミュレーションのときにのみ利用されます。</p>
+<p>1ビットの四値を表現するための型は<b>logic</b>です。Nビットのlogic型は<b>logic&lt;N&gt;</b>のように記述することができます。1ビットの二値を表現する型は<b>bit</b>です。基本的に、レジスタや信号の定義にbit型は利用せず、logic型を利用します。</p>
+<p>logic, bit型は、デフォルトで符号が無い型として扱われます。符号付き型として扱いたいときは、型名の前に<b>signed</b>キーワードを追加します(<span class="listref"><a href="./03-veryl.html#code.signed_keyword">リスト2.4</a></span>)。</p>
+<div id="code.signed_keyword" class="caption-code">
+<span class="caption">リスト2.4: リスト2.4: 符号付き型</span>
+<pre class="list language-signed_keyword">signed logic&lt;4&gt; // 4ビットの符号付きlogic型
+signed bit&lt;2&gt; // 2ビットの符号付きbit型
+</pre>
+</div>
+<p>32, 64ビットのbit型を表す型が定義されています(<span class="tableref"><a href="./03-veryl.html#ui3264">表2.3</a></span>)。</p>
+<div id="ui3264" class="table">
+<p class="caption">表2.3: 整数型</p>
+<table>
+<tr class="hline"><th>型名</th><th>等価な型</th></tr>
+<tr class="hline"><td>u32</td><td>bit&lt;32&gt;</td></tr>
+<tr class="hline"><td>u64</td><td>bit&lt;64&gt;</td></tr>
+<tr class="hline"><td>i32</td><td>signed bit&lt;32&gt;</td></tr>
+<tr class="hline"><td>i64</td><td>signed bit&lt;64&gt;</td></tr>
+</table>
+</div>
+<p>数値は<span class="listref"><a href="./03-veryl.html#code.num_literal">リスト2.5</a></span>のように記述することができます。</p>
+<div id="code.num_literal" class="caption-code">
+<span class="caption">リスト2.5: リスト2.5: 数値リテラル</span>
+<pre class="list language-num_literal">4'b0101 // 4ビットの数値 (2進数表記)
+4'bxxzz // 4ビットの数値 (2進数表記)
+
+12'o34xz // 12ビットの数値 (8進数表記)
+32'h89abcdef // 32ビットの数値 (16進数表記)
+
+123 // 10進数の数値
+32'd12345 // 32ビットの数値 (10進数表記)
+
+// 数値リテラルの好きな場所に_を挿入できる
+1_2_34_567
+
+// x, zは大文字でも良い
+4'bxXzZ
+
+// 全ビット0, 1, x, zにする
+'0
+'1
+'x
+'z
+
+// 指定したビット幅だけ0, 1, x, zにする
+8'0 // 8ビット0
+8'1 // 8ビット1
+8'x // 8ビットx
+8'z // 8ビットz
+
+// 幅を指定しない場合、幅が自動で推定される
+'hffff // 16ビット
+'h1fff // 13ビット
+</pre>
+</div>
+
+<h3 class="none"><a id="h2-2-3"></a><span class="secno">2.2.3</span> module</h3>
+<p>HDLによる論理回路は<b>モジュール</b>(Module)というコンポーネントで構成されます。例えば、半加算器のモジュールは次のように定義できます(<span class="listref"><a href="./03-veryl.html#halfadder.veryl">リスト2.6</a></span>).</p>
+<div id="halfadder.veryl" class="caption-code">
+<span class="caption">リスト2.6: リスト2.6: 半加算器(HalfAdder)モジュール</span>
+<pre class="list language-veryl">module HalfAdder (
+    x: input  logic, // 1ビットのlogic型の入力
+    y: input  logic, // 1ビットのlogic型の入力
+    s: output logic, // 1ビットのlogic型の出力
+    c: output logic, // 1ビットのlogic型の出力
+) {
+    always_comb {
+        s = x ^ y; // sにx XOR yを割り当てる
+        c = x &amp; y; // cにx AND yを割り当てる
+    }
+}
+</pre>
+</div>
+<p>HaldAdderモジュールには、入力変数として<code class="inline-code">x</code>, <code class="inline-code">y</code>、出力変数として<code class="inline-code">s</code>. <code class="inline-code">c</code>が宣言されています。入出力の変数のことを<b>接続ポート</b>、または単に<b>ポート</b>と呼びます。</p>
+<p>入力ポートを定義するとき、モジュール名の後の括弧の中に、<code class="inline-code">変数名 : input 型名</code>と記述します。出力ポートを宣言するときは<code class="inline-code">input</code>の代わりに<code class="inline-code">output</code>と記述します。複数のポートを宣言するとき、宣言の末尾にカンマ(<code class="inline-code">,</code>)を記述します。</p>
+
+<h4><a id="h2-2-3-1"></a>変数の宣言, 代入</h4>
+<p>HalfAdderモジュールでは、<b>always_comb</b>ブロックで出力変数<code class="inline-code">s</code>, <code class="inline-code">c</code>に値を割り当てています。変数への値の割り当ては<code class="inline-code">変数名 = 式</code>で行います。</p>
+<p>always_combブロック内で値を割り当てると、割り当てる式は組み合わせ回路になります。</p>
+<p>always_combの中での割り当ては、<b>assign</b>文でも記述することができます(<span class="listref"><a href="./03-veryl.html#assign">リスト2.7</a></span>)。</p>
+<div id="assign" class="caption-code">
+<span class="caption">リスト2.7: リスト2.7: assign文による代入</span>
+<pre class="list">        // 下のalways_combと同じ意味になる
+        assign s = a ^ c;
+        assign c = a &amp; c;
+
+        // always_combによる代入
+        always_comb {
+                s = a ^ c;
+                c = a &amp; c;
+        }
+</pre>
+</div>
+<p>モジュールの中では、<b>var</b>文によって新しく変数を宣言することができます(<span class="listref"><a href="./03-veryl.html#var.stmt">リスト2.8</a></span>)。</p>
+<div id="var.stmt" class="caption-code">
+<span class="caption">リスト2.8: リスト2.8: 変数の宣言</span>
+<pre class="list language-stmt">        // var 変数名 : 型名;
+        var value : logic&lt;32&gt;;
+</pre>
+</div>
+<p><code class="inline-code">var</code>文によって宣言した変数は、<code class="inline-code">assign</code>文, または<code class="inline-code">always_comb</code>内での割り当てによって、値を割り当てることができます。</p>
+<p>変数の定義と値の</p>
 <ul>
-<li>リテラル
+<li>let, var
 </li>
-<li>型 (logic,リテラル,struct,enum,clock,reset)
+<li>always_comb 連続代入, assign
 </li>
-<li>type
-</li>
-<li>const
-</li>
-<li>連接, repeat
+<li>always_ff, if_reset ノンブロッキング
 </li>
 </ul>
+
+<h4><a id="h2-2-3-2"></a>モジュールのパラメータ</h4>
+
+<h4><a id="h2-2-3-3"></a>モジュールのインスタンス化</h4>
+
+<h4><a id="h2-2-3-4"></a>initial, final</h4>
+
+<h3 class="none"><a id="h2-2-4"></a><span class="secno">2.2.4</span> 型</h3>
+
+<h4><a id="h2-2-4-1"></a>配列</h4>
+<p><code class="inline-code">[]</code>を利用することで、配列を定義することができます。</p>
+<p>struct,enum,clock,reset,配列,多次元type</p>
+
+<h3 class="none"><a id="h2-2-5"></a><span class="secno">2.2.5</span> 定数</h3>
+<p>const</p>
+
+<h3 class="none"><a id="h2-2-6"></a><span class="secno">2.2.6</span> 式</h3>
 <ul>
-<li>変数 (var, let)
+<li>ビット選択
 </li>
-</ul>
-<ul>
 <li>式 (演算子)
 </li>
 <li>if式, case式
 </li>
-</ul>
-<ul>
-<li>文 (if, case, for)
+<li>連接, repeat
+</li>
+<li>msb. lsb
 </li>
 </ul>
+
+<h3 class="none"><a id="h2-2-7"></a><span class="secno">2.2.7</span> 文</h3>
 <ul>
+<li>変数 (var, let)
+</li>
+<li>if, case, for
+</li>
 <li>function
 </li>
-<li>SystemVerilogの機能(システムタスク)
-</li>
 </ul>
 
-<h2 class="numbox"><a id="h2-3"></a><span class="secno">2.3</span> module</h2>
-<ul>
-<li>module宣言
-</li>
-<li>ポート
-</li>
-<li>パラメータ
-</li>
-<li>インスタンス化
-</li>
-<li>always_comb, assign
-</li>
-<li>always_ff, if_reset
-</li>
-<li>initial, final
-</li>
-</ul>
-
-<h2 class="numbox"><a id="h2-4"></a><span class="secno">2.4</span> interface</h2>
+<h3 class="none"><a id="h2-2-8"></a><span class="secno">2.2.8</span> interface</h3>
 <ul>
 <li>パラメータ化
 </li>
@@ -197,13 +320,13 @@ endmodule
 </li>
 </ul>
 
-<h2 class="numbox"><a id="h2-5"></a><span class="secno">2.5</span> package</h2>
+<h3 class="none"><a id="h2-2-9"></a><span class="secno">2.2.9</span> package</h3>
 <ul>
 <li>import
 </li>
 </ul>
 
-<h2 class="numbox"><a id="h2-6"></a><span class="secno">2.6</span> ジェネリクス</h2>
+<h3 class="none"><a id="h2-2-10"></a><span class="secno">2.2.10</span> ジェネリクス</h3>
 <ul>
 <li>function
 </li>
@@ -215,13 +338,16 @@ endmodule
 </li>
 </ul>
 
-<h2 class="numbox"><a id="h2-7"></a><span class="secno">2.7</span> サンプルプログラム</h2>
+<h3 class="none"><a id="h2-2-11"></a><span class="secno">2.2.11</span> その他の機能</h3>
 <ul>
-<li>半加算器
+<li>$sv
 </li>
-<li>全加算器
+<li>SystemVerilogの機能 (システムタスク)
 </li>
-<li>カウンタ</li>
+</ul>
+<p>$display, readmemh, clog2, size, bits, signed, error, finish</p>
+<ul>
+<li>標準ライブラリ</li>
 </ul>
 
         </main>

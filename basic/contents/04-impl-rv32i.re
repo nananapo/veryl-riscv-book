@@ -324,7 +324,7 @@ memoryモジュールを利用する時、
 	@<code>{membus.valid}が@<code>{1}、
 	@<code>{membus.wen}が@<code>{1}、
 	@<code>{membus.addr}が対象アドレスになっています。
-	@<code>{always_ff}ブロックでは、
+	always_ffブロックでは、
 	@<code>{membus.wen}が@<code>{1}であることを確認し、
 	@<code>{1}の場合は対象アドレスに@<code>{membus.wdata}を書き込みます。
 	次のクロックで@<code>{membus.rvalid}が@<code>{1}になります。
@@ -469,13 +469,13 @@ membus_ifのジェネリックパラメータには、
 @<code>{if_is_requested}は現在フェッチ中かどうかを管理しており、
 フェッチ中のアドレスを@<code>{if_pc_requested}に格納しています。
 
-@<code>{always_comb}ブロックでは、
+always_combブロックでは、
 アドレス@<code>{if_pc}にあるデータを、
 常にメモリに要求しています。
 命令フェッチではメモリの読み込みしか行わないため、
 @<code>{membus.wen}は@<code>{0}にしています。
 
-上から1つめの@<code>{always_ff}ブロックでは、
+上から1つめのalways_ffブロックでは、
 フェッチ中かどうか,
 メモリがready(要求を受け入れる)状態かどうかによって、
 @<code>{if_pc},
@@ -493,7 +493,7 @@ membus_ifのジェネリックパラメータには、
 0,4,8,c,10,...という順番のアドレスの命令を、
 次々にフェッチするようになっています。
 
-上から2つめの@<code>{always_ff}ブロックは、
+上から2つめのalways_ffブロックは、
 デバッグ用の表示を行うプログラムです。
 命令フェッチが完了したとき、
 その結果を@<code>{$display}システムタスクによって出力します。
@@ -1009,7 +1009,7 @@ FIFOに2つ以上空きがあるという条件に変更しています。
 これにより、FIFOがあふれてしまうことがなくなります。
 また、とりあえずFIFOから常にデータを取り出すようにしています。
 
-最後に、命令をフェッチできたらFIFOに格納するコードを@<code>{always_ff}ブロックの中に追加します(@<list>{core.veryl.if-fifo-range.fifo_ctrl})。
+最後に、命令をフェッチできたらFIFOに格納するコードをalways_ffブロックの中に追加します(@<list>{core.veryl.if-fifo-range.fifo_ctrl})。
 
 //list[core.veryl.if-fifo-range.fifo_ctrl][FIFOへのデータの格納 (core.veryl)]{
 #@maprange(scripts/04/if-fifo-range/core/src/core.veryl,fifo_ctrl)
@@ -1297,7 +1297,7 @@ B形式の命令について考えます。
 B形式の命令内に含まれている即値は12ビットで、最上位ビットは符号ビットです。
 最上位ビットを繰り返す(符号拡張する)ことによって、32ビットの即値@<code>{imm_b}を生成します。
 
-@<code>{always_comb}ブロックでは、
+always_combブロックでは、
 opcodeをcase式で分岐することにより
 @<code>{imm}ポートに適切な即値を供給しています。
 
@@ -1308,7 +1308,7 @@ opcodeがOP-IMMな命令、
 ADDI命令は、即値とソースレジスタの値を足し、
 デスティネーションレジスタに結果を格納する命令です。
 
-@<code>{always_comb}ブロックでは、
+always_combブロックでは、
 opcodeが@<code>{OP_OP_IMM}(OP-IMM)のとき、
 次のように制御信号@<code>{ctrl}を設定します。
 
@@ -1342,7 +1342,7 @@ inst_decoderモジュールを、
 次に、inst_decoderモジュールをインスタンス化します。
 @<code>{bits}ポートに@<code>{inst_bits}を渡すことで、フェッチした命令をデコードします。
 
-デバッグ用の@<code>{always_ff}ブロックに、
+デバッグ用のalways_ffブロックに、
 デコードした結果を表示するプログラムを記述します(@<list>{core.veryl.id-range.debug})。
 
 //list[core.veryl.id-range.debug][デコード結果の表示プログラム (core.veryl)]{
@@ -1495,7 +1495,7 @@ I形式の命令の実行には、ソースレジスタの値と即値を利用�
 #@end
 //}
 
-@<code>{always_ff}ブロックの@<code>{if_reset}で、
+always_ffブロックのif_resetで、
 n番目(32 > n > 0)のレジスタの値を@<code>{n + 100}で初期化します。
 
 //footnote[reset.reg.error][「iは変数だからif_resetで使えません」のようなエラーが出る場合、申し訳ありませんがfor文を使わずに1つずつ初期化してください。]
@@ -1545,7 +1545,7 @@ CPUの計算を行うユニットである@<b>{ALU}(Arithmetic Logic Unit)を作
 === ALUモジュールを作成する
 
 レジスタ, 即値の幅は@<code>{XLEN}です。
-計算には符号付き整数と符号無し整数向けの計算があります。
+計算には符号付き整数と符号なし整数向けの計算があります。
 
 これに利用するために、
 eeiモジュールに@<code>{XLEN}ビットの符号付き整数型を定義します(@<list>{eei.veryl.alu-range.define})。
@@ -1644,7 +1644,7 @@ funct3			演算
 具体的には、
 @<code>{opcode}がOPかOP-IMMの命令の@<code>{InstCtrl.is_aluop}を@<code>{1}にしています(@<list>{inst_decoder.veryl.id})。
 
-@<code>{always_comb}ブロックでは、
+always_combブロックでは、
 case文でfunct3によって計算を区別します。
 それだけでは区別できないとき、funct7を使用します。
 
@@ -1654,7 +1654,7 @@ case文でfunct3によって計算を区別します。
 @<code>{UIntX}型の変数@<code>{op1},
 @<code>{op2},
 @<code>{alu_result}を定義し、
-@<code>{always_comb}ブロックで値を割り当てます。
+always_combブロックで値を割り当てます。
 
 //list[core.veryl.alu-range.data][ALUに渡すデータの用意 (core.veryl)]{
 #@maprange(scripts/04/alu-range/core/src/core.veryl,data)
@@ -1723,7 +1723,7 @@ ALUに渡すデータを用意したので、aluモジュールをインスタ�
 === ALUモジュールをテストする
 
 最後にALUが正しく動くことを確認します。
-@<code>{always_ff}ブロックで、
+always_ffブロックで、
 @<code>{op1}, @<code>{op2}, @<code>{alu_result}を表示します(@<list>{core.veryl.alu-range.debug})。
 
 //list[core.veryl.alu-range.debug][ALUの結果を表示する (core.veryl)]{
@@ -1864,7 +1864,7 @@ CPUは、レジスタから値を読み込み、これを計算して、
 
 === ライトバック処理をテストする
 
-デバッグ表示用の@<code>{always_ff}ブロックで、
+デバッグ表示用のalways_ffブロックで、
 ライトバック処理の概要を表示します(@<list>{core.veryl.wb.debug})。
 処理している命令がライトバックする命令のときにのみ、
 @<code>{$display}システムタスクを呼び出します。
@@ -2738,7 +2738,7 @@ memunitモジュールでwmaskを設定します。
 #@end
 //}
 
-@<code>{always_ff}の中で、@<code>{req_wmask}の値を設定します。
+always_ffの中で、@<code>{req_wmask}の値を設定します。
 それぞれの命令のとき、wmaskがどうなるかを確認してください(
 @<list>{memunit.veryl.lbhsbh-range.always_reset},
 @<list>{memunit.veryl.lbhsbh-range.always_wmask}
@@ -3145,7 +3145,7 @@ coreモジュールでインスタンス化します(@<list>{core.veryl.br-range
 ==== 条件分岐命令のテスト
 
 条件分岐命令を実行するとき、分岐の成否を表示するようにします。
-デバッグ表示を行っている@<code>{always_ff}ブロック内に、次のプログラムを追加します(@<list>{core.very.br-range.debug})。
+デバッグ表示を行っているalways_ffブロック内に、次のプログラムを追加します(@<list>{core.very.br-range.debug})。
 
 //list[core.very.br-range.debug][デバッグ表示 (core.veryl)]{
 #@maprange(scripts/04/br-range/core/src/core.veryl,debug)

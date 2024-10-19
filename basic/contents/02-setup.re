@@ -3,7 +3,7 @@
 本書で使用するソフトウェアをインストールします。
 
 次のいずれかの環境を用意してください。
-筆者はWindowsを推奨します。
+筆者はWindowsを利用しています。
 
  * WSLが使えるWindows
  * Mac
@@ -22,7 +22,7 @@ Verylupはcargo, またはGitHubのReleaseページから入手することが�
 cargoが入っている方は@<code>{cargo install verylup}でインストールしてください。
 cargoが入っていない場合は、
 @<href>{https://github.com/veryl-lang/verylup, veryl-lang/verylup}
-から入手方法を確認することができます。
+で入手方法を確認することができます。
 
 Verylupを入手したら、
 次のようにVerylの最新版をインストールします
