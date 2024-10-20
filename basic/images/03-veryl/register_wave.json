@@ -1,0 +1,9 @@
+{signal: [
+    {
+        name:'clk', wave: 'p..'
+    },
+    {
+        name:'value', wave: '010'
+    }
+],
+}

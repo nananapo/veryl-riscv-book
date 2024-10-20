@@ -931,7 +931,7 @@ fifoモジュールを使って、命令フェッチ処理を変更します。
 
 まず、FIFOに格納する型を定義します(@<list>{core.veryl.if-fifo-range.fifo_type})。
 @<code>{if_fifo_type}には、
-命令のアドレス(@<code>{addr})と命令のビット列(@<code>{bits})を格納するためのメンバーを含めます。
+命令のアドレス(@<code>{addr})と命令のビット列(@<code>{bits})を格納するためのフィールドを含めます。
 
 //list[core.veryl.if-fifo-range.fifo_type][FIFOで格納する型を定義する (core.veryl)]{
 #@maprange(scripts/04/if-fifo-range/core/src/core.veryl,fifo_type)
@@ -992,7 +992,7 @@ fifoモジュールをインスタンス化したので、
     // 命令フェッチ処理
     always_comb {
         // FIFOに2個以上空きがあるとき、命令をフェッチする
-        membus.valid = @<b>|if_fifo.wready_two;|
+        membus.valid = @<b>|if_fifo.wready_two|;
         membus.addr  = if_pc;
         membus.wen   = 0;
         membus.wdata = 'x; // wdataは使用しない
@@ -1200,7 +1200,7 @@ package corectrl {
 @<code>{InstCtrl}は、制御に使うフラグを列挙するための構造体です。
 @<code>{itype}には命令の形式、@<code>{funct3}, @<code>{funct7}には、
 それぞれ命令の@<code>{funct3}, @<code>{funct3}フィールドを格納します。
-これ以外の構造体のメンバーについては、使用するときに説明します。
+これ以外の構造体のフィールドについては、使用するときに説明します。
 
 命令をデコードするとき、まずopcodeを使って判別します。
 このために、デコードに使う定数を@<code>{eei}パッケージに記述します(@<list>{eei.very.id-range.opcode})。
@@ -1316,7 +1316,7 @@ opcodeが@<code>{OP_OP_IMM}(OP-IMM)のとき、
  * 結果をレジスタに書き込むため、@<code>{rwb_en}を@<code>{1}に設定します
  * ALU(計算を実行するユニット)を利用するため、@<code>{is_aluop}を@<code>{1}に設定します。
  * @<code>{funct3}, @<code>{funct7}を命令中のビットをそのまま設定します 
- * それ以外のメンバーは@<code>{0}に設定します。
+ * それ以外のフィールドは@<code>{0}に設定します。
 
 === デコーダをインスタンス化する
 

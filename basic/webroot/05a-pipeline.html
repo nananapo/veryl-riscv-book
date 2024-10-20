@@ -28,7 +28,7 @@
       <ul class="toc toc-3">
         <li class="toc-section"><a href="#h7-1">7.1 CPUの速度</a></li>
         <li class="toc-section"><a href="#h7-2">7.2 パイプライン処理の実装</a></li>
-        <li class="toc-section"><a href="#h7-3">7.3 データハザードの対処</a></li>
+        <li class="toc-section"><a href="#h7-3">7.3 データ依存の対処</a></li>
       </ul>
     </li>
     <li class="toc-chapter"><a href="./05b-synth.html">8 CPUを合成する</a></li>
@@ -203,12 +203,12 @@
 
 <h4><a id="h7-2-2-1"></a>構造体の定義</h4>
 <div id="fifo_type" class="image">
-<img src="images/05a-pipeline/fifo_type.png" alt="メンバーの生存区間" class="img" />
+<img src="images/05a-pipeline/fifo_type.png" alt="構造体のフィールドの生存区間" class="img" />
 <p class="caption">
-図7.5: メンバーの生存区間
+図7.5: 構造体のフィールドの生存区間
 </p>
 </div>
-<p>まず、FIFOに格納するデータの型を定義します。それぞれのメンバーが存在する区間は<span class="imgref"><a href="./05a-pipeline.html#fifo_type">図7.5</a></span>の通りです。</p>
+<p>まず、FIFOに格納するデータの型を定義します。それぞれのフィールドが存在する区間は<span class="imgref"><a href="./05a-pipeline.html#fifo_type">図7.5</a></span>の通りです。</p>
 <div id="fifo.type.ex" class="caption-code">
 <span class="caption">リスト7.2: リスト7.2: ID -&amp;gt; EXの間のFIFOのデータ型 (core.veryl)</span>
 <pre class="list language-ex">    struct exq_type {
@@ -252,7 +252,7 @@
 </div>
 <p>MEMステージは、メモリのロード結果とCSRの読み込みデータを生成し、WBステージに渡します。</p>
 <p>WBステージでは、命令がライトバックする命令の時、即値, ALUの計算結果, メモリのロード結果, CSRの読み込みデータから1つを選択し、レジスタに値を書き込みます。</p>
-<p>構造体のメンバーの生存区間が<span class="imgref"><a href="./05a-pipeline.html#fifo_type">図7.5</a></span>のようになっている理由が、なんとなく分かったでしょうか?</p>
+<p>構造体のフィールドの生存区間が<span class="imgref"><a href="./05a-pipeline.html#fifo_type">図7.5</a></span>のようになっている理由が、なんとなく分かったでしょうか?</p>
 
 <h4><a id="h7-2-2-2"></a>FIFOのインスタンス化</h4>
 <p>FIFOをインスタンス化します。<code class="inline-code">DATA_TYPE</code>パラメータには、先ほど作成した構造体を設定します。FIFOのデータの個数は1であるため、<code class="inline-code">WIDTH</code>パラメータには<code class="inline-code">1</code>を設定します<sup><a id="fnb-fifo.width" href="#fn-fifo.width" class="noteref" epub:type="noteref">*3</a></sup>。<code class="inline-code">mem_wb_fifo</code>の<code class="inline-code">flush</code>が<code class="inline-code">0</code>になっていることに注意してください。</p>
@@ -672,7 +672,7 @@ Test Result : 0 / 1
 </div>
 <p>おや?テストにパスしません。一体何が起きているのでしょうか?</p>
 
-<h2 class="numbox"><a id="h7-3"></a><span class="secno">7.3</span> データハザードの対処</h2>
+<h2 class="numbox"><a id="h7-3"></a><span class="secno">7.3</span> データ依存の対処</h2>
 
 <h3 class="none"><a id="h7-3-1"></a><span class="secno">7.3.1</span> 正しく動かないプログラムを確認する</h3>
 <p>実は、ただIF, ID, EX, MEM, WBステージに処理を分割するだけでは、正しく命令を実行することができません。例えば、<span class="listref"><a href="./05a-pipeline.html#dh.example">リスト7.22</a></span>のようなプログラムは正しく動きません。<code class="inline-code">test/sample_datahazard.hex</code>として保存します(<span class="listref"><a href="./05a-pipeline.html#dh.example">リスト7.22</a></span>, <span class="listref"><a href="./05a-pipeline.html#dh.test">リスト7.23</a></span>)。</p>
@@ -763,7 +763,7 @@ MEM -----
 <h3 class="none"><a id="h7-3-4"></a><span class="secno">7.3.4</span> パイプライン処理をテストする</h3>
 <p><code class="inline-code">test/sample_datahazard.hex</code>が正しく動くことを確認します。</p>
 <div id="dh.test.successful" class="cmd-code">
-<span class="caption">リスト7.27: リスト7.27: test/dh.hexが正しく動くことを確認する</span>
+<span class="caption">リスト7.27: リスト7.27: test/sample_datahazard.hexが正しく動くことを確認する</span>
 <pre class="list language-successful">#                    5
 ...
 ID ------

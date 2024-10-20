@@ -264,10 +264,10 @@ IDからEX, EXからMEM, MEMからWBへのFIFOを作成します。
 
 ==== 構造体の定義
 
-//image[fifo_type][メンバーの生存区間]
+//image[fifo_type][構造体のフィールドの生存区間]
 
 まず、FIFOに格納するデータの型を定義します。
-それぞれのメンバーが存在する区間は@<img>{fifo_type}の通りです。
+それぞれのフィールドが存在する区間は@<img>{fifo_type}の通りです。
 
 //list[fifo.type.ex][ID -> EXの間のFIFOのデータ型 (core.veryl)]{
 #@maprange(scripts/05a/create-fifo-range/core/src/core.veryl,extype)
@@ -329,7 +329,7 @@ WBステージでは、
 即値, ALUの計算結果, メモリのロード結果, CSRの読み込みデータから1つを選択し、
 レジスタに値を書き込みます。
 
-構造体のメンバーの生存区間が@<img>{fifo_type}のようになっている理由が、
+構造体のフィールドの生存区間が@<img>{fifo_type}のようになっている理由が、
 なんとなく分かったでしょうか?
 
 ==== FIFOのインスタンス化
@@ -866,7 +866,7 @@ Test Result : 0 / 1
 おや?テストにパスしません。
 一体何が起きているのでしょうか?
 
-== データハザードの対処
+== データ依存の対処
 
 === 正しく動かないプログラムを確認する
 
@@ -991,7 +991,7 @@ EXステージのFIFOの@<code>{rready}とMEMステージの@<code>{wvalid}に�
 
 @<code>{test/sample_datahazard.hex}が正しく動くことを確認します。
 
-//terminal[dh.test.successful][test/dh.hexが正しく動くことを確認する]{
+//terminal[dh.test.successful][test/sample_datahazard.hexが正しく動くことを確認する]{
 #                    5
 ...
 ID ------

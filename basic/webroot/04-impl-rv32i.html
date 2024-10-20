@@ -761,7 +761,7 @@ $ <span class="userinput">make clean</span> <span class="balloon">← ビルド�
 
 <h4><a id="h3-6-4-2"></a>命令フェッチ処理の変更</h4>
 <p>fifoモジュールを使って、命令フェッチ処理を変更します。</p>
-<p>まず、FIFOに格納する型を定義します(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.if-fifo-range.fifo_type">リスト3.21</a></span>)。<code class="inline-code">if_fifo_type</code>には、命令のアドレス(<code class="inline-code">addr</code>)と命令のビット列(<code class="inline-code">bits</code>)を格納するためのメンバーを含めます。</p>
+<p>まず、FIFOに格納する型を定義します(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.if-fifo-range.fifo_type">リスト3.21</a></span>)。<code class="inline-code">if_fifo_type</code>には、命令のアドレス(<code class="inline-code">addr</code>)と命令のビット列(<code class="inline-code">bits</code>)を格納するためのフィールドを含めます。</p>
 <div id="core.veryl.if-fifo-range.fifo_type" class="caption-code">
 <span class="caption">リスト3.21: リスト3.21: FIFOで格納する型を定義する (core.veryl)</span>
 <pre class="list language-fifo_type">    // ifのFIFOのデータ型
@@ -808,7 +808,7 @@ $ <span class="userinput">make clean</span> <span class="balloon">← ビルド�
 <pre class="list language-fetch">    // 命令フェッチ処理
     always_comb {
         // FIFOに2個以上空きがあるとき、命令をフェッチする
-        membus.valid = <b>if_fifo.wready_two;</b>
+        membus.valid = <b>if_fifo.wready_two</b>;
         membus.addr  = if_pc;
         membus.wen   = 0;
         membus.wdata = 'x; // wdataは使用しない
@@ -991,7 +991,7 @@ package corectrl {
 </pre>
 </div>
 <p><code class="inline-code">InstType</code>は、命令の形式を表すための列挙型です。<code class="inline-code">InstType</code>の幅は6ビットで、それぞれのビットに1つの命令形式が対応しています。どの命令形式にも対応しない場合、すべてのビットが0の<code class="inline-code">InstType::X</code>を対応させます。</p>
-<p><code class="inline-code">InstCtrl</code>は、制御に使うフラグを列挙するための構造体です。<code class="inline-code">itype</code>には命令の形式、<code class="inline-code">funct3</code>, <code class="inline-code">funct7</code>には、それぞれ命令の<code class="inline-code">funct3</code>, <code class="inline-code">funct3</code>フィールドを格納します。これ以外の構造体のメンバーについては、使用するときに説明します。</p>
+<p><code class="inline-code">InstCtrl</code>は、制御に使うフラグを列挙するための構造体です。<code class="inline-code">itype</code>には命令の形式、<code class="inline-code">funct3</code>, <code class="inline-code">funct7</code>には、それぞれ命令の<code class="inline-code">funct3</code>, <code class="inline-code">funct3</code>フィールドを格納します。これ以外の構造体のフィールドについては、使用するときに説明します。</p>
 <p>命令をデコードするとき、まずopcodeを使って判別します。このために、デコードに使う定数を<code class="inline-code">eei</code>パッケージに記述します(<span class="listref"><a href="./04-impl-rv32i.html#eei.very.id-range.opcode">リスト3.30</a></span>)。</p>
 <div id="eei.very.id-range.opcode" class="caption-code">
 <span class="caption">リスト3.30: リスト3.30: eei.verylに追加で記述する (eei.veryl)</span>
@@ -1085,7 +1085,7 @@ module inst_decoder (
 </li>
 <li><code class="inline-code">funct3</code>, <code class="inline-code">funct7</code>を命令中のビットをそのまま設定します 
 </li>
-<li>それ以外のメンバーは<code class="inline-code">0</code>に設定します。
+<li>それ以外のフィールドは<code class="inline-code">0</code>に設定します。
 </li>
 </ul>
 
