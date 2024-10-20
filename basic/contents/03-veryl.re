@@ -326,25 +326,25 @@ always_comb {
 //}
 
 通常のプログラミング言語での代入とは、スタック領域やレジスタに存在する変数に値を格納することです。
-これに対して、always_combブロックの中での代入やassign文による代入は変数に式(値)を@<b>{束縛}します。
-変数に式が束縛されると、
+これに対して、always_combブロックの中での代入やassign文による代入は変数に式の結果が@<b>{継続的代入}(continuous assignment)されます。
+変数に式が継続的代入されると、
 式が評価(計算)された値が変数に1度だけ代入されるのではなく、
 変数の値は常に式の計算結果になります。
 
 具体例で考えてみます。
-例えば、1ビットの変数xに1ビットの変数yをassign文で割り当てます
+例えば、1ビットの変数xに1ビットの変数yをassign文で代入します
 (@<list>{assign.wave})。
 
 //list[assign.wave][xにyを割り当てる]{
 assign x = y;
 //}
 
-yの値が時間経過により0, 1, 0, 1, 0というように遷移したとします。
+yの値が時間経過により0, 1, 0, 1, 0というように変化したとします。
 このとき、xの値はyが変わるのと同時に変化します。
 @<img>{assign_wave}は、横軸が時間で、xとyの値を線の高低で表しています。
-@<img>{assign_wave}のような図を波形図(waveform, 波形)と呼びます。
+@<img>{assign_wave}のような図を@<b>{波形図}(waveform)、または単に@<b>{波形}と呼びます。
 
-xにyではなくa + bを割り当てるとすると、aかbの変化をトリガーにxの値も変化します。
+xにyではなくa + bを継続的代入すると、aかbの変化をトリガーにxの値も変化します。
 
 //image[assign_wave][xはyの値の変化に追従する][width=60%]
 
@@ -358,10 +358,10 @@ var value : logic<32>;
 
 var文によって宣言した変数は、
 assign文, またはalways_comb内での代入によって、
-式を束縛することができます。
+継続的代入することができます。
 
 @<b>{let}文を使うと、
-変数の宣言と値の代入を同時に行うことができます。
+変数の宣言と値の継続的代入を同時に行うことができます。
 
 //list[let.stmt][変数の宣言と代入]{
 // let 変数名 : 型名 = 式;
@@ -371,7 +371,7 @@ let value : logic<32> = 100 + a;
 ==== レジスタの定義, 代入
 
 変数を宣言するとき、
-変数に式が束縛されない場合、
+変数に式が継続的代入されない場合、
 変数はレジスタとして解釈できます
 (@<list>{reg.define})。
 
@@ -379,7 +379,7 @@ let value : logic<32> = 100 + a;
 // var レジスタ名 : 型名;
 var reg_value : logic<32>;
 
-// always_combブロックの中での代入や、assign文での代入をしない
+// reg_valueに継続的代入しない
 //}
 
 本書では、レジスタのことを変数,
@@ -447,6 +447,10 @@ always_ff {
 2つ以上のalways_ffブロックで、
 1つの同じレジスタの値を変更することはできません@<fn>{clockdomain}。
 
+本書では、
+継続的代入とレジスタへの代入のことを区別せず、
+どちらも代入と呼ぶことがあります。
+
 //footnote[clockdomain][正確には可能ですが、本書では扱っていません]
 
 ==== モジュールのインスタンス化
@@ -485,11 +489,11 @@ module ModuleA{
 モジュールをインスタンス化するときにパラメータの値を指定することができます。
 
 モジュールのパラメータは、
-ポート宣言の前に@<b>{param}キーワードによって宣言することができます
+ポート宣言の前の@<code>{#()}の中で@<b>{param}キーワードによって宣言することができます
 (@<list>{module.param.define})。
 
 //list[module.param.define][モジュールのパラメータの宣言]{
-module ModuleA (
+module ModuleA #(
 	// param パラメータ名 : 型名 = デフォルト値 
 	param WIDTH : u32 = 100, // u32型のパラメータ
 	param DATA_TYPE : type = logic, // type型のパラメータには型を指定できる
@@ -535,9 +539,9 @@ logic<32>とlogic<16>の2つのデータから構成される型を定義する�
 //list[struct.define][構造体型の定義]{
 // struct 型名 { フィールドの定義 }
 struct MyPair {
-    // 名前 : 型
-    word: logic<32>,
-    half: logic<16>,
+	// 名前 : 型
+	word: logic<32>,
+	half: logic<16>,
 }
 //}
 
@@ -553,7 +557,7 @@ let w : logic<32> = pair.word;
 
 // フィールドに値を割り当てる
 always_comb {
-    pair.word = 12345;
+	pair.word = 12345;
 }
 //}
 
@@ -569,11 +573,11 @@ always_comb {
 //list[enum.define][列挙型の定義]{
 // enum 型名 : logic<バリアント数を保持できるだけのビット数> { バリアントの定義 }
 enum abc : logic<2> {
-    // バリアント名 : バリアントを表す値,
-    A = 2'd0,
-    B = 2'd1,
-    C = 2'd2,
-    D = 2'd3
+	// バリアント名 : バリアントを表す値,
+	A = 2'd0,
+	B = 2'd1,
+	C = 2'd2,
+	D = 2'd3
 }
 //}
 
@@ -583,7 +587,7 @@ enum abc : logic<2> {
 
 //list[enum.omit][列挙型の省略した定義]{
 enum abc {
-    A, B, C, D
+	A, B, C, D
 }
 //}
 
@@ -620,70 +624,6 @@ type ptr_array  = ptr<32>
 
 === 式, 文, 宣言
 
-==== 演算子
-
-Verylでは、次の演算子を使用することができます(@<list>{operator})。
-
-TODO
-
-//list[operator][単項演算子, 二項演算子]{
-これはdocからのコピペ
-
-// 単項算術演算
-a = +1;
-a = -1;
-
-// 単項論理演算
-a = !1;
-a = ~1;
-
-// 単項集約演算
-a = &1;
-a = |1;
-a = ^1;
-a = ~&1;
-a = ~|1;
-a = ~^1;
-a = ^~1;
-
-// 二項算術演算
-a = 1 ** 1;
-a = 1 * 1;
-a = 1 / 1;
-a = 1 % 1;
-a = 1 + 1;
-a = 1 - 1;
-
-// シフト演算
-a = 1 << 1;
-a = 1 >> 1;
-a = 1 <<< 1;
-a = 1 >>> 1;
-
-// 比較演算
-a = 1 <: 1;
-a = 1 <= 1;
-a = 1 >: 1;
-a = 1 >= 1;
-a = 1 == 1;
-a = 1 != 1;
-a = 1 === 1;
-a = 1 !== 1;
-a = 1 ==? 1;
-a = 1 !=? 1;
-
-// ビット演算
-a = 1 & 1;
-a = 1 ^ 1;
-a = 1 ~^ 1;
-a = 1 ^~ 1;
-a = 1 | 1;
-
-// 二項論理演算
-a = 1 && 1;
-a = 1 || 1;
-//}
-
 ==== ビット選択
 
 //image[bitsel][ビット選択][width=50%]
@@ -694,34 +634,474 @@ a = 1 || 1;
 最下位ビット(least significant bit)は@<b>{lsb}キーワードで指定することができます。
 選択する場所の指定には式を使うことができます。
 
+==== 演算子
+
+Verylでは、次の演算子を使用することができます(@<table>{operator.priority})。
+
+//table[operator.priority][演算子と優先度 @<bib>{veryl-doc.operator.precedence}]{
+演算子	結合法則	優先度
+==============================================
+@<code>{()  []  ::  .}												左		最優先
+@<code>{+  -  !  ~  &  ~&  |  ~|  ^  ~^  ^~}(単項)					左
+@<code>{**}															左
+@<code>{*  /  %}													左
+@<code>{+  -} (二項)												左
+@<code>{<<  >>  <<<  >>>}											左
+@<code>{<:  <=  >:  >=}												左
+@<code>{==  !=  ===  !==  ==?  !=?}									左
+@<code>{&} (二項)													左
+@<code>{^  ~^  ^~} (二項)											左
+@<code>{|} (二項)													左
+@<code>{&&}															左
+@<code>{||}															左
+@<code>{=  +=  -=  *=  /=  %=  &=  ^=  |=  <<=  >>=  <<<=  >>>=}	なし
+@<code>{{\} inside outside if case switch}							なし	最後
+//}
+
+SystemVerilogを知っている方向けにSystemVerilogとの差異を説明すると、
+@<code>{++},@<code>{--},@<code>{:=},@<code>{:/},@<code>{<=}(代入),@<code>{{{\}\}}が無く、
+@<code>{<=},@<code>{>=}がそれぞれ@<code>{<:},@<code>{>:}に変更されています。
+また、@<code>{inside}の形式が変更され、@<code>{if}, @<code>{case}, @<code>{switch}式が追加されています。
+
+単項, 二項演算子の使用例は次の通りです(@<list>{operator.use})。
+
+//list[operator.use][単項, 二項演算子 (Verylのドキュメント@<bib>{veryl-doc.operators}の例を改変)]{
+// 単項算術演算
+a = +1;
+a = -1; // 正負を反転させる
+
+// 単項論理演算
+a = !1; // 否定 (真偽を反転させる)
+a = ~1; // ビット反転 (0を1, 1を0にする)
+
+// 単項集約演算
+// 集約: 左のビットから順にビット演算する
+//   例: k=3'b110のとき、&k = 0
+//   まず、k[msb]とk[1]をANDして1を得る。
+//   次に、その結果とk[0]をANDして0を得る。
+//   この値が&kの結果になる。
+a = &1;  // AND
+a = |1;  // OR
+a = ^1;  // XOR
+a = ~&1; // NAND
+a = ~|1; // NOR
+a = ~^1; // XNOR
+a = ^~1; // XNOR
+
+// 二項算術演算
+a = k ** p; // kのp乗
+a = 1 * 1;  // かけ算
+a = 1 / 1;  // 割り算
+a = 1 % 1;  // 剰余
+a = 1 + 1;  // 足し算
+a = 1 - 1;  // 引き算
+
+// シフト演算
+// 注意 : 右オペランド(シフト数)は符号無しの数として扱われる
+a =	k <<  n; // kをnビット左シフトする。空いたビットは0で埋める
+a = k <<< n; // <<と同じ
+a = k >>  n; // kをnビット右シフトする。空いたビットは0で埋める
+a = k >>> n; // kが符号無しのとき>>と同じ。符号付きのとき、空いたビットはmsbで埋める
+
+// 比較演算
+a = n <: m;  // nはm未満
+a = n <= m;  // nはm以下
+a = n >: m;  // nはmよりも大きい (mを含まない)
+a = n >= m;  // nはm以上 (mを含む)
+a = n == m;  // nはmと等しい (x, zを含む場合、x)
+a = n != m;  // nはmと等しくない (x, zを含む場合、x)
+a = n === m; // nはmと等しい (x, zを含めて完全に一致)
+a = n !== m; // nはmと等しくない (x, zを含めて完全に一致)
+a = n ==? m; // ===と同じ。ただし、mに含まれるx,zはワイルドカードになる
+a = n !=? m; // !(==?)と同じ
+
+// ビット演算 (ビット単位, bitwise)
+a = 1 & 1;  // ビット単位AND
+a = 1 ^ 1;  // ビット単位XOR
+a = 1 ~^ 1; // ビット単位XNOR
+a = 1 ^~ 1; // ビット単位XNOR
+a = 1 | 1;  // ビット単位OR
+
+// 二項論理演算
+a = x && y; // xとyの両方が真のとき真
+a = x || y; // xまたはyが真のとき真
+//}
+
 ==== if, switch, case
 
-TODO
-式と文
+条件によって動作や値を変えたいとき、@<b>{if}文を使用します (@<list>{if.only})。
+if文は式にすることができます。
+if式は必ず値を返す必要があり、elseが必須です。
+
+//list[if.only][if文, if式]{
+var v1 : logic<32>;
+always_comb {
+	if WIDTH == 0 {
+		// WIDTH == 0のとき
+		v1 = 0;
+	} else if WIDTH == 1 {
+		// WIDTH != 0かつWIDTH == 1のとき
+		v1 = 1;
+	} else {
+		// WIDTH != 0かつWIDTH != 1のとき
+		v1 = if WIDTH == 3 { // ifは式にもなる
+			3
+		} else {
+			// if式はelseが必須
+			4
+		};
+	}
+}
+//}
+
+always_combブロックで変数に継続的代入するとき、
+if文の全ての場合で継続的代入する必要があることに注意してください
+(@<code>{v1}は常に代入されています)。
+
+@<list>{if.only}と同じ意味の文を@<b>{switch}文で書くことができます(@<list>{switch.only})。
+どの条件にも当てはまらないときの動作は@<b>{default}で指定します。
+switchは式にすることができます。
+switch式はは必ず値を返す必要があり、defaultが必須です。
+
+//list[switch.only][switch文, switch式]{
+var v1: logic<32>;
+always_comb {
+	switch {
+		// WIDTH == 0のとき
+		WIDTH == 0: {
+			v1 = 0;
+		}
+		// WIDTH != 0かつWIDTH == 1のとき
+		WIDTH == 1: v1 = 1; // 要素が1つの文の時、{}は省略できる
+		// WIDTH != 0かつWIDTH != 1のとき
+		default: 
+			// switch式
+			v1 = switch {
+				WIDTH == 3: 3, // カンマで区切る
+				default : 4, // switch式はdefaultが必須
+			};
+	}
+}
+//}
+
+@<list>{if.only}のように
+1つの要素(@<code>{WIDTH})の一致のみが条件のとき、
+同じ意味の文を@<b>{case}文で書くことができます(@<list>{case.only})。
+式にできたり、式にdefaultが必須なのはswitch文と同様です。
+
+//list[case.only][case文, case式]{
+var v1: logic<32>;
+always_comb {
+	case WIDTH {
+		// WIDTH == 0のとき
+		0: {
+			v1 = 0;
+		}
+		// WIDTH != 0かつWIDTH == 1のとき
+		1: v1 = 1; // 要素が1つの文の時、{}は省略できる
+		// WIDTH != 0かつWIDTH != 1のとき
+		default: 
+			// case式
+			v1 = case WIDTH {
+				3: 3, // カンマで区切る
+				default : 4, // case式はdefaultが必須
+			};
+	}
+}
+//}
 
 ==== 連結, repeat
 
-ビット列や文字列を連結したいときは@<code>{\{\}}を使用することができます(@<list>{renketu})。
+ビット列や文字列を連結したいときは@<code>{{\}}を使用することができます(@<list>{renketu})。
 @<code>{+}では連結できない(値の足し算になる)ことに注意してください。
+同じビット列, 文字列を繰り返して連結したいときは@<b>{repeat}キーワードを使用します(@<list>{repeat})。
 
 //list[renketu][連結]{
 {12'h123, 32'habcd0123} // 44'h123_abcde0123になる
 {"Hello", " ", "World!"} // "Hello World!"になる
 //}
 
-同じビット列, 文字列を繰り返して連結したいとき、@<b>{repeat}キーワードを使用します
-(@<list>{repeat})。
-
-//list[repeat][repeatを使って、連結を繰り返す]{
+//list[repeat][repeatを使って連結を繰り返す]{
+// {繰り返したい要素 repeat 繰り返す回数}
 {4'0011 repeat 3, 4'b1111} // 16'b0011_0011_0011_1111になる
 {"Happy" repeat 3} // "HappyHappyHappy"になる
 //}
 
-==== for ..=
-TODO
+==== 文の生成 (if, for)
+
+if文はalways_ff, always_comb等のブロックの外にも書くことができます(@<list>{generate.if})。
+このとき、条件式は定数しか使用できません。
+if文, else if, else文には@<code>{: ラベル名}で名前を付ける必要があります。
+
+//list[generate.if][if文による文の生成]{
+module ModuleA #(
+	param WIDTH : u32 = 0
+) (
+	value : output logic<32>
+) {
+	if WIDTH == 0 : width_is_zero {
+		assign value = 1;
+	} else if WIDTH == 1 : width_is_one {
+		assign value = 2;
+	} else { // else文のラベルは省略できる
+		assign value = 'x;
+	}
+}
+//}
+
+同じ文をなんども繰り返し記述したいとき、@<b>{for}文を活用することができます(@<list>{generate.for})。
+if文と同様に、for文にもラベルを付ける必要があります。
+
+for文はalways_ff, always_comb等のブロックの中にも書くことができます。
+その場合、ラベルは不要で、ループ変数に型を付ける必要があります。
+また、@<b>{break}文によってループを中断することができます。
+
+//list[generate.for][for文による文の生成]{
+module ModuleA (
+	value : output logic<32>
+) {
+	// in 0..32で、0から31の区間をループする
+	// in 0..=31で同じ区間を指定できる
+	for i in 0..32 : value_assignment {
+		assign value[i] = i % 2;
+	}
+
+	var value2 : logic<32>;
+	always_comb {
+		// ループ変数に型を指定する必要がある
+		for i :u32 in  0..=63 {
+			value2[i] = i % 2;
+			if i == 31 {
+				break;
+			}
+		}
+	}
+}
+//}
+
+=== inside, outside
+
+値がある範囲に含まれているかという条件を記述したいとき、
+@<b>{inside}式を利用することができます。
+@<code>{inside 式 {範囲\}}で、
+式の結果が範囲内にあるかという条件を記述できます(@<list>{inside-outside})。
+逆に、範囲外にあるという条件は@<b>{outside}式で記述できます。
+
+//list[inside-outside][inside, outside]{
+inside n {0..10}    // nが0以上10未満のとき1
+inside n {0..=10}   // nが0以上10以下のとき1
+inside n {0, 1, 3}  // nが0,1,3のいずれかのとき1
+inside n {0, 2..10} // nが0、または2以上10未満のとき1
+
+// outsideはinsideの逆
+outside n {0..10}   // nが0未満、または10より大きいとき1
+outside n {0, 1, 3} // nが0,1,3以外の値のとき1
+//}
 
 ==== function
+
+何度も記述する操作, 計算は、関数(@<b>{function})を使うことでまとめて記述することができます(@<list>{function.first})。
+関数は値を引数で受け取り、@<b>{return}文で値を返します。
+値を返さないとき、戻り値の型の指定を省略できます。
+
+引数には向きを指定できます。
+functionの実行を開始するとき、
+inputとして指定されている実引数の値が仮引数にコピーされます。
+functionの実行が終了するとき、
+outputとして指定されている仮引数の値が実引数の変数にコピーされます。
+
+//list[function.first][関数]{
+// べき乗を返す関数
+function get_power(
+	a : input u32,
+	b : input u32,
+) -> u32 {
+	return a ** b;
+}
+
+val v1 : logic<32>;
+val v2 : logic<32>;
+
+always_comb {
+	v1 = get_power(2, 10); // v1 = 1024
+	v2 = get_power(3, 3); // v2 = 27
+}
+
+
+// a + 1をbに代入する関数
+function assign_plus1(
+	a : input  logic<32>,
+	b : output logic<32>,
+) { // 戻り値はないので省略
+	b = a + 1;
+}
+
+val v3 : logic<32>;
+
+always_comb {
+	assign_plus1(v1, v3); // v3 = v1 + 1
+}
+//}
+
+=== interface
+
+モジュールに何個もポートが存在するとき、
+ポートの接続は非常に手間のかかる作業になります(@<list>{interface.motivate})。
+
+//list[interface.motivate][モジュールのポートの相互接続]{
+module ModuleA (
+	req_a: output logic,
+	req_b: output logic,
+	req_c: output logic,
+){}
+module ModuleB (
+	resp_a: input logic,
+	resp_b: input logic,
+	resp_c: input logic,
+){}
+module Top{
+	var a: logic;
+	var b: logic;
+	var c: logic;
+	inst ma : ModuleA (
+		req_a:a,
+		req_b:b,
+		req_c:c,
+	);
+	inst mb : ModuleB (
+		resp_a:a,
+		resp_b:b,
+		resp_c:c,
+	);
+}
+//}
+
+モジュール間のポートの接続を簡単に行うために、
+インターフェース(@<b>{interface})という機能が用意されています。
+@<list>{interface.motivate}のModuleAとModuleBを相互接続するような
+インターフェースは次のように定義することができます(@<list>{interface.example})。
+
+//list[interface.example][インターフェースの定義]{
+// interface インターフェース名 { }
+interface iff_ab {
+	var a : logic;
+	var b : logic;
+	var c : logic;
+
+	modport req {
+		a: input,
+		b: input,
+		c: input,
+	}
+	modport resp {
+		a: output,
+		b: output,
+		c: output,
+	}
+}
+//}
+
+@<code>{iff_ab}を利用すると、
+@<list>{interface.motivate}を次のように簡潔に記述することができます
+(@<list>{interface.good})。
+
+//list[interface.good][インターフェースによる接続]{
+module ModuleA (
+	req : modport iff_ab::req,
+){}
+module ModuleB (
+	resp : modport iff_ab::resp,
+){}
+module Top{
+	// インターフェースのインスタンス化
+	inst iab : iff_ab;
+	inst ma : ModuleA (req: iab);
+	inst mb : ModuleB (resp: iab);
+}
+//}
+
+インターフェースはポートの宣言と接続を抽象化します。
+インターフェース内に変数を定義すると、
+@<b>{modport}文によってポートと向きを宣言することができます。
+モジュールでのポートの宣言は、@<code>{ポート名 : modport インターフェース名::modport名}という風に記述することができます。
+modportで宣言されたポートにインターフェースのインスタンスを渡すことにより、
+ポートの接続を一気に行うことができます。
+
+モジュールと同じようにパラメータを宣言することができます(@<list>{interface.param})。
+
+//list[interface.param][インターフェースの定義]{
+// interface インターフェース名 #( パラメータの定義 ) { }
+interface iff_params # (
+	param PARAM_A : u32 = 100,
+	param PARAM_B : u64 = 200,
+){ }
+//}
+
+インターフェース内には、関数の定義やassign, always_comb, always_ffなどの文を記述することができます。
+
+=== package
+
+複数のモジュールやインターフェースにまたがって使用したい
+パラメータや型, 関数はパッケージ(package)に定義することができます
+(@<list>{package.define})。
+
+//list[package.define][パッケージの定義]{
+package PackageA {
+	const WIDTH : u32 = 1234;
+	type foo = logic<WIDTH>;
+	function bar () -> u32 {
+		return 1234;
+	}
+}
+//}
+
+パッケージに定義した要素には、
+@<code>{パッケージ名::要素名}でアクセスすることができます
+(@<list>{package.access})。
+
+//list[package.access][パッケージの要素にアクセスする]{
+module ModuleA {
+	const W : u32 = PackageA::WIDTH;
+	var value1 : PackageA::foo;
+	let value2 : u32 = PackageA::bar();
+}
+//}
+
+@<b>{import}文を使用すると、
+パッケージ名の指定を省略することができます
+(@<list>{package.import})。
+@<b>{export}文を使用すると、パッケージ名の指定が必要な状態に戻すことができます。
+
+//list[package.import][パッケージをimportする]{
+import PackageA::WIDTH; // 特定の要素をimportする
+import PackageA::*; // 全ての要素をimportする
+export WIDTH; // PackageAからimportしたWIDTHをexportする
+//}
+
+=== ジェネリクス
+
+module ModuleA {
+    inst u0: ModuleB::<ModuleC>;
+    inst u1: ModuleB::<ModuleD>;
+}
+
+proto module ProtoA;
+
+module ModuleB::<T: ProtoA> {
+    inst u: T;
+}
+
+module ModuleC for ProtoA {}
+module ModuleD for ProtoA {}
+
 TODO
+
+ * function
+ * module
+ * interface
+ * package
+
+=== その他の機能, 文
 
 ==== initial, final
 
@@ -730,47 +1110,19 @@ TODO
 
 //list[initial.final][initial, finalブロック]{
 module ModuleA {
-    initial {
+	initial {
 		// シミュレーション開始時に実行される
-    }
-    final {
+	}
+	final {
 		// シミュレーション終了時に実行される
-    }
+	}
 }
 //}
-
-=== interface
-TODO
-
-楽に済ますよ
-
-定義, パラメータも使えます
-
-modportでらくちんの例
-
-インスタンス化する例
-
-=== package
-TODO
-
-const, type, function
-
-import
-
-=== ジェネリクス
-TODO
-
- * function
- * module
- * interface
- * package
-
-=== その他の機能
 
 ==== SystemVerilogとの連携
 
 VerylはSystemVerilogのモジュールやパッケージ, インターフェースを利用することができます。
-SystemVerilogのリソースにアクセスすには@<b>{$sv::}キーワードを使用します。
+SystemVerilogのリソースにアクセスするには@<b>{$sv::}を使用します。
 
 //list[sv.use][SystemVerilogの要素を利用する]{
 module ModuleA {
@@ -790,7 +1142,7 @@ module ModuleA {
 
 	// SystemVerilogプログラムでsvinterfaceとして
 	// 定義されているインターフェースをインスタンス化する
-    inst c: $sv::svinterface;
+	inst c: $sv::svinterface;
 }
 //}
 
@@ -800,11 +1152,11 @@ SystemVerilogプログラムを直接埋め込み、含めることができま�
 //list[sv.integrate][SystemVerilogプログラムを埋め込む]{
 // SystemVerilogプログラムを直接埋め込む
 embed (inline) sv{{{
-    module ModuleA(
+	module ModuleA(
 		output logic a
 	);
 		assign a = 0;
-    endmodule
+	endmodule
 }}}
 
 // SystemVerilogプログラムのファイルを展開する
@@ -855,7 +1207,7 @@ $finish		シミュレーションを終了する				なし
 
 ==== 標準ライブラリ
 
-Verylには、よく使うモジュールなどが標準ライブラリと準備されています。
+Verylには、よく使うモジュールなどが標準ライブラリとして準備されています。
 標準ライブラリは@<href>{https://std.veryl-lang.org/}で確認することができます。
 
 本書では標準ライブラリを使用していないため、説明は割愛します。

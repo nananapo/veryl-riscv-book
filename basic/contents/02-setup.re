@@ -97,7 +97,7 @@ Veryl側の問題によりプログラムをビルドできないことがあり
 ===[notoc] VSCodeの拡張のインストール
 
 エディタにVSCodeを利用している方は、
-@<img>{vscode-ext}の拡張をインストールするとシンタックスハイライト等の機能を利用することができます。
+@<img>{vscode-ext}の拡張をインストールするとシンタックスハイライトなどの機能を利用することができます。
 
  * @<href>{https://marketplace.visualstudio.com/items?itemName=dalance.vscode-veryl}
 

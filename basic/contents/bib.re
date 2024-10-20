@@ -4,9 +4,20 @@
 天野 英晴, FPGAの原理と構成, オーム社
 //}
 
-
 //bibpaper[ronrikairo][]{
 坂井 修一, 論理回路入門, 培風館
+//}
+
+//bibpaper[veryl-doc.operator.precedence][]{
+演算子の優先順位 - The Veryl Hardware Description Language, 
+https://doc.veryl-lang.org/book/ja/05_language_reference/04_expression/01_operator_precedence.html ,
+2024/10/21閲覧
+//}
+
+//bibpaper[veryl-doc.operators][]{
+演算子 - The Veryl Hardware Description Language, 
+https://doc.veryl-lang.org/book/ja/05_language_reference/02_lexical_structure/01_operator.html ,
+2024/10/21閲覧
 //}
 
 //bibpaper[isa-manual.1.2.3.enc][]{

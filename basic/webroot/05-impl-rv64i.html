@@ -199,9 +199,9 @@ Test Result : 14 / 52
 
 <h3 class="none"><a id="h6-2-1"></a><span class="secno">6.2.1</span> ADD[I]W, SUBW命令をデコードする</h3>
 <div id="addsubw" class="image">
-<img src="images/05-impl-rv64i/addsubw.png" alt="ADDW, ADDIW, SUBW命令のフォーマット&lt;a href=&quot;bib.html#bib-isa-manual.1.37&quot;&gt;[4]&lt;/a&gt;" class="img" />
+<img src="images/05-impl-rv64i/addsubw.png" alt="ADDW, ADDIW, SUBW命令のフォーマット&lt;a href=&quot;bib.html#bib-isa-manual.1.37&quot;&gt;[6]&lt;/a&gt;" class="img" />
 <p class="caption">
-図6.1: ADDW, ADDIW, SUBW命令のフォーマット<a href="bib.html#bib-isa-manual.1.37">[4]</a>
+図6.1: ADDW, ADDIW, SUBW命令のフォーマット<a href="bib.html#bib-isa-manual.1.37">[6]</a>
 </p>
 </div>
 <p>ADDW, SUBW命令はR形式で、opcodeは<code class="inline-code">OP-32</code>(<code class="inline-code">0111011</code>)です。ADDIW命令はI形式で、opcodeは<code class="inline-code">OP-IMM-32</code>(<code class="inline-code">0011011</code>)です。</p>
@@ -336,9 +336,9 @@ PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-subw.bin.hex
 <h2 class="numbox"><a id="h6-3"></a><span class="secno">6.3</span> SLL[I]W, SRL[I]W, SRA[I]W命令の実装</h2>
 <p>RV64Iでは、SLL[I], SRL[I], SRA[I]命令はrs1を0 ～ 63ビットシフトする命令になり、rs1の下位32ビットを0 ～ 31ビットシフトするSLL[I]W, SRL[I]W, SRA[I]W命令が追加されます。32ビットの演算結果は符号拡張します。</p>
 <div id="sllsrlsraw" class="image">
-<img src="images/05-impl-rv64i/sllsrlsraw.png" alt="SLL[I]W, SRL[I]W, SRA[I]W命令のフォーマット &lt;a href=&quot;bib.html#bib-isa-manual.1.37&quot;&gt;[4]&lt;/a&gt;" class="img" />
+<img src="images/05-impl-rv64i/sllsrlsraw.png" alt="SLL[I]W, SRL[I]W, SRA[I]W命令のフォーマット &lt;a href=&quot;bib.html#bib-isa-manual.1.37&quot;&gt;[6]&lt;/a&gt;" class="img" />
 <p class="caption">
-図6.2: SLL[I]W, SRL[I]W, SRA[I]W命令のフォーマット <a href="bib.html#bib-isa-manual.1.37">[4]</a>
+図6.2: SLL[I]W, SRL[I]W, SRA[I]W命令のフォーマット <a href="bib.html#bib-isa-manual.1.37">[6]</a>
 </p>
 </div>
 <p>SLL[I]W, SRL[I]W, SRA[I]W命令のフォーマットは、RV32IのSLL[I], SRL[I], SRA[I]命令のopcodeを変えたものと同じです。SLLW, SRLW, SRAW命令はR形式で、opcodeは<code class="inline-code">OP-32</code>です。SLLIW, SRLIW, SRAIW命令はI形式で、opcodeは<code class="inline-code">OP-IMM-32</code>です。どちらのopcodeの命令も、ADD[I]W, SUBW命令の実装時にデコードが完了しています。</p>
@@ -395,9 +395,9 @@ PASS : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-
 <p>LB, LH命令は、ロードした値を符号拡張した値をレジスタに格納します。これに対して、LBU, LHU命令は、ロードした値をゼロで拡張した値をレジスタに格納します。</p>
 <p>同様に、LW命令は、ロードした値を符号拡張した値をレジスタに格納します。これに対して、RV64Iでは、ロードした32ビットの値をゼロで拡張した値をレジスタに格納するLWU命令が追加されます。</p>
 <div id="lwu" class="image">
-<img src="images/05-impl-rv64i/lwu.png" alt="LWU命令のフォーマット&lt;a href=&quot;bib.html#bib-isa-manual.1.37&quot;&gt;[4]&lt;/a&gt;" class="img" />
+<img src="images/05-impl-rv64i/lwu.png" alt="LWU命令のフォーマット&lt;a href=&quot;bib.html#bib-isa-manual.1.37&quot;&gt;[6]&lt;/a&gt;" class="img" />
 <p class="caption">
-図6.3: LWU命令のフォーマット<a href="bib.html#bib-isa-manual.1.37">[4]</a>
+図6.3: LWU命令のフォーマット<a href="bib.html#bib-isa-manual.1.37">[6]</a>
 </p>
 </div>
 <p>LWU命令はI形式で、opcodeは<code class="inline-code">LOAD</code>です。ロード, ストア命令はfunct3によって区別することができます。LWU命令のfunct3は<code class="inline-code">110</code>です。デコード処理に変更は必要なく、メモリにアクセスする処理を変更する必要があります。</p>

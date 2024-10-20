@@ -213,12 +213,12 @@ module csrunit (
 
 <h4><a id="h4-3-2-1"></a>mtvecレジスタ, トラップ</h4>
 <div id="mtvec" class="image">
-<img src="images/04a-zicsr/mtvec.png" alt="mtvecのエンコーディング&lt;a href=&quot;bib.html#bib-isa-manual.2.fig10&quot;&gt;[7]&lt;/a&gt;" class="img" />
+<img src="images/04a-zicsr/mtvec.png" alt="mtvecのエンコーディング&lt;a href=&quot;bib.html#bib-isa-manual.2.fig10&quot;&gt;[9]&lt;/a&gt;" class="img" />
 <p class="caption">
-図4.1: mtvecのエンコーディング<a href="bib.html#bib-isa-manual.2.fig10">[7]</a>
+図4.1: mtvecのエンコーディング<a href="bib.html#bib-isa-manual.2.fig10">[9]</a>
 </p>
 </div>
-<p>mtvecレジスタは、仕様書<a href="bib.html#bib-isa-manual.2.3.1.7">[8]</a>に定義されています。mtvecは、MXLENビットのWARLなレジスタです。mtvecのアドレスは<code class="inline-code">12'h305</code>です。</p>
+<p>mtvecレジスタは、仕様書<a href="bib.html#bib-isa-manual.2.3.1.7">[10]</a>に定義されています。mtvecは、MXLENビットのWARLなレジスタです。mtvecのアドレスは<code class="inline-code">12'h305</code>です。</p>
 <p>MXLENはmisaレジスタに定義されていますが、今のところはXLENと等しいという認識で問題ありません。WARLはWrite Any Values, Reads Legal Valuesの略です。その名の通り、好きな値を書き込めるが、読み出すときには合法な値になっているという認識で問題ありません。</p>
 <p>mtvecは、トラップ(Trap)が発生したときのジャンプ先(Trap-Vector)の基準となるアドレスを格納するレジスタです。<b>トラップ</b>とは、例外(Exception)、または割り込み(Interrupt)により、CPUの制御を変更することです<sup><a id="fnb-trap.define" href="#fn-trap.define" class="noteref" epub:type="noteref">*1</a></sup>。トラップが発生する時、CPUはCSRを変更した後、mtvecに格納されたアドレスにジャンプします。</p>
 <p><b>例外</b>とは、命令の実行によって引き起こされる異常な状態(unusual condition)のことです。例えば、不正な命令を実行しようとしたときにはIllegal Instruction例外が発生します。CPUは、例外が発生したときのジャンプ先(対処方法)を決めておくことで、CPUが異常な状態に陥ったままにならないようにしています。</p>
@@ -529,9 +529,9 @@ $ <span class="userinput">./obj_dir/sim test/sample_csr.hex 5</span>
 </pre>
 </div>
 <div id="ecall_enc" class="image">
-<img src="images/04a-zicsr/ecall_enc.png" alt="ECALL命令のフォーマット&lt;a href=&quot;bib.html#bib-isa-manual.1.37&quot;&gt;[4]&lt;/a&gt;" class="img" />
+<img src="images/04a-zicsr/ecall_enc.png" alt="ECALL命令のフォーマット&lt;a href=&quot;bib.html#bib-isa-manual.1.37&quot;&gt;[6]&lt;/a&gt;" class="img" />
 <p class="caption">
-図4.2: ECALL命令のフォーマット<a href="bib.html#bib-isa-manual.1.37">[4]</a>
+図4.2: ECALL命令のフォーマット<a href="bib.html#bib-isa-manual.1.37">[6]</a>
 </p>
 </div>
 <p>それでは、csrunitモジュールにトラップの処理を実装します。</p>
@@ -637,9 +637,9 @@ $ <span class="userinput">./obj_dir/sim test/sample_ecall.hex 10</span>
 
 <h3 class="none"><a id="h4-5-1"></a><span class="secno">4.5.1</span> MRET命令を実装する</h3>
 <div id="mret_enc" class="image">
-<img src="images/04a-zicsr/mret_enc.png" alt="MRET命令のフォーマット&lt;a href=&quot;bib.html#bib-isa-manual.2.15&quot;&gt;[9]&lt;/a&gt;" class="img" />
+<img src="images/04a-zicsr/mret_enc.png" alt="MRET命令のフォーマット&lt;a href=&quot;bib.html#bib-isa-manual.2.15&quot;&gt;[11]&lt;/a&gt;" class="img" />
 <p class="caption">
-図4.3: MRET命令のフォーマット<a href="bib.html#bib-isa-manual.2.15">[9]</a>
+図4.3: MRET命令のフォーマット<a href="bib.html#bib-isa-manual.2.15">[11]</a>
 </p>
 </div>
 <p>まず、csrunitモジュールに供給されている命令がMRET命令かどうかを判定する変数<code class="inline-code">is_mret</code>を作成します(<span class="listref"><a href="./04a-zicsr.html#csrunit.veryl.create-mret-range.is_mret">リスト4.32</a></span>)。MRET命令は、上位12ビットが<code class="inline-code">001100000010</code>,rs1は0, funct3は0, rdは0です(<span class="imgref"><a href="./04a-zicsr.html#mret_enc">図4.3</a></span>)。</p>
