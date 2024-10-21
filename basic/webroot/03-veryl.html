@@ -574,7 +574,7 @@ a = 1 - 1;  // 引き算
 
 // シフト演算
 // 注意 : 右オペランド(シフト数)は符号無しの数として扱われる
-a =     k &lt;&lt;  n; // kをnビット左シフトする。空いたビットは0で埋める
+a = k &lt;&lt;  n; // kをnビット左シフトする。空いたビットは0で埋める
 a = k &lt;&lt;&lt; n; // &lt;&lt;と同じ
 a = k &gt;&gt;  n; // kをnビット右シフトする。空いたビットは0で埋める
 a = k &gt;&gt;&gt; n; // kが符号無しのとき&gt;&gt;と同じ。符号付きのとき、空いたビットはmsbで埋める
@@ -738,7 +738,7 @@ always_comb {
 </pre>
 </div>
 
-<h3 class="none"><a id="h2-2-6"></a><span class="secno">2.2.6</span> inside, outside</h3>
+<h4><a id="h2-2-5-6"></a>inside, outside</h4>
 <p>値がある範囲に含まれているかという条件を記述したいとき、<b>inside</b>式を利用することができます。<code class="inline-code">inside 式 {範囲}</code>で、式の結果が範囲内にあるかという条件を記述できます(<span class="listref"><a href="./03-veryl.html#inside-outside">リスト2.35</a></span>)。逆に、範囲外にあるという条件は<b>outside</b>式で記述できます。</p>
 <div id="inside-outside" class="caption-code">
 <span class="caption">リスト2.35: リスト2.35: inside, outside</span>
@@ -753,7 +753,7 @@ outside n {0, 1, 3} // nが0,1,3以外の値のとき1
 </pre>
 </div>
 
-<h4><a id="h2-2-6-1"></a>function</h4>
+<h4><a id="h2-2-5-7"></a>function</h4>
 <p>何度も記述する操作, 計算は、関数(<b>function</b>)を使うことでまとめて記述することができます(<span class="listref"><a href="./03-veryl.html#function.first">リスト2.36</a></span>)。関数は値を引数で受け取り、<b>return</b>文で値を返します。値を返さないとき、戻り値の型の指定を省略できます。</p>
 <p>引数には向きを指定できます。functionの実行を開始するとき、inputとして指定されている実引数の値が仮引数にコピーされます。functionの実行が終了するとき、outputとして指定されている仮引数の値が実引数の変数にコピーされます。</p>
 <div id="function.first" class="caption-code">
@@ -791,7 +791,7 @@ always_comb {
 </pre>
 </div>
 
-<h3 class="none"><a id="h2-2-7"></a><span class="secno">2.2.7</span> interface</h3>
+<h3 class="none"><a id="h2-2-6"></a><span class="secno">2.2.6</span> interface</h3>
 <p>モジュールに何個もポートが存在するとき、ポートの接続は非常に手間のかかる作業になります(<span class="listref"><a href="./03-veryl.html#interface.motivate">リスト2.37</a></span>)。</p>
 <div id="interface.motivate" class="caption-code">
 <span class="caption">リスト2.37: リスト2.37: モジュールのポートの相互接続</span>
@@ -874,7 +874,7 @@ interface iff_params # (
 </div>
 <p>インターフェース内には、関数の定義やassign, always_comb, always_ffなどの文を記述することができます。</p>
 
-<h3 class="none"><a id="h2-2-8"></a><span class="secno">2.2.8</span> package</h3>
+<h3 class="none"><a id="h2-2-7"></a><span class="secno">2.2.7</span> package</h3>
 <p>複数のモジュールやインターフェースにまたがって使用したいパラメータや型, 関数はパッケージ(package)に定義することができます(<span class="listref"><a href="./03-veryl.html#package.define">リスト2.41</a></span>)。</p>
 <div id="package.define" class="caption-code">
 <span class="caption">リスト2.41: リスト2.41: パッケージの定義</span>
@@ -906,7 +906,7 @@ export WIDTH; // PackageAからimportしたWIDTHをexportする
 </pre>
 </div>
 
-<h3 class="none"><a id="h2-2-9"></a><span class="secno">2.2.9</span> ジェネリクス</h3>
+<h3 class="none"><a id="h2-2-8"></a><span class="secno">2.2.8</span> ジェネリクス</h3>
 <p>関数, モジュール, インターフェース, パッケージ, 構造体は、<b>ジェネリクス</b>(generics)によってパラメータ化することができます。</p>
 <p>例えば、要素に任意の型TやWビットのデータを持つ構造体は、次のように<b>ジェネリックパラメータ</b>(generic parameter)を使うことで定義できます(<span class="listref"><a href="./03-veryl.html#generics.sample">リスト2.44</a></span>)。ジェネリックパラメータに渡される値は、ジェネリクスの定義位置からアクセスすることができる定数である必要があります。</p>
 <div id="generics.sample" class="caption-code">
@@ -935,9 +935,9 @@ export WIDTH; // PackageAからimportしたWIDTHをexportする
 </pre>
 </div>
 
-<h3 class="none"><a id="h2-2-10"></a><span class="secno">2.2.10</span> その他の機能, 文</h3>
+<h3 class="none"><a id="h2-2-9"></a><span class="secno">2.2.9</span> その他の機能, 文</h3>
 
-<h4><a id="h2-2-10-1"></a>initial, final</h4>
+<h4><a id="h2-2-9-1"></a>initial, final</h4>
 <p><b>initial</b>ブロックの中の文は、シミュレーションの開始時に実行されます。<b>final</b>ブロックの中の文は、シミュレーションの終了時に実行されます。</p>
 <div id="initial.final" class="caption-code">
 <span class="caption">リスト2.45: リスト2.45: initial, finalブロック</span>
@@ -952,7 +952,7 @@ export WIDTH; // PackageAからimportしたWIDTHをexportする
 </pre>
 </div>
 
-<h4><a id="h2-2-10-2"></a>SystemVerilogとの連携</h4>
+<h4><a id="h2-2-9-2"></a>SystemVerilogとの連携</h4>
 <p>VerylはSystemVerilogのモジュールやパッケージ, インターフェースを利用することができます。SystemVerilogのリソースにアクセスするには<b>$sv::</b>を使用します。</p>
 <div id="sv.use" class="caption-code">
 <span class="caption">リスト2.46: リスト2.46: SystemVerilogの要素を利用する</span>
@@ -995,7 +995,7 @@ include(inline, &quot;filename.sv&quot;);
 </pre>
 </div>
 
-<h4><a id="h2-2-10-3"></a>システム関数 / システムタスク</h4>
+<h4><a id="h2-2-9-3"></a>システム関数 / システムタスク</h4>
 <p>SystemVerilogに標準で用意されている関数(システム関数, システムタスク)を利用することができます。システム関数(system function), システムタスク(system task)の名前は、<code class="inline-code">$</code>から始まります。本書で利用するシステム関数, システムタスクを<span class="tableref"><a href="./03-veryl.html#systemtasks">表2.5</a></span>に列挙します。それぞれの使用例は次の通りです(<span class="listref"><a href="./03-veryl.html#systemtask.use">リスト2.48</a></span>)。</p>
 <p>システム関数, システムタスクを利用するときは、通常の関数呼び出しのように使用します。</p>
 <div id="systemtask.use" class="caption-code">
@@ -1033,7 +1033,7 @@ initial {
 </table>
 </div>
 
-<h4><a id="h2-2-10-4"></a>標準ライブラリ</h4>
+<h4><a id="h2-2-9-4"></a>標準ライブラリ</h4>
 <p>Verylには、よく使うモジュールなどが標準ライブラリとして準備されています。標準ライブラリは<a href="https://std.veryl-lang.org/" class="link">https://std.veryl-lang.org/</a>で確認することができます。</p>
 <p>本書では標準ライブラリを使用していないため、説明は割愛します。</p>
 
