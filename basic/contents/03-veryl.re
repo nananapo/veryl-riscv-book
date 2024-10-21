@@ -658,7 +658,7 @@ Verylでは、次の演算子を使用することができます(@<table>{opera
 @<code>{{\} inside outside if case switch}							なし	最後
 //}
 
-SystemVerilogを知っている方向けにSystemVerilogとの差異を説明すると、
+SystemVerilogを知っている方にSystemVerilogとの差異を説明すると、
 @<code>{++},@<code>{--},@<code>{:=},@<code>{:/},@<code>{<=}(代入),@<code>{{{\}\}}が無く、
 @<code>{<=},@<code>{>=}がそれぞれ@<code>{<:},@<code>{>:}に変更されています。
 また、@<code>{inside}の形式が変更され、@<code>{if}, @<code>{case}, @<code>{switch}式が追加されています。
