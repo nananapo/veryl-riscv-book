@@ -139,9 +139,9 @@ if式やcase式,
 痒い所に手が届く機能が提供されており、
 高い生産性を発揮します。
 
-Verylプログラムは、
+Verylのソースコードは、
 コンパイラ(トランスパイラ)によって、
-自然で読みやすいSystemVerilogプログラムに変換されます。
+自然で読みやすいSystemVerilogのソースコードに変換されます。
 よって、Verylは旧来のSystemVerilogの環境と共存することができ、
 SystemVerilogの資産を利用することができます。
 
@@ -164,7 +164,7 @@ Verylはまだ開発途上(正式版, 安定版がリリースされていない
 それでは、Verylの書き方を簡単に学んでいきましょう。
 Verylのドキュメントは@<href>{https://doc.veryl-lang.org/book/ja/}に存在します。
 また、@<href>{https://doc.veryl-lang.org/playground/, Veryl Playground}では、
-VerylプログラムのSystemVerilogプログラムへのトランスパイルを試すことができます。
+VerylのSystemVerilogへのトランスパイルを試すことができます。
 
 === コメント, 空白
 
@@ -1137,7 +1137,7 @@ SystemVerilogのリソースにアクセスするには@<b>{$sv::}を使用し�
 
 //list[sv.use][SystemVerilogの要素を利用する]{
 module ModuleA {
-	// SystemVerilogプログラムでsvpackageとして
+	// SystemVerilogでsvpackageとして
 	// 定義されているパッケージを利用する
 	let x = $sv::svpackage::X;
 	let y = $sv::svpackage::Y;
@@ -1145,23 +1145,23 @@ module ModuleA {
 	var s: logic;
 	var c: logic;
 
-	// SystemVerilogプログラムでHalfAdderとして
+	// SystemVerilogでHalfAdderとして
 	// 定義されているモジュールをインスタンス化する
 	inst ha : $sv::HalfAdder(
 		x, y, s, c
 	);
 
-	// SystemVerilogプログラムでsvinterfaceとして
+	// SystemVerilogでsvinterfaceとして
 	// 定義されているインターフェースをインスタンス化する
 	inst c: $sv::svinterface;
 }
 //}
 
-SystemVerilogプログラムを直接埋め込み、含めることができます
+SystemVerilogのソースコードを直接埋め込み、含めることができます
 (@<list>{sv.integrate})。
 
-//list[sv.integrate][SystemVerilogプログラムを埋め込む]{
-// SystemVerilogプログラムを直接埋め込む
+//list[sv.integrate][SystemVerilogのソースコードを埋め込む]{
+// SystemVerilogのソースコードを直接埋め込む
 embed (inline) sv{{{
 	module ModuleA(
 		output logic a
@@ -1170,7 +1170,7 @@ embed (inline) sv{{{
 	endmodule
 }}}
 
-// SystemVerilogプログラムのファイルを展開する
+// SystemVerilogのソースコードのファイルを展開する
 // パスは相対パス
 include(inline, "filename.sv");
 //}

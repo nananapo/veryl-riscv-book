@@ -127,7 +127,7 @@ endmodule
 <div class="footnote" id="fn-nettype" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*2] </span>例えば、未定義の変数が1ビット幅の信号線として解釈される仕様があります。ヤバすぎる</p></div>
 </div><!--/.footnote-list-->
 <p>本書では、CPUの実装にVerylというHDLを使用します。Verylは2022年12月に公開された言語です。Verylの抽象度は、Verilogと同じくレジスタ転送レベルです。Verylの文法や機能は、Verilog, SystemVerilogに似通ったものになっています。しかし、if式やcase式,クロックとリセットの抽象化,ジェネリクスなど、痒い所に手が届く機能が提供されており、高い生産性を発揮します。</p>
-<p>Verylプログラムは、コンパイラ(トランスパイラ)によって、自然で読みやすいSystemVerilogプログラムに変換されます。よって、Verylは旧来のSystemVerilogの環境と共存することができ、SystemVerilogの資産を利用することができます。</p>
+<p>Verylのソースコードは、コンパイラ(トランスパイラ)によって、自然で読みやすいSystemVerilogのソースコードに変換されます。よって、Verylは旧来のSystemVerilogの環境と共存することができ、SystemVerilogの資産を利用することができます。</p>
 <div class="miniblock miniblock-caution">
 <p class="miniblock-caption">注意</p>
 <p>本書は2024/10/19時点のVeryl(バージョン0.13.1)について、本書で利用する範囲の文法, 機能を解説しています。Verylはまだ開発途上(正式版, 安定版がリリースされていない)状態の言語です。破壊的変更が入り、記載しているコードが使えなくなる可能性があります。</p>
@@ -138,7 +138,7 @@ endmodule
 </div><!--/.footnote-list-->
 
 <h2 class="numbox"><a id="h2-2"></a><span class="secno">2.2</span> Verylの基本文法, 機能</h2>
-<p>それでは、Verylの書き方を簡単に学んでいきましょう。Verylのドキュメントは<a href="https://doc.veryl-lang.org/book/ja/" class="link">https://doc.veryl-lang.org/book/ja/</a>に存在します。また、<a href="https://doc.veryl-lang.org/playground/" class="link">Veryl Playground</a>では、VerylプログラムのSystemVerilogプログラムへのトランスパイルを試すことができます。</p>
+<p>それでは、Verylの書き方を簡単に学んでいきましょう。Verylのドキュメントは<a href="https://doc.veryl-lang.org/book/ja/" class="link">https://doc.veryl-lang.org/book/ja/</a>に存在します。また、<a href="https://doc.veryl-lang.org/playground/" class="link">Veryl Playground</a>では、VerylのSystemVerilogへのトランスパイルを試すことができます。</p>
 
 <h3 class="none"><a id="h2-2-1"></a><span class="secno">2.2.1</span> コメント, 空白</h3>
 <p>Verylでは次のようにコメントを記述することができます(<span class="listref"><a href="./03-veryl.html#code.comment">リスト2.3</a></span>)。</p>
@@ -957,7 +957,7 @@ export WIDTH; // PackageAからimportしたWIDTHをexportする
 <div id="sv.use" class="caption-code">
 <span class="caption">リスト2.46: リスト2.46: SystemVerilogの要素を利用する</span>
 <pre class="list language-use">module ModuleA {
-        // SystemVerilogプログラムでsvpackageとして
+        // SystemVerilogでsvpackageとして
         // 定義されているパッケージを利用する
         let x = $sv::svpackage::X;
         let y = $sv::svpackage::Y;
@@ -965,22 +965,22 @@ export WIDTH; // PackageAからimportしたWIDTHをexportする
         var s: logic;
         var c: logic;
 
-        // SystemVerilogプログラムでHalfAdderとして
+        // SystemVerilogでHalfAdderとして
         // 定義されているモジュールをインスタンス化する
         inst ha : $sv::HalfAdder(
                 x, y, s, c
         );
 
-        // SystemVerilogプログラムでsvinterfaceとして
+        // SystemVerilogでsvinterfaceとして
         // 定義されているインターフェースをインスタンス化する
         inst c: $sv::svinterface;
 }
 </pre>
 </div>
-<p>SystemVerilogプログラムを直接埋め込み、含めることができます(<span class="listref"><a href="./03-veryl.html#sv.integrate">リスト2.47</a></span>)。</p>
+<p>SystemVerilogのソースコードを直接埋め込み、含めることができます(<span class="listref"><a href="./03-veryl.html#sv.integrate">リスト2.47</a></span>)。</p>
 <div id="sv.integrate" class="caption-code">
-<span class="caption">リスト2.47: リスト2.47: SystemVerilogプログラムを埋め込む</span>
-<pre class="list language-integrate">// SystemVerilogプログラムを直接埋め込む
+<span class="caption">リスト2.47: リスト2.47: SystemVerilogのソースコードを埋め込む</span>
+<pre class="list language-integrate">// SystemVerilogのソースコードを直接埋め込む
 embed (inline) sv{{{
         module ModuleA(
                 output logic a
@@ -989,7 +989,7 @@ embed (inline) sv{{{
         endmodule
 }}}
 
-// SystemVerilogプログラムのファイルを展開する
+// SystemVerilogのソースコードのファイルを展開する
 // パスは相対パス
 include(inline, &quot;filename.sv&quot;);
 </pre>

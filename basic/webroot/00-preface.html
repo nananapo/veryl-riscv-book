@@ -110,7 +110,7 @@
 
 <h4 id="id_00-preface_nonum9" notoc="true">RISC-V</h4>
 <p><b>RISC-V</b>は、カリフォルニア大学バークレー校で開発されたISAです。仕様書の初版は2011年に公開されました。ISAとしての歴史はまだ浅いですが、仕様がオープンでカスタマイズ可能であるという特徴もあって、研究で利用されたり既に何種類もCPUが市販されているなど、着実に広まっていっています。</p>
-<p>インターネット上には多くのRISC-Vの実装が公開されています。例として、rocket-chip(Chiselによる実装),Shakti(Bluespec SVによる実装),rsd(SystemVerilogによる実装)が挙げられます。</p>
+<p>インターネット上には多くのRISC-Vの実装が公開されています。例として、<a href="https://github.com/chipsalliance/rocket-chip" class="link">RocketChip</a>(Chiselによる実装),<a href="https://shakti.org.in/" class="link">Shakti</a>(Bluespec SVによる実装),<a href="https://github.com/rsd-devel/rsd" class="link">RSD</a>(SystemVerilogによる実装)が挙げられます。</p>
 <p>本書では、RISC-VのバージョンRISC-V ISA Manual, version 20240411 を利用します。RISC-Vの最新の仕様は、GitHubの<a href="https://github.com/riscv/riscv-isa-manual/" class="link">riscv/riscv-isa-manual</a>で確認することができます。</p>
 <p>RISC-Vには、基本整数命令セットとしてRV32I, RV64I, RV32E, RV64E<sup><a id="fnb-rv128i" href="#fn-rv128i" class="noteref" epub:type="noteref">*4</a></sup>が定義されています。RVの後ろにつく数字はレジスタの長さ(XLEN)が何ビットかです。数字の後ろにつく文字がIの場合、XLENビットのレジスタが32個存在します。Eの場合はレジスタの数が16個になります。</p>
 <div class="footnote-list">
@@ -121,7 +121,7 @@
 
 <h4 id="id_00-preface_nonum10" notoc="true">使用する言語</h4>
 <p>CPUの論理設計にはハードウェア記述言語を使用します。ハードウェア記述言語とは、文字通り、ハードウェアを記述するための言語です。ハードウェアとは論理回路のことで、ハードウェア記述言語を使うと論理回路を記述, 生成することができます。これ以降、ハードウェア記述言語のことをHDL (Hardware Description Language) と書くことがあります。</p>
-<p>有名なHDLとしてはVerilog HDL, SystemVerilog, VHDLが挙げられますが、本書では、CPUの実装にVerylというHDLを使用します。VerylはSystemVerilogの構文を書きやすくしたような言語で、VerylのプログラムはSystemVerilogに変換することができます。そのため、SystemVerilogを利用できる環境でVerylを使用することができます。</p>
+<p>有名なHDLとしてはVerilog HDL, SystemVerilog, VHDLが挙げられますが、本書では、CPUの実装にVerylというHDLを使用します。VerylはSystemVerilogの構文を書きやすくしたような言語で、VerylのソースコードはSystemVerilogに変換することができます。そのため、SystemVerilogを利用できる環境でVerylを使用することができます。</p>
 <p>Verylの構文や機能はSystemVerilogと似通っており、SystemVerilogが分かる人は殆ど時間をかけずにVerylを書けるようになると思います。本書はSystemVerilogを知らない人を対象にしているため、SystemVerilogを知っている必要はありません。HDLやVerylの記法は<a href="./03-veryl.html">第2章「ハードウェア記述言語 Veryl」</a>で解説します。</p>
 <p>他には、回路のシミュレーションやテストのためにC++, Pythonを利用します。プログラムがどのような意味や機能を持つかについては解説しますが、言語の仕様や書き方、ライブラリなどについては説明しません。</p>
 

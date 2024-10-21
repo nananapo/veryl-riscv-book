@@ -81,7 +81,7 @@
 <p>計算対象のデータにレジスタと即値のどちらを使うかは命令によって異なります。レジスタの番号は命令のビット列の中に含まれています。</p>
 <p>計算を実行するユニット(部品)のことを、ALU(Arithmetic Logic Unit)と呼びます。</p>
 <p>計算やメモリアクセスが終わると、その結果をレジスタに格納します。例えば、足し算を行う命令なら足し算の結果、メモリから値を読み込む命令なら読み込まれた値を格納します。</p>
-<p>これで命令の実行は終わりですが、CPUは次の命令を実行する必要があります。今現在実行している命令のアドレスを格納しているレジスタのことをプログラムカウンタ(PC)と言い、CPUはPCの値をメモリに渡すことで命令をフェッチしています。</p>
+<p>これで命令の実行は終わりですが、CPUは次の命令を実行する必要があります。今現在実行している命令のアドレスを格納しているレジスタのことを<b>プログラムカウンタ</b>(program counter, PC)と言い、CPUはPCの値をメモリに渡すことで命令をフェッチしています。</p>
 <p>CPUは次の命令を実行するために、PCの値を次の命令のアドレスに設定します。ジャンプ命令の場合は、PCの値をジャンプ先のアドレスに設定します。分岐命令の場合は、まず、分岐の成否を判定します。分岐が成立する場合は、PCの値を分岐先のアドレスに設定します。分岐が成立しない場合は、通常の命令と同じように、PCの値を次の命令のアドレスに設定します。</p>
 <p>ここまでの話をまとめると、CPUの動作は次のようになります。</p>
 <ol start="1" type="1">
@@ -120,7 +120,7 @@ version = &quot;0.1.0&quot;
 sourcemap_target = {type =&quot;none&quot;}
 </pre>
 </div>
-<p>Verylのプログラムを格納するために、プロジェクトのフォルダ内にsrcフォルダを作成しておいてください。</p>
+<p>Verylのソースコードを格納するために、プロジェクトのフォルダ内にsrcフォルダを作成しておいてください。</p>
 <div class="cmd-code">
 <pre class="emlist">$ <span class="userinput">cd core</span>
 $ <span class="userinput">mkdir src</span>
@@ -128,7 +128,7 @@ $ <span class="userinput">mkdir src</span>
 </div>
 
 <h2 class="numbox"><a id="h3-3"></a><span class="secno">3.3</span> 定数の定義</h2>
-<p>いよいよプログラムを記述していきます。まず、CPU内で何度も使用する定数や型を記述するパッケージを作成します。</p>
+<p>いよいよソースコードを記述していきます。まず、CPU内で何度も使用する定数や型を記述するパッケージを作成します。</p>
 <p><code class="inline-code">src/eei.veryl</code>を作成し、次のように記述します(<span class="listref"><a href="./04-impl-rv32i.html#eei.veryl">リスト3.3</a></span>)。</p>
 <div id="eei.veryl" class="caption-code">
 <span class="caption">リスト3.3: リスト3.3: eei.veryl</span>
@@ -417,7 +417,7 @@ module core (
 <p>always_combブロックでは、アドレス<code class="inline-code">if_pc</code>にあるデータを、常にメモリに要求しています。命令フェッチではメモリの読み込みしか行わないため、<code class="inline-code">membus.wen</code>は<code class="inline-code">0</code>にしています。</p>
 <p>上から1つめのalways_ffブロックでは、フェッチ中かどうか,メモリがready(要求を受け入れる)状態かどうかによって、<code class="inline-code">if_pc</code>,<code class="inline-code">if_is_requested</code>,<code class="inline-code">if_pc_requested</code>の値を変更しています。</p>
 <p>メモリにデータを要求する時、<code class="inline-code">if_pc</code>を次の命令のアドレス(<code class="inline-code">4</code>を足したアドレス)に変更して、<code class="inline-code">if_is_requested</code>を<code class="inline-code">1</code>に変更しています。フェッチ中かつ<code class="inline-code">membus.rvalid</code>が<code class="inline-code">1</code>のとき、命令フェッチが完了し、データが<code class="inline-code">membus.rdata</code>に供給されています。このとき、メモリがready状態なら、すぐに次の命令フェッチを開始します。この状態遷移を繰り返すことによって、0,4,8,c,10,...という順番のアドレスの命令を、次々にフェッチするようになっています。</p>
-<p>上から2つめのalways_ffブロックは、デバッグ用の表示を行うプログラムです。命令フェッチが完了したとき、その結果を<code class="inline-code">$display</code>システムタスクによって出力します。</p>
+<p>上から2つめのalways_ffブロックは、デバッグ用の表示を行うコードです。命令フェッチが完了したとき、その結果を<code class="inline-code">$display</code>システムタスクによって出力します。</p>
 
 <h3 class="none"><a id="h3-6-2"></a><span class="secno">3.6.2</span> memoryモジュールとcoreモジュールを接続する</h3>
 <p>次に、topモジュールでcoreモジュールをインスタンス化し、membus_ifインターフェースを接続します。</p>
@@ -468,19 +468,19 @@ module core (
 </div>
 
 <h3 class="none"><a id="h3-6-3"></a><span class="secno">3.6.3</span> 命令フェッチをテストする</h3>
-<p>ここまでのプログラムが正しく動くかを検証します。</p>
-<p>Verylで記述されたプログラムは<code class="inline-code">veryl build</code>コマンドでSystemVerilogのプログラムに変換することができます。変換されたプログラムをオープンソースのVerilogシミュレータであるVerilatorで実行することで、命令フェッチが正しく動いていることを確認します。</p>
-<p>まず、プログラムをビルドします。</p>
+<p>ここまでのコードが正しく動くかを検証します。</p>
+<p>Verylで記述されたコードは<code class="inline-code">veryl build</code>コマンドでSystemVerilogのコードに変換することができます。変換されたソースコードをオープンソースのVerilogシミュレータであるVerilatorで実行することで、命令フェッチが正しく動いていることを確認します。</p>
+<p>まず、Verylのプロジェクトをビルドします。</p>
 <div id="veryl.build.first" class="cmd-code">
-<span class="caption">リスト3.13: リスト3.13: Verylプログラムのビルド</span>
+<span class="caption">リスト3.13: リスト3.13: Verylのプロジェクトのビルド</span>
 <pre class="list language-first">$ <span class="userinput">veryl fmt</span> <span class="balloon">← フォーマットする</span>
 $ <span class="userinput">veryl build</span> <span class="balloon">← ビルドする</span>
 </pre>
 </div>
-<p>上記のコマンドを実行すると、verylプログラムと同名の<code class="inline-code">.sv</code>ファイルと<code class="inline-code">core.f</code>ファイルが生成されます。<code class="inline-code">core.f</code>は生成されたSystemVerilogのプログラムファイルのリストです。これをシミュレータのビルドに利用します。</p>
-<p>シミュレータのビルドにはVerilatorを利用します。Verilatorは与えられたSystemVerilogプログラムをC++プログラムに変換することでシミュレータを生成します。verilatorを利用するために、次のようなC++プログラムを書く必要があります<sup><a id="fnb-verilator.only.verilog" href="#fn-verilator.only.verilog" class="noteref" epub:type="noteref">*2</a></sup>。</p>
+<p>上記のコマンドを実行すると、verylファイルと同名の<code class="inline-code">.sv</code>ファイルと<code class="inline-code">core.f</code>ファイルが生成されます。<code class="inline-code">core.f</code>は生成されたSystemVerilogのソースコードファイルのリストです。これをシミュレータのビルドに利用します。</p>
+<p>シミュレータのビルドにはVerilatorを利用します。Verilatorは与えられたSystemVeriloのコードをC++プログラムに変換することでシミュレータを生成します。verilatorを利用するために、次のようなC++プログラムを書く必要があります<sup><a id="fnb-verilator.only.verilog" href="#fn-verilator.only.verilog" class="noteref" epub:type="noteref">*2</a></sup>。</p>
 <div class="footnote-list">
-<div class="footnote" id="fn-verilator.only.verilog" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*2] </span>Verilogプログラムだけでビルドすることもできます</p></div>
+<div class="footnote" id="fn-verilator.only.verilog" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*2] </span>Verilogのソースコードだけでビルドすることもできます</p></div>
 </div><!--/.footnote-list-->
 <p><code class="inline-code">src/tb_verilator.cpp</code>を作成し、次のように記述します(<span class="listref"><a href="./04-impl-rv32i.html#test_verilator.cpp">リスト3.14</a></span>)。</p>
 <div id="test_verilator.cpp" class="caption-code">
@@ -657,10 +657,10 @@ sim:
         mv $(OBJ_DIR)/V$(PROJECT)_$(TOP_MODULE) $(OBJ_DIR)/$(SIM_NAME)
 </pre>
 </div>
-<p>これ以降、次のようにVerylプログラムのビルド,シミュレータのビルド,成果物の削除ができるようになります(<span class="listref"><a href="./04-impl-rv32i.html#build.command">リスト3.19</a></span>)。</p>
+<p>これ以降、次のようにVerylのソースコードのビルド,シミュレータのビルド,成果物の削除ができるようになります(<span class="listref"><a href="./04-impl-rv32i.html#build.command">リスト3.19</a></span>)。</p>
 <div id="build.command" class="cmd-code">
 <span class="caption">リスト3.19: リスト3.19: Makefileによって追加されたコマンド</span>
-<pre class="list language-command">$ <span class="userinput">make build</span> <span class="balloon">← Verylプログラムのビルド</span>
+<pre class="list language-command">$ <span class="userinput">make build</span> <span class="balloon">← Verylのソースコードのビルド</span>
 $ <span class="userinput">make sim</span> <span class="balloon">← シミュレータのビルド</span>
 $ <span class="userinput">make clean</span> <span class="balloon">← ビルドした成果物の削除</span>
 </pre>
@@ -1106,9 +1106,9 @@ module inst_decoder (
 </pre>
 </div>
 <p>まず、デコーダとcoreモジュールを接続するために<code class="inline-code">inst_ctrl</code>と<code class="inline-code">inst_imm</code>を定義します。次に、inst_decoderモジュールをインスタンス化します。<code class="inline-code">bits</code>ポートに<code class="inline-code">inst_bits</code>を渡すことで、フェッチした命令をデコードします。</p>
-<p>デバッグ用のalways_ffブロックに、デコードした結果を表示するプログラムを記述します(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.id-range.debug">リスト3.33</a></span>)。</p>
+<p>デバッグ用のalways_ffブロックに、デコードした結果を表示するコードを記述します(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.id-range.debug">リスト3.33</a></span>)。</p>
 <div id="core.veryl.id-range.debug" class="caption-code">
-<span class="caption">リスト3.33: リスト3.33: デコード結果の表示プログラム (core.veryl)</span>
+<span class="caption">リスト3.33: リスト3.33: デコード結果の表示 (core.veryl)</span>
 <pre class="list language-debug">    always_ff {
         if if_fifo_rvalid {
             $display(&quot;%h : %h&quot;, inst_pc, inst_bits);
@@ -1157,7 +1157,7 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 7</span>
 <h3 class="none"><a id="h3-8-2"></a><span class="secno">3.8.2</span> レジスタの値を読み込む</h3>
 <p>レジスタを定義したので、命令が使用するレジスタの値を取得します。</p>
 <p><span class="imgref"><a href="./04-impl-rv32i.html#riscv-inst-types">図3.3</a></span>を見るとわかるように、RISC-Vの命令は形式によってソースレジスタの数が異なります。例えば、R形式はソースレジスタが2つで、2つのレジスタの値を使って実行されます。それに対して、I形式のソースレジスタは1つです。I形式の命令の実行には、ソースレジスタの値と即値を利用します。命令のビット列の中のソースレジスタの番号の場所は、命令形式が違っても共通の場所にあります。</p>
-<p>ここで、プログラムを簡単にするために、命令中のソースレジスタの番号にあたる場所に、常にソースレジスタの番号が書かれていると解釈します。更に、命令がレジスタの値を利用するかどうかに関係なく、常にレジスタの値を読み込むことにします(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.reg-range.use">リスト3.36</a></span>)。</p>
+<p>ここで、コードを簡単にするために、命令中のソースレジスタの番号にあたる場所に、常にソースレジスタの番号が書かれていると解釈します。更に、命令がレジスタの値を利用するかどうかに関係なく、常にレジスタの値を読み込むことにします(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.reg-range.use">リスト3.36</a></span>)。</p>
 <div id="core.veryl.reg-range.use" class="caption-code">
 <span class="caption">リスト3.36: リスト3.36: 命令が使うレジスタの値を取得する (core.veryl)</span>
 <pre class="list language-use">    // レジスタ番号
@@ -1914,7 +1914,7 @@ module memunit (
     };
 </pre>
 </div>
-<p>ところで、現在のプログラムでは、memunitの処理が終了していないときも値をライトバックし続けています。レジスタへのライトバックは命令の実行が終了したときのみで良いため、次のようにプログラムを変更します(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.lwsw-range.wb_ready">リスト3.61</a></span>)。</p>
+<p>ところで、現在のコードでは、memunitの処理が終了していないときも値をライトバックし続けています。レジスタへのライトバックは命令の実行が終了したときのみで良いため、次のようにコードを変更します(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.lwsw-range.wb_ready">リスト3.61</a></span>)。</p>
 <div id="core.veryl.lwsw-range.wb_ready" class="caption-code">
 <span class="caption">リスト3.61: リスト3.61: 命令の実行が終了したときにのみライトバックする (core.veryl)</span>
 <pre class="list language-wb_ready">    always_ff {
@@ -2555,7 +2555,7 @@ module brunit (
 <p><code class="inline-code">control_hazard</code>は、命令が無条件ジャンプ命令か、命令が条件分岐命令かつ分岐が成立するときに<code class="inline-code">1</code>になります。<code class="inline-code">control_hazard_pc_next</code>は、無条件ジャンプ命令のときは<code class="inline-code">alu_result</code>、条件分岐命令のときはPC + 即値になります。</p>
 
 <h4><a id="h3-12-2-2"></a>条件分岐命令のテスト</h4>
-<p>条件分岐命令を実行するとき、分岐の成否を表示するようにします。デバッグ表示を行っているalways_ffブロック内に、次のプログラムを追加します(<span class="listref"><a href="./04-impl-rv32i.html#core.very.br-range.debug">リスト3.93</a></span>)。</p>
+<p>条件分岐命令を実行するとき、分岐の成否を表示するようにします。デバッグ表示を行っているalways_ffブロック内に、次のコードを追加します(<span class="listref"><a href="./04-impl-rv32i.html#core.very.br-range.debug">リスト3.93</a></span>)。</p>
 <div id="core.very.br-range.debug" class="caption-code">
 <span class="caption">リスト3.93: リスト3.93: デバッグ表示 (core.veryl)</span>
 <pre class="list language-debug">    if inst_is_br(inst_ctrl) {

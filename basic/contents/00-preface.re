@@ -167,7 +167,7 @@ CPUの論理設計にはハードウェア記述言語を使用します。
 有名なHDLとしてはVerilog HDL, SystemVerilog, VHDLが挙げられますが、
 本書では、CPUの実装にVerylというHDLを使用します。
 VerylはSystemVerilogの構文を書きやすくしたような言語で、
-VerylのプログラムはSystemVerilogに変換することができます。
+VerylのソースコードはSystemVerilogに変換することができます。
 そのため、SystemVerilogを利用できる環境でVerylを使用することができます。
 
 Verylの構文や機能はSystemVerilogと似通っており、

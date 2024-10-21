@@ -71,7 +71,7 @@ CPUは命令のビット列がどのような意味を持っていて、
 メモリから値を読み込む命令なら読み込まれた値を格納します。
 
 これで命令の実行は終わりですが、CPUは次の命令を実行する必要があります。
-今現在実行している命令のアドレスを格納しているレジスタのことをプログラムカウンタ(PC)と言い、
+今現在実行している命令のアドレスを格納しているレジスタのことを@<b>{プログラムカウンタ}(program counter, PC)と言い、
 CPUはPCの値をメモリに渡すことで命令をフェッチしています。
 
 CPUは次の命令を実行するために、
@@ -121,7 +121,7 @@ sourcemap_target = {type ="none"}
 #@end
 //}
 
-Verylのプログラムを格納するために、プロジェクトのフォルダ内にsrcフォルダを作成しておいてください。
+Verylのソースコードを格納するために、プロジェクトのフォルダ内にsrcフォルダを作成しておいてください。
 //terminal[][]{
 $ @<userinput>{cd core}
 $ @<userinput>{mkdir src}
@@ -129,7 +129,7 @@ $ @<userinput>{mkdir src}
 
 == 定数の定義
 
-いよいよプログラムを記述していきます。
+いよいよソースコードを記述していきます。
 まず、CPU内で何度も使用する定数や型を記述するパッケージを作成します。
 
 @<code>{src/eei.veryl}を作成し、次のように記述します(@<list>{eei.veryl})。
@@ -494,7 +494,7 @@ always_combブロックでは、
 次々にフェッチするようになっています。
 
 上から2つめのalways_ffブロックは、
-デバッグ用の表示を行うプログラムです。
+デバッグ用の表示を行うコードです。
 命令フェッチが完了したとき、
 その結果を@<code>{$display}システムタスクによって出力します。
 
@@ -574,26 +574,28 @@ ILENとXLENを割り当てます。
 
 === 命令フェッチをテストする
 
-ここまでのプログラムが正しく動くかを検証します。
+ここまでのコードが正しく動くかを検証します。
 
-Verylで記述されたプログラムは@<code>{veryl build}コマンドでSystemVerilogのプログラムに変換することができます。
-変換されたプログラムをオープンソースのVerilogシミュレータであるVerilatorで実行することで、命令フェッチが正しく動いていることを確認します。
+Verylで記述されたコードは@<code>{veryl build}コマンドでSystemVerilogのコードに変換することができます。
+変換されたソースコードをオープンソースのVerilogシミュレータであるVerilatorで実行することで、
+命令フェッチが正しく動いていることを確認します。
 
-まず、プログラムをビルドします。
-//terminal[veryl.build.first][Verylプログラムのビルド]{
+まず、Verylのプロジェクトをビルドします。
+//terminal[veryl.build.first][Verylのプロジェクトのビルド]{
 $ @<userinput>{veryl fmt} @<balloon>{フォーマットする}
 $ @<userinput>{veryl build} @<balloon>{ビルドする}
 //}
 
-上記のコマンドを実行すると、verylプログラムと同名の@<code>{.sv}ファイルと@<code>{core.f}ファイルが生成されます。
-@<code>{core.f}は生成されたSystemVerilogのプログラムファイルのリストです。
+上記のコマンドを実行すると、
+verylファイルと同名の@<code>{.sv}ファイルと@<code>{core.f}ファイルが生成されます。
+@<code>{core.f}は生成されたSystemVerilogのソースコードファイルのリストです。
 これをシミュレータのビルドに利用します。
 
 シミュレータのビルドにはVerilatorを利用します。
-Verilatorは与えられたSystemVerilogプログラムをC++プログラムに変換することでシミュレータを生成します。
+Verilatorは与えられたSystemVeriloのコードをC++プログラムに変換することでシミュレータを生成します。
 verilatorを利用するために、次のようなC++プログラムを書く必要があります@<fn>{verilator.only.verilog}。
 
-//footnote[verilator.only.verilog][Verilogプログラムだけでビルドすることもできます]
+//footnote[verilator.only.verilog][Verilogのソースコードだけでビルドすることもできます]
 
 @<code>{src/tb_verilator.cpp}を作成し、次のように記述します(@<list>{test_verilator.cpp})。
 
@@ -797,12 +799,12 @@ sim:
 //}
 
 これ以降、
-次のようにVerylプログラムのビルド,
+次のようにVerylのソースコードのビルド,
 シミュレータのビルド,
 成果物の削除ができるようになります(@<list>{build.command})。
 
 //terminal[build.command][Makefileによって追加されたコマンド]{
-$ @<userinput>{make build} @<balloon>{Verylプログラムのビルド}
+$ @<userinput>{make build} @<balloon>{Verylのソースコードのビルド}
 $ @<userinput>{make sim} @<balloon>{シミュレータのビルド}
 $ @<userinput>{make clean} @<balloon>{ビルドした成果物の削除}
 //}
@@ -1343,9 +1345,9 @@ inst_decoderモジュールを、
 @<code>{bits}ポートに@<code>{inst_bits}を渡すことで、フェッチした命令をデコードします。
 
 デバッグ用のalways_ffブロックに、
-デコードした結果を表示するプログラムを記述します(@<list>{core.veryl.id-range.debug})。
+デコードした結果を表示するコードを記述します(@<list>{core.veryl.id-range.debug})。
 
-//list[core.veryl.id-range.debug][デコード結果の表示プログラム (core.veryl)]{
+//list[core.veryl.id-range.debug][デコード結果の表示 (core.veryl)]{
 #@maprange(scripts/04/id-range/core/src/core.veryl,debug)
     always_ff {
         if if_fifo_rvalid {
@@ -1424,7 +1426,7 @@ I形式の命令の実行には、ソースレジスタの値と即値を利用�
 命令のビット列の中のソースレジスタの番号の場所は、
 命令形式が違っても共通の場所にあります。
 
-ここで、プログラムを簡単にするために、
+ここで、コードを簡単にするために、
 命令中のソースレジスタの番号にあたる場所に、
 常にソースレジスタの番号が書かれていると解釈します。
 更に、命令がレジスタの値を利用するかどうかに関係なく、
@@ -2340,10 +2342,10 @@ FIFOからの命令の取り出しを停止します。
 #@end
 //}
 
-ところで、現在のプログラムでは、
+ところで、現在のコードでは、
 memunitの処理が終了していないときも値をライトバックし続けています。
 レジスタへのライトバックは命令の実行が終了したときのみで良いため、
-次のようにプログラムを変更します(@<list>{core.veryl.lwsw-range.wb_ready})。
+次のようにコードを変更します(@<list>{core.veryl.lwsw-range.wb_ready})。
 
 //list[core.veryl.lwsw-range.wb_ready][命令の実行が終了したときにのみライトバックする (core.veryl)]{
 #@maprange(scripts/04/lwsw-range/core/src/core.veryl,wb_ready)
@@ -3145,7 +3147,7 @@ coreモジュールでインスタンス化します(@<list>{core.veryl.br-range
 ==== 条件分岐命令のテスト
 
 条件分岐命令を実行するとき、分岐の成否を表示するようにします。
-デバッグ表示を行っているalways_ffブロック内に、次のプログラムを追加します(@<list>{core.very.br-range.debug})。
+デバッグ表示を行っているalways_ffブロック内に、次のコードを追加します(@<list>{core.very.br-range.debug})。
 
 //list[core.very.br-range.debug][デバッグ表示 (core.veryl)]{
 #@maprange(scripts/04/br-range/core/src/core.veryl,debug)
