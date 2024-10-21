@@ -1080,26 +1080,37 @@ export WIDTH; // PackageAからimportしたWIDTHをexportする
 
 === ジェネリクス
 
+関数, モジュール, インターフェース, パッケージ, 構造体は、
+@<b>{ジェネリクス}(generics)によってパラメータ化することができます。
+
+例えば、要素に任意の型TやWビットのデータを持つ構造体は、
+次のように@<b>{ジェネリックパラメータ}(generic parameter)を使うことで定義できます(@<list>{generics.sample})。
+ジェネリックパラメータに渡される値は、
+ジェネリクスの定義位置からアクセスすることができる定数である必要があります。
+
+//list[generics.sample][パラメータ化された構造体]{
 module ModuleA {
-    inst u0: ModuleB::<ModuleC>;
-    inst u1: ModuleB::<ModuleD>;
+	// ::<>でジェネリックパラメータを定義する
+	// constで数値を受け取る
+	struct StructA::<W: const> {
+	    A: logic<W>,
+	}
+
+	// 複数のジェネリックパラメータを定義できる
+	// typeで型を受け取る
+	// デフォルト値を設定できる
+	struct StructB::<W: const, T: type, D:const = 100> {
+		A: logic<W>,
+		B: T,
+		C: logic<D>
+	}
+
+	// ::<>でジェネリックパラメータを指定する
+	type A = StructA::<16>;
+	type B = StructB::<17, A>;
+	type C = StructB::<18, B, 19>;
 }
-
-proto module ProtoA;
-
-module ModuleB::<T: ProtoA> {
-    inst u: T;
-}
-
-module ModuleC for ProtoA {}
-module ModuleD for ProtoA {}
-
-TODO
-
- * function
- * module
- * interface
- * package
+//}
 
 === その他の機能, 文
 

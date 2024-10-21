@@ -907,28 +907,40 @@ export WIDTH; // PackageAからimportしたWIDTHをexportする
 </div>
 
 <h3 class="none"><a id="h2-2-9"></a><span class="secno">2.2.9</span> ジェネリクス</h3>
-<p>module ModuleA {inst u0: ModuleB::&lt;ModuleC&gt;;inst u1: ModuleB::&lt;ModuleD&gt;;}</p>
-<p>proto module ProtoA;</p>
-<p>module ModuleB::&lt;T: ProtoA&gt; {inst u: T;}</p>
-<p>module ModuleC for ProtoA {}module ModuleD for ProtoA {}</p>
-<p>TODO</p>
-<ul>
-<li>function
-</li>
-<li>module
-</li>
-<li>interface
-</li>
-<li>package
-</li>
-</ul>
+<p>関数, モジュール, インターフェース, パッケージ, 構造体は、<b>ジェネリクス</b>(generics)によってパラメータ化することができます。</p>
+<p>例えば、要素に任意の型TやWビットのデータを持つ構造体は、次のように<b>ジェネリックパラメータ</b>(generic parameter)を使うことで定義できます(<span class="listref"><a href="./03-veryl.html#generics.sample">リスト2.44</a></span>)。ジェネリックパラメータに渡される値は、ジェネリクスの定義位置からアクセスすることができる定数である必要があります。</p>
+<div id="generics.sample" class="caption-code">
+<span class="caption">リスト2.44: リスト2.44: パラメータ化された構造体</span>
+<pre class="list language-sample">module ModuleA {
+        // ::&lt;&gt;でジェネリックパラメータを定義する
+        // constで数値を受け取る
+        struct StructA::&lt;W: const&gt; {
+            A: logic&lt;W&gt;,
+        }
+
+        // 複数のジェネリックパラメータを定義できる
+        // typeで型を受け取る
+        // デフォルト値を設定できる
+        struct StructB::&lt;W: const, T: type, D:const = 100&gt; {
+                A: logic&lt;W&gt;,
+                B: T,
+                C: logic&lt;D&gt;
+        }
+
+        // ::&lt;&gt;でジェネリックパラメータを指定する
+        type A = StructA::&lt;16&gt;;
+        type B = StructB::&lt;17, A&gt;;
+        type C = StructB::&lt;18, B, 19&gt;;
+}
+</pre>
+</div>
 
 <h3 class="none"><a id="h2-2-10"></a><span class="secno">2.2.10</span> その他の機能, 文</h3>
 
 <h4><a id="h2-2-10-1"></a>initial, final</h4>
 <p><b>initial</b>ブロックの中の文は、シミュレーションの開始時に実行されます。<b>final</b>ブロックの中の文は、シミュレーションの終了時に実行されます。</p>
 <div id="initial.final" class="caption-code">
-<span class="caption">リスト2.44: リスト2.44: initial, finalブロック</span>
+<span class="caption">リスト2.45: リスト2.45: initial, finalブロック</span>
 <pre class="list language-final">module ModuleA {
         initial {
                 // シミュレーション開始時に実行される
@@ -943,7 +955,7 @@ export WIDTH; // PackageAからimportしたWIDTHをexportする
 <h4><a id="h2-2-10-2"></a>SystemVerilogとの連携</h4>
 <p>VerylはSystemVerilogのモジュールやパッケージ, インターフェースを利用することができます。SystemVerilogのリソースにアクセスするには<b>$sv::</b>を使用します。</p>
 <div id="sv.use" class="caption-code">
-<span class="caption">リスト2.45: リスト2.45: SystemVerilogの要素を利用する</span>
+<span class="caption">リスト2.46: リスト2.46: SystemVerilogの要素を利用する</span>
 <pre class="list language-use">module ModuleA {
         // SystemVerilogプログラムでsvpackageとして
         // 定義されているパッケージを利用する
@@ -965,9 +977,9 @@ export WIDTH; // PackageAからimportしたWIDTHをexportする
 }
 </pre>
 </div>
-<p>SystemVerilogプログラムを直接埋め込み、含めることができます(<span class="listref"><a href="./03-veryl.html#sv.integrate">リスト2.46</a></span>)。</p>
+<p>SystemVerilogプログラムを直接埋め込み、含めることができます(<span class="listref"><a href="./03-veryl.html#sv.integrate">リスト2.47</a></span>)。</p>
 <div id="sv.integrate" class="caption-code">
-<span class="caption">リスト2.46: リスト2.46: SystemVerilogプログラムを埋め込む</span>
+<span class="caption">リスト2.47: リスト2.47: SystemVerilogプログラムを埋め込む</span>
 <pre class="list language-integrate">// SystemVerilogプログラムを直接埋め込む
 embed (inline) sv{{{
         module ModuleA(
@@ -984,10 +996,10 @@ include(inline, &quot;filename.sv&quot;);
 </div>
 
 <h4><a id="h2-2-10-3"></a>システム関数 / システムタスク</h4>
-<p>SystemVerilogに標準で用意されている関数(システム関数, システムタスク)を利用することができます。システム関数(system function), システムタスク(system task)の名前は、<code class="inline-code">$</code>から始まります。本書で利用するシステム関数, システムタスクを<span class="tableref"><a href="./03-veryl.html#systemtasks">表2.5</a></span>に列挙します。それぞれの使用例は次の通りです(<span class="listref"><a href="./03-veryl.html#systemtask.use">リスト2.47</a></span>)。</p>
+<p>SystemVerilogに標準で用意されている関数(システム関数, システムタスク)を利用することができます。システム関数(system function), システムタスク(system task)の名前は、<code class="inline-code">$</code>から始まります。本書で利用するシステム関数, システムタスクを<span class="tableref"><a href="./03-veryl.html#systemtasks">表2.5</a></span>に列挙します。それぞれの使用例は次の通りです(<span class="listref"><a href="./03-veryl.html#systemtask.use">リスト2.48</a></span>)。</p>
 <p>システム関数, システムタスクを利用するときは、通常の関数呼び出しのように使用します。</p>
 <div id="systemtask.use" class="caption-code">
-<span class="caption">リスト2.47: リスト2.47: システム関数, システムタスクの使用例</span>
+<span class="caption">リスト2.48: リスト2.48: システム関数, システムタスクの使用例</span>
 <pre class="list language-use">const w1 : u32 = $clog2(32); // 5
 const w2 : u32 = $clog2(35); // 6
 
