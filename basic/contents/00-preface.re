@@ -131,9 +131,9 @@ ISAとしての歴史はまだ浅いですが、
 
 インターネット上には多くのRISC-Vの実装が公開されています。
 例として、
-rocket-chip(Chiselによる実装),
-Shakti(Bluespec SVによる実装),
-rsd(SystemVerilogによる実装)が挙げられます。
+@<href>{https://github.com/chipsalliance/rocket-chip,RocketChip}(Chiselによる実装),
+@<href>{https://shakti.org.in/,Shakti}(Bluespec SVによる実装),
+@<href>{https://github.com/rsd-devel/rsd,RSD}(SystemVerilogによる実装)が挙げられます。
 
 本書では、RISC-Vのバージョン@<w>{riscv-version}を利用します。
 RISC-Vの最新の仕様は、GitHubの
