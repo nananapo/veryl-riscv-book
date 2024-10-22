@@ -1081,17 +1081,17 @@ module inst_decoder (
 
 <h4><a id="h3-7-2-2"></a>制御フラグの生成</h4>
 <p>opcodeがOP-IMMな命令、例えばADDI命令について考えます。ADDI命令は、即値とソースレジスタの値を足し、デスティネーションレジスタに結果を格納する命令です。</p>
-<p>always_combブロックでは、opcodeが<code class="inline-code">OP_OP_IMM</code>(OP-IMM)のとき、次のように制御信号<code class="inline-code">ctrl</code>を設定します。</p>
+<p>always_combブロックでは、opcodeが<code class="inline-code">OP_OP_IMM</code>(OP-IMM)のとき、次のように制御信号<code class="inline-code">ctrl</code>を設定します。1ビットの0と1を入力する手間を省くために、<code class="inline-code">F</code>と<code class="inline-code">T</code>という定数を用意していることに注意してください。</p>
 <ul>
 <li>命令形式<code class="inline-code">itype</code>を<code class="inline-code">InstType::I</code>に設定します
 </li>
 <li>結果をレジスタに書き込むため、<code class="inline-code">rwb_en</code>を<code class="inline-code">1</code>に設定します
 </li>
-<li>ALU(計算を実行するユニット)を利用するため、<code class="inline-code">is_aluop</code>を<code class="inline-code">1</code>に設定します。
+<li>ALU(計算を実行するユニット)を利用するため、<code class="inline-code">is_aluop</code>を<code class="inline-code">1</code>に設定します
 </li>
 <li><code class="inline-code">funct3</code>, <code class="inline-code">funct7</code>を命令中のビットをそのまま設定します 
 </li>
-<li>それ以外のフィールドは<code class="inline-code">0</code>に設定します。
+<li>それ以外のフィールドは<code class="inline-code">0</code>に設定します
 </li>
 </ul>
 
@@ -1202,7 +1202,7 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 7</span>
 <div class="footnote-list">
 <div class="footnote" id="fn-verilator.x" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*4] </span>Verilatorはデフォルト設定では不定値に対応していないため、不定値は0になります</p></div>
 </div><!--/.footnote-list-->
-<p>これではテストする意味がないため、レジスタの値を適当な値に初期化します(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.reg-range.init">リスト3.38</a></span>)。</p>
+<p>これではテストする意味がないため、レジスタの値を適当な値に初期化します。always_ffブロックのif_resetで、n番目(0 &lt; i &lt; 32)のレジスタの値を<code class="inline-code">i + 100</code>で初期化します(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.reg-range.init">リスト3.38</a></span>)。</p>
 <div id="core.veryl.reg-range.init" class="caption-code">
 <span class="caption">リスト3.38: リスト3.38: レジスタの値を初期化する (core.veryl)</span>
 <pre class="list language-init">    // レジスタの初期化
@@ -1215,7 +1215,6 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 7</span>
     }
 </pre>
 </div>
-<p>always_ffブロックのif_resetで、n番目(32 &gt; n &gt; 0)のレジスタの値を<code class="inline-code">n + 100</code>で初期化します。</p>
 <p>レジスタの値が読み込めていることを確認します(<span class="listref"><a href="./04-impl-rv32i.html#reg.debug">リスト3.39</a></span>)。</p>
 <div id="reg.debug" class="cmd-code">
 <span class="caption">リスト3.39: リスト3.39: レジスタ読み込みのデバッグ</span>

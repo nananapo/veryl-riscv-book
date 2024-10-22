@@ -1323,12 +1323,14 @@ ADDI命令は、即値とソースレジスタの値を足し、
 always_combブロックでは、
 opcodeが@<code>{OP_OP_IMM}(OP-IMM)のとき、
 次のように制御信号@<code>{ctrl}を設定します。
+1ビットの0と1を入力する手間を省くために、
+@<code>{F}と@<code>{T}という定数を用意していることに注意してください。
 
  * 命令形式@<code>{itype}を@<code>{InstType::I}に設定します
  * 結果をレジスタに書き込むため、@<code>{rwb_en}を@<code>{1}に設定します
- * ALU(計算を実行するユニット)を利用するため、@<code>{is_aluop}を@<code>{1}に設定します。
+ * ALU(計算を実行するユニット)を利用するため、@<code>{is_aluop}を@<code>{1}に設定します
  * @<code>{funct3}, @<code>{funct7}を命令中のビットをそのまま設定します 
- * それ以外のフィールドは@<code>{0}に設定します。
+ * それ以外のフィールドは@<code>{0}に設定します
 
 === デコーダをインスタンス化する
 
@@ -1492,7 +1494,9 @@ I形式の命令の実行には、ソースレジスタの値と即値を利用�
 //footnote[verilator.x][Verilatorはデフォルト設定では不定値に対応していないため、不定値は0になります]
 
 これではテストする意味がないため、
-レジスタの値を適当な値に初期化します(@<list>{core.veryl.reg-range.init})。
+レジスタの値を適当な値に初期化します。
+always_ffブロックのif_resetで、
+n番目(0 < i < 32)のレジスタの値を@<code>{i + 100}で初期化します(@<list>{core.veryl.reg-range.init})。
 
 //list[core.veryl.reg-range.init][レジスタの値を初期化する (core.veryl)]{
 #@maprange(scripts/04/reg-range/core/src/core.veryl,init)
@@ -1506,9 +1510,6 @@ I形式の命令の実行には、ソースレジスタの値と即値を利用�
     }
 #@end
 //}
-
-always_ffブロックのif_resetで、
-n番目(32 > n > 0)のレジスタの値を@<code>{n + 100}で初期化します。
 
 レジスタの値が読み込めていることを確認します(@<list>{reg.debug})。
 
