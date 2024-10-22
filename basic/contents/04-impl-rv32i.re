@@ -525,7 +525,7 @@ memoryモジュールは32ビット(=4バイト)単位でデータを整列し�
     function addr_to_memaddr (
         addr: input logic<XLEN>,
     ) -> logic<20>   {
-        return addr[20 + $clog2(MEM_DATA_WIDTH / 8) - 1:$clog2(MEM_DATA_WIDTH / 8)];
+        return addr[$clog2(MEM_DATA_WIDTH / 8)+:20];
     }
 #@end
 //}
@@ -533,6 +533,7 @@ memoryモジュールは32ビット(=4バイト)単位でデータを整列し�
 addr_to_memaddr関数は、
 @<code>{MEM_DATA_WIDTH}(=32)をバイトに変換した値(=4)のlog2をとった値(=2)を使って、
 @<code>{addr[21:2]}を切り取っています。
+範囲の選択には@<code>{+:}を利用しています。
 
 次に、coreモジュール用のmembus_ifインターフェースを作成します(@<list>{top.veryl.create-core-range.membus})。
 ジェネリックパラメータには、

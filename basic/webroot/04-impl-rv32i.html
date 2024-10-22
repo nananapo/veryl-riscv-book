@@ -432,11 +432,11 @@ module core (
     function addr_to_memaddr (
         addr: input logic&lt;XLEN&gt;,
     ) -&gt; logic&lt;20&gt;   {
-        return addr[20 + $clog2(MEM_DATA_WIDTH / 8) - 1:$clog2(MEM_DATA_WIDTH / 8)];
+        return addr[$clog2(MEM_DATA_WIDTH / 8)+:20];
     }
 </pre>
 </div>
-<p>addr_to_memaddr関数は、<code class="inline-code">MEM_DATA_WIDTH</code>(=32)をバイトに変換した値(=4)のlog2をとった値(=2)を使って、<code class="inline-code">addr[21:2]</code>を切り取っています。</p>
+<p>addr_to_memaddr関数は、<code class="inline-code">MEM_DATA_WIDTH</code>(=32)をバイトに変換した値(=4)のlog2をとった値(=2)を使って、<code class="inline-code">addr[21:2]</code>を切り取っています。範囲の選択には<code class="inline-code">+:</code>を利用しています。</p>
 <p>次に、coreモジュール用のmembus_ifインターフェースを作成します(<span class="listref"><a href="./04-impl-rv32i.html#top.veryl.create-core-range.membus">リスト3.10</a></span>)。ジェネリックパラメータには、coreモジュールのインターフェースのジェネリックパラメータと同じく、ILENとXLENを割り当てます。</p>
 <div id="top.veryl.create-core-range.membus" class="caption-code">
 <span class="caption">リスト3.10: リスト3.10: coreモジュール用のmembus_ifインターフェースをインスタンス化する (top.veryl)</span>

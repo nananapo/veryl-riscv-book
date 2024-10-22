@@ -510,7 +510,15 @@ type ptr_array  = ptr&lt;32&gt;
 図2.5: ビット選択
 </p>
 </div>
-<p>変数の任意のビットを切り出すには<code class="inline-code">[]</code>を使用します(<span class="imgref"><a href="./03-veryl.html#bitsel">図2.5</a></span>)。範囲の指定には<code class="inline-code">[:]</code>を使用します。最上位ビット(most significant bit)は<b>msb</b>キーワード,最下位ビット(least significant bit)は<b>lsb</b>キーワードで指定することができます。選択する場所の指定には式を使うことができます。</p>
+<p>変数の任意のビットを切り出すには<code class="inline-code">[]</code>を使用します(<span class="imgref"><a href="./03-veryl.html#bitsel">図2.5</a></span>)。範囲の選択には<code class="inline-code">[:]</code>を使用します。最上位ビット(most significant bit)は<b>msb</b>キーワード,最下位ビット(least significant bit)は<b>lsb</b>キーワードで指定することができます。選択する場所の指定には式を使うことができます。</p>
+<p>よく使われる範囲の選択には、別の書き方が用意されています(<span class="listref"><a href="./03-veryl.html#bitsel.range_sel">リスト2.27</a></span>)。</p>
+<div id="bitsel.range_sel" class="caption-code">
+<span class="caption">リスト2.27: リスト2.27: 範囲の選択</span>
+<pre class="list language-range_sel">v[s +: w]   // = v[s+w-1   : s    ]
+v[s -: w]   // = v[s       : s-w+1]
+v[i step w] // = v[i*(w+1) : i*w  ] = v[i*w +: w]
+</pre>
+</div>
 
 <h4><a id="h2-2-5-2"></a>演算子</h4>
 <p>Verylでは、次の演算子を使用することができます(<span class="tableref"><a href="./03-veryl.html#operator.priority">表2.4</a></span>)。</p>
@@ -536,9 +544,9 @@ type ptr_array  = ptr&lt;32&gt;
 </table>
 </div>
 <p>SystemVerilogを知っている方にSystemVerilogとの差異を説明すると、<code class="inline-code">++</code>,<code class="inline-code">--</code>,<code class="inline-code">:=</code>,<code class="inline-code">:/</code>,<code class="inline-code">&lt;=</code>(代入)が無く、<code class="inline-code">&lt;=</code>,<code class="inline-code">&gt;=</code>がそれぞれ<code class="inline-code">&lt;:</code>,<code class="inline-code">&gt;:</code>に変更されています。また、<code class="inline-code">inside</code>と<code class="inline-code">{{}}</code>の形式が変更され、<code class="inline-code">if</code>, <code class="inline-code">case</code>, <code class="inline-code">switch</code>式が追加されています。</p>
-<p>単項, 二項演算子の使用例は次の通りです(<span class="listref"><a href="./03-veryl.html#operator.use">リスト2.27</a></span>)。</p>
+<p>単項, 二項演算子の使用例は次の通りです(<span class="listref"><a href="./03-veryl.html#operator.use">リスト2.28</a></span>)。</p>
 <div id="operator.use" class="caption-code">
-<span class="caption">リスト2.27: リスト2.27: 単項, 二項演算子 (Verylのドキュメント&lt;a href=&quot;bib.html#bib-veryl-doc.operators&quot;&gt;[4]&lt;/a&gt;の例を改変)</span>
+<span class="caption">リスト2.28: リスト2.28: 単項, 二項演算子 (Verylのドキュメント&lt;a href=&quot;bib.html#bib-veryl-doc.operators&quot;&gt;[4]&lt;/a&gt;の例を改変)</span>
 <pre class="list language-use">// 単項算術演算
 a = +1;
 a = -1; // 正負を反転させる
@@ -602,9 +610,9 @@ a = x || y; // xまたはyが真のとき真
 </div>
 
 <h4><a id="h2-2-5-3"></a>if, switch, case</h4>
-<p>条件によって動作や値を変えたいとき、<b>if</b>文を使用します (<span class="listref"><a href="./03-veryl.html#if.only">リスト2.28</a></span>)。if文は式にすることができます。if式は必ず値を返す必要があり、elseが必須です。</p>
+<p>条件によって動作や値を変えたいとき、<b>if</b>文を使用します (<span class="listref"><a href="./03-veryl.html#if.only">リスト2.29</a></span>)。if文は式にすることができます。if式は必ず値を返す必要があり、elseが必須です。</p>
 <div id="if.only" class="caption-code">
-<span class="caption">リスト2.28: リスト2.28: if文, if式</span>
+<span class="caption">リスト2.29: リスト2.29: if文, if式</span>
 <pre class="list language-only">var v1 : logic&lt;32&gt;;
 always_comb {
         if WIDTH == 0 {
@@ -626,9 +634,9 @@ always_comb {
 </pre>
 </div>
 <p>always_combブロックで変数に継続的代入するとき、if文の全ての場合で継続的代入する必要があることに注意してください(<code class="inline-code">v1</code>は常に代入されています)。</p>
-<p><span class="listref"><a href="./03-veryl.html#if.only">リスト2.28</a></span>と同じ意味の文を<b>switch</b>文で書くことができます(<span class="listref"><a href="./03-veryl.html#switch.only">リスト2.29</a></span>)。どの条件にも当てはまらないときの動作は<b>default</b>で指定します。switchは式にすることができます。switch式はは必ず値を返す必要があり、defaultが必須です。</p>
+<p><span class="listref"><a href="./03-veryl.html#if.only">リスト2.29</a></span>と同じ意味の文を<b>switch</b>文で書くことができます(<span class="listref"><a href="./03-veryl.html#switch.only">リスト2.30</a></span>)。どの条件にも当てはまらないときの動作は<b>default</b>で指定します。switchは式にすることができます。switch式はは必ず値を返す必要があり、defaultが必須です。</p>
 <div id="switch.only" class="caption-code">
-<span class="caption">リスト2.29: リスト2.29: switch文, switch式</span>
+<span class="caption">リスト2.30: リスト2.30: switch文, switch式</span>
 <pre class="list language-only">var v1: logic&lt;32&gt;;
 always_comb {
         switch {
@@ -649,9 +657,9 @@ always_comb {
 }
 </pre>
 </div>
-<p><span class="listref"><a href="./03-veryl.html#if.only">リスト2.28</a></span>のように1つの要素(<code class="inline-code">WIDTH</code>)の一致のみが条件のとき、同じ意味の文を<b>case</b>文で書くことができます(<span class="listref"><a href="./03-veryl.html#case.only">リスト2.30</a></span>)。式にできたり、式にdefaultが必須なのはswitch文と同様です。</p>
+<p><span class="listref"><a href="./03-veryl.html#if.only">リスト2.29</a></span>のように1つの要素(<code class="inline-code">WIDTH</code>)の一致のみが条件のとき、同じ意味の文を<b>case</b>文で書くことができます(<span class="listref"><a href="./03-veryl.html#case.only">リスト2.31</a></span>)。式にできたり、式にdefaultが必須なのはswitch文と同様です。</p>
 <div id="case.only" class="caption-code">
-<span class="caption">リスト2.30: リスト2.30: case文, case式</span>
+<span class="caption">リスト2.31: リスト2.31: case文, case式</span>
 <pre class="list language-only">var v1: logic&lt;32&gt;;
 always_comb {
         case WIDTH {
@@ -674,15 +682,15 @@ always_comb {
 </div>
 
 <h4><a id="h2-2-5-4"></a>連結, repeat</h4>
-<p>ビット列や文字列を連結したいときは<code class="inline-code">{}</code>を使用することができます(<span class="listref"><a href="./03-veryl.html#renketu">リスト2.31</a></span>)。<code class="inline-code">+</code>では連結できない(値の足し算になる)ことに注意してください。同じビット列, 文字列を繰り返して連結したいときは<b>repeat</b>キーワードを使用します(<span class="listref"><a href="./03-veryl.html#repeat">リスト2.32</a></span>)。</p>
+<p>ビット列や文字列を連結したいときは<code class="inline-code">{}</code>を使用することができます(<span class="listref"><a href="./03-veryl.html#renketu">リスト2.32</a></span>)。<code class="inline-code">+</code>では連結できない(値の足し算になる)ことに注意してください。同じビット列, 文字列を繰り返して連結したいときは<b>repeat</b>キーワードを使用します(<span class="listref"><a href="./03-veryl.html#repeat">リスト2.33</a></span>)。</p>
 <div id="renketu" class="caption-code">
-<span class="caption">リスト2.31: リスト2.31: 連結</span>
+<span class="caption">リスト2.32: リスト2.32: 連結</span>
 <pre class="list">{12'h123, 32'habcd0123} // 44'h123_abcde0123になる
 {&quot;Hello&quot;, &quot; &quot;, &quot;World!&quot;} // &quot;Hello World!&quot;になる
 </pre>
 </div>
 <div id="repeat" class="caption-code">
-<span class="caption">リスト2.32: リスト2.32: repeatを使って連結を繰り返す</span>
+<span class="caption">リスト2.33: リスト2.33: repeatを使って連結を繰り返す</span>
 <pre class="list">// {繰り返したい要素 repeat 繰り返す回数}
 {4'0011 repeat 3, 4'b1111} // 16'b0011_0011_0011_1111になる
 {&quot;Happy&quot; repeat 3} // &quot;HappyHappyHappy&quot;になる
@@ -690,9 +698,9 @@ always_comb {
 </div>
 
 <h4><a id="h2-2-5-5"></a>文の生成 (if, for)</h4>
-<p>if文はalways_ff, always_comb等のブロックの外にも書くことができます(<span class="listref"><a href="./03-veryl.html#generate.if">リスト2.33</a></span>)。このとき、条件式は定数しか使用できません。if文, else if, else文には<code class="inline-code">: ラベル名</code>で名前を付ける必要があります。</p>
+<p>if文はalways_ff, always_comb等のブロックの外にも書くことができます(<span class="listref"><a href="./03-veryl.html#generate.if">リスト2.34</a></span>)。このとき、条件式は定数しか使用できません。if文, else if, else文には<code class="inline-code">: ラベル名</code>で名前を付ける必要があります。</p>
 <div id="generate.if" class="caption-code">
-<span class="caption">リスト2.33: リスト2.33: if文による文の生成</span>
+<span class="caption">リスト2.34: リスト2.34: if文による文の生成</span>
 <pre class="list language-if">module ModuleA #(
         param WIDTH : u32 = 0
 ) (
@@ -708,10 +716,10 @@ always_comb {
 }
 </pre>
 </div>
-<p>同じ文をなんども繰り返し記述したいとき、<b>for</b>文を活用することができます(<span class="listref"><a href="./03-veryl.html#generate.for">リスト2.34</a></span>)。if文と同様に、for文にもラベルを付ける必要があります。</p>
+<p>同じ文をなんども繰り返し記述したいとき、<b>for</b>文を活用することができます(<span class="listref"><a href="./03-veryl.html#generate.for">リスト2.35</a></span>)。if文と同様に、for文にもラベルを付ける必要があります。</p>
 <p>for文はalways_ff, always_comb等のブロックの中にも書くことができます。その場合、ラベルは不要で、ループ変数に型を付ける必要があります。また、<b>break</b>文によってループを中断することができます。</p>
 <div id="generate.for" class="caption-code">
-<span class="caption">リスト2.34: リスト2.34: for文による文の生成</span>
+<span class="caption">リスト2.35: リスト2.35: for文による文の生成</span>
 <pre class="list language-for">module ModuleA (
         value : output logic&lt;32&gt;
 ) {
@@ -736,9 +744,9 @@ always_comb {
 </div>
 
 <h4><a id="h2-2-5-6"></a>inside, outside</h4>
-<p>値がある範囲に含まれているかという条件を記述したいとき、<b>inside</b>式を利用することができます。<code class="inline-code">inside 式 {範囲}</code>で、式の結果が範囲内にあるかという条件を記述できます(<span class="listref"><a href="./03-veryl.html#inside-outside">リスト2.35</a></span>)。逆に、範囲外にあるという条件は<b>outside</b>式で記述できます。</p>
+<p>値がある範囲に含まれているかという条件を記述したいとき、<b>inside</b>式を利用することができます。<code class="inline-code">inside 式 {範囲}</code>で、式の結果が範囲内にあるかという条件を記述できます(<span class="listref"><a href="./03-veryl.html#inside-outside">リスト2.36</a></span>)。逆に、範囲外にあるという条件は<b>outside</b>式で記述できます。</p>
 <div id="inside-outside" class="caption-code">
-<span class="caption">リスト2.35: リスト2.35: inside, outside</span>
+<span class="caption">リスト2.36: リスト2.36: inside, outside</span>
 <pre class="list">inside n {0..10}    // nが0以上10未満のとき1
 inside n {0..=10}   // nが0以上10以下のとき1
 inside n {0, 1, 3}  // nが0,1,3のいずれかのとき1
@@ -751,10 +759,10 @@ outside n {0, 1, 3} // nが0,1,3以外の値のとき1
 </div>
 
 <h4><a id="h2-2-5-7"></a>function</h4>
-<p>何度も記述する操作, 計算は、関数(<b>function</b>)を使うことでまとめて記述することができます(<span class="listref"><a href="./03-veryl.html#function.first">リスト2.36</a></span>)。関数は値を引数で受け取り、<b>return</b>文で値を返します。値を返さないとき、戻り値の型の指定を省略できます。</p>
+<p>何度も記述する操作, 計算は、関数(<b>function</b>)を使うことでまとめて記述することができます(<span class="listref"><a href="./03-veryl.html#function.first">リスト2.37</a></span>)。関数は値を引数で受け取り、<b>return</b>文で値を返します。値を返さないとき、戻り値の型の指定を省略できます。</p>
 <p>引数には向きを指定できます。functionの実行を開始するとき、inputとして指定されている実引数の値が仮引数にコピーされます。functionの実行が終了するとき、outputとして指定されている仮引数の値が実引数の変数にコピーされます。</p>
 <div id="function.first" class="caption-code">
-<span class="caption">リスト2.36: リスト2.36: 関数</span>
+<span class="caption">リスト2.37: リスト2.37: 関数</span>
 <pre class="list language-first">// べき乗を返す関数
 function get_power(
         a : input u32,
@@ -789,9 +797,9 @@ always_comb {
 </div>
 
 <h3 class="none"><a id="h2-2-6"></a><span class="secno">2.2.6</span> interface</h3>
-<p>モジュールに何個もポートが存在するとき、ポートの接続は非常に手間のかかる作業になります(<span class="listref"><a href="./03-veryl.html#interface.motivate">リスト2.37</a></span>)。</p>
+<p>モジュールに何個もポートが存在するとき、ポートの接続は非常に手間のかかる作業になります(<span class="listref"><a href="./03-veryl.html#interface.motivate">リスト2.38</a></span>)。</p>
 <div id="interface.motivate" class="caption-code">
-<span class="caption">リスト2.37: リスト2.37: モジュールのポートの相互接続</span>
+<span class="caption">リスト2.38: リスト2.38: モジュールのポートの相互接続</span>
 <pre class="list language-motivate">module ModuleA (
         req_a: output logic,
         req_b: output logic,
@@ -819,9 +827,9 @@ module Top{
 }
 </pre>
 </div>
-<p>モジュール間のポートの接続を簡単に行うために、インターフェース(<b>interface</b>)という機能が用意されています。<span class="listref"><a href="./03-veryl.html#interface.motivate">リスト2.37</a></span>のModuleAとModuleBを相互接続するようなインターフェースは次のように定義することができます(<span class="listref"><a href="./03-veryl.html#interface.example">リスト2.38</a></span>)。</p>
+<p>モジュール間のポートの接続を簡単に行うために、インターフェース(<b>interface</b>)という機能が用意されています。<span class="listref"><a href="./03-veryl.html#interface.motivate">リスト2.38</a></span>のModuleAとModuleBを相互接続するようなインターフェースは次のように定義することができます(<span class="listref"><a href="./03-veryl.html#interface.example">リスト2.39</a></span>)。</p>
 <div id="interface.example" class="caption-code">
-<span class="caption">リスト2.38: リスト2.38: インターフェースの定義</span>
+<span class="caption">リスト2.39: リスト2.39: インターフェースの定義</span>
 <pre class="list language-example">// interface インターフェース名 { }
 interface iff_ab {
         var a : logic;
@@ -841,9 +849,9 @@ interface iff_ab {
 }
 </pre>
 </div>
-<p><code class="inline-code">iff_ab</code>を利用すると、<span class="listref"><a href="./03-veryl.html#interface.motivate">リスト2.37</a></span>を次のように簡潔に記述することができます(<span class="listref"><a href="./03-veryl.html#interface.good">リスト2.39</a></span>)。</p>
+<p><code class="inline-code">iff_ab</code>を利用すると、<span class="listref"><a href="./03-veryl.html#interface.motivate">リスト2.38</a></span>を次のように簡潔に記述することができます(<span class="listref"><a href="./03-veryl.html#interface.good">リスト2.40</a></span>)。</p>
 <div id="interface.good" class="caption-code">
-<span class="caption">リスト2.39: リスト2.39: インターフェースによる接続</span>
+<span class="caption">リスト2.40: リスト2.40: インターフェースによる接続</span>
 <pre class="list language-good">module ModuleA (
         req : modport iff_ab::req,
 ){}
@@ -859,9 +867,9 @@ module Top{
 </pre>
 </div>
 <p>インターフェースはポートの宣言と接続を抽象化します。インターフェース内に変数を定義すると、<b>modport</b>文によってポートと向きを宣言することができます。モジュールでのポートの宣言は、<code class="inline-code">ポート名 : modport インターフェース名::modport名</code>という風に記述することができます。modportで宣言されたポートにインターフェースのインスタンスを渡すことにより、ポートの接続を一気に行うことができます。</p>
-<p>モジュールと同じようにパラメータを宣言することができます(<span class="listref"><a href="./03-veryl.html#interface.param">リスト2.40</a></span>)。</p>
+<p>モジュールと同じようにパラメータを宣言することができます(<span class="listref"><a href="./03-veryl.html#interface.param">リスト2.41</a></span>)。</p>
 <div id="interface.param" class="caption-code">
-<span class="caption">リスト2.40: リスト2.40: インターフェースの定義</span>
+<span class="caption">リスト2.41: リスト2.41: インターフェースの定義</span>
 <pre class="list language-param">// interface インターフェース名 #( パラメータの定義 ) { }
 interface iff_params # (
         param PARAM_A : u32 = 100,
@@ -872,9 +880,9 @@ interface iff_params # (
 <p>インターフェース内には、関数の定義やassign, always_comb, always_ffなどの文を記述することができます。</p>
 
 <h3 class="none"><a id="h2-2-7"></a><span class="secno">2.2.7</span> package</h3>
-<p>複数のモジュールやインターフェースにまたがって使用したいパラメータや型, 関数はパッケージ(package)に定義することができます(<span class="listref"><a href="./03-veryl.html#package.define">リスト2.41</a></span>)。</p>
+<p>複数のモジュールやインターフェースにまたがって使用したいパラメータや型, 関数はパッケージ(package)に定義することができます(<span class="listref"><a href="./03-veryl.html#package.define">リスト2.42</a></span>)。</p>
 <div id="package.define" class="caption-code">
-<span class="caption">リスト2.41: リスト2.41: パッケージの定義</span>
+<span class="caption">リスト2.42: リスト2.42: パッケージの定義</span>
 <pre class="list language-define">package PackageA {
         const WIDTH : u32 = 1234;
         type foo = logic&lt;WIDTH&gt;;
@@ -884,9 +892,9 @@ interface iff_params # (
 }
 </pre>
 </div>
-<p>パッケージに定義した要素には、<code class="inline-code">パッケージ名::要素名</code>でアクセスすることができます(<span class="listref"><a href="./03-veryl.html#package.access">リスト2.42</a></span>)。</p>
+<p>パッケージに定義した要素には、<code class="inline-code">パッケージ名::要素名</code>でアクセスすることができます(<span class="listref"><a href="./03-veryl.html#package.access">リスト2.43</a></span>)。</p>
 <div id="package.access" class="caption-code">
-<span class="caption">リスト2.42: リスト2.42: パッケージの要素にアクセスする</span>
+<span class="caption">リスト2.43: リスト2.43: パッケージの要素にアクセスする</span>
 <pre class="list language-access">module ModuleA {
         const W : u32 = PackageA::WIDTH;
         var value1 : PackageA::foo;
@@ -894,9 +902,9 @@ interface iff_params # (
 }
 </pre>
 </div>
-<p><b>import</b>文を使用すると、パッケージ名の指定を省略することができます(<span class="listref"><a href="./03-veryl.html#package.import">リスト2.43</a></span>)。<b>export</b>文を使用すると、パッケージ名の指定が必要な状態に戻すことができます。</p>
+<p><b>import</b>文を使用すると、パッケージ名の指定を省略することができます(<span class="listref"><a href="./03-veryl.html#package.import">リスト2.44</a></span>)。<b>export</b>文を使用すると、パッケージ名の指定が必要な状態に戻すことができます。</p>
 <div id="package.import" class="caption-code">
-<span class="caption">リスト2.43: リスト2.43: パッケージをimportする</span>
+<span class="caption">リスト2.44: リスト2.44: パッケージをimportする</span>
 <pre class="list language-import">import PackageA::WIDTH; // 特定の要素をimportする
 import PackageA::*; // 全ての要素をimportする
 export WIDTH; // PackageAからimportしたWIDTHをexportする
@@ -905,9 +913,9 @@ export WIDTH; // PackageAからimportしたWIDTHをexportする
 
 <h3 class="none"><a id="h2-2-8"></a><span class="secno">2.2.8</span> ジェネリクス</h3>
 <p>関数, モジュール, インターフェース, パッケージ, 構造体は、<b>ジェネリクス</b>(generics)によってパラメータ化することができます。</p>
-<p>例えば、要素に任意の型TやWビットのデータを持つ構造体は、次のように<b>ジェネリックパラメータ</b>(generic parameter)を使うことで定義できます(<span class="listref"><a href="./03-veryl.html#generics.sample">リスト2.44</a></span>)。ジェネリックパラメータに渡される値は、ジェネリクスの定義位置からアクセスすることができる定数である必要があります。</p>
+<p>例えば、要素に任意の型TやWビットのデータを持つ構造体は、次のように<b>ジェネリックパラメータ</b>(generic parameter)を使うことで定義できます(<span class="listref"><a href="./03-veryl.html#generics.sample">リスト2.45</a></span>)。ジェネリックパラメータに渡される値は、ジェネリクスの定義位置からアクセスすることができる定数である必要があります。</p>
 <div id="generics.sample" class="caption-code">
-<span class="caption">リスト2.44: リスト2.44: パラメータ化された構造体</span>
+<span class="caption">リスト2.45: リスト2.45: パラメータ化された構造体</span>
 <pre class="list language-sample">module ModuleA {
         // ::&lt;&gt;でジェネリックパラメータを定義する
         // constで数値を受け取る
@@ -937,7 +945,7 @@ export WIDTH; // PackageAからimportしたWIDTHをexportする
 <h4><a id="h2-2-9-1"></a>initial, final</h4>
 <p><b>initial</b>ブロックの中の文は、シミュレーションの開始時に実行されます。<b>final</b>ブロックの中の文は、シミュレーションの終了時に実行されます。</p>
 <div id="initial.final" class="caption-code">
-<span class="caption">リスト2.45: リスト2.45: initial, finalブロック</span>
+<span class="caption">リスト2.46: リスト2.46: initial, finalブロック</span>
 <pre class="list language-final">module ModuleA {
         initial {
                 // シミュレーション開始時に実行される
@@ -952,7 +960,7 @@ export WIDTH; // PackageAからimportしたWIDTHをexportする
 <h4><a id="h2-2-9-2"></a>SystemVerilogとの連携</h4>
 <p>VerylはSystemVerilogのモジュールやパッケージ, インターフェースを利用することができます。SystemVerilogのリソースにアクセスするには<b>$sv::</b>を使用します。</p>
 <div id="sv.use" class="caption-code">
-<span class="caption">リスト2.46: リスト2.46: SystemVerilogの要素を利用する</span>
+<span class="caption">リスト2.47: リスト2.47: SystemVerilogの要素を利用する</span>
 <pre class="list language-use">module ModuleA {
         // SystemVerilogでsvpackageとして
         // 定義されているパッケージを利用する
@@ -974,9 +982,9 @@ export WIDTH; // PackageAからimportしたWIDTHをexportする
 }
 </pre>
 </div>
-<p>SystemVerilogのソースコードを直接埋め込み、含めることができます(<span class="listref"><a href="./03-veryl.html#sv.integrate">リスト2.47</a></span>)。</p>
+<p>SystemVerilogのソースコードを直接埋め込み、含めることができます(<span class="listref"><a href="./03-veryl.html#sv.integrate">リスト2.48</a></span>)。</p>
 <div id="sv.integrate" class="caption-code">
-<span class="caption">リスト2.47: リスト2.47: SystemVerilog記述を埋め込む</span>
+<span class="caption">リスト2.48: リスト2.48: SystemVerilog記述を埋め込む</span>
 <pre class="list language-integrate">// SystemVerilog記述を直接埋め込む
 embed (inline) sv{{{
         module ModuleA(
@@ -993,10 +1001,10 @@ include(inline, &quot;filename.sv&quot;);
 </div>
 
 <h4><a id="h2-2-9-3"></a>システム関数 / システムタスク</h4>
-<p>SystemVerilogに標準で用意されている関数(システム関数, システムタスク)を利用することができます。システム関数(system function), システムタスク(system task)の名前は、<code class="inline-code">$</code>から始まります。本書で利用するシステム関数, システムタスクを<span class="tableref"><a href="./03-veryl.html#systemtasks">表2.5</a></span>に列挙します。それぞれの使用例は次の通りです(<span class="listref"><a href="./03-veryl.html#systemtask.use">リスト2.48</a></span>)。</p>
+<p>SystemVerilogに標準で用意されている関数(システム関数, システムタスク)を利用することができます。システム関数(system function), システムタスク(system task)の名前は、<code class="inline-code">$</code>から始まります。本書で利用するシステム関数, システムタスクを<span class="tableref"><a href="./03-veryl.html#systemtasks">表2.5</a></span>に列挙します。それぞれの使用例は次の通りです(<span class="listref"><a href="./03-veryl.html#systemtask.use">リスト2.49</a></span>)。</p>
 <p>システム関数, システムタスクを利用するときは、通常の関数呼び出しのように使用します。</p>
 <div id="systemtask.use" class="caption-code">
-<span class="caption">リスト2.48: リスト2.48: システム関数, システムタスクの使用例</span>
+<span class="caption">リスト2.49: リスト2.49: システム関数, システムタスクの使用例</span>
 <pre class="list language-use">const w1 : u32 = $clog2(32); // 5
 const w2 : u32 = $clog2(35); // 6
 

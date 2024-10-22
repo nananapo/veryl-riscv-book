@@ -627,10 +627,19 @@ type ptr_array  = ptr<32>
 //image[bitsel][ビット選択][width=50%]
 
 変数の任意のビットを切り出すには@<code>{[]}を使用します(@<img>{bitsel})。
-範囲の指定には@<code>{[:]}を使用します。
+範囲の選択には@<code>{[:]}を使用します。
 最上位ビット(most significant bit)は@<b>{msb}キーワード,
 最下位ビット(least significant bit)は@<b>{lsb}キーワードで指定することができます。
 選択する場所の指定には式を使うことができます。
+
+よく使われる範囲の選択には、別の書き方が用意されています
+(@<list>{bitsel.range_sel})。
+
+//list[bitsel.range_sel][範囲の選択]{
+v[s +: w]   // = v[s+w-1   : s    ]
+v[s -: w]   // = v[s       : s-w+1]
+v[i step w] // = v[i*(w+1) : i*w  ] = v[i*w +: w]
+//}
 
 ==== 演算子
 
