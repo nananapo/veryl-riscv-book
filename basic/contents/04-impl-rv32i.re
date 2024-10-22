@@ -817,6 +817,8 @@ $ @<userinput>{make clean} @<balloon>{ビルドした成果物の削除}
 
 === フェッチした命令をFIFOに格納する
 
+//image[fifo][FIFO][width=32%]
+
 フェッチした命令は次々に実行されますが、
 その命令が何クロックで実行されるかは分かりません。
 命令が常に1クロックで実行される場合は、
@@ -838,16 +840,18 @@ $ @<userinput>{make clean} @<balloon>{ビルドした成果物の削除}
 
 ==== FIFOの作成
 
-//image[fifo][FIFO][width=40%]
-
 そこで、
 @<b>{FIFO}(First In First Out, ファイフォ)を作成して、
 フェッチした命令を格納します。
-FIFOとは、先に入れたデータが先に出されるデータ構造のことです。
+FIFOとは、先に入れたデータが先に出されるデータ構造のことです(@<img>{fifo})。
 命令をフェッチしたらFIFOに格納(enqueue)し、
 命令を処理するときにFIFOから取り出し(dequeue)ます。
 
+Verylの標準ライブラリ@<fn>{veryl-std}にはFIFOが用意されていますが、
+FIFOは簡単なデータ構造なので自分で作ってみましょう。
 @<code>{src/fifo.veryl}を作成し、次のように記述します(@<list>{fifo.veryl})。
+
+//footnote[veryl-std][@<href>{https://std.veryl-lang.org/}]
 
 //list[fifo.veryl][FIFOモジュールの実装 (fifo.veryl)]{
 #@mapfile(scripts/04/if-fifo/core/src/fifo.veryl)

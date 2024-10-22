@@ -670,6 +670,12 @@ $ <span class="userinput">make clean</span> <span class="balloon">← ビルド�
 </div>
 
 <h3 class="none"><a id="h3-6-4"></a><span class="secno">3.6.4</span> フェッチした命令をFIFOに格納する</h3>
+<div id="fifo" class="image">
+<img src="images/04-impl-rv32i/fifo.png" alt="FIFO" class="img" style="width:32%" />
+<p class="caption">
+図3.2: FIFO
+</p>
+</div>
 <p>フェッチした命令は次々に実行されますが、その命令が何クロックで実行されるかは分かりません。命令が常に1クロックで実行される場合は、現状の常にフェッチし続けるようなコードで問題ありませんが、例えばメモリにアクセスする命令は実行に何クロックかかるか分かりません。</p>
 <p>複数クロックかかる命令に対応するために、命令の処理が終わったら次の命令をフェッチするようにします。すると、命令の実行の流れは次のようになります。</p>
 <ol start="1" type="1">
@@ -680,14 +686,11 @@ $ <span class="userinput">make clean</span> <span class="balloon">← ビルド�
 <p>この場合、命令の処理が終わってから次の命令をフェッチするため、次々にフェッチするよりも多くのクロックサイクルが必要です。これはCPUの性能を露骨に悪化させるので許容できません。</p>
 
 <h4><a id="h3-6-4-1"></a>FIFOの作成</h4>
-<div id="fifo" class="image">
-<img src="images/04-impl-rv32i/fifo.png" alt="FIFO" class="img" style="width:40%" />
-<p class="caption">
-図3.2: FIFO
-</p>
-</div>
-<p>そこで、<b>FIFO</b>(First In First Out, ファイフォ)を作成して、フェッチした命令を格納します。FIFOとは、先に入れたデータが先に出されるデータ構造のことです。命令をフェッチしたらFIFOに格納(enqueue)し、命令を処理するときにFIFOから取り出し(dequeue)ます。</p>
-<p><code class="inline-code">src/fifo.veryl</code>を作成し、次のように記述します(<span class="listref"><a href="./04-impl-rv32i.html#fifo.veryl">リスト3.20</a></span>)。</p>
+<p>そこで、<b>FIFO</b>(First In First Out, ファイフォ)を作成して、フェッチした命令を格納します。FIFOとは、先に入れたデータが先に出されるデータ構造のことです(<span class="imgref"><a href="./04-impl-rv32i.html#fifo">図3.2</a></span>)。命令をフェッチしたらFIFOに格納(enqueue)し、命令を処理するときにFIFOから取り出し(dequeue)ます。</p>
+<p>Verylの標準ライブラリ<sup><a id="fnb-veryl-std" href="#fn-veryl-std" class="noteref" epub:type="noteref">*3</a></sup>にはFIFOが用意されていますが、FIFOは簡単なデータ構造なので自分で作ってみましょう。<code class="inline-code">src/fifo.veryl</code>を作成し、次のように記述します(<span class="listref"><a href="./04-impl-rv32i.html#fifo.veryl">リスト3.20</a></span>)。</p>
+<div class="footnote-list">
+<div class="footnote" id="fn-veryl-std" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*3] </span><a href="https://std.veryl-lang.org/" class="link">https://std.veryl-lang.org/</a></p></div>
+</div><!--/.footnote-list-->
 <div id="fifo.veryl" class="caption-code">
 <span class="caption">リスト3.20: リスト3.20: FIFOモジュールの実装 (fifo.veryl)</span>
 <pre class="list language-veryl">module fifo #(
@@ -1195,9 +1198,9 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 7</span>
     }
 </pre>
 </div>
-<p>早速動作のテストをしたいところですが、今のままだとレジスタの値が初期化されておらず、0番目のレジスタの値以外は不定(0か1か分からない)<sup><a id="fnb-verilator.x" href="#fn-verilator.x" class="noteref" epub:type="noteref">*3</a></sup>になってしまいます。</p>
+<p>早速動作のテストをしたいところですが、今のままだとレジスタの値が初期化されておらず、0番目のレジスタの値以外は不定(0か1か分からない)<sup><a id="fnb-verilator.x" href="#fn-verilator.x" class="noteref" epub:type="noteref">*4</a></sup>になってしまいます。</p>
 <div class="footnote-list">
-<div class="footnote" id="fn-verilator.x" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*3] </span>Verilatorはデフォルト設定では不定値に対応していないため、不定値は0になります</p></div>
+<div class="footnote" id="fn-verilator.x" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*4] </span>Verilatorはデフォルト設定では不定値に対応していないため、不定値は0になります</p></div>
 </div><!--/.footnote-list-->
 <p>これではテストする意味がないため、レジスタの値を適当な値に初期化します(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.reg-range.init">リスト3.38</a></span>)。</p>
 <div id="core.veryl.reg-range.init" class="caption-code">
