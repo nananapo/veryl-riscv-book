@@ -385,7 +385,7 @@ module top (
 membus_ifインターフェースをインスタンス化しています。
 
 ジェネリックパラメータの@<code>{DATA_WIDTH}には、
-@<code>{eei::MEM_DATA_WIDTH}を指定しています。
+@<code>{MEM_DATA_WIDTH}を指定しています。
 @<code>{membus}インターフェースのアドレスの幅と、
 memoryモジュールのメモリ容量には、
 適当に20を指定しています。
