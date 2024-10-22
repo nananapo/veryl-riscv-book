@@ -1108,12 +1108,10 @@ module ModuleA {
 @<b>{import}文を使用すると、
 パッケージ名の指定を省略することができます
 (@<list>{package.import})。
-@<b>{export}文を使用すると、パッケージ名の指定が必要な状態に戻すことができます。
 
 //list[package.import][パッケージをimportする]{
 import PackageA::WIDTH; // 特定の要素をimportする
 import PackageA::*; // 全ての要素をimportする
-export WIDTH; // PackageAからimportしたWIDTHをexportする
 //}
 
 === ジェネリクス

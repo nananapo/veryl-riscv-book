@@ -918,12 +918,11 @@ interface iff_params # (
 }
 </pre>
 </div>
-<p><b>import</b>文を使用すると、パッケージ名の指定を省略することができます(<span class="listref"><a href="./03-veryl.html#package.import">リスト2.45</a></span>)。<b>export</b>文を使用すると、パッケージ名の指定が必要な状態に戻すことができます。</p>
+<p><b>import</b>文を使用すると、パッケージ名の指定を省略することができます(<span class="listref"><a href="./03-veryl.html#package.import">リスト2.45</a></span>)。</p>
 <div id="package.import" class="caption-code">
 <span class="caption">リスト2.45: リスト2.45: パッケージをimportする</span>
 <pre class="list language-import">import PackageA::WIDTH; // 特定の要素をimportする
 import PackageA::*; // 全ての要素をimportする
-export WIDTH; // PackageAからimportしたWIDTHをexportする
 </pre>
 </div>
 
