@@ -356,11 +356,8 @@ always_ff(clk, rst) {
 }
 </pre>
 </div>
-<p>2つ以上のalways_ffブロックで、1つの同じレジスタの値を変更することはできません<sup><a id="fnb-clockdomain" href="#fn-clockdomain" class="noteref" epub:type="noteref">*4</a></sup>。</p>
+<p>2つ以上のalways_ffブロックで、1つの同じレジスタの値を変更することはできません。</p>
 <p>本書では、継続的代入とレジスタへの代入のことを区別せず、どちらも代入と呼ぶことがあります。</p>
-<div class="footnote-list">
-<div class="footnote" id="fn-clockdomain" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*4] </span>正確には可能ですが、本書では扱っていません</p></div>
-</div><!--/.footnote-list-->
 
 <h4><a id="h2-2-3-3"></a>モジュールのインスタンス化</h4>
 <p>あるモジュールを利用したいとき、モジュールを<b>インスタンス化</b>(instantiate)することにより、モジュールのインスタンスを宣言することができます。</p>
