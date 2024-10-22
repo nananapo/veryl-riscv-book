@@ -278,10 +278,15 @@ module memory::<DATA_WIDTH: const, ADDR_WIDTH: const> (
     }
 
     always_ff {
-        membus.rvalid = membus.valid;
-        membus.rdata  = mem[membus.addr[ADDR_WIDTH - 1:0]];
-        if membus.valid && membus.wen {
-            mem[membus.addr[ADDR_WIDTH - 1:0]] = membus.wdata;
+        if_reset {
+            membus.rvalid = 0;
+            membus.rdata  = 0;
+        } else {
+            membus.rvalid = membus.valid;
+            membus.rdata  = mem[membus.addr[ADDR_WIDTH - 1:0]];
+            if membus.valid && membus.wen {
+                mem[membus.addr[ADDR_WIDTH - 1:0]] = membus.wdata;
+            }
         }
     }
 }
