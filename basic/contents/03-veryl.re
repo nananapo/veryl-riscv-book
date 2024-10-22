@@ -1160,8 +1160,8 @@ module ModuleA {
 SystemVerilogのソースコードを直接埋め込み、含めることができます
 (@<list>{sv.integrate})。
 
-//list[sv.integrate][SystemVerilogのソースコードを埋め込む]{
-// SystemVerilogのソースコードを直接埋め込む
+//list[sv.integrate][SystemVerilog記述を埋め込む]{
+// SystemVerilog記述を直接埋め込む
 embed (inline) sv{{{
 	module ModuleA(
 		output logic a
@@ -1170,7 +1170,7 @@ embed (inline) sv{{{
 	endmodule
 }}}
 
-// SystemVerilogのソースコードのファイルを展開する
+// SystemVerilogのソースファイルを展開する
 // パスは相対パス
 include(inline, "filename.sv");
 //}

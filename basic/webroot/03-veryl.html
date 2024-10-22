@@ -979,8 +979,8 @@ export WIDTH; // PackageAからimportしたWIDTHをexportする
 </div>
 <p>SystemVerilogのソースコードを直接埋め込み、含めることができます(<span class="listref"><a href="./03-veryl.html#sv.integrate">リスト2.47</a></span>)。</p>
 <div id="sv.integrate" class="caption-code">
-<span class="caption">リスト2.47: リスト2.47: SystemVerilogのソースコードを埋め込む</span>
-<pre class="list language-integrate">// SystemVerilogのソースコードを直接埋め込む
+<span class="caption">リスト2.47: リスト2.47: SystemVerilog記述を埋め込む</span>
+<pre class="list language-integrate">// SystemVerilog記述を直接埋め込む
 embed (inline) sv{{{
         module ModuleA(
                 output logic a
@@ -989,7 +989,7 @@ embed (inline) sv{{{
         endmodule
 }}}
 
-// SystemVerilogのソースコードのファイルを展開する
+// SystemVerilogのソースファイルを展開する
 // パスは相対パス
 include(inline, &quot;filename.sv&quot;);
 </pre>

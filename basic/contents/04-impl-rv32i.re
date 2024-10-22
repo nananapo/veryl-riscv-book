@@ -121,7 +121,9 @@ sourcemap_target = {type ="none"}
 #@end
 //}
 
-Verylのソースコードを格納するために、プロジェクトのフォルダ内にsrcフォルダを作成しておいてください。
+Verylのソースファイルを格納するために、
+プロジェクトのフォルダ内にsrcフォルダを作成しておいてください。
+
 //terminal[][]{
 $ @<userinput>{cd core}
 $ @<userinput>{mkdir src}
@@ -129,7 +131,7 @@ $ @<userinput>{mkdir src}
 
 == 定数の定義
 
-いよいよソースコードを記述していきます。
+いよいよコードを記述していきます。
 まず、CPU内で何度も使用する定数や型を記述するパッケージを作成します。
 
 @<code>{src/eei.veryl}を作成し、次のように記述します(@<list>{eei.veryl})。
@@ -591,14 +593,14 @@ $ @<userinput>{veryl build} @<balloon>{ビルドする}
 
 上記のコマンドを実行すると、
 verylファイルと同名の@<code>{.sv}ファイルと@<code>{core.f}ファイルが生成されます。
-@<code>{core.f}は生成されたSystemVerilogのソースコードファイルのリストです。
+@<code>{core.f}は生成されたSystemVerilogのファイルのリストです。
 これをシミュレータのビルドに利用します。
 
 シミュレータのビルドにはVerilatorを利用します。
-Verilatorは与えられたSystemVeriloのコードをC++プログラムに変換することでシミュレータを生成します。
+Verilatorは与えられたSystemVerilogのコードをC++プログラムに変換することでシミュレータを生成します。
 verilatorを利用するために、次のようなC++プログラムを書く必要があります@<fn>{verilator.only.verilog}。
 
-//footnote[verilator.only.verilog][Verilogのソースコードだけでビルドすることもできます]
+//footnote[verilator.only.verilog][Verilogのソースファイルだけでビルドすることもできます]
 
 @<code>{src/tb_verilator.cpp}を作成し、次のように記述します(@<list>{test_verilator.cpp})。
 
