@@ -1490,7 +1490,7 @@ I形式の命令の実行には、ソースレジスタの値と即値を利用�
 これではテストする意味がないため、
 レジスタの値を適当な値に初期化します(@<list>{core.veryl.reg-range.init})。
 
-//list[core.veryl.reg-range.init][レジスタの値を初期化する@<fn>{reset.reg.error} (core.veryl)]{
+//list[core.veryl.reg-range.init][レジスタの値を初期化する (core.veryl)]{
 #@maprange(scripts/04/reg-range/core/src/core.veryl,init)
     // レジスタの初期化
     always_ff {
@@ -1505,8 +1505,6 @@ I形式の命令の実行には、ソースレジスタの値と即値を利用�
 
 always_ffブロックのif_resetで、
 n番目(32 > n > 0)のレジスタの値を@<code>{n + 100}で初期化します。
-
-//footnote[reset.reg.error][「iは変数だからif_resetで使えません」のようなエラーが出る場合、申し訳ありませんがfor文を使わずに1つずつ初期化してください。]
 
 レジスタの値が読み込めていることを確認します(@<list>{reg.debug})。
 

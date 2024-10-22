@@ -82,7 +82,7 @@
 <p>特定のバージョンのVerylをインストールするには、次のようなコマンドを実行します(<span class="listref"><a href="./02-setup.html#veryl-specific">リスト1.3</a></span>)。</p>
 <div id="veryl-specific" class="cmd-code">
 <span class="caption">リスト1.3: リスト1.3: Verylのバージョン0.13.1をインストールする</span>
-<pre class="list">$ verylup install 0.13.1
+<pre class="list">$ <span class="userinput">verylup install 0.13.1</span>
 </pre>
 </div>
 <p>インストールされているバージョン一覧は次のように確認できます(<span class="listref"><a href="./02-setup.html#veryl-show">リスト1.4</a></span>)。</p>
@@ -92,6 +92,7 @@
 installed toolchains
 --------------------
 0.13.1
+0.13.2
 latest (default)
 </pre>
 </div>
@@ -101,18 +102,18 @@ latest (default)
 <div id="veryl-version" class="cmd-code">
 <span class="caption">リスト1.5: リスト1.5: verylのバージョン確認</span>
 <pre class="list">$ <span class="userinput">veryl --version</span>
-veryl 0.13.1
+veryl 0.13.2
 </pre>
 </div>
 <p>特定のバージョンのVerylを使用するには、次のようにverylコマンドを実行します(<span class="listref"><a href="./02-setup.html#veryl-use-ver">リスト1.6</a></span>)。</p>
 <div id="veryl-use-ver" class="cmd-code">
-<span class="caption">リスト1.6: リスト1.6: Verylのバージョン0.13.1を使用する</span>
-<pre class="list">$ <span class="userinput">veryl +0.13.1</span> <span class="balloon">← +でバージョンを指定する</span>
+<span class="caption">リスト1.6: リスト1.6: Verylのバージョン0.13.2を使用する</span>
+<pre class="list">$ <span class="userinput">veryl +0.13.2</span> <span class="balloon">← +でバージョンを指定する</span>
 </pre>
 </div>
 <div class="miniblock miniblock-caution">
 <p class="miniblock-caption">本書で利用するVerylのバージョン</p>
-<p>本書ではバージョン0.13.1を利用しますが、Veryl側の問題によりソースコードをビルドできないことがあります。これの対処方法についてはサポートページを確認してください。</p>
+<p>本書ではバージョン0.13.2を利用しますが、Veryl側の問題によりソースコードをビルドできないことがあります。これの対処方法についてはサポートページを確認してください。</p>
 <ul>
 <li>https://github.com/nananapo/veryl-riscv-book/wiki/techbookfest17-support-page
 </li>

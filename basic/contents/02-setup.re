@@ -52,8 +52,10 @@ $ @<userinput>{verylup update}
 次のようなコマンドを実行します
 (@<list>{veryl-specific})。
 
-//terminal[veryl-specific][Verylのバージョン@<w>{veryl-version}をインストールする]{
-$ verylup install 0.13.1
+#@# TODO wとuserinputを入れ子にできないのと、terminal内でwを使えない問題がある
+
+//terminal[veryl-specific][Verylのバージョン0.13.1をインストールする]{
+$ @<userinput>{verylup install 0.13.1}
 //}
 
 インストールされているバージョン一覧は次のように確認できます
@@ -64,6 +66,7 @@ $ @<userinput>{verylup show}
 installed toolchains
 --------------------
 0.13.1
+0.13.2
 latest (default)
 //}
 
@@ -75,15 +78,15 @@ latest (default)
 
 //terminal[veryl-version][verylのバージョン確認]{
 $ @<userinput>{veryl --version}
-veryl 0.13.1
+veryl 0.13.2
 //}
 
 特定のバージョンのVerylを使用するには、
 次のようにverylコマンドを実行します
 (@<list>{veryl-use-ver})。
 
-//terminal[veryl-use-ver][Verylのバージョン@<w>{veryl-version}を使用する]{
-$ @<userinput>{veryl +0.13.1} @<balloon>{+でバージョンを指定する}
+//terminal[veryl-use-ver][Verylのバージョン0.13.2を使用する]{
+$ @<userinput>|veryl +0.13.2| @<balloon>{+でバージョンを指定する}
 //}
 
 //caution[本書で利用するVerylのバージョン]{

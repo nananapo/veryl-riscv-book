@@ -13,6 +13,6 @@ apple			アップル
 amazon			アマゾン
 google			グーグル
 facebook		フェイスブック
-veryl-version	0.13.1
+veryl-version	0.13.2
 support-page	https://github.com/nananapo/veryl-riscv-book/wiki/techbookfest17-support-page
 riscv-version	RISC-V ISA Manual, version 20240411 

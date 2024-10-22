@@ -1201,7 +1201,7 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 7</span>
 </div><!--/.footnote-list-->
 <p>これではテストする意味がないため、レジスタの値を適当な値に初期化します(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.reg-range.init">リスト3.38</a></span>)。</p>
 <div id="core.veryl.reg-range.init" class="caption-code">
-<span class="caption">リスト3.38: リスト3.38: レジスタの値を初期化する&lt;sup&gt;&lt;a id=&quot;fnb-reset.reg.error&quot; href=&quot;#fn-reset.reg.error&quot; class=&quot;noteref&quot; epub:type=&quot;noteref&quot;&gt;*4&lt;/a&gt;&lt;/sup&gt; (core.veryl)</span>
+<span class="caption">リスト3.38: リスト3.38: レジスタの値を初期化する (core.veryl)</span>
 <pre class="list language-init">    // レジスタの初期化
     always_ff {
         if_reset {
@@ -1213,9 +1213,6 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 7</span>
 </pre>
 </div>
 <p>always_ffブロックのif_resetで、n番目(32 &gt; n &gt; 0)のレジスタの値を<code class="inline-code">n + 100</code>で初期化します。</p>
-<div class="footnote-list">
-<div class="footnote" id="fn-reset.reg.error" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*4] </span>「iは変数だからif_resetで使えません」のようなエラーが出る場合、申し訳ありませんがfor文を使わずに1つずつ初期化してください。</p></div>
-</div><!--/.footnote-list-->
 <p>レジスタの値が読み込めていることを確認します(<span class="listref"><a href="./04-impl-rv32i.html#reg.debug">リスト3.39</a></span>)。</p>
 <div id="reg.debug" class="cmd-code">
 <span class="caption">リスト3.39: リスト3.39: レジスタ読み込みのデバッグ</span>
