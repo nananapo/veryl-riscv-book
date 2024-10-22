@@ -13,20 +13,20 @@
 
 ===[notoc] Verylのインストール
 
-Verylは本書で利用するHDLです。
+本書ではVerylという言語でCPUを記述します。
 まず、Verylのトランスパイラをインストールします。
 Verylには、Verylupというインストーラが用意されており、
-これを利用することでverylをインストールすることができます。
+これを利用することでVerylをインストールすることができます。
 
-Verylupはcargo, またはGitHubのReleaseページから入手することができます。
-cargoが入っている方は@<code>{cargo install verylup}でインストールしてください。
-cargoが入っていない場合は、
+VerylupはGitHubのReleaseページから入手することができます。
 @<href>{https://github.com/veryl-lang/verylup, veryl-lang/verylup}
-で入手方法を確認することができます。
-
+で入手方法を確認してください@<fn>{cargo.install}。
 Verylupを入手したら、
 次のようにVerylの最新版をインストールします
 (@<list>{Verylup-install})。
+
+//footnote[cargo.install][cargoが入っている方は、@<code>{cargo install verylup}でもインストールできます。]
+
 
 //terminal[Verylup-install][Verylのインストール]{
 $ @<userinput>{verylup setup}
@@ -97,7 +97,11 @@ Veryl側の問題によりソースコードをビルドできないことがあ
  * @<w>{support-page}
 //}
 
-===[notoc] VSCodeの拡張のインストール
+===[notoc] Vim, VSCodeの拡張のインストール
+
+エディタにVimを利用している方は、
+GtiHubの@<href>{https://github.com/veryl-lang/veryl.vim, veryl-lang/veryl.vim}
+でプラグインを入手することができます。
 
 エディタにVSCodeを利用している方は、
 @<img>{vscode-ext}の拡張をインストールするとシンタックスハイライトなどの機能を利用することができます。
@@ -111,8 +115,9 @@ Veryl側の問題によりソースコードをビルドできないことがあ
 @<href>{https://github.com/verilator/verilator, Verilator}は、
 SystemVerilogのシミュレータを生成するためのソフトウェアです。
 
-@<code>{apt}、または@<code>{brew}を利用してインストールすることができます。
-パッケージマネージャが入っていない場合は、以下のページを参考にインストールしてください。
+apt、またはbrewを利用してインストールすることができます。
+パッケージマネージャが入っていない場合は、
+以下のページを参考にインストールしてください。
 
  * @<href>{https://verilator.org/guide/latest/install.html}
 
@@ -124,7 +129,7 @@ riscv-gnu-toolchainは、RISC-V向けのコンパイラなどが含まれるtool
 のREADMEにインストール方法が書かれています。
 READMEの@<code>{Installation (Newlib)}を参考にインストールしてください。
 
-//info[FPGAを利用する方へ]{
-TangMega138Kを利用する人はGOWIN EDA,
-PYNQ-Z1を利用する人はVivadoのインストールが必要です。
-//}
+#@# //info[FPGAを利用する方へ]{
+#@# TangMega138Kを利用する人はGOWIN EDA,
+#@# PYNQ-Z1を利用する人はVivadoのインストールが必要です。
+#@# //}

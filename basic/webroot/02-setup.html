@@ -57,9 +57,11 @@
 <h2 class="numbox"><a id="h1-1"></a><span class="secno">1.1</span> Veryl</h2>
 
 <h3 id="id_02-setup_nonum1" notoc="true">Verylのインストール</h3>
-<p>Verylは本書で利用するHDLです。まず、Verylのトランスパイラをインストールします。Verylには、Verylupというインストーラが用意されており、これを利用することでverylをインストールすることができます。</p>
-<p>Verylupはcargo, またはGitHubのReleaseページから入手することができます。cargoが入っている方は<code class="inline-code">cargo install verylup</code>でインストールしてください。cargoが入っていない場合は、<a href="https://github.com/veryl-lang/verylup" class="link">veryl-lang/verylup</a>で入手方法を確認することができます。</p>
-<p>Verylupを入手したら、次のようにVerylの最新版をインストールします(<span class="listref"><a href="./02-setup.html#Verylup-install">リスト1.1</a></span>)。</p>
+<p>本書ではVerylという言語でCPUを記述します。まず、Verylのトランスパイラをインストールします。Verylには、Verylupというインストーラが用意されており、これを利用することでVerylをインストールすることができます。</p>
+<p>VerylupはGitHubのReleaseページから入手することができます。<a href="https://github.com/veryl-lang/verylup" class="link">veryl-lang/verylup</a>で入手方法を確認してください<sup><a id="fnb-cargo.install" href="#fn-cargo.install" class="noteref" epub:type="noteref">*1</a></sup>。Verylupを入手したら、次のようにVerylの最新版をインストールします(<span class="listref"><a href="./02-setup.html#Verylup-install">リスト1.1</a></span>)。</p>
+<div class="footnote-list">
+<div class="footnote" id="fn-cargo.install" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>cargoが入っている方は、<code class="inline-code">cargo install verylup</code>でもインストールできます。</p></div>
+</div><!--/.footnote-list-->
 <div id="Verylup-install" class="cmd-code">
 <span class="caption">リスト1.1: リスト1.1: Verylのインストール</span>
 <pre class="list">$ <span class="userinput">verylup setup</span>
@@ -120,7 +122,8 @@ veryl 0.13.2
 </ul>
 </div>
 
-<h3 id="id_02-setup_nonum2" notoc="true">VSCodeの拡張のインストール</h3>
+<h3 id="id_02-setup_nonum2" notoc="true">Vim, VSCodeの拡張のインストール</h3>
+<p>エディタにVimを利用している方は、GtiHubの<a href="https://github.com/veryl-lang/veryl.vim" class="link">veryl-lang/veryl.vim</a>でプラグインを入手することができます。</p>
 <p>エディタにVSCodeを利用している方は、<span class="imgref"><a href="./02-setup.html#vscode-ext">図1.1</a></span>の拡張をインストールするとシンタックスハイライトなどの機能を利用することができます。</p>
 <ul>
 <li><a href="https://marketplace.visualstudio.com/items?itemName=dalance.vscode-veryl" class="link">https://marketplace.visualstudio.com/items?itemName=dalance.vscode-veryl</a>
@@ -135,7 +138,7 @@ veryl 0.13.2
 
 <h2 class="numbox"><a id="h1-2"></a><span class="secno">1.2</span> Verilator</h2>
 <p><a href="https://github.com/verilator/verilator" class="link">Verilator</a>は、SystemVerilogのシミュレータを生成するためのソフトウェアです。</p>
-<p><code class="inline-code">apt</code>、または<code class="inline-code">brew</code>を利用してインストールすることができます。パッケージマネージャが入っていない場合は、以下のページを参考にインストールしてください。</p>
+<p>apt、またはbrewを利用してインストールすることができます。パッケージマネージャが入っていない場合は、以下のページを参考にインストールしてください。</p>
 <ul>
 <li><a href="https://verilator.org/guide/latest/install.html" class="link">https://verilator.org/guide/latest/install.html</a>
 </li>
@@ -144,10 +147,6 @@ veryl 0.13.2
 <h2 class="numbox"><a id="h1-3"></a><span class="secno">1.3</span> riscv-gnu-toolchain</h2>
 <p>riscv-gnu-toolchainは、RISC-V向けのコンパイラなどが含まれるtoolchainです。</p>
 <p><a href="https://github.com/riscv-collab/riscv-gnu-toolchain" class="link">riscv-collab/riscv-gnu-toolchain</a>のREADMEにインストール方法が書かれています。READMEの<code class="inline-code">Installation (Newlib)</code>を参考にインストールしてください。</p>
-<div class="miniblock miniblock-info">
-<p class="miniblock-caption">FPGAを利用する方へ</p>
-<p>TangMega138Kを利用する人はGOWIN EDA,PYNQ-Z1を利用する人はVivadoのインストールが必要です。</p>
-</div>
 
         </main>
         <nav class="page-navi">
