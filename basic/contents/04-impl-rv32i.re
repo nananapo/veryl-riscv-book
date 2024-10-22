@@ -230,8 +230,6 @@ interface membus_if::<DATA_WIDTH: const, ADDR_WIDTH: const> {
 //table[memmodule-if][メモリモジュールに必要なポート]{
 ポート名	型					向き	意味
 -------------------------------------------------------------
-clk			clock				input	クロック信号
-rst 		reset				input	リセット信号
 valid		logic				input	メモリアクセスを要求しているかどうか
 ready		logic				output	メモリアクセスを受容するかどうか
 addr		logic<ADDR_WIDTH>	input	アクセスするアドレス
