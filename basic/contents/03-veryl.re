@@ -505,7 +505,7 @@ always_ffでの代入		クロック信号, またはリセット信号のタイ�
 (@<list>{module.inst})。
 
 //list[module.inst][ModuleAモジュール内でHalfAdderモジュールをインスタンス化する]{
-module ModuleA{
+module ModuleA {
 	// モジュールと接続するための変数の宣言
 	let x : logic = 0;
 	let y : logic = 1;
@@ -576,7 +576,7 @@ const SECRET : u32 = 42;
 
 構造体(struct)とは、複数のデータから構成される型です。
 例えば、@<list>{struct.define}のように記述すると、
-logic<32>とlogic<16>の2つのデータから構成される型を定義することができます。
+@<code>{logic<32>}と@<code>{logic<16>}の2つのデータから構成される型を定義することができます。
 
 //list[struct.define][構造体型の定義]{
 // struct 型名 { フィールドの定義 }
@@ -639,18 +639,25 @@ enum abc {
 (@<list>{logic.md})。
 
 //list[logic.md][多次元の型]{
-logic        // 1ビットのlogic
-logic<N>     // Nビットのlogic
-logic<A, B>  // A * Bの2次元のlogic
+logic        // 1ビットのlogic型
+logic<N>     // Nビットのlogic型
+logic<A, B>  // BビットのlogicがA個並ぶ型
 //}
 
-@<code>{[]}を使用することで、配列を定義することができます
+@<code>{<>}を使用して構成される型の要素は、
+連続した領域に並ぶことが保証されます(@<img>{packed_array})。
+
+//image[packed_array][<>の型の要素は連続した領域に並ぶ (例 : v[1\][0\]とv[0\][3\]が隣り合う)]
+
+@<code>{[]}を使用することでも、多次元の型を定義することができます
 (@<list>{array.define})。
+ただし、@<code>{[]}を使用して構成される型の要素は、
+連続した領域に並ぶことが保証されません。
 
 //list[array.define][配列型]{
-// 型名[個数] で、"型名"型が"個数"個の配列型になる
-logic[32]     // 32個のlogicが並ぶ型
-logic[4, 8]   // logicが8個並ぶ配列が4個並ぶ配列型
+// 型名[個数] で、"型名"型が"個数"個の配列になる
+logic[32]     // 要素数が32のlogicの配列型
+logic[4, 8]   // logicが8個の配列が4個ある配列型
 //}
 
 ==== 型に別名をつける

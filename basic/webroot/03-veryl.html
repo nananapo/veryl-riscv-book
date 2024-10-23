@@ -395,7 +395,7 @@ always_ff(clk, rst) {
 <p>モジュールは、<b>inst</b>キーワードによってインスタンス化することができます(<span class="listref"><a href="./03-veryl.html#module.inst">リスト2.18</a></span>)。</p>
 <div id="module.inst" class="caption-code">
 <span class="caption">リスト2.18: リスト2.18: ModuleAモジュール内でHalfAdderモジュールをインスタンス化する</span>
-<pre class="list language-inst">module ModuleA{
+<pre class="list language-inst">module ModuleA {
         // モジュールと接続するための変数の宣言
         let x : logic = 0;
         let y : logic = 1;
@@ -453,7 +453,7 @@ const SECRET : u32 = 42;
 <h3 class="none"><a id="h2-2-4"></a><span class="secno">2.2.4</span> ユーザー定義型</h3>
 
 <h4><a id="h2-2-4-1"></a>構造体型</h4>
-<p>構造体(struct)とは、複数のデータから構成される型です。例えば、<span class="listref"><a href="./03-veryl.html#struct.define">リスト2.22</a></span>のように記述すると、logic&lt;32&gt;とlogic&lt;16&gt;の2つのデータから構成される型を定義することができます。</p>
+<p>構造体(struct)とは、複数のデータから構成される型です。例えば、<span class="listref"><a href="./03-veryl.html#struct.define">リスト2.22</a></span>のように記述すると、<code class="inline-code">logic&lt;32&gt;</code>と<code class="inline-code">logic&lt;16&gt;</code>の2つのデータから構成される型を定義することができます。</p>
 <div id="struct.define" class="caption-code">
 <span class="caption">リスト2.22: リスト2.22: 構造体型の定義</span>
 <pre class="list language-define">// struct 型名 { フィールドの定義 }
@@ -508,17 +508,24 @@ enum abc : logic&lt;2&gt; {
 <p><code class="inline-code">&lt;&gt;</code>を使用することで、多次元の型を定義することができます(<span class="listref"><a href="./03-veryl.html#logic.md">リスト2.26</a></span>)。</p>
 <div id="logic.md" class="caption-code">
 <span class="caption">リスト2.26: リスト2.26: 多次元の型</span>
-<pre class="list language-md">logic        // 1ビットのlogic
-logic&lt;N&gt;     // Nビットのlogic
-logic&lt;A, B&gt;  // A * Bの2次元のlogic
+<pre class="list language-md">logic        // 1ビットのlogic型
+logic&lt;N&gt;     // Nビットのlogic型
+logic&lt;A, B&gt;  // BビットのlogicがA個並ぶ型
 </pre>
 </div>
-<p><code class="inline-code">[]</code>を使用することで、配列を定義することができます(<span class="listref"><a href="./03-veryl.html#array.define">リスト2.27</a></span>)。</p>
+<p><code class="inline-code">&lt;&gt;</code>を使用して構成される型の要素は、連続した領域に並ぶことが保証されます(<span class="imgref"><a href="./03-veryl.html#packed_array">図2.5</a></span>)。</p>
+<div id="packed_array" class="image">
+<img src="images/03-veryl/packed_array.png" alt="&amp;lt;&amp;gt;の型の要素は連続した領域に並ぶ (例 : v[1][0]とv[0][3]が隣り合う)" class="img" />
+<p class="caption">
+図2.5: &lt;&gt;の型の要素は連続した領域に並ぶ (例 : v[1][0]とv[0][3]が隣り合う)
+</p>
+</div>
+<p><code class="inline-code">[]</code>を使用することでも、多次元の型を定義することができます(<span class="listref"><a href="./03-veryl.html#array.define">リスト2.27</a></span>)。ただし、<code class="inline-code">[]</code>を使用して構成される型の要素は、連続した領域に並ぶことが保証されません。</p>
 <div id="array.define" class="caption-code">
 <span class="caption">リスト2.27: リスト2.27: 配列型</span>
-<pre class="list language-define">// 型名[個数] で、&quot;型名&quot;型が&quot;個数&quot;個の配列型になる
-logic[32]     // 32個のlogicが並ぶ型
-logic[4, 8]   // logicが8個並ぶ配列が4個並ぶ配列型
+<pre class="list language-define">// 型名[個数] で、&quot;型名&quot;型が&quot;個数&quot;個の配列になる
+logic[32]     // 要素数が32のlogicの配列型
+logic[4, 8]   // logicが8個の配列が4個ある配列型
 </pre>
 </div>
 
@@ -538,10 +545,10 @@ type ptr_array  = ptr&lt;32&gt;
 <div id="bitsel" class="image">
 <img src="images/03-veryl/bitsel.png" alt="ビット選択" class="img" style="width:50%" />
 <p class="caption">
-図2.5: ビット選択
+図2.6: ビット選択
 </p>
 </div>
-<p>変数の任意のビットを切り出すには<code class="inline-code">[]</code>を使用します(<span class="imgref"><a href="./03-veryl.html#bitsel">図2.5</a></span>)。範囲の選択には<code class="inline-code">[:]</code>を使用します。最上位ビット(most significant bit)は<b>msb</b>キーワード,最下位ビット(least significant bit)は<b>lsb</b>キーワードで指定することができます。選択する場所の指定には式を使うことができます。</p>
+<p>変数の任意のビットを切り出すには<code class="inline-code">[]</code>を使用します(<span class="imgref"><a href="./03-veryl.html#bitsel">図2.6</a></span>)。範囲の選択には<code class="inline-code">[:]</code>を使用します。最上位ビット(most significant bit)は<b>msb</b>キーワード,最下位ビット(least significant bit)は<b>lsb</b>キーワードで指定することができます。選択する場所の指定には式を使うことができます。</p>
 <p>よく使われる範囲の選択には、別の書き方が用意されています(<span class="listref"><a href="./03-veryl.html#bitsel.range_sel">リスト2.29</a></span>)。</p>
 <div id="bitsel.range_sel" class="caption-code">
 <span class="caption">リスト2.29: リスト2.29: 範囲の選択</span>
