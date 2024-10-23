@@ -882,11 +882,11 @@ module fifo #(
         rdata  = mem[head];
     }
 
-    if WIDTH == 1 :wready_block {
-        assign wready = head == tail || rready;
+    assign wready = if WIDTH == 1 {
+        head == tail || rready
     } else {
-        assign wready = tail_plus1 != head;
-    }
+        tail_plus1 != head
+    };
 
     // 2つ以上空きがあるかどうか
     let wready_two: logic = wready && tail_plus2 != head;
@@ -2617,8 +2617,10 @@ module memory::<DATA_WIDTH: const, ADDR_WIDTH: const> (
 
     // 書き込みマスクをDATA_WIDTHに展開した値
     var wmask_expand: DataType;
-    for i in 0..DATA_WIDTH :wm_expand_block {
-        assign wmask_expand[i] = wmask_saved[i / 8];
+    always_comb {
+        for i: u32 in 0..DATA_WIDTH {
+            wmask_expand[i] = wmask_saved[i / 8];
+        }
     }
 
     initial {

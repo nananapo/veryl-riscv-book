@@ -735,48 +735,26 @@ always_comb {
 </pre>
 </div>
 
-<h4><a id="h2-2-5-5"></a>文の生成 (if, for)</h4>
-<p>if文はalways_ff, always_comb等のブロックの外にも書くことができます(<span class="listref"><a href="./03-veryl.html#generate.if">リスト2.36</a></span>)。このとき、条件式は定数しか使用できません。if文, else if文, else文には<code class="inline-code">: ラベル名</code>で名前を付ける必要があります。</p>
-<div id="generate.if" class="caption-code">
-<span class="caption">リスト2.36: リスト2.36: if文による文の生成</span>
-<pre class="list language-if">module ModuleA #(
-        param WIDTH : u32 = 0
-) (
-        value : output logic&lt;32&gt;
-) {
-        if WIDTH == 0 : width_is_zero {
-                assign value = 1;
-        } else if WIDTH == 1 : width_is_one {
-                assign value = 2;
-        } else { // else文のラベルは省略できる
-                assign value = 'x;
-        }
-}
+<h4><a id="h2-2-5-5"></a>for</h4>
+<p><b>for</b>文はループを実現するための文です。<span class="listref"><a href="./03-veryl.html#for.code">リスト2.36</a></span>のように記述することができます。例えばループ変数が0から31になるまで(32回)繰り返すなら、範囲に<code class="inline-code">0..32</code>, または<code class="inline-code">0..=31</code>と記述します。範囲には定数のみ指定することができます。</p>
+<div id="for.code" class="caption-code">
+<span class="caption">リスト2.36: リスト2.36: for文の記法</span>
+<pre class="list language-code">// for ループ変数名: 型 in 範囲 { 処理 }
+for i: u32 in 0..32 { ... }
 </pre>
 </div>
-<p>同じ文をなんども繰り返し記述したいとき、<b>for</b>文を活用することができます(<span class="listref"><a href="./03-veryl.html#generate.for">リスト2.37</a></span>)。if文と同様に、for文にもラベルを付ける必要があります。</p>
-<p>for文はalways_ff, always_comb等のブロックの中にも書くことができます。その場合、ラベルは不要で、ループ変数に型を付ける必要があります。また、<b>break</b>文によってループを中断することができます。</p>
-<div id="generate.for" class="caption-code">
-<span class="caption">リスト2.37: リスト2.37: for文による文の生成</span>
-<pre class="list language-for">module ModuleA (
-        value : output logic&lt;32&gt;
-) {
-        // in 0..32で、0から31の区間をループする
-        // in 0..=31で同じ区間を指定できる
-        for i in 0..32 : value_assignment {
-                assign value[i] = i % 2;
+<p><b>break</b>文を使うとループから抜け出すことができます。例えば<span class="listref"><a href="./03-veryl.html#always_comb.for">リスト2.37</a></span>では、最終的にxの値は256になります。</p>
+<div id="always_comb.for" class="caption-code">
+<span class="caption">リスト2.37: リスト2.37: always_combブロック内でfor文を記述する例</span>
+<pre class="list language-for">var x: u32;
+always_comb {
+    x = 0;
+    for _: u32 in 0..1024 {
+        if x == 256 {
+            break;
         }
-
-        var value2 : logic&lt;32&gt;;
-        always_comb {
-                // ループ変数に型を指定する必要がある
-                for i :u32 in  0..=63 {
-                        value2[i] = i % 2;
-                        if i == 31 {
-                                break;
-                        }
-                }
-        }
+        x += 1;
+    }
 }
 </pre>
 </div>

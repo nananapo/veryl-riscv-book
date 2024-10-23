@@ -885,55 +885,32 @@ always_comb {
 {"Happy" repeat 3} // "HappyHappyHappy"になる
 //}
 
-==== 文の生成 (if, for)
+==== for
 
-if文はalways_ff, always_comb等のブロックの外にも書くことができます(@<list>{generate.if})。
-このとき、条件式は定数しか使用できません。
-if文, else if文, else文には@<code>{: ラベル名}で名前を付ける必要があります。
+@<b>{for}文はループを実現するための文です。
+@<list>{for.code}のように記述することができます。
+例えばループ変数が0から31になるまで(32回)繰り返すなら、
+範囲に@<code>{0..32}, または@<code>{0..=31}と記述します。
+範囲には定数のみ指定することができます。
 
-//list[generate.if][if文による文の生成]{
-module ModuleA #(
-	param WIDTH : u32 = 0
-) (
-	value : output logic<32>
-) {
-	if WIDTH == 0 : width_is_zero {
-		assign value = 1;
-	} else if WIDTH == 1 : width_is_one {
-		assign value = 2;
-	} else { // else文のラベルは省略できる
-		assign value = 'x;
-	}
-}
+//list[for.code][for文の記法]{
+// for ループ変数名: 型 in 範囲 { 処理 }
+for i: u32 in 0..32 { ... }
 //}
 
-同じ文をなんども繰り返し記述したいとき、@<b>{for}文を活用することができます(@<list>{generate.for})。
-if文と同様に、for文にもラベルを付ける必要があります。
+@<b>{break}文を使うとループから抜け出すことができます。
+例えば@<list>{always_comb.for}では、最終的にxの値は256になります。
 
-for文はalways_ff, always_comb等のブロックの中にも書くことができます。
-その場合、ラベルは不要で、ループ変数に型を付ける必要があります。
-また、@<b>{break}文によってループを中断することができます。
-
-//list[generate.for][for文による文の生成]{
-module ModuleA (
-	value : output logic<32>
-) {
-	// in 0..32で、0から31の区間をループする
-	// in 0..=31で同じ区間を指定できる
-	for i in 0..32 : value_assignment {
-		assign value[i] = i % 2;
-	}
-
-	var value2 : logic<32>;
-	always_comb {
-		// ループ変数に型を指定する必要がある
-		for i :u32 in  0..=63 {
-			value2[i] = i % 2;
-			if i == 31 {
-				break;
-			}
-		}
-	}
+//list[always_comb.for][always_combブロック内でfor文を記述する例]{
+var x: u32;
+always_comb {
+    x = 0;
+    for _: u32 in 0..1024 {
+        if x == 256 {
+            break;
+        }
+        x += 1;
+    }
 }
 //}
 
