@@ -86,7 +86,7 @@
 <p>TODO</p>
 
 <h4 id="id_00-preface_nonum6" notoc="true">注意</h4>
-<p>本書は「Verylで作るCPU 基本編」の第I部のみを発行したものです。そのため、本文に「後の章」と書かれていても、本書には含まれない場合があります。本書のpdf, web版は無料で配布されており、<a href="https://github.com/nananapo/veryl-riscv-book" class="link">https://github.com/nananapo/veryl-riscv-book</a>でダウンロード, 閲覧することができます。</p>
+<p>本書は「Verylで作るCPU 基本編」の第I部のみを発行したものです。そのため、本文に「後の章」と書かれていても、本書には含まれない場合があります。本書のpdf, web版は無料で配布されており、<a href="https://github.com/nananapo/veryl-riscv-book" class="link">https://github.com/nananapo/veryl-riscv-book</a>で入手することができます。</p>
 <p></p>
 <hr />
 <p></p>
@@ -117,7 +117,7 @@
 <div class="footnote" id="fn-rv128i" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*4] </span>RV128Iもありますが、まだDraft段階です</p></div>
 </div><!--/.footnote-list-->
 <p>基本整数命令セットには最低限の命令しか定義されていません。それ以外のかけ算や割り算, 不可分操作, CSRなどの追加の命令や機能は拡張として定義されています。CPUが何を実装しているかを示す表現にISA Stringというものがあり、例えばかけ算と割り算, 不可分操作ができるRV32IのCPUは<code class="inline-code">RV32IMA</code>と表現されます。</p>
-<p>本書では、まず、<code class="inline-code">RV32I</code>のCPUを作成します。これを、OSを実行できる程度までに進化させることを目標に実装を進めます。</p>
+<p>本書では、まず、<code class="inline-code">RV32I</code>のCPUを実装します。これを、OSを実行できる程度までに進化させることを目標に実装を進めます。</p>
 
 <h4 id="id_00-preface_nonum10" notoc="true">使用する言語</h4>
 <p>CPUの論理設計にはハードウェア記述言語を使用します。ハードウェア記述言語とは、文字通り、ハードウェアを記述するための言語です。ハードウェアとは論理回路のことで、ハードウェア記述言語を使うと論理回路を記述, 生成することができます。これ以降、ハードウェア記述言語のことをHDL (Hardware Description Language) と書くことがあります。</p>
@@ -150,7 +150,7 @@
 <pre class="emlist">print(&quot;Hello, <b>world</b>!\n&quot;);       <span class="balloon">← 太字は強調</span>
 </pre>
 </div>
-<p>プログラムコードの差分を表示する場合は、追加されたコードを太字で、削除されたコードを取り消し線で表します。ただし、リスト内のコードが全て新しく追加されるときは太字を利用しません。</p>
+<p>プログラムコードの差分を表示する場合は、追加されたコードを太字で、削除されたコードを取り消し線で表します。ただし、リスト内のコードが全て新しく追加されるときは太字を利用しません。コードを置き換えるときは太字で示し、削除されたコードを示さない場合もあります。</p>
 <div class="caption-code">
 <pre class="emlist"><del>print(&quot;Hello, <b>world</b>!\n&quot;);</del>       <span class="balloon">← 取り消し線は削除したコード</span>
 <b>print(&quot;Hello, &quot;+name+&quot;!\n&quot;);</b>    <span class="balloon">← 太字は追加したコード</span>
@@ -166,7 +166,7 @@
 <pre class="emlist">$ <span class="userinput">echo Hello</span>       <span class="balloon">← 行頭の「$ 」はプロンプト、それ以降がユーザ入力</span>
 </pre>
 </div>
-<p>プログラムコードやターミナル画面は、<code class="inline-code">...</code>などの複数の点で省略を表すことがあります。</p>
+<p>プログラムコードやターミナル画面は、<code class="inline-code">...</code>などの複数の点で省略することがあります。</p>
 <p>本文に対する補足情報や注意・警告は、次のようなノートや囲み枠で表示します。</p>
 <div class="note">
 <h5>ノートタイトル</h5>

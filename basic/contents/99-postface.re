@@ -7,7 +7,7 @@
 
 本書は「Verylで作るCPU 基本編」の第I部のみを発行したものです。
 本書のpdf, web版は無料で配布されており、
-@<href>{https://github.com/nananapo/veryl-riscv-book}でダウンロード, 閲覧することができます。
+@<href>{https://github.com/nananapo/veryl-riscv-book}で入手することができます。
 
 本書に関する質問やお問い合わせは、以下の GitHub のリポジトリに issue を⽴てて⾏ってくだ
 さい。

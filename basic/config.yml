@@ -381,7 +381,7 @@ pdfmaker:
   colophon: true
   #
   # 表紙に配置し、書籍の影絵にも利用する画像ファイル。同人誌の印刷では一般的に、表紙は本文と別ファイルにするので、ここはnullにする。
-  #coverimage: null
+  # coverimage: cover
   #
   ### 【注意】次の設定項目は config-starter.yml に移動し、項目名も変わりました。
   ###   ・coverpdf_files:     => frontcover_pdffile:
