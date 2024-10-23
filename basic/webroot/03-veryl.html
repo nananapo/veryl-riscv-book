@@ -270,19 +270,20 @@ signed bit&lt;2&gt; // 2ビットの符号付きbit型
 }
 </pre>
 </div>
-<p>assign文による代入と同じように、<span class="listref"><a href="./03-veryl.html#always_comb.assign">リスト2.9</a></span>ではbの変化をトリガーにaの値が変化します。しかし、継続的代入と違い、ブロッキング代入には、代入が完了するまで後続の文の代入をブロックするという違いがあります。</p>
+<p>assign文による代入と同じように、<span class="listref"><a href="./03-veryl.html#always_comb.assign">リスト2.9</a></span>ではbの変化をトリガーにaの値が変化します。</p>
+<p>always_combブロックには複数のブロッキング代入文を記述することができます。このとき、代入文は上から順番に実行されます。</p>
 <div id="always_comb.order" class="caption-code">
-<span class="caption">リスト2.10: リスト2.10: ブロッキング代入は後続の文の代入をブロックする</span>
+<span class="caption">リスト2.10: リスト2.10: ブロッキング代入は逐次実行される</span>
 <pre class="list language-order">always_comb {
-        s = 0;
-        a = s; // a = 0
-        s = 1;
-        b = a; // b = 1
+        s = X;
+        a = s; // a = X
+        s = Y;
+        b = a; // b = Y
 }
 </pre>
 </div>
-<p>例えば、<code class="inline-code">always_comb.order</code>では、aには0が代入されますが、bには1が代入されます。これは、<code class="inline-code">s = 0</code>が完了するまで<code class="inline-code">a = s</code>がブロックされることでaに0が代入され、<code class="inline-code">s = 1</code>が完了するまで<code class="inline-code">b = a</code>がブロックされることでbに1が代入されるためです。最終的に、aは0, bは1, sは1になります。簡単に言ってしまうと、ブロッキング代入文は上から順番に実行されます。</p>
-<p>assign文やalways_combブロック内でブロッキング代入される式は、組み合わせ回路になります。</p>
+<p>例えば、<span class="listref"><a href="./03-veryl.html#always_comb.order">リスト2.10</a></span>では、aにはXが代入されますが、bにはYが代入されます。a, b, sは、変数X, Yの変化をトリガーに値が更新されます。</p>
+<p>assign文やブロッキング代入文は論理回路の状態(レジスタ)を変更しません。そのため、assign文やブロッキング代入文は組み合わせ回路になります。</p>
 
 <h4><a id="h2-2-3-2"></a>変数の宣言</h4>
 <p>モジュールの中では、<b>var</b>文によって新しく変数を宣言することができます(<span class="listref"><a href="./03-veryl.html#var.stmt">リスト2.11</a></span>)。</p>
