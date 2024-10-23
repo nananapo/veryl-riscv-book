@@ -271,7 +271,6 @@ i64		signed bit<64>
 //list[string.literal][文字列リテラル]{
 "Hello World!" // 文字列リテラル 
 "abcdef\nabc"  // エスケープシーケンスを含む文字列リテラル
-"あうあうあー"  // 日本語も入力できる
 //}
 
 === module
