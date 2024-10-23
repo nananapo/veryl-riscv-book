@@ -717,8 +717,8 @@ Verylでは、次の演算子を使用することができます(@<table>{opera
 //}
 
 SystemVerilogを知っている方にSystemVerilogとの差異を説明すると、
-@<code>{++},@<code>{--},@<code>{:=},@<code>{:/},@<code>{<=}(代入)が無く、
-@<code>{<=},@<code>{>=}がそれぞれ@<code>{<:},@<code>{>:}に変更されています。
+@<code>{++},@<code>{--},@<code>{:=},@<code>{:/},@<code>{<=}(代入),@<code>{?:}(三項演算子)が無く、
+@<code>{<},@<code>{>}がそれぞれ@<code>{<:},@<code>{>:}に変更されています。
 また、@<code>{inside}と@<code>{{{\}\}}の形式が変更され、@<code>{if}, @<code>{case}, @<code>{switch}式が追加されています。
 
 単項, 二項演算子の使用例は次の通りです(@<list>{operator.use})。
