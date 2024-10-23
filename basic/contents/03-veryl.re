@@ -668,7 +668,7 @@ logic[4, 8]   // logicが8個の配列が4個ある配列型
 //list[type.define][型に別名を付ける]{
 // type 名前 = 型;
 type ptr        = logic<32>;
-type ptr_array  = ptr<32>
+type ptr_array  = ptr<32>;
 //}
 
 === 式, 文, 宣言
@@ -686,7 +686,7 @@ type ptr_array  = ptr<32>
 よく使われる範囲の選択には、別の書き方が用意されています
 (@<list>{bitsel.range_sel})。
 
-//list[bitsel.range_sel][範囲の選択]{
+//list[bitsel.range_sel][範囲の選択の別の記法]{
 v[s +: w]   // = v[s+w-1   : s    ]
 v[s -: w]   // = v[s       : s-w+1]
 v[i step w] // = v[i*(w+1) : i*w  ] = v[i*w +: w]
@@ -723,7 +723,7 @@ SystemVerilogを知っている方にSystemVerilogとの差異を説明すると
 
 単項, 二項演算子の使用例は次の通りです(@<list>{operator.use})。
 
-//list[operator.use][単項, 二項演算子 (Verylのドキュメント@<bib>{veryl-doc.operators}の例を改変)]{
+//list[operator.use][単項, 二項演算子 (Verylのドキュメントの例@<bib>{veryl-doc.operators}を改変)]{
 // 単項算術演算
 a = +1;
 a = -1; // 正負を反転させる
@@ -792,17 +792,17 @@ if文は式にすることができます。
 if式は必ず値を返す必要があり、elseが必須です。
 
 //list[if.only][if文, if式]{
-var v1 : logic<32>;
+var v : logic<32>;
 always_comb {
 	if WIDTH == 0 {
 		// WIDTH == 0のとき
-		v1 = 0;
+		v = 0;
 	} else if WIDTH == 1 {
 		// WIDTH != 0かつWIDTH == 1のとき
-		v1 = 1;
+		v = 1;
 	} else {
 		// WIDTH != 0かつWIDTH != 1のとき
-		v1 = if WIDTH == 3 { // ifは式にもなる
+		v = if WIDTH == 3 { // ifは式にもなる
 			3
 		} else {
 			// if式はelseが必須
@@ -814,27 +814,27 @@ always_comb {
 
 always_combブロックで変数に継続的代入するとき、
 if文の全ての場合で継続的代入する必要があることに注意してください
-(@<code>{v1}は常に代入されています)。
+(@<code>{v}は常に代入されています)。
 
 @<list>{if.only}と同じ意味の文を@<b>{switch}文で書くことができます(@<list>{switch.only})。
 どの条件にも当てはまらないときの動作は@<b>{default}で指定します。
 switchは式にすることができます。
-switch式はは必ず値を返す必要があり、defaultが必須です。
+switch式は必ず値を返す必要があり、defaultが必須です。
 
 //list[switch.only][switch文, switch式]{
-var v1: logic<32>;
+var v : logic<32>;
 always_comb {
 	switch {
 		// WIDTH == 0のとき
 		WIDTH == 0: {
-			v1 = 0;
+			v = 0;
 		}
 		// WIDTH != 0かつWIDTH == 1のとき
-		WIDTH == 1: v1 = 1; // 要素が1つの文の時、{}は省略できる
+		WIDTH == 1: v = 1; // 要素が1つの文の時、{}は省略できる
 		// WIDTH != 0かつWIDTH != 1のとき
 		default: 
 			// switch式
-			v1 = switch {
+			v = switch {
 				WIDTH == 3: 3, // カンマで区切る
 				default : 4, // switch式はdefaultが必須
 			};
@@ -848,19 +848,19 @@ always_comb {
 式にできたり、式にdefaultが必須なのはswitch文と同様です。
 
 //list[case.only][case文, case式]{
-var v1: logic<32>;
+var v: logic<32>;
 always_comb {
 	case WIDTH {
 		// WIDTH == 0のとき
 		0: {
-			v1 = 0;
+			v = 0;
 		}
 		// WIDTH != 0かつWIDTH == 1のとき
-		1: v1 = 1; // 要素が1つの文の時、{}は省略できる
+		1: v = 1; // 要素が1つの文の時、{}は省略できる
 		// WIDTH != 0かつWIDTH != 1のとき
 		default: 
 			// case式
-			v1 = case WIDTH {
+			v = case WIDTH {
 				3: 3, // カンマで区切る
 				default : 4, // case式はdefaultが必須
 			};
@@ -889,7 +889,7 @@ always_comb {
 
 if文はalways_ff, always_comb等のブロックの外にも書くことができます(@<list>{generate.if})。
 このとき、条件式は定数しか使用できません。
-if文, else if, else文には@<code>{: ラベル名}で名前を付ける必要があります。
+if文, else if文, else文には@<code>{: ラベル名}で名前を付ける必要があります。
 
 //list[generate.if][if文による文の生成]{
 module ModuleA #(
@@ -1085,9 +1085,9 @@ module Top{
 modportで宣言されたポートにインターフェースのインスタンスを渡すことにより、
 ポートの接続を一気に行うことができます。
 
-モジュールと同じようにパラメータを宣言することができます(@<list>{interface.param})。
+モジュールと同じように、インターフェースにはパラメータを宣言できます(@<list>{interface.param})。
 
-//list[interface.param][インターフェースの定義]{
+//list[interface.param][パラメータ付きのインターフェースの定義]{
 // interface インターフェース名 #( パラメータの定義 ) { }
 interface iff_params # (
 	param PARAM_A : u32 = 100,
@@ -1126,7 +1126,7 @@ module ModuleA {
 //}
 
 @<b>{import}文を使用すると、
-パッケージ名の指定を省略することができます
+要素へのアクセス時にパッケージ名の指定を省略することができます
 (@<list>{package.import})。
 
 //list[package.import][パッケージをimportする]{
@@ -1189,7 +1189,7 @@ module ModuleA {
 ==== SystemVerilogとの連携
 
 VerylはSystemVerilogのモジュールやパッケージ, インターフェースを利用することができます。
-SystemVerilogのリソースにアクセスするには@<b>{$sv::}を使用します。
+SystemVerilogのリソースにアクセスするには@<code>{$sv::}を使用します。
 
 //list[sv.use][SystemVerilogの要素を利用する]{
 module ModuleA {
@@ -1213,7 +1213,7 @@ module ModuleA {
 }
 //}
 
-SystemVerilogのソースコードを直接埋め込み、含めることができます
+SystemVerilogのソースコードを直接埋め込み、展開することができます
 (@<list>{sv.integrate})。
 
 //list[sv.integrate][SystemVerilog記述を埋め込む]{

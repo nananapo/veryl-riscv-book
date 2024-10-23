@@ -535,7 +535,7 @@ logic[4, 8]   // logicが8個の配列が4個ある配列型
 <span class="caption">リスト2.28: リスト2.28: 型に別名を付ける</span>
 <pre class="list language-define">// type 名前 = 型;
 type ptr        = logic&lt;32&gt;;
-type ptr_array  = ptr&lt;32&gt;
+type ptr_array  = ptr&lt;32&gt;;
 </pre>
 </div>
 
@@ -551,7 +551,7 @@ type ptr_array  = ptr&lt;32&gt;
 <p>変数の任意のビットを切り出すには<code class="inline-code">[]</code>を使用します(<span class="imgref"><a href="./03-veryl.html#bitsel">図2.6</a></span>)。範囲の選択には<code class="inline-code">[:]</code>を使用します。最上位ビット(most significant bit)は<b>msb</b>キーワード,最下位ビット(least significant bit)は<b>lsb</b>キーワードで指定することができます。選択する場所の指定には式を使うことができます。</p>
 <p>よく使われる範囲の選択には、別の書き方が用意されています(<span class="listref"><a href="./03-veryl.html#bitsel.range_sel">リスト2.29</a></span>)。</p>
 <div id="bitsel.range_sel" class="caption-code">
-<span class="caption">リスト2.29: リスト2.29: 範囲の選択</span>
+<span class="caption">リスト2.29: リスト2.29: 範囲の選択の別の記法</span>
 <pre class="list language-range_sel">v[s +: w]   // = v[s+w-1   : s    ]
 v[s -: w]   // = v[s       : s-w+1]
 v[i step w] // = v[i*(w+1) : i*w  ] = v[i*w +: w]
@@ -584,7 +584,7 @@ v[i step w] // = v[i*(w+1) : i*w  ] = v[i*w +: w]
 <p>SystemVerilogを知っている方にSystemVerilogとの差異を説明すると、<code class="inline-code">++</code>,<code class="inline-code">--</code>,<code class="inline-code">:=</code>,<code class="inline-code">:/</code>,<code class="inline-code">&lt;=</code>(代入),<code class="inline-code">?:</code>(三項演算子)が無く、<code class="inline-code">&lt;</code>,<code class="inline-code">&gt;</code>がそれぞれ<code class="inline-code">&lt;:</code>,<code class="inline-code">&gt;:</code>に変更されています。また、<code class="inline-code">inside</code>と<code class="inline-code">{{}}</code>の形式が変更され、<code class="inline-code">if</code>, <code class="inline-code">case</code>, <code class="inline-code">switch</code>式が追加されています。</p>
 <p>単項, 二項演算子の使用例は次の通りです(<span class="listref"><a href="./03-veryl.html#operator.use">リスト2.30</a></span>)。</p>
 <div id="operator.use" class="caption-code">
-<span class="caption">リスト2.30: リスト2.30: 単項, 二項演算子 (Verylのドキュメント&lt;a href=&quot;bib.html#bib-veryl-doc.operators&quot;&gt;[4]&lt;/a&gt;の例を改変)</span>
+<span class="caption">リスト2.30: リスト2.30: 単項, 二項演算子 (Verylのドキュメントの例&lt;a href=&quot;bib.html#bib-veryl-doc.operators&quot;&gt;[4]&lt;/a&gt;を改変)</span>
 <pre class="list language-use">// 単項算術演算
 a = +1;
 a = -1; // 正負を反転させる
@@ -651,17 +651,17 @@ a = x || y; // xまたはyが真のとき真
 <p>条件によって動作や値を変えたいとき、<b>if</b>文を使用します (<span class="listref"><a href="./03-veryl.html#if.only">リスト2.31</a></span>)。if文は式にすることができます。if式は必ず値を返す必要があり、elseが必須です。</p>
 <div id="if.only" class="caption-code">
 <span class="caption">リスト2.31: リスト2.31: if文, if式</span>
-<pre class="list language-only">var v1 : logic&lt;32&gt;;
+<pre class="list language-only">var v : logic&lt;32&gt;;
 always_comb {
         if WIDTH == 0 {
                 // WIDTH == 0のとき
-                v1 = 0;
+                v = 0;
         } else if WIDTH == 1 {
                 // WIDTH != 0かつWIDTH == 1のとき
-                v1 = 1;
+                v = 1;
         } else {
                 // WIDTH != 0かつWIDTH != 1のとき
-                v1 = if WIDTH == 3 { // ifは式にもなる
+                v = if WIDTH == 3 { // ifは式にもなる
                         3
                 } else {
                         // if式はelseが必須
@@ -671,23 +671,23 @@ always_comb {
 }
 </pre>
 </div>
-<p>always_combブロックで変数に継続的代入するとき、if文の全ての場合で継続的代入する必要があることに注意してください(<code class="inline-code">v1</code>は常に代入されています)。</p>
-<p><span class="listref"><a href="./03-veryl.html#if.only">リスト2.31</a></span>と同じ意味の文を<b>switch</b>文で書くことができます(<span class="listref"><a href="./03-veryl.html#switch.only">リスト2.32</a></span>)。どの条件にも当てはまらないときの動作は<b>default</b>で指定します。switchは式にすることができます。switch式はは必ず値を返す必要があり、defaultが必須です。</p>
+<p>always_combブロックで変数に継続的代入するとき、if文の全ての場合で継続的代入する必要があることに注意してください(<code class="inline-code">v</code>は常に代入されています)。</p>
+<p><span class="listref"><a href="./03-veryl.html#if.only">リスト2.31</a></span>と同じ意味の文を<b>switch</b>文で書くことができます(<span class="listref"><a href="./03-veryl.html#switch.only">リスト2.32</a></span>)。どの条件にも当てはまらないときの動作は<b>default</b>で指定します。switchは式にすることができます。switch式は必ず値を返す必要があり、defaultが必須です。</p>
 <div id="switch.only" class="caption-code">
 <span class="caption">リスト2.32: リスト2.32: switch文, switch式</span>
-<pre class="list language-only">var v1: logic&lt;32&gt;;
+<pre class="list language-only">var v : logic&lt;32&gt;;
 always_comb {
         switch {
                 // WIDTH == 0のとき
                 WIDTH == 0: {
-                        v1 = 0;
+                        v = 0;
                 }
                 // WIDTH != 0かつWIDTH == 1のとき
-                WIDTH == 1: v1 = 1; // 要素が1つの文の時、{}は省略できる
+                WIDTH == 1: v = 1; // 要素が1つの文の時、{}は省略できる
                 // WIDTH != 0かつWIDTH != 1のとき
                 default: 
                         // switch式
-                        v1 = switch {
+                        v = switch {
                                 WIDTH == 3: 3, // カンマで区切る
                                 default : 4, // switch式はdefaultが必須
                         };
@@ -698,19 +698,19 @@ always_comb {
 <p><span class="listref"><a href="./03-veryl.html#if.only">リスト2.31</a></span>のように1つの要素(<code class="inline-code">WIDTH</code>)の一致のみが条件のとき、同じ意味の文を<b>case</b>文で書くことができます(<span class="listref"><a href="./03-veryl.html#case.only">リスト2.33</a></span>)。式にできたり、式にdefaultが必須なのはswitch文と同様です。</p>
 <div id="case.only" class="caption-code">
 <span class="caption">リスト2.33: リスト2.33: case文, case式</span>
-<pre class="list language-only">var v1: logic&lt;32&gt;;
+<pre class="list language-only">var v: logic&lt;32&gt;;
 always_comb {
         case WIDTH {
                 // WIDTH == 0のとき
                 0: {
-                        v1 = 0;
+                        v = 0;
                 }
                 // WIDTH != 0かつWIDTH == 1のとき
-                1: v1 = 1; // 要素が1つの文の時、{}は省略できる
+                1: v = 1; // 要素が1つの文の時、{}は省略できる
                 // WIDTH != 0かつWIDTH != 1のとき
                 default: 
                         // case式
-                        v1 = case WIDTH {
+                        v = case WIDTH {
                                 3: 3, // カンマで区切る
                                 default : 4, // case式はdefaultが必須
                         };
@@ -736,7 +736,7 @@ always_comb {
 </div>
 
 <h4><a id="h2-2-5-5"></a>文の生成 (if, for)</h4>
-<p>if文はalways_ff, always_comb等のブロックの外にも書くことができます(<span class="listref"><a href="./03-veryl.html#generate.if">リスト2.36</a></span>)。このとき、条件式は定数しか使用できません。if文, else if, else文には<code class="inline-code">: ラベル名</code>で名前を付ける必要があります。</p>
+<p>if文はalways_ff, always_comb等のブロックの外にも書くことができます(<span class="listref"><a href="./03-veryl.html#generate.if">リスト2.36</a></span>)。このとき、条件式は定数しか使用できません。if文, else if文, else文には<code class="inline-code">: ラベル名</code>で名前を付ける必要があります。</p>
 <div id="generate.if" class="caption-code">
 <span class="caption">リスト2.36: リスト2.36: if文による文の生成</span>
 <pre class="list language-if">module ModuleA #(
@@ -905,9 +905,9 @@ module Top{
 </pre>
 </div>
 <p>インターフェースはポートの宣言と接続を抽象化します。インターフェース内に変数を定義すると、<b>modport</b>文によってポートと向きを宣言することができます。モジュールでのポートの宣言は、<code class="inline-code">ポート名 : modport インターフェース名::modport名</code>という風に記述することができます。modportで宣言されたポートにインターフェースのインスタンスを渡すことにより、ポートの接続を一気に行うことができます。</p>
-<p>モジュールと同じようにパラメータを宣言することができます(<span class="listref"><a href="./03-veryl.html#interface.param">リスト2.43</a></span>)。</p>
+<p>モジュールと同じように、インターフェースにはパラメータを宣言できます(<span class="listref"><a href="./03-veryl.html#interface.param">リスト2.43</a></span>)。</p>
 <div id="interface.param" class="caption-code">
-<span class="caption">リスト2.43: リスト2.43: インターフェースの定義</span>
+<span class="caption">リスト2.43: リスト2.43: パラメータ付きのインターフェースの定義</span>
 <pre class="list language-param">// interface インターフェース名 #( パラメータの定義 ) { }
 interface iff_params # (
         param PARAM_A : u32 = 100,
@@ -940,7 +940,7 @@ interface iff_params # (
 }
 </pre>
 </div>
-<p><b>import</b>文を使用すると、パッケージ名の指定を省略することができます(<span class="listref"><a href="./03-veryl.html#package.import">リスト2.46</a></span>)。</p>
+<p><b>import</b>文を使用すると、要素へのアクセス時にパッケージ名の指定を省略することができます(<span class="listref"><a href="./03-veryl.html#package.import">リスト2.46</a></span>)。</p>
 <div id="package.import" class="caption-code">
 <span class="caption">リスト2.46: リスト2.46: パッケージをimportする</span>
 <pre class="list language-import">import PackageA::WIDTH; // 特定の要素をimportする
@@ -995,7 +995,7 @@ import PackageA::*; // 全ての要素をimportする
 </div>
 
 <h4><a id="h2-2-9-2"></a>SystemVerilogとの連携</h4>
-<p>VerylはSystemVerilogのモジュールやパッケージ, インターフェースを利用することができます。SystemVerilogのリソースにアクセスするには<b>$sv::</b>を使用します。</p>
+<p>VerylはSystemVerilogのモジュールやパッケージ, インターフェースを利用することができます。SystemVerilogのリソースにアクセスするには<code class="inline-code">$sv::</code>を使用します。</p>
 <div id="sv.use" class="caption-code">
 <span class="caption">リスト2.49: リスト2.49: SystemVerilogの要素を利用する</span>
 <pre class="list language-use">module ModuleA {
@@ -1019,7 +1019,7 @@ import PackageA::*; // 全ての要素をimportする
 }
 </pre>
 </div>
-<p>SystemVerilogのソースコードを直接埋め込み、含めることができます(<span class="listref"><a href="./03-veryl.html#sv.integrate">リスト2.50</a></span>)。</p>
+<p>SystemVerilogのソースコードを直接埋め込み、展開することができます(<span class="listref"><a href="./03-veryl.html#sv.integrate">リスト2.50</a></span>)。</p>
 <div id="sv.integrate" class="caption-code">
 <span class="caption">リスト2.50: リスト2.50: SystemVerilog記述を埋め込む</span>
 <pre class="list language-integrate">// SystemVerilog記述を直接埋め込む
