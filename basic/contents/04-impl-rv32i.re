@@ -258,20 +258,26 @@ interfaceを利用することで、
 
 //list[memory.veryl][メモリモジュールの定義 (memory.veryl)]{
 #@mapfile(scripts/04/memif/core/src/memory.veryl)
-module memory::<DATA_WIDTH: const, ADDR_WIDTH: const> (
-    clk      : input   clock                                     ,
-    rst      : input   reset                                     ,
-    membus   : modport membus_if::<DATA_WIDTH, ADDR_WIDTH>::slave,
-    FILE_PATH: input   string                                    , // メモリの初期値が格納されたファイルのパス
+module memory::<DATA_WIDTH: const, ADDR_WIDTH: const> #(
+    param FILEPATH_IS_ENV: logic  = 0 , // FILEPATHが環境変数名かどうか
+    param FILEPATH       : string = "", // メモリの初期化用ファイルのパス, または環境変数名
+) (
+    clk   : input   clock                                     ,
+    rst   : input   reset                                     ,
+    membus: modport membus_if::<DATA_WIDTH, ADDR_WIDTH>::slave,
 ) {
     type DataType = logic<DATA_WIDTH>;
 
     var mem: DataType [2 ** ADDR_WIDTH];
 
     initial {
-        // memをFILE_PATHに格納されているデータで初期化
-        if FILE_PATH != "" {
-            $readmemh(FILE_PATH, mem);
+        // memを初期化する
+        if FILEPATH != "" {
+            if FILEPATH_IS_ENV {
+                $readmemh(util::get_env(FILEPATH), mem);
+            } else {
+                $readmemh(FILEPATH, mem);
+            }
         }
     }
 
@@ -353,6 +359,8 @@ memoryモジュールはジェネリックモジュールであるため、
 #@maprange(scripts/04/memif-range/core/src/eei.veryl,width)
     // メモリのデータ幅
     const MEM_DATA_WIDTH: u32 = 32;
+    // メモリのアドレス幅
+    const MEM_ADDR_WIDTH: u32 = 16;
 #@end
 //}
 
@@ -364,18 +372,18 @@ memoryモジュールはジェネリックモジュールであるため、
 import eei::*;
 
 module top (
-    clk          : input clock ,
-    rst          : input reset ,
-    MEM_FILE_PATH: input string,
+    clk: input clock,
+    rst: input reset,
 ) {
+    inst membus: membus_if::<MEM_DATA_WIDTH, MEM_ADDR_WIDTH>;
 
-    inst membus: membus_if::<MEM_DATA_WIDTH, 20>;
-
-    inst mem: memory::<MEM_DATA_WIDTH, 20> (
-        clk                     ,
-        rst                     ,
-        membus                  ,
-        FILE_PATH: MEM_FILE_PATH,
+    inst mem: memory::<MEM_DATA_WIDTH, MEM_ADDR_WIDTH> #(
+        FILEPATH_IS_ENV: 1                 ,
+        FILEPATH       : "MEMORY_FILE_PATH",
+    ) (
+        clk     ,
+        rst     ,
+        membus  ,
     );
 }
 #@end
@@ -523,9 +531,9 @@ memoryモジュールは32ビット(=4バイト)単位でデータを整列し�
 #@maprange(scripts/04/create-core-range/core/src/top.veryl,addr_to_memaddr)
     // アドレスをメモリのデータ単位でのアドレスに変換する
     function addr_to_memaddr (
-        addr: input logic<XLEN>,
-    ) -> logic<20>   {
-        return addr[$clog2(MEM_DATA_WIDTH / 8)+:20];
+        addr: input logic<XLEN>          ,
+    ) -> logic<MEM_ADDR_WIDTH> {
+        return addr[$clog2(MEM_DATA_WIDTH / 8)+:MEM_ADDR_WIDTH];
     }
 #@end
 //}
@@ -542,7 +550,7 @@ ILENとXLENを割り当てます。
 
 //list[top.veryl.create-core-range.membus][coreモジュール用のmembus_ifインターフェースをインスタンス化する (top.veryl)]{
 #@maprange(scripts/04/create-core-range/core/src/top.veryl,membus)
-    inst membus     : membus_if::<MEM_DATA_WIDTH, 20>;
+    inst membus     : membus_if::<MEM_DATA_WIDTH, MEM_ADDR_WIDTH>;
     @<b>|inst membus_core: membus_if::<ILEN, XLEN>;|
 #@end
 //}
@@ -609,10 +617,18 @@ verilatorを利用するために、次のようなC++プログラムを書く�
 #@mapfile(scripts/04/verilator-tb/core/src/tb_verilator.cpp)
 #include <iostream>
 #include <filesystem>
+#include <stdlib.h>
 #include <verilated.h>
 #include "Vcore_top.h"
 
 namespace fs = std::filesystem;
+
+extern "C" const char* get_env_value(const char* key) {
+    const char* value = getenv(key);
+    if (value == nullptr)
+        return "";
+    return value;
+}
 
 int main(int argc, char** argv) {
     Verilated::commandArgs(argc, argv);
@@ -645,8 +661,12 @@ int main(int argc, char** argv) {
         }
     }
 
+    // 環境変数でメモリの初期化用ファイルを指定する
+    const char* original_env = getenv("MEMORY_FILE_PATH");
+    setenv("MEMORY_FILE_PATH", memory_file_path.c_str(), 1);
+
+    // top
     Vcore_top *dut = new Vcore_top();
-    dut->MEM_FILE_PATH = memory_file_path;
 
     // reset
     dut->clk = 0;
@@ -654,6 +674,11 @@ int main(int argc, char** argv) {
     dut->eval();
     dut->rst = 0;
     dut->eval();
+
+    // 環境変数を元に戻す
+    if (original_env != nullptr){
+        setenv("MEMORY_FILE_PATH", original_env, 1);
+    }
 
     // loop
     dut->rst = 1;
@@ -2229,7 +2254,7 @@ module core (
 
 //list[top.veryl.lwsw-range.arb][メモリへのアクセス要求の調停 (top.veryl)]{
 #@maprange(scripts/04/lwsw-range/core/src/top.veryl,arb)
-    inst membus  : membus_if::<MEM_DATA_WIDTH, 20>;
+    inst membus  : membus_if::<MEM_DATA_WIDTH, MEM_ADDR_WIDTH>;
     inst i_membus: membus_if::<ILEN, XLEN>; // 命令フェッチ用
     inst d_membus: membus_if::<MEM_DATA_WIDTH, XLEN>; // ロードストア命令用
 
@@ -2604,11 +2629,13 @@ memoryモジュールは、32ビット単位の読み書きしかサポートし
 
 //list[memory.veryl.lbhsbh][書き込みマスクをサポートするmemoryモジュール (memory.veryl)]{
 #@mapfile(scripts/04/lbhsbh/core/src/memory.veryl)
-module memory::<DATA_WIDTH: const, ADDR_WIDTH: const> (
-    clk      : input   clock                                     ,
-    rst      : input   reset                                     ,
-    membus   : modport membus_if::<DATA_WIDTH, ADDR_WIDTH>::slave,
-    FILE_PATH: input   string                                    , // メモリの初期値が格納されたファイルのパス
+module memory::<DATA_WIDTH: const, ADDR_WIDTH: const> #(
+    param FILEPATH_IS_ENV: logic  = 0 , // FILEPATHが環境変数名かどうか
+    param FILEPATH       : string = "", // メモリの初期化用ファイルのパス, または環境変数名
+) (
+    clk   : input   clock                                     ,
+    rst   : input   reset                                     ,
+    membus: modport membus_if::<DATA_WIDTH, ADDR_WIDTH>::slave,
 ) {
     type DataType = logic<DATA_WIDTH>    ;
     type MaskType = logic<DATA_WIDTH / 8>;
@@ -2624,9 +2651,13 @@ module memory::<DATA_WIDTH: const, ADDR_WIDTH: const> (
     }
 
     initial {
-        // memをFILE_PATHに格納されているデータで初期化
-        if FILE_PATH != "" {
-            $readmemh(FILE_PATH, mem);
+        // memを初期化する
+        if FILEPATH != "" {
+            if FILEPATH_IS_ENV {
+                $readmemh(util::get_env(FILEPATH), mem);
+            } else {
+                $readmemh(FILEPATH, mem);
+            }
         }
     }
 

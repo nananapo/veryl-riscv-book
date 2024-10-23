@@ -244,20 +244,26 @@ $ <span class="userinput">mkdir src</span>
 <p>メモリを作る準備が整いました。<code class="inline-code">src/memory.veryl</code>を作成し、次のように記述します(<span class="listref"><a href="./04-impl-rv32i.html#memory.veryl">リスト3.5</a></span>)。</p>
 <div id="memory.veryl" class="caption-code">
 <span class="caption">リスト3.5: リスト3.5: メモリモジュールの定義 (memory.veryl)</span>
-<pre class="list language-veryl">module memory::&lt;DATA_WIDTH: const, ADDR_WIDTH: const&gt; (
-    clk      : input   clock                                     ,
-    rst      : input   reset                                     ,
-    membus   : modport membus_if::&lt;DATA_WIDTH, ADDR_WIDTH&gt;::slave,
-    FILE_PATH: input   string                                    , // メモリの初期値が格納されたファイルのパス
+<pre class="list language-veryl">module memory::&lt;DATA_WIDTH: const, ADDR_WIDTH: const&gt; #(
+    param FILEPATH_IS_ENV: logic  = 0 , // FILEPATHが環境変数名かどうか
+    param FILEPATH       : string = &quot;&quot;, // メモリの初期化用ファイルのパス, または環境変数名
+) (
+    clk   : input   clock                                     ,
+    rst   : input   reset                                     ,
+    membus: modport membus_if::&lt;DATA_WIDTH, ADDR_WIDTH&gt;::slave,
 ) {
     type DataType = logic&lt;DATA_WIDTH&gt;;
 
     var mem: DataType [2 ** ADDR_WIDTH];
 
     initial {
-        // memをFILE_PATHに格納されているデータで初期化
-        if FILE_PATH != &quot;&quot; {
-            $readmemh(FILE_PATH, mem);
+        // memを初期化する
+        if FILEPATH != &quot;&quot; {
+            if FILEPATH_IS_ENV {
+                $readmemh(util::get_env(FILEPATH), mem);
+            } else {
+                $readmemh(FILEPATH, mem);
+            }
         }
     }
 
@@ -326,6 +332,8 @@ $ <span class="userinput">mkdir src</span>
 <span class="caption">リスト3.6: リスト3.6: 1つのデータのビット幅を示す定数を定義する (eei.veryl)</span>
 <pre class="list language-width">    // メモリのデータ幅
     const MEM_DATA_WIDTH: u32 = 32;
+    // メモリのアドレス幅
+    const MEM_ADDR_WIDTH: u32 = 16;
 </pre>
 </div>
 <p>それでは、最上位のモジュールを作成します。<code class="inline-code">src/top.veryl</code>を作成し、次のように記述します(<span class="listref"><a href="./04-impl-rv32i.html#top.veryl.memory.inst">リスト3.7</a></span>)。</p>
@@ -334,18 +342,18 @@ $ <span class="userinput">mkdir src</span>
 <pre class="list language-inst">import eei::*;
 
 module top (
-    clk          : input clock ,
-    rst          : input reset ,
-    MEM_FILE_PATH: input string,
+    clk: input clock,
+    rst: input reset,
 ) {
+    inst membus: membus_if::&lt;MEM_DATA_WIDTH, MEM_ADDR_WIDTH&gt;;
 
-    inst membus: membus_if::&lt;MEM_DATA_WIDTH, 20&gt;;
-
-    inst mem: memory::&lt;MEM_DATA_WIDTH, 20&gt; (
-        clk                     ,
-        rst                     ,
-        membus                  ,
-        FILE_PATH: MEM_FILE_PATH,
+    inst mem: memory::&lt;MEM_DATA_WIDTH, MEM_ADDR_WIDTH&gt; #(
+        FILEPATH_IS_ENV: 1                 ,
+        FILEPATH       : &quot;MEMORY_FILE_PATH&quot;,
+    ) (
+        clk     ,
+        rst     ,
+        membus  ,
     );
 }
 </pre>
@@ -430,9 +438,9 @@ module core (
 <span class="caption">リスト3.9: リスト3.9: アドレスを変換する関数を作成する (top.veryl)</span>
 <pre class="list language-addr_to_memaddr">    // アドレスをメモリのデータ単位でのアドレスに変換する
     function addr_to_memaddr (
-        addr: input logic&lt;XLEN&gt;,
-    ) -&gt; logic&lt;20&gt;   {
-        return addr[$clog2(MEM_DATA_WIDTH / 8)+:20];
+        addr: input logic&lt;XLEN&gt;          ,
+    ) -&gt; logic&lt;MEM_ADDR_WIDTH&gt; {
+        return addr[$clog2(MEM_DATA_WIDTH / 8)+:MEM_ADDR_WIDTH];
     }
 </pre>
 </div>
@@ -440,7 +448,7 @@ module core (
 <p>次に、coreモジュール用のmembus_ifインターフェースを作成します(<span class="listref"><a href="./04-impl-rv32i.html#top.veryl.create-core-range.membus">リスト3.10</a></span>)。ジェネリックパラメータには、coreモジュールのインターフェースのジェネリックパラメータと同じく、ILENとXLENを割り当てます。</p>
 <div id="top.veryl.create-core-range.membus" class="caption-code">
 <span class="caption">リスト3.10: リスト3.10: coreモジュール用のmembus_ifインターフェースをインスタンス化する (top.veryl)</span>
-<pre class="list language-membus">    inst membus     : membus_if::&lt;MEM_DATA_WIDTH, 20&gt;;
+<pre class="list language-membus">    inst membus     : membus_if::&lt;MEM_DATA_WIDTH, MEM_ADDR_WIDTH&gt;;
     <b>inst membus_core: membus_if::&lt;ILEN, XLEN&gt;;</b>
 </pre>
 </div>
@@ -490,10 +498,18 @@ $ <span class="userinput">veryl build</span> <span class="balloon">← ビルド
 <span class="caption">リスト3.14: リスト3.14: tb_verilator.cpp</span>
 <pre class="list language-cpp">#include &lt;iostream&gt;
 #include &lt;filesystem&gt;
+#include &lt;stdlib.h&gt;
 #include &lt;verilated.h&gt;
 #include &quot;Vcore_top.h&quot;
 
 namespace fs = std::filesystem;
+
+extern &quot;C&quot; const char* get_env_value(const char* key) {
+    const char* value = getenv(key);
+    if (value == nullptr)
+        return &quot;&quot;;
+    return value;
+}
 
 int main(int argc, char** argv) {
     Verilated::commandArgs(argc, argv);
@@ -526,8 +542,12 @@ int main(int argc, char** argv) {
         }
     }
 
+    // 環境変数でメモリの初期化用ファイルを指定する
+    const char* original_env = getenv(&quot;MEMORY_FILE_PATH&quot;);
+    setenv(&quot;MEMORY_FILE_PATH&quot;, memory_file_path.c_str(), 1);
+
+    // top
     Vcore_top *dut = new Vcore_top();
-    dut-&gt;MEM_FILE_PATH = memory_file_path;
 
     // reset
     dut-&gt;clk = 0;
@@ -535,6 +555,11 @@ int main(int argc, char** argv) {
     dut-&gt;eval();
     dut-&gt;rst = 0;
     dut-&gt;eval();
+
+    // 環境変数を元に戻す
+    if (original_env != nullptr){
+        setenv(&quot;MEMORY_FILE_PATH&quot;, original_env, 1);
+    }
 
     // loop
     dut-&gt;rst = 1;
@@ -1812,7 +1837,7 @@ module memunit (
 <p>次に、topモジュールでの調停を実装します(<span class="listref"><a href="./04-impl-rv32i.html#top.veryl.lwsw-range.arb">リスト3.56</a></span>)。新しく<code class="inline-code">i_membus</code>と<code class="inline-code">d_membus</code>をインスタンス化し、それを<code class="inline-code">membus</code>と接続します。</p>
 <div id="top.veryl.lwsw-range.arb" class="caption-code">
 <span class="caption">リスト3.56: リスト3.56: メモリへのアクセス要求の調停 (top.veryl)</span>
-<pre class="list language-arb">    inst membus  : membus_if::&lt;MEM_DATA_WIDTH, 20&gt;;
+<pre class="list language-arb">    inst membus  : membus_if::&lt;MEM_DATA_WIDTH, MEM_ADDR_WIDTH&gt;;
     inst i_membus: membus_if::&lt;ILEN, XLEN&gt;; // 命令フェッチ用
     inst d_membus: membus_if::&lt;MEM_DATA_WIDTH, XLEN&gt;; // ロードストア命令用
 
@@ -2113,11 +2138,13 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 13</span>
 <p>次に、memoryモジュールで書き込みマスクをサポートします(<span class="listref"><a href="./04-impl-rv32i.html#memory.veryl.lbhsbh">リスト3.72</a></span>)。</p>
 <div id="memory.veryl.lbhsbh" class="caption-code">
 <span class="caption">リスト3.72: リスト3.72: 書き込みマスクをサポートするmemoryモジュール (memory.veryl)</span>
-<pre class="list language-lbhsbh">module memory::&lt;DATA_WIDTH: const, ADDR_WIDTH: const&gt; (
-    clk      : input   clock                                     ,
-    rst      : input   reset                                     ,
-    membus   : modport membus_if::&lt;DATA_WIDTH, ADDR_WIDTH&gt;::slave,
-    FILE_PATH: input   string                                    , // メモリの初期値が格納されたファイルのパス
+<pre class="list language-lbhsbh">module memory::&lt;DATA_WIDTH: const, ADDR_WIDTH: const&gt; #(
+    param FILEPATH_IS_ENV: logic  = 0 , // FILEPATHが環境変数名かどうか
+    param FILEPATH       : string = &quot;&quot;, // メモリの初期化用ファイルのパス, または環境変数名
+) (
+    clk   : input   clock                                     ,
+    rst   : input   reset                                     ,
+    membus: modport membus_if::&lt;DATA_WIDTH, ADDR_WIDTH&gt;::slave,
 ) {
     type DataType = logic&lt;DATA_WIDTH&gt;    ;
     type MaskType = logic&lt;DATA_WIDTH / 8&gt;;
@@ -2133,9 +2160,13 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 13</span>
     }
 
     initial {
-        // memをFILE_PATHに格納されているデータで初期化
-        if FILE_PATH != &quot;&quot; {
-            $readmemh(FILE_PATH, mem);
+        // memを初期化する
+        if FILEPATH != &quot;&quot; {
+            if FILEPATH_IS_ENV {
+                $readmemh(util::get_env(FILEPATH), mem);
+            } else {
+                $readmemh(FILEPATH, mem);
+            }
         }
     }
 
