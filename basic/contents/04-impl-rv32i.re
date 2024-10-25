@@ -106,7 +106,7 @@ $ @<userinput>{veryl new core}
 [INFO ]      Created "core" project
 //}
 
-すると、プロジェクト名のフォルダと、その中に@<code>{Veryl.toml}が作成されます。
+すると、プロジェクト名のディレクトリと、その中に@<code>{Veryl.toml}が作成されます。
 @<code>{Veryl.toml}を次のように変更してください(@<list>{Veryl.toml.first})。
 
 //list[Veryl.toml.first][Veryl.toml]{
@@ -121,10 +121,10 @@ version = "0.1.0"
 //}
 
 Verylのソースファイルを格納するために、
-プロジェクトのフォルダ内にsrcフォルダを作成しておいてください
+プロジェクトのディレクトリ内にsrcディレクトリを作成しておいてください
 (@<list>{create.src})。
 
-//terminal[create.src][srcフォルダを作成する]{
+//terminal[create.src][srcディレクトリを作成する]{
 $ @<userinput>{cd core}
 $ @<userinput>{mkdir src}
 //}
@@ -783,7 +783,7 @@ $ mv obj_dir/Vcore_top obj_dir/sim @<balloon>{シミュレータの名前をsim�
 
  : --Mdir
 	成果物の生成先を指定します。
-	今回は@<code>{obj_dir}フォルダに指定しています。
+	今回は@<code>{obj_dir}ディレクトリに指定しています。
 
 @<list>{build.simulator}のコマンドの実行により、
 シミュレータが@<code>{obj_dir/sim}に生成されました。

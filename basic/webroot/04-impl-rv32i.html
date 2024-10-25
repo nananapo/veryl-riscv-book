@@ -109,7 +109,7 @@
 [INFO ]      Created &quot;core&quot; project
 </pre>
 </div>
-<p>すると、プロジェクト名のフォルダと、その中に<code class="inline-code">Veryl.toml</code>が作成されます。<code class="inline-code">Veryl.toml</code>を次のように変更してください(<span class="listref"><a href="./04-impl-rv32i.html#Veryl.toml.first">リスト3.2</a></span>)。</p>
+<p>すると、プロジェクト名のディレクトリと、その中に<code class="inline-code">Veryl.toml</code>が作成されます。<code class="inline-code">Veryl.toml</code>を次のように変更してください(<span class="listref"><a href="./04-impl-rv32i.html#Veryl.toml.first">リスト3.2</a></span>)。</p>
 <div id="Veryl.toml.first" class="caption-code">
 <span class="caption">リスト3.2: リスト3.2: Veryl.toml</span>
 <pre class="list language-first">[project]
@@ -120,9 +120,9 @@ version = &quot;0.1.0&quot;
 <b>sourcemap_target = {type =&quot;none&quot;}</b>
 </pre>
 </div>
-<p>Verylのソースファイルを格納するために、プロジェクトのフォルダ内にsrcフォルダを作成しておいてください(<span class="listref"><a href="./04-impl-rv32i.html#create.src">リスト3.3</a></span>)。</p>
+<p>Verylのソースファイルを格納するために、プロジェクトのディレクトリ内にsrcディレクトリを作成しておいてください(<span class="listref"><a href="./04-impl-rv32i.html#create.src">リスト3.3</a></span>)。</p>
 <div id="create.src" class="cmd-code">
-<span class="caption">リスト3.3: リスト3.3: srcフォルダを作成する</span>
+<span class="caption">リスト3.3: リスト3.3: srcディレクトリを作成する</span>
 <pre class="list language-src">$ <span class="userinput">cd core</span>
 $ <span class="userinput">mkdir src</span>
 </pre>
@@ -644,7 +644,7 @@ $ mv obj_dir/Vcore_top obj_dir/sim <span class="balloon">← シミュレータ�
 <dt>--Mdir</dt>
 <dd>
 	成果物の生成先を指定します。
-	今回は<code class="inline-code">obj_dir</code>フォルダに指定しています。
+	今回は<code class="inline-code">obj_dir</code>ディレクトリに指定しています。
 </dd>
 </dl>
 <p><span class="listref"><a href="./04-impl-rv32i.html#build.simulator">リスト3.17</a></span>のコマンドの実行により、シミュレータが<code class="inline-code">obj_dir/sim</code>に生成されました。</p>
