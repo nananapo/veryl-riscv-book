@@ -89,14 +89,6 @@ veryl 0.13.2
 $ @<userinput>|veryl +0.13.2| @<balloon>{+でバージョンを指定する}
 //}
 
-//caution[本書で利用するVerylのバージョン]{
-本書ではバージョン@<w>{veryl-version}を利用しますが、
-Veryl側の問題によりソースコードをビルドできない可能性があります。
-対処方法についてはサポートページを確認してください。
-
- * @<w>{support-page}
-//}
-
 ===[notoc] Vim, VSCodeの拡張のインストール
 
 エディタにVimを利用している方は、
@@ -120,6 +112,14 @@ apt、またはbrewを利用してインストールすることができます�
 以下のページを参考にインストールしてください。
 
  * @<href>{https://verilator.org/guide/latest/install.html}
+
+//caution[Verilatorのバージョンについて]{
+本書ではバージョン5系を利用しますが、
+Verilatorの問題によりシミュレータをビルドできない可能性があります。
+対処方法についてはサポートページを確認してください。
+
+ * @<w>{support-page}
+//}
 
 == riscv-gnu-toolchain
 
