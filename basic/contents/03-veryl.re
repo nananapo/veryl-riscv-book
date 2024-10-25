@@ -285,6 +285,7 @@ module HalfAdder (
 	s: output logic, // 1ビットのlogic型の出力
 	c: output logic, // 1ビットのlogic型の出力
 ) {
+	a
 	assign s = x ^ y; // sにx XOR yを割り当てる
 	assign c = x & y; // cにx AND yを割り当てる
 }

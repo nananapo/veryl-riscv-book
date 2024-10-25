@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width">
-    <title>CPUのパイプライン処理化 | Verylで作るCPU</title>
+    <title>CPUのパイプライン化 | Verylで作るCPU</title>
     <link rel="stylesheet" type="text/css" href="css/normalize.css" />
     <link rel="stylesheet" type="text/css" href="css/webstyle.css" />
     <link rel="next" title="CPUを合成する" href="05b-synth.html">
@@ -24,7 +24,7 @@
     <li class="toc-chapter"><a href="./04a-zicsr.html">4 Zicsr拡張の実装</a></li>
     <li class="toc-chapter"><a href="./04b-riscvtests.html">5 riscv-testsによるテスト</a></li>
     <li class="toc-chapter"><a href="./05-impl-rv64i.html">6 RV64Iの実装</a></li>
-    <li class="toc-chapter"><a href="./05a-pipeline.html">7 CPUのパイプライン処理化</a>
+    <li class="toc-chapter"><a href="./05a-pipeline.html">7 CPUのパイプライン化</a>
       <ul class="toc toc-3">
         <li class="toc-section"><a href="#h7-1">7.1 CPUの速度</a></li>
         <li class="toc-section"><a href="#h7-2">7.2 パイプライン処理の実装</a></li>
@@ -42,7 +42,7 @@
         <header class="page-header">
         </header>
         <main class="page-main">
-<h1 class="boldlines center twolines"><a id="h7"></a><span class="secno">第7章</span> <br/>CPUのパイプライン処理化</h1>
+<h1 class="boldlines center twolines"><a id="h7"></a><span class="secno">第7章</span> <br/>CPUのパイプライン化</h1>
 <p>これまでの章では、同時に1つの命令のみを実行するCPUを実装しました。高機能なCPUを実装するのは面白いですが、プログラムの実行が遅くてはいけません。機能を増やす前に、一度性能のことを考えてみましょう。</p>
 
 <h2 class="numbox"><a id="h7-1"></a><span class="secno">7.1</span> CPUの速度</h2>
@@ -113,7 +113,7 @@
 図7.2: 命令の実行 (パイプライン処理)
 </p>
 </div>
-<p>本章では、CPUをパイプライン処理化することで、性能の向上を図ります。</p>
+<p>本章では、CPUをパイプライン化することで、性能の向上を図ります。</p>
 
 <h3 class="none"><a id="h7-1-3"></a><span class="secno">7.1.3</span> パイプライン処理のステージについて考える</h3>
 <p>具体的に処理をどのようなステージに分割し、パイプライン処理を実現すればいいでしょうか?これを考えるために、<a href="./04-impl-rv32i.html">第3章</a>の最初で検討したCPUの動作を振り返ります。<a href="./04-impl-rv32i.html">第3章</a>では、CPUの動作を次のように順序付けしました。</p>
@@ -167,7 +167,7 @@
 <h2 class="numbox"><a id="h7-2"></a><span class="secno">7.2</span> パイプライン処理の実装</h2>
 
 <h3 class="none"><a id="h7-2-1"></a><span class="secno">7.2.1</span> ステージに分割する準備をする</h3>
-<p>それでは、CPUをパイプライン処理化します。</p>
+<p>それでは、CPUをパイプライン化します。</p>
 <p>パイプライン処理では、複数のステージがそれぞれ違う命令を処理します。そのため、それぞれのステージのために、現在処理している命令を保持するためのレジスタ(<b>パイプラインレジスタ</b>)を用意してあげる必要があります。</p>
 <div id="pipeline_reg" class="image">
 <img src="images/05a-pipeline/pipeline_reg.png" alt="パイプライン処理の概略図" class="img" />

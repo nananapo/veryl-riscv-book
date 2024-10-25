@@ -188,7 +188,7 @@ HDLやVerylの記法は@<chapref>{03-veryl}で解説します。
  2. Zicsr拡張を実装する (@<chap>{04a-zicsr})
  3. CPUをテストする (@<chap>{04b-riscvtests})
  4. RV64Iを実装する (@<chap>{05-impl-rv64i})
- 5. パイプライン処理化する (@<chap>{05a-pipeline})
+ 5. パイプライン化する (@<chap>{05a-pipeline})
  6. 実機でテストする (@<chap>{05b-synth})
  7. M, A, C拡張を実装する
  8. UARTと割り込みを実装する
