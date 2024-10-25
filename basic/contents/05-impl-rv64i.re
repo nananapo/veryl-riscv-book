@@ -148,7 +148,7 @@ RV64Iでは、LW命令の結果が64ビットに符号拡張されるように�
 
 //terminal[rv32ui-p.first][RV32I向けのテストを実行する]{
 $ @<userinput>{make build}
-$ @<userinput>{make sim}
+$ @<userinput>{make sim VERILATOR_FLAGS="-DTEST_MODE"}
 $ @<userinput>{python3 test/test.py -r obj_dir/sim test/share rv32ui-p-}
 ...
 PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-srl.bin.hex
@@ -185,7 +185,7 @@ RV64I向けのテストは、名前が@<code>{rv64ui-p-}から始まります、
 
 //terminal[rv64ui-p.xlen][RV64I向けのテストを実行する]{
 $ @<userinput>{make build}
-$ @<userinput>{make sim}
+$ @<userinput>{make sim VERILATOR_FLAGS="-DTEST_MODE"}
 $ @<userinput>{python3 test/test.py -r obj_dir/sim test/share rv64ui-p-}
 ...
 FAIL : ~/core/test/share/riscv-tests/isa/rv64ui-p-add.bin.hex
@@ -359,7 +359,7 @@ RV64I向けのテストを実行し、生成される結果ファイルを確認
 
 //terminal[rv64ui-p.test.addsubw][RV64I向けのテストを実行する]{
 $ @<userinput>{make build}
-$ @<userinput>{make sim}
+$ @<userinput>{make sim VERILATOR_FLAGS="-DTEST_MODE"}
 $ @<userinput>{python3 test/test.py -r obj_dir/sim test/share rv64ui-p-}
 //}
 
@@ -437,24 +437,24 @@ RV64I向けのテストを実行し、生成される結果ファイルを確認
 
 //list[results.txt.sllsrlsraw][テストの実行結果 (results/result.txt)]{
 Test Result : 48 / 52
-FAIL : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-ld.bin.hex
-FAIL : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-lwu.bin.hex
-FAIL : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-ma_data.bin.hex
-FAIL : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-sd.bin.hex
-PASS : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-add.bin.hex
+FAIL : ~/core/test/share/riscv-tests/isa/rv64ui-p-ld.bin.hex
+FAIL : ~/core/test/share/riscv-tests/isa/rv64ui-p-lwu.bin.hex
+FAIL : ~/core/test/share/riscv-tests/isa/rv64ui-p-ma_data.bin.hex
+FAIL : ~/core/test/share/riscv-tests/isa/rv64ui-p-sd.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-add.bin.hex
 ...
-PASS : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-sll.bin.hex
-PASS : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-slli.bin.hex
-PASS : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-slliw.bin.hex
-PASS : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-sllw.bin.hex
-PASS : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-sra.bin.hex
-PASS : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-srai.bin.hex
-PASS : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-sraiw.bin.hex
-PASS : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-sraw.bin.hex
-PASS : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-srl.bin.hex
-PASS : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-srli.bin.hex
-PASS : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-srliw.bin.hex
-PASS : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-srlw.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-sll.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-slli.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-slliw.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-sllw.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-sra.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-srai.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-sraiw.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-sraw.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-srl.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-srli.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-srliw.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-srlw.bin.hex
 ...
 //}
 
@@ -495,7 +495,7 @@ LWU命令のテストを実行します(@<list>{rv64ui-p-lwu.test})。
 
 //terminal[rv64ui-p-lwu.test][LWU命令をテストする]{
 $ @<userinput>{make build}
-$ @<userinput>{make sim}
+$ @<userinput>{make sim VERILATOR_FLAGS="-DTEST_MODE"}
 $ @<userinput>{python3 test/test.py -r obj_dir/sim test/share rv64ui-p-lwu}
 PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-lwu.bin.hex
 Test Result : 1 / 1
@@ -677,6 +677,8 @@ $ @<userinput>{find share/ -type f -name "*.bin" -exec sh -c "python3 bin2hex.py
 riscv-testsを実行します(@<list>{riscv-tests.ldsd})。
 
 //terminal[riscv-tests.ldsd][RV32I, RV64Iをテストする]{
+$ @<userinput>{make build}
+$ @<userinput>{make sim VERILATOR_FLAGS="-DTEST_MODE"}
 $ @<userinput>{python3 test/test~st/share rv32ui-p-}
 ...
 Test Result : 40 / 40

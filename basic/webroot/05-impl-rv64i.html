@@ -141,14 +141,14 @@
 <div id="rv32ui-p.first" class="cmd-code">
 <span class="caption">リスト6.7: リスト6.7: RV32I向けのテストを実行する</span>
 <pre class="list language-first">$ <span class="userinput">make build</span>
-$ <span class="userinput">make sim</span>
+$ <span class="userinput">make sim VERILATOR_FLAGS=&quot;-DTEST_MODE&quot;</span>
 $ <span class="userinput">python3 test/test.py -r obj_dir/sim test/share rv32ui-p-</span>
 ...
 PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-srl.bin.hex
 Test Result : 40 / 40
 </pre>
 </div>
-<p>RV32I向けのテストにすべてPASSしました。しかし、rv32ui-p-ma_dataはFAILするはず(<span class="listref"><a href="./04b-riscvtests.html#python.test.py">リスト5.12</a></span>)です。これは、riscv-testsのRV32I向けのテストは、XLENが64のときはテストを実行せずにPASSとするためです(<span class="listref"><a href="./05-impl-rv64i.html#riscvtests.rv32i.xlen">リスト6.8</a></span>)。</p>
+<p>RV32I向けのテストにすべてPASSしました。しかし、rv32ui-p-ma_dataはFAILするはず(<span class="listref"><a href="./04b-riscvtests.html#python.test.py">リスト5.14</a></span>)です。これは、riscv-testsのRV32I向けのテストは、XLENが64のときはテストを実行せずにPASSとするためです(<span class="listref"><a href="./05-impl-rv64i.html#riscvtests.rv32i.xlen">リスト6.8</a></span>)。</p>
 <div id="riscvtests.rv32i.xlen" class="caption-code">
 <span class="caption">リスト6.8: リスト6.8: rv32ui-p-addはXLENが64のときにPASSする (rv32ui-p-add.dump)</span>
 <pre class="list language-xlen">00000050 &lt;reset_vector&gt;:
@@ -170,7 +170,7 @@ Test Result : 40 / 40
 <div id="rv64ui-p.xlen" class="cmd-code">
 <span class="caption">リスト6.9: リスト6.9: RV64I向けのテストを実行する</span>
 <pre class="list language-xlen">$ <span class="userinput">make build</span>
-$ <span class="userinput">make sim</span>
+$ <span class="userinput">make sim VERILATOR_FLAGS=&quot;-DTEST_MODE&quot;</span>
 $ <span class="userinput">python3 test/test.py -r obj_dir/sim test/share rv64ui-p-</span>
 ...
 FAIL : ~/core/test/share/riscv-tests/isa/rv64ui-p-add.bin.hex
@@ -305,7 +305,7 @@ Test Result : 14 / 52
 <div id="rv64ui-p.test.addsubw" class="cmd-code">
 <span class="caption">リスト6.18: リスト6.18: RV64I向けのテストを実行する</span>
 <pre class="list language-addsubw">$ <span class="userinput">make build</span>
-$ <span class="userinput">make sim</span>
+$ <span class="userinput">make sim VERILATOR_FLAGS=&quot;-DTEST_MODE&quot;</span>
 $ <span class="userinput">python3 test/test.py -r obj_dir/sim test/share rv64ui-p-</span>
 </pre>
 </div>
@@ -368,24 +368,24 @@ PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-subw.bin.hex
 <div id="results.txt.sllsrlsraw" class="caption-code">
 <span class="caption">リスト6.22: リスト6.22: テストの実行結果 (results/result.txt)</span>
 <pre class="list language-sllsrlsraw">Test Result : 48 / 52
-FAIL : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-ld.bin.hex
-FAIL : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-lwu.bin.hex
-FAIL : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-ma_data.bin.hex
-FAIL : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-sd.bin.hex
-PASS : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-add.bin.hex
+FAIL : ~/core/test/share/riscv-tests/isa/rv64ui-p-ld.bin.hex
+FAIL : ~/core/test/share/riscv-tests/isa/rv64ui-p-lwu.bin.hex
+FAIL : ~/core/test/share/riscv-tests/isa/rv64ui-p-ma_data.bin.hex
+FAIL : ~/core/test/share/riscv-tests/isa/rv64ui-p-sd.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-add.bin.hex
 ...
-PASS : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-sll.bin.hex
-PASS : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-slli.bin.hex
-PASS : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-slliw.bin.hex
-PASS : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-sllw.bin.hex
-PASS : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-sra.bin.hex
-PASS : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-srai.bin.hex
-PASS : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-sraiw.bin.hex
-PASS : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-sraw.bin.hex
-PASS : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-srl.bin.hex
-PASS : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-srli.bin.hex
-PASS : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-srliw.bin.hex
-PASS : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-srlw.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-sll.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-slli.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-slliw.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-sllw.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-sra.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-srai.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-sraiw.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-sraw.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-srl.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-srli.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-srliw.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-srlw.bin.hex
 ...
 </pre>
 </div>
@@ -413,7 +413,7 @@ PASS : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-
 <div id="rv64ui-p-lwu.test" class="cmd-code">
 <span class="caption">リスト6.24: リスト6.24: LWU命令をテストする</span>
 <pre class="list language-test">$ <span class="userinput">make build</span>
-$ <span class="userinput">make sim</span>
+$ <span class="userinput">make sim VERILATOR_FLAGS=&quot;-DTEST_MODE&quot;</span>
 $ <span class="userinput">python3 test/test.py -r obj_dir/sim test/share rv64ui-p-lwu</span>
 PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-lwu.bin.hex
 Test Result : 1 / 1
@@ -551,7 +551,9 @@ $ <span class="userinput">find share/ -type f -name &quot;*.bin&quot; -exec sh -
 <p>riscv-testsを実行します(<span class="listref"><a href="./05-impl-rv64i.html#riscv-tests.ldsd">リスト6.33</a></span>)。</p>
 <div id="riscv-tests.ldsd" class="cmd-code">
 <span class="caption">リスト6.33: リスト6.33: RV32I, RV64Iをテストする</span>
-<pre class="list language-ldsd">$ <span class="userinput">python3 test/test~st/share rv32ui-p-</span>
+<pre class="list language-ldsd">$ <span class="userinput">make build</span>
+$ <span class="userinput">make sim VERILATOR_FLAGS=&quot;-DTEST_MODE&quot;</span>
+$ <span class="userinput">python3 test/test~st/share rv32ui-p-</span>
 ...
 Test Result : 40 / 40
 $ <span class="userinput">python3 test/test.py -r obj_dir/sim test/share rv64ui-p-</span>

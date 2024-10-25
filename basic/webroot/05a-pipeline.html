@@ -664,7 +664,7 @@
 <div id="pipeline.test" class="cmd-code">
 <span class="caption">リスト7.21: リスト7.21: パイプライン処理のテスト</span>
 <pre class="list language-test">$ <span class="userinput">make build</span>
-$ <span class="userinput">make sim</span>
+$ <span class="userinput">make sim VERILATOR_FLAGS=&quot;-DTEST_MODE&quot;</span>
 $ <span class="userinput">python3 test/test.py -r obj_dir/sim test/share rv64ui-p-add.bin.hex</span>
 FAIL : ~/core/test/share/riscv-tests/isa/rv64ui-p-add.bin.hex
 Test Result : 0 / 1
@@ -821,9 +821,11 @@ WB ----
 <p>RV64Iのriscv-testsも実行します。</p>
 <div id="riscvtests.successful" class="cmd-code">
 <span class="caption">リスト7.28: リスト7.28: riscv-testsを実行する</span>
-<pre class="list language-successful">$ python3 test/test.py -r obj_dir/sim test/share rv64ui-p-
+<pre class="list language-successful">$ <span class="userinput">make build</span>
+$ <span class="userinput">make sim VERILATOR_FLAGS=&quot;-DTEST_MODE&quot;</span>
+$ <span class="userinput">python3 test/test.py -r obj_dir/sim test/share rv64ui-p-</span>
 ...
-FAIL : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-ma_data.bin.hex
+FAIL : ~/core/test/share/riscv-tests/isa/rv64ui-p-ma_data.bin.hex
 ...
 Test Result : 51 / 52
 </pre>

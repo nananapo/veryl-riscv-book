@@ -252,15 +252,18 @@ riscv-testsは、
 
 riscv-testsが終了したことを検知する処理をtopモジュールに記述します。
 topモジュールでメモリへのアクセスを監視し、
-@<code>{.tohost}に値が書き込まれたら実行を終了します
+@<code>{.tohost}にLSBが@<code>{1}な値が書き込まれたら、
+@<code>{test_success}に結果を書き込んでテストを終了します。
 (@<list>{top.veryl.detect-finish-range.detect})。
 
 //list[top.veryl.detect-finish-range.detect][メモリアクセスを監視して終了を検知する (top.veryl)]{
 #@maprange(scripts/04b/detect-finish-range/core/src/top.veryl,detect)
     // riscv-testsの終了を検知する
-    const RISCVTESTS_TOHOST_ADDR: Addr = 'h1000 as Addr;
+    #[ifdef(TEST_MODE)]
     always_ff {
-        if d_membus.valid && d_membus.ready && d_membus.wen == 1 && d_membus.addr == RISCVTESTS_TOHOST_ADDR {
+        let RISCVTESTS_TOHOST_ADDR: Addr = 'h1000 as Addr;
+        if d_membus.valid && d_membus.ready && d_membus.wen == 1 && d_membus.addr == RISCVTESTS_TOHOST_ADDR && d_membus.wdata[lsb] == 1'b1 {
+            test_success = d_membus.wdata == 1;
             if d_membus.wdata == 1 {
                 $display("riscv-tests success!");
             } else {
@@ -273,13 +276,22 @@ topモジュールでメモリへのアクセスを監視し、
 #@end
 //}
 
-テストが失敗した場合、
-つまり1以外の値が書き込まれた場合、
-@<code>{$error}システムタスクを実行します。
-Verilatorで生成するシミュレータは、
-@<code>{$error}システムタスクを実行すると終了コードが@<code>{1}になります@<fn>{exitcode}。
+@<code>{test_success}はポートとして定義します
+(@<list>{top.veryl.detect-finish-range.port})。
 
-//footnote[exitcode][他のシミュレータでも終了コードが1になるとは限らないことに注意してください]
+//list[top.veryl.detect-finish-range.port][テスト結果を報告するためのポートを宣言する (top.veryl)]{
+#@maprange(scripts/04b/detect-finish-range/core/src/top.veryl,port)
+module top (
+    clk: input clock,
+    rst: input reset,
+    @<b>|#[ifdef(TEST_MODE)]|
+    @<b>|test_success: output bit,|
+) {
+#@end
+//}
+
+アトリビュートによって、
+終了検知のコードと@<code>{test_success}ポートは@<code>{TEST_MODE}マクロが定義されているときにのみ存在するようにしています。
 
 == テストの実行
 
@@ -290,7 +302,7 @@ ADD命令のテストのHEXファイルは@<code>{test/share/riscv-tests/isa/rv3
 
 //terminal[test.add.sim][ADD命令のriscv-testsを実行する]{
 $ @<userinput>{make build}
-$ @<userinput>{make sim}
+$ @<userinput>{make sim VERILATOR_FLAGS="-DTEST_MODE"} @<balloon>{TEST_MODEマクロを定義してビルドする}
 $ @<userinput>{./obj_dir/sim test/share/riscv-tests/isa/rv32ui-p-add.bin.hex 0}
 #                    4
 00000000 : 0500006f
@@ -309,8 +321,8 @@ $ @<userinput>{./obj_dir/sim test/share/riscv-tests/isa/rv32ui-p-add.bin.hex 0}
   mem stall : 1
   mem rdata : ff1ff06f
 riscv-tests success!
-- /home/kanataso/Documents/bluecore/core/src/top.sv:26: Verilog $finish
-- /home/kanataso/Documents/bluecore/core/src/top.sv:26: Second verilog $finish, exiting
+- ~/core/src/top.sv:26: Verilog $finish
+- ~/core/src/top.sv:26: Second verilog $finish, exiting
 //}
 
 @<code>{riscv-tests success!}と表示され、テストが正常終了しました@<fn>{if_not_success}。
@@ -427,10 +439,26 @@ if __name__ == '__main__':
     0を指定すると時間制限はなくなります。
     デフォルト値は10(秒)です。
 
+テストが成功したか失敗したかの判定には、
+シミュレータの終了コードを利用しています。
+テストが失敗した時に終了コードが@<code>{1}になるように、
+Verilatorに渡しているプログラムを変更します
+(@<list>{tb_verilator.cpp.detect-finish-range.return})。
+
+//list[tb_verilator.cpp.detect-finish-range.return][tb_verilator.cpp]{
+#@maprange(scripts/04b/detect-finish-range/core/src/tb_verilator.cpp,return)
+    #ifdef TEST_MODE
+        return dut->test_success != 1;
+    #endif
+#@end
+//}
+
 それでは、RV32Iのテストを実行しましょう。
 riscv-testsのRV32I向けのテストの接頭辞である@<code>{rv32ui-p-}を引数に指定します。
 
 //terminal[python.test.py][rv32ui-pから始まるテストを実行する]{
+$ @<userinput>{make build}
+$ @<userinput>{make sim VERILATOR_FLAGS="-DTEST_MODE"}
 $ @<userinput>{python3 test/test.py obj_dir/sim test/share rv32ui-p- -r}
 PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-lh.bin.hex
 PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-sb.bin.hex

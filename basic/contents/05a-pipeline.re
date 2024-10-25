@@ -857,7 +857,7 @@ RV64IのADDのテストを実行します。
 
 //terminal[pipeline.test][パイプライン処理のテスト]{
 $ @<userinput>{make build}
-$ @<userinput>{make sim}
+$ @<userinput>{make sim VERILATOR_FLAGS="-DTEST_MODE"}
 $ @<userinput>{python3 test/test.py -r obj_dir/sim test/share rv64ui-p-add.bin.hex}
 FAIL : ~/core/test/share/riscv-tests/isa/rv64ui-p-add.bin.hex
 Test Result : 0 / 1
@@ -1052,9 +1052,11 @@ WB ----
 RV64Iのriscv-testsも実行します。
 
 //terminal[riscvtests.successful][riscv-testsを実行する]{
-$ python3 test/test.py -r obj_dir/sim test/share rv64ui-p-
+$ @<userinput>{make build}
+$ @<userinput>{make sim VERILATOR_FLAGS="-DTEST_MODE"}
+$ @<userinput>{python3 test/test.py -r obj_dir/sim test/share rv64ui-p-}
 ...
-FAIL : /home/kanataso/Documents/bluecore/core/test/share/riscv-tests/isa/rv64ui-p-ma_data.bin.hex
+FAIL : ~/core/test/share/riscv-tests/isa/rv64ui-p-ma_data.bin.hex
 ...
 Test Result : 51 / 52
 //}

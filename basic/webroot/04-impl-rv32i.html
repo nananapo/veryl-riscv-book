@@ -590,7 +590,7 @@ int main(int argc, char** argv) {
 
     // loop
     dut-&gt;rst = 1;
-    for (long long i=0; cycles == 0 || i / 2 &lt; cycles; i++) {
+    for (long long i=0; !Verilated::gotFinish() &amp;&amp; (cycles == 0 || i / 2 &lt; cycles); i++) {
         dut-&gt;clk = !dut-&gt;clk;
         dut-&gt;eval();
     }
