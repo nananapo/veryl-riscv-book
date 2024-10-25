@@ -479,7 +479,7 @@ module core (
     <b>inst membus_core: membus_if::&lt;ILEN, XLEN&gt;;</b>
 </pre>
 </div>
-<p><code class="inline-code">membus</code>と<code class="inline-code">membus_core</code>を接続します(<span class="listref"><a href="./04-impl-rv32i.html#top.veryl.create-core-range.connect">リスト3.13</a></span>)。アドレスは、<code class="inline-code">addr_to_memaddr</code>関数で変換した値を割り当てます。</p>
+<p><code class="inline-code">membus</code>と<code class="inline-code">membus_core</code>を接続します(<span class="listref"><a href="./04-impl-rv32i.html#top.veryl.create-core-range.connect">リスト3.13</a></span>)。アドレスは、addr_to_memaddr関数で変換した値を割り当てます。</p>
 <div id="top.veryl.create-core-range.connect" class="caption-code">
 <span class="caption">リスト3.13: リスト3.13: membusとmembus_coreを接続する (top.veryl)</span>
 <pre class="list language-connect">    always_comb {
@@ -613,7 +613,7 @@ int main(int argc, char** argv) {
 	0のときは終了しません。デフォルト値は<code class="inline-code">0</code>です。
 </dd>
 </dl>
-<p>Verilatorによるシミュレーションは、topモジュールのクロック信号を更新して、<code class="inline-code">eval</code>関数を呼び出すことにより実行します。プログラムでは、<code class="inline-code">clk</code>を反転させて<code class="inline-code">eval</code>するループの前に、topモジュールをリセット信号によりリセットする必要があります。そのため、topモジュールの<code class="inline-code">rst</code>を1にしてから<code class="inline-code">eval</code>を実行し、<code class="inline-code">rst</code>を0にしてまた<code class="inline-code">eval</code>を実行し、<code class="inline-code">rst</code>を1にもどしてから<code class="inline-code">clk</code>を反転しています。</p>
+<p>Verilatorによるシミュレーションは、topモジュールのクロック信号を更新して、eval関数を呼び出すことにより実行します。プログラムでは、<code class="inline-code">clk</code>を反転させて<code class="inline-code">eval</code>するループの前に、topモジュールをリセット信号によりリセットする必要があります。そのため、topモジュールの<code class="inline-code">rst</code>を1にしてから<code class="inline-code">eval</code>を実行し、<code class="inline-code">rst</code>を0にしてまた<code class="inline-code">eval</code>を実行し、<code class="inline-code">rst</code>を1にもどしてから<code class="inline-code">clk</code>を反転しています。</p>
 
 <h4><a id="h3-6-3-1"></a>シミュレータのビルド</h4>
 <p><code class="inline-code">verilator</code>コマンドを実行し、シミュレータをビルドします(<span class="listref"><a href="./04-impl-rv32i.html#build.simulator">リスト3.17</a></span>)。</p>
@@ -1772,7 +1772,7 @@ module memunit (
 </pre>
 </div>
 <p>memunitモジュールでは、命令がメモリにアクセスする命令の時、ALUから受け取ったアドレスをメモリに渡して操作を実行します。</p>
-<p>命令がメモリにアクセスする命令かどうかは<code class="inline-code">inst_is_memop</code>関数で判定します。ストア命令のとき、命令の形式はS形式です。ロード命令のとき、デコーダは<code class="inline-code">InstCtrl.is_load</code>を<code class="inline-code">1</code>にしています(<span class="listref"><a href="./04-impl-rv32i.html#inst_decoder.veryl.id">リスト3.33</a></span>)。</p>
+<p>命令がメモリにアクセスする命令かどうかはinst_is_memop関数で判定します。ストア命令のとき、命令の形式はS形式です。ロード命令のとき、デコーダは<code class="inline-code">InstCtrl.is_load</code>を<code class="inline-code">1</code>にしています(<span class="listref"><a href="./04-impl-rv32i.html#inst_decoder.veryl.id">リスト3.33</a></span>)。</p>
 <p>memunitモジュールには、次の状態が定義されています。初期状態は<code class="inline-code">State::Init</code>です。</p>
 <dl>
 <dt>State::Init</dt>

@@ -76,7 +76,7 @@
 <p>実装のテストにはriscv-testsを利用します。RV64I向けのテストは<code class="inline-code">rv64ui-p-</code>から始まるテストです。命令を実装するたびにテストを実行することで、命令が正しく実行できていることを確認します。</p>
 
 <h2 class="numbox"><a id="h6-1"></a><span class="secno">6.1</span> XLENの変更</h2>
-<p>レジスタの幅が32ビットから64ビットに変わるということは、XLENが32から64に変わるということです。eeiパッケージに定義しているXLENを64に変更します(<span class="listref"><a href="./05-impl-rv64i.html#eei.veryl.xlen-shift-range.xlen">リスト6.1</a></span>)。RV64Iになっても命令の幅(ILEN)は32ビットのままです。</p>
+<p>レジスタの幅が32ビットから64ビットに変わるということは、XLENが32から64に変わるということです。eeiパッケージに定義している<code class="inline-code">XLEN</code>を64に変更します(<span class="listref"><a href="./05-impl-rv64i.html#eei.veryl.xlen-shift-range.xlen">リスト6.1</a></span>)。RV64Iになっても命令の幅(ILEN)は32ビットのままです。</p>
 <div id="eei.veryl.xlen-shift-range.xlen" class="caption-code">
 <span class="caption">リスト6.1: リスト6.1: XLENを変更する (eei.veryl)</span>
 <pre class="list language-xlen">    const XLEN: u32 = <b>64</b>;
@@ -95,7 +95,7 @@
 </div>
 
 <h3 class="none"><a id="h6-1-2"></a><span class="secno">6.1.2</span> LUI, AUIPC命令を変更する</h3>
-<p>RV32Iでは、LUI命令は32ビットの即値をそのまま保存する命令として定義されています。これがRV64Iでは、32ビットの即値を64ビットに符号拡張した値を保存する命令に変更されます。AUIPC命令も同様で、即値にPCを足す前に、即値を64ビットに符号拡張します。</p>
+<p>RV32Iでは、LUI命令は32ビットの即値をそのままレジスタに格納する命令として定義されています。これがRV64Iでは、32ビットの即値を64ビットに符号拡張した値を格納する命令に変更されます。AUIPC命令も同様で、即値にPCを足す前に、即値を64ビットに符号拡張します。</p>
 <p>この対応ですが、XLENを64に変更した時点ですでに完了しています(<span class="listref"><a href="./05-impl-rv64i.html#inst_decoder.veryl.xlen-shift-range.imm">リスト6.3</a></span>)。よって、コードの変更の必要はありません。</p>
 <div id="inst_decoder.veryl.xlen-shift-range.imm" class="caption-code">
 <span class="caption">リスト6.3: リスト6.3: U形式の即値はXLENビットに拡張されている (inst_decoder.veryl)</span>
@@ -137,7 +137,7 @@
 <h3 class="none"><a id="h6-1-5"></a><span class="secno">6.1.5</span> riscv-testsでテストする</h3>
 
 <h4><a id="h6-1-5-1"></a>RV32I向けのテストの実行</h4>
-<p>まず、RV32I向けのテストが正しく動くことを確認します。</p>
+<p>まず、RV32I向けのテストが正しく動くことを確認します(<span class="listref"><a href="./05-impl-rv64i.html#rv32ui-p.first">リスト6.7</a></span>)。</p>
 <div id="rv32ui-p.first" class="cmd-code">
 <span class="caption">リスト6.7: リスト6.7: RV32I向けのテストを実行する</span>
 <pre class="list language-first">$ <span class="userinput">make build</span>
@@ -148,7 +148,7 @@ PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-srl.bin.hex
 Test Result : 40 / 40
 </pre>
 </div>
-<p>RV32I向けのテストにすべてPASSしました。しかし、rv32ui-p-ma_dataはFAILするはず(<span class="listref"><a href="./04b-riscvtests.html#python.test.py">リスト5.14</a></span>)です。これは、riscv-testsのRV32I向けのテストは、XLENが64のときはテストを実行せずにPASSとするためです(<span class="listref"><a href="./05-impl-rv64i.html#riscvtests.rv32i.xlen">リスト6.8</a></span>)。</p>
+<p>RV32I向けのテストにすべて成功しました。しかし、<code class="inline-code">rv32ui-p-ma_data</code>は失敗するはずです(<span class="listref"><a href="./04b-riscvtests.html#python.test.py">リスト5.14</a></span>)。これは、riscv-testsのRV32I向けのテストは、XLENが64のときはテストを実行せずに成功とするためです(<span class="listref"><a href="./05-impl-rv64i.html#riscvtests.rv32i.xlen">リスト6.8</a></span>)。</p>
 <div id="riscvtests.rv32i.xlen" class="caption-code">
 <span class="caption">リスト6.8: リスト6.8: rv32ui-p-addはXLENが64のときにPASSする (rv32ui-p-add.dump)</span>
 <pre class="list language-xlen">00000050 &lt;reset_vector&gt;:
@@ -178,7 +178,7 @@ FAIL : ~/core/test/share/riscv-tests/isa/rv64ui-p-add.bin.hex
 Test Result : 14 / 52
 </pre>
 </div>
-<p>ADD命令のテストを含む、ほとんどのテストにFAILしてしまいました。これは、riscv-testsのテストが、まだ未実装の命令を含むためです(<span class="listref"><a href="./05-impl-rv64i.html#riscvtests.rv64ui-p-add.dump.addiw">リスト6.10</a></span>)。</p>
+<p>ADD命令のテストを含む、ほとんどのテストに失敗してしまいました。これは、riscv-testsのテストが、まだ未実装の命令を含むためです(<span class="listref"><a href="./05-impl-rv64i.html#riscvtests.rv64ui-p-add.dump.addiw">リスト6.10</a></span>)。</p>
 <div id="riscvtests.rv64ui-p-add.dump.addiw" class="caption-code">
 <span class="caption">リスト6.10: リスト6.10: ADD命令のテストは未実装の命令(ADDIW命令)を含む (rv64ui-p-add.dump)</span>
 <pre class="list language-addiw">0000000000000208 &lt;test_7&gt;:
@@ -192,7 +192,7 @@ Test Result : 14 / 52
  224:   46771063                bne     a4,t2,684 &lt;fail&gt;
 </pre>
 </div>
-<p>というわけで、FAILしていることを気にせずに実装を進めていきます。</p>
+<p>というわけで、失敗していることを気にせずに実装を進めていきます。</p>
 
 <h2 class="numbox"><a id="h6-2"></a><span class="secno">6.2</span> ADD[I]W, SUBW命令の実装</h2>
 <p>RV64Iでは、ADD命令は64ビット単位で演算する命令になり、32ビットの加算をするADDW, ADDIW命令が追加されます。同様に、SUB命令は64ビッド単位の演算になり、32ビットの減算をするSUBW命令が追加されます。32ビットの演算結果は符号拡張します。</p>
@@ -204,7 +204,7 @@ Test Result : 14 / 52
 図6.1: ADDW, ADDIW, SUBW命令のフォーマット<a href="bib.html#bib-isa-manual.1.37">[6]</a>
 </p>
 </div>
-<p>ADDW, SUBW命令はR形式で、opcodeは<code class="inline-code">OP-32</code>(<code class="inline-code">0111011</code>)です。ADDIW命令はI形式で、opcodeは<code class="inline-code">OP-IMM-32</code>(<code class="inline-code">0011011</code>)です。</p>
+<p>ADDW, SUBW命令はR形式で、opcodeは<code class="inline-code">OP-32</code>(<code class="inline-code">7'b0111011</code>)です。ADDIW命令はI形式で、opcodeは<code class="inline-code">OP-IMM-32</code>(<code class="inline-code">7'b0011011</code>)です。</p>
 <p>まず、eeiパッケージにopcodeの定数を定義します(<span class="listref"><a href="./05-impl-rv64i.html#eei.veryl.addsubw-range.op">リスト6.11</a></span>)。</p>
 <div id="eei.veryl.addsubw-range.op" class="caption-code">
 <span class="caption">リスト6.11: リスト6.11: opcodeを定義する (eei.veryl)</span>
@@ -232,8 +232,8 @@ Test Result : 14 / 52
 <p>inst_decoderモジュールの<code class="inline-code">InstCtrl</code>と即値を生成している部分を変更します(<span class="listref"><a href="./05-impl-rv64i.html#inst_decoder.veryl.addsubw-range.ctrl">リスト6.13</a></span>,<span class="listref"><a href="./05-impl-rv64i.html#inst_decoder.veryl.addsubw-range.imm">リスト6.14</a></span>)。これでデコードは完了です。</p>
 <div id="inst_decoder.veryl.addsubw-range.ctrl" class="caption-code">
 <span class="caption">リスト6.13: リスト6.13: OP-32, OP-IMM-32のInstCtrlの生成 (inst_decoder.veryl)</span>
-<pre class="list language-ctrl">                                       is_op32を追加
-    ctrl = {case op {                        ↓
+<pre class="list language-ctrl">                                     is_op32を追加
+    ctrl = {case op {                      ↓
         OP_LUI      : {InstType::U, T, T, F, <b>F</b>, F, F, F},
         OP_AUIPC    : {InstType::U, T, F, F, <b>F</b>, F, F, F},
         OP_JAL      : {InstType::J, T, F, F, <b>F</b>, T, F, F},
@@ -251,7 +251,7 @@ Test Result : 14 / 52
 </pre>
 </div>
 <div id="inst_decoder.veryl.addsubw-range.imm" class="caption-code">
-<span class="caption">リスト6.14: リスト6.14: OP-32, OP-IMM-32の即値の生成 (inst_decoder.veryl)</span>
+<span class="caption">リスト6.14: リスト6.14: OP-IMM-32の即値の生成 (inst_decoder.veryl)</span>
 <pre class="list language-imm">    imm = case op {
         OP_LUI, OP_AUIPC       : imm_u,
         OP_JAL                 : imm_j,
@@ -273,7 +273,7 @@ Test Result : 14 / 52
     let sub32: UInt32 = op1[31:0] - op2[31:0];
 </pre>
 </div>
-<p>次に、フラグによって演算結果を選択する関数<code class="inline-code">sel_w</code>を作成します(<span class="listref"><a href="./05-impl-rv64i.html#alu.veryl.addsubw-range.sel">リスト6.16</a></span>)。この関数は、<code class="inline-code">is_op32</code>が<code class="inline-code">1</code>なら<code class="inline-code">value32</code>を64ビットに符号拡張した値、<code class="inline-code">0</code>なら<code class="inline-code">value64</code>を返します。</p>
+<p>次に、フラグによって演算結果を選択する関数sel_wを作成します(<span class="listref"><a href="./05-impl-rv64i.html#alu.veryl.addsubw-range.sel">リスト6.16</a></span>)。この関数は、<code class="inline-code">is_op32</code>が<code class="inline-code">1</code>なら<code class="inline-code">value32</code>を64ビットに符号拡張した値、<code class="inline-code">0</code>なら<code class="inline-code">value64</code>を返します。</p>
 <div id="alu.veryl.addsubw-range.sel" class="caption-code">
 <span class="caption">リスト6.16: リスト6.16: 演算結果を選択する関数を作成する (alu.veryl)</span>
 <pre class="list language-sel">    function sel_w (
@@ -289,7 +289,7 @@ Test Result : 14 / 52
     }
 </pre>
 </div>
-<p><code class="inline-code">sel_w</code>関数を使用し、aluモジュールの演算処理を変更します。case文の足し算と引き算の部分を次のように変更します(<span class="listref"><a href="./05-impl-rv64i.html#alu.veryl.addsubw-range.case">リスト6.17</a></span>)。</p>
+<p>sel_w関数を使用し、aluモジュールの演算処理を変更します。case文の足し算と引き算の部分を次のように変更します(<span class="listref"><a href="./05-impl-rv64i.html#alu.veryl.addsubw-range.case">リスト6.17</a></span>)。</p>
 <div id="alu.veryl.addsubw-range.case" class="caption-code">
 <span class="caption">リスト6.17: リスト6.17: 32ビットの演算結果を選択する (alu.veryl)</span>
 <pre class="list language-case">    3'b000: result = if ctrl.itype == InstType::I | ctrl.funct7 == 0 {
@@ -331,7 +331,7 @@ PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-subw.bin.hex
 ...
 </pre>
 </div>
-<p>ADDIW, ADDW, SUBW命令のテストに成功していることを確認できます、また、未実装の命令以外のテストがPASSするようになっています。</p>
+<p>ADDIW, ADDW, SUBW命令のテストに成功していることを確認できます、また、未実装の命令以外のテストに成功するようになっています。</p>
 
 <h2 class="numbox"><a id="h6-3"></a><span class="secno">6.3</span> SLL[I]W, SRL[I]W, SRA[I]W命令の実装</h2>
 <p>RV64Iでは、SLL[I], SRL[I], SRA[I]命令はrs1を0 ～ 63ビットシフトする命令になり、rs1の下位32ビットを0 ～ 31ビットシフトするSLL[I]W, SRL[I]W, SRA[I]W命令が追加されます。32ビットの演算結果は符号拡張します。</p>
@@ -350,7 +350,7 @@ PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-subw.bin.hex
     let sra32: SInt32 = $signed(op1[31:0]) &gt;&gt;&gt; op2[4:0];
 </pre>
 </div>
-<p>生成したシフト演算の結果を<code class="inline-code">sel_w</code>関数で選択するようにします。case文のシフト演算の部分を次のように変更します(<span class="listref"><a href="./05-impl-rv64i.html#alu.veryl.sllsrlsraw-range.case">リスト6.21</a></span>)。</p>
+<p>生成したシフト演算の結果をsel_w関数で選択するようにします。case文のシフト演算の部分を次のように変更します(<span class="listref"><a href="./05-impl-rv64i.html#alu.veryl.sllsrlsraw-range.case">リスト6.21</a></span>)。</p>
 <div id="alu.veryl.sllsrlsraw-range.case" class="caption-code">
 <span class="caption">リスト6.21: リスト6.21: 32ビットの演算結果を選択する (alu.veryl)</span>
 <pre class="list language-case">    3'b001: result = <b>sel_w(ctrl.is_op32, sll32, sll)</b>;
@@ -364,9 +364,16 @@ PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-subw.bin.hex
 </div>
 
 <h3 class="none"><a id="h6-3-1"></a><span class="secno">6.3.1</span> SLL[I]W, SRL[I]W, SRA[I]W命令をテストする</h3>
-<p>RV64I向けのテストを実行し、生成される結果ファイルを確認します(<span class="listref"><a href="./05-impl-rv64i.html#results.txt.sllsrlsraw">リスト6.22</a></span>)。</p>
+<p>RV64I向けのテストを実行し、生成される結果ファイルを確認します(<span class="listref"><a href="./05-impl-rv64i.html#rv64ui-p.test.sllsrlsraw">リスト6.22</a></span>, <span class="listref"><a href="./05-impl-rv64i.html#results.txt.sllsrlsraw">リスト6.23</a></span>)。</p>
+<div id="rv64ui-p.test.sllsrlsraw" class="cmd-code">
+<span class="caption">リスト6.22: リスト6.22: RV64I向けのテストを実行する</span>
+<pre class="list language-sllsrlsraw">$ <span class="userinput">make build</span>
+$ <span class="userinput">make sim VERILATOR_FLAGS=&quot;-DTEST_MODE&quot;</span>
+$ <span class="userinput">python3 test/test.py -r obj_dir/sim test/share rv64ui-p-</span>
+</pre>
+</div>
 <div id="results.txt.sllsrlsraw" class="caption-code">
-<span class="caption">リスト6.22: リスト6.22: テストの実行結果 (results/result.txt)</span>
+<span class="caption">リスト6.23: リスト6.23: テストの実行結果 (results/result.txt)</span>
 <pre class="list language-sllsrlsraw">Test Result : 48 / 52
 FAIL : ~/core/test/share/riscv-tests/isa/rv64ui-p-ld.bin.hex
 FAIL : ~/core/test/share/riscv-tests/isa/rv64ui-p-lwu.bin.hex
@@ -400,18 +407,18 @@ PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-srlw.bin.hex
 図6.3: LWU命令のフォーマット<a href="bib.html#bib-isa-manual.1.37">[6]</a>
 </p>
 </div>
-<p>LWU命令はI形式で、opcodeは<code class="inline-code">LOAD</code>です。ロード, ストア命令はfunct3によって区別することができます。LWU命令のfunct3は<code class="inline-code">110</code>です。デコード処理に変更は必要なく、メモリにアクセスする処理を変更する必要があります。</p>
-<p>memunitモジュールの、ロードする部分を変換します。32ビットを<code class="inline-code">rdata</code>に割り当てるとき、<code class="inline-code">sext</code>によって符号拡張かゼロで拡張するかを選択するようにします(<span class="listref"><a href="./05-impl-rv64i.html#memunit.veryl.lwu-range.lwu">リスト6.23</a></span>)。</p>
+<p>LWU命令はI形式で、opcodeは<code class="inline-code">LOAD</code>です。ロード, ストア命令はfunct3によって区別することができます。LWU命令のfunct3は<code class="inline-code">3'b110</code>です。デコード処理に変更は必要なく、メモリにアクセスする処理を変更する必要があります。</p>
+<p>memunitモジュールの、ロードする部分を変更します。32ビットを<code class="inline-code">rdata</code>に割り当てるとき、sextによって符号かゼロで拡張するかを選択するようにします(<span class="listref"><a href="./05-impl-rv64i.html#memunit.veryl.lwu-range.lwu">リスト6.24</a></span>)。</p>
 <div id="memunit.veryl.lwu-range.lwu" class="caption-code">
-<span class="caption">リスト6.23: リスト6.23: LWU命令の実装 (memunit.veryl)</span>
+<span class="caption">リスト6.24: リスト6.24: LWU命令の実装 (memunit.veryl)</span>
 <pre class="list language-lwu">    2'b10  : {<b>sext &amp; D[31]</b> repeat W - 32, D[31:0]},
 </pre>
 </div>
 
 <h3 class="none"><a id="h6-4-1"></a><span class="secno">6.4.1</span> LWU命令をテストする</h3>
-<p>LWU命令のテストを実行します(<span class="listref"><a href="./05-impl-rv64i.html#rv64ui-p-lwu.test">リスト6.24</a></span>)。</p>
+<p>LWU命令のテストを実行します(<span class="listref"><a href="./05-impl-rv64i.html#rv64ui-p-lwu.test">リスト6.25</a></span>)。</p>
 <div id="rv64ui-p-lwu.test" class="cmd-code">
-<span class="caption">リスト6.24: リスト6.24: LWU命令をテストする</span>
+<span class="caption">リスト6.25: リスト6.25: LWU命令をテストする</span>
 <pre class="list language-test">$ <span class="userinput">make build</span>
 $ <span class="userinput">make sim VERILATOR_FLAGS=&quot;-DTEST_MODE&quot;</span>
 $ <span class="userinput">python3 test/test.py -r obj_dir/sim test/share rv64ui-p-lwu</span>
@@ -428,12 +435,12 @@ Test Result : 1 / 1
 図6.4: LD, SD命令のフォーマット
 </p>
 </div>
-<p>LD命令はI形式で、opcodeは<code class="inline-code">LOAD</code>です。SD命令はS形式で、opcodeは<code class="inline-code">STORE</code>です。どちらの命令もfunct3は<code class="inline-code">011</code>です。デコード処理に変更は必要ありません。</p>
+<p>LD命令はI形式で、opcodeは<code class="inline-code">LOAD</code>です。SD命令はS形式で、opcodeは<code class="inline-code">STORE</code>です。どちらの命令もfunct3は<code class="inline-code">3'b011</code>です。デコード処理に変更は必要ありません。</p>
 
 <h3 class="none"><a id="h6-5-1"></a><span class="secno">6.5.1</span> メモリの幅を広げる</h3>
-<p>現在のメモリの1つのデータの幅(<code class="inline-code">MEM_DATA_WIDTH</code>)は32ビットですが、このままだと64ビットでロードやストアを行うときに、最低2回のメモリアクセスが必要です。これを1回のメモリアクセスで済ませるために、データの幅を32ビットから64ビットに広げます(<span class="listref"><a href="./05-impl-rv64i.html#eei.veryl.ldsd-range.width">リスト6.25</a></span>)。</p>
+<p>現在のメモリの1つのデータの幅(<code class="inline-code">MEM_DATA_WIDTH</code>)は32ビットですが、このままだと64ビットでロードやストアを行うときに、最低2回のメモリアクセスが必要です。これを1回のメモリアクセスで済ませるために、データの幅を32ビットから64ビットに広げます(<span class="listref"><a href="./05-impl-rv64i.html#eei.veryl.ldsd-range.width">リスト6.26</a></span>)。</p>
 <div id="eei.veryl.ldsd-range.width" class="caption-code">
-<span class="caption">リスト6.25: リスト6.25: MEM_DATA_WIDTHを64ビットに変更する (eei.veryl)</span>
+<span class="caption">リスト6.26: リスト6.26: MEM_DATA_WIDTHを64ビットに変更する (eei.veryl)</span>
 <pre class="list language-width">    const MEM_DATA_WIDTH: u32 = <b>64</b>;
 </pre>
 </div>
@@ -441,15 +448,15 @@ Test Result : 1 / 1
 <h3 class="none"><a id="h6-5-2"></a><span class="secno">6.5.2</span> 命令フェッチ処理を修正する</h3>
 <p><code class="inline-code">XLEN</code>, <code class="inline-code">MEM_DATA_WIDTH</code>が変わっても、命令の長さ(<code class="inline-code">ILEN</code>)は32ビットのままです。そのため、topモジュールの<code class="inline-code">i_membus.rdata</code>の幅は32ビットなのに対し、<code class="inline-code">membus.rdata</code>は64ビットになり、ビット幅が一致しません。</p>
 <p>ビット幅を合わせ、正しく命令をフェッチするために、64ビットの読み出しデータの上位32ビット,下位32ビットをアドレスの下位ビットで選択します。アドレスが8の倍数のときは下位32ビット,それ以外のときは上位32ビットを選択します。</p>
-<p>まず、命令フェッチの要求のアドレスをレジスタに保存します(<span class="listref"><a href="./05-impl-rv64i.html#top.veryl.ldsd-range.last_iaddr">リスト6.26</a></span>,<span class="listref"><a href="./05-impl-rv64i.html#top.veryl.ldsd-range.always_arb">リスト6.27</a></span>)。</p>
+<p>まず、命令フェッチの要求アドレスをレジスタに保存します(<span class="listref"><a href="./05-impl-rv64i.html#top.veryl.ldsd-range.last_iaddr">リスト6.27</a></span>,<span class="listref"><a href="./05-impl-rv64i.html#top.veryl.ldsd-range.always_arb">リスト6.28</a></span>)。</p>
 <div id="top.veryl.ldsd-range.last_iaddr" class="caption-code">
-<span class="caption">リスト6.26: リスト6.26: アドレスを保存するためのレジスタの定義 (top.veryl)</span>
+<span class="caption">リスト6.27: リスト6.27: アドレスを保存するためのレジスタの定義 (top.veryl)</span>
 <pre class="list language-last_iaddr">    var memarb_last_i    : logic;
     <b>var memarb_last_iaddr: Addr ;</b>
 </pre>
 </div>
 <div id="top.veryl.ldsd-range.always_arb" class="caption-code">
-<span class="caption">リスト6.27: リスト6.27: レジスタに命令フェッチの要求アドレスを保存する (top.veryl)</span>
+<span class="caption">リスト6.28: リスト6.28: レジスタに命令フェッチの要求アドレスを保存する (top.veryl)</span>
 <pre class="list language-always_arb">    // メモリアクセスを調停する
     always_ff {
         if_reset {
@@ -464,9 +471,9 @@ Test Result : 1 / 1
     }
 </pre>
 </div>
-<p>このレジスタの値を利用し、<code class="inline-code">i_membus.rdata</code>に割り当てる値を選択します(<span class="listref"><a href="./05-impl-rv64i.html#top.veryl.ldsd-range.rdata">リスト6.28</a></span>)。</p>
+<p>このレジスタの値を利用し、<code class="inline-code">i_membus.rdata</code>に割り当てる値を選択します(<span class="listref"><a href="./05-impl-rv64i.html#top.veryl.ldsd-range.rdata">リスト6.29</a></span>)。</p>
 <div id="top.veryl.ldsd-range.rdata" class="caption-code">
-<span class="caption">リスト6.28: リスト6.28: アドレスによってデータを選択する (top.veryl)</span>
+<span class="caption">リスト6.29: リスト6.29: アドレスによってデータを選択する (top.veryl)</span>
 <pre class="list language-rdata">    i_membus.rdata  = if memarb_last_iaddr[2] == 0 {
         membus.rdata[31:0]
     } else {
@@ -477,15 +484,15 @@ Test Result : 1 / 1
 
 <h3 class="none"><a id="h6-5-3"></a><span class="secno">6.5.3</span> SD命令を実装する</h3>
 <p>SD命令の実装のためには、書き込むデータ(<code class="inline-code">wdata</code>)と書き込みマスク(<code class="inline-code">wmask</code>)を変更する必要があります。</p>
-<p>書き込むデータは、アドレスの下位2ビットではなく下位3ビット分だけシフトするようにします(<span class="listref"><a href="./05-impl-rv64i.html#memunit.veryl.ldsd-range.wdata">リスト6.29</a></span>)。</p>
+<p>書き込むデータは、アドレスの下位2ビットではなく下位3ビット分だけシフトするようにします(<span class="listref"><a href="./05-impl-rv64i.html#memunit.veryl.ldsd-range.wdata">リスト6.30</a></span>)。</p>
 <div id="memunit.veryl.ldsd-range.wdata" class="caption-code">
-<span class="caption">リスト6.29: リスト6.29: 書き込みデータの変更 (memunit.veryl)</span>
+<span class="caption">リスト6.30: リスト6.30: 書き込みデータの変更 (memunit.veryl)</span>
 <pre class="list language-wdata">    req_wdata = rs2 &lt;&lt; {addr[<b>2</b>:0], 3'b0};
 </pre>
 </div>
-<p>書き込みマスクは4ビットから8ビットに拡張されるため、アドレスの下位2ビットではなく下位3ビットで選択するようにします(<span class="listref"><a href="./05-impl-rv64i.html#memunit.veryl.ldsd-range.wmask">リスト6.30</a></span>)。</p>
+<p>書き込みマスクは4ビットから8ビットに拡張されるため、アドレスの下位2ビットではなく下位3ビットで選択するようにします(<span class="listref"><a href="./05-impl-rv64i.html#memunit.veryl.ldsd-range.wmask">リスト6.31</a></span>)。</p>
 <div id="memunit.veryl.ldsd-range.wmask" class="caption-code">
-<span class="caption">リスト6.30: リスト6.30: 書き込みマスクの変更 (memunit.veryl)</span>
+<span class="caption">リスト6.31: リスト6.31: 書き込みマスクの変更 (memunit.veryl)</span>
 <pre class="list language-wmask">    req_wmask = case ctrl.funct3[1:0] {
         2'b00  : <b>8</b>'b1 &lt;&lt; addr[<b>2</b>:0],
         2'b01  : case addr[<b>2</b>:0] {
@@ -507,9 +514,9 @@ Test Result : 1 / 1
 </div>
 
 <h3 class="none"><a id="h6-5-4"></a><span class="secno">6.5.4</span> LD命令を実装する</h3>
-<p>メモリのデータ幅が64ビットに広がるため、<code class="inline-code">rdata</code>に割り当てる値を、アドレスの下位2ビットではなく下位3ビットで選択するようにします(<span class="listref"><a href="./05-impl-rv64i.html#memunit.veryl.ldsd-range.rdata">リスト6.31</a></span>)。</p>
+<p>メモリのデータ幅が64ビットに広がるため、<code class="inline-code">rdata</code>に割り当てる値を、アドレスの下位2ビットではなく下位3ビットで選択するようにします(<span class="listref"><a href="./05-impl-rv64i.html#memunit.veryl.ldsd-range.rdata">リスト6.32</a></span>)。</p>
 <div id="memunit.veryl.ldsd-range.rdata" class="caption-code">
-<span class="caption">リスト6.31: リスト6.31: rdataの変更 (memunit.veryl)</span>
+<span class="caption">リスト6.32: リスト6.32: rdataの変更 (memunit.veryl)</span>
 <pre class="list language-rdata">    rdata = case ctrl.funct3[1:0] {
         2'b00  : case addr[<b>2</b>:0] {
             0      : {sext &amp; D[7] repeat W - 8, D[7:0]},
@@ -541,19 +548,19 @@ Test Result : 1 / 1
 </div>
 
 <h3 class="none"><a id="h6-5-5"></a><span class="secno">6.5.5</span> LD, SD命令をテストする</h3>
-<p>LD, SD命令のテストを実行する前に、テストのHEXファイルを4バイト単位の改行から8バイト単位の改行に変更します(<span class="listref"><a href="./05-impl-rv64i.html#hex.8">リスト6.32</a></span>)。</p>
+<p>LD, SD命令のテストを実行する前に、メモリのデータ単位が4バイトから8バイトになったため、テストのHEXファイルを4バイト単位の改行から8バイト単位の改行に変更します(<span class="listref"><a href="./05-impl-rv64i.html#hex.8">リスト6.33</a></span>)。</p>
 <div id="hex.8" class="cmd-code">
-<span class="caption">リスト6.32: リスト6.32: HEXファイルを8バイト単位に変更する</span>
+<span class="caption">リスト6.33: リスト6.33: HEXファイルを8バイト単位に変更する</span>
 <pre class="list language-8">$ <span class="userinput">cd test</span>
 $ <span class="userinput">find share/ -type f -name &quot;*.bin&quot; -exec sh -c &quot;python3 bin2hex.py 8 {} &gt; {}.hex&quot; \;</span>
 </pre>
 </div>
-<p>riscv-testsを実行します(<span class="listref"><a href="./05-impl-rv64i.html#riscv-tests.ldsd">リスト6.33</a></span>)。</p>
+<p>riscv-testsを実行します(<span class="listref"><a href="./05-impl-rv64i.html#riscv-tests.ldsd">リスト6.34</a></span>)。</p>
 <div id="riscv-tests.ldsd" class="cmd-code">
-<span class="caption">リスト6.33: リスト6.33: RV32I, RV64Iをテストする</span>
+<span class="caption">リスト6.34: リスト6.34: RV32I, RV64Iをテストする</span>
 <pre class="list language-ldsd">$ <span class="userinput">make build</span>
 $ <span class="userinput">make sim VERILATOR_FLAGS=&quot;-DTEST_MODE&quot;</span>
-$ <span class="userinput">python3 test/test~st/share rv32ui-p-</span>
+$ <span class="userinput">python3 test/test.py -r obj_dir/sim test/share rv32ui-p-</span>
 ...
 Test Result : 40 / 40
 $ <span class="userinput">python3 test/test.py -r obj_dir/sim test/share rv64ui-p-</span>

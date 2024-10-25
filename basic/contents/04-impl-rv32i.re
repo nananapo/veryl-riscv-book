@@ -593,7 +593,7 @@ ILENとXLENを割り当てます。
 //}
 
 @<code>{membus}と@<code>{membus_core}を接続します(@<list>{top.veryl.create-core-range.connect})。
-アドレスは、@<code>{addr_to_memaddr}関数で変換した値を割り当てます。
+アドレスは、addr_to_memaddr関数で変換した値を割り当てます。
 
 //list[top.veryl.create-core-range.connect][membusとmembus_coreを接続する (top.veryl)]{
 #@maprange(scripts/04/create-core-range/core/src/top.veryl,connect)
@@ -746,7 +746,7 @@ topモジュール(プログラム中ではVtop_coreクラス)をインスタン
 
 Verilatorによるシミュレーションは、
 topモジュールのクロック信号を更新して、
-@<code>{eval}関数を呼び出すことにより実行します。
+eval関数を呼び出すことにより実行します。
 プログラムでは、
 @<code>{clk}を反転させて@<code>{eval}するループの前に、
 topモジュールをリセット信号によりリセットする必要があります。
@@ -2142,7 +2142,7 @@ memunitモジュールでは、
 命令がメモリにアクセスする命令の時、
 ALUから受け取ったアドレスをメモリに渡して操作を実行します。
 
-命令がメモリにアクセスする命令かどうかは@<code>{inst_is_memop}関数で判定します。
+命令がメモリにアクセスする命令かどうかはinst_is_memop関数で判定します。
 ストア命令のとき、命令の形式はS形式です。
 ロード命令のとき、デコーダは@<code>{InstCtrl.is_load}を@<code>{1}にしています(@<list>{inst_decoder.veryl.id})。
 
