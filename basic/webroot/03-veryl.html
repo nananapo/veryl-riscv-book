@@ -1018,6 +1018,20 @@ include(inline, &quot;filename.sv&quot;);
 
 <h4><a id="h2-2-9-3"></a>システム関数 / システムタスク</h4>
 <p>SystemVerilogに標準で用意されている関数(システム関数, システムタスク)を利用することができます。システム関数(system function), システムタスク(system task)の名前は、<code class="inline-code">$</code>から始まります。本書で利用するシステム関数, システムタスクを<span class="tableref"><a href="./03-veryl.html#systemtasks">表2.6</a></span>に列挙します。それぞれの使用例は次の通りです(<span class="listref"><a href="./03-veryl.html#systemtask.use">リスト2.51</a></span>)。</p>
+<div id="systemtasks" class="table">
+<p class="caption">表2.6: 本書で使用するシステム関数, システムタスク</p>
+<table>
+<tr class="hline"><th>関数名</th><th>機能</th><th>戻り値</th></tr>
+<tr class="hline"><td>$clog2</td><td>値のlog2のceilを求める</td><td>数値</td></tr>
+<tr class="hline"><td>$size</td><td>配列のサイズを求める</td><td>数値</td></tr>
+<tr class="hline"><td>$bits</td><td>値の幅を求める</td><td>数値</td></tr>
+<tr class="hline"><td>$signed</td><td>値を符号付きとして扱う</td><td>符号付きの値</td></tr>
+<tr class="hline"><td>$readmemh</td><td>レジスタにファイルのデータを代入する</td><td>なし</td></tr>
+<tr class="hline"><td>$display</td><td>文字列を出力する</td><td>なし</td></tr>
+<tr class="hline"><td>$error</td><td>エラー出力する</td><td>なし</td></tr>
+<tr class="hline"><td>$finish</td><td>シミュレーションを終了する</td><td>なし</td></tr>
+</table>
+</div>
 <p>システム関数, システムタスクを利用するときは、通常の関数呼び出しのように使用します。</p>
 <div id="systemtask.use" class="caption-code">
 <span class="caption">リスト2.51: リスト2.51: システム関数, システムタスクの使用例</span>
@@ -1039,22 +1053,38 @@ initial {
 }
 </pre>
 </div>
-<div id="systemtasks" class="table">
-<p class="caption">表2.6: 本書で使用するシステム関数, システムタスク</p>
-<table>
-<tr class="hline"><th>関数名</th><th>機能</th><th>戻り値</th></tr>
-<tr class="hline"><td>$clog2</td><td>値のlog2のceilを求める</td><td>数値</td></tr>
-<tr class="hline"><td>$size</td><td>配列のサイズを求める</td><td>数値</td></tr>
-<tr class="hline"><td>$bits</td><td>値の幅を求める</td><td>数値</td></tr>
-<tr class="hline"><td>$signed</td><td>値を符号付きとして扱う</td><td>符号付きの値</td></tr>
-<tr class="hline"><td>$readmemh</td><td>レジスタにファイルのデータを代入する</td><td>なし</td></tr>
-<tr class="hline"><td>$display</td><td>文字列を出力する</td><td>なし</td></tr>
-<tr class="hline"><td>$error</td><td>エラー出力する</td><td>なし</td></tr>
-<tr class="hline"><td>$finish</td><td>シミュレーションを終了する</td><td>なし</td></tr>
-</table>
-</div>
 
-<h4><a id="h2-2-9-4"></a>標準ライブラリ</h4>
+<h4><a id="h2-2-9-4"></a>アトリビュート</h4>
+<p>アトリビュートを使うと宣言に注釈をつけることができます。例えば<span class="listref"><a href="./03-veryl.html#attribute.use">リスト2.52</a></span>は、<span class="listref"><a href="./03-veryl.html#attribute.sv">リスト2.53</a></span>に変換されます。</p>
+<div id="attribute.use" class="caption-code">
+<span class="caption">リスト2.52: リスト2.52: アトリビュートを使ったVerylコード</span>
+<pre class="list language-use">#[sv(&quot;keep=\&quot;true\&quot;&quot;)]
+var aaa : logic;
+
+#[ifdef(IS_DEBUG)]
+var bbb : logic;
+
+#[ifndef(IS_DEBUG)]
+var ccc : logic;
+</pre>
+</div>
+<div id="attribute.sv" class="caption-code">
+<span class="caption">リスト2.53: リスト2.53: 同じ意味のSystemVerilogコード</span>
+<pre class="list language-sv">(* keep=&quot;true&quot; *)
+logic aaa;
+
+`ifdef IS_DEBUG
+logic bbb;
+`endif
+
+`ifndef IS_DEBUG
+logic ccc;
+`endif
+</pre>
+</div>
+<p><code class="inline-code">#[sv()]</code>は、宣言にSystemVerilogの属性を付けることができます。属性については使用するときに説明します。<code class="inline-code">#[ifdef(マクロ名)]</code>をつけられた宣言は、マクロが存在するときにのみ定義されるようになります。<code class="inline-code">#[ifndef(マクロ名)]</code>はその逆で、マクロが存在しないときにのみ定義されるようになります。</p>
+
+<h4><a id="h2-2-9-5"></a>標準ライブラリ</h4>
 <p>Verylには、よく使うモジュールなどが標準ライブラリとして準備されています。標準ライブラリは<a href="https://std.veryl-lang.org/" class="link">https://std.veryl-lang.org/</a>で確認することができます。</p>
 <p>本書では標準ライブラリを使用していないため、説明は割愛します。</p>
 

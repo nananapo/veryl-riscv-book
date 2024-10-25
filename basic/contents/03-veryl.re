@@ -1216,6 +1216,19 @@ SystemVerilogに標準で用意されている関数(システム関数, シス�
 本書で利用するシステム関数, システムタスクを@<table>{systemtasks}に列挙します。
 それぞれの使用例は次の通りです(@<list>{systemtask.use})。
 
+//table[systemtasks][本書で使用するシステム関数, システムタスク]{
+関数名		機能		戻り値
+===============================================================
+$clog2		値のlog2のceilを求める					数値
+$size		配列のサイズを求める					数値
+$bits		値の幅を求める							数値
+$signed		値を符号付きとして扱う					符号付きの値
+$readmemh	レジスタにファイルのデータを代入する	なし
+$display	文字列を出力する						なし
+$error		エラー出力する							なし
+$finish		シミュレーションを終了する				なし
+//}
+
 システム関数, システムタスクを利用するときは、通常の関数呼び出しのように使用します。
 
 //list[systemtask.use][システム関数, システムタスクの使用例]{
@@ -1237,18 +1250,41 @@ initial {
 }
 //}
 
-//table[systemtasks][本書で使用するシステム関数, システムタスク]{
-関数名		機能		戻り値
-===============================================================
-$clog2		値のlog2のceilを求める					数値
-$size		配列のサイズを求める					数値
-$bits		値の幅を求める							数値
-$signed		値を符号付きとして扱う					符号付きの値
-$readmemh	レジスタにファイルのデータを代入する	なし
-$display	文字列を出力する						なし
-$error		エラー出力する							なし
-$finish		シミュレーションを終了する				なし
+==== アトリビュート
+
+アトリビュートを使うと宣言に注釈をつけることができます。
+例えば@<list>{attribute.use}は、@<list>{attribute.sv}に変換されます。
+
+//list[attribute.use][アトリビュートを使ったVerylコード]{
+#[sv("keep=\"true\"")]
+var aaa : logic;
+
+#[ifdef(IS_DEBUG)]
+var bbb : logic;
+
+#[ifndef(IS_DEBUG)]
+var ccc : logic;
 //}
+
+//list[attribute.sv][同じ意味のSystemVerilogコード]{
+(* keep="true" *)
+logic aaa;
+
+`ifdef IS_DEBUG
+logic bbb;
+`endif
+
+`ifndef IS_DEBUG
+logic ccc;
+`endif
+//}
+
+@<code>{#[sv()]}は、宣言にSystemVerilogの属性を付けることができます。
+属性については使用するときに説明します。
+@<code>{#[ifdef(マクロ名)]}をつけられた宣言は、
+マクロが存在するときにのみ定義されるようになります。
+@<code>{#[ifndef(マクロ名)]}はその逆で、
+マクロが存在しないときにのみ定義されるようになります。
 
 ==== 標準ライブラリ
 
