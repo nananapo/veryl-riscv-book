@@ -76,7 +76,7 @@
 <p>実装のテストにはriscv-testsを利用します。RV64I向けのテストは<code class="inline-code">rv64ui-p-</code>から始まるテストです。命令を実装するたびにテストを実行することで、命令が正しく実行できていることを確認します。</p>
 
 <h2 class="numbox"><a id="h6-1"></a><span class="secno">6.1</span> XLENの変更</h2>
-<p>レジスタの幅が32ビットから64ビットに変わるということは、XLENが32から64に変わるということです。eeiパッケージに定義しているXLENを64に変更します(<span class="listref"><a href="./05-impl-rv64i.html#eei.veryl.xlen-shift-range.xlen">リスト6.1</a></span>)。RV64Iになっても命令の幅(<code class="inline-code">ILEN</code>)は32ビットのままです。</p>
+<p>レジスタの幅が32ビットから64ビットに変わるということは、XLENが32から64に変わるということです。eeiパッケージに定義しているXLENを64に変更します(<span class="listref"><a href="./05-impl-rv64i.html#eei.veryl.xlen-shift-range.xlen">リスト6.1</a></span>)。RV64Iになっても命令の幅(ILEN)は32ビットのままです。</p>
 <div id="eei.veryl.xlen-shift-range.xlen" class="caption-code">
 <span class="caption">リスト6.1: リスト6.1: XLENを変更する (eei.veryl)</span>
 <pre class="list language-xlen">    const XLEN: u32 = <b>64</b>;

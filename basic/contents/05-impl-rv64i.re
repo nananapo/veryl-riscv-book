@@ -46,7 +46,7 @@ RV64I向けのテストは@<code>{rv64ui-p-}から始まるテストです。
 レジスタの幅が32ビットから64ビットに変わるということは、
 XLENが32から64に変わるということです。
 eeiパッケージに定義しているXLENを64に変更します(@<list>{eei.veryl.xlen-shift-range.xlen})。
-RV64Iになっても命令の幅(@<code>{ILEN})は32ビットのままです。
+RV64Iになっても命令の幅(ILEN)は32ビットのままです。
 
 //list[eei.veryl.xlen-shift-range.xlen][XLENを変更する (eei.veryl)]{
 #@maprange(scripts/05/xlen-shift-range/core/src/eei.veryl,xlen)
