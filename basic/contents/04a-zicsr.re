@@ -4,8 +4,10 @@
 
 前の章では、RISC-Vの基本整数命令セットであるRV32Iを実装しました。
 既に簡単なプログラムを動かすことができますが、
-例外や割り込み,ページングなどの機能がありません。
+例外や割り込み,ページングなどの機能がありません@<fn>{sorezore.atode}。
 このような機能はCSRを利用して提供されます。
+
+//footnote[sorezore.atode][それぞれの機能は実装するときに解説します]
 
 RISC-Vには、CSR(Control and Status Register)というレジスタが4096個存在しています。
 例えば@<code>{mtvec}というレジスタは、例外や割り込みが発生したときのジャンプ先のアドレスを格納しています。
@@ -32,7 +34,7 @@ CSRRCI	CSRRCのrs1を、即値をゼロ拡張した値に置き換えた動作
 
 まず、Zicsrに定義されている命令(@<table>{zicsr.insts})をデコードします。
 
-これらの命令のopcodeは@<code>{SYSTEM}(@<code>{1110011})です。
+これらの命令のopcodeは@<code>{SYSTEM}(@<code>{7'b1110011})です。
 この値をeeiパッケージに定義します(@<list>{eei.veryl.create-csrunit-range.opcode})。
 
 //list[eei.veryl.create-csrunit-range.opcode][opcode用の定数の定義 (eei.veryl)]{
@@ -65,9 +67,9 @@ CSRを制御する命令であることを示す@<code>{is_csr}フラグを追�
 inst_decoderモジュールの@<code>{InstCtrl}を生成している部分を変更します(@<list>{inst_decoder.veryl.create-csrunit-range.decode})。
 
 //list[inst_decoder.veryl.create-csrunit-range.decode][OP_SYSTEMとis_csrを追加する (inst_decoder.veryl)]{
-#@maprange(scripts/04a/create-csrunit-range/core/src/inst_decoder.veryl,decode)
-                                           is_csrを追加
-    ctrl = {case op {                           ↓
+#@# #@maprange(scripts/04a/create-csrunit-range/core/src/inst_decoder.veryl,decode)
+                                         is_csrを追加
+    ctrl = {case op {                         ↓
         OP_LUI   : {InstType::U, T, T, F, F, F, @<b>|F|},
         OP_AUIPC : {InstType::U, T, F, F, F, F, @<b>|F|},
         OP_JAL   : {InstType::J, T, F, F, T, F, @<b>|F|},
@@ -80,7 +82,7 @@ inst_decoderモジュールの@<code>{InstCtrl}を生成している部分を変
         @<b>|OP_SYSTEM: {InstType::I, T, F, F, F, F, T},|
         default  : {InstType::X, F, F, F, F, F, @<b>|F|},
     }, f3, f7};
-#@end
+#@# #@end
 //}
 
 @<list>{inst_decoder.veryl.create-csrunit-range.decode}では、
@@ -92,7 +94,7 @@ CSRを操作しない命令であるということにしています。
 CSRRW, CSRRS, CSRRC命令は、
 rs1レジスタのデータを利用します。
 CSRRWI, CSRRSI, CSRRCI命令は、
-命令のビット中のrs1にあたるビット列(5ビット)をゼロ拡張した値を利用します。
+命令のビット列中のrs1にあたるビット列(5ビット)を@<code>{0}で拡張した値を利用します。
 それぞれの命令はfunct3で区別することができます(@<table>{zicsr.f3})。
 
 //table[zicsr.f3][Zicsrに定義されている命令(funct3による区別)]{
@@ -153,8 +155,7 @@ rdata		UIntX		output	CSR命令よるCSR読み込みの結果
 
 まだ、csrunitモジュールにはCSRが一つもありません。
 そのため、中身が空になっています。
-このままの状態で、
-とりあえず、
+このままの状態で、とりあえず、
 csrunitモジュールをcoreモジュールの中でインスタンス化します
 (@<list>{core.veryl.create-csrunit-range.csru})。
 
@@ -183,11 +184,11 @@ csrunitモジュールをインスタンス化しています。
 
 @<code>{csr_addr}ポートには、
 命令の上位12ビットを設定しています。
-rs1ポートには、
-即値を利用する命令(CSRR(W|S|C)I)の場合はrs1_addrを0で拡張した値を、
-それ以外の命令の場合はrs1のデータを設定しています。
+@<code>{rs1}ポートには、
+即値を利用する命令(CSRR(W|S|C)I)の場合はrs1_addrを@<code>{0}で拡張した値を、
+それ以外の命令の場合は@<code>{rs1}のデータを設定しています。
 
-次に、csrunitの結果を、
+次に、CSRを読み込んだデータを、
 レジスタにライトバックするようにします。
 具体的には、
 @<code>{InstCtrl.is_csr}が@<code>{1}のとき、
@@ -215,7 +216,7 @@ rs1ポートには、
 デバッグ表示用のalways_ffブロックに、
 次のコードを追加してください(@<list>{core.veryl.create-csrunit-range.debug})。
 
-//list[core.veryl.create-csrunit-range.debug][デバッグ用にrdataを表示するようにする (core.veryl)]{
+//list[core.veryl.create-csrunit-range.debug][rdataをデバッグ表示するようにする (core.veryl)]{
 #@maprange(scripts/04a/create-csrunit-range/core/src/core.veryl,debug)
     if inst_ctrl.is_csr {
         $display("  csr rdata : %h", csru_rdata);
@@ -224,7 +225,7 @@ rs1ポートには、
 //}
 
 これらのテストは、
-csrunitモジュールにレジスタを追加してから行います。
+csrunitモジュールにCSRを追加してから行います。
 
 === mtvecレジスタを実装する
 
@@ -243,7 +244,9 @@ MXLENはmisaレジスタに定義されていますが、
 今のところはXLENと等しいという認識で問題ありません。
 WARLはWrite Any Values, Reads Legal Valuesの略です。
 その名の通り、好きな値を書き込めるが、
-読み出すときには合法な値になっているという認識で問題ありません。
+読み出すときには合法な値@<fn>{what.is.legal}になっているという認識で問題ありません。
+
+//footnote[what.is.legal][合法な値とは実装がサポートしている有効な値のことです]
 
 mtvecは、トラップ(Trap)が発生したときのジャンプ先(Trap-Vector)の基準となるアドレスを格納するレジスタです。
 @<b>{トラップ}とは、例外(Exception)、または割り込み(Interrupt)により、
@@ -258,7 +261,7 @@ CPUが異常な状態に陥ったままにならないようにしています�
 
 mtvecはBASEとMODEの2つのフィールドで構成されています。
 MODEはジャンプ先の決め方を指定するためのフィールドですが、
-簡単のために常に0(Directモード)になるようにします。
+簡単のために常に@<code>{2'b00}(Directモード)になるようにします。
 Directモードのとき、トラップ時のジャンプ先は@<code>{BASE << 2}になります。
 
 //footnote[trap.define][トラップや例外, 割り込みはVolume Iの1.6Exceptions, Traps, and Interruptsに定義されています]
@@ -290,7 +293,7 @@ MXLEN=XLENとしているので、
 #@end
 //}
 
-MODEはDirectモード(@<code>{00})しか対応していません。
+MODEはDirectモード(@<code>{2'b00})しか対応していません。
 mtvecはWARLなレジスタなので、
 MODEフィールドには書き込めないようにする必要があります。
 これを制御するためにmtvecレジスタの書き込みマスク用の定数を定義します
@@ -306,7 +309,7 @@ MODEフィールドには書き込めないようにする必要があります�
 次に、書き込むべきデータ@<code>{wdata}の生成と、
 mtvecレジスタの読み込みを実装します(@<list>{csrunit.veryl.create-mtvec-range.rw})。
 
-//list[csrunit.veryl.create-mtvec-range.rw][レジスタの読み込みと書き込みデータの作成 (csrunit.veryl)]{
+//list[csrunit.veryl.create-mtvec-range.rw][レジスタの読み込みと書き込むデータの作成 (csrunit.veryl)]{
 #@maprange(scripts/04a/create-mtvec-range/core/src/csrunit.veryl,rw)
     var wmask: UIntX; // write mask
     var wdata: UIntX; // write data
@@ -337,7 +340,7 @@ always_combブロックで、
 @<code>{wdata}には、CSRに書き込むべきデータを割り当てます。
 CSRに書き込むべきデータは、
 書き込む命令(CSRRW[I], CSRRS[I], CSRRC[I])によって異なります。
-rs1には、rs1の値か即値が供給されているため、
+@<code>{rs1}ポートには、rs1の値か即値が供給されているため、
 これと@<code>{rdata}を利用して@<code>{wdata}を生成しています。
 @<code>{funct3}と演算の種類の関係については、
 @<table>{zicsr.f3}を参照してください。
@@ -366,17 +369,15 @@ mtvecへの書き込みは、
 #@end
 //}
 
-mtvecの初期値は0です。
-mtvecにwdataを書き込むとき、
-MODEが常に0になるようにしています。
+mtvecの初期値は@<code>{0}です。
+mtvecに@<code>{wdata}を書き込むとき、
+MODEが常に@<code>{2'b00}になるようにしています。
 
 === csrunitモジュールをテストする
 
 mtvecレジスタの書き込み、
 読み込みができることを確認します。
 
-プロジェクトのフォルダに、
-@<code>{test}ディレクトリを作成してください。
 @<code>{test/sample_csr.hex}を作成し、
 次のように記述します(@<list>{sample_csr.hex})。
 
@@ -388,7 +389,7 @@ mtvecレジスタの書き込み、
 //}
 
 テストでは、
-CSRRWI命令でmtvecに@<code>{'b10111}を書き込んだ後、
+CSRRWI命令でmtvecに@<code>{32'b10111}を書き込んだ後、
 CSRRS命令でmtvecの値を読み込んでいます。
 CSRRS命令で読み込むとき、
 rs1をx0(ゼロレジスタ)にすることで、
@@ -401,20 +402,20 @@ $ @<userinput>{make build}
 $ @<userinput>{make sim}
 $ @<userinput>{./obj_dir/sim test/sample_csr.hex 5}
 #                    4
-00000000 : 305bd0f3 @<balloon>{mtvecに'b10111を書き込む}
+00000000 : 305bd0f3 @<balloon>{mtvecに32'b10111を書き込む}
   itype     : 000010
-  rs1[23]   : 00000000 @<balloon>{CSRRWIなので、mtvecに'b10111(=23)を書き込む}
+  rs1[23]   : 00000000 @<balloon>{CSRRWIなので、mtvecに32'b10111(=23)を書き込む}
   csr rdata : 00000000 @<balloon>{mtvecの初期値(0)が読み込まれている}
   reg[ 1] <= 00000000
 #                    5
 00000004 : 30502173 @<balloon>{mtvecを読み込む}
   itype     : 000010
   csr rdata : 00000014 @<balloon>{mtvecに書き込まれた値を読み込んでいる}
-  reg[ 2] <= 00000014 @<balloon>{'b10111のMODE部分がマスクされて、'b10100 = 14になっている}
+  reg[ 2] <= 00000014 @<balloon>{32'b10111のMODE部分がマスクされて、32'b10100 = 14になっている}
 //}
 
 mtvecのBASEフィールドにのみ書き込みが行われ、
-@<code>{00000014}が読み込まれることが確認できます。
+@<code>{32'h00000014}が読み込まれることが確認できます。
 
 == ECALL命令の実装
 
@@ -427,7 +428,7 @@ ECALL命令を実行すると、
 現在の権限レベル(Privilege Level)に応じて@<table>{ecall.expts}のような例外が発生します。
 
 @<b>{権限レベル}とは、
-権限(特権, 機能)を持つソフトウェアを実装するための機能です。
+権限(特権)を持つソフトウェアを実装するための機能です。
 例えばOS上で動くソフトウェアは、
 セキュリティのために、他のソフトウェアのメモリを侵害できないようにする必要があります。
 権限レベル機能があると、このような保護を、
@@ -497,7 +498,7 @@ Environment call from M-mode例外には11が割り当てられています。
 (@<list>{csrunit.veryl.create-ecall-range.wmask})。
 mepcに格納されるのは例外が発生した時の命令のアドレスです。
 命令は4バイトに整列して配置されているため、
-mepcの下位2ビットは常に0になるようにします。
+mepcの下位2ビットは常に@<code>{2'b00}になるようにします。
 
 //list[csrunit.veryl.create-ecall-range.wmask][mepc, mcauseの書き込みマスクの定義 (csrunit.veryl)]{
 #@maprange(scripts/04a/create-ecall-range/core/src/csrunit.veryl,wmask)
@@ -510,7 +511,7 @@ mepcの下位2ビットは常に0になるようにします。
 ==== mepc, mcauseレジスタの実装
 
 mepc, mcauseレジスタを作成します。
-サイズはMXLEN(=XLEN)なため、型はUIntXとします
+サイズはMXLEN(=XLEN)なため、型は@<code>{UIntX}とします
 (@<list>{csrunit.veryl.create-ecall-range.reg})。
 
 //list[csrunit.veryl.create-ecall-range.reg][mepc, mcauseレジスタの定義 (csrunit.veryl)]{
@@ -552,7 +553,7 @@ mepc, mcauseレジスタを作成します。
 //}
 
 最後に、mepc, mcauseの書き込みを実装します。
-if_resetで値を0に初期化し、case文にmepc, mcauseの場合を実装します
+if_resetで値を@<code>{0}に初期化し、case文にmepc, mcauseの場合を実装します
 (@<list>{csrunit.veryl.create-ecall-range.always_ff_csr})。
 
 //list[csrunit.veryl.create-ecall-range.always_ff_csr][mepc, mcauseの書き込み (csrunit.veryl)]{
@@ -613,7 +614,7 @@ module csrunit (
 	現在処理している命令がECALL命令かどうかを判定するために使います。
 
  : raise_trap
-	例外が発生する時、値を1にします。
+	例外が発生する時、値を@<code>{1}にします。
 
  : trap_vector
 	例外が発生する時、ジャンプ先のアドレスを出力します。
@@ -666,7 +667,7 @@ csrunitモジュールと接続します
 @<code>{csru_trap_vector}がトラップ先になります。
 
 トラップするときの動作には、
-ジャンプや分岐命令の実装に利用したロジックを利用します。
+ジャンプと分岐命令の仕組みを利用します。
 @<code>{control_hazard}の条件に@<code>{csru_raise_trap}を追加して、
 トラップするときに@<code>{control_hazard_pc_next}を@<code>{csru_trap_vector}に設定します
 (@<list>{core.veryl.create-ecall-range.hazard})。
@@ -694,10 +695,10 @@ csrunitモジュールと接続します
 
 ECALL命令は、
 I形式, 
-即値は0, 
-rs1とrdは0, 
-funct3は0, 
-opcodeは@<code>{SYSTEM}な命令(@<img>{ecall_enc})です。
+即値は@<code>{0}, 
+rs1とrdは@<code>{0}, 
+funct3は@<code>{0}, 
+opcodeは@<code>{SYSTEM}な命令です(@<img>{ecall_enc})。
 
 これを判定するための変数を作成します(@<list>{csrunit.veryl.create-ecall-range.is_ecall})。
 
@@ -708,7 +709,7 @@ opcodeは@<code>{SYSTEM}な命令(@<img>{ecall_enc})です。
 #@end
 //}
 
-例外が発生するかどうかを示す@<code>{raise_expt}と、
+次に、例外が発生するかどうかを示す@<code>{raise_expt}と、
 例外が発生の原因を示す@<code>{expt_cause}を作成します。
 今のところ、例外はECALL命令によってのみ発生するため、
 @<code>{expt_cause}は実質的に定数になっています
@@ -735,7 +736,7 @@ opcodeは@<code>{SYSTEM}な命令(@<img>{ecall_enc})です。
 
 最後に、トラップに伴うCSRの変更を実装します。
 トラップが発生する時、
-mepcレジスタにpc、
+mepcレジスタにPC、
 mcauseレジスタにトラップの発生原因を格納します
 (@<list>{csrunit.veryl.create-ecall-range.always_ff_trap})。
 
@@ -763,7 +764,7 @@ ECALL命令をテストする前に、
 トラップ先を表示します
 (@<list>{core.veryl.create-ecall-range.debug})。
 
-//list[core.veryl.create-ecall-range.debug][デバッグ用の表示を追加する (core.veryl)]{
+//list[core.veryl.create-ecall-range.debug][トラップの情報をデバッグ表示する (core.veryl)]{
 #@maprange(scripts/04a/create-ecall-range/core/src/core.veryl,debug)
     if inst_ctrl.is_csr {
         $display("  csr rdata : %h", csru_rdata);
@@ -790,7 +791,7 @@ ECALL命令をテストする前に、
 //}
 
 CSRRW命令でmtvecレジスタに値を書き込み、
-ecall命令で例外を発生させてジャンプします。
+ECALL命令で例外を発生させてジャンプします。
 ジャンプ先では、
 mcauseレジスタ, mepcレジスタの値を読み取ります。
 
@@ -826,7 +827,7 @@ mcauseとmepcに書き込みが行われてからmtvecにジャンプしてい�
 
 ECALL命令の実行時にレジスタに値がライトバックされてしまっていますが、
 ECALL命令のrdは常に0番目のレジスタであり、
-0番目のレジスタは常に値が0になるため問題ありません。
+0番目のレジスタは常に値が@<code>{0}になるため問題ありません。
 
 == MRET命令の実装
 
@@ -847,8 +848,8 @@ MRET命令は、例えば、権限のあるOSから権限のないユーザー�
 まず、
 csrunitモジュールに供給されている命令がMRET命令かどうかを判定する変数@<code>{is_mret}を作成します
 (@<list>{csrunit.veryl.create-mret-range.is_mret})。
-MRET命令は、上位12ビットが@<code>{001100000010},
-rs1は0, funct3は0, rdは0です(@<img>{mret_enc})。
+MRET命令は、上位12ビットが@<code>{12'b001100000010},
+rs1は@<code>{0}, funct3は@<code>{0}, rdは@<code>{0}です(@<img>{mret_enc})。
 
 //list[csrunit.veryl.create-mret-range.is_mret][MRET命令の判定 (csrunit.veryl)]{
 #@maprange(scripts/04a/create-mret-range/core/src/csrunit.veryl,is_mret)
@@ -859,8 +860,8 @@ rs1は0, funct3は0, rdは0です(@<img>{mret_enc})。
 
 次に、
 csrunitモジュールにMRET命令が供給されているときに、
-mepcにジャンプするようにするロジックを作成します。
-ジャンプするためのロジックは、
+mepcにジャンプするようにする仕組みを実装します。
+ジャンプするための仕組みには、
 トラップによってジャンプする仕組みを利用します
 (@<list>{csrunit.veryl.create-mret-range.trap})。
 
@@ -882,7 +883,7 @@ mepcにジャンプするようにするロジックを作成します。
 
 //note[例外が優先]{
 trap_vectorには、
-@<code>{is_mret}のときに@<code>{mepc}を割り当てるのではなく
+@<code>{is_mret}のときに@<code>{mepc}を割り当てるのではなく、
 @<code>{raise_expt}のときに@<code>{mtvec}を割り当てています。
 これは、MRET命令によって発生する例外があるからです。
 MRET命令の判定を優先すると、例外が発生するのにmepcにジャンプしてしまいます。

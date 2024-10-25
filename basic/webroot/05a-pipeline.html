@@ -337,7 +337,7 @@
     }
 </pre>
 </div>
-<p>IDステージにある命令は、EXステージが命令を受け付けることができるとき(<code class="inline-code">exq_wready</code>)、IDステージを完了してEXステージに処理を進めることができます。このロジックは、<code class="inline-code">if_fifo_rready</code>に<code class="inline-code">exq_wready</code>を割り当てることで実現できます。</p>
+<p>IDステージにある命令は、EXステージが命令を受け付けることができるとき(<code class="inline-code">exq_wready</code>)、IDステージを完了してEXステージに処理を進めることができます。この仕組みは、<code class="inline-code">if_fifo_rready</code>に<code class="inline-code">exq_wready</code>を割り当てることで実現できます。</p>
 <p>最後に、命令が今のクロックで供給されたかどうかを示す変数<code class="inline-code">id_is_new</code>は必要ないため削除します(<span class="listref"><a href="./05a-pipeline.html#id_is_new">リスト7.8</a></span>)。</p>
 <div id="id_is_new" class="caption-code">
 <span class="caption">リスト7.8: リスト7.8: id_is_newを削除する (core.veryl)</span>
@@ -445,7 +445,7 @@
 </pre>
 </div>
 <p><code class="inline-code">br_taken</code>には、ジャンプ命令かどうか、または分岐命令かつ分岐が成立するか、という条件を割り当てます。<code class="inline-code">jump_addr</code>には、分岐命令、またはジャンプ命令のジャンプ先を割り当てます。MEMステージではこれを利用してジャンプと分岐を処理します。</p>
-<p>EXステージにある命令は、MEMステージが命令を受け付けることができるとき(<code class="inline-code">memq_wready</code>)、EXステージを完了してMEMステージに処理を進めることができます。このロジックは、<code class="inline-code">exq_rready</code>に<code class="inline-code">memq_wready</code>を割り当てることで実現できます。</p>
+<p>EXステージにある命令は、MEMステージが命令を受け付けることができるとき(<code class="inline-code">memq_wready</code>)、EXステージを完了してMEMステージに処理を進めることができます。この仕組みは、<code class="inline-code">exq_rready</code>に<code class="inline-code">memq_wready</code>を割り当てることで実現できます。</p>
 
 <h3 class="none"><a id="h7-2-6"></a><span class="secno">7.2.6</span> MEMステージを実装する</h3>
 <p>MEMステージでは、メモリにアクセスする命令とCSR命令を処理します。また、ジャンプ命令, 分岐命令かつ分岐が成立, またはトラップが発生する時、次に実行する命令のアドレスを変更します。</p>
@@ -461,7 +461,7 @@
     let mems_rd_addr  : logic   &lt;5&gt; = mems_inst_bits[11:7];
 </pre>
 </div>
-<p><code class="inline-code">mem_is_new</code>には、もともと<code class="inline-code">id_is_new</code>の更新に利用していたロジックを利用します(<span class="listref"><a href="./05a-pipeline.html#mem_is_new">リスト7.13</a></span>)。</p>
+<p><code class="inline-code">mem_is_new</code>には、もともと<code class="inline-code">id_is_new</code>の更新に利用していた仕組みを利用します(<span class="listref"><a href="./05a-pipeline.html#mem_is_new">リスト7.13</a></span>)。</p>
 <div id="mem_is_new" class="caption-code">
 <span class="caption">リスト7.13: リスト7.13: mem_is_newの更新 (core.veryl)</span>
 <pre class="list">    always_ff {
@@ -548,7 +548,7 @@
     }
 </pre>
 </div>
-<p>MEMステージにある命令は、memunitが処理中ではなく(<code class="inline-code">!memy_stall</code>)、WBステージが命令を受け付けることができるとき(<code class="inline-code">wbq_wready</code>)、MEMステージを完了してWBステージに処理を進めることができます。このロジックについては、<code class="inline-code">memq_rready</code>と<code class="inline-code">wbq_wvalid</code>を確認してください。</p>
+<p>MEMステージにある命令は、memunitが処理中ではなく(<code class="inline-code">!memy_stall</code>)、WBステージが命令を受け付けることができるとき(<code class="inline-code">wbq_wready</code>)、MEMステージを完了してWBステージに処理を進めることができます。この仕組みについては、<code class="inline-code">memq_rready</code>と<code class="inline-code">wbq_wvalid</code>を確認してください。</p>
 
 <h3 class="none"><a id="h7-2-7"></a><span class="secno">7.2.7</span> WBステージを実装する</h3>
 <p>WBステージでは、命令の結果をレジスタに書き込みます。WBステージが完了したら命令の処理は終わりなので、命令を破棄します。</p>
@@ -596,8 +596,8 @@
 </div>
 <p>これで、IF, ID, EX, MEM, WBステージを作成できました。</p>
 
-<h3 class="none"><a id="h7-2-8"></a><span class="secno">7.2.8</span> デバッグ用に情報を表示する</h3>
-<p>今までは同時に1つの命令しか処理していませんでしたが、これからは全てのステージで別の命令を処理することになります。デバッグ用の表示を変更しておきましょう。</p>
+<h3 class="none"><a id="h7-2-8"></a><span class="secno">7.2.8</span> デバッグのために情報を表示する</h3>
+<p>今までは同時に1つの命令しか処理していませんでしたが、これからは全てのステージで別の命令を処理することになります。デバッグ表示を変更しておきましょう。</p>
 <p><span class="listref"><a href="./05a-pipeline.html#debug">リスト7.20</a></span>のように、デバッグ表示のalways_ffブロックを変更します。</p>
 <div id="debug" class="caption-code">
 <span class="caption">リスト7.20: リスト7.20: 各ステージの情報を表示する (core.veryl)</span>

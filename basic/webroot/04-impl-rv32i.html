@@ -52,7 +52,7 @@
         </header>
         <main class="page-main">
 <h1 class="boldlines center twolines"><a id="h3"></a><span class="secno">第3章</span> <br/>RV32Iの実装</h1>
-<p>本章では、RISC-Vの基本整数命令セットである<b>RV32I</b>を実装します。基本整数命令という名前の通り、整数の足し引きやビット演算、ジャンプ、分岐命令などの最小限の命令しか実装されていません。また、32ビット幅の汎用レジスタが32個定義されています。ただし、0番目のレジスタの値は常に0です。</p>
+<p>本章では、RISC-Vの基本整数命令セットである<b>RV32I</b>を実装します。基本整数命令という名前の通り、整数の足し引きやビット演算、ジャンプ、分岐命令などの最小限の命令しか実装されていません。また、32ビット幅の汎用レジスタが32個定義されています。ただし、0番目のレジスタの値は常に<code class="inline-code">0</code>です。</p>
 <p>RISC-VのCPUは基本整数命令セットを必ず実装して、他の命令や機能は拡張として実装します。複雑な機能を持つCPUを実装する前に、まずは最小限の命令を実行できるCPUを実装しましょう。</p>
 
 <h2 class="numbox"><a id="h3-1"></a><span class="secno">3.1</span> CPUは何をやっているのか?</h2>
@@ -173,7 +173,7 @@ $ <span class="userinput">mkdir src</span>
 <dt>Addr</dt>
 <dd>
     メモリのアドレスを格納するための型。
-    RISC-Vで使用できるメモリ空間の幅はXLENなのでUIntXでもいいですが、アドレスであることを明示するために別名を定義しています。
+    RISC-Vで使用できるメモリ空間の幅はXLENなので<code class="inline-code">UIntX</code>でもいいですが、アドレスであることを明示するために別名を定義しています。
 </dd>
 </dl>
 
@@ -610,7 +610,7 @@ int main(int argc, char** argv) {
 <dt>CYCLE</dt>
 <dd>
 	何クロックで実行を終了するかを表す値<br />
-	0のときは終了しません。デフォルト値は0です。
+	0のときは終了しません。デフォルト値は<code class="inline-code">0</code>です。
 </dd>
 </dl>
 <p>Verilatorによるシミュレーションは、topモジュールのクロック信号を更新して、<code class="inline-code">eval</code>関数を呼び出すことにより実行します。プログラムでは、<code class="inline-code">clk</code>を反転させて<code class="inline-code">eval</code>するループの前に、topモジュールをリセット信号によりリセットする必要があります。そのため、topモジュールの<code class="inline-code">rst</code>を1にしてから<code class="inline-code">eval</code>を実行し、<code class="inline-code">rst</code>を0にしてまた<code class="inline-code">eval</code>を実行し、<code class="inline-code">rst</code>を1にもどしてから<code class="inline-code">clk</code>を反転しています。</p>
@@ -1200,7 +1200,7 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 7</span>
 <p>例えば<code class="inline-code">32'h01234567</code>は、<code class="inline-code">jalr x10, 18(x6)</code>という命令のビット列になります。命令の種類はJALRで、命令形式はI形式、即値は10進数で18です。デコード結果を確認すると、<code class="inline-code">itype</code>が<code class="inline-code">32'h0000010</code>、<code class="inline-code">imm</code>が<code class="inline-code">32'h00000012</code>になっており、正しくデコードできていることが確認できます。</p>
 
 <h2 class="numbox"><a id="h3-8"></a><span class="secno">3.8</span> レジスタの定義と読み込み</h2>
-<p>RV32Iには、32ビット幅のレジスタが32個用意されています。ただし、0番目のレジスタの値は常に0です。</p>
+<p>RV32Iには、32ビット幅のレジスタが32個用意されています。ただし、0番目のレジスタの値は常に<code class="inline-code">0</code>です。</p>
 
 <h3 class="none"><a id="h3-8-1"></a><span class="secno">3.8.1</span> レジスタファイルを定義する</h3>
 <p>coreモジュールにレジスタを定義します。レジスタの幅はXLEN(=32)ビットであるため、<code class="inline-code">UIntX</code>型のレジスタの配列を定義します。</p>
@@ -1531,7 +1531,7 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 6</span>
 <dt>addi x1, x0, 32</dt>
 <dd>
 	<code class="inline-code">op1</code>は0番目のレジスタの値です。
-	0番目のレジスタの値は常に0であるため、<code class="inline-code">32'h00000000</code>と表示されています。
+	0番目のレジスタの値は常に<code class="inline-code">0</code>であるため、<code class="inline-code">32'h00000000</code>と表示されています。
 	<code class="inline-code">op2</code>は即値です。
 	即値は32であるため、<code class="inline-code">32'h00000020</code>と表示されています。
 	ALUの計算結果として、0と32を足した結果<code class="inline-code">32'h00000020</code>が表示されています。
@@ -2161,7 +2161,7 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 13</span>
     }
 </pre>
 </div>
-<p><code class="inline-code">wmask</code>には、書き込む部分を1、書き込まない部分を0で指定します。このような挙動をする値を、書き込みマスクと呼びます。バイト単位で指定するため、<code class="inline-code">wmask</code>の幅は<code class="inline-code">DATA_WIDTH / 8</code>ビットです。</p>
+<p><code class="inline-code">wmask</code>には、書き込む部分を<code class="inline-code">1</code>、書き込まない部分を<code class="inline-code">0</code>で指定します。このような挙動をする値を、書き込みマスクと呼びます。バイト単位で指定するため、<code class="inline-code">wmask</code>の幅は<code class="inline-code">DATA_WIDTH / 8</code>ビットです。</p>
 <p>次に、memoryモジュールで書き込みマスクをサポートします(<span class="listref"><a href="./04-impl-rv32i.html#memory.veryl.lbhsbh">リスト3.74</a></span>)。</p>
 <div id="memory.veryl.lbhsbh" class="caption-code">
 <span class="caption">リスト3.74: リスト3.74: 書き込みマスクをサポートするmemoryモジュール (memory.veryl)</span>
