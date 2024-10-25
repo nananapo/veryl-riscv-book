@@ -143,7 +143,7 @@ module csrunit (
 
 csrunitモジュールの主要なポートの定義は@<table>{csrunit.port}のとおりです。
 
-//table[csrunit.port][csrunitのポート定義]{
+//table[csrunit.port][csrunitモジュールのポート定義]{
 ポート名	型			向き	意味
 -------------------------------------------------------------
 valid		logic		input	命令が供給されているかどうか
@@ -629,7 +629,7 @@ csrunitモジュールと接続します
 @<list>{core.veryl.create-ecall-range.inst}
 )。
 
-//list[core.veryl.create-ecall-range.reg][csrunitのポートの定義を変更する ① (core.veryl)]{
+//list[core.veryl.create-ecall-range.reg][csrunitモジュールのポートの定義を変更する ① (core.veryl)]{
 #@maprange(scripts/04a/create-ecall-range/core/src/core.veryl,reg)
     var csru_rdata      : UIntX;
     @<b>|var csru_raise_trap : logic;|
@@ -637,7 +637,7 @@ csrunitモジュールと接続します
 #@end
 //}
 
-//list[core.veryl.create-ecall-range.inst][csrunitのポートの定義を変更する ② (core.veryl)]{
+//list[core.veryl.create-ecall-range.inst][csrunitモジュールのポートの定義を変更する ② (core.veryl)]{
 #@maprange(scripts/04a/create-ecall-range/core/src/core.veryl,inst)
     inst csru: csrunit (
         clk                       ,

@@ -450,7 +450,7 @@ module core (
 }
 </pre>
 </div>
-<p>coreモジュールは、クロック信号,リセット信号,membus_ifインターフェースをポートに持ちます。membus_ifのジェネリックパラメータには、データ単位としてILEN(1つの命令のビット幅),アドレスの幅としてXLENを指定しています。</p>
+<p>coreモジュールは、クロック信号,リセット信号,membus_ifインターフェースをポートに持ちます。membus_ifインターフェースのジェネリックパラメータには、データ単位として<code class="inline-code">ILEN</code>(1つの命令のビット幅),アドレスの幅として<code class="inline-code">XLEN</code>を指定しています。</p>
 <p><code class="inline-code">if_pc</code>レジスタはPC(プログラムカウンタ)です。ここで<code class="inline-code">if_</code>というprefixはinstruction fetch(命令フェッチ)の略です。<code class="inline-code">if_is_requested</code>は現在フェッチ中かどうかを管理しており、フェッチ中のアドレスを<code class="inline-code">if_pc_requested</code>に格納しています。どのレジスタも<code class="inline-code">0</code>で初期化しています。</p>
 <p>always_combブロックでは、アドレス<code class="inline-code">if_pc</code>にあるデータを、常にメモリに要求しています。命令フェッチではメモリの読み込みしか行わないため、<code class="inline-code">membus.wen</code>は<code class="inline-code">0</code>にしています。</p>
 <p>上から1つめのalways_ffブロックでは、フェッチ中かどうか,メモリがready(要求を受け入れる)状態かどうかによって、<code class="inline-code">if_pc</code>,<code class="inline-code">if_is_requested</code>,<code class="inline-code">if_pc_requested</code>の値を変更しています。</p>
@@ -697,6 +697,7 @@ TOP_MODULE = top
 TB_PROGRAM = src/tb_verilator.cpp
 OBJ_DIR = obj_dir/
 SIM_NAME = sim
+VERILATOR_FLAGS = &quot;&quot;
 
 build:
         veryl fmt
@@ -707,7 +708,7 @@ clean:
         rm -rf $(OBJ_DIR)
 
 sim:
-        verilator --cc -f $(FILELIST) --exe $(TB_PROGRAM) --top-module $(PROJECT)_$(TOP_MODULE) --Mdir $(OBJ_DIR)
+        verilator --cc $(VERILATOR_FLAGS) -f $(FILELIST) --exe $(TB_PROGRAM) --top-module $(PROJECT)_$(TOP_MODULE) --Mdir $(OBJ_DIR)
         make -C $(OBJ_DIR) -f V$(PROJECT)_$(TOP_MODULE).mk
         mv $(OBJ_DIR)/V$(PROJECT)_$(TOP_MODULE) $(OBJ_DIR)/$(SIM_NAME)
 
@@ -737,7 +738,7 @@ $ <span class="userinput">make clean</span> <span class="balloon">← ビルド�
 <li>次の命令のフェッチ要求をメモリに送る</li>
 <li>命令がフェッチされ、命令の処理を開始する</li>
 </ol>
-<p>このとき、命令の処理が終わってから次の命令をフェッチするため、次々にフェッチするよりも多くのクロックサイクルが必要です。これはCPUの性能を露骨に悪化させるので許容できません。</p>
+<p>このとき、命令の処理が終わってから次の命令をフェッチするため、次々にフェッチするよりも多くのクロック数が必要です。これはCPUの性能を露骨に悪化させるので許容できません。</p>
 
 <h4><a id="h3-6-4-1"></a>FIFOの作成</h4>
 <p>そこで、<b>FIFO</b>(First In First Out, ファイフォ)を作成して、フェッチした命令を格納します。FIFOとは、先に入れたデータが先に出されるデータ構造のことです(<span class="imgref"><a href="./04-impl-rv32i.html#fifo">図3.2</a></span>)。命令をフェッチしたらFIFOに格納(enqueue)し、命令を処理するときにFIFOから取り出し(dequeue)ます。</p>
@@ -1151,7 +1152,7 @@ module inst_decoder (
 <h3 class="none"><a id="h3-7-3"></a><span class="secno">3.7.3</span> デコーダをインスタンス化する</h3>
 <p>inst_decoderモジュールを、<code class="inline-code">core</code>モジュールでインスタンス化します(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.id-range.inst">リスト3.34</a></span>)。</p>
 <div id="core.veryl.id-range.inst" class="caption-code">
-<span class="caption">リスト3.34: リスト3.34: inst_decoderのインスタンス化 (core.veryl)</span>
+<span class="caption">リスト3.34: リスト3.34: inst_decoderモジュールのインスタンス化 (core.veryl)</span>
 <pre class="list language-inst">    let inst_pc  : Addr     = if_fifo_rdata.addr;
     let inst_bits: Inst     = if_fifo_rdata.bits;
     var inst_ctrl: InstCtrl;
@@ -1819,7 +1820,7 @@ module memunit (
 <div id="core.veryl.lwsw-range.valid_new" class="caption-code">
 <span class="caption">リスト3.54: リスト3.54: inst_valid, inst_is_newの定義 (core.veryl)</span>
 <pre class="list language-valid_new">    let inst_valid : logic    = if_fifo_rvalid;
-    var inst_is_new: logic   ; // 命令が今のクロックで供給されたかどうか
+    var inst_is_new: logic   ; // 命令が現在のクロックで供給されたかどうか
 </pre>
 </div>
 <p>次に、<code class="inline-code">inst_is_new</code>の値を更新します(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.lwsw-range.new_ff">リスト3.55</a></span>)。命令が現在のクロックで供給されたかどうかは、FIFOの<code class="inline-code">rvalid</code>, <code class="inline-code">rready</code>を観測することでわかります。<code class="inline-code">rvalid</code>が<code class="inline-code">1</code>のとき、<code class="inline-code">rready</code>が<code class="inline-code">1</code>なら、次のクロックで供給される命令は新しく供給される命令です。<code class="inline-code">rready</code>が<code class="inline-code">0</code>なら、次のクロックで供給されている命令は現在のクロックと同じ命令になります。<code class="inline-code">rvalid</code>が<code class="inline-code">0</code>のとき、次のクロックで供給される命令は常に新しく供給される命令になります。(次のクロックで<code class="inline-code">rvalid</code>が<code class="inline-code">1</code>かどうかについては考えません)</p>
@@ -1925,7 +1926,7 @@ module memunit (
     );
 </pre>
 </div>
-<p>memoryモジュールとmemunitを接続する準備が整ったので、memunitモジュールをインスタンス化します(<span class="listref"><a href="./04-impl-rv32i.html#top.veryl.lwsw-range.inst">リスト3.60</a></span>)。</p>
+<p>memoryモジュールとmemunitモジュールを接続する準備が整ったので、memunitモジュールをインスタンス化します(<span class="listref"><a href="./04-impl-rv32i.html#top.veryl.lwsw-range.inst">リスト3.60</a></span>)。</p>
 <div id="top.veryl.lwsw-range.inst" class="caption-code">
 <span class="caption">リスト3.60: リスト3.60: memunitモジュールのインスタンス化 (core.veryl)</span>
 <pre class="list language-inst">    var memu_rdata: UIntX;
@@ -2581,7 +2582,7 @@ module brunit (
 <p>brunitモジュールは、<code class="inline-code">funct3</code>に応じて<code class="inline-code">take</code>の条件を切り替えます。分岐が成立するとき、<code class="inline-code">take</code>は<code class="inline-code">1</code>になるようにします。</p>
 <p>brunitモジュールを、coreモジュールでインスタンス化します(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.br-range.inst">リスト3.92</a></span>)。命令がB形式のとき、<code class="inline-code">op1</code>は<code class="inline-code">rs1_data</code>、<code class="inline-code">op2</code>は<code class="inline-code">rs2_data</code>になっていることを確認してください(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.alu-range.data">リスト3.44</a></span>)。</p>
 <div id="core.veryl.br-range.inst" class="caption-code">
-<span class="caption">リスト3.92: リスト3.92: brunitのインスタンス化 (core.veryl)</span>
+<span class="caption">リスト3.92: リスト3.92: brunitモジュールのインスタンス化 (core.veryl)</span>
 <pre class="list language-inst">    var brunit_take: logic;
 
     inst bru: brunit (

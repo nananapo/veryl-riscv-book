@@ -70,7 +70,9 @@ CPIを減らすか、
 
 ==== CPIに注目する
 
-CPIを減らすために1クロックの計算量を増やすと、
+CPIを減らすためには、
+例えばどの命令も1クロックで実行するようにしてしまうという方法が考えられます。
+しかし、そのために論理回路を大きくすると、
 その分クリティカルパスが長くなってしまう場合があります。
 また、1クロックに1命令しか実行しない場合、
 どう頑張ってもCPIは1より小さくなりません。
@@ -80,7 +82,7 @@ CPIをより効果的に減らすためには、
 1つ以上の命令を実行完了すればいいです。
 これを実現する手法として、
 スーパースカラやアウトオブオーダー実行が存在します。
-これらの手法は後の章で解説, 実装します。
+これらの手法はずっと後の章で解説, 実装します。
 
 ==== クロック周波数に注目する
 
@@ -102,7 +104,7 @@ ALUで足し算を実行し、
 クロック周波数を増大させるもっとも単純な方法は、
 命令の処理をいくつかの@<b>{ステージ(段)}に分割し、
 複数クロックで1つの命令を実行することです。
-複数のサイクルで命令を実行することから、
+複数のクロック・サイクルで命令を実行することから、
 この形式のCPUは@<b>{マルチサイクル}CPUと呼びます。
 
 //image[multicycle][命令の実行 (マルチサイクル)]
@@ -123,15 +125,14 @@ CPU時間が増えてしまいそうです。
 //footnote[multicycle.clock][実際のところは均等に分割することはできないため、Nステージに分割してもクロック周波数はN分の1になりません]
 
 しかし、CPIがステージ分だけ増大してしまうのは問題です。
-これは、命令の処理を車の組立のように流れ作業で行うことで緩和することができます。
+この問題は、命令の処理を、まるで車の組立のように流れ作業で行うことで緩和することができます。
 このような処理のことを、@<b>{パイプライン処理}と呼びます
 (@<img>{pipeline})。
 
 //image[pipeline][命令の実行 (パイプライン処理)]
 
 本章では、
-CPUをパイプライン化することで、
-性能の向上を図ります。
+CPUをパイプライン化することで性能の向上を図ります。
 
 === パイプライン処理のステージについて考える
 
@@ -166,15 +167,17 @@ CPUをパイプライン化することで、
  : MEM (MEMory) ステージ (5, 7)
     メモリにアクセスする命令とCSR命令を処理します。@<br>{}
     分岐命令かつ分岐が成立する, ジャンプ命令である, またはトラップが発生するとき、
-    IF, ID, EXステージにある命令をフラッシュして、ジャンプ先をIFステージに伝えます。
+    IF, ID, EXステージにある命令を無効化して、ジャンプ先をIFステージに伝えます。
     メモリ, CSRの読み込み結果等をWBステージに渡します。
 
  : WB (WriteBack) ステージ (6)
     ALUの演算結果, メモリやCSRの読み込み結果など、命令の処理結果をレジスタに書き込みます。
 
-MEMステージではジャンプするときにIF, ID, EXステージにある命令をフラッシュ(無効化)します。
+MEMステージではジャンプするときにIF, ID, EXステージにある命令を無効化します。
 これは、IF, ID, EXステージにある命令は、
 ジャンプによって実行されない命令になるためです。
+パイプラインのステージにある命令を無効化することを、
+パイプラインを@<b>{フラッシュ}(flush)すると呼びます。
 
 IF, ID, EX, MEM, WBの5段の構成を、
 @<b>{5段パイプライン}(Five Stage Pipeline)と呼ぶことがあります。
@@ -209,7 +212,7 @@ MEMステージ以降でCSRを処理することでもこの事態を回避で�
 パイプライン処理では、
 複数のステージがそれぞれ違う命令を処理します。
 そのため、それぞれのステージのために、
-現在処理している命令を保持するためのレジスタ(@<b>{パイプラインレジスタ})を用意してあげる必要があります。
+現在処理している命令を保持するためのレジスタ(@<b>{パイプラインレジスタ})を用意する必要があります。
 
 //image[pipeline_reg][パイプライン処理の概略図]
 
@@ -232,7 +235,7 @@ IFステージの次はIDステージであるため、
 //list[core.veryl.ifs-range.ifs][変数名を変更する (core.veryl)]{
 #@maprange(scripts/05a/ifs-range/core/src/core.veryl,ifs)
     let ids_valid    : logic    = if_fifo_rvalid;
-    var ids_is_new   : logic   ; // 命令が今のクロックで供給されたかどうか
+    var ids_is_new   : logic   ; // 命令が現在のクロックで供給されたかどうか
     let ids_pc       : Addr     = if_fifo_rdata.addr;
     let ids_inst_bits: Inst     = if_fifo_rdata.bits;
     var ids_ctrl     : InstCtrl;
@@ -334,12 +337,42 @@ WBステージでは、
 
 ==== FIFOのインスタンス化
 
-FIFOをインスタンス化します。
+FIFOと接続するための変数を定義し、FIFOをインスタンス化します
+(@<list>{fifo.vars}, @<list>{fifo.inst})。
 @<code>{DATA_TYPE}パラメータには、先ほど作成した構造体を設定します。
 FIFOのデータの個数は1であるため、@<code>{WIDTH}パラメータには@<code>{1}を設定します@<fn>{fifo.width}。
 @<code>{mem_wb_fifo}の@<code>{flush}が@<code>{0}になっていることに注意してください。
 
 //footnote[fifo.width][FIFOのデータ個数は2 ** WIDTH - 1です]
+
+//list[fifo.vars][FIFOと接続するための変数を定義する (core.veryl)]{
+#@maprange(scripts/05a/create-fifo-range/core/src/core.veryl,var)
+    // ID -> EXのFIFO
+    var exq_wready: logic   ;
+    var exq_wvalid: logic   ;
+    var exq_wdata : exq_type;
+    var exq_rready: logic   ;
+    var exq_rvalid: logic   ;
+    var exq_rdata : exq_type;
+
+    // EX -> MEMのFIFO
+    var memq_wready: logic    ;
+    var memq_wvalid: logic    ;
+    var memq_wdata : memq_type;
+    var memq_rready: logic    ;
+    var memq_rvalid: logic    ;
+    var memq_rdata : memq_type;
+
+    // MEM -> WBのFIFO
+    var wbq_wready: logic   ;
+    var wbq_wvalid: logic   ;
+    var wbq_wdata : wbq_type;
+    var wbq_rready: logic   ;
+    var wbq_rvalid: logic   ;
+    var wbq_rdata : wbq_type;
+#@end
+//}
+
 
 //list[fifo.inst][FIFOのインスタンス化 (core.veryl)]{
 #@maprange(scripts/05a/create-fifo-range/core/src/core.veryl,fifos)
@@ -443,7 +476,7 @@ IDステージを完了してEXステージに処理を進めることができ�
 この仕組みは、
 @<code>{if_fifo_rready}に@<code>{exq_wready}を割り当てることで実現できます。
 
-最後に、命令が今のクロックで供給されたかどうかを示す変数@<code>{id_is_new}は必要ないため削除します
+最後に、命令が現在のクロックで供給されたかどうかを示す変数@<code>{id_is_new}は必要ないため削除します
 (@<list>{id_is_new})。
 
 //list[id_is_new][id_is_newを削除する (core.veryl)]{
@@ -474,7 +507,7 @@ EXステージでは、
 変数の名前に@<code>{exs_}をつけます
 (@<list>{ex_prefix})。
 
-//list[ex_prefix][変数名の変更対応 (core.veryl)]{
+//list[ex_prefix][変数名を変更する (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,ex_prefix)
     // レジスタ番号
     let @<b>|exs_|rs1_addr: logic<5> = @<b>|exs|_inst_bits[19:15];
@@ -585,15 +618,14 @@ MEMステージでは、メモリにアクセスする命令とCSR命令を処�
 また、ジャンプ命令, 分岐命令かつ分岐が成立, またはトラップが発生する時、
 次に実行する命令のアドレスを変更します。
 
-MEMステージではメモリにアクセスする命令を処理します。
-メモリにアクセスしているとき、
-新しくEXステージからMEMステージに命令の処理を進めることはできず、
+ロードストア命令でメモリにアクセスしているとき、
+EXステージからMEMステージに別の命令の処理を進めることはできず、
 パイプライン処理は止まってしまいます。
 パイプライン処理を進めることができない状態のことを@<b>{パイプラインハザード}(pipeline hazard)と呼びます。
 
 まず、MEMステージに存在する命令の情報を@<code>{memq_rdata}から取り出します(@<list>{var_mem})。
 MEMステージでは、csrunitモジュールに、
-命令が今のクロックでMEMステージに供給されたかどうかの情報を渡す必要があります。
+命令が現在のクロックでMEMステージに供給されたかどうかの情報を渡す必要があります。
 そのため、変数@<code>{mem_is_new}を定義しています。
 
 //list[var_mem][変数の定義 (core.veryl)]{
@@ -608,7 +640,7 @@ MEMステージでは、csrunitモジュールに、
 //}
 
 @<code>{mem_is_new}には、
-もともと@<code>{id_is_new}の更新に利用していた仕組みを利用します(@<list>{mem_is_new})。
+もともと@<code>{id_is_new}の更新に利用していたコードを利用します(@<list>{mem_is_new})。
 
 //list[mem_is_new][mem_is_newの更新 (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,mem_is_new)
@@ -627,9 +659,10 @@ MEMステージでは、csrunitモジュールに、
 //}
 
 次に、MEMモジュールで使う変数に合わせて、
-ポートなどに割り当てている変数名を変更します(@<list>{mem_prefix2})。
+memunitモジュールとcsrunitモジュールのポートに割り当てている変数名を変更します
+(@<list>{mem_prefix2})。
 
-//list[mem_prefix2][変数名の変更対応 (core.veryl)]{
+//list[mem_prefix2][変数名を変更する (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,mem_prefix2)
     var memu_rdata: UIntX;
     var memu_stall: logic;
@@ -676,7 +709,7 @@ MEMステージでは、csrunitモジュールに、
 EXステージで計算したデータとCSRステージのトラップ情報を利用するようにします
 (@<list>{mem_prefix1})。
 
-//list[mem_prefix1][ジャンプ判定処理 (core.veryl)]{
+//list[mem_prefix1][ジャンプの判定処理 (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,mem_prefix1)
     assign control_hazard         = @<b>|mems|_valid && (csru_raise_trap || @<b>|mems|_ctrl.is_jump || @<b>|memq_rdata.|br_taken);
     assign control_hazard_pc_next = if csru_raise_trap {
@@ -687,6 +720,7 @@ EXステージで計算したデータとCSRステージのトラップ情報を
 #@end
 //}
 
+ジャンプ命令の後ろの余計な命令を実行しないために、
 @<code>{control_hazard}が@<code>{1}になったとき、
 ID, EX, MEMステージに命令を供給するFIFOをフラッシュします。
 @<code>{control_hazard}が@<code>{1}になるとき、
@@ -696,6 +730,8 @@ MEMステージの処理は完了しています。
 MEMステージにある命令は必ずWBステージに移動します。
 
 最後に、WBステージに命令とデータを渡します(@<list>{always_comb_mem})。
+WBステージにデータを渡すために、
+@<code>{wbq_wdata}にデータを割り当てます
 
 //list[always_comb_mem][WBステージにデータを渡す (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,always_comb_mem)
@@ -715,17 +751,17 @@ MEMステージにある命令は必ずWBステージに移動します。
 //}
 
 MEMステージにある命令は、
-memunitが処理中ではなく(@<code>{!memy_stall})、
+memunitモジュールが処理中ではなく(@<code>{!memy_stall})、
 WBステージが命令を受け付けることができるとき(@<code>{wbq_wready})、
 MEMステージを完了してWBステージに処理を進めることができます。
 この仕組みについては、@<code>{memq_rready}と@<code>{wbq_wvalid}を確認してください。
 
 === WBステージを実装する
 
-WBステージでは、命令の結果をレジスタに書き込みます。
+WBステージでは、命令の結果をレジスタにライトバックします。
 WBステージが完了したら命令の処理は終わりなので、命令を破棄します。
 
-まず、MEMステージに存在する命令の情報を@<code>{wbq_rdata}から取り出します
+まず、WBステージに存在する命令の情報を@<code>{wbq_rdata}から取り出します
 (@<list>{var_wb})。
 
 //list[var_wb][変数の定義 (core.veryl)]{
@@ -742,7 +778,7 @@ WBステージが完了したら命令の処理は終わりなので、命令を
 変数の名前には@<code>{wbs_}をつけます
 (@<list>{wb_prefix})。
 
-//list[wb_prefix][変数名の変更対応 (core.veryl)]{
+//list[wb_prefix][変数名を変更する (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,wb_prefix)
     let @<b>|wbs_|rd_addr: logic<5> = @<b>|wbs|_inst_bits[11:7];
     let @<b>|wbs_|wb_data: UIntX    = if @<b>|wbs|_ctrl.is_lui {
@@ -790,7 +826,7 @@ WBステージの次のステージを待つ必要もありません。
 
 @<list>{debug}のように、デバッグ表示のalways_ffブロックを変更します。
 
-//list[debug][各ステージの情報を表示する (core.veryl)]{
+//list[debug][各ステージの情報をデバッグ表示する (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,debug)
     ///////////////////////////////// DEBUG /////////////////////////////////
     var clock_count: u64;
@@ -874,9 +910,9 @@ Test Result : 0 / 1
 正しく命令を実行することができません。
 例えば、@<list>{dh.example}のようなプログラムは正しく動きません。
 @<code>{test/sample_datahazard.hex}として保存します
-(@<list>{dh.example}, @<list>{dh.test})。
+(@<list>{dh.example})。
 
-//list[dh.example][正しく動かないプログラムの例 (test/sample_datahazard.hex)]{
+//list[dh.example][sample_datahazard.hex]{
 #@mapfile(scripts/05a/datahazard/core/test/sample_datahazard.hex)
 0010811300100093 // 0:addi x1, x0, 1    4: addi x2, x1, 1
 #@end
@@ -884,7 +920,7 @@ Test Result : 0 / 1
 
 このプログラムでは、
 x1にx0 + 1を代入した後、x2にx1 + 1を代入します。
-シミュレータを実行し、どのように実行されるかを確かめます。
+シミュレータを実行し、どのように実行されるかを確かめます(@<list>{dh.test})。
 
 //terminal[dh.test][sample_datahazard.hexを実行する]{
 $ @<userinput>{make build}
@@ -923,7 +959,7 @@ MEM -----
 アドレス4の命令でx1を読み込むときにx1は0になっています。
 
 この問題は、
-アドレス0の命令の結果がレジスタファイルに書き込まれていないのに、
+まだアドレス0の命令の結果がレジスタファイルに書き込まれていないのに、
 アドレス4の命令でレジスタファイルで結果を読み出しているために発生しています。
 
 === データ依存とは何か？
@@ -939,10 +975,11 @@ MEM -----
 
 === データ依存に対処する
 
+レジスタのデータを読み出すのはEXステージです。
 データ依存に対処するために、
 データ依存関係があるときにEXステージをストールさせます。
 
-まず、MEMとEXかWBとEXステージにある命令の間にデータ依存があることを検知します
+まず、MEMとEXか、WBとEXステージにある命令の間にデータ依存があることを検知します
 (@<list>{core.veryl.datahazard-range.hazard})。
 例えばMEMステージとデータ依存の関係にあるとき、
 MEMステージの命令はライトバックする命令で、
@@ -991,7 +1028,11 @@ EXステージのFIFOの@<code>{rready}とMEMステージの@<code>{wvalid}に�
 
 @<code>{test/sample_datahazard.hex}が正しく動くことを確認します。
 
-//terminal[dh.test.successful][test/sample_datahazard.hexが正しく動くことを確認する]{
+//terminal[dh.test.successful][sample_datahazard.hexが正しく動くことを確認する]{
+$ @<userinput>{make build}
+$ @<userinput>{make sim}
+$ @<userinput>{./obj_dir/sim test/sample_datahazard.hex 7}
+...
 #                    5
 ...
 ID ------

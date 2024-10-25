@@ -509,9 +509,9 @@ coreモジュールは、
 クロック信号,
 リセット信号,
 membus_ifインターフェースをポートに持ちます。
-membus_ifのジェネリックパラメータには、
-データ単位としてILEN(1つの命令のビット幅),
-アドレスの幅としてXLENを指定しています。
+membus_ifインターフェースのジェネリックパラメータには、
+データ単位として@<code>{ILEN}(1つの命令のビット幅),
+アドレスの幅として@<code>{XLEN}を指定しています。
 
 @<code>{if_pc}レジスタはPC(プログラムカウンタ)です。
 ここで@<code>{if_}というprefixはinstruction fetch(命令フェッチ)の略です。
@@ -850,6 +850,7 @@ TOP_MODULE = top
 TB_PROGRAM = src/tb_verilator.cpp
 OBJ_DIR = obj_dir/
 SIM_NAME = sim
+VERILATOR_FLAGS = ""
 
 build:
         veryl fmt
@@ -860,7 +861,7 @@ clean:
         rm -rf $(OBJ_DIR)
 
 sim:
-        verilator --cc -f $(FILELIST) --exe $(TB_PROGRAM) --top-module $(PROJECT)_$(TOP_MODULE) --Mdir $(OBJ_DIR)
+        verilator --cc $(VERILATOR_FLAGS) -f $(FILELIST) --exe $(TB_PROGRAM) --top-module $(PROJECT)_$(TOP_MODULE) --Mdir $(OBJ_DIR)
         make -C $(OBJ_DIR) -f V$(PROJECT)_$(TOP_MODULE).mk
         mv $(OBJ_DIR)/V$(PROJECT)_$(TOP_MODULE) $(OBJ_DIR)/$(SIM_NAME)
 
@@ -899,7 +900,7 @@ $ @<userinput>{make clean} @<balloon>{ビルドした成果物の削除}
 
 このとき、
 命令の処理が終わってから次の命令をフェッチするため、
-次々にフェッチするよりも多くのクロックサイクルが必要です。
+次々にフェッチするよりも多くのクロック数が必要です。
 これはCPUの性能を露骨に悪化させるので許容できません。
 
 ==== FIFOの作成
@@ -1400,7 +1401,7 @@ opcodeが@<code>{OP_OP_IMM}(OP-IMM)のとき、
 inst_decoderモジュールを、
 @<code>{core}モジュールでインスタンス化します(@<list>{core.veryl.id-range.inst})。
 
-//list[core.veryl.id-range.inst][inst_decoderのインスタンス化 (core.veryl)]{
+//list[core.veryl.id-range.inst][inst_decoderモジュールのインスタンス化 (core.veryl)]{
 #@maprange(scripts/04/id-range/core/src/core.veryl,inst)
     let inst_pc  : Addr     = if_fifo_rdata.addr;
     let inst_bits: Inst     = if_fifo_rdata.bits;
@@ -2210,7 +2211,7 @@ coreモジュール内にmemunitモジュールをインスタンス化します
 //list[core.veryl.lwsw-range.valid_new][inst_valid, inst_is_newの定義 (core.veryl)]{
 #@maprange(scripts/04/lwsw-range/core/src/core.veryl,valid_new)
     let inst_valid : logic    = if_fifo_rvalid;
-    var inst_is_new: logic   ; // 命令が今のクロックで供給されたかどうか
+    var inst_is_new: logic   ; // 命令が現在のクロックで供給されたかどうか
 #@end
 //}
 
@@ -2350,7 +2351,7 @@ coreモジュールとの接続を次のように変更します(@<list>{top.ver
 #@end
 //}
 
-memoryモジュールとmemunitを接続する準備が整ったので、memunitモジュールをインスタンス化します(@<list>{top.veryl.lwsw-range.inst})。
+memoryモジュールとmemunitモジュールを接続する準備が整ったので、memunitモジュールをインスタンス化します(@<list>{top.veryl.lwsw-range.inst})。
 
 //list[top.veryl.lwsw-range.inst][memunitモジュールのインスタンス化 (core.veryl)]{
 #@maprange(scripts/04/lwsw-range/core/src/core.veryl,inst)
@@ -3172,7 +3173,7 @@ coreモジュールでインスタンス化します(@<list>{core.veryl.br-range
 @<code>{op1}は@<code>{rs1_data}、
 @<code>{op2}は@<code>{rs2_data}になっていることを確認してください(@<list>{core.veryl.alu-range.data})。
 
-//list[core.veryl.br-range.inst][brunitのインスタンス化 (core.veryl)]{
+//list[core.veryl.br-range.inst][brunitモジュールのインスタンス化 (core.veryl)]{
 #@maprange(scripts/04/br-range/core/src/core.veryl,inst)
     var brunit_take: logic;
 
