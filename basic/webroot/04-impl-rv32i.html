@@ -665,11 +665,11 @@ cafebebe
 <p class="caption">表3.2: sample.hexによって設定されるメモリの初期値</p>
 <table>
 <tr class="hline"><th>アドレス</th><th>値</th></tr>
-<tr class="hline"><td>32'h00000000</td><td>01234567</td></tr>
-<tr class="hline"><td>32'h00000004</td><td>89abcdef</td></tr>
-<tr class="hline"><td>32'h00000008</td><td>deadbeef</td></tr>
-<tr class="hline"><td>32'h0000000c</td><td>cafebebe</td></tr>
-<tr class="hline"><td>32'h00000010～</td><td>不定</td></tr>
+<tr class="hline"><td>0x00000000</td><td>    01234567</td></tr>
+<tr class="hline"><td>0x00000004</td><td>    89abcdef</td></tr>
+<tr class="hline"><td>0x00000008</td><td>    deadbeef</td></tr>
+<tr class="hline"><td>0x0000000c</td><td>    cafebebe</td></tr>
+<tr class="hline"><td>0x00000010～</td><td>不定</td></tr>
 </table>
 </div>
 
@@ -1489,9 +1489,9 @@ module alu (
 <p class="caption">表3.5: 命令の意味</p>
 <table>
 <tr class="hline"><th>アドレス</th><th>命令</th><th>命令形式</th><th>意味</th></tr>
-<tr class="hline"><td>32'h00000000</td><td>addi x1, x0, 32</td><td>I形式</td><td>x1 = x0 + 32</td></tr>
-<tr class="hline"><td>32'h00000004</td><td>auipc x2, 256</td><td>U形式</td><td>x2 = pc + 256</td></tr>
-<tr class="hline"><td>32'h00000008</td><td>add x3, x1, x2</td><td>R形式</td><td>x3 = x1 + x2</td></tr>
+<tr class="hline"><td>0x00000000</td><td>addi x1, x0, 32</td><td>I形式</td><td>x1 = x0 + 32</td></tr>
+<tr class="hline"><td>0x00000004</td><td>auipc x2, 256</td><td>U形式</td><td>x2 = pc + 256</td></tr>
+<tr class="hline"><td>0x00000008</td><td>add x3, x1, x2</td><td>R形式</td><td>x3 = x1 + x2</td></tr>
 </table>
 </div>
 <p>シミュレータを実行し、結果を確かめます(<span class="listref"><a href="./04-impl-rv32i.html#alu.debug">リスト3.48</a></span>)。</p>
@@ -1539,7 +1539,7 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 6</span>
 <dt>auipc x2, 256</dt>
 <dd>
 	<code class="inline-code">op1</code>はPCです。
-	<code class="inline-code">op1</code>には、命令のアドレス<code class="inline-code">32'h00000004</code>が表示されています。
+	<code class="inline-code">op1</code>には、命令のアドレス<code class="inline-code">0x00000004</code>が表示されています。
 	<code class="inline-code">op2</code>は即値です。
 	256を12bit左にシフトした値<code class="inline-code">32'h00100000</code>が表示されています。
 	ALUの計算結果として、これを足した結果<code class="inline-code">32'h00100004</code>が表示されています。
@@ -2031,13 +2031,13 @@ deadbeef // 0x20
 <p class="caption">表3.8: メモリに格納する命令</p>
 <table>
 <tr class="hline"><th>アドレス</th><th>命令</th><th>意味</th></tr>
-<tr class="hline"><td>32'h00000000</td><td>lw x10, 0x20(x0)</td><td>x10に、アドレスが0x20のデータを読み込む</td></tr>
-<tr class="hline"><td>32'h00000004</td><td>addi x11, x0, 0x400</td><td>x11 = 0x400</td></tr>
-<tr class="hline"><td>32'h00000008</td><td>sw x11, 0x20(x0)</td><td>アドレス0x20にx11の値を書き込む</td></tr>
-<tr class="hline"><td>32'h0000000c</td><td>lw x12, 0x20(x0)</td><td>x12に、アドレスが0x20のデータを読み込む</td></tr>
+<tr class="hline"><td>0x00000000</td><td>lw x10, 0x20(x0)</td><td>x10に、アドレスが0x20のデータを読み込む</td></tr>
+<tr class="hline"><td>0x00000004</td><td>addi x11, x0, 0x400</td><td>x11 = 0x400</td></tr>
+<tr class="hline"><td>0x00000008</td><td>sw x11, 0x20(x0)</td><td>アドレス0x20にx11の値を書き込む</td></tr>
+<tr class="hline"><td>0x0000000c</td><td>lw x12, 0x20(x0)</td><td>x12に、アドレスが0x20のデータを読み込む</td></tr>
 </table>
 </div>
-<p>アドレス<code class="inline-code">32'h00000020</code>には、データ<code class="inline-code">32'hdeadbeef</code>を格納しています。1つ目の命令で<code class="inline-code">32'hdeadbeef</code>が読み込まれ、3つ目の命令で<code class="inline-code">32'h00000400</code>を書き込み、4つ目の命令で<code class="inline-code">32'h00000400</code>が読み込まれます。</p>
+<p>アドレス<code class="inline-code">0x00000020</code>には、データ<code class="inline-code">32'hdeadbeef</code>を格納しています。1つ目の命令で<code class="inline-code">32'hdeadbeef</code>が読み込まれ、3つ目の命令で<code class="inline-code">32'h00000400</code>を書き込み、4つ目の命令で<code class="inline-code">32'h00000400</code>が読み込まれます。</p>
 <p>シミュレータを実行し、結果を確かめます(<span class="listref"><a href="./04-impl-rv32i.html#lwsw.test">リスト3.68</a></span>)。</p>
 <div id="lwsw.test" class="cmd-code">
 <span class="caption">リスト3.68: リスト3.68: LW, SW命令のテスト</span>

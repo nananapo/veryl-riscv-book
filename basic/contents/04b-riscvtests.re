@@ -1,22 +1,24 @@
 = riscv-testsによるテスト
 
 @<chap>{04-impl-rv32i}では、RV32IのCPUを実装しました。
-簡単なテストを作成して操作を確かめましたが、
+簡単なテストを作成して動作を確かめましたが、
 まだテストできていない命令が複数あります。
 そこで、riscv-testsというテストを利用することで、
 CPUがある程度正しく動いているらしいことを確かめます。
 
 == riscv-testsとは何か?
 
-riscv-testsは、
-GitHubの@<href>{https://github.com/riscv-software-src/riscv-tests, riscv-software-src/riscv-tests}
-からソースコードをダウンロードすることができます。
-
 riscv-testsは、RISC-Vのプロセッサ向けのユニットテストやベンチマークの集合です。
 命令や機能ごとにテストが用意されており、
 これを利用することで簡単に実装を確かめることができます。
 すべての命令のすべての場合を網羅するようなテストではないため、
-riscv-testsをパスしても、確実に実装が正しいとは言えないことに注意してください。
+riscv-testsをパスしても、確実に実装が正しいとは言えないことに注意してください(@<fn>{about.formal})。
+
+//footnote[about.formal][実装の正しさを完全に確かめるには形式的検証(formal verification)を行う必要があります]
+
+riscv-testsは、
+GitHubの@<href>{https://github.com/riscv-software-src/riscv-tests, riscv-software-src/riscv-tests}
+からソースコードをダウンロードすることができます。
 
 == riscv-testsのビルド
 
@@ -24,7 +26,7 @@ riscv-testsをパスしても、確実に実装が正しいとは言えないこ
 @<href>{https://github.com/nananapo/riscv-tests-bin/tree/bin4}
 
 完成品を上記のURLにおいておきます。
-core/test以下にコピーしてください。
+core/testにコピーしてください。
 //}
 
 === riscv-testsをビルドする
@@ -70,13 +72,12 @@ core/testにshareディレクトリが作成されます。
 
 riscv-testsをビルドすることができましたが、
 これは@<code>{$readmemh}システムタスクで読み込める形式(以降HEX形式と呼びます)ではありません。
-
-CPUでテストを実行できるように、
+これをCPUでテストを実行できるように、
 ビルドしたテストのバイナリファイルをHEX形式に変換します。
 
 まず、バイナリファイルをHEX形式に変換するPythonプログラム@<code>{test/bin2hex.py}を作成します(@<list>{bin2hex.py})。
 
-//list[bin2hex.py][core/test/bin2hex.py]{
+//list[bin2hex.py][test/bin2hex.py]{
 #@mapfile(scripts/04b/bin2hex/core/test/bin2hex.py)
 import sys
 
@@ -127,16 +128,18 @@ print("\n".join(results))
 16進数のテキストで出力します。
 
 HEXファイルに変換する前に、ビルドした成果物を確認する必要があります。
-例えば@<code>{test/share/riscv-tests/isa/rv32ui-p-add}はELFファイルです。
+例えば@<code>{test/share/riscv-tests/isa/rv32ui-p-add}はELFファイル@<fn>{what.is.elf}です。
 CPUはELFを直接に実行する機能を持っていないため、
 @<code>{riscv64-unknown-elf-objcopy}を利用して、
 ELFファイルを余計な情報を取り除いたバイナリファイルに変換します(@<list>{elf.bin})。
 
-//terminal[elf.bin][ELFファイルを変換する]{
+//footnote[what.is.elf][ELF(Executable and Linkable Format)とは実行可能ファイルの形式です]
+
+//terminal[elf.bin][ELFファイルをバイナリファイルに変換する]{
 $ @<userinput>{find share/ -type f -not -name "*.dump" -exec riscv32-unknown-elf-objcopy -O binary {\} {\}.bin \;}
 //}
 
-最後に、objcopyで生成されたbinファイルを、
+最後に、objcopyで生成されたバイナリファイルを、
 PythonプログラムでHEXファイルに変換します(@<list>{bin.hex})。
 
 //terminal[bin.hex][バイナリファイルをHEXファイルに変換する]{
@@ -148,7 +151,7 @@ $ @<userinput>{find share/ -type f -name "*.bin" -exec sh -c "python3 bin2hex.py
 riscv-testsには複数のテストが用意されていますが、
 本章では、名前が@<code>{rv32ui-p-}から始まるRV32I向けのテストを利用します。
 
-例えば、ADD命令のテストである@<code>{rv32ui-p-add.dump}を読んでみます。
+例えば、ADD命令のテストである@<code>{test/share/riscv-tests/isa/rv32ui-p-add.dump}を読んでみます。
 @<code>{rv32ui-p-add.dump}は、@<code>{rv32ui-p-add}のダンプファイルです。
 
 //list[rv32ui-p-add.dump][rv32ui-p-add.dump]{
@@ -173,16 +176,16 @@ Disassembly of section .text.init:
   50:	00000093          	li	ra,0
  ... 	@<balloon>{レジスタ値のゼロ初期化}
   c8:	00000f93          	li	t6,0
- ...	@<balloon>{↓mtvecにtrap_vectorのアドレスを書き込む}
+ ...	
  130:	00000297          	auipc	t0,0x0
  134:	ed428293          	addi	t0,t0,-300 # 4 <trap_vector>
- 138:	30529073          	csrw	mtvec,t0
- ...	@<balloon>{↓mepcにtest_2のアドレスを書き込む}
+ 138:	30529073          	csrw	mtvec,t0 @<balloon>{mtvecにtrap_vectorのアドレスを書き込む}
+ ...	
  178:	00000297          	auipc	t0,0x0
  17c:	01428293          	addi	t0,t0,20 # 18c <test_2>
- 180:	34129073          	csrw	mepc,t0
- ...	@<balloon>{↓mretを実行し、mepcのアドレス=test_2にジャンプする}
- 188:	30200073          	mret
+ 180:	34129073          	csrw	mepc,t0 @<balloon>{mepcにtest_2のアドレスを書き込む}
+ ...	
+ 188:	30200073          	mret @<balloon>{mepcのアドレス=test_2にジャンプする}
 
 0000018c <test_2>: @<balloon>{0 + 0 = 0のテスト}
  18c:	00200193          	li	gp,2 @<balloon>{gp = 2}
@@ -193,9 +196,9 @@ Disassembly of section .text.init:
  1a0:	4c771663          	bne	a4,t2,66c <fail>
  ...
 0000066c <fail>: @<balloon>{失敗したときのジャンプ先}
- ... @<balloon>{↓gpを1以外の値にする}
- 674:	00119193          	sll	gp,gp,0x1
- 678:	0011e193          	or	gp,gp,1
+ ...
+ 674:	00119193          	sll	gp,gp,0x1 @<balloon>{gpを1ビット左シフトする}
+ 678:	0011e193          	or	gp,gp,1 @<balloon>{gpのLSBを1にする}
  ...
  684:	00000073          	ecall
 
@@ -217,7 +220,7 @@ riscv-testsは、基本的に次の流れで実行されます。
  5. trap_vector : write_tohostに飛ぶ
  6. write_tohost : テスト結果をメモリに書き込む。ここでループする
 
-_startから実行を開始し、最終的にwrite_tohostに移動します。
+@<code>{_start}から実行を開始し、最終的に@<code>{write_tohost}に移動します。
 テスト結果はメモリの@<code>{.tohost}に書き込まれます。
 @<code>{.tohost}のアドレスは、リンカの設定ファイルに記述されています(@<list>{link.ld.tohost})。
 プログラムのサイズは@<code>{0x1000}よりも小さいため、
@@ -231,8 +234,8 @@ SECTIONS
 {
   . = 0x00000000;
   .text.init : { *(.text.init) }
-  . = ALIGN(0x1000);
-  .tohost : { *(.tohost) }
+  @<b>|. = ALIGN(0x1000);|
+  @<b>|.tohost : { *(.tohost) }|
 //}
 
 == テストの終了検知
@@ -243,8 +246,8 @@ SECTIONS
 
 riscv-testsは、
 テストが終了したことを示すために、
-@<code>{.tohost}に値を書き込みます。
-この値が1のとき、riscv-testsが正常に終了したことを示します。
+@<code>{.tohost}にLSBが@<code>{1}な値を書き込みます。
+書き込まれる値が@<code>{32'h1}のとき、riscv-testsが正常に終了したことを示します。
 それ以外の時は、riscv-testsが失敗したことを示します。
 
 riscv-testsが終了したことを検知する処理をtopモジュールに記述します。
@@ -273,7 +276,10 @@ topモジュールでメモリへのアクセスを監視し、
 テストが失敗した場合、
 つまり1以外の値が書き込まれた場合、
 @<code>{$error}システムタスクを実行します。
-これにより、テスト失敗時のシミュレータの終了コードが1になります。
+Verilatorで生成するシミュレータは、
+@<code>{$error}システムタスクを実行すると終了コードが@<code>{1}になります@<fn>{exitcode}。
+
+//footnote[exitcode][他のシミュレータでも終了コードが1になるとは限らないことに注意してください]
 
 == テストの実行
 
@@ -422,8 +428,7 @@ if __name__ == '__main__':
     デフォルト値は10(秒)です。
 
 それでは、RV32Iのテストを実行しましょう。
-今回はRV32Iのテストを実行したいので、
-riscv-testsのRV32I向けのテストの接頭辞であるrv32ui-p-引数に指定します。
+riscv-testsのRV32I向けのテストの接頭辞である@<code>{rv32ui-p-}を引数に指定します。
 
 //terminal[python.test.py][rv32ui-pから始まるテストを実行する]{
 $ @<userinput>{python3 test/test.py obj_dir/sim test/share rv32ui-p- -r}
@@ -470,9 +475,9 @@ PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-srl.bin.hex
 Test Result : 39 / 40
 //}
 
-rv32ui-p-から始まる40個のテストの内、39個のテストにパスしました。
+@<code>{rv32ui-p-}から始まる40個のテストの内、39個のテストにパスしました。
 テストの詳細な結果はresultsディレクトリに格納されています。
 
-rv32ui-p-ma_dataは、
+@<code>{rv32ui-p-ma_data}は、
 ロードストアするサイズに整列されていないアドレスへのロードストア命令のテストです。
 これについては後の章で例外として対処するため、今は無視します。

@@ -803,7 +803,7 @@ $ @<userinput>{make sim}
 $ @<userinput>{./obj_dir/sim test/sample_ecall.hex 10}
 #                    4
 00000000 : 30585073 @<balloon>{CSRRWIでmtvecに書き込み}
-  rs1[16]   : 00000000 @<balloon>{0x10(=16)をmtvecに書き込む}
+  rs1[16]   : 00000000 @<balloon>{10(=16)をmtvecに書き込む}
   csr trap  : 0
   csr vec   : 00000000
   reg[ 0] <= 00000000
