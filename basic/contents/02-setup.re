@@ -38,7 +38,7 @@ $ @<userinput>{verylup setup}
 
 ==== Verylの更新
 
-verylはまだ開発途上の言語であり、頻繁にバージョンが更新されます。
+Verylはまだ開発途上の言語であり、頻繁にバージョンが更新されます。
 最新のVerylに更新するには、次のようなコマンドを実行します
 (@<list>{veryl-update})。
 
@@ -92,7 +92,7 @@ $ @<userinput>|veryl +0.13.2| @<balloon>{+でバージョンを指定する}
 ===[notoc] Vim, VSCodeの拡張のインストール
 
 エディタにVimを利用している方は、
-GtiHubの@<href>{https://github.com/veryl-lang/veryl.vim, veryl-lang/veryl.vim}
+GitHubの@<href>{https://github.com/veryl-lang/veryl.vim, veryl-lang/veryl.vim}
 でプラグインを入手することができます。
 
 エディタにVSCodeを利用している方は、
@@ -100,22 +100,22 @@ GtiHubの@<href>{https://github.com/veryl-lang/veryl.vim, veryl-lang/veryl.vim}
 
  * @<href>{https://marketplace.visualstudio.com/items?itemName=dalance.vscode-veryl}
 
-//image[vscode-ext][VerylのVSCode拡張]
+//image[vscode-ext][VerylのVSCode拡張][width=50%]
 
 == Verilator
 
 @<href>{https://github.com/verilator/verilator, Verilator}は、
 SystemVerilogのシミュレータを生成するためのソフトウェアです。
 
-apt、またはbrewを利用してインストールすることができます。
+aptやbrewを利用してインストールすることができます。
 パッケージマネージャが入っていない場合は、
 以下のページを参考にインストールしてください。
 
  * @<href>{https://verilator.org/guide/latest/install.html}
 
-//caution[Verilatorのバージョンについて]{
+//caution[本書で利用するVerilatorのバージョン]{
 本書ではバージョン5系を利用しますが、
-Verilatorの問題によりシミュレータをビルドできない可能性があります。
+Verilatorの問題によりシミュレータをビルドできない場合があります。
 対処方法についてはサポートページを確認してください。
 
  * @<w>{support-page}
@@ -125,7 +125,7 @@ Verilatorの問題によりシミュレータをビルドできない可能性�
 
 riscv-gnu-toolchainは、RISC-V向けのコンパイラなどが含まれるtoolchainです。
 
-@<href>{https://github.com/riscv-collab/riscv-gnu-toolchain, riscv-collab/riscv-gnu-toolchain}
+GitHubの@<href>{https://github.com/riscv-collab/riscv-gnu-toolchain, riscv-collab/riscv-gnu-toolchain}
 のREADMEにインストール方法が書かれています。
 READMEの@<code>{Installation (Newlib)}を参考にインストールしてください。
 

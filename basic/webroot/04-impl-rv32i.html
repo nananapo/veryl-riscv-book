@@ -30,7 +30,7 @@
         <li class="toc-section"><a href="#h3-6">3.6 命令フェッチ</a></li>
         <li class="toc-section"><a href="#h3-7">3.7 命令のデコードと即値の生成</a></li>
         <li class="toc-section"><a href="#h3-8">3.8 レジスタの定義と読み込み</a></li>
-        <li class="toc-section"><a href="#h3-9">3.9 ALUを作り、計算する</a></li>
+        <li class="toc-section"><a href="#h3-9">3.9 ALUによる計算の実装</a></li>
         <li class="toc-section"><a href="#h3-10">3.10 レジスタに結果を書き込む</a></li>
         <li class="toc-section"><a href="#h3-11">3.11 ロード命令とストア命令の実装</a></li>
         <li class="toc-section"><a href="#h3-12">3.12 ジャンプ命令、分岐命令の実装</a></li>
@@ -1299,7 +1299,7 @@ $ <span class="userinput">obj_dir/sim sample.hex 7</span>
 <p><code class="inline-code">32'h01234567</code>は<code class="inline-code">jalr x10, 18(x6)</code>です。JALR命令は、ソースレジスタ<code class="inline-code">x6</code>を使用します。<code class="inline-code">x6</code>はレジスタ番号が6であることを表しており、値は106に初期化しています。これは16進数で<code class="inline-code">32'h0000006a</code>です。</p>
 <p>シミュレーションと結果が一致していることを確認してください。</p>
 
-<h2 class="numbox"><a id="h3-9"></a><span class="secno">3.9</span> ALUを作り、計算する</h2>
+<h2 class="numbox"><a id="h3-9"></a><span class="secno">3.9</span> ALUによる計算の実装</h2>
 <p>レジスタと即値が揃い、命令で使用するデータが手に入るようになりました。基本整数命令セットの命令では、足し算や引き算, ビット演算などの簡単な整数演算を行います。それでは、CPUの計算を行うユニットである<b>ALU</b>(Arithmetic Logic Unit)を作成します。</p>
 
 <h3 class="none"><a id="h3-9-1"></a><span class="secno">3.9.1</span> ALUモジュールを作成する</h3>

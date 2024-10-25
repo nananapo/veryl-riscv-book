@@ -114,7 +114,7 @@ endmodule
 endmodule
 </pre>
 </div>
-<p>HDLを使用すると、論理回路の設計を、レジスタの値と入力値を使った組み合わせ回路と、その結果をレジスタに値を格納する操作の記述によって行うことができます。このような、レジスタからレジスタに、組み合わせ回路を通したデータを転送する抽象度のことを<b>レジスタ転送レベル</b>(Register Transfer Level, RTL)と呼びます。</p>
+<p>HDLを使用すると、論理回路の設計を、レジスタの値と入力値を使った組み合わせ回路と、その結果をレジスタに格納する操作の記述によって行うことができます。このような、レジスタからレジスタに、組み合わせ回路を通したデータを転送する抽象度のことを<b>レジスタ転送レベル</b>(Register Transfer Level, <b>RTL</b>)と呼びます。</p>
 <p>HDLで記述された論理回路は、<b>合成系</b>によって、RTLから実際の回路のデータに変換(<b>合成</b>)されます。</p>
 
 <h3 class="none"><a id="h2-1-3"></a><span class="secno">2.1.3</span> Veryl</h3>
@@ -139,7 +139,7 @@ endmodule
 <h2 class="numbox"><a id="h2-2"></a><span class="secno">2.2</span> Verylの基本文法, 機能</h2>
 <p>それでは、Verylの書き方を簡単に学んでいきましょう。Verylのドキュメントは<a href="https://doc.veryl-lang.org/book/ja/" class="link">https://doc.veryl-lang.org/book/ja/</a>に存在します。また、<a href="https://doc.veryl-lang.org/playground/" class="link">Veryl Playground</a>では、VerylのSystemVerilogへのトランスパイルをウェブブラウザ上で試すことができます。</p>
 
-<h3 class="none"><a id="h2-2-1"></a><span class="secno">2.2.1</span> コメント, 空白</h3>
+<h3 class="none"><a id="h2-2-1"></a><span class="secno">2.2.1</span> コメント</h3>
 <p>Verylでは次のようにコメントを記述することができます(<span class="listref"><a href="./03-veryl.html#code.comment">リスト2.3</a></span>)。</p>
 <div id="code.comment" class="caption-code">
 <span class="caption">リスト2.3: リスト2.3: コメント</span>
@@ -163,7 +163,7 @@ endmodule
 <tr class="hline"><td>z</td><td>ハイインピーダンス</td><td>偽</td></tr>
 </table>
 </div>
-<p><b>不定値</b>(unknown value, <code class="inline-code">x</code>)とは、<code class="inline-code">0</code>か<code class="inline-code">1</code>のどちらか分からない値です。不定値は、未初期化のレジスタの値の表現に利用されたり、不定値との演算の結果として生成されます。<b>ハイインピーダンス</b>(high-inpedance, <code class="inline-code">z</code>)とは、どのレジスタ, 信号とも接続されていないことを表す値です。物理的なハードウェア上では、全ての値は0か1の二値として解釈されます。不定値とハイインピーダンスはシミュレーションのときにのみ利用されます。</p>
+<p><b>不定値</b>(unknown value, <code class="inline-code">x</code>)とは、<code class="inline-code">0</code>か<code class="inline-code">1</code>のどちらか分からない値です。不定値は、未初期化のレジスタの値の表現に利用されたり、不定値との演算の結果として生成されます。<b>ハイインピーダンス</b>(high-inpedance, <code class="inline-code">z</code>)とは、どのレジスタ, 信号とも接続されていないことを表す値です。物理的なハードウェア上では、全ての値は<code class="inline-code">0</code>か<code class="inline-code">1</code>の二値として解釈されます。不定値とハイインピーダンスはシミュレーションのときにのみ利用されます。</p>
 <p>1ビットの四値を表現するための型は<b>logic</b>です。Nビットのlogic型は<code class="inline-code">logic&lt;N&gt;</code>と記述することができます。1ビットの二値を表現する型は<b>bit</b>です。基本的に、レジスタや信号の定義にbit型は利用せず、logic型を利用します。</p>
 <p>logic, bit型は、デフォルトで符号が無い型として扱われます。符号付き型として扱いたいときは、型名の前に<b>signed</b>キーワードを追加します(<span class="listref"><a href="./03-veryl.html#code.signed_keyword">リスト2.4</a></span>)。</p>
 <div id="code.signed_keyword" class="caption-code">
@@ -215,7 +215,7 @@ signed bit&lt;2&gt; // 2ビットの符号付きbit型
 
 // 幅を指定しない場合、幅が自動で推定される
 'hffff // 16ビット
-'h1fff // 13ビット
+'h1fff // 13ビット (13'b1_1111_1111_1111)
 </pre>
 </div>
 <p>文字列は<b>string</b>型で表現することができます。文字列の値は<span class="listref"><a href="./03-veryl.html#string.literal">リスト2.6</a></span>のように記述することができます。</p>
@@ -242,7 +242,7 @@ signed bit&lt;2&gt; // 2ビットの符号付きbit型
 }
 </pre>
 </div>
-<p>HalfAdderモジュールには、入力変数として<code class="inline-code">x</code>, <code class="inline-code">y</code>、出力変数として<code class="inline-code">s</code>. <code class="inline-code">c</code>が宣言されています。入出力の変数のことを<b>接続ポート</b>、または単に<b>ポート</b>と呼びます。</p>
+<p>HalfAdderモジュールには、入力変数として<code class="inline-code">x</code>, <code class="inline-code">y</code>、出力変数として<code class="inline-code">s</code>, <code class="inline-code">c</code>が宣言されています。入出力の変数のことを<b>接続ポート</b>、または単に<b>ポート</b>と呼びます。</p>
 <p>入力ポートを定義するとき、モジュール名の後の括弧の中に、<code class="inline-code">変数名 : input 型名</code>と記述します。出力ポートを宣言するときは<code class="inline-code">input</code>の代わりに<code class="inline-code">output</code>と記述します。複数のポートを宣言するとき、宣言の末尾にカンマ(<code class="inline-code">,</code>)を記述します。</p>
 
 <h4><a id="h2-2-3-1"></a>変数の継続的代入, ブロッキング代入</h4>
@@ -530,12 +530,12 @@ logic[4, 8]   // logicが8個の配列が4個ある配列型
 </div>
 
 <h4><a id="h2-2-4-4"></a>型に別名をつける</h4>
-<p><b>type</b>キーワードを使うと、型に別名を付けることができます(type.define)。</p>
+<p><b>type</b>キーワードを使うと、型に別名を付けることができます(<span class="listref"><a href="./03-veryl.html#type.define">リスト2.28</a></span>)。</p>
 <div id="type.define" class="caption-code">
 <span class="caption">リスト2.28: リスト2.28: 型に別名を付ける</span>
 <pre class="list language-define">// type 名前 = 型;
-type ptr        = logic&lt;32&gt;;
-type ptr_array  = ptr&lt;32&gt;;
+type ptr = logic&lt;32&gt;;
+type ptr_array = ptr&lt;32&gt;;
 </pre>
 </div>
 
@@ -548,7 +548,7 @@ type ptr_array  = ptr&lt;32&gt;;
 図2.6: ビット選択
 </p>
 </div>
-<p>変数の任意のビットを切り出すには<code class="inline-code">[]</code>を使用します(<span class="imgref"><a href="./03-veryl.html#bitsel">図2.6</a></span>)。範囲の選択には<code class="inline-code">[:]</code>を使用します。最上位ビット(most significant bit)は<b>msb</b>キーワード,最下位ビット(least significant bit)は<b>lsb</b>キーワードで指定することができます。選択する場所の指定には式を使うことができます。</p>
+<p>変数の任意のビットを切り出すには<code class="inline-code">[]</code>を使用します(<span class="imgref"><a href="./03-veryl.html#bitsel">図2.6</a></span>)。範囲の選択には<code class="inline-code">[:]</code>を使用します。最上位ビット(most significant bit, MSB)は<b>msb</b>キーワード,最下位ビット(least significant bit, LSB)は<b>lsb</b>キーワードで指定することができます。選択する場所の指定には式を使うことができます。</p>
 <p>よく使われる範囲の選択には、別の書き方が用意されています(<span class="listref"><a href="./03-veryl.html#bitsel.range_sel">リスト2.29</a></span>)。</p>
 <div id="bitsel.range_sel" class="caption-code">
 <span class="caption">リスト2.29: リスト2.29: 範囲の選択の別の記法</span>
@@ -581,7 +581,7 @@ v[i step w] // = v[i*(w+1) : i*w  ] = v[i*w +: w]
 <tr class="hline"><td><code class="inline-code">{} inside outside if case switch</code></td><td>なし</td><td>最後</td></tr>
 </table>
 </div>
-<p>SystemVerilogを知っている方にSystemVerilogとの差異を説明すると、<code class="inline-code">++</code>,<code class="inline-code">--</code>,<code class="inline-code">:=</code>,<code class="inline-code">:/</code>,<code class="inline-code">&lt;=</code>(代入),<code class="inline-code">?:</code>(三項演算子)が無く、<code class="inline-code">&lt;</code>,<code class="inline-code">&gt;</code>がそれぞれ<code class="inline-code">&lt;:</code>,<code class="inline-code">&gt;:</code>に変更されています。また、<code class="inline-code">inside</code>と<code class="inline-code">{{}}</code>の形式が変更され、<code class="inline-code">if</code>, <code class="inline-code">case</code>, <code class="inline-code">switch</code>式が追加されています。</p>
+<p>SystemVerilogを知っている方にSystemVerilogとの差異を説明すると、<code class="inline-code">++</code>, <code class="inline-code">--</code>, <code class="inline-code">:=</code>, <code class="inline-code">:/</code>, <code class="inline-code">&lt;=</code>(代入), <code class="inline-code">?:</code>(三項演算子)が無く、<code class="inline-code">&lt;</code>, <code class="inline-code">&gt;</code>がそれぞれ<code class="inline-code">&lt;:</code>, <code class="inline-code">&gt;:</code>に変更されています。また、<code class="inline-code">inside</code>と<code class="inline-code">{{}}</code>の形式が変更され、<code class="inline-code">if</code>, <code class="inline-code">case</code>, <code class="inline-code">switch</code>式が追加されています。</p>
 <p>単項, 二項演算子の使用例は次の通りです(<span class="listref"><a href="./03-veryl.html#operator.use">リスト2.30</a></span>)。</p>
 <div id="operator.use" class="caption-code">
 <span class="caption">リスト2.30: リスト2.30: 単項, 二項演算子 (Verylのドキュメントの例&lt;a href=&quot;bib.html#bib-veryl-doc.operators&quot;&gt;[4]&lt;/a&gt;を改変)</span>
@@ -620,7 +620,7 @@ a = 1 - 1;  // 引き算
 a = k &lt;&lt;  n; // kをnビット左シフトする。空いたビットは0で埋める
 a = k &lt;&lt;&lt; n; // &lt;&lt;と同じ
 a = k &gt;&gt;  n; // kをnビット右シフトする。空いたビットは0で埋める
-a = k &gt;&gt;&gt; n; // kが符号無しのとき&gt;&gt;と同じ。符号付きのとき、空いたビットはmsbで埋める
+a = k &gt;&gt;&gt; n; // kが符号無しのとき&gt;&gt;と同じ。符号付きのとき、空いたビットはMSBで埋める
 
 // 比較演算
 a = n &lt;: m;  // nはm未満
@@ -671,7 +671,7 @@ always_comb {
 }
 </pre>
 </div>
-<p>always_combブロックで変数に継続的代入するとき、if文の全ての場合で継続的代入する必要があることに注意してください(<code class="inline-code">v</code>は常に代入されています)。</p>
+<p>always_combブロックで変数に代入するとき、if文の全ての場合で代入する必要があることに注意してください(<code class="inline-code">v</code>は常に代入されています)。</p>
 <p><span class="listref"><a href="./03-veryl.html#if.only">リスト2.31</a></span>と同じ意味の文を<b>switch</b>文で書くことができます(<span class="listref"><a href="./03-veryl.html#switch.only">リスト2.32</a></span>)。どの条件にも当てはまらないときの動作は<b>default</b>で指定します。switchは式にすることができます。switch式は必ず値を返す必要があり、defaultが必須です。</p>
 <div id="switch.only" class="caption-code">
 <span class="caption">リスト2.32: リスト2.32: switch文, switch式</span>
@@ -720,7 +720,7 @@ always_comb {
 </div>
 
 <h4><a id="h2-2-5-4"></a>連結, repeat</h4>
-<p>ビット列や文字列を連結したいときは<code class="inline-code">{}</code>を使用することができます(<span class="listref"><a href="./03-veryl.html#renketu">リスト2.34</a></span>)。<code class="inline-code">+</code>では連結できない(値の足し算になる)ことに注意してください。同じビット列, 文字列を繰り返して連結したいときは<b>repeat</b>キーワードを使用します(<span class="listref"><a href="./03-veryl.html#repeat">リスト2.35</a></span>)。</p>
+<p>ビット列や文字列を連結したいとき、<code class="inline-code">{}</code>を使用することができます(<span class="listref"><a href="./03-veryl.html#renketu">リスト2.34</a></span>)。<code class="inline-code">+</code>では連結できない(値の足し算になる)ことに注意してください。同じビット列, 文字列を繰り返して連結したいときは<b>repeat</b>キーワードを使用します(<span class="listref"><a href="./03-veryl.html#repeat">リスト2.35</a></span>)。</p>
 <div id="renketu" class="caption-code">
 <span class="caption">リスト2.34: リスト2.34: 連結</span>
 <pre class="list">{12'h123, 32'habcd0123} // 44'h123_abcde0123になる
@@ -736,7 +736,7 @@ always_comb {
 </div>
 
 <h4><a id="h2-2-5-5"></a>for</h4>
-<p><b>for</b>文はループを実現するための文です。<span class="listref"><a href="./03-veryl.html#for.code">リスト2.36</a></span>のように記述することができます。例えばループ変数が0から31になるまで(32回)繰り返すなら、範囲に<code class="inline-code">0..32</code>, または<code class="inline-code">0..=31</code>と記述します。範囲には定数のみ指定することができます。</p>
+<p><b>for</b>文はループを実現するための文です。for文は<span class="listref"><a href="./03-veryl.html#for.code">リスト2.36</a></span>のように記述することができます。例えばループ変数が0から31になるまで(32回)繰り返すなら、範囲に<code class="inline-code">0..32</code>, または<code class="inline-code">0..=31</code>と記述します。範囲には定数のみ指定することができます。</p>
 <div id="for.code" class="caption-code">
 <span class="caption">リスト2.36: リスト2.36: for文の記法</span>
 <pre class="list language-code">// for ループ変数名: 型 in 範囲 { 処理 }
@@ -776,7 +776,7 @@ outside n {0, 1, 3} // nが0,1,3以外の値のとき1
 
 <h4><a id="h2-2-5-7"></a>function</h4>
 <p>何度も記述する操作, 計算は、関数(<b>function</b>)を使うことでまとめて記述することができます(<span class="listref"><a href="./03-veryl.html#function.first">リスト2.39</a></span>)。関数は値を引数で受け取り、<b>return</b>文で値を返します。値を返さないとき、戻り値の型の指定を省略できます。</p>
-<p>引数には向きを指定できます。functionの実行を開始するとき、inputとして指定されている実引数の値が仮引数にコピーされます。functionの実行が終了するとき、outputとして指定されている仮引数の値が実引数の変数にコピーされます。</p>
+<p>引数には向きを指定できます。functionの実行を開始するとき、<code class="inline-code">input</code>として指定されている実引数の値が仮引数にコピーされます。functionの実行が終了するとき、<code class="inline-code">output</code>として指定されている仮引数の値が実引数の変数にコピーされます。</p>
 <div id="function.first" class="caption-code">
 <span class="caption">リスト2.39: リスト2.39: 関数</span>
 <pre class="list language-first">// べき乗を返す関数
@@ -813,7 +813,8 @@ always_comb {
 </div>
 
 <h3 class="none"><a id="h2-2-6"></a><span class="secno">2.2.6</span> interface</h3>
-<p>モジュールに何個もポートが存在するとき、ポートの接続は非常に手間のかかる作業になります(<span class="listref"><a href="./03-veryl.html#interface.motivate">リスト2.40</a></span>)。</p>
+<p>モジュールに何個もポートが存在するとき、ポートの接続は非常に手間のかかる作業になります。</p>
+<p>例えば<span class="listref"><a href="./03-veryl.html#interface.motivate">リスト2.40</a></span>では、向きが対になっているポートがModuleAとModuleBに定義されており、これを一つ一つ接続しています。</p>
 <div id="interface.motivate" class="caption-code">
 <span class="caption">リスト2.40: リスト2.40: モジュールのポートの相互接続</span>
 <pre class="list language-motivate">module ModuleA (
