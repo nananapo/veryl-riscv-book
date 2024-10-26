@@ -303,13 +303,13 @@ let value : logic&lt;32&gt; = 100 + a;
 </div>
 
 <h4><a id="h2-2-3-3"></a>レジスタの定義, 代入</h4>
-<p>変数を宣言するとき、変数に式が継続的代入, ブロッキング代入されない場合、変数はレジスタとして解釈できます(<span class="listref"><a href="./03-veryl.html#reg.define">リスト2.13</a></span>)。</p>
+<p>変数を宣言するとき、変数に式がブロッキング代入されない場合、変数はレジスタとして解釈できます(<span class="listref"><a href="./03-veryl.html#reg.define">リスト2.13</a></span>)。</p>
 <div id="reg.define" class="caption-code">
 <span class="caption">リスト2.13: リスト2.13: レジスタの定義</span>
 <pre class="list language-define">// var レジスタ名 : 型名;
 var reg_value : logic&lt;32&gt;;
 
-// reg_valueに継続的代入, ブロッキング代入しない
+// reg_valueにブロッキング代入しない
 </pre>
 </div>
 <p>本書では、レジスタのことを変数,または変数のことをレジスタと呼ぶことがあります。</p>
@@ -350,14 +350,14 @@ always_ff(clk, rst) {
 }
 </pre>
 </div>
-<p>1つのalways_ffブロックで、複数のレジスタの値を変更することができます。always_ffブロックの中で複数のレジスタの値を変更する時、全ての代入は同時に行われます(<span class="listref"><a href="./03-veryl.html#always_ff.nonblocking">リスト2.16</a></span>)。この代入は後続の文の代入をブロックしないため、ブロッキング代入の対として<b>ノンブロッキング代入</b>(non-blocking assignment)と呼びます。</p>
+<p>1つのalways_ffブロックで、複数のレジスタの値を変更することができます。レジスタの値は、always_ffブロックの中の全ての代入文の右辺を評価した後に同時に変更されます。この代入はブロッキング代入と違って逐次実行されないので、<b>ノンブロッキング代入</b>(non-blocking assignment)と呼びます。</p>
 <div id="always_ff.nonblocking" class="caption-code">
 <span class="caption">リスト2.16: リスト2.16: ノンブロッキング代入のタイミングは同じ</span>
 <pre class="list language-nonblocking">always_ff {
         if_reset {
                 ...
         } else {
-                // 2つの代入文が同時に実行される。
+                // 先に右辺の評価を行ってから、同時にA, Bが変更される
                 // その結果、AとBの値が入れ替わる
                 A = B;
                 B = A;
@@ -365,7 +365,7 @@ always_ff(clk, rst) {
 }
 </pre>
 </div>
-<p><span class="listref"><a href="./03-veryl.html#always_ff.nonblocking">リスト2.16</a></span>のAとBの代入文は、2つのalways_ffブロックに分けて記述することができます(<span class="listref"><a href="./03-veryl.html#multi.always_ff.nonblocking">リスト2.17</a></span>)。同じタイミングで更新されるalways_ffブロックは、全て同時に実行されます。</p>
+<p><span class="listref"><a href="./03-veryl.html#always_ff.nonblocking">リスト2.16</a></span>のAとBの代入文は、2つのalways_ffブロックに分けて記述することができます(<span class="listref"><a href="./03-veryl.html#multi.always_ff.nonblocking">リスト2.17</a></span>)。この場合も<span class="listref"><a href="./03-veryl.html#always_ff.nonblocking">リスト2.16</a></span>と同様に、同じタイミングで更新されるalways_ffの全ての代入文の右辺が評価された後に、同時にレジスタの値が変更されます。</p>
 <p>2つ以上のalways_ffブロックで、1つの同じレジスタの値を変更することはできません。</p>
 <div id="multi.always_ff.nonblocking" class="caption-code">
 <span class="caption">リスト2.17: リスト2.17: 同じタイミングで更新されるalways_ffは同時に実行される</span>
@@ -378,7 +378,7 @@ always_ff(clk, rst) {
 }
 </pre>
 </div>
-<p>本書では、継続的代入, ブロッキング代入, ノンブロッキング代入を区別せず、どれも代入と呼ぶことがあります。</p>
+<p>本書では、ブロッキング代入, ノンブロッキング代入を区別せず、どれも代入と呼ぶことがあります。</p>
 <p>変数への代入方法と動作を<span class="tableref"><a href="./03-veryl.html#table.assign">表2.4</a></span>にまとめます。大変間違えやすいため、気を付けてください。</p>
 <div id="table.assign" class="table">
 <p class="caption">表2.4: 変数への代入方法と動作の違い</p>
