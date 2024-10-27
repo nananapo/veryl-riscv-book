@@ -272,7 +272,7 @@ IDからEX、EXからMEM、MEMからWBへのFIFOを作成します。
 まず、FIFOに格納するデータの型を定義します。
 それぞれのフィールドが存在する区間は@<img>{fifo_type}の通りです。
 
-//list[fifo.type.ex][ID -> EXの間のFIFOのデータ型 (core.veryl)]{
+//list[fifo.type.ex][ID → EXの間のFIFOのデータ型 (core.veryl)]{
 #@maprange(scripts/05a/create-fifo-range/core/src/core.veryl,extype)
     struct exq_type {
         addr: Addr    ,
@@ -286,7 +286,7 @@ IDからEX、EXからMEM、MEMからWBへのFIFOを作成します。
 IDステージは、IFステージから命令のアドレスと命令のビット列を受け取ります。
 命令のビット列をデコードして、制御フラグと即値を生成し、EXステージに渡します。
 
-//list[fifo.type.mem][EX -> MEMの間のFIFOのデータ型 (core.veryl)]{
+//list[fifo.type.mem][EX → MEMの間のFIFOのデータ型 (core.veryl)]{
 #@maprange(scripts/05a/create-fifo-range/core/src/core.veryl,memtype)
     struct memq_type {
         addr      : Addr       ,
@@ -309,7 +309,7 @@ EXステージは、IDステージで生成された制御フラグと即値と�
 CSRやメモリアクセスでrs1とrs2のデータを利用するため、
 演算の結果とともにMEMステージに渡します。
 
-//list[fifo.type.wb][MEM -> WBの間のFIFOのデータ型 (core.veryl)]{
+//list[fifo.type.wb][MEM → WBの間のFIFOのデータ型 (core.veryl)]{
 #@maprange(scripts/05a/create-fifo-range/core/src/core.veryl,wbtype)
     struct wbq_type {
         addr      : Addr    ,

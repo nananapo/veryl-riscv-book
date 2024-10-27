@@ -2517,16 +2517,16 @@ $ <span class="userinput">obj_dir/sim src/sample_jump.hex 17</span>
 00000000 : 0100006f
   reg[ 0] &lt;= 00000004 <span class="balloon">← rd = PC + 4</span>
 #                    8
-00000010 : 01800093 <span class="balloon">← 0x00 -&gt; 0x10にジャンプしている</span>
+00000010 : 01800093 <span class="balloon">← 0x00 → 0x10にジャンプしている</span>
   reg[ 1] &lt;= 00000018
 #                    9
 00000014 : 00808067
   reg[ 0] &lt;= 00000018 <span class="balloon">← rd = PC + 4</span>
 #                   13
-00000020 : fe1ff06f <span class="balloon">← 0x14 -&gt; 0x20にジャンプしている</span>
+00000020 : fe1ff06f <span class="balloon">← 0x14 → 0x20にジャンプしている</span>
   reg[ 0] &lt;= 00000024 <span class="balloon">← rd = PC + 4</span>
 #                   17
-00000000 : 0100006f <span class="balloon">← 0x20 -&gt; 0x00にジャンプしている</span>
+00000000 : 0100006f <span class="balloon">← 0x20 → 0x00にジャンプしている</span>
   reg[ 0] &lt;= 00000004
 </pre>
 </div>
@@ -2656,10 +2656,10 @@ $ <span class="userinput">obj_dir/sim src/sample_br.hex 15</span>
   op2       : 00000001
   br take   : 1 <span class="balloon">← x0 != x1なので成立</span>
 #                   10
-00000018 : 0000d063 <span class="balloon">← 0x08 -&gt; 0x18にジャンプ</span>
+00000018 : 0000d063 <span class="balloon">← 0x08 → 0x18にジャンプ</span>
   br take   : 1 <span class="balloon">← x1 &gt; x0なので成立</span>
 #                   14
-00000018 : 0000d063 <span class="balloon">← 0x18 -&gt; 0x18にジャンプ</span>
+00000018 : 0000d063 <span class="balloon">← 0x18 → 0x18にジャンプ</span>
   br take   : 1
 </pre>
 </div>

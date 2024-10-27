@@ -210,7 +210,7 @@
 </div>
 <p>まず、FIFOに格納するデータの型を定義します。それぞれのフィールドが存在する区間は<span class="imgref"><a href="./05a-pipeline.html#fifo_type">図7.5</a></span>の通りです。</p>
 <div id="fifo.type.ex" class="caption-code">
-<span class="caption">リスト7.2: リスト7.2: ID -&amp;gt; EXの間のFIFOのデータ型 (core.veryl)</span>
+<span class="caption">リスト7.2: リスト7.2: ID → EXの間のFIFOのデータ型 (core.veryl)</span>
 <pre class="list language-ex">    struct exq_type {
         addr: Addr    ,
         bits: Inst    ,
@@ -221,7 +221,7 @@
 </div>
 <p>IDステージは、IFステージから命令のアドレスと命令のビット列を受け取ります。命令のビット列をデコードして、制御フラグと即値を生成し、EXステージに渡します。</p>
 <div id="fifo.type.mem" class="caption-code">
-<span class="caption">リスト7.3: リスト7.3: EX -&amp;gt; MEMの間のFIFOのデータ型 (core.veryl)</span>
+<span class="caption">リスト7.3: リスト7.3: EX → MEMの間のFIFOのデータ型 (core.veryl)</span>
 <pre class="list language-mem">    struct memq_type {
         addr      : Addr       ,
         bits      : Inst       ,
@@ -238,7 +238,7 @@
 </div>
 <p>EXステージは、IDステージで生成された制御フラグと即値と受け取ります。整数演算命令の時、レジスタのデータを読み取り、ALUで計算します。分岐命令のとき、分岐判定を行います。CSRやメモリアクセスでrs1とrs2のデータを利用するため、演算の結果とともにMEMステージに渡します。</p>
 <div id="fifo.type.wb" class="caption-code">
-<span class="caption">リスト7.4: リスト7.4: MEM -&amp;gt; WBの間のFIFOのデータ型 (core.veryl)</span>
+<span class="caption">リスト7.4: リスト7.4: MEM → WBの間のFIFOのデータ型 (core.veryl)</span>
 <pre class="list language-wb">    struct wbq_type {
         addr      : Addr    ,
         bits      : Inst    ,
