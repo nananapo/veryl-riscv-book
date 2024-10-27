@@ -236,44 +236,38 @@ signed bit&lt;2&gt; // 2ビットの符号付きbit型
         s: output logic, // 1ビットのlogic型の出力
         c: output logic, // 1ビットのlogic型の出力
 ) {
-        a
-        assign s = x ^ y; // sにx XOR yを割り当てる
-        assign c = x &amp; y; // cにx AND yを割り当てる
+        always_comb {
+                s = x ^ y; // sにx XOR yを代入
+                c = x &amp; y; // cにx AND yを代入
+        }
 }
 </pre>
 </div>
 <p>HalfAdderモジュールには、入力変数として<code class="inline-code">x</code>, <code class="inline-code">y</code>、出力変数として<code class="inline-code">s</code>, <code class="inline-code">c</code>が宣言されています。入出力の変数のことを<b>接続ポート</b>、または単に<b>ポート</b>と呼びます。</p>
 <p>入力ポートを定義するとき、モジュール名の後の括弧の中に、<code class="inline-code">変数名 : input 型名</code>と記述します。出力ポートを宣言するときは<code class="inline-code">input</code>の代わりに<code class="inline-code">output</code>と記述します。複数のポートを宣言するとき、宣言の末尾にカンマ(<code class="inline-code">,</code>)を記述します。</p>
 
-<h4><a id="h2-2-3-1"></a>変数の継続的代入, ブロッキング代入</h4>
-<p>HalfAdderモジュールでは、<b>assign</b>文で出力変数<code class="inline-code">s</code>, <code class="inline-code">c</code>に値を代入しています。変数への代入は<code class="inline-code">assign 変数名 = 式;</code>で行います。</p>
-<p>通常のプログラミング言語での代入とは、スタック領域やレジスタに存在する変数に値を格納することです。これに対して、assign文による代入は変数に式の結果が<b>継続的代入</b>(continuous assignment)されます。変数に式が継続的代入されると、式が評価(計算)された値が変数に1度だけ代入されるのではなく、変数の値は常に式の計算結果になります。</p>
-<p>具体例で考えてみます。例えば、1ビットの変数xに1ビットの変数yをassign文で代入します(<span class="listref"><a href="./03-veryl.html#assign.wave">リスト2.8</a></span>)。</p>
+<h4><a id="h2-2-3-1"></a>変数のブロッキング代入</h4>
+<p>HalfAdderモジュールでは、<b>always_comb</b>ブロックの中で出力変数<code class="inline-code">s</code>, <code class="inline-code">c</code>に値を代入しています。変数への代入は<code class="inline-code">変数名 = 式;</code>で行います。</p>
+<p>通常のプログラミング言語での代入とは、スタック領域やレジスタに存在する変数に値を格納することです。これに対して、always_combブロック内での代入は、式が評価(計算)された値が変数に1度だけ代入されるのではなく、変数の値は常に式の計算結果になります。</p>
+<p>具体例で考えてみます。例えば、1ビットの変数xに1ビットの変数yを代入します(<span class="listref"><a href="./03-veryl.html#assign.wave">リスト2.8</a></span>)。</p>
 <div id="assign.wave" class="caption-code">
 <span class="caption">リスト2.8: リスト2.8: xにyを割り当てる</span>
-<pre class="list language-wave">assign x = y;
+<pre class="list language-wave">always_comb {
+        x = y;
+}
 </pre>
 </div>
 <p>yの値が時間経過により0, 1, 0, 1, 0と変化したとします。このとき、xの値はyが変わるのと同時に変化します(<span class="imgref"><a href="./03-veryl.html#assign_wave">図2.3</a></span>)。<span class="imgref"><a href="./03-veryl.html#assign_wave">図2.3</a></span>は、横軸が時間で、xとyの値を線の高低で表しています。<span class="imgref"><a href="./03-veryl.html#assign_wave">図2.3</a></span>のような図を<b>波形図</b>(waveform)、または単に<b>波形</b>と呼びます。</p>
-<p>xにyではなくa + bを継続的代入すると、aかbの変化をトリガーにxの値が変化します。</p>
+<p>xにyではなくa + bを代入すると、aかbの変化をトリガーにxの値が変化します。</p>
 <div id="assign_wave" class="image">
 <img src="images/03-veryl/assign_wave.png" alt="xはyの値の変化に追従する" class="img" style="width:60%" />
 <p class="caption">
 図2.3: xはyの値の変化に追従する
 </p>
 </div>
-<p>assign文による代入の代わりに、<b>always_comb</b>ブロックでも代入することができます(<span class="listref"><a href="./03-veryl.html#always_comb.assign">リスト2.9</a></span>)。always_comb内での代入のことを、<b>ブロッキング代入</b>(blocking assignment)と呼びます。</p>
-<div id="always_comb.assign" class="caption-code">
-<span class="caption">リスト2.9: リスト2.9: always_combブロック内での代入</span>
-<pre class="list language-assign">always_comb {
-        a = b + 100;
-}
-</pre>
-</div>
-<p>assign文による代入と同じように、<span class="listref"><a href="./03-veryl.html#always_comb.assign">リスト2.9</a></span>ではbの変化をトリガーにaの値が変化します。</p>
-<p>always_combブロックには複数のブロッキング代入文を記述することができます。このとき、代入文は上から順番に実行されます。</p>
+<p>always_combブロックには複数の代入文を記述することができます。このとき、代入文は上から順番に実行されます。</p>
 <div id="always_comb.order" class="caption-code">
-<span class="caption">リスト2.10: リスト2.10: ブロッキング代入は逐次実行される</span>
+<span class="caption">リスト2.9: リスト2.9: ブロッキング代入は逐次実行される</span>
 <pre class="list language-order">always_comb {
         s = X;
         a = s; // a = X
@@ -282,8 +276,17 @@ signed bit&lt;2&gt; // 2ビットの符号付きbit型
 }
 </pre>
 </div>
-<p>例えば、<span class="listref"><a href="./03-veryl.html#always_comb.order">リスト2.10</a></span>では、aにはXが代入されますが、bにはYが代入されます。a, b, sは、変数X, Yの変化をトリガーに値が更新されます。</p>
-<p>assign文やブロッキング代入文は論理回路の状態(レジスタ)を変更しません。そのため、assign文やブロッキング代入文は組み合わせ回路になります。</p>
+<p>例えば、<span class="listref"><a href="./03-veryl.html#always_comb.order">リスト2.9</a></span>では、aにはXが代入されますが、bにはYが代入されます。a, b, sは、変数X, Yの変化をトリガーに値が更新されます。</p>
+<p>always_combブロック内での代入のことを、<b>ブロッキング代入</b>(blocking assignment)と呼びます。</p>
+<p>1つの変数にしかブロッキング代入しないとき、<b>assign</b>文でもブロッキング代入することができます(<span class="listref"><a href="./03-veryl.html#always_comb.assign">リスト2.10</a></span>)。</p>
+<div id="always_comb.assign" class="caption-code">
+<span class="caption">リスト2.10: リスト2.10: assign文による代入</span>
+<pre class="list language-assign">// assign 変数名 = 式;
+assign a = b + 100;
+</pre>
+</div>
+<p>always_combブロック内での代入と同じように、<span class="listref"><a href="./03-veryl.html#always_comb.assign">リスト2.10</a></span>ではbの変化をトリガーにaの値が変化します。</p>
+<p>ブロッキング代入文やassign文は論理回路の状態(レジスタ)を変更しません。そのため、ブロッキング代入文やassign文は組み合わせ回路になります。</p>
 
 <h4><a id="h2-2-3-2"></a>変数の宣言</h4>
 <p>モジュールの中では、<b>var</b>文によって新しく変数を宣言することができます(<span class="listref"><a href="./03-veryl.html#var.stmt">リスト2.11</a></span>)。</p>
@@ -293,8 +296,8 @@ signed bit&lt;2&gt; // 2ビットの符号付きbit型
 var value : logic&lt;32&gt;;
 </pre>
 </div>
-<p>var文によって宣言した変数は、assign文による継続的代入, またはalways_comb内でのブロッキング代入が可能です。</p>
-<p><b>let</b>文を使うと、変数の宣言と値の継続的代入を同時に行うことができます。</p>
+<p>var文で宣言した変数に対してブロッキング代入することができます。</p>
+<p><b>let</b>文を使うと、変数の宣言とブロッキング代入を同時に行うことができます。</p>
 <div id="let.stmt" class="caption-code">
 <span class="caption">リスト2.12: リスト2.12: 変数の宣言と代入</span>
 <pre class="list language-stmt">// let 変数名 : 型名 = 式;
@@ -350,14 +353,14 @@ always_ff(clk, rst) {
 }
 </pre>
 </div>
-<p>1つのalways_ffブロックで、複数のレジスタの値を変更することができます。レジスタの値は、always_ffブロックの中の全ての代入文の右辺を評価した後に同時に変更されます。この代入はブロッキング代入と違って逐次実行されないので、<b>ノンブロッキング代入</b>(non-blocking assignment)と呼びます。</p>
+<p>1つのalways_ffブロックで、複数のレジスタの値を変更することができます。レジスタの値は、always_ffブロックの中の全ての代入文の右辺を評価した後に変更されます。この代入はブロッキング代入と違って逐次実行されないので、<b>ノンブロッキング代入</b>(non-blocking assignment)と呼びます。</p>
 <div id="always_ff.nonblocking" class="caption-code">
 <span class="caption">リスト2.16: リスト2.16: ノンブロッキング代入のタイミングは同じ</span>
 <pre class="list language-nonblocking">always_ff {
         if_reset {
                 ...
         } else {
-                // 先に右辺の評価を行ってから、同時にA, Bが変更される
+                // 全ての代入文の右辺を評価した後に、A, Bが変更される
                 // その結果、AとBの値が入れ替わる
                 A = B;
                 B = A;
@@ -365,10 +368,10 @@ always_ff(clk, rst) {
 }
 </pre>
 </div>
-<p><span class="listref"><a href="./03-veryl.html#always_ff.nonblocking">リスト2.16</a></span>のAとBの代入文は、2つのalways_ffブロックに分けて記述することができます(<span class="listref"><a href="./03-veryl.html#multi.always_ff.nonblocking">リスト2.17</a></span>)。この場合も<span class="listref"><a href="./03-veryl.html#always_ff.nonblocking">リスト2.16</a></span>と同様に、同じタイミングで更新されるalways_ffの全ての代入文の右辺が評価された後に、同時にレジスタの値が変更されます。</p>
+<p><span class="listref"><a href="./03-veryl.html#always_ff.nonblocking">リスト2.16</a></span>のAとBの代入文は、2つのalways_ffブロックに分けて記述することができます(<span class="listref"><a href="./03-veryl.html#multi.always_ff.nonblocking">リスト2.17</a></span>)。この場合も<span class="listref"><a href="./03-veryl.html#always_ff.nonblocking">リスト2.16</a></span>と同様に、同じタイミングで更新されるalways_ffブロック内の全ての代入文の右辺が評価された後に、レジスタの値が変更されます。</p>
 <p>2つ以上のalways_ffブロックで、1つの同じレジスタの値を変更することはできません。</p>
 <div id="multi.always_ff.nonblocking" class="caption-code">
-<span class="caption">リスト2.17: リスト2.17: 同じタイミングで更新されるalways_ffは同時に実行される</span>
+<span class="caption">リスト2.17: リスト2.17: 同じタイミングで更新されるalways_ffブロック</span>
 <pre class="list language-nonblocking">// AとBの値を入れ替える
 always_ff(clk, rst) {
         A = B;
@@ -383,10 +386,9 @@ always_ff(clk, rst) {
 <div id="table.assign" class="table">
 <p class="caption">表2.4: 変数への代入方法と動作の違い</p>
 <table>
-<tr class="hline"><th>代入方法</th><th>値の更新タイミング</th></tr>
-<tr class="hline"><td>assign文<br />let文</td><td>式に使用されている変数が更新されたとき。<br />継続的代入される。</td></tr>
-<tr class="hline"><td>always_combでの代入</td><td>always_combブロック内の式に使用されている変数が更新されたとき。<br />ブロッキング代入になるので、上から順に実行される。</td></tr>
-<tr class="hline"><td>always_ffでの代入</td><td>クロック信号, またはリセット信号のタイミング。<br />ノンブロッキング代入になるので、同じタイミングで更新されるalways_ff<br />での代入は全て同時に実行される。</td></tr>
+<tr class="hline"><th>代入場所</th><th>代入文の名称</th><th> 更新タイミング</th></tr>
+<tr class="hline"><td>always_comb</td><td>ブロッキング代入</td><td>ブロック内の式で参照されている変数が更新されたとき。<br />上から順に実行される。</td></tr>
+<tr class="hline"><td>always_ff</td><td>ノンブロッキング代入</td><td>クロック信号, またはリセット信号のタイミング。<br />同じタイミングで実行される全ての代入文の右辺を評価した後<br />にレジスタの値が変更される。</td></tr>
 </table>
 </div>
 
@@ -671,7 +673,7 @@ always_comb {
 }
 </pre>
 </div>
-<p>always_combブロックで変数に代入するとき、if文の全ての場合で代入する必要があることに注意してください(<code class="inline-code">v</code>は常に代入されています)。</p>
+<p>always_combブロック内で変数に代入するとき、if文の全ての場合で代入する必要があることに注意してください(<code class="inline-code">v</code>は常に代入されています)。</p>
 <p><span class="listref"><a href="./03-veryl.html#if.only">リスト2.31</a></span>と同じ意味の文を<b>switch</b>文で書くことができます(<span class="listref"><a href="./03-veryl.html#switch.only">リスト2.32</a></span>)。どの条件にも当てはまらないときの動作は<b>default</b>で指定します。switchは式にすることができます。switch式は必ず値を返す必要があり、defaultが必須です。</p>
 <div id="switch.only" class="caption-code">
 <span class="caption">リスト2.32: リスト2.32: switch文, switch式</span>
