@@ -224,7 +224,7 @@ print(&quot;\n&quot;.join(results))
 <li>_start : reset_vectorにジャンプする</li>
 <li>reset_vector : 各種状態を初期化する</li>
 <li>test_* : テストを実行する。命令の結果がおかしかったらfailに飛ぶ。最後まで正常に実行できたらpassに飛ぶ。</li>
-<li>fail, pass : テストの成否をレジスタに書き込み、trap_vectorに飛ぶ</li>
+<li>fail、pass : テストの成否をレジスタに書き込み、trap_vectorに飛ぶ</li>
 <li>trap_vector : write_tohostに飛ぶ</li>
 <li>write_tohost : テスト結果をメモリに書き込む。ここでループする</li>
 </ol>

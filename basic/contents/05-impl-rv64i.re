@@ -54,15 +54,15 @@ RV64Iになっても命令の幅(ILEN)は32ビットのままです。
 #@end
 //}
 
-=== SLL[I], SRL[I], SRA[I]命令を変更する
+=== SLL[I]、SRL[I]、SRA[I]命令を変更する
 
 RV32Iでは、シフト命令はrs1の値を0 ～ 31ビットシフトする命令として定義されています。
 これがRV64Iでは、rs1の値を0 ～ 63ビットシフトする命令に変更されます。
 
 これに対応するために、ALUのシフト演算する量を5ビットから6ビットに変更します
 (@<list>{alu.veryl.xlen-shift-range.shift})。
-I形式の命令(SLLI, SRLI, SRAI)のときは即値の下位6ビット、
-R形式の命令(SLL, SRL, SRA)のときはレジスタの下位6ビットが利用されるようにします。
+I形式の命令(SLLI、SRLI、SRAI)のときは即値の下位6ビット、
+R形式の命令(SLL、SRL、SRA)のときはレジスタの下位6ビットが利用されるようにします。
 
 //list[alu.veryl.xlen-shift-range.shift][シフト命令でシフトする量を変更する (alu.veryl)]{
 #@maprange(scripts/05/xlen-shift-range/core/src/alu.veryl,shift)
@@ -73,7 +73,7 @@ R形式の命令(SLL, SRL, SRA)のときはレジスタの下位6ビットが利
 //}
 
 
-=== LUI, AUIPC命令を変更する
+=== LUI、AUIPC命令を変更する
 
 RV32Iでは、LUI命令は32ビットの即値をそのままレジスタに格納する命令として定義されています。
 これがRV64Iでは、32ビットの即値を64ビットに符号拡張した値を格納する命令に変更されます。
@@ -91,12 +91,12 @@ AUIPC命令も同様で、即値にPCを足す前に、即値を64ビットに�
 === CSRを変更する
 
 MXLEN(=XLEN)が64ビットに変更されると、CSRの幅も64ビットに変更されます。
-そのため、mtvec, mepc, mcauseレジスタの幅を64ビットに変更する必要があります。
+そのため、mtvec、mepc、mcauseレジスタの幅を64ビットに変更する必要があります。
 
-しかし、mtvec, mepc, mcauseレジスタは
+しかし、mtvec、mepc、mcauseレジスタは
 XLENビットのレジスタ(@<code>{UIntX})として定義しているため、
 変更の必要はありません。
-また、mtvec, mepc, mcauseレジスタはMXLENを基準に定義されており、
+また、mtvec、mepc、mcauseレジスタはMXLENを基準に定義されており、
 RV32IからRV64Iに変わってもフィールドに変化はないため、
 対応は必要ありません。
 
@@ -210,19 +210,19 @@ ADD命令のテストを含む、ほとんどのテストに失敗してしま�
 
 というわけで、失敗していることを気にせずに実装を進めていきます。
 
-== ADD[I]W, SUBW命令の実装
+== ADD[I]W、SUBW命令の実装
 
 RV64Iでは、ADD命令は64ビット単位で演算する命令になり、
-32ビットの加算をするADDW, ADDIW命令が追加されます。
+32ビットの加算をするADDW命令とADDIW命令が追加されます。
 同様に、SUB命令は64ビッド単位の演算になり、
 32ビットの減算をするSUBW命令が追加されます。
 32ビットの演算結果は符号拡張します。
 
-=== ADD[I]W, SUBW命令をデコードする
+=== ADD[I]W、SUBW命令をデコードする
 
-//image[addsubw][ADDW, ADDIW, SUBW命令のフォーマット@<bib>{isa-manual.1.37}]
+//image[addsubw][ADDW、ADDIW、SUBW命令のフォーマット@<bib>{isa-manual.1.37}]
 
-ADDW, SUBW命令はR形式で、opcodeは@<code>{OP-32}(@<code>{7'b0111011})です。
+ADDW命令とSUBW命令はR形式で、opcodeは@<code>{OP-32}(@<code>{7'b0111011})です。
 ADDIW命令はI形式で、opcodeは@<code>{OP-IMM-32}(@<code>{7'b0011011})です。
 
 まず、eeiパッケージにopcodeの定数を定義します
@@ -258,12 +258,12 @@ ADDIW命令はI形式で、opcodeは@<code>{OP-IMM-32}(@<code>{7'b0011011})で�
 
 inst_decoderモジュールの@<code>{InstCtrl}と即値を生成している部分を変更します
 (
-@<list>{inst_decoder.veryl.addsubw-range.ctrl},
+@<list>{inst_decoder.veryl.addsubw-range.ctrl}、
 @<list>{inst_decoder.veryl.addsubw-range.imm}
 )。
 これでデコードは完了です。
 
-//list[inst_decoder.veryl.addsubw-range.ctrl][OP-32, OP-IMM-32のInstCtrlの生成 (inst_decoder.veryl)]{
+//list[inst_decoder.veryl.addsubw-range.ctrl][OP-32、OP-IMM-32のInstCtrlの生成 (inst_decoder.veryl)]{
 #@# #@maprange(scripts/05/addsubw-range/core/src/inst_decoder.veryl,ctrl)
                                      is_op32を追加
     ctrl = {case op {                      ↓
@@ -298,10 +298,10 @@ inst_decoderモジュールの@<code>{InstCtrl}と即値を生成している部
 #@end
 //}
 
-=== ALUにADDW, SUBWを実装する
+=== ALUにADDW、SUBWを実装する
 
 制御フラグを生成できたので、
-それに応じて32ビットのADD, SUBを計算するようにします。
+それに応じて32ビットのADDとSUBを計算するようにします。
 
 まず、32ビットの足し算と引き算の結果を生成します
 (@<list>{alu.veryl.addsubw-range.32})。
@@ -349,11 +349,11 @@ case文の足し算と引き算の部分を次のように変更します
 #@end
 //}
 
-=== ADD[I]W, SUBW命令をテストする
+=== ADD[I]W、SUBW命令をテストする
 
 RV64I向けのテストを実行し、生成される結果ファイルを確認します
 (
-@<list>{rv64ui-p.test.addsubw},
+@<list>{rv64ui-p.test.addsubw}、
 @<list>{results.txt.addsubw}
 )。
 
@@ -384,23 +384,23 @@ PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-subw.bin.hex
 ...
 //}
 
-ADDIW, ADDW, SUBW命令のテストに成功していることを確認できます、
+ADDIW、ADDW、SUBW命令のテストに成功していることを確認できます、
 また、未実装の命令以外のテストに成功するようになっています。
 
-== SLL[I]W, SRL[I]W, SRA[I]W命令の実装
+== SLL[I]W、SRL[I]W、SRA[I]W命令の実装
 
-RV64Iでは、SLL[I], SRL[I], SRA[I]命令はrs1を0 ～ 63ビットシフトする命令になり、
-rs1の下位32ビットを0 ～ 31ビットシフトするSLL[I]W, SRL[I]W, SRA[I]W命令が追加されます。
+RV64Iでは、SLL[I]、SRL[I]、SRA[I]命令はrs1を0 ～ 63ビットシフトする命令になり、
+rs1の下位32ビットを0 ～ 31ビットシフトするSLL[I]W、SRL[I]W、SRA[I]W命令が追加されます。
 32ビットの演算結果は符号拡張します。
 
-//image[sllsrlsraw][SLL[I\]W, SRL[I\]W, SRA[I\]W命令のフォーマット @<bib>{isa-manual.1.37}]
+//image[sllsrlsraw][SLL[I\]W、SRL[I\]W、SRA[I\]W命令のフォーマット @<bib>{isa-manual.1.37}]
 
-SLL[I]W, SRL[I]W, SRA[I]W命令のフォーマットは、
-RV32IのSLL[I], SRL[I], SRA[I]命令のopcodeを変えたものと同じです。
-SLLW, SRLW, SRAW命令はR形式で、opcodeは@<code>{OP-32}です。
-SLLIW, SRLIW, SRAIW命令はI形式で、opcodeは@<code>{OP-IMM-32}です。
+SLL[I]W、SRL[I]W、SRA[I]W命令のフォーマットは、
+RV32IのSLL[I]、SRL[I]、SRA[I]命令のopcodeを変えたものと同じです。
+SLLW、SRLW、SRAW命令はR形式で、opcodeは@<code>{OP-32}です。
+SLLIW、SRLIW、SRAIW命令はI形式で、opcodeは@<code>{OP-IMM-32}です。
 どちらのopcodeの命令も、
-ADD[I]W, SUBW命令の実装時にデコードが完了しています。
+ADD[I]W命令とSUBW命令の実装時にデコードが完了しています。
 
 aluモジュールで、シフト演算の結果を生成します
 (@<list>{alu.veryl.sllsrlsraw-range.let})。
@@ -429,11 +429,11 @@ case文のシフト演算の部分を次のように変更します
 #@end
 //}
 
-=== SLL[I]W, SRL[I]W, SRA[I]W命令をテストする
+=== SLL[I]W、SRL[I]W、SRA[I]W命令をテストする
 
 
 RV64I向けのテストを実行し、生成される結果ファイルを確認します
-(@<list>{rv64ui-p.test.sllsrlsraw}, @<list>{results.txt.sllsrlsraw})。
+(@<list>{rv64ui-p.test.sllsrlsraw}、@<list>{results.txt.sllsrlsraw})。
 
 //terminal[rv64ui-p.test.sllsrlsraw][RV64I向けのテストを実行する]{
 $ @<userinput>{make build}
@@ -464,12 +464,12 @@ PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-srlw.bin.hex
 ...
 //}
 
-SLLW, SLLIW, SRLW, SRLIW, SRAW, SRAIW命令のテストに成功していることを確認できます。
+SLLW、SLLIW、SRLW、SRLIW、SRAW、SRAIW命令のテストに成功していることを確認できます。
 
 == LWU命令の実装
 
-LB, LH命令は、ロードした値を符号拡張した値をレジスタに格納します。
-これに対して、LBU, LHU命令は、
+LB、LH命令は、ロードした値を符号拡張した値をレジスタに格納します。
+これに対して、LBU、LHU命令は、
 ロードした値をゼロで拡張した値をレジスタに格納します。
 
 同様に、LW命令は、ロードした値を符号拡張した値をレジスタに格納します。
@@ -480,8 +480,7 @@ LWU命令が追加されます。
 //image[lwu][LWU命令のフォーマット@<bib>{isa-manual.1.37}]
 
 LWU命令はI形式で、opcodeは@<code>{LOAD}です。
-ロード, ストア命令はfunct3によって区別することができます。
-LWU命令のfunct3は@<code>{3'b110}です。
+ロードストア命令はfunct3によって区別することができて、LWU命令のfunct3は@<code>{3'b110}です。
 デコード処理に変更は必要なく、メモリにアクセスする処理を変更する必要があります。
 
 memunitモジュールの、ロードする部分を変更します。
@@ -507,11 +506,11 @@ PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-lwu.bin.hex
 Test Result : 1 / 1
 //}
 
-== LD, SD命令の実装
+== LD、SD命令の実装
 
-RV64Iには、64ビット単位でロード, ストアを行うLD命令, SD命令が定義されています。
+RV64Iには、64ビット単位でロードストアを行うLD命令とSD命令が定義されています。
 
-//image[ldsd][LD, SD命令のフォーマット]
+//image[ldsd][LD、SD命令のフォーマット]
 
 LD命令はI形式で、opcodeは@<code>{LOAD}です。
 SD命令はS形式で、opcodeは@<code>{STORE}です。
@@ -535,20 +534,20 @@ SD命令はS形式で、opcodeは@<code>{STORE}です。
 
 === 命令フェッチ処理を修正する
 
-@<code>{XLEN}, @<code>{MEM_DATA_WIDTH}が変わっても、
+@<code>{XLEN}、@<code>{MEM_DATA_WIDTH}が変わっても、
 命令の長さ(@<code>{ILEN})は32ビットのままです。
 そのため、topモジュールの@<code>{i_membus.rdata}の幅は32ビットなのに対し、
 @<code>{membus.rdata}は64ビットになり、ビット幅が一致しません。
 
 ビット幅を合わせ、正しく命令をフェッチするために、
-64ビットの読み出しデータの上位32ビット,
+64ビットの読み出しデータの上位32ビット、
 下位32ビットをアドレスの下位ビットで選択します。
-アドレスが8の倍数のときは下位32ビット,
+アドレスが8の倍数のときは下位32ビット、
 それ以外のときは上位32ビットを選択します。
 
 まず、命令フェッチの要求アドレスをレジスタに保存します
 (
-@<list>{top.veryl.ldsd-range.last_iaddr},
+@<list>{top.veryl.ldsd-range.last_iaddr}、
 @<list>{top.veryl.ldsd-range.always_arb}
 )。
 
@@ -669,9 +668,9 @@ SD命令の実装のためには、
 #@end
 //}
 
-=== LD, SD命令をテストする
+=== LD、SD命令をテストする
 
-LD, SD命令のテストを実行する前に、
+LD、SD命令のテストを実行する前に、
 メモリのデータ単位が4バイトから8バイトになったため、
 テストのHEXファイルを4バイト単位の改行から8バイト単位の改行に変更します
 (@<list>{hex.8})。
@@ -683,7 +682,7 @@ $ @<userinput>{find share/ -type f -name "*.bin" -exec sh -c "python3 bin2hex.py
 
 riscv-testsを実行します(@<list>{riscv-tests.ldsd})。
 
-//terminal[riscv-tests.ldsd][RV32I, RV64Iをテストする]{
+//terminal[riscv-tests.ldsd][RV32I、RV64Iをテストする]{
 $ @<userinput>{make build}
 $ @<userinput>{make sim VERILATOR_FLAGS="-DTEST_MODE"}
 $ @<userinput>{python3 test/test.py -r obj_dir/sim test/share rv32ui-p-}

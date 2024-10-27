@@ -84,12 +84,12 @@
 <h4><a id="h7-1-2-1"></a>実行命令数に注目する</h4>
 <p>実行命令数を減らすためには、コンパイラによる最適化でプログラムの命令数を減らすソフトウェア的な方法と、命令セットアーキテクチャ(ISA)を変更することで必要な命令数を減らす方法が存在します。どちらも本書の目的とするところではないので、検討しません<sup><a id="fnb-other.runinst" href="#fn-other.runinst" class="noteref" epub:type="noteref">*1</a></sup>。</p>
 <div class="footnote-list">
-<div class="footnote" id="fn-other.runinst" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>他の方法として、関数呼び出しやループをCPU側で検知して結果を保存, 利用することで実行命令数を減らす手法があります。この手法についてはずっと後の章で検討します。</p></div>
+<div class="footnote" id="fn-other.runinst" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>他の方法として、関数呼び出しやループをCPU側で検知して結果を保存して利用することで実行命令数を減らす手法があります。この手法についてはずっと後の章で検討します。</p></div>
 </div><!--/.footnote-list-->
 
 <h4><a id="h7-1-2-2"></a>CPIに注目する</h4>
 <p>CPIを減らすためには、例えばどの命令も1クロックで実行するようにしてしまうという方法が考えられます。しかし、そのために論理回路を大きくすると、その分クリティカルパスが長くなってしまう場合があります。また、1クロックに1命令しか実行しない場合、どう頑張ってもCPIは1より小さくなりません。</p>
-<p>CPIをより効果的に減らすためには、1クロックで1つ以上の命令を実行開始し、1つ以上の命令を実行完了すればいいです。これを実現する手法として、スーパースカラやアウトオブオーダー実行が存在します。これらの手法はずっと後の章で解説, 実装します。</p>
+<p>CPIをより効果的に減らすためには、1クロックで1つ以上の命令を実行開始し、1つ以上の命令を実行完了すればいいです。これを実現する手法として、スーパースカラやアウトオブオーダー実行が存在します。これらの手法はずっと後の章で解説、実装します。</p>
 
 <h4><a id="h7-1-2-3"></a>クロック周波数に注目する</h4>
 <p>クロック周波数を増大させるには、クリティカルパスの長さを短くする必要があります。</p>
@@ -133,30 +133,30 @@
     メモリから命令をフェッチします。<br />
     フェッチした命令をIDステージに受け渡します。
 </dd>
-<dt>ID (Instruction Decode) ステージ (2,3)</dt>
+<dt>ID (Instruction Decode) ステージ (2、3)</dt>
 <dd>
     命令をデコードし、制御フラグと即値を生成します。<br />
     生成したデータをEXステージに渡します。
 </dd>
-<dt>EX (EXecute) ステージ (3, 4)</dt>
+<dt>EX (EXecute) ステージ (3、4)</dt>
 <dd>
-    制御フラグ, 即値, レジスタの値を利用し、ALUで計算します。<br />
+    制御フラグ、即値、レジスタの値を利用し、ALUで計算します。<br />
     分岐判定やジャンプ先の計算も行い、生成したデータをMEMステージに渡します。
 </dd>
-<dt>MEM (MEMory) ステージ (5, 7)</dt>
+<dt>MEM (MEMory) ステージ (5、7)</dt>
 <dd>
     メモリにアクセスする命令とCSR命令を処理します。<br />
-    分岐命令かつ分岐が成立する, ジャンプ命令である, またはトラップが発生するとき、
-    IF, ID, EXステージにある命令を無効化して、ジャンプ先をIFステージに伝えます。
-    メモリ, CSRの読み込み結果等をWBステージに渡します。
+    分岐命令かつ分岐が成立する、ジャンプ命令である、またはトラップが発生するとき、
+    IF、ID、EXステージにある命令を無効化して、ジャンプ先をIFステージに伝えます。
+    メモリのロード、CSRの読み込み結果をWBステージに渡します。
 </dd>
 <dt>WB (WriteBack) ステージ (6)</dt>
 <dd>
-    ALUの演算結果, メモリやCSRの読み込み結果など、命令の処理結果をレジスタに書き込みます。
+    ALUの演算結果、メモリやCSRの読み込み結果など、命令の処理結果をレジスタに書き込みます。
 </dd>
 </dl>
-<p>MEMステージではジャンプするときにIF, ID, EXステージにある命令を無効化します。これは、IF, ID, EXステージにある命令は、ジャンプによって実行されない命令になるためです。パイプラインのステージにある命令を無効化することを、パイプラインを<b>フラッシュ</b>(flush)すると呼びます。</p>
-<p>IF, ID, EX, MEM, WBの5段の構成を、<b>5段パイプライン</b>(Five Stage Pipeline)と呼ぶことがあります。</p>
+<p>MEMステージではジャンプするときにIF、ID、EXステージにある命令を無効化します。これは、IF、ID、EXステージにある命令は、ジャンプによって実行されない命令になるためです。パイプラインのステージにある命令を無効化することを、パイプラインを<b>フラッシュ</b>(flush)すると呼びます。</p>
+<p>IF、ID、EX、MEM、WBの5段の構成を、<b>5段パイプライン</b>(Five Stage Pipeline)と呼ぶことがあります。</p>
 <div class="note">
 <h5>CSRをMEMステージで処理する</h5>
 <p>上記の5段のパイプライン処理では、CSRの処理をMEMステージで行っています。これはいったいなぜでしょうか?</p>
@@ -188,10 +188,10 @@
     var ids_imm      : UIntX   ;
 </pre>
 </div>
-<p><code class="inline-code">inst_valid</code>, <code class="inline-code">inst_is_new</code>, <code class="inline-code">inst_pc</code>,<code class="inline-code">inst_bits</code>, <code class="inline-code">inst_ctrl</code>, <code class="inline-code">inst_imm</code>の名前を<span class="listref"><a href="./05a-pipeline.html#core.veryl.ifs-range.ifs">リスト7.1</a></span>のように変更します。定義だけではなく、変数を使用しているところもすべて変更してください。</p>
+<p><code class="inline-code">inst_valid</code>、<code class="inline-code">inst_is_new</code>、<code class="inline-code">inst_pc</code>、<code class="inline-code">inst_bits</code>、<code class="inline-code">inst_ctrl</code>、<code class="inline-code">inst_imm</code>の名前を<span class="listref"><a href="./05a-pipeline.html#core.veryl.ifs-range.ifs">リスト7.1</a></span>のように変更します。定義だけではなく、変数を使用しているところもすべて変更してください。</p>
 
 <h3 class="none"><a id="h7-2-2"></a><span class="secno">7.2.2</span> FIFOを作成する</h3>
-<p>命令フェッチ処理とそれ以降の処理は、それぞれ独立して動作しています。実は既にCPUは、IF, IDステージ(命令フェッチ以外の処理を行うステージ)の2ステージのパイプライン処理を行っています。</p>
+<p>命令フェッチ処理とそれ以降の処理は、それぞれ独立して動作しています。実は既にCPUは、IFとIDステージ(命令フェッチ以外の処理を行うステージ)の2ステージのパイプライン処理を行っています。</p>
 <p>IFステージとIDステージはFIFOで区切られており、FIFOのレジスタを経由して命令の受け渡しを行います。これと同様に、5ステージのパイプライン処理の実装では、それぞれのステージをFIFOで接続します(<span class="imgref"><a href="./05a-pipeline.html#pipeline_fifo">図7.4</a></span>)。ただし、FIFOのサイズは1とします。この場合、FIFOはただの1つのレジスタです。</p>
 <div id="pipeline_fifo" class="image">
 <img src="images/05a-pipeline/pipeline_fifo.png" alt="FIFOを利用したパイプライン処理" class="img" />
@@ -199,7 +199,7 @@
 図7.4: FIFOを利用したパイプライン処理
 </p>
 </div>
-<p>IFからIDへのFIFOは存在するため、IDからEX, EXからMEM, MEMからWBへのFIFOを作成します。</p>
+<p>IFからIDへのFIFOは存在するため、IDからEX、EXからMEM、MEMからWBへのFIFOを作成します。</p>
 
 <h4><a id="h7-2-2-1"></a>構造体の定義</h4>
 <div id="fifo_type" class="image">
@@ -236,7 +236,7 @@
     }
 </pre>
 </div>
-<p>EXステージは、IDステージで生成された制御フラグと即値と受け取ります。整数演算命令の時、レジスタのデータを読み取り、ALUで計算します。分岐命令のとき、分岐判定を行います。CSRやメモリアクセスでrs1, rs2のデータを利用するため、演算の結果とともにMEMステージに渡します。</p>
+<p>EXステージは、IDステージで生成された制御フラグと即値と受け取ります。整数演算命令の時、レジスタのデータを読み取り、ALUで計算します。分岐命令のとき、分岐判定を行います。CSRやメモリアクセスでrs1とrs2のデータを利用するため、演算の結果とともにMEMステージに渡します。</p>
 <div id="fifo.type.wb" class="caption-code">
 <span class="caption">リスト7.4: リスト7.4: MEM -&amp;gt; WBの間のFIFOのデータ型 (core.veryl)</span>
 <pre class="list language-wb">    struct wbq_type {
@@ -251,11 +251,11 @@
 </pre>
 </div>
 <p>MEMステージは、メモリのロード結果とCSRの読み込みデータを生成し、WBステージに渡します。</p>
-<p>WBステージでは、命令がライトバックする命令の時、即値, ALUの計算結果, メモリのロード結果, CSRの読み込みデータから1つを選択し、レジスタに値を書き込みます。</p>
+<p>WBステージでは、命令がライトバックする命令の時、即値、ALUの計算結果、メモリのロード結果、CSRの読み込みデータから1つを選択し、レジスタに値を書き込みます。</p>
 <p>構造体のフィールドの生存区間が<span class="imgref"><a href="./05a-pipeline.html#fifo_type">図7.5</a></span>のようになっている理由が、なんとなく分かったでしょうか?</p>
 
 <h4><a id="h7-2-2-2"></a>FIFOのインスタンス化</h4>
-<p>FIFOと接続するための変数を定義し、FIFOをインスタンス化します(<span class="listref"><a href="./05a-pipeline.html#fifo.vars">リスト7.5</a></span>, <span class="listref"><a href="./05a-pipeline.html#fifo.inst">リスト7.6</a></span>)。<code class="inline-code">DATA_TYPE</code>パラメータには、先ほど作成した構造体を設定します。FIFOのデータの個数は1であるため、<code class="inline-code">WIDTH</code>パラメータには<code class="inline-code">1</code>を設定します<sup><a id="fnb-fifo.width" href="#fn-fifo.width" class="noteref" epub:type="noteref">*3</a></sup>。<code class="inline-code">mem_wb_fifo</code>の<code class="inline-code">flush</code>が<code class="inline-code">0</code>になっていることに注意してください。</p>
+<p>FIFOと接続するための変数を定義し、FIFOをインスタンス化します(<span class="listref"><a href="./05a-pipeline.html#fifo.vars">リスト7.5</a></span>、<span class="listref"><a href="./05a-pipeline.html#fifo.inst">リスト7.6</a></span>)。<code class="inline-code">DATA_TYPE</code>パラメータには、先ほど作成した構造体を設定します。FIFOのデータの個数は1であるため、<code class="inline-code">WIDTH</code>パラメータには<code class="inline-code">1</code>を設定します<sup><a id="fnb-fifo.width" href="#fn-fifo.width" class="noteref" epub:type="noteref">*3</a></sup>。<code class="inline-code">mem_wb_fifo</code>の<code class="inline-code">flush</code>が<code class="inline-code">0</code>になっていることに注意してください。</p>
 <div class="footnote-list">
 <div class="footnote" id="fn-fifo.width" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*3] </span>FIFOのデータ個数は2 ** WIDTH - 1です</p></div>
 </div><!--/.footnote-list-->
@@ -337,7 +337,7 @@
 
 <h3 class="none"><a id="h7-2-3"></a><span class="secno">7.2.3</span> IFステージを実装する</h3>
 <p>まず、IFステージを実装します。...といっても、既にIFステージ(=命令フェッチ処理)は独立に動くものとして実装されているため、手を加える必要はありません。</p>
-<p>ステージの区間を示すために、<span class="listref"><a href="./05a-pipeline.html#mark_if">リスト7.7</a></span>のようなコメントを挿入すると良いです。ID, EX, MEM, WBステージを実装する時にも同様のコメントを挿入し、ステージの処理のコードをまとまった場所に配置しましょう。</p>
+<p>ステージの区間を示すために、<span class="listref"><a href="./05a-pipeline.html#mark_if">リスト7.7</a></span>のようなコメントを挿入すると良いです。ID、EX、MEM、WBステージを実装する時にも同様のコメントを挿入し、ステージの処理のコードをまとまった場所に配置しましょう。</p>
 <div id="mark_if" class="caption-code">
 <span class="caption">リスト7.7: リスト7.7: IFステージが始まることを示すコメントを挿入する (core.veryl)</span>
 <pre class="list">    ///////////////////////////////// IF Stage /////////////////////////////////
@@ -349,7 +349,7 @@
 
 <h3 class="none"><a id="h7-2-4"></a><span class="secno">7.2.4</span> IDステージを実装する</h3>
 <p>IDステージでは、命令をデコードします。</p>
-<p>既に<code class="inline-code">ids_ctrl</code>, <code class="inline-code">ids_imm</code>には、デコード結果の制御フラグと即値が割り当てられています。そのため、既存のコードの変更は必要ありません。</p>
+<p>既に<code class="inline-code">ids_ctrl</code>と<code class="inline-code">ids_imm</code>には、デコード結果の制御フラグと即値が割り当てられています。そのため、既存のコードの変更は必要ありません。</p>
 <p>デコード結果はEXステージに渡す必要があります。EXステージにデータを渡すには、<code class="inline-code">exq_wdata</code>にデータを割り当てます(<span class="listref"><a href="./05a-pipeline.html#always_comb_id">リスト7.8</a></span>)。</p>
 <div id="always_comb_id" class="caption-code">
 <span class="caption">リスト7.8: リスト7.8: EXステージに値を渡す (core.veryl)</span>
@@ -475,7 +475,7 @@
 <p>EXステージにある命令は、MEMステージが命令を受け付けることができるとき(<code class="inline-code">memq_wready</code>)、EXステージを完了してMEMステージに処理を進めることができます。この仕組みは、<code class="inline-code">exq_rready</code>に<code class="inline-code">memq_wready</code>を割り当てることで実現できます。</p>
 
 <h3 class="none"><a id="h7-2-6"></a><span class="secno">7.2.6</span> MEMステージを実装する</h3>
-<p>MEMステージでは、メモリにアクセスする命令とCSR命令を処理します。また、ジャンプ命令, 分岐命令かつ分岐が成立, またはトラップが発生する時、次に実行する命令のアドレスを変更します。</p>
+<p>MEMステージでは、メモリにアクセスする命令とCSR命令を処理します。また、ジャンプ命令、分岐命令かつ分岐が成立、またはトラップが発生する時、次に実行する命令のアドレスを変更します。</p>
 <p>ロードストア命令でメモリにアクセスしているとき、EXステージからMEMステージに別の命令の処理を進めることはできず、パイプライン処理は止まってしまいます。パイプライン処理を進めることができない状態のことを<b>パイプラインハザード</b>(pipeline hazard)と呼びます。</p>
 <p>まず、MEMステージに存在する命令の情報を<code class="inline-code">memq_rdata</code>から取り出します(<span class="listref"><a href="./05a-pipeline.html#var_mem">リスト7.13</a></span>)。MEMステージでは、csrunitモジュールに、命令が現在のクロックでMEMステージに供給されたかどうかの情報を渡す必要があります。そのため、変数<code class="inline-code">mem_is_new</code>を定義しています。</p>
 <div id="var_mem" class="caption-code">
@@ -557,7 +557,7 @@
     };
 </pre>
 </div>
-<p>ジャンプ命令の後ろの余計な命令を実行しないために、<code class="inline-code">control_hazard</code>が<code class="inline-code">1</code>になったとき、ID, EX, MEMステージに命令を供給するFIFOをフラッシュします。<code class="inline-code">control_hazard</code>が<code class="inline-code">1</code>になるとき、MEMステージの処理は完了しています。後述しますが、WBステージの処理は必ず1クロックで終了します。そのため、フラッシュするとき、MEMステージにある命令は必ずWBステージに移動します。</p>
+<p>ジャンプ命令の後ろの余計な命令を実行しないために、<code class="inline-code">control_hazard</code>が<code class="inline-code">1</code>になったとき、ID、EX、MEMステージに命令を供給するFIFOをフラッシュします。<code class="inline-code">control_hazard</code>が<code class="inline-code">1</code>になるとき、MEMステージの処理は完了しています。後述しますが、WBステージの処理は必ず1クロックで終了します。そのため、フラッシュするとき、MEMステージにある命令は必ずWBステージに移動します。</p>
 <p>最後に、WBステージに命令とデータを渡します(<span class="listref"><a href="./05a-pipeline.html#always_comb_mem">リスト7.17</a></span>)。WBステージにデータを渡すために、<code class="inline-code">wbq_wdata</code>にデータを割り当てます</p>
 <div id="always_comb_mem" class="caption-code">
 <span class="caption">リスト7.17: リスト7.17: WBステージにデータを渡す (core.veryl)</span>
@@ -621,7 +621,7 @@
     }
 </pre>
 </div>
-<p>これで、IF, ID, EX, MEM, WBステージを作成できました。</p>
+<p>これで、IF、ID、EX、MEM、WBステージを作成できました。</p>
 
 <h3 class="none"><a id="h7-2-8"></a><span class="secno">7.2.8</span> デバッグのために情報を表示する</h3>
 <p>今までは同時に1つの命令しか処理していませんでしたが、これからは全てのステージで別の命令を処理することになります。デバッグ表示を変更しておきましょう。</p>
@@ -702,7 +702,7 @@ Test Result : 0 / 1
 <h2 class="numbox"><a id="h7-3"></a><span class="secno">7.3</span> データ依存の対処</h2>
 
 <h3 class="none"><a id="h7-3-1"></a><span class="secno">7.3.1</span> 正しく動かないプログラムを確認する</h3>
-<p>実は、ただIF, ID, EX, MEM, WBステージに処理を分割するだけでは、正しく命令を実行することができません。例えば、<span class="listref"><a href="./05a-pipeline.html#dh.example">リスト7.23</a></span>のようなプログラムは正しく動きません。<code class="inline-code">test/sample_datahazard.hex</code>として保存します(<span class="listref"><a href="./05a-pipeline.html#dh.example">リスト7.23</a></span>)。</p>
+<p>実は、ただIF、ID、EX、MEM、WBステージに処理を分割するだけでは、正しく命令を実行することができません。例えば、<span class="listref"><a href="./05a-pipeline.html#dh.example">リスト7.23</a></span>のようなプログラムは正しく動きません。<code class="inline-code">test/sample_datahazard.hex</code>として保存します(<span class="listref"><a href="./05a-pipeline.html#dh.example">リスト7.23</a></span>)。</p>
 <div id="dh.example" class="caption-code">
 <span class="caption">リスト7.23: リスト7.23: sample_datahazard.hex</span>
 <pre class="list language-example">0010811300100093 // 0:addi x1, x0, 1    4: addi x2, x1, 1
@@ -756,7 +756,7 @@ MEM -----
 
 <h3 class="none"><a id="h7-3-3"></a><span class="secno">7.3.3</span> データ依存に対処する</h3>
 <p>レジスタのデータを読み出すのはEXステージです。データ依存に対処するために、データ依存関係があるときにEXステージをストールさせます。</p>
-<p>まず、MEMとEXか、WBとEXステージにある命令の間にデータ依存があることを検知します(<span class="listref"><a href="./05a-pipeline.html#core.veryl.datahazard-range.hazard">リスト7.25</a></span>)。例えばMEMステージとデータ依存の関係にあるとき、MEMステージの命令はライトバックする命令で、rdがEXステージのrs1, またはrs2と一致しています。</p>
+<p>まず、MEMとEXか、WBとEXステージにある命令の間にデータ依存があることを検知します(<span class="listref"><a href="./05a-pipeline.html#core.veryl.datahazard-range.hazard">リスト7.25</a></span>)。例えばMEMステージとデータ依存の関係にあるとき、MEMステージの命令はライトバックする命令で、rdがEXステージのrs1、またはrs2と一致しています。</p>
 <div id="core.veryl.datahazard-range.hazard" class="caption-code">
 <span class="caption">リスト7.25: リスト7.25: データ依存の検知 (core.veryl)</span>
 <pre class="list language-hazard">    // データハザード
@@ -848,7 +848,7 @@ MEM -----
 WB ----
 </pre>
 </div>
-<p>アドレス4の命令が、6,7クロック目にEXステージでデータハザードが発生し、アドレス0の命令が実行終了するのを待っているのを確認できます。</p>
+<p>アドレス4の命令が、6クロック目と7クロック目にEXステージでデータハザードが発生し、アドレス0の命令が実行終了するのを待っているのを確認できます。</p>
 <p>RV64Iのriscv-testsも実行します。</p>
 <div id="riscvtests.successful" class="cmd-code">
 <span class="caption">リスト7.29: リスト7.29: riscv-testsを実行する</span>

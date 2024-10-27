@@ -216,7 +216,7 @@ riscv-testsは、基本的に次の流れで実行されます。
  1. _start : reset_vectorにジャンプする
  2. reset_vector : 各種状態を初期化する
  3. test_* : テストを実行する。命令の結果がおかしかったらfailに飛ぶ。最後まで正常に実行できたらpassに飛ぶ。
- 4. fail, pass : テストの成否をレジスタに書き込み、trap_vectorに飛ぶ
+ 4. fail、pass : テストの成否をレジスタに書き込み、trap_vectorに飛ぶ
  5. trap_vector : write_tohostに飛ぶ
  6. write_tohost : テスト結果をメモリに書き込む。ここでループする
 
