@@ -42,7 +42,7 @@
         <main class="page-main">
 <h1 class="none center"><a id="h"></a><br/>まえがき / はじめに</h1>
 <p>本書を手に取っていただき、ありがとうございます。</p>
-<p>本書は、Verylという言語で<b>CPUを自作する</b>方法について解説した本です。</p>
+<p>本書は、Verylという言語で<b>CPUを自作する</b>方法を解説した本です。</p>
 
 <h4 id="id_00-preface_nonum1" notoc="true">読むとわかること</h4>
 <p>本書を読むと、こんなことが分かります。</p>
@@ -80,32 +80,32 @@
 <p>TODO</p>
 
 <h4 id="id_00-preface_nonum5" notoc="true">注意</h4>
-<p>本書は「Verylで作るCPU 基本編」の第I部のみを発行したものです。そのため、本文に「後の章」と書かれていても、本書には含まれない場合があります。本書のpdfとweb版は無料で配布されており、<a href="https://github.com/nananapo/veryl-riscv-book" class="link">https://github.com/nananapo/veryl-riscv-book</a>で入手することができます。</p>
+<p>本書は「Verylで作るCPU 基本編」の第I部のみを発行したものです。そのため、本文に「後の章」と書かれていても、本書には含まれない場合があります。本書のpdfとWeb版は無料で配布されており、<a href="https://github.com/nananapo/veryl-riscv-book" class="link">https://github.com/nananapo/veryl-riscv-book</a>で入手できます。</p>
 <p></p>
 <hr />
 <p></p>
 
 <h2 id="id_00-preface_nonum6" notoc="true">Intro</h2>
-<p>こんにちは!あなたはCPUを作成したことがありますか?作成したことがあってもなくても大歓迎、この本はCPU自作の面白さとVerylを世に広めるために執筆されました。実装を始める前に、まずはRISC-Vや使用する言語、本書の構成について簡単に解説します。RISC-VやVerylのことを知っているという方は、本書の構成だけ読んでいただければOKです。それでは始めましょう。</p>
+<p>こんにちは!あなたはCPUを作成したことがありますか?作成したことがあってもなくても大歓迎、この本はCPU自作の面白さとVerylを世に広めるために執筆されました。実装を始める前に、まずはRISC-Vや使用する言語、本書の構成を簡単に解説します。RISC-VやVerylのことを知っているという方は、本書の構成だけ読んでいただければOKです。それでは始めましょう。</p>
 
 <h4 id="id_00-preface_nonum7" notoc="true">CPUの自作</h4>
-<p>CPUって自作できるのでしょうか?そもそもCPUの自作って何でしょうか?CPUの自作について一般的な定義はありませんが、筆者は「命令セットアーキテクチャの設計」「論理設計」「物理的に製造する」に分類できると考えています。</p>
-<p><b>命令セットアーキテクチャ</b>(Instruction Set Architecture, <b>ISA</b>)とは、CPUがどのような命令を実行することができるかを定めたもの(仕様)です。ISAの設計は考えるだけなので、紙とペンさえあればできます。<b>論理設計</b>とは、簡単に言うと、仕様の動作を実現する論理回路を設計することです。CPUは論理回路で構成されているため、CPUの設計には論理設計が必要になります。最近のCPUは、物理的には<b>VLSI</b>(Very Large Scale Integration, 超大規模集積回路)によって実装されています。VLSIの製造には莫大なお金が必要です<sup><a id="fnb-vlsi" href="#fn-vlsi" class="noteref" epub:type="noteref">*1</a></sup>。</p>
+<p>CPUって自作できるのでしょうか?そもそもCPUの自作って何でしょうか?CPUの自作の一般的な定義はありませんが、筆者は「命令セットアーキテクチャの設計」「論理設計」「物理的に製造する」に分類できると考えています。</p>
+<p><b>命令セットアーキテクチャ</b>(Instruction Set Architecture, <b>ISA</b>)とは、CPUがどのような命令を実行できるかを定めたもの(仕様)です。ISAの設計は考えるだけなので、紙とペンさえあればできます。<b>論理設計</b>とは、簡単に言うと、仕様の動作を実現する論理回路を設計することです。CPUは論理回路で構成されているため、CPUの設計には論理設計が必要になります。最近のCPUは、物理的には<b>VLSI</b>(Very Large Scale Integration, 超大規模集積回路)によって実装されています。VLSIの製造には莫大なお金が必要です<sup><a id="fnb-vlsi" href="#fn-vlsi" class="noteref" epub:type="noteref">*1</a></sup>。</p>
 <div class="footnote-list">
-<div class="footnote" id="fn-vlsi" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>小さいチップなら安く(※安くない)製造することができます。efablessやTinyTapeout、OpenMPWで検索してください</p></div>
+<div class="footnote" id="fn-vlsi" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>小さいチップなら安く(※安くない)製造できます。efablessやTinyTapeout、OpenMPWで検索してください</p></div>
 </div><!--/.footnote-list-->
-<p>ISAの設計は簡単<sup><a id="fnb-not-easy" href="#fn-not-easy" class="noteref" epub:type="noteref">*2</a></sup>なので、CPUの自作を難しくしているのは、論理設計と物理的な製造です。論理設計については、最近では、論理設計に使う言語やシミュレータ、回路に落とし込むツールなどがオープンに公開されており、昔よりは自作のハードルが下がっています<sup><a id="fnb-not-know" href="#fn-not-know" class="noteref" epub:type="noteref">*3</a></sup>。物理的な製造のハードルは高いですが、FPGAを使うことで簡単にお試しすることができます。<b>FPGA</b>(Field Programmable Gate Array)とは、任意の論理回路を実現できる集積回路のことです<a href="bib.html#bib-amano.fpga">[1]</a>。最近は安価にFPGAを入手することができます。</p>
+<p>ISAの設計は簡単<sup><a id="fnb-not-easy" href="#fn-not-easy" class="noteref" epub:type="noteref">*2</a></sup>なので、CPUの自作を難しくしているのは、論理設計と物理的な製造です。論理設計は、最近では、論理設計に使う言語やシミュレータ、回路に落とし込むツールなどがオープンに公開されており、昔よりは自作のハードルが下がっています<sup><a id="fnb-not-know" href="#fn-not-know" class="noteref" epub:type="noteref">*3</a></sup>。物理的な製造のハードルは高いですが、FPGAを使うことで簡単にお試しできます。<b>FPGA</b>(Field Programmable Gate Array)とは、任意の論理回路を実現できる集積回路のことです<a href="bib.html#bib-amano.fpga">[1]</a>。最近は安価にFPGAを入手できます。</p>
 <div class="footnote-list">
 <div class="footnote" id="fn-not-easy" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*2] </span>簡単ではない。論理設計より難しいかもしれない</p></div>
 <div class="footnote" id="fn-not-know" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*3] </span>筆者は最近にCPUの自作を始めたので最近のことしか知りません。嘘だったらごめん</p></div>
 </div><!--/.footnote-list-->
 <p>本書は、ISAの設計は行わず、論理設計は無料でオープンなツールを利用し、安価(数千 ～ 数万円)なFPGAを利用してCPUを実装します。</p>
-<p>CPUのテストはシミュレータとFPGAで行います。本書では、TangMega 138KとPYNQ-Z1というFPGAを利用します。ただし、実機がなくても実装を進めることができるので所有していなくても構いません。</p>
+<p>CPUのテストはシミュレータとFPGAで行います。本書では、TangMega 138KとPYNQ-Z1というFPGAを利用します。ただし、実機がなくても実装を進められるので所有していなくても構いません。</p>
 
 <h4 id="id_00-preface_nonum8" notoc="true">RISC-V</h4>
 <p><b>RISC-V</b>は、カリフォルニア大学バークレー校で開発されたISAです。仕様書の初版は2011年に公開されました。ISAとしての歴史はまだ浅いですが、仕様がオープンでカスタマイズ可能であるという特徴もあって、研究で利用されたり既に何種類もCPUが市販されているなど、着実に広まっていっています。</p>
 <p>インターネット上には多くのRISC-Vの実装が公開されています。例として、<a href="https://github.com/chipsalliance/rocket-chip" class="link">RocketChip</a>(Chiselによる実装)、<a href="https://shakti.org.in/" class="link">Shakti</a>(Bluespec SVによる実装)、<a href="https://github.com/rsd-devel/rsd" class="link">RSD</a>(SystemVerilogによる実装)が挙げられます。</p>
-<p>本書では、RISC-VのバージョンRISC-V ISA Manual, version 20240411 を利用します。RISC-Vの最新の仕様は、GitHubの<a href="https://github.com/riscv/riscv-isa-manual/" class="link">riscv/riscv-isa-manual</a>で確認することができます。</p>
+<p>本書では、RISC-VのバージョンRISC-V ISA Manual, version 20240411 を利用します。RISC-Vの最新の仕様は、GitHubの<a href="https://github.com/riscv/riscv-isa-manual/" class="link">riscv/riscv-isa-manual</a>で確認できます。</p>
 <p>RISC-Vには、基本整数命令セットとしてRV32I、RV64I、RV32E、RV64E<sup><a id="fnb-rv128i" href="#fn-rv128i" class="noteref" epub:type="noteref">*4</a></sup>が定義されています。RVの後ろにつく数字はレジスタの長さ(XLEN)が何ビットかです。数字の後ろにつく文字がIの場合、XLENビットのレジスタが32個存在します。Eの場合はレジスタの数が16個になります。</p>
 <div class="footnote-list">
 <div class="footnote" id="fn-rv128i" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*4] </span>RV128Iもありますが、まだDraft段階です</p></div>
@@ -114,10 +114,10 @@
 <p>本書では、まず、<code class="inline-code">RV32I</code>のCPUを実装します。これを、OSを実行できる程度までに進化させることを目標に実装を進めます。</p>
 
 <h4 id="id_00-preface_nonum9" notoc="true">使用する言語</h4>
-<p>CPUの論理設計にはハードウェア記述言語を使用します。ハードウェア記述言語とは、文字通り、ハードウェアを記述するための言語です。ハードウェアとは論理回路のことで、ハードウェア記述言語を使うと論理回路を記述、生成することができます。これ以降、ハードウェア記述言語のことをHDL (Hardware Description Language) と書くことがあります。</p>
-<p>有名なHDLとしてはVerilog HDL、SystemVerilog、VHDLが挙げられますが、本書では、CPUの実装にVerylというHDLを使用します。VerylはSystemVerilogの構文を書きやすくしたような言語で、VerylのソースコードはSystemVerilogに変換することができます。そのため、SystemVerilogを利用できる環境でVerylを使用することができます。</p>
+<p>CPUの論理設計にはハードウェア記述言語を使用します。ハードウェア記述言語とは、文字通り、ハードウェアを記述するための言語です。ハードウェアとは論理回路のことで、ハードウェア記述言語を使うと論理回路を記述、生成できます。これ以降、ハードウェア記述言語のことをHDL (Hardware Description Language) と書くことがあります。</p>
+<p>有名なHDLとしてはVerilog HDL、SystemVerilog、VHDLが挙げられますが、本書では、CPUの実装にVerylというHDLを使用します。VerylはSystemVerilogの構文を書きやすくしたような言語で、VerylのソースコードはSystemVerilogに変換できます。そのため、SystemVerilogを利用できる環境でVerylを使用できます。</p>
 <p>Verylの構文や機能はSystemVerilogと似通っており、SystemVerilogが分かる人は殆ど時間をかけずにVerylを書けるようになると思います。本書はSystemVerilogを知らない人を対象にしているため、SystemVerilogを知っている必要はありません。HDLやVerylの記法は<a href="./03-veryl.html">第2章「ハードウェア記述言語 Veryl」</a>で解説します。</p>
-<p>他には、回路のシミュレーションやテストのためにC++とPythonを利用します。プログラムがどのような意味や機能を持つかについては解説しますが、言語の仕様や書き方、ライブラリなどについては説明しません。</p>
+<p>他には、回路のシミュレーションやテストのためにC++とPythonを利用します。プログラムがどのような意味や機能を持つかは解説しますが、言語の仕様や書き方、ライブラリなどは説明しません。</p>
 
 <h4 id="id_00-preface_nonum10" notoc="true">本書の構成</h4>
 <p>本シリーズ(基本編)では、次のようにCPUを実装していきます。</p>

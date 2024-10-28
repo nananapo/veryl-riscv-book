@@ -80,7 +80,7 @@ RV32Iでは、LUI命令は32ビットの即値をそのままレジスタに格�
 AUIPC命令も同様で、即値にPCを足す前に、即値を64ビットに符号拡張します。
 
 この対応ですが、XLENを64に変更した時点ですでに完了しています(@<list>{inst_decoder.veryl.xlen-shift-range.imm})。
-よって、コードの変更の必要はありません。
+そのため、コードの変更の必要はありません。
 
 //list[inst_decoder.veryl.xlen-shift-range.imm][U形式の即値はXLENビットに拡張されている (inst_decoder.veryl)]{
 #@maprange(scripts/05/xlen-shift-range/core/src/inst_decoder.veryl,imm)
@@ -208,7 +208,7 @@ ADD命令のテストを含む、ほとんどのテストに失敗してしま�
  224:	46771063          	bne	a4,t2,684 <fail>
 //}
 
-というわけで、失敗していることを気にせずに実装を進めていきます。
+ということで、失敗していることを気にせずに実装を進めます。
 
 == ADD[I]W、SUBW命令の実装
 
@@ -480,7 +480,7 @@ LWU命令が追加されます。
 //image[lwu][LWU命令のフォーマット@<bib>{isa-manual.1.37}]
 
 LWU命令はI形式で、opcodeは@<code>{LOAD}です。
-ロードストア命令はfunct3によって区別することができて、LWU命令のfunct3は@<code>{3'b110}です。
+ロードストア命令はfunct3によって区別できて、LWU命令のfunct3は@<code>{3'b110}です。
 デコード処理に変更は必要なく、メモリにアクセスする処理を変更する必要があります。
 
 memunitモジュールの、ロードする部分を変更します。
@@ -545,20 +545,20 @@ SD命令はS形式で、opcodeは@<code>{STORE}です。
 アドレスが8の倍数のときは下位32ビット、
 それ以外のときは上位32ビットを選択します。
 
-まず、命令フェッチの要求アドレスをレジスタに保存します
+まず、命令フェッチの要求アドレスをレジスタに格納します
 (
 @<list>{top.veryl.ldsd-range.last_iaddr}、
 @<list>{top.veryl.ldsd-range.always_arb}
 )。
 
-//list[top.veryl.ldsd-range.last_iaddr][アドレスを保存するためのレジスタの定義 (top.veryl)]{
+//list[top.veryl.ldsd-range.last_iaddr][アドレスを格納するためのレジスタの定義 (top.veryl)]{
 #@maprange(scripts/05/ldsd-range/core/src/top.veryl,last_iaddr)
     var memarb_last_i    : logic;
     @<b>|var memarb_last_iaddr: Addr ;|
 #@end
 //}
 
-//list[top.veryl.ldsd-range.always_arb][レジスタに命令フェッチの要求アドレスを保存する (top.veryl)]{
+//list[top.veryl.ldsd-range.always_arb][レジスタに命令フェッチの要求アドレスを格納する (top.veryl)]{
 #@maprange(scripts/05/ldsd-range/core/src/top.veryl,always_arb)
     // メモリアクセスを調停する
     always_ff {
@@ -698,4 +698,4 @@ PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-sd.bin.hex
 Test Result : 51 / 52
 //}
 
-RV64IのCPUを実装することができました。
+RV64IのCPUを実装できました。

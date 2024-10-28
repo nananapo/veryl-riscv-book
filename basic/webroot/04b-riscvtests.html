@@ -49,11 +49,11 @@
 <p><a href="./04-impl-rv32i.html">第3章</a>では、RV32IのCPUを実装しました。簡単なテストを作成して動作を確かめましたが、まだテストできていない命令が複数あります。そこで、riscv-testsというテストを利用することで、CPUがある程度正しく動いているらしいことを確かめます。</p>
 
 <h2 class="numbox"><a id="h5-1"></a><span class="secno">5.1</span> riscv-testsとは何か?</h2>
-<p>riscv-testsは、RISC-Vのプロセッサ向けのユニットテストやベンチマークの集合です。命令や機能ごとにテストが用意されており、これを利用することで簡単に実装を確かめることができます。すべての命令のすべての場合を網羅するようなテストではないため、riscv-testsをパスしても、確実に実装が正しいとは言えないことに注意してください(<sup><a id="fnb-about.formal" href="#fn-about.formal" class="noteref" epub:type="noteref">*1</a></sup>)。</p>
+<p>riscv-testsは、RISC-Vのプロセッサ向けのユニットテストやベンチマークの集合です。命令や機能ごとにテストが用意されており、これを利用することで簡単に実装を確かめられます。すべての命令のすべての場合を網羅するようなテストではないため、riscv-testsをパスしても、確実に実装が正しいとは言えないことに注意してください(<sup><a id="fnb-about.formal" href="#fn-about.formal" class="noteref" epub:type="noteref">*1</a></sup>)。</p>
 <div class="footnote-list">
 <div class="footnote" id="fn-about.formal" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>実装の正しさを完全に確かめるには形式的検証(formal verification)を行う必要があります</p></div>
 </div><!--/.footnote-list-->
-<p>riscv-testsは、GitHubの<a href="https://github.com/riscv-software-src/riscv-tests" class="link">riscv-software-src/riscv-tests</a>からソースコードをダウンロードすることができます。</p>
+<p>riscv-testsは、GitHubの<a href="https://github.com/riscv-software-src/riscv-tests" class="link">riscv-software-src/riscv-tests</a>からソースコードをダウンロードできます。</p>
 
 <h2 class="numbox"><a id="h5-2"></a><span class="secno">5.2</span> riscv-testsのビルド</h2>
 <div class="miniblock miniblock-info">
@@ -95,7 +95,7 @@ $ <span class="userinput">make install</span>
 <p>core/testにshareディレクトリが作成されます。</p>
 
 <h3 class="none"><a id="h5-2-2"></a><span class="secno">5.2.2</span> 成果物を$readmemhで読み込める形式に変換する</h3>
-<p>riscv-testsをビルドすることができましたが、これは<code class="inline-code">$readmemh</code>システムタスクで読み込める形式(以降HEX形式と呼びます)ではありません。これをCPUでテストを実行できるように、ビルドしたテストのバイナリファイルをHEX形式に変換します。</p>
+<p>riscv-testsをビルドできましたが、これは<code class="inline-code">$readmemh</code>システムタスクで読み込める形式(以降HEX形式と呼びます)ではありません。これをCPUでテストを実行できるように、ビルドしたテストのバイナリファイルをHEX形式に変換します。</p>
 <p>まず、バイナリファイルをHEX形式に変換するPythonプログラム<code class="inline-code">test/bin2hex.py</code>を作成します(<span class="listref"><a href="./04b-riscvtests.html#bin2hex.py">リスト5.4</a></span>)。</p>
 <div id="bin2hex.py" class="caption-code">
 <span class="caption">リスト5.4: リスト5.4: test/bin2hex.py</span>
@@ -476,7 +476,7 @@ Test Result : 39 / 40
 </pre>
 </div>
 <p><code class="inline-code">rv32ui-p-</code>から始まる40個のテストの内、39個のテストにパスしました。テストの詳細な結果はresultsディレクトリに格納されています。</p>
-<p><code class="inline-code">rv32ui-p-ma_data</code>は、ロードストアするサイズに整列されていないアドレスへのロードストア命令のテストです。これについては後の章で例外として対処するため、今は無視します。</p>
+<p><code class="inline-code">rv32ui-p-ma_data</code>は、ロードストアするサイズに整列されていないアドレスへのロードストア命令のテストです。これは後の章で例外として対処するため、今は無視します。</p>
 
         </main>
         <nav class="page-navi">

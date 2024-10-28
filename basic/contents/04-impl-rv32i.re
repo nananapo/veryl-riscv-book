@@ -14,30 +14,29 @@ RISC-VのCPUは基本整数命令セットを必ず実装して、
 
 == CPUは何をやっているのか?
 
-上に書かれている文章の意味が分からなくても大丈夫です。
-詳しく説明します。
-
 CPUを実装するには何が必要でしょうか?
-まずはCPUがどのような動作をするかについて考えてみます。
+まずはCPUとはどのような動作をするものなのかを考えます。
 一般的に、
 汎用のプログラムを実行するCPUは、
-次の手順でプログラムを実行していきます。
+次の手順でプログラムを実行します。
 
  1. メモリからプログラムを読み込む
  2. プログラムを実行する
  3. 1、2の繰り返し
 
-ここで、メモリから読み込まれる「プログラム」とは一体何を示しているのでしょうか?
+ここで、メモリから読み込まれる「プログラム」とは一体何を指しているのでしょうか?
 普通のプログラマが書くのはC言語やRustなどのプログラミング言語のプログラムですが、
 通常のCPUはそれをそのまま解釈して実行することはできません。
 そのため、メモリから読み込まれる「プログラム」とは、
-CPUが読み込んで実行することができる形式のプログラムです。
-これはよく「機械語」と呼ばれ、0と1で表される2進数のビット列@<fn>{trit.computer}で記述されています。
+CPUが読み込んで実行できる形式のプログラムです。
+これはよく「機械語」と呼ばれ、@<code>{0}と@<code>{1}で表される2進数のビット列@<fn>{trit.computer}で記述されています。
 
 //footnote[trit.computer][その昔、Setunという3進数のコンピュータが存在したらしく、機械語は3進数のトリット(trit)で構成されていたようです]
 
 メモリからプログラムを読み込んで実行するのがCPUの仕事ということが分かりました。
 これをもう少し掘り下げます。
+
+//clearpage
 
 まず、プログラムをメモリから読み込むためには、
 メモリのどこを読み込みたいのかという情報(アドレス)をメモリに与える必要があります。
@@ -58,13 +57,13 @@ CPUは命令のビット列がどのような意味を持っていて、
 何と何を足し合わせればいいのか分かりません。
 この計算に使うデータは、次のいずれかで指定されます。
 
- * レジスタ(= CPUに存在する小さなメモリ)の番号
+ * レジスタ(= CPU内に存在する小さなメモリ)の番号
  * 即値(= 命令のビット列から生成される数値)
 
 計算対象のデータにレジスタと即値のどちらを使うかは命令によって異なります。
 レジスタの番号は命令のビット列の中に含まれています。
 
-計算を実行するユニット(部品)のことを、ALU(Arithmetic Logic Unit)と呼びます。
+計算を実行する部品のことを、ALU(Arithmetic Logic Unit)と呼びます。
 
 計算やメモリアクセスが終わると、その結果をレジスタに格納します。
 例えば、足し算を行う命令なら足し算の結果、
@@ -76,10 +75,10 @@ CPUはPCの値をメモリに渡すことで命令をフェッチしています
 
 CPUは次の命令を実行するために、
 PCの値を次の命令のアドレスに設定します。
-ジャンプ命令の場合は、PCの値をジャンプ先のアドレスに設定します。
+ジャンプ命令の場合はPCの値をジャンプ先のアドレスに設定します。
 分岐命令の場合は、まず、分岐の成否を判定します。
-分岐が成立する場合は、PCの値を分岐先のアドレスに設定します。
-分岐が成立しない場合は、通常の命令と同じです。
+分岐が成立する場合はPCの値を分岐先のアドレスに設定します。
+分岐が成立しない場合は通常の命令と同じです。
 
 ここまでの話をまとめると、CPUの動作は次のようになります(@<img>{cpu-arch})。
 
@@ -91,7 +90,9 @@ PCの値を次の命令のアドレスに設定します。
  4. 計算する命令の場合、計算を行う
  5. メモリにアクセスする命令の場合、メモリ操作を行う
  6. 計算やメモリアクセスの結果をレジスタに格納する
- 7. PCの値を次に実行する命令に設定する
+ 7. PCの値を次に実行する命令のアドレスに設定する
+
+#@# 同じ列挙をパイプライン化の章にも書いているので変更するときは注意
 
 CPUが一体どんなものなのかが分かりましたか?
 実装を始めましょう。
@@ -99,7 +100,7 @@ CPUが一体どんなものなのかが分かりましたか?
 == プロジェクトの作成
 
 まず、Verylのプロジェクトを作成します(@<list>{veryl-new})。
-ここでは適当にcoreという名前にしています。
+プロジェクト名はcoreという名前にしています。
 
 //terminal[veryl-new][新規プロジェクトの作成]{
 $ @<userinput>{veryl new core}
@@ -121,7 +122,7 @@ version = "0.1.0"
 //}
 
 Verylのソースファイルを格納するために、
-プロジェクトのディレクトリ内にsrcディレクトリを作成しておいてください
+プロジェクトのディレクトリ内にsrcディレクトリを作成してください
 (@<list>{create.src})。
 
 //terminal[create.src][srcディレクトリを作成する]{
@@ -131,7 +132,7 @@ $ @<userinput>{mkdir src}
 
 == 定数の定義
 
-いよいよコードを記述していきます。
+いよいよコードを記述します。
 まず、CPU内で何度も使用する定数や型を書いておくためのパッケージを作成します。
 
 @<code>{src/eei.veryl}を作成し、次のように記述します(@<list>{eei.veryl})。
@@ -173,12 +174,13 @@ eeiパッケージには、次の定数を定義します。
     命令のビット列を格納するための型
  : Addr
     メモリのアドレスを格納するための型。
-    RISC-Vで使用できるメモリ空間の幅はXLENなので@<code>{UIntX}でもいいですが、アドレスであることを明示するために別名を定義しています。
+    RISC-Vで使用できるメモリ空間の幅はXLENなので@<code>{UIntX}でもいいですが、
+    アドレスであることを明示するための別名を定義しています。
 
 == メモリ
 
 CPUはメモリに格納された命令を実行します。
-よって、CPUの実装のためにはメモリの実装が必要です。
+そのため、CPUの実装のためにはメモリの実装が必要です。
 RV32Iにおいて命令の幅は32ビット(ILEN)です。
 また、メモリからの読み込み命令、書き込み命令の最大の幅も32ビットです。
 
@@ -192,6 +194,18 @@ RV32Iにおいて命令の幅は32ビット(ILEN)です。
 
 このメモリモジュールには、クロックとリセット信号の他に@<table>{memmodule-if}のようなポートを定義する必要があります。
 これを一つ一つ定義して接続するのは面倒なため、interfaceを定義します。
+
+//table[memmodule-if][メモリモジュールに必要なポート]{
+ポート名	型					向き	意味
+-------------------------------------------------------------
+valid		logic				input	メモリアクセスを要求しているかどうか
+ready		logic				output	メモリアクセス要求を受容するかどうか
+addr		logic<ADDR_WIDTH>	input	アクセス先のアドレス
+wen			logic				input	書き込みかどうか (1なら書き込み)
+wdata		logic<DATA_WIDTH>	input	書き込むデータ
+rvalid		logic				output	受容した要求の処理が終了したかどうか
+rdata		logic<DATA_WIDTH>	output	受容した読み込み命令の結果
+//}
 
 @<code>{src/membus_if.veryl}を作成し、次のように記述します(@<list>{membus_if.veryl})。
 
@@ -229,18 +243,6 @@ interface membus_if::<DATA_WIDTH: const, ADDR_WIDTH: const> {
 #@end
 //}
 
-//table[memmodule-if][メモリモジュールに必要なポート]{
-ポート名	型					向き	意味
--------------------------------------------------------------
-valid		logic				input	メモリアクセスを要求しているかどうか
-ready		logic				output	メモリアクセス要求を受容するかどうか
-addr		logic<ADDR_WIDTH>	input	アクセス先のアドレス
-wen			logic				input	書き込みかどうか (1なら書き込み)
-wdata		logic<DATA_WIDTH>	input	書き込むデータ
-rvalid		logic				output	受容した要求の処理が終了したかどうか
-rdata		logic<DATA_WIDTH>	output	受容した読み込み命令の結果
-//}
-
 membus_ifはジェネリックインターフェースです。
 ジェネリックパラメータとして、
 @<code>{ADDR_WIDTH}と@<code>{DATA_WIDTH}が定義されています。
@@ -248,7 +250,7 @@ membus_ifはジェネリックインターフェースです。
 @<code>{DATA_WIDTH}は1つのデータの幅です。
 
 interfaceを利用することで変数の定義が不要になり、
-さらにポートの相互接続を簡潔にすることができます。
+ポートの相互接続を簡潔にできます。
 
 === メモリモジュールを実装する
 
@@ -309,7 +311,7 @@ memoryモジュールはジェネリックモジュールです。
 
  : ADDR_WIDTH
 	データのアドレスの幅(メモリの容量)を指定するためのパラメータです。@<br>{}
-	メモリの容量はDATA_WIDTH * (2 ** ADDR_WIDTH)ビットになります。
+	メモリの容量は@<code>{DATA_WIDTH * (2 ** ADDR_WIDTH)}ビットになります。
 
 ポートには、クロック信号とリセット信号とmembus_ifインターフェースを定義しています。
 
@@ -344,10 +346,10 @@ memoryモジュールをインスタンス化する時、
 初期化は@<code>{$readmemh}システムタスクで行います。
 
 @<code>{FILEPATH_IS_ENV}が@<code>{1}のとき、
-環境変数を取得して、初期化用のファイルのパスとして利用します。
+環境変数の値を取得して、初期化用のファイルのパスとして利用します。
 環境変数はutilパッケージのget_env関数で取得します。
 
-utilパッケージとget_env関数を作成します。
+まず、utilパッケージとget_env関数を作成します。
 @<code>{src/util.veryl}を作成し、次のように記述します(@<list>{util.veryl})。
 
 //list[util.veryl][util.veryl]{
@@ -372,7 +374,7 @@ package util {
 //}
 
 utilパッケージのget_env関数は、
-コード中に埋め込まれたSystemVerilogのパッケージのget_env関数の結果を返しています。
+コード中に埋め込まれたSystemVerilogのsvutilパッケージのget_env関数の結果を返しています。
 svutilパッケージのget_env関数は、
 C(C++)で定義されているget_env_value関数の結果を返しています。
 get_env_value関数は後で定義します。
@@ -394,7 +396,7 @@ memoryモジュールはジェネリックモジュールであるため、
 メモリのアドレス幅(サイズ)には、適当に16を設定しています。
 これによりメモリ容量は32ビット * (2 ** 16) = 256KiBになります。
 
-//list[eei.veryl.memif.width][1つのデータのビット幅を示す定数を定義する (eei.veryl)]{
+//list[eei.veryl.memif.width][メモリのデータ幅とアドレスの幅の定数を定義する (eei.veryl)]{
 #@maprange(scripts/04/memif-range/core/src/eei.veryl,width)
     // メモリのデータ幅
     const MEM_DATA_WIDTH: u32 = 32;
@@ -438,10 +440,9 @@ memoryモジュールとmembusインターフェースのジェネリックパ�
 
 == 命令フェッチ
 
-メモリを作成したので、
-命令フェッチ処理を作ることができるようになりました。
+メモリを作成したので、命令フェッチ処理を作れるようになりました。
 
-いよいよ、CPUのメインの部分を作成していきます。
+いよいよ、CPUのメインの部分を作成します。
 
 === 命令フェッチを実装する
 
@@ -513,14 +514,13 @@ membus_ifインターフェースのジェネリックパラメータには、
 アドレスの幅として@<code>{XLEN}を指定しています。
 
 @<code>{if_pc}レジスタはPC(プログラムカウンタ)です。
-ここで@<code>{if_}というprefixはinstruction fetch(命令フェッチ)の略です。
-@<code>{if_is_requested}は現在フェッチ中かどうかを管理しており、
+ここで@<code>{if_}という接頭辞はinstruction fetch(命令フェッチ)の略です。
+@<code>{if_is_requested}はフェッチ中かどうかを管理しており、
 フェッチ中のアドレスを@<code>{if_pc_requested}に格納しています。
 どのレジスタも@<code>{0}で初期化しています。
 
 always_combブロックでは、
-アドレス@<code>{if_pc}にあるデータを、
-常にメモリに要求しています。
+アドレス@<code>{if_pc}にあるデータを常にメモリに要求しています。
 命令フェッチではメモリの読み込みしか行わないため、
 @<code>{membus.wen}は@<code>{0}にしています。
 
@@ -536,7 +536,7 @@ always_combブロックでは、
 このとき、メモリがready状態なら、
 すぐに次の命令フェッチを開始します。
 この状態遷移を繰り返すことによって、
-アドレス0→4→8→c→10...の命令を、
+アドレス@<code>{0}→@<code>{4}→@<code>{8}→@<code>{c}→@<code>{10}...の命令を、
 次々にフェッチするようになっています。
 
 上から2つめのalways_ffブロックは、
@@ -550,7 +550,7 @@ always_combブロックでは、
 topモジュールでcoreモジュールをインスタンス化し、
 membus_ifインターフェースでメモリと接続します。
 
-このとき、coreモジュールが指定するアドレスは1バイト単位のアドレスです。
+coreモジュールが指定するアドレスは1バイト単位のアドレスです。
 それに対して、
 memoryモジュールは32ビット(=4バイト)単位でデータを整列しているため、
 データは4バイト単位のアドレスで指定する必要があります。
@@ -588,8 +588,9 @@ ILENとXLENを割り当てます。
 #@end
 //}
 
-@<code>{membus}と@<code>{membus_core}を接続します(@<list>{top.veryl.create-core-range.connect})。
-アドレスは、addr_to_memaddr関数で変換した値を割り当てます。
+@<code>{membus}と@<code>{membus_core}を接続します。
+アドレスにはaddr_to_memaddr関数で変換した値を割り当てます
+(@<list>{top.veryl.create-core-range.connect})。
 
 //list[top.veryl.create-core-range.connect][membusとmembus_coreを接続する (top.veryl)]{
 #@maprange(scripts/04/create-core-range/core/src/top.veryl,connect)
@@ -606,8 +607,9 @@ ILENとXLENを割り当てます。
 #@end
 //}
 
-最後に、coreモジュールをインスタンス化します。
-これによって、メモリとCPUが接続されました。
+最後にcoreモジュールをインスタンス化します
+(@<list>{top.veryl.create-core-range.core})。
+メモリとCPUが接続されました。
 
 //list[top.veryl.create-core-range.core][top.veryl内でcoreモジュールをインスタンス化する]{
 #@maprange(scripts/04/create-core-range/core/src/top.veryl,core)
@@ -623,7 +625,7 @@ ILENとXLENを割り当てます。
 
 ここまでのコードが正しく動くかを検証します。
 
-Verylで記述されたコードは@<code>{veryl build}コマンドでSystemVerilogのコードに変換することができます。
+Verylで記述されたコードは@<code>{veryl build}コマンドでSystemVerilogのコードに変換できます。
 変換されたソースコードをオープンソースのVerilogシミュレータであるVerilatorで実行することで、
 命令フェッチが正しく動いていることを確認します。
 
@@ -641,7 +643,7 @@ verylファイルと同名の@<code>{sv}ファイルと@<code>{core.f}ファイ�
 
 シミュレータのビルドにはVerilatorを利用します。
 Verilatorは、与えられたSystemVerilogのコードをC++プログラムに変換することでシミュレータを生成します。
-Verilatorを利用するためには、次のようなC++プログラムを書く必要があります@<fn>{verilator.only.verilog}。
+Verilatorを利用するために、次のようなC++プログラムを書きます@<fn>{verilator.only.verilog}。
 
 //footnote[verilator.only.verilog][Verilogのソースファイルだけでビルドすることもできます]
 
@@ -738,22 +740,21 @@ topモジュール(プログラム中ではVtop_coreクラス)をインスタン
 
  : CYCLE
 	何クロックで実行を終了するかを表す値@<br>{}
-	0のときは終了しません。デフォルト値は@<code>{0}です。
+	@<code>{0}のときは終了しません。デフォルト値は@<code>{0}です。
 
 Verilatorによるシミュレーションは、
-topモジュールのクロック信号を更新して、
-eval関数を呼び出すことにより実行します。
+topモジュールのクロック信号を更新してeval関数を呼び出すことにより実行します。
 プログラムでは、
 @<code>{clk}を反転させて@<code>{eval}するループの前に、
 topモジュールをリセット信号によりリセットする必要があります。
 そのため、
-topモジュールの@<code>{rst}を1にしてから@<code>{eval}を実行し、
-@<code>{rst}を0にしてまた@<code>{eval}を実行し、
-@<code>{rst}を1にもどしてから@<code>{clk}を反転しています。
+topモジュールの@<code>{rst}を@<code>{1}にしてから@<code>{eval}を実行し、
+@<code>{rst}を@<code>{0}にしてまた@<code>{eval}を実行し、
+@<code>{rst}を@<code>{1}にもどしてから@<code>{clk}を反転しています。
 
 ==== シミュレータのビルド
 
-@<code>{verilator}コマンドを実行し、
+verilatorコマンドを実行し、
 シミュレータをビルドします(@<list>{build.simulator})。
 
 //terminal[build.simulator][シミュレータのビルド]{
@@ -775,7 +776,7 @@ $ mv obj_dir/Vcore_top obj_dir/sim @<balloon>{シミュレータの名前をsim�
 
  : --top-module
 	トップモジュールを指定します。
-	今回は@<code>{top}モジュールを指定しています。
+	今回はtopモジュールを指定しています。
 
  : --Mdir
 	成果物の生成先を指定します。
@@ -817,7 +818,7 @@ memoryモジュールは@<code>{$readmemh}システムタスクでsample.hexを�
 ==== シミュレータの実行
 
 生成されたシミュレータを実行し、
-アドレスが0、4、8、cのデータが正しくフェッチされていることを確認します(@<list>{check-memory})。
+アドレスが@<code>{0}、@<code>{4}、@<code>{8}、@<code>{c}のデータが正しくフェッチされていることを確認します(@<list>{check-memory})。
 
 //terminal[check-memory][命令フェッチの動作チェック]{
 $ obj_dir/sim src/sample.hex 5
@@ -828,7 +829,7 @@ $ obj_dir/sim src/sample.hex 5
 //}
 
 メモリファイルのデータが、
-4バイトずつ読み込まれていることが確認できます。
+4バイトずつ読み込まれていることを確認できます。
 
 ==== Makefileの作成
 
@@ -887,8 +888,10 @@ $ @<userinput>{make clean} @<balloon>{ビルドした成果物の削除}
 例えばメモリにアクセスする命令は実行に何クロックかかるか分かりません。
 
 複数クロックかかる命令に対応するために、
-命令の処理が終わったら次の命令をフェッチするようにすると、
+命令の処理が終わってから次の命令をフェッチするようにすると、
 命令の実行の流れは次のようになります。
+
+//clearpage
 
  1. 命令の処理が終わる
  2. 次の命令のフェッチ要求をメモリに送る
@@ -972,31 +975,30 @@ module fifo #(
 
 fifoモジュールは、
 @<code>{DATA_TYPE}型のデータを
-@<code>{2 ** WIDTH - 1}個格納することができるFIFOです。
+@<code>{2 ** WIDTH - 1}個格納できるFIFOです。
 操作は次のように行います。
 
  : データを追加する
-    @<code>{wready}が@<code>{1}のとき、データを追加することができます。@<b>{}
+    @<code>{wready}が@<code>{1}のとき、データを追加できます。@<b>{}
     データを追加するためには、追加したいデータを@<code>{wdata}に格納し、@<code>{wvalid}を@<code>{1}にします。@<b>{}
-    追加したデータは次のクロック以降に取り出すことができます。
+    追加したデータは次のクロック以降に取り出せます。
 
  : データを取り出す
-    @<code>{rvalid}が@<code>{1}のとき、データを取り出すことができます。@<b>{}
-    データを取り出すことができるとき、@<code>{rdata}にデータが供給されています。@<b>{}
-    @<code>{rready}を@<code>{1}にすることで、FIFOにデータを取り出したことを通知することができます。
+    @<code>{rvalid}が@<code>{1}のとき、データを取り出せます。@<b>{}
+    データを取り出せるとき、@<code>{rdata}にデータが供給されています。@<b>{}
+    @<code>{rready}を@<code>{1}にすることで、FIFOにデータを取り出したことを通知できます。
 
 データの格納状況は、@<code>{head}レジスタと@<code>{tail}レジスタで管理します。
 データを追加するとき、つまり@<code>{wready && wvalid}のとき、@<code>{tail = tail + 1}しています。
 データを取り出すとき、つまり@<code>{rready && rvalid}のとき、@<code>{head = head + 1}しています。
 
 データを追加できる状況とは、
-@<code>{tail}に1を足しても@<code>{head}を超えないとき、
+@<code>{tail}に@<code>{1}を足しても@<code>{head}を超えないとき、
 つまり、@<code>{tail}が指す場所が一周してしまわないときです。
-この制限から、FIFOには最大でも@<code>{2 ** WIDTH - 1}個しかデータを格納することができません。
+この制限から、FIFOには最大でも@<code>{2 ** WIDTH - 1}個しかデータを格納できません。
 データを取り出せる状況とは、@<code>{head}と@<code>{tail}の指す場所が違うときです。
-
-@<code>{WIDTH}が1のときは特別で、既にデータが1つ入っていても、
-@<code>{rready}が@<code>{1}のときはデータを追加することができるようにしています。
+@<code>{WIDTH}が@<code>{1}のときは特別で、既にデータが1つ入っていても、
+@<code>{rready}が@<code>{1}のときはデータを追加できるようにしています。
 
 ==== 命令フェッチ処理の変更
 
@@ -1017,7 +1019,6 @@ fifoモジュールを使って、命令フェッチ処理を変更します。
 //}
 
 次に、FIFOと接続するための変数を定義します(@<list>{core.veryl.if-fifo-range.fifo_reg})。
-wdataとrdataのデータ型は@<code>{if_fifo_type}にしています。
 
 //list[core.veryl.if-fifo-range.fifo_reg][FIFOと接続するための変数を定義する (core.veryl)]{
 #@maprange(scripts/04/if-fifo-range/core/src/core.veryl,fifo_reg)
@@ -1033,7 +1034,7 @@ wdataとrdataのデータ型は@<code>{if_fifo_type}にしています。
 
 FIFOモジュールをインスタンス化します(@<list>{core.veryl.if-fifo-range.inst_if_fifo})。
 @<code>{DATA_TYPE}パラメータに@<code>{if_fifo_type}を渡すことで、
-アドレスと命令のペアを格納することができるようにします。
+アドレスと命令のペアを格納できるようにします。
 @<code>{WIDTH}パラメータには@<code>{3}を指定することで、
 サイズを@<code>{2 ** 3 - 1 = 7}にしています。
 このサイズは適当です。
@@ -1077,12 +1078,14 @@ fifoモジュールをインスタンス化したので、
 //}
 
 @<list>{core.veryl.if-fifo-range.fetch}では、
-メモリに命令フェッチを要求する条件を、
-FIFOに2つ以上空きがあるという条件に変更しています。
+メモリに命令フェッチを要求する条件を
+FIFOに2つ以上空きがあるという条件に変更しています@<fn>{why.two.buffer}。
 これにより、FIFOがあふれてしまうことがなくなります。
-また、とりあえずFIFOから常にデータを取り出すようにしています。
+また、FIFOから常にデータを取り出すようにしています。
 
-最後に、命令をフェッチできたらFIFOに格納するコードをalways_ffブロックの中に追加します(@<list>{core.veryl.if-fifo-range.fifo_ctrl})。
+//footnote[why.two.buffer][1つ空きがあるという条件だとあふれてしまいます。FIFOが容量いっぱいのときにどうなるか確認してください]
+
+命令をフェッチできたらFIFOに格納する処理をalways_ffブロックの中に追加します(@<list>{core.veryl.if-fifo-range.fifo_ctrl})。
 
 //list[core.veryl.if-fifo-range.fifo_ctrl][FIFOへのデータの格納 (core.veryl)]{
 #@maprange(scripts/04/if-fifo-range/core/src/core.veryl,fifo_ctrl)
@@ -1099,7 +1102,7 @@ FIFOに2つ以上空きがあるという条件に変更しています。
 #@end
 //}
 
-また、@<code>{if_fifo_wvalid}と@<code>{if_fifo_wdata}を0に初期化します(@<list>{core.veryl.if-fifo-range.if_reset})。
+@<code>{if_fifo_wvalid}と@<code>{if_fifo_wdata}を@<code>{0}に初期化します(@<list>{core.veryl.if-fifo-range.if_reset})。
 
 //list[core.veryl.if-fifo-range.if_reset][変数の初期化 (core.veryl)]{
 #@maprange(scripts/04/if-fifo-range/core/src/core.veryl,if_reset)
@@ -1122,7 +1125,7 @@ FIFOに2つ以上空きがあるという条件に変更しています。
 FIFOにデータを格納しようとしていてFIFOに空きがあるとき、
 @<code>{if_fifo_wvalid}を@<code>{0}にすることでデータの追加を完了します。
 
-命令フェッチはFIFOに空きがあるときにのみ行うため、
+命令フェッチはFIFOに2つ以上空きがあるときに行うため、
 まだ追加されていないデータが@<code>{if_fifo_wdata}に格納されていても、
 別のデータに上書きされてしまうことはありません。
 
@@ -1143,9 +1146,9 @@ FIFOをテストする前に、命令のデバッグ表示を行うコードを�
 #@end
 //}
 
-それでは、シミュレータを実行します(@<list>{sim-fifo})。
+シミュレータを実行します(@<list>{sim-fifo})。
 命令がフェッチされて表示されるまでに、
-FIFOに格納して取り出すクロック分だけ遅延があることに注意してください。
+FIFOに格納してから取り出すクロック分だけ遅延があることに注意してください。
 
 //terminal[sim-fifo][FIFOをテストする]{
 $ @<userinput>{make build}
@@ -1162,9 +1165,9 @@ $ @<userinput>{obj_dir/sim src/sample.hex 7}
 命令をフェッチできたら、
 フェッチした命令がどのような意味を持つかをチェックし、
 CPUが何をすればいいかを判断するためのフラグや値を生成します。
-この作業のことを、命令の@<b>{デコード}(decode)と呼びます。
+この作業のことを命令の@<b>{デコード}(decode)と呼びます。
 
-RISC-Vの命令のビット列には、次のような要素が含まれています。
+RISC-Vの命令のビット列には次のような要素が含まれています。
 
  : オペコード (opcode)
     5ビットの値です。命令を区別するために使用されます。
@@ -1182,7 +1185,7 @@ RISC-Vの命令のビット列には、次のような要素が含まれてい�
 
  : デスティネーションレジスタ(Destination Register)の番号
     命令の結果を格納するためのレジスタの番号です。
-    ソースレジスタと同様に、5ビットの値になっています。
+    ソースレジスタと同様に5ビットの値になっています。
 
 RISC-Vにはいくつかの命令の形式がありますが、
 RV32IにはR、I、S、B、U、Jの6つの形式の命令が存在しています (@<img>{riscv-inst-types})。
@@ -1224,10 +1227,10 @@ RV32IにはR、I、S、B、U、Jの6つの形式の命令が存在していま�
 	例えばJAL命令(ジャンプ命令)に使用されており、
 	PCに即値を足したアドレスにジャンプします。
 
-全ての命令形式には@<code>{opcode}が共通して存在しています。
-命令の判別には@<code>{opcode}、@<code>{funct3}、@<code>{funct7}を利用します。
+全ての命令形式にはopcodeが共通して存在しています。
+命令の判別にはopcode、funct3、funct7を利用します。
 
-=== 定数と型を定義する
+=== デコード用の定数と型を定義する
 
 デコード処理を書く前に、
 デコードに利用する定数と型を定義します。
@@ -1271,11 +1274,11 @@ package corectrl {
 
 @<code>{InstCtrl}は、制御に使うフラグをひとまとめにした構造体です。
 @<code>{itype}には命令の形式、
-@<code>{funct3}と@<code>{funct7}にはそれぞれ命令の@<code>{funct3}と@<code>{funct3}フィールドを格納します。
-これ以外の構造体のフィールドについては、使用するときに説明します。
+@<code>{funct3}と@<code>{funct7}にはそれぞれ命令のfunct3とfunct7フィールドを格納します。
+これ以外の構造体のフィールドは、使用するときに説明します。
 
 命令をデコードするとき、まずopcodeを使って判別します。
-このために、デコードに使う定数を@<code>{eei}パッケージに記述します(@<list>{eei.very.id-range.opcode})。
+このために、デコードに使う定数をeeiパッケージに記述します(@<list>{eei.very.id-range.opcode})。
 
 //list[eei.very.id-range.opcode][opcodeの定数を定義する (eei.veryl)]{
 #@maprange(scripts/04/id-range/core/src/eei.veryl, opcode)
@@ -1292,7 +1295,7 @@ package corectrl {
 #@end
 //}
 
-これらの値とそれぞれの命令の対応については、
+これらの値とそれぞれの命令の対応は、
 仕様書@<bib>{isa-manual.1.37}を確認してください。
 
 === 制御フラグと即値を生成する
@@ -1364,8 +1367,8 @@ inst_decoderモジュールは、
 
 ==== 即値の生成
 
-B形式の命令について考えます。
-まず、命令のビット列から即値部分を取り出して、変数@<code>{imm_b_g}を生成します。
+B形式の命令を考えます。
+まず、命令のビット列から即値部分を取り出して変数@<code>{imm_b_g}を生成します。
 B形式の命令内に含まれている即値は12ビットで、最上位ビットは符号ビットです。
 最上位ビットを繰り返す(符号拡張する)ことによって、32ビットの即値@<code>{imm_b}を生成します。
 
@@ -1376,7 +1379,7 @@ opcodeをcase式で分岐することにより
 ==== 制御フラグの生成
 
 opcodeがOP-IMMな命令、
-例えばADDI命令について考えます。
+例えばADDI命令を考えます。
 ADDI命令は、即値とソースレジスタの値を足し、
 デスティネーションレジスタに結果を格納する命令です。
 
@@ -1388,14 +1391,14 @@ opcodeが@<code>{OP_OP_IMM}(OP-IMM)のとき、
 
  * 命令形式@<code>{itype}を@<code>{InstType::I}に設定します
  * 結果をレジスタに書き込むため、@<code>{rwb_en}を@<code>{1}に設定します
- * ALU(計算を実行するユニット)を利用するため、@<code>{is_aluop}を@<code>{1}に設定します
+ * ALU(計算を実行する部品)を利用するため、@<code>{is_aluop}を@<code>{1}に設定します
  * @<code>{funct3}、@<code>{funct7}に命令中のビットをそのまま設定します 
  * それ以外のフィールドは@<code>{0}に設定します
 
 === デコーダをインスタンス化する
 
 inst_decoderモジュールを、
-@<code>{core}モジュールでインスタンス化します(@<list>{core.veryl.id-range.inst})。
+coreモジュールでインスタンス化します(@<list>{core.veryl.id-range.inst})。
 
 //list[core.veryl.id-range.inst][inst_decoderモジュールのインスタンス化 (core.veryl)]{
 #@maprange(scripts/04/id-range/core/src/core.veryl,inst)
@@ -1414,7 +1417,7 @@ inst_decoderモジュールを、
 
 まず、デコーダとcoreモジュールを接続するために@<code>{inst_ctrl}と@<code>{inst_imm}を定義します。
 次に、inst_decoderモジュールをインスタンス化します。
-@<code>{bits}ポートに@<code>{inst_bits}を渡すことで、フェッチした命令をデコードします。
+@<code>{bits}ポートに@<code>{inst_bits}を渡すことでフェッチした命令をデコードします。
 
 デバッグ用のalways_ffブロックに、
 デコードした結果をデバッグ表示するコードを記述します(@<list>{core.veryl.id-range.debug})。
@@ -1457,7 +1460,7 @@ $ @<userinput>{obj_dir/sim src/sample.hex 7}
 デコード結果を確認すると、
 @<code>{itype}が@<code>{32'h0000010}、
 @<code>{imm}が@<code>{32'h00000012}になっており、
-正しくデコードできていることが確認できます。
+正しくデコードできていることを確認できます。
 
 == レジスタの定義と読み込み
 
@@ -1477,7 +1480,7 @@ coreモジュールにレジスタを定義します。
 #@end
 //}
 
-レジスタをまとめたもののことを@<b>{レジスタファイル}と呼ぶため、
+レジスタをまとめたもののことを@<b>{レジスタファイル}(register file)と呼ぶため、
 @<code>{regfile}という名前をつけています。
 
 === レジスタの値を読み込む
@@ -1492,7 +1495,7 @@ I形式の命令の実行にはソースレジスタの値と即値を利用し�
 
 命令のビット列の中のソースレジスタの番号の場所は、
 命令形式が違っても共通の場所にあります。
-ここで、コードを簡単にするために、
+コードを簡単にするために、
 命令がレジスタの値を利用するかどうかに関係なく、
 常にレジスタの値を読み込むことにします(@<list>{core.veryl.reg-range.use})。
 
@@ -1518,7 +1521,7 @@ I形式の命令の実行にはソースレジスタの値と即値を利用し�
 
 if式を使うことで、
 0番目のレジスタが指定されたときは、
-値が常に0になるようにします。
+値が常に@<code>{0}になるようにします。
 
 レジスタの値を読み込めていることを確認するために、
 デバッグ表示にソースレジスタの値を追加します(@<list>{core.veryl.reg-range.debug})。
@@ -1548,7 +1551,7 @@ if式を使うことで、
 これではテストする意味がないため、
 レジスタの値を適当な値に初期化します。
 always_ffブロックのif_resetで、
-n番目(0 < i < 32)のレジスタの値を@<code>{i + 100}で初期化します(@<list>{core.veryl.reg-range.init})。
+i番目(0 < i < 32)のレジスタの値を@<code>{i + 100}で初期化します(@<list>{core.veryl.reg-range.init})。
 
 //list[core.veryl.reg-range.init][レジスタを適当な値で初期化する (core.veryl)]{
 #@maprange(scripts/04/reg-range/core/src/core.veryl,init)
@@ -1603,13 +1606,12 @@ JALR命令は、ソースレジスタ@<code>{x6}を使用します。
 レジスタと即値が揃い、命令で使用するデータが手に入るようになりました。
 基本整数命令セットの命令では、
 足し算や引き算、ビット演算などの簡単な整数演算を行います。
-それでは、CPUの計算を行うユニットである@<b>{ALU}(Arithmetic Logic Unit)を作成します。
+それでは、CPUの計算を行う部品である@<b>{ALU}(Arithmetic Logic Unit)を作成します。
 
 === ALUモジュールを作成する
 
 レジスタと即値の幅はXLENです。
 計算には符号付き整数と符号なし整数向けの計算があります。
-
 符号付き整数を利用するために、
 eeiモジュールにXLENビットの符号付き整数型を定義します(@<list>{eei.veryl.alu-range.define})。
 
@@ -1684,9 +1686,8 @@ op2 	input	UIntX		2つ目のデータ
 result	output	UIntX		結果
 //}
 
-命令がALUでどのような計算を行うかは命令によって異なります。
 仕様書で整数演算命令として定義されている命令@<bib>{isa-manual.1.2.4}は、
-funct3とfunct7フィールドによって計算の種類を特定することができます(@<table>{alu_funct3})。
+funct3とfunct7フィールドによって計算の種類を特定できます(@<table>{alu_funct3})。
 
 //table[alu_funct3][ALUの演算の種類]{
 funct3			演算
@@ -1705,10 +1706,10 @@ funct3			演算
 そのため、デコード時に整数演算命令とそれ以外の命令を@<code>{InstCtrl.is_aluop}で区別し、
 整数演算命令以外は常に足し算を行うようにしています。
 具体的には、
-@<code>{opcode}がOPかOP-IMMの命令の@<code>{InstCtrl.is_aluop}を@<code>{1}にしています(@<list>{inst_decoder.veryl.id})。
+opcodeがOPかOP-IMMの命令の@<code>{InstCtrl.is_aluop}を@<code>{1}にしています(@<list>{inst_decoder.veryl.id})。
 
 always_combブロックでは、
-case文でfunct3によって計算を選択します。
+funct3のcase文によって計算を選択します。
 funct3だけでは選択できないとき、funct7を使用します。
 
 === ALUモジュールをインスタンス化する
@@ -1753,14 +1754,14 @@ always_combブロックで値を割り当てます
 割り当てるデータは、命令形式によって次のように異なります。
 
  : R形式、B形式
-	R形式とB形式は、レジスタのデータとレジスタのデータの演算を行います。
-	@<code>{op1}と@<code>{op2}は、レジスタのデータ@<code>{rs1_data}と@<code>{rs2_data}になります。
+	R形式とB形式は、レジスタの値とレジスタの値の演算を行います。
+	@<code>{op1}と@<code>{op2}は、レジスタの値@<code>{rs1_data}と@<code>{rs2_data}になります。
 
  : I形式、S形式
-	I形式とS形式は、レジスタのデータと即値の演算を行います。
-	@<code>{op1}と@<code>{op2}は、それぞれレジスタのデータ@<code>{rs1_data}と即値@<code>{inst_imm}になります。
-	S形式はメモリのストア命令に利用されており、
-	レジスタのデータと即値を足し合わせた値がアクセスするアドレスになります。
+	I形式とS形式は、レジスタの値と即値の演算を行います。
+	@<code>{op1}と@<code>{op2}は、それぞれレジスタの値@<code>{rs1_data}と即値@<code>{inst_imm}になります。
+	S形式はメモリの書き込み命令に利用されており、
+	レジスタの値と即値を足し合わせた値がアクセスするアドレスになります。
 
  : U形式、J形式
 	U形式とJ形式は、即値とPCを足した値、または即値を使う命令に使われています。
@@ -1830,6 +1831,8 @@ always_ffブロックで、
 
 シミュレータを実行し、結果を確かめます(@<list>{alu.debug})。
 
+//clearpage
+
 //terminal[alu.debug][ALUのデバッグ]{
 $ @<userinput>{make build}
 $ @<userinput>{make sim}
@@ -1865,7 +1868,7 @@ $ @<userinput>{obj_dir/sim src/sample.hex 6}
 
  : addi x1, x0, 32
 	@<code>{op1}は0番目のレジスタの値です。
-	0番目のレジスタの値は常に@<code>{0}であるため、@<code>{32'h00000000}と表示されています。
+	0番目のレジスタの値は常に0であるため、@<code>{32'h00000000}と表示されています。
 	@<code>{op2}は即値です。
 	即値は32であるため、@<code>{32'h00000020}と表示されています。
 	ALUの計算結果として、0と32を足した結果@<code>{32'h00000020}が表示されています。
@@ -1886,23 +1889,23 @@ $ @<userinput>{obj_dir/sim src/sample.hex 6}
 
 == レジスタに結果を書き込む
 
-CPUは、レジスタから値を読み込み、これを計算して、
+CPUはレジスタから値を読み込み、計算して、
 レジスタに結果の値を書き戻します。
 レジスタに値を書き戻すことを、
 値を@<b>{ライトバック}(write-back)すると呼びます。
 
 ライトバックする値は、計算やメモリアクセスの結果です。
-まだ、メモリにアクセスする処理を実装していませんが、
+まだメモリにアクセスする処理を実装していませんが、
 先にライトバック処理を実装します。
 
 === ライトバック処理を実装する
 
 書き込む対象のレジスタ(デスティネーションレジスタ)は、
-命令の@<code>{rd}フィールドによって番号で指定されます。
+命令のrdフィールドによって番号で指定されます。
 デコード時に、
 レジスタに結果を書き込む命令かどうかを@<code>{InstCtrl.rwb_en}に格納しています(@<list>{inst_decoder.veryl.id})。
 
-とりあえず、LUI命令のときは即値をそのまま、
+LUI命令のときは即値をそのまま、
 それ以外の命令のときはALUの結果をライトバックするようにします(@<list>{core.veryl.wb-range.wb})。
 
 //list[core.veryl.wb-range.wb][ライトバック処理の実装 (core.veryl)]{
@@ -2009,7 +2012,6 @@ $ @<userinput>{obj_dir/sim sample.hex 6}
 RV32Iには、
 メモリのデータを読み込む、
 書き込む命令として次の命令があります(@<table>{ls.insts})。
-
 データを読み込む命令のことを@<b>{ロード命令}、
 データを書き込む命令のことを@<b>{ストア命令}と呼びます。
 2つを合わせて@<b>{ロードストア命令}と呼びます。
@@ -2035,7 +2037,7 @@ ALUに渡すデータがrs1と即値になっていることを確認してく�
 === LW、SW命令を実装する
 
 8ビット、16ビット単位で読み書きを行う命令の実装は少し大変です。
-まず32ビット単位で読み書きを行うLW命令とSW命令を実装します。
+まず、32ビット単位で読み書きを行うLW命令とSW命令を実装します。
 
 ==== memunitモジュールの作成
 
@@ -2142,7 +2144,7 @@ ALUから受け取ったアドレスをメモリに渡して操作を実行し�
 ストア命令のとき、命令の形式はS形式です。
 ロード命令のとき、デコーダは@<code>{InstCtrl.is_load}を@<code>{1}にしています(@<list>{inst_decoder.veryl.id})。
 
-memunitモジュールには、次の状態が定義されています。
+memunitモジュールには次の状態が定義されています。
 初期状態は@<code>{State::Init}です。
 
  : State::Init
@@ -2160,7 +2162,7 @@ memunitモジュールには、次の状態が定義されています。
 	状態を@<code>{State::WaitValid}に移動します。
 
  : State::WaitValid
-	メモリに送信した要求の処理が終了した(@<code>{rvalid})とき、
+	メモリの処理が終了した(@<code>{rvalid})とき、
 	状態を@<code>{State::Init}に移動します。
 
 メモリにアクセスする命令のとき、
@@ -2170,7 +2172,7 @@ memunitモジュールは@<code>{Init}→@<code>{WaitReady}→@<code>{WaitValid}
 
 CPUの実行が止まることを、CPUが@<b>{ストール}(Stall)すると呼びます。
 メモリアクセス中のストールを実現するために、
-memunitモジュールには処理中かどうかを表す@<code>{stall}フラグが存在します。
+memunitモジュールには処理中かどうかを表す@<code>{stall}フラグを実装しています。
 有効な命令が供給されているとき、@<code>{state}やメモリの状態に応じて、
 次のように@<code>{stall}の値を決定します(@<table>{stall.cond})。
 
@@ -2183,12 +2185,12 @@ WaitValid	処理が終了していない(@<code>{!membus.rvalid})とき
 //}
 
 //caution[アドレスが4バイトに整列されていない場合の動作]{
-今のところ、memoryモジュールはアドレスの下位2ビットを無視するため、
+memoryモジュールはアドレスの下位2ビットを無視するため、
 @<code>{addr}の下位2ビットが@<code>{00}ではない、
 つまり、4で割り切れないアドレスに対してLW命令かSW命令を実行する場合、
 memunitモジュールは正しい動作をしません。
-この問題については後の章で対応するため、
-とりあえず全てのロードストア命令は、
+この問題は後の章で対応するため、
+全てのロードストア命令は、
 アクセスするビット幅で割り切れるアドレスにしかアクセスしないということにしておきます。
 //}
 
@@ -2199,8 +2201,7 @@ coreモジュール内にmemunitモジュールをインスタンス化します
 
 まず、命令が供給されていることを示す信号@<code>{inst_valid}と、
 命令が現在のクロックで供給されたことを示す信号@<code>{inst_is_new}を作成します(@<list>{core.veryl.lwsw-range.valid_new})。
-命令が供給されているかどうかは、
-@<code>{if_fifo_rvalid}と同値です。
+命令が供給されているかどうかは@<code>{if_fifo_rvalid}と同値です。
 これを機に、@<code>{if_fifo_rvalid}を使用しているところを@<code>{inst_valid}に置き換えましょう。
 
 //list[core.veryl.lwsw-range.valid_new][inst_validとinst_is_newの定義 (core.veryl)]{
@@ -2209,6 +2210,8 @@ coreモジュール内にmemunitモジュールをインスタンス化します
     var inst_is_new: logic   ; // 命令が現在のクロックで供給されたかどうか
 #@end
 //}
+
+//clearpage
 
 次に、@<code>{inst_is_new}の値を更新します(@<list>{core.veryl.lwsw-range.new_ff})。
 命令が現在のクロックで供給されたかどうかは、
@@ -2219,8 +2222,8 @@ FIFOの@<code>{rvalid}と@<code>{rready}を観測することでわかります�
 @<code>{rready}が@<code>{0}なら、
 次のクロックで供給されている命令は現在のクロックと同じ命令になります。
 @<code>{rvalid}が@<code>{0}のとき、
-次のクロックで供給される命令は常に新しく供給される命令になります。
-(次のクロックで@<code>{rvalid}が@<code>{1}かどうかについては考えません)
+次のクロックで供給される命令は常に新しく供給される命令になります
+(次のクロックで@<code>{rvalid}が@<code>{1}かどうかは考えません)。
 
 //list[core.veryl.lwsw-range.new_ff][inst_is_newの実装 (core.veryl)]{
 #@maprange(scripts/04/lwsw-range/core/src/core.veryl,new_ff)
@@ -2238,20 +2241,18 @@ FIFOの@<code>{rvalid}と@<code>{rready}を観測することでわかります�
 #@end
 //}
 
-さて、memunitモジュールをインスタンス化する前に、
-メモリとの接続方法について考える必要があります。
+memunitモジュールをインスタンス化する前に、
+メモリとの接続方法を考える必要があります。
 
 coreモジュールには、メモリとの接続点としてmembusポートが存在します。
 しかし、これは命令フェッチに使用されているため、
-memunitモジュールのために使用することができません。
-また、memoryモジュールは同時に2つの操作を受け付けることができません。
+memunitモジュールのために使用できません。
+また、memoryモジュールは同時に2つの操作を受け付けられません。
 
 この問題を、
-coreモジュールにメモリとのインターフェースを2つ用意し、
-それをtopモジュールで調停することにより回避します。
+coreモジュールにメモリとのインターフェースを2つ用意してtopモジュールで調停することにより回避します。
 
-まず、coreモジュールに、
-命令フェッチ用のポート@<code>{i_membus}と、
+まず、coreモジュールに命令フェッチ用のポート@<code>{i_membus}と、
 ロードストア命令用のポート@<code>{d_membus}の2つのポートを用意します(@<list>{core.veryl.lwsw-range.port})。
 
 //list[core.veryl.lwsw-range.port][coreモジュールのポート定義 (core.veryl)]{
@@ -2327,7 +2328,7 @@ module core (
 調停の仕組みは次のとおりです。
 
  * @<code>{i_membus}と@<code>{d_membus}の両方の@<code>{valid}が@<code>{1}のとき、@<code>{d_membus}を優先する
- * @<code>{memarb_last_i}レジスタに、受け入れた要求が@<code>{i_membus}からのものだったかどうかを記録する
+ * @<code>{memarb_last_i}レジスタに、受け入れた要求が@<code>{i_membus}からのものだったかを記録する
  * メモリが要求の結果を返すとき、@<code>{memarb_last_i}を見て、@<code>{i_membus}と@<code>{d_membus}のどちらか片方の@<code>{rvalid}を@<code>{1}にする
 
 命令フェッチを優先しているとロードストア命令の処理が進まないため、
@@ -2370,11 +2371,10 @@ memoryモジュールとmemunitモジュールを接続する準備が整った�
 
 ==== memunitモジュールの処理待ちとライトバック
 
-最後に、
 memunitモジュールが処理中のときは命令をFIFOから取り出すのを止める処理と、
 ロード命令で読み込んだデータをレジスタにライトバックする処理を実装します。
 
-まず、memunitモジュールが処理中のとき、
+memunitモジュールが処理中のとき、
 FIFOから命令を取り出すのを止めます(@<list>{core.veryl.lwsw-range.rready})。
 
 //list[core.veryl.lwsw-range.rready][memunitモジュールの処理が終わるのを待つ (core.veryl)]{
@@ -2385,8 +2385,7 @@ FIFOから命令を取り出すのを止めます(@<list>{core.veryl.lwsw-range.
 //}
 
 memunitモジュールが処理中のとき、@<code>{memu_stall}が@<code>{1}になっています。
-そのため、@<code>{memu_stall}が@<code>{1}のときは、
-@<code>{if_fifo_rready}を@<code>{0}にすることで、
+そのため、@<code>{memu_stall}が@<code>{1}のときは@<code>{if_fifo_rready}を@<code>{0}にすることで、
 FIFOからの命令の取り出しを停止します。
 
 次に、ロード命令の結果をレジスタにライトバックします(@<list>{core.veryl.lwsw-range.rd})。
@@ -2406,8 +2405,7 @@ FIFOからの命令の取り出しを停止します。
 #@end
 //}
 
-ところで、現在のコードでは、
-memunitの処理が終了していないときも値をライトバックし続けています。
+ところで、現在のコードではmemunitの処理が終了していないときも値をライトバックし続けています。
 レジスタへのライトバックは命令の実行が終了したときのみで良いため、
 次のようにコードを変更します(@<list>{core.veryl.lwsw-range.wb_ready})。
 
@@ -2435,9 +2433,9 @@ memunitの処理が終了していないときも値をライトバックし続�
 ==== LW、SW命令のテスト
 
 LW命令とSW命令が正しく動作していることを確認するために、
-デバッグ出力に次のコードを追加します(@<list>{core.veryl.lwsw-range.mem})。
+デバッグ表示に次のコードを追加します(@<list>{core.veryl.lwsw-range.mem})。
 
-//list[core.veryl.lwsw-range.mem][メモリモジュールの状態をデバッグ出力する (core.veryl)]{
+//list[core.veryl.lwsw-range.mem][メモリモジュールの状態をデバッグ表示する (core.veryl)]{
 #@maprange(scripts/04/lwsw-range/core/src/core.veryl,mem)
     $display("  mem stall : %b", memu_stall);
     $display("  mem rdata : %h", memu_rdata);
@@ -2445,8 +2443,7 @@ LW命令とSW命令が正しく動作していることを確認するために�
 //}
 
 ここからのテストは実行するクロック数が多くなります。
-そこで、ログに何クロック目かを表示することで、
-ログを読みやすくします(@<list>{core.veryl.lwsw-range.clock_count})。
+そこで、ログに何クロック目かを表示することでログを読みやすくします(@<list>{core.veryl.lwsw-range.clock_count})。
 
 //list[core.veryl.lwsw-range.clock_count][何クロック目かを出力する (core.veryl)]{
 #@maprange(scripts/04/lwsw-range/core/src/core.veryl,clock_count)
@@ -2546,13 +2543,12 @@ $ @<userinput>{obj_dir/sim src/sample.hex 13}
 === LB、LBU、LH、LHU命令を実装する
 
 LBとLBUとSB命令は8ビット単位、LHとLHUとSH命令は16ビット単位でロードストアを行う命令です。
-
 まず、ロード命令を実装します。
 ロード命令は32ビット単位でデータを読み込み、
-その結果の一部を切り取ることで実装することができます。
+その結果の一部を切り取ることで実装できます。
 
-LB、LBU、LH、LHU、LW命令は、funct3の値で区別することができます(@<table>{funct3.load})。
-funct3の上位1ビットが1のとき、符号拡張を行います。
+LB、LBU、LH、LHU、LW命令は、funct3の値で区別できます(@<table>{funct3.load})。
+funct3の上位1ビットが@<code>{1}のとき、符号拡張を行います。
 
 //table[funct3.load][ロード命令のfunct3]{
 funct3	命令
@@ -2567,7 +2563,7 @@ funct3	命令
 まず、何度も記述することになる値を短い名前(@<code>{W}、@<code>{D}、@<code>{sext})で定義します(@<list>{memunit.veryl.lbhsbh-range.wd})。
 @<code>{sext}は、符号拡張を行うかどうかを示す変数です。
 
-//list[memunit.veryl.lbhsbh-range.wd][WとDの定義 (memunit.veryl)]{
+//list[memunit.veryl.lbhsbh-range.wd][W、D、sextの定義 (memunit.veryl)]{
 #@maprange(scripts/04/lbhsbh-range/core/src/memunit.veryl,wd)
     const W   : u32                   = XLEN;
     let D   : logic<MEM_DATA_WIDTH> = membus.rdata;
@@ -2750,7 +2746,7 @@ module memory::<DATA_WIDTH: const, ADDR_WIDTH: const> #(
  : State::Ready
 	要求を受け付ける。
 	読み込み要求のとき、次のクロックで結果を返す。
-	書き込み要求のとき、要求の内容をレジスタに保存し、
+	書き込み要求のとき、要求の内容をレジスタに格納し、
 	状態を@<code>{State::WriteValid}に移動する。
 
  : State::WriteValid
@@ -2758,8 +2754,8 @@ module memory::<DATA_WIDTH: const, ADDR_WIDTH: const> #(
 	状態を@<code>{State::Ready}に移動する。
 
 memoryモジュールは、書き込み要求が送られてきた場合、
-名前が@<code>{_saved}で終わるレジスタに要求の内容を保存します。
-また、@<code>{rdata_saved}に、指定されたアドレスのデータを保存します。
+名前が@<code>{_saved}で終わるレジスタに要求の内容を格納します。
+また、指定されたアドレスのデータを@<code>{rdata_saved}に格納します。
 次のクロックで、書き込みマスクを使った書き込みを行い、要求の処理を終了します。
 
 topモジュールの調停処理で、
@@ -2832,13 +2828,13 @@ always_ffの中で、@<code>{req_wmask}の値を設定します。
 //list[memunit.veryl.lbhsbh-range.always_wmask][メモリにアクセスする命令のとき、wmaskを設定する (memunit.veryl)]{
 #@maprange(scripts/04/lbhsbh-range/core/src/memunit.veryl,always_wmask)
     req_wmask = case ctrl.funct3[1:0] {
-        2'b00  : 4'b1 << addr[1:0], @<balloon>{LB, LBUのとき、アドレス下位2ビット分だけ1を左シフトする}
-        2'b01  : case addr[1:0] { @<balloon>{LH, LHU命令のとき}
+        2'b00  : 4'b1 << addr[1:0], @<balloon>{SB命令のとき、アドレス下位2ビット分だけ1を左シフトする}
+        2'b01  : case addr[1:0] { @<balloon>{SH命令のとき}
             2      : 4'b1100, @<balloon>{上位2バイトに書き込む}
             0      : 4'b0011, @<balloon>{下位2バイトに書き込む}
             default: 'x,
         },
-        2'b10  : 4'b1111, @<balloon>{LW命令のとき、全体に書き込む}
+        2'b10  : 4'b1111, @<balloon>{SW命令のとき、全体に書き込む}
         default: 'x,
     };
 #@end
@@ -2873,10 +2869,12 @@ deadbeef // 0x0
 #@end
 //}
 
+//clearpage
+
 == ジャンプ命令、分岐命令の実装
 
-まだ、重要な命令を実装できていません。
-プログラムでif文やループを実現するためには、ジャンプや分岐をする命令が必要です。
+まだ重要な命令を実装できていません。
+プログラムで分岐やループを実現するためにはジャンプや分岐をする命令が必要です。
 RV32Iには、仕様書@<bib>{isa-manual.1.2.5}に次の命令が定義されています(@<table>{jump.br.insts})。
 
 //table[jump.br.insts][ジャンプ命令、分岐命令]{
@@ -2902,10 +2900,10 @@ BGEU	B形式	rs1(符号なし整数)がrs2(符号なし整数)より大きいと
 まず、無条件ジャンプを実装します。
 
 JAL(Jump And Link)命令は、PC+即値でジャンプ先を指定します。
-ここでLinkとは、rdレジスタにPC+4を記録しておくことで、分岐元に戻れるようにしておく操作のことを指しています。
+Linkとは、rdレジスタにPC+4を記録しておくことで、分岐元に戻れるようにしておく操作のことです。
 即値の幅は20ビットです。
 PCの下位1ビットは常に0なため、即値を1ビット左シフトして符号拡張した値をPCに加算します
-(即値の生成については@<list>{inst_decoder.veryl.id}を確認してください)。
+(即値の生成は@<list>{inst_decoder.veryl.id}を確認してください)。
 JAL命令でジャンプ可能な範囲は、PC±1MiBです。
 
 JALR (Jump And Link Register)命令は、rs1+即値でジャンプ先を指定します。
@@ -2920,7 +2918,7 @@ JAL命令かJALR命令のとき、
 @<code>{InstCtrl.is_jump}を@<code>{1}
 としてデコードします。
 
-無条件ジャンプであるかどうかは@<code>{InstCtrl.is_jump}で確かめることができます。
+無条件ジャンプであるかどうかは@<code>{InstCtrl.is_jump}で確かめられます。
 また、@<code>{InstCtrl.is_aluop}が@<code>{0}なため、ALUは常に加算を行います。
 加算の対象のデータが、
 JAL命令(J形式)ならPCと即値、
@@ -2929,8 +2927,7 @@ JALR命令(I形式)ならrs1と即値になっていることを確認してく�
 ==== 無条件ジャンプの実装
 
 それでは、無条件ジャンプを実装します。
-まず、ジャンプ命令を実行するとき、
-ライトバックする値を@<code>{inst_pc + 4}にします(@<list>{core.veryl.jump-range.wb})。
+まず、ジャンプ命令を実行するときにライトバックする値を@<code>{inst_pc + 4}にします(@<list>{core.veryl.jump-range.wb})。
 
 //list[core.veryl.jump-range.wb][pc + 4を書き込む (core.veryl)]{
 #@maprange(scripts/04/jump-range/core/src/core.veryl,wb)
@@ -2947,7 +2944,7 @@ JALR命令(I形式)ならrs1と即値になっていることを確認してく�
 //}
 
 次に、次にフェッチする命令をジャンプ先の命令に変更します。
-そのために、フェッチ先の変更が発生したことを表す信号@<code>{control_hazard}と、
+フェッチ先の変更が発生したことを表す信号@<code>{control_hazard}と、
 新しいフェッチ先を示す信号@<code>{control_hazard_pc_next}を作成します
 (
 @<list>{core.veryl.jump-range.hazard_reg}、
@@ -3102,12 +3099,10 @@ $ @<userinput>{obj_dir/sim src/sample_jump.hex 17}
   reg[ 0] <= 00000004
 //}
 
-無条件ジャンプを正しく実行できていることを確認することができます。
-
 === 条件分岐命令を実装する
 
 条件分岐命令はすべてB形式で、PC+即値で分岐先を指定します。
-それぞれの命令は、命令のfunct3フィールドで判別することができます
+それぞれの命令は、命令のfunct3フィールドで判別できます
 (@<table>{br.funct3})。
 
 //table[br.funct3][条件分岐命令とfunct3]{
@@ -3123,8 +3118,7 @@ funct3	命令	演算
 
 ==== 条件分岐の実装
 
-まず、分岐するかどうかの判定を行うモジュールを作成します。
-
+分岐の条件が成立するかどうかを判定するモジュールを作成します。
 @<code>{src/brunit.veryl}を作成し、次のように記述します(@<list>{brunit.veryl.br-range})。
 
 //list[brunit.veryl.br-range][brunit.veryl]{
@@ -3159,8 +3153,7 @@ module brunit (
 
 brunitモジュールは、
 @<code>{funct3}に応じて@<code>{take}の条件を切り替えます。
-分岐が成立するとき、
-@<code>{take}は@<code>{1}になるようにします。
+分岐が成立するときに@<code>{take}が@<code>{1}になります。
 
 brunitモジュールを、
 coreモジュールでインスタンス化します(@<list>{core.veryl.br-range.inst})。
@@ -3226,7 +3219,7 @@ coreモジュールでインスタンス化します(@<list>{core.veryl.br-range
 #@end
 //}
 
-簡単なテストを作成し、動作をテストします(@<list>{sample_br.hex})。
+簡単なテストを作成し、動作をテストします(@<list>{sample_br.hex}, @<list>{br.test})。
 
 //list[sample_br.hex][sample_br.hex]{
 #@mapfile(scripts/04/br-range/core/src/sample_br.hex)
@@ -3245,8 +3238,7 @@ $ @<userinput>{make build}
 $ @<userinput>{make sim}
 $ @<userinput>{obj_dir/sim src/sample_br.hex 15}
 #                    4
-00000000 : 00100093
-  reg[ 1] <= 00000001 @<balloon>{x1に1を代入}
+00000000 : 00100093 @<balloon>{x1に1を代入}
 #                    5
 00000004 : 10100063
   op1       : 00000000
@@ -3265,12 +3257,8 @@ $ @<userinput>{obj_dir/sim src/sample_br.hex 15}
   br take   : 1
 //}
 
-BLT、BLTU、BGEU命令についてはテストできていませんが、後の章で紹介するriscv-testsでテストします。
+BLT、BLTU、BGEU命令は後の章で紹介するriscv-testsでテストします。
 
-これでRV32Iの実装は終わりです。
-お疲れ様でした。
-
-//caution[実装していないRV32Iの命令について]{
-本章ではメモリフェンス命令、ECALL、EBREAK命令などを実装していません。
-これらの命令は後の章で実装します。
+//caution[実装していないRV32Iの命令]{
+メモリフェンス命令、ECALL、EBREAK命令は後の章で実装します。
 //}

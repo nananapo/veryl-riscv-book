@@ -1,13 +1,7 @@
 = 環境構築
 
 本書で使用するソフトウェアをインストールします。
-
-次のいずれかの環境を用意してください。
-筆者はWindowsを利用しています。
-
- * WSLが使えるWindows
- * Mac
- * Linux
+WSLが使えるWindows、Mac、Linuxのいずれかの環境を用意してください。
 
 == Veryl
 
@@ -16,9 +10,9 @@
 本書ではVerylという言語でCPUを記述します。
 まず、Verylのトランスパイラをインストールします。
 Verylには、Verylupというインストーラが用意されており、
-これを利用することでVerylをインストールすることができます。
+これを利用することでVerylをインストールできます。
 
-VerylupはGitHubのReleaseページから入手することができます。
+VerylupはGitHubのReleaseページから入手できます。
 @<href>{https://github.com/veryl-lang/verylup, veryl-lang/verylup}
 で入手方法を確認してください@<fn>{cargo.install}。
 Verylupを入手したら、
@@ -38,7 +32,6 @@ $ @<userinput>{verylup setup}
 
 ==== Verylの更新
 
-Verylはまだ開発途上の言語であり、頻繁にバージョンが更新されます。
 最新のVerylに更新するには、次のようなコマンドを実行します
 (@<list>{veryl-update})。
 
@@ -81,49 +74,47 @@ $ @<userinput>{veryl --version}
 veryl 0.13.2
 //}
 
-特定のバージョンのVerylを使用するには、
-次のようにverylコマンドを実行します
+特定のバージョンのVerylを使用するには@<code>{+}でバージョンを指定します
 (@<list>{veryl-use-ver})。
 
 //terminal[veryl-use-ver][Verylのバージョン0.13.2を使用する]{
 $ @<userinput>|veryl +0.13.2| @<balloon>{+でバージョンを指定する}
 //}
 
-===[notoc] エディタの拡張のインストール
+===[notoc] エディタ拡張のインストール
 
-エディタにVimを利用している方は、
-GitHubの@<href>{https://github.com/veryl-lang/veryl.vim, veryl-lang/veryl.vim}
-でプラグインを入手することができます。
-
+//image[vscode-ext][VerylのVSCode拡張][width=50%]
 エディタにVSCodeを利用している方は、
-@<img>{vscode-ext}の拡張をインストールするとシンタックスハイライトなどの機能を利用することができます。
+@<img>{vscode-ext}の拡張をインストールするとシンタックスハイライトなどの機能を利用できます。
 
  * @<href>{https://marketplace.visualstudio.com/items?itemName=dalance.vscode-veryl}
 
-//image[vscode-ext][VerylのVSCode拡張][width=50%]
+エディタにVimを利用している方は、
+GitHubの@<href>{https://github.com/veryl-lang/veryl.vim, veryl-lang/veryl.vim}
+でプラグインを入手できます。
 
 == Verilator
 
 @<href>{https://github.com/verilator/verilator, Verilator}は、
 SystemVerilogのシミュレータを生成するためのソフトウェアです。
 
-aptやbrewを利用してインストールすることができます。
+パッケージマネージャ(apt、Homebrewなど)を利用してインストールできます。
 パッケージマネージャが入っていない場合は、
 以下のページを参考にインストールしてください。
 
  * @<href>{https://verilator.org/guide/latest/install.html}
 
 //caution[本書で利用するVerilatorのバージョン]{
-本書ではバージョン5系を利用しますが、
+2024/10/28時点の最新バージョンはv5.030ですが、
 Verilatorの問題によりシミュレータをビルドできない場合があります。
-対処方法についてはサポートページを確認してください。
-
- * @<w>{support-page}
+対処方法はサポートページ@<fn>{support-page}を確認してください。
 //}
+
+//footnote[support-page][@<w>{support-page}]
 
 == riscv-gnu-toolchain
 
-riscv-gnu-toolchainは、RISC-V向けのコンパイラなどが含まれるtoolchainです。
+riscv-gnu-toolchainは、RISC-V向けのコンパイラやシミュレータなどが含まれているツールチェーン(ソフトウェア群)です。
 
 GitHubの@<href>{https://github.com/riscv-collab/riscv-gnu-toolchain, riscv-collab/riscv-gnu-toolchain}
 のREADMEにインストール方法が書かれています。

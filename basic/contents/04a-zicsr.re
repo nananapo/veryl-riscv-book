@@ -3,21 +3,23 @@
 == CSRとは何か?
 
 前の章では、RISC-Vの基本整数命令セットであるRV32Iを実装しました。
-既に簡単なプログラムを動かすことができますが、
+既に簡単なプログラムを動かせますが、
 例外や割り込み、ページングなどの機能がありません@<fn>{sorezore.atode}。
-このような機能はCSRを利用して提供されます。
+このような機能はCSRを介して提供されます。
 
 //footnote[sorezore.atode][それぞれの機能は実装するときに解説します]
 
 RISC-Vには、CSR(Control and Status Register)というレジスタが4096個存在しています。
 例えば@<code>{mtvec}というレジスタは、例外や割り込みが発生したときのジャンプ先のアドレスを格納しています。
-RISC-VのCPUは、CSRの読み書きによって、制御(Control)や状態(Status)の読み取りを行います。
+RISC-VのCPUは、CSRの読み書きによって制御(Control)や状態(Status)の読み取りを行います。
 
 CSRの読み書きを行う命令は、Zicsr拡張によって定義されています(@<table>{zicsr.insts})。
 本章では、Zicsrに定義されている命令、
 RV32Iに定義されているECALL命令、
 MRET命令、
-mtvec/mepc/mcauseレジスタを実装します。
+mtvecレジスタ、
+mepcレジスタ、
+mcauseレジスタを実装します。
 
 //table[zicsr.insts][Zicsr拡張に定義されている命令]{
 命令	作用
@@ -88,14 +90,13 @@ inst_decoderモジュールの@<code>{InstCtrl}を生成している部分を変
 @<list>{inst_decoder.veryl.create-csrunit-range.decode}では、
 opcodeが@<code>{OP_SYSTEM}な命令を、
 I形式、レジスタに結果を書き込む、CSRを操作する命令であるということにしています。
-他のopcodeの命令については、
-CSRを操作しない命令であるということにしています。
+他のopcodeの命令はCSRを操作しない命令であるということにしています。
 
 CSRRW、CSRRS、CSRRC命令は、
-rs1レジスタのデータを利用します。
+rs1レジスタの値を利用します。
 CSRRWI、CSRRSI、CSRRCI命令は、
 命令のビット列中のrs1にあたるビット列(5ビット)を@<code>{0}で拡張した値を利用します。
-それぞれの命令はfunct3で区別することができます(@<table>{zicsr.f3})。
+それぞれの命令はfunct3で区別できます(@<table>{zicsr.f3})。
 
 //table[zicsr.f3][Zicsrに定義されている命令(funct3による区別)]{
 funct3	命令	
@@ -153,10 +154,11 @@ rs1			UIntX		input	CSRR(W|S|C)のときrs1の値、@<br>{}CSRR(W|S|C)Iのとき�
 rdata		UIntX		output	CSR命令よるCSR読み込みの結果
 //}
 
-まだ、csrunitモジュールにはCSRが一つもありません。
-そのため、中身が空になっています。
-このままの状態で、とりあえず、
-csrunitモジュールをcoreモジュールの中でインスタンス化します
+まだcsrunitモジュールにはCSRが一つもないため、中身が空になっています。
+
+//clearpage
+
+このままの状態でcsrunitモジュールをcoreモジュールの中でインスタンス化します
 (@<list>{core.veryl.create-csrunit-range.csru})。
 
 //list[core.veryl.create-csrunit-range.csru][csrunitモジュールのインスタンス化 (core.veryl)]{
@@ -342,7 +344,7 @@ CSRに書き込むべきデータは、
 書き込む命令(CSRRW[I]、CSRRS[I]、CSRRC[I])によって異なります。
 @<code>{rs1}ポートには、rs1の値か即値が供給されているため、
 これと@<code>{rdata}を利用して@<code>{wdata}を生成しています。
-@<code>{funct3}と演算の種類の関係については、
+@<code>{funct3}と演算の種類の関係は、
 @<table>{zicsr.f3}を参照してください。
 
 最後に、mtvecレジスタへの書き込み処理を実装します。
@@ -415,7 +417,7 @@ $ @<userinput>{./obj_dir/sim test/sample_csr.hex 5}
 //}
 
 mtvecのBASEフィールドにのみ書き込みが行われ、
-@<code>{32'h00000014}が読み込まれることが確認できます。
+@<code>{32'h00000014}が読み込まれることを確認できます。
 
 == ECALL命令の実装
 
@@ -457,7 +459,7 @@ ECALL命令を実行すると例外が発生します。
 
 例外が発生すると、CPUはmtvecにジャンプする前に、
 mepcに現在のPCを、mcauseに発生原因を格納します。
-これにより、mtvecにジャンプしてから例外に応じた処理を実行することができるようになります。
+これにより、mtvecにジャンプしてから例外に応じた処理を実行できるようになります。
 
 例外の発生原因は数値で表現されており、
 Environment call from M-mode例外には11が割り当てられています。
@@ -823,7 +825,7 @@ $ @<userinput>{./obj_dir/sim test/sample_ecall.hex 10}
 //}
 
 ECALL命令によって例外が発生し、
-mcauseとmepcに書き込みが行われてからmtvecにジャンプしていることが確認できます。
+mcauseとmepcに書き込みが行われてからmtvecにジャンプしていることを確認できます。
 
 ECALL命令の実行時にレジスタに値がライトバックされてしまっていますが、
 ECALL命令のrdは常に0番目のレジスタであり、
@@ -927,7 +929,7 @@ $ @<userinput>{./obj_dir/sim test/sample_mret.hex 9}
 00000010 : 00000013 @<balloon>{10にジャンプしている}
 //}
 
-MRET命令によってmepcにジャンプすることが確認できます。
+MRET命令によってmepcにジャンプすることを確認できます。
 
 MRET命令はレジスタに値をライトバックしていますが、
 ECALL命令と同じく0番目のレジスタが指定されるため問題ありません。
