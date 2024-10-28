@@ -43,7 +43,7 @@
         <main class="page-main">
 <h1 class="boldlines center twolines"><a id="h2"></a><span class="secno">第2章</span> <br/>ハードウェア記述言語 Veryl</h1>
 <p>CPU (Central Proccessing Unit, 中央演算処理装置)は、コンピュータを構成する主要な部品の1つであり、電気で動くとても複雑な回路で構成されています。</p>
-<p>本書では「ハードウェア記述言語」によってCPUを記述します。CPUを記述するといっても、いったい何をどうやって記述するのでしょうか?</p>
+<p>本書では「ハードウェア記述言語」によってCPUをの回路を記述します。回路を記述するといっても、いったい何をどうやって記述するのでしょうか?</p>
 <p>まずは、論理回路を構成する方法から考えます。</p>
 
 <h2 id="hdl" class="numbox"><a id="h2-1"></a><span class="secno">2.1</span> ハードウェア記述言語</h2>
@@ -391,6 +391,9 @@ always_ff(clk, rst) {
 <tr class="hline"><td>always_ff</td><td>ノンブロッキング代入</td><td>クロック信号、リセット信号のタイミング。<br />同じタイミングで実行される全ての代入文の右辺を評価した後<br />にレジスタの値が変更される。</td></tr>
 </table>
 </div>
+<p></p>
+<hr />
+<p></p>
 
 <h4><a id="h2-2-3-4"></a>モジュールのインスタンス化</h4>
 <p>あるモジュールを利用したいとき、モジュールを<b>インスタンス化</b>(instantiate)することにより、モジュールの実体を宣言できます。</p>
@@ -637,22 +640,22 @@ a = x || y; // xまたはyが真のとき真
 <div id="operator.priority" class="table">
 <p class="caption">表2.5: 演算子と優先度 <a href="bib.html#bib-veryl-doc.operator.precedence">[3]</a></p>
 <table>
-<tr class="hline"><th>演算子</th><th>結合法則</th><th>優先度</th></tr>
-<tr class="hline"><td><code class="inline-code">()  []  ::  .</code></td><td>左</td><td>最優先</td></tr>
-<tr class="hline"><td><code class="inline-code">+  -  !  ~  &amp;  ~&amp;  |  ~|  ^  ~^  ^~</code>(単項)</td><td>左</td><td></td></tr>
+<tr class="hline"><th>演算子</th><th>結合性</th><th>優先順位</th></tr>
+<tr class="hline"><td><code class="inline-code">()</code> <code class="inline-code">[]</code> <code class="inline-code">::</code> <code class="inline-code">.</code></td><td>左</td><td>高い</td></tr>
+<tr class="hline"><td><code class="inline-code">+</code> <code class="inline-code">-</code> <code class="inline-code">!</code> <code class="inline-code">~</code> <code class="inline-code">&amp;</code> <code class="inline-code">~&amp;</code> <code class="inline-code">|</code> <code class="inline-code">~|</code> <code class="inline-code">^</code> <code class="inline-code">~^</code> <code class="inline-code">^~</code>(単項)</td><td>左</td><td></td></tr>
 <tr class="hline"><td><code class="inline-code">**</code></td><td>左</td><td></td></tr>
-<tr class="hline"><td><code class="inline-code">*  /  %</code></td><td>左</td><td></td></tr>
-<tr class="hline"><td><code class="inline-code">+  -</code> (二項)</td><td>左</td><td></td></tr>
-<tr class="hline"><td><code class="inline-code">&lt;&lt;  &gt;&gt;  &lt;&lt;&lt;  &gt;&gt;&gt;</code></td><td>左</td><td></td></tr>
-<tr class="hline"><td><code class="inline-code">&lt;:  &lt;=  &gt;:  &gt;=</code></td><td>左</td><td></td></tr>
-<tr class="hline"><td><code class="inline-code">==  !=  ===  !==  ==?  !=?</code></td><td>左</td><td></td></tr>
+<tr class="hline"><td><code class="inline-code">*</code> <code class="inline-code">/</code> <code class="inline-code">%</code></td><td>左</td><td></td></tr>
+<tr class="hline"><td><code class="inline-code">+</code> <code class="inline-code">-</code> (二項)</td><td>左</td><td></td></tr>
+<tr class="hline"><td><code class="inline-code">&lt;&lt;</code> <code class="inline-code">&gt;&gt;</code> <code class="inline-code">&lt;&lt;&lt;</code> <code class="inline-code">&gt;&gt;&gt;</code></td><td>左</td><td></td></tr>
+<tr class="hline"><td><code class="inline-code">&lt;:</code> <code class="inline-code">&lt;=</code> <code class="inline-code">&gt;:</code> <code class="inline-code">&gt;=</code></td><td>左</td><td></td></tr>
+<tr class="hline"><td><code class="inline-code">==</code> <code class="inline-code">!=</code> <code class="inline-code">===</code> <code class="inline-code">!==</code> <code class="inline-code">==?</code> <code class="inline-code">!=?</code></td><td>左</td><td></td></tr>
 <tr class="hline"><td><code class="inline-code">&amp;</code> (二項)</td><td>左</td><td></td></tr>
-<tr class="hline"><td><code class="inline-code">^  ~^  ^~</code> (二項)</td><td>左</td><td></td></tr>
+<tr class="hline"><td><code class="inline-code">^</code> <code class="inline-code">~^</code> <code class="inline-code">^~</code> (二項)</td><td>左</td><td></td></tr>
 <tr class="hline"><td><code class="inline-code">|</code> (二項)</td><td>左</td><td></td></tr>
 <tr class="hline"><td><code class="inline-code">&amp;&amp;</code></td><td>左</td><td></td></tr>
 <tr class="hline"><td><code class="inline-code">||</code></td><td>左</td><td></td></tr>
-<tr class="hline"><td><code class="inline-code">=  +=  -=  *=  /=  %=  &amp;=  ^=  |=  &lt;&lt;=  &gt;&gt;=  &lt;&lt;&lt;=  &gt;&gt;&gt;=</code></td><td>なし</td><td></td></tr>
-<tr class="hline"><td><code class="inline-code">{} inside outside if case switch</code></td><td>なし</td><td>最後</td></tr>
+<tr class="hline"><td><code class="inline-code">=</code> <code class="inline-code">+=</code> <code class="inline-code">-=</code> <code class="inline-code">*=</code> <code class="inline-code">/=</code> <code class="inline-code">%=</code> <code class="inline-code">&amp;=</code> <code class="inline-code">^=</code> <code class="inline-code">|=</code> <code class="inline-code">&lt;&lt;=</code> <code class="inline-code">&gt;&gt;=</code> <code class="inline-code">&lt;&lt;&lt;=</code> <code class="inline-code">&gt;&gt;&gt;=</code></td><td>なし</td><td></td></tr>
+<tr class="hline"><td><code class="inline-code">{} inside outside if case switch</code></td><td>なし</td><td>低い</td></tr>
 </table>
 </div>
 
@@ -692,7 +695,7 @@ always_comb {
                         v = 0;
                 }
                 // WIDTH != 0かつWIDTH == 1のとき
-                WIDTH == 1: v = 1; // 要素が1つの文の時、{}は省略できる
+                WIDTH == 1: v = 1; // 要素が1つの文のとき、{}は省略できる
                 // WIDTH != 0かつWIDTH != 1のとき
                 default: 
                         // switch式
@@ -715,7 +718,7 @@ always_comb {
                         v = 0;
                 }
                 // WIDTH != 0かつWIDTH == 1のとき
-                1: v = 1; // 要素が1つの文の時、{}は省略できる
+                1: v = 1; // 要素が1つの文のとき、{}は省略できる
                 // WIDTH != 0かつWIDTH != 1のとき
                 default: 
                         // case式

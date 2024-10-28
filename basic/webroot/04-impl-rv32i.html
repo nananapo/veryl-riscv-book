@@ -87,9 +87,9 @@
 <p>CPUは次の命令を実行するために、PCの値を次の命令のアドレスに設定します。ジャンプ命令の場合はPCの値をジャンプ先のアドレスに設定します。分岐命令の場合は、まず、分岐の成否を判定します。分岐が成立する場合はPCの値を分岐先のアドレスに設定します。分岐が成立しない場合は通常の命令と同じです。</p>
 <p>ここまでの話をまとめると、CPUの動作は次のようになります(<span class="imgref"><a href="./04-impl-rv32i.html#cpu-arch">図3.1</a></span>)。</p>
 <div id="cpu-arch" class="image">
-<img src="images/04-impl-rv32i/cpu-arch.png" alt="雑なCPUの図" class="img" />
+<img src="images/04-impl-rv32i/cpu-arch.png" alt="CPUの動作" class="img" />
 <p class="caption">
-図3.1: 雑なCPUの図
+図3.1: CPUの動作
 </p>
 </div>
 <ol start="1" type="1">
@@ -104,7 +104,7 @@
 <p>CPUが一体どんなものなのかが分かりましたか?実装を始めましょう。</p>
 
 <h2 class="numbox"><a id="h3-2"></a><span class="secno">3.2</span> プロジェクトの作成</h2>
-<p>まず、Verylのプロジェクトを作成します(<span class="listref"><a href="./04-impl-rv32i.html#veryl-new">リスト3.1</a></span>)。プロジェクト名はcoreという名前にしています。</p>
+<p>まず、Verylのプロジェクトを作成します(<span class="listref"><a href="./04-impl-rv32i.html#veryl-new">リスト3.1</a></span>)。プロジェクトはcoreという名前にしています。</p>
 <div id="veryl-new" class="cmd-code">
 <span class="caption">リスト3.1: リスト3.1: 新規プロジェクトの作成</span>
 <pre class="list">$ <span class="userinput">veryl new core</span>
@@ -329,7 +329,7 @@ $ <span class="userinput">mkdir src</span>
 </dl>
 
 <h3 class="none"><a id="h3-4-3"></a><span class="secno">3.4.3</span> メモリの初期化、環境変数の読み込み</h3>
-<p>memoryモジュールのパラメータには、<code class="inline-code">FILEPATH_IS_ENV</code>と<code class="inline-code">FILEPATH</code>を定義しています。memoryモジュールをインスタンス化する時、<code class="inline-code">FILEPATH</code>には、メモリの初期値が格納されたファイルのパスか、ファイルパスが格納されている環境変数名を指定します。初期化は<code class="inline-code">$readmemh</code>システムタスクで行います。</p>
+<p>memoryモジュールのパラメータには、<code class="inline-code">FILEPATH_IS_ENV</code>と<code class="inline-code">FILEPATH</code>を定義しています。memoryモジュールをインスタンス化するとき、<code class="inline-code">FILEPATH</code>には、メモリの初期値が格納されたファイルのパスか、ファイルパスが格納されている環境変数名を指定します。初期化は<code class="inline-code">$readmemh</code>システムタスクで行います。</p>
 <p><code class="inline-code">FILEPATH_IS_ENV</code>が<code class="inline-code">1</code>のとき、環境変数の値を取得して、初期化用のファイルのパスとして利用します。環境変数はutilパッケージのget_env関数で取得します。</p>
 <p>まず、utilパッケージとget_env関数を作成します。<code class="inline-code">src/util.veryl</code>を作成し、次のように記述します(<span class="listref"><a href="./04-impl-rv32i.html#util.veryl">リスト3.7</a></span>)。</p>
 <div id="util.veryl" class="caption-code">
@@ -457,7 +457,7 @@ module core (
 <p><code class="inline-code">if_pc</code>レジスタはPC(プログラムカウンタ)です。ここで<code class="inline-code">if_</code>という接頭辞はinstruction fetch(命令フェッチ)の略です。<code class="inline-code">if_is_requested</code>はフェッチ中かどうかを管理しており、フェッチ中のアドレスを<code class="inline-code">if_pc_requested</code>に格納しています。どのレジスタも<code class="inline-code">0</code>で初期化しています。</p>
 <p>always_combブロックでは、アドレス<code class="inline-code">if_pc</code>にあるデータを常にメモリに要求しています。命令フェッチではメモリの読み込みしか行わないため、<code class="inline-code">membus.wen</code>は<code class="inline-code">0</code>にしています。</p>
 <p>上から1つめのalways_ffブロックでは、フェッチ中かどうかとメモリがready(要求を受け入れる)状態かどうかによって、<code class="inline-code">if_pc</code>と<code class="inline-code">if_is_requested</code>、<code class="inline-code">if_pc_requested</code>の値を変更しています。</p>
-<p>メモリにデータを要求する時、<code class="inline-code">if_pc</code>を次の命令のアドレス(<code class="inline-code">4</code>を足したアドレス)に変更して、<code class="inline-code">if_is_requested</code>を<code class="inline-code">1</code>に変更しています。フェッチ中かつ<code class="inline-code">membus.rvalid</code>が<code class="inline-code">1</code>のとき、命令フェッチが完了し、データが<code class="inline-code">membus.rdata</code>に供給されています。このとき、メモリがready状態なら、すぐに次の命令フェッチを開始します。この状態遷移を繰り返すことによって、アドレス<code class="inline-code">0</code>→<code class="inline-code">4</code>→<code class="inline-code">8</code>→<code class="inline-code">c</code>→<code class="inline-code">10</code>...の命令を、次々にフェッチするようになっています。</p>
+<p>メモリにデータを要求するとき、<code class="inline-code">if_pc</code>を次の命令のアドレス(<code class="inline-code">4</code>を足したアドレス)に変更して、<code class="inline-code">if_is_requested</code>を<code class="inline-code">1</code>に変更しています。フェッチ中かつ<code class="inline-code">membus.rvalid</code>が<code class="inline-code">1</code>のとき、命令フェッチが完了し、データが<code class="inline-code">membus.rdata</code>に供給されています。このとき、メモリがready状態なら、すぐに次の命令フェッチを開始します。この状態遷移を繰り返すことによって、アドレス<code class="inline-code">0</code>→<code class="inline-code">4</code>→<code class="inline-code">8</code>→<code class="inline-code">c</code>→<code class="inline-code">10</code>...の命令を次々にフェッチします。</p>
 <p>上から2つめのalways_ffブロックは、デバッグ用の表示を行うコードです。命令フェッチが完了したとき、その結果を<code class="inline-code">$display</code>システムタスクによって出力します。</p>
 
 <h3 class="none"><a id="h3-6-2"></a><span class="secno">3.6.2</span> memoryモジュールとcoreモジュールを接続する</h3>
@@ -735,7 +735,7 @@ $ <span class="userinput">make clean</span> <span class="balloon">← ビルド�
 </p>
 </div>
 <p>フェッチした命令は次々に実行されますが、その命令が何クロックで実行されるかは分かりません。命令が常に1クロックで実行される場合は、現状の常にフェッチし続けるようなコードで問題ありませんが、例えばメモリにアクセスする命令は実行に何クロックかかるか分かりません。</p>
-<p>複数クロックかかる命令に対応するために、命令の処理が終わってから次の命令をフェッチするようにすると、命令の実行の流れは次のようになります。</p>
+<p>複数クロックかかる命令に対応するために、命令の処理が終わってから次の命令をフェッチする場合、命令の実行の流れは次のようになります。</p>
 <p></p>
 <hr />
 <p></p>
@@ -915,8 +915,8 @@ $ <span class="userinput">make clean</span> <span class="balloon">← ビルド�
     } else {
 </pre>
 </div>
-<p>命令をフェッチできた時、<code class="inline-code">if_fifo_wvalid</code>の値を<code class="inline-code">1</code>にして、<code class="inline-code">if_fifo_wdata</code>にフェッチした命令とアドレスを格納します。これにより、次のクロック以降のFIFOに空きがあるタイミングでデータが追加されます。</p>
-<p>それ以外の時、FIFOにデータを格納しようとしていてFIFOに空きがあるとき、<code class="inline-code">if_fifo_wvalid</code>を<code class="inline-code">0</code>にすることでデータの追加を完了します。</p>
+<p>命令をフェッチできたとき、<code class="inline-code">if_fifo_wvalid</code>の値を<code class="inline-code">1</code>にして、<code class="inline-code">if_fifo_wdata</code>にフェッチした命令とアドレスを格納します。これにより、次のクロック以降のFIFOに空きがあるタイミングでデータが追加されます。</p>
+<p>それ以外のとき、FIFOにデータを格納しようとしていてFIFOに空きがあるとき、<code class="inline-code">if_fifo_wvalid</code>を<code class="inline-code">0</code>にすることでデータの追加を完了します。</p>
 <p>命令フェッチはFIFOに2つ以上空きがあるときに行うため、まだ追加されていないデータが<code class="inline-code">if_fifo_wdata</code>に格納されていても、別のデータに上書きされてしまうことはありません。</p>
 
 <h4><a id="h3-6-4-3"></a>FIFOのテスト</h4>
@@ -1571,7 +1571,7 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 6</span>
 
 <h3 class="none"><a id="h3-10-1"></a><span class="secno">3.10.1</span> ライトバック処理を実装する</h3>
 <p>書き込む対象のレジスタ(デスティネーションレジスタ)は、命令のrdフィールドによって番号で指定されます。デコード時に、レジスタに結果を書き込む命令かどうかを<code class="inline-code">InstCtrl.rwb_en</code>に格納しています(<span class="listref"><a href="./04-impl-rv32i.html#inst_decoder.veryl.id">リスト3.33</a></span>)。</p>
-<p>LUI命令のときは即値をそのまま、それ以外の命令のときはALUの結果をライトバックするようにします(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.wb-range.wb">リスト3.49</a></span>)。</p>
+<p>LUI命令のときは即値をそのまま、それ以外の命令のときはALUの結果をライトバックします(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.wb-range.wb">リスト3.49</a></span>)。</p>
 <div id="core.veryl.wb-range.wb" class="caption-code">
 <span class="caption">リスト3.49: リスト3.49: ライトバック処理の実装 (core.veryl)</span>
 <pre class="list language-wb">    <b>let rd_addr: logic&lt;5&gt; = inst_bits[11:7];</b>
@@ -1656,7 +1656,10 @@ $ <span class="userinput">obj_dir/sim sample.hex 6</span>
 </dd>
 </dl>
 <p>おめでとうございます！このCPUは整数演算命令の実行ができるようになりました！</p>
-<p>最後に、テストのためにレジスタの値を初期化するようにしていたコードを削除します(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.wb-rm-reset-range.wb">リスト3.52</a></span>)。</p>
+<p>最後に、テストのためにレジスタの値を初期化していたコードを削除します(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.wb-rm-reset-range.wb">リスト3.52</a></span>)。</p>
+<p></p>
+<hr />
+<p></p>
 <div id="core.veryl.wb-rm-reset-range.wb" class="caption-code">
 <span class="caption">リスト3.52: リスト3.52: レジスタの初期化をやめる (core.veryl)</span>
 <pre class="list language-wb">    always_ff {
@@ -1781,7 +1784,7 @@ module memunit (
 }
 </pre>
 </div>
-<p>memunitモジュールでは、命令がメモリにアクセスする命令の時、ALUから受け取ったアドレスをメモリに渡して操作を実行します。</p>
+<p>memunitモジュールでは、命令がメモリにアクセスする命令のとき、ALUから受け取ったアドレスをメモリに渡して操作を実行します。</p>
 <p>命令がメモリにアクセスする命令かどうかはinst_is_memop関数で判定します。ストア命令のとき、命令の形式はS形式です。ロード命令のとき、デコーダは<code class="inline-code">InstCtrl.is_load</code>を<code class="inline-code">1</code>にしています(<span class="listref"><a href="./04-impl-rv32i.html#inst_decoder.veryl.id">リスト3.33</a></span>)。</p>
 <p>memunitモジュールには次の状態が定義されています。初期状態は<code class="inline-code">State::Init</code>です。</p>
 <dl>
@@ -1797,7 +1800,7 @@ module memunit (
 </dd>
 <dt>State::WaitReady</dt>
 <dd>
-	この状態の時、命令に応じた要求をメモリに送り続けます。
+	命令に応じた要求をメモリに送り続けます。
 	メモリが要求を受け付ける(<code class="inline-code">ready</code>)とき、
 	状態を<code class="inline-code">State::WaitValid</code>に移動します。
 </dd>
@@ -1992,7 +1995,7 @@ module memunit (
     }
 </pre>
 </div>
-<p>デバッグ表示も同様で、ライトバックするときにのみデバッグ表示するようにします(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.lwsw-range.wb_debug">リスト3.64</a></span>)。</p>
+<p>デバッグ表示も同様で、ライトバックするときにのみデバッグ表示します(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.lwsw-range.wb_debug">リスト3.64</a></span>)。</p>
 <div id="core.veryl.lwsw-range.wb_debug" class="caption-code">
 <span class="caption">リスト3.64: リスト3.64: ライトバックするときにのみデバッグ表示する (core.veryl)</span>
 <pre class="list language-wb_debug">    if <b>if_fifo_rready &amp;&amp;</b> inst_ctrl.rwb_en {
@@ -2279,7 +2282,7 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 13</span>
 </dd>
 </dl>
 <p>memoryモジュールは、書き込み要求が送られてきた場合、名前が<code class="inline-code">_saved</code>で終わるレジスタに要求の内容を格納します。また、指定されたアドレスのデータを<code class="inline-code">rdata_saved</code>に格納します。次のクロックで、書き込みマスクを使った書き込みを行い、要求の処理を終了します。</p>
-<p>topモジュールの調停処理で、<code class="inline-code">wmask</code>も調停するようにします(<span class="listref"><a href="./04-impl-rv32i.html#top.veryl.lbhsbh-range.wmask">リスト3.75</a></span>)。</p>
+<p>topモジュールの調停処理で、<code class="inline-code">wmask</code>も調停します(<span class="listref"><a href="./04-impl-rv32i.html#top.veryl.lbhsbh-range.wmask">リスト3.75</a></span>)。</p>
 <div id="top.veryl.lbhsbh-range.wmask" class="caption-code">
 <span class="caption">リスト3.75: リスト3.75: wmaskの調停 (top.veryl)</span>
 <pre class="list language-wmask">    membus.valid = i_membus.valid | d_membus.valid;
@@ -2298,7 +2301,7 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 13</span>
 </div>
 
 <h4><a id="h3-11-3-2"></a>memunitモジュールの実装</h4>
-<p>memoryモジュールが書き込みマスクをサポートするようになったので、memunitモジュールでwmaskを設定します。</p>
+<p>memoryモジュールが書き込みマスクをサポートしたので、memunitモジュールでwmaskを設定します。</p>
 <p><code class="inline-code">req_wmask</code>レジスタを作成し、<code class="inline-code">membus.wmask</code>と接続します(<span class="listref"><a href="./04-impl-rv32i.html#memunit.veryl.lbhsbh-range.def_wmask">リスト3.76</a></span>、<span class="listref"><a href="./04-impl-rv32i.html#memunit.veryl.lbhsbh-range.mem_wmask">リスト3.77</a></span>)。</p>
 <div id="memunit.veryl.lbhsbh-range.def_wmask" class="caption-code">
 <span class="caption">リスト3.76: リスト3.76: req_wmaskの定義 (memunit.veryl)</span>
@@ -2410,7 +2413,7 @@ deadbeef // 0x0
     };
 </pre>
 </div>
-<p>次に、次にフェッチする命令をジャンプ先の命令に変更します。フェッチ先の変更が発生したことを表す信号<code class="inline-code">control_hazard</code>と、新しいフェッチ先を示す信号<code class="inline-code">control_hazard_pc_next</code>を作成します(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.jump-range.hazard_reg">リスト3.83</a></span>、<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.jump-range.hazard_assign">リスト3.84</a></span>)。</p>
+<p>次に、次にフェッチする命令をジャンプ先の命令に変更します。フェッチ先の変更が発生を示す信号<code class="inline-code">control_hazard</code>と、新しいフェッチ先を示す信号<code class="inline-code">control_hazard_pc_next</code>を作成します(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.jump-range.hazard_reg">リスト3.83</a></span>、<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.jump-range.hazard_assign">リスト3.84</a></span>)。</p>
 <div id="core.veryl.jump-range.hazard_reg" class="caption-code">
 <span class="caption">リスト3.83: リスト3.83: control_hazardとcontrol_hazard_pc_nextの定義 (core.veryl)</span>
 <pre class="list language-hazard_reg">    var control_hazard        : logic;
@@ -2454,7 +2457,7 @@ deadbeef // 0x0
 図3.4: ジャンプ命令とジャンプ先の間に余計な命令が入ってしまっている
 </p>
 </div>
-<p>実行するべきではない命令を実行しないようにするために、ジャンプ命令を実行するときに、FIFOをリセットするようにします。</p>
+<p>実行するべきではない命令を実行しないようにするために、ジャンプ命令を実行するときに、FIFOをリセットします。</p>
 <p>FIFOに、中身をリセットするための信号<code class="inline-code">flush</code>を実装します(<span class="listref"><a href="./04-impl-rv32i.html#fifo.veryl.jump-range.port">リスト3.86</a></span>)。</p>
 <div id="fifo.veryl.jump-range.port" class="caption-code">
 <span class="caption">リスト3.86: リスト3.86: ポートにflushを追加する (fifo.veryl)</span>
@@ -2492,7 +2495,7 @@ deadbeef // 0x0
     }
 </pre>
 </div>
-<p>coreモジュールで、<code class="inline-code">control_hazard</code>と<code class="inline-code">flush</code>を接続し、FIFOをリセットするようにします(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.jump-range.fifo">リスト3.88</a></span>)。</p>
+<p>coreモジュールで、<code class="inline-code">control_hazard</code>と<code class="inline-code">flush</code>を接続し、FIFOをリセットします(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.jump-range.fifo">リスト3.88</a></span>)。</p>
 <div id="core.veryl.jump-range.fifo" class="caption-code">
 <span class="caption">リスト3.88: リスト3.88: ジャンプ命令のとき、FIFOをリセットする (core.veryl)</span>
 <pre class="list language-fifo">    inst if_fifo: fifo #(
@@ -2605,7 +2608,7 @@ module brunit (
     );
 </pre>
 </div>
-<p>命令が条件分岐命令で<code class="inline-code">brunit_take</code>が<code class="inline-code">1</code>のとき、次のPCをPC + 即値にするようにします(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.br-range.function">リスト3.93</a></span>、<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.br-range.hazard">リスト3.94</a></span>)。</p>
+<p>命令が条件分岐命令で<code class="inline-code">brunit_take</code>が<code class="inline-code">1</code>のとき、次のPCをPC + 即値にします(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.br-range.function">リスト3.93</a></span>、<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.br-range.hazard">リスト3.94</a></span>)。</p>
 <div id="core.veryl.br-range.function" class="caption-code">
 <span class="caption">リスト3.93: リスト3.93: 命令が条件分岐命令か判定する関数 (core.veryl)</span>
 <pre class="list language-function">    // 命令が分岐命令かどうかを判定する
@@ -2627,9 +2630,12 @@ module brunit (
 </pre>
 </div>
 <p><code class="inline-code">control_hazard</code>は、命令が無条件ジャンプ命令か、命令が条件分岐命令かつ分岐が成立するときに<code class="inline-code">1</code>になります。<code class="inline-code">control_hazard_pc_next</code>は、無条件ジャンプ命令のときは<code class="inline-code">alu_result</code>、条件分岐命令のときはPC + 即値になります。</p>
+<p></p>
+<hr />
+<p></p>
 
 <h4><a id="h3-12-2-2"></a>条件分岐命令のテスト</h4>
-<p>条件分岐命令を実行するとき、分岐の成否をデバッグ表示するようにします。デバッグ表示を行っているalways_ffブロック内に、次のコードを追加します(<span class="listref"><a href="./04-impl-rv32i.html#core.very.br-range.debug">リスト3.95</a></span>)。</p>
+<p>条件分岐命令を実行するとき、分岐の成否をデバッグ表示します。デバッグ表示を行っているalways_ffブロック内に、次のコードを追加します(<span class="listref"><a href="./04-impl-rv32i.html#core.very.br-range.debug">リスト3.95</a></span>)。</p>
 <div id="core.very.br-range.debug" class="caption-code">
 <span class="caption">リスト3.95: リスト3.95: 分岐判定のデバッグ表示 (core.veryl)</span>
 <pre class="list language-debug">    if inst_is_br(inst_ctrl) {
@@ -2677,7 +2683,7 @@ $ <span class="userinput">obj_dir/sim src/sample_br.hex 15</span>
 <p>BLT、BLTU、BGEU命令は後の章で紹介するriscv-testsでテストします。</p>
 <div class="miniblock miniblock-caution">
 <p class="miniblock-caption">実装していないRV32Iの命令</p>
-<p>メモリフェンス命令、ECALL、EBREAK命令は後の章で実装します。</p>
+<p>メモリフェンス命令、ECALL命令、EBREAK命令は後の章で実装します。</p>
 </div>
 
         </main>

@@ -43,13 +43,13 @@
         </header>
         <main class="page-main">
 <h1 class="boldlines center twolines"><a id="h7"></a><span class="secno">第7章</span> <br/>CPUのパイプライン化</h1>
-<p>これまでの章では、同時に1つの命令のみを実行するCPUを実装しました。高機能なCPUを実装するのは面白いですが、プログラムの実行が遅くてはいけません。機能を増やす前に、一度性能のことを考えてみましょう。</p>
+<p>これまでの章では、同時に1つの命令を実行するCPUを実装しました。高機能なCPUを実装するのは面白いですが、プログラムの実行が遅くてはいけません。機能を増やす前に、一度性能のことを考えてみましょう。</p>
 
 <h2 class="numbox"><a id="h7-1"></a><span class="secno">7.1</span> CPUの速度</h2>
 <p>CPUの性能指標は、例えば消費電力や実行速度が考えられます。本章では、プログラムの実行速度を考えます。</p>
 
 <h3 class="none"><a id="h7-1-1"></a><span class="secno">7.1.1</span> CPUの性能を考える</h3>
-<p>性能の比較にはクロック周波数やコア数などが用いられますが、プログラムの実行速度を比較する場合、プログラムの実行にかかる時間のみが絶対的な指標になります。プログラムの実行時間は、簡単に、次のような式で表せます(<a>式7.1</a>)。</p>
+<p>性能の比較にはクロック周波数やコア数などが用いられますが、プログラムの実行速度を比較する場合、プログラムの実行にかかる時間のみが絶対的な指標になります。プログラムの実行時間は、次のような式で表せます(<a>式7.1</a>)。</p>
 <span class="caption">式7.1: CPU性能方程式<a href="bib.html#bib-patahene">[12]</a></span>
 <div class="equation">
 <pre>CPU時間 = \frac{実行命令数 \times CPI}{クロック周波数}
@@ -71,12 +71,13 @@
 </dd>
 <dt>クロック周波数 (clock rate)</dt>
 <dd>
-    クロック・サイクル時間(clock cycle time)の逆数
+    クロック・サイクル時間(clock cycle time)の逆数<br />
+    クロック・サイクル時間は、クロックが<code class="inline-code">0</code>→<code class="inline-code">1</code>→<code class="inline-code">1</code>になる周期のこと
 </dd>
 </dl>
 <p>今のところ、CPUは命令をスキップしたり無駄に実行することはありません。そのため、実行命令数は、プログラムを1命令ずつ順に実行していった時の実行命令数になります。</p>
 <p>CPIを計測するためには、何の命令にどれだけのクロック・サイクル数がかかるかと、それぞれの命令の割合が必要です。今のところ、メモリにアクセスする命令は3 ～ 4クロック、それ以外の命令は1クロックで実行されます。命令の割合は考えないでおきます。</p>
-<p>クロック周波数は、CPUの回路のクリティカルパスの長さによって決まります。クリティカルパスとは、組み合わせ回路の中で最も大きな遅延を持つパスのことです。</p>
+<p>クロック周波数は、CPUの回路のクリティカルパスの長さによって決まります。クリティカルパスとは、組み合わせ回路の中で最も大きな遅延を持つ経路のことです。</p>
 
 <h3 class="none"><a id="h7-1-2"></a><span class="secno">7.1.2</span> 実行速度を上げる方法を考える</h3>
 <p>CPU性能方程式の各項に注目すると、CPU時間を減らすためには、実行命令数を減らすか、CPIを減らすか、クロック周波数を増大させる必要があります。</p>
@@ -88,12 +89,12 @@
 </div><!--/.footnote-list-->
 
 <h4><a id="h7-1-2-2"></a>CPIに注目する</h4>
-<p>CPIを減らすためには、例えばどの命令も1クロックで実行するようにしてしまうという方法が考えられます。しかし、そのために論理回路を大きくすると、その分クリティカルパスが長くなってしまう場合があります。また、1クロックに1命令しか実行しない場合、どう頑張ってもCPIは1より小さくなりません。</p>
+<p>CPIを減らすためには、例えばどの命令も1クロックで実行してしまうという方法が考えられます。しかし、そのために論理回路を大きくすると、その分クリティカルパスが長くなってしまう場合があります。また、1クロックに1命令しか実行しない場合、どう頑張ってもCPIは1より小さくなりません。</p>
 <p>CPIをより効果的に減らすためには、1クロックで1つ以上の命令を実行開始し、1つ以上の命令を実行完了すればいいです。これを実現する手法として、スーパースカラやアウトオブオーダー実行が存在します。これらの手法はずっと後の章で解説、実装します。</p>
 
 <h4><a id="h7-1-2-3"></a>クロック周波数に注目する</h4>
 <p>クロック周波数を増大させるには、クリティカルパスの長さを短くする必要があります。</p>
-<p>今のところ、CPUは計算命令を1クロック(<b>シングルサイクル</b>)で実行します。例えばADD命令を実行する時、FIFOに保存されたADD命令をデコードし、命令のビット列をもとにレジスタの値を選択し、ALUで足し算を実行し、その結果をレジスタにライトバックします。これらを1クロックで実行するということは、命令が保存されている32ビットのレジスタとレジスタファイルを入力に、64ビットのADD演算の結果を出力する組み合わせ回路が存在するということです。この回路は大変に段数の深い組み合わせ回路を必要とし、長いクリティカルパスを生成する原因になります。</p>
+<p>今のところ、CPUは計算命令を1クロック(<b>シングルサイクル</b>)で実行します。例えばADD命令を実行するとき、FIFOに保存されたADD命令をデコードし、命令のビット列をもとにレジスタの値を選択し、ALUで足し算を実行し、その結果をレジスタにライトバックします。これらを1クロックで実行するということは、命令が保存されている32ビットのレジスタと32*64ビットのレジスタファイルを入力に、64ビットのADD演算の結果を出力する組み合わせ回路が存在するということです。この回路は大変に段数の深い組み合わせ回路を必要とし、長いクリティカルパスを生成する原因になります。</p>
 <p>クロック周波数を増大させるもっとも単純な方法は、命令の処理をいくつかの<b>ステージ(段)</b>に分割し、複数クロックで1つの命令を実行することです。複数のクロック・サイクルで命令を実行することから、この形式のCPUは<b>マルチサイクル</b>CPUと呼びます。</p>
 <div id="multicycle" class="image">
 <img src="images/05a-pipeline/multicycle.png" alt="命令の実行 (マルチサイクル)" class="img" />
@@ -106,7 +107,7 @@
 <div class="footnote-list">
 <div class="footnote" id="fn-multicycle.clock" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*2] </span>実際のところは均等に分割することはできないため、Nステージに分割してもクロック周波数はN分の1になりません</p></div>
 </div><!--/.footnote-list-->
-<p>しかし、CPIがステージ分だけ増大してしまうのは問題です。この問題は、命令の処理を、まるで車の組立のように流れ作業で行うことで緩和できます。このような処理のことを、<b>パイプライン処理</b>と呼びます(<span class="imgref"><a href="./05a-pipeline.html#pipeline">図7.2</a></span>)。</p>
+<p>しかし、CPIがステージ分だけ増大してしまうのは問題です。この問題は、命令の処理を、まるで車の組立のように流れ作業で行うことで緩和できます(<span class="imgref"><a href="./05a-pipeline.html#pipeline">図7.2</a></span>)。このような処理のことを、<b>パイプライン処理</b>と呼びます。</p>
 <div id="pipeline" class="image">
 <img src="images/05a-pipeline/pipeline.png" alt="命令の実行 (パイプライン処理)" class="img" />
 <p class="caption">
@@ -116,7 +117,7 @@
 <p>本章では、CPUをパイプライン化することで性能の向上を図ります。</p>
 
 <h3 class="none"><a id="h7-1-3"></a><span class="secno">7.1.3</span> パイプライン処理のステージを考える</h3>
-<p>具体的に処理をどのようなステージに分割し、パイプライン処理を実現すればいいでしょうか?これを考えるために、<a href="./04-impl-rv32i.html">第3章</a>の最初で検討したCPUの動作を振り返ります。<a href="./04-impl-rv32i.html">第3章</a>では、CPUの動作を次のように順序付けしました。</p>
+<p>具体的に処理をどのようなステージに分割してパイプライン処理を実現すればいいでしょうか?これを考えるために、<a href="./04-impl-rv32i.html">第3章</a>の最初で検討したCPUの動作を振り返ります。<a href="./04-impl-rv32i.html">第3章</a>では、CPUの動作を次のように順序付けしました。</p>
 <ol start="1" type="1">
 <li>PCに格納されたアドレスにある命令をフェッチする</li>
 <li>命令を取得したらデコードする</li>
@@ -160,15 +161,15 @@
 <div class="note">
 <h5>CSRをMEMステージで処理する</h5>
 <p>上記の5段のパイプライン処理では、CSRの処理をMEMステージで行っています。これはいったいなぜでしょうか?</p>
-<p>今のところCPUにはECALL命令による例外しか存在しないため、EXステージでCSRの処理を行ってしまっても問題ありません。しかし、他の例外、例えばメモリアクセスに伴う例外を実装するとき、問題が生じます。</p>
-<p>メモリアクセスに起因する例外が発生するのはMEMステージです。このとき、EXステージでCSRの処理を行っていて、EXステージに存在する命令がmtvecレジスタに書き込むCSRRW命令だった場合、本来はMEMステージで発生した例外によって実行されないはずであるCSRRW命令によって、既にmtvecレジスタが書き換えられているかもしれません。これを復元する処理を書くことはできますが、MEMステージ以降でCSRを処理することでもこの事態を回避できるため、無駄な複雑性を導入しないために、MEMステージでCSRを処理しています。</p>
+<p>CPUにはECALL命令による例外しか実装してしないため、EXステージでCSRの処理を行ってしまっても問題ありません。しかし、他の例外、例えばメモリアクセスに伴う例外を実装するとき、問題が生じます。</p>
+<p>メモリアクセスに起因する例外が発生するのはMEMステージです。このとき、EXステージでCSRの処理を行っていて、EXステージに存在する命令がmtvecレジスタに書き込むCSRRW命令だった場合、本来はMEMステージで発生した例外によって実行されないはずであるCSRRW命令によって、既にmtvecレジスタが書き換えられているかもしれません。これを復元する処理を書くことはできますが、MEMステージ以降でCSRを処理することでもこの事態を回避できるため、MEMステージでCSRを処理しています。</p>
 </div>
 
 <h2 class="numbox"><a id="h7-2"></a><span class="secno">7.2</span> パイプライン処理の実装</h2>
 
 <h3 class="none"><a id="h7-2-1"></a><span class="secno">7.2.1</span> ステージに分割する準備をする</h3>
 <p>それでは、CPUをパイプライン化します。</p>
-<p>パイプライン処理では、複数のステージがそれぞれ違う命令を処理します。そのため、それぞれのステージのために、現在処理している命令を保持するためのレジスタ(<b>パイプラインレジスタ</b>)を用意する必要があります。</p>
+<p>パイプライン処理では、複数のステージがそれぞれ違う命令を処理します。そのため、それぞれのステージのために、現在処理している命令を保持するためのレジスタ(<b>パイプラインレジスタ</b>)を用意します。</p>
 <div id="pipeline_reg" class="image">
 <img src="images/05a-pipeline/pipeline_reg.png" alt="パイプライン処理の概略図" class="img" />
 <p class="caption">
@@ -176,7 +177,7 @@
 </p>
 </div>
 <p>まず、処理を複数ステージに分割する前に、既存の変数の名前を変更します。</p>
-<p>現状のcoreモジュールでは、命令をフェッチする処理に使う変数の名前の先頭に<code class="inline-code">if_</code>、FIFOから取り出した命令の情報を表す変数の名前の先頭に<code class="inline-code">inst_</code>をつけています。</p>
+<p>coreモジュールでは、命令をフェッチする処理に使う変数の名前の先頭に<code class="inline-code">if_</code>、FIFOから取り出した命令の情報を表す変数の名前の先頭に<code class="inline-code">inst_</code>をつけています。</p>
 <p>命令をフェッチする処理はIFステージに該当するため、<code class="inline-code">if_</code>から始まる変数はこのままで問題ありません。しかし、<code class="inline-code">inst_</code>から始まる変数は、CPUの処理を複数ステージに分けたとき、どのステージの変数か分からなくなります。IFステージの次はIDステージであるため、変数がIDステージのものであることを示す名前に変えてしまいます。</p>
 <div id="core.veryl.ifs-range.ifs" class="caption-code">
 <span class="caption">リスト7.1: リスト7.1: 変数名を変更する (core.veryl)</span>
@@ -236,7 +237,7 @@
     }
 </pre>
 </div>
-<p>EXステージは、IDステージで生成された制御フラグと即値と受け取ります。整数演算命令の時、レジスタの値を読み取り、ALUで計算します。分岐命令のとき、分岐判定を行います。CSRやメモリアクセスでrs1とrs2のデータを利用するため、演算の結果とともにMEMステージに渡します。</p>
+<p>EXステージは、IDステージで生成された制御フラグと即値と受け取ります。整数演算命令のとき、レジスタの値を読み取り、ALUで計算します。分岐命令のとき、分岐判定を行います。CSRやメモリアクセスでrs1とrs2を利用するため、演算の結果とともにMEMステージに渡します。</p>
 <div id="fifo.type.wb" class="caption-code">
 <span class="caption">リスト7.4: リスト7.4: MEM → WBの間のFIFOのデータ型 (core.veryl)</span>
 <pre class="list language-wb">    struct wbq_type {
@@ -251,13 +252,13 @@
 </pre>
 </div>
 <p>MEMステージは、メモリのロード結果とCSRの読み込みデータを生成し、WBステージに渡します。</p>
-<p>WBステージでは、命令がライトバックする命令の時、即値、ALUの計算結果、メモリのロード結果、CSRの読み込みデータから1つを選択し、レジスタに値を書き込みます。</p>
-<p>構造体のフィールドの生存区間が<span class="imgref"><a href="./05a-pipeline.html#fifo_type">図7.5</a></span>のようになっている理由が、なんとなく分かったでしょうか?</p>
+<p>WBステージでは、命令がライトバックする命令のとき、即値、ALUの計算結果、メモリのロード結果、CSRの読み込みデータから1つを選択し、レジスタに値を書き込みます。</p>
+<p>構造体のフィールドの生存区間が<span class="imgref"><a href="./05a-pipeline.html#fifo_type">図7.5</a></span>のようになっている理由が分かったでしょうか?</p>
 
 <h4><a id="h7-2-2-2"></a>FIFOのインスタンス化</h4>
-<p>FIFOと接続するための変数を定義し、FIFOをインスタンス化します(<span class="listref"><a href="./05a-pipeline.html#fifo.vars">リスト7.5</a></span>、<span class="listref"><a href="./05a-pipeline.html#fifo.inst">リスト7.6</a></span>)。<code class="inline-code">DATA_TYPE</code>パラメータには、先ほど作成した構造体を設定します。FIFOのデータの個数は1であるため、<code class="inline-code">WIDTH</code>パラメータには<code class="inline-code">1</code>を設定します<sup><a id="fnb-fifo.width" href="#fn-fifo.width" class="noteref" epub:type="noteref">*3</a></sup>。<code class="inline-code">mem_wb_fifo</code>の<code class="inline-code">flush</code>が<code class="inline-code">0</code>になっていることに注意してください。</p>
+<p>FIFOと接続するための変数を定義し、FIFOをインスタンス化します(<span class="listref"><a href="./05a-pipeline.html#fifo.vars">リスト7.5</a></span>、<span class="listref"><a href="./05a-pipeline.html#fifo.inst">リスト7.6</a></span>)。<code class="inline-code">DATA_TYPE</code>パラメータには先ほど作成した構造体を設定します。FIFOのデータ個数は1であるため、<code class="inline-code">WIDTH</code>パラメータには<code class="inline-code">1</code>を設定します<sup><a id="fnb-fifo.width" href="#fn-fifo.width" class="noteref" epub:type="noteref">*3</a></sup>。<code class="inline-code">mem_wb_fifo</code>の<code class="inline-code">flush</code>は<code class="inline-code">0</code>にしています。</p>
 <div class="footnote-list">
-<div class="footnote" id="fn-fifo.width" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*3] </span>FIFOのデータ個数は2 ** WIDTH - 1です</p></div>
+<div class="footnote" id="fn-fifo.width" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*3] </span>FIFOのデータ個数は<code class="inline-code">2 ** WIDTH - 1</code>です</p></div>
 </div><!--/.footnote-list-->
 <div id="fifo.vars" class="caption-code">
 <span class="caption">リスト7.5: リスト7.5: FIFOと接続するための変数を定義する (core.veryl)</span>
@@ -286,6 +287,9 @@
     var wbq_rdata : wbq_type;
 </pre>
 </div>
+<p></p>
+<hr />
+<p></p>
 <div id="fifo.inst" class="caption-code">
 <span class="caption">リスト7.6: リスト7.6: FIFOのインスタンス化 (core.veryl)</span>
 <pre class="list language-inst">    inst id_ex_fifo: fifo #(
@@ -337,7 +341,7 @@
 
 <h3 class="none"><a id="h7-2-3"></a><span class="secno">7.2.3</span> IFステージを実装する</h3>
 <p>まず、IFステージを実装します。...といっても、既にIFステージ(=命令フェッチ処理)は独立に動くものとして実装されているため、手を加える必要はありません。</p>
-<p>ステージの区間を示すために、<span class="listref"><a href="./05a-pipeline.html#mark_if">リスト7.7</a></span>のようなコメントを挿入すると良いです。ID、EX、MEM、WBステージを実装する時にも同様のコメントを挿入し、ステージの処理のコードをまとまった場所に配置しましょう。</p>
+<p><span class="listref"><a href="./05a-pipeline.html#mark_if">リスト7.7</a></span>のようなコメントを挿入すると、ステージの処理を書いている区間が分かりやすくなります。ID、EX、MEM、WBステージを実装するときにも同様のコメントを挿入し、ステージの処理のコードをまとまった場所に配置しましょう。</p>
 <div id="mark_if" class="caption-code">
 <span class="caption">リスト7.7: リスト7.7: IFステージが始まることを示すコメントを挿入する (core.veryl)</span>
 <pre class="list">    ///////////////////////////////// IF Stage /////////////////////////////////
@@ -348,9 +352,8 @@
 </div>
 
 <h3 class="none"><a id="h7-2-4"></a><span class="secno">7.2.4</span> IDステージを実装する</h3>
-<p>IDステージでは、命令をデコードします。</p>
-<p>既に<code class="inline-code">ids_ctrl</code>と<code class="inline-code">ids_imm</code>には、デコード結果の制御フラグと即値が割り当てられています。そのため、既存のコードの変更は必要ありません。</p>
-<p>デコード結果はEXステージに渡す必要があります。EXステージにデータを渡すには、<code class="inline-code">exq_wdata</code>にデータを割り当てます(<span class="listref"><a href="./05a-pipeline.html#always_comb_id">リスト7.8</a></span>)。</p>
+<p>IDステージでは、命令をデコードします。既に<code class="inline-code">ids_ctrl</code>と<code class="inline-code">ids_imm</code>には、デコード結果の制御フラグと即値が割り当てられているため、既存のコードの変更は必要ありません。</p>
+<p>デコード結果はEXステージに渡します。EXステージにデータを渡すには、<code class="inline-code">exq_wdata</code>にデータを割り当てます(<span class="listref"><a href="./05a-pipeline.html#always_comb_id">リスト7.8</a></span>)。</p>
 <div id="always_comb_id" class="caption-code">
 <span class="caption">リスト7.8: リスト7.8: EXステージに値を渡す (core.veryl)</span>
 <pre class="list">    always_comb {
@@ -364,16 +367,16 @@
     }
 </pre>
 </div>
-<p>IDステージにある命令は、EXステージが命令を受け付けられるとき(<code class="inline-code">exq_wready</code>)、IDステージを完了してEXステージに処理を進められます。この仕組みは、<code class="inline-code">if_fifo_rready</code>に<code class="inline-code">exq_wready</code>を割り当てることで実現できます。</p>
+<p>IDステージにある命令は、EXステージが命令を受け入れられるとき(<code class="inline-code">exq_wready</code>)、IDステージを完了してEXステージに処理を進められます。この仕組みは、<code class="inline-code">if_fifo_rready</code>に<code class="inline-code">exq_wready</code>を割り当てることで実現できます。</p>
 <p>最後に、命令が現在のクロックで供給されたかどうかを示す変数<code class="inline-code">id_is_new</code>は必要ないため削除します(<span class="listref"><a href="./05a-pipeline.html#id_is_new">リスト7.9</a></span>)。</p>
 <div id="id_is_new" class="caption-code">
-<span class="caption">リスト7.9: リスト7.9: id_is_newを削除する (core.veryl)</span>
+<span class="caption">リスト7.9: リスト7.9: ids_is_newを削除する (core.veryl)</span>
 <pre class="list">    <del>var ids_is_new   : logic   ;</del>
 </pre>
 </div>
 
 <h3 class="none"><a id="h7-2-5"></a><span class="secno">7.2.5</span> EXステージを実装する</h3>
-<p>EXステージでは、整数演算命令の時はALUで計算し、分岐命令の時は分岐判定を行います。</p>
+<p>EXステージでは、整数演算命令のときはALUで計算し、分岐命令のときは分岐判定を行います。</p>
 <p>まず、EXステージに存在する命令の情報を<code class="inline-code">exq_rdata</code>から取り出します(<span class="listref"><a href="./05a-pipeline.html#var_ex">リスト7.10</a></span>)。</p>
 <div id="var_ex" class="caption-code">
 <span class="caption">リスト7.10: リスト7.10: 変数の定義 (core.veryl)</span>
@@ -472,12 +475,12 @@
 </pre>
 </div>
 <p><code class="inline-code">br_taken</code>には、ジャンプ命令かどうか、または分岐命令かつ分岐が成立するか、という条件を割り当てます。<code class="inline-code">jump_addr</code>には、分岐命令、またはジャンプ命令のジャンプ先を割り当てます。MEMステージではこれを利用してジャンプと分岐を処理します。</p>
-<p>EXステージにある命令は、MEMステージが命令を受け付けられるとき(<code class="inline-code">memq_wready</code>)、EXステージを完了してMEMステージに処理を進められます。この仕組みは、<code class="inline-code">exq_rready</code>に<code class="inline-code">memq_wready</code>を割り当てることで実現できます。</p>
+<p>EXステージにある命令は、MEMステージが命令を受け入れられるとき(<code class="inline-code">memq_wready</code>)、EXステージを完了してMEMステージに処理を進められます。この仕組みは、<code class="inline-code">exq_rready</code>に<code class="inline-code">memq_wready</code>を割り当てることで実現できます。</p>
 
 <h3 class="none"><a id="h7-2-6"></a><span class="secno">7.2.6</span> MEMステージを実装する</h3>
-<p>MEMステージでは、メモリにアクセスする命令とCSR命令を処理します。また、ジャンプ命令、分岐命令かつ分岐が成立、またはトラップが発生する時、次に実行する命令のアドレスを変更します。</p>
+<p>MEMステージでは、メモリにアクセスする命令とCSR命令を処理します。また、ジャンプ命令、分岐命令かつ分岐が成立、またはトラップが発生するとき、次に実行する命令のアドレスを変更します。</p>
 <p>ロードストア命令でメモリにアクセスしているとき、EXステージからMEMステージに別の命令の処理を進めることはできず、パイプライン処理は止まってしまいます。パイプライン処理を進められない状態のことを<b>パイプラインハザード</b>(pipeline hazard)と呼びます。</p>
-<p>まず、MEMステージに存在する命令の情報を<code class="inline-code">memq_rdata</code>から取り出します(<span class="listref"><a href="./05a-pipeline.html#var_mem">リスト7.13</a></span>)。MEMステージでは、csrunitモジュールに、命令が現在のクロックでMEMステージに供給されたかどうかの情報を渡す必要があります。そのため、変数<code class="inline-code">mem_is_new</code>を定義しています。</p>
+<p>まず、MEMステージに存在する命令の情報を<code class="inline-code">memq_rdata</code>から取り出します(<span class="listref"><a href="./05a-pipeline.html#var_mem">リスト7.13</a></span>)。MEMステージでは、csrunitモジュールに、命令が現在のクロックでMEMステージに供給されたかどうかの情報を渡します。そのため、変数<code class="inline-code">mem_is_new</code>を定義しています。</p>
 <div id="var_mem" class="caption-code">
 <span class="caption">リスト7.13: リスト7.13: 変数の定義 (core.veryl)</span>
 <pre class="list">    var mems_is_new   : logic      ;
@@ -488,7 +491,7 @@
     let mems_rd_addr  : logic   &lt;5&gt; = mems_inst_bits[11:7];
 </pre>
 </div>
-<p><code class="inline-code">mem_is_new</code>には、もともと<code class="inline-code">id_is_new</code>の更新に利用していたコードを利用します(<span class="listref"><a href="./05a-pipeline.html#mem_is_new">リスト7.14</a></span>)。</p>
+<p><code class="inline-code">mem_is_new</code>には、<code class="inline-code">id_is_new</code>の更新に利用していたコードを利用します(<span class="listref"><a href="./05a-pipeline.html#mem_is_new">リスト7.14</a></span>)。</p>
 <div id="mem_is_new" class="caption-code">
 <span class="caption">リスト7.14: リスト7.14: mem_is_newの更新 (core.veryl)</span>
 <pre class="list">    always_ff {
@@ -546,7 +549,7 @@
     );
 </pre>
 </div>
-<p>フェッチ先が変わったことを表す変数<code class="inline-code">control_hazard</code>と、新しいフェッチ先を示す信号<code class="inline-code">control_hazard_pc_next</code>では、EXステージで計算したデータとCSRステージのトラップ情報を利用するようにします(<span class="listref"><a href="./05a-pipeline.html#mem_prefix1">リスト7.16</a></span>)。</p>
+<p>フェッチ先が変わったことを表す変数<code class="inline-code">control_hazard</code>と、新しいフェッチ先を示す信号<code class="inline-code">control_hazard_pc_next</code>では、EXステージで計算したデータとCSRステージのトラップ情報を利用します(<span class="listref"><a href="./05a-pipeline.html#mem_prefix1">リスト7.16</a></span>)。</p>
 <div id="mem_prefix1" class="caption-code">
 <span class="caption">リスト7.16: リスト7.16: ジャンプの判定処理 (core.veryl)</span>
 <pre class="list">    assign control_hazard         = <b>mems</b>_valid &amp;&amp; (csru_raise_trap || <b>mems</b>_ctrl.is_jump || <b>memq_rdata.</b>br_taken);
@@ -575,7 +578,7 @@
     }
 </pre>
 </div>
-<p>MEMステージにある命令は、memunitモジュールが処理中ではなく(<code class="inline-code">!memy_stall</code>)、WBステージが命令を受け付けられるとき(<code class="inline-code">wbq_wready</code>)、MEMステージを完了してWBステージに処理を進められます。この仕組みは、<code class="inline-code">memq_rready</code>と<code class="inline-code">wbq_wvalid</code>を確認してください。</p>
+<p>MEMステージにある命令は、memunitモジュールが処理中ではなく(<code class="inline-code">!memy_stall</code>)、WBステージが命令を受け入れられるとき(<code class="inline-code">wbq_wready</code>)、MEMステージを完了してWBステージに処理を進められます。この仕組みは、<code class="inline-code">memq_rready</code>と<code class="inline-code">wbq_wvalid</code>を確認してください。</p>
 
 <h3 class="none"><a id="h7-2-7"></a><span class="secno">7.2.7</span> WBステージを実装する</h3>
 <p>WBステージでは、命令の結果をレジスタにライトバックします。WBステージが完了したら命令の処理は終わりなので、命令を破棄します。</p>
@@ -589,7 +592,7 @@
     let wbs_imm      : UIntX    = wbq_rdata.imm;
 </pre>
 </div>
-<p>次に、WBステージで扱う変数の名前を変更します。変数の名前には<code class="inline-code">wbs_</code>をつけます(<span class="listref"><a href="./05a-pipeline.html#wb_prefix">リスト7.19</a></span>)。</p>
+<p>次に、WBステージで扱う変数名を変更します。変数名に<code class="inline-code">wbs_</code>をつけます(<span class="listref"><a href="./05a-pipeline.html#wb_prefix">リスト7.19</a></span>)。</p>
 <div id="wb_prefix" class="caption-code">
 <span class="caption">リスト7.19: リスト7.19: 変数名を変更する (core.veryl)</span>
 <pre class="list">    let <b>wbs_</b>rd_addr: logic&lt;5&gt; = <b>wbs</b>_inst_bits[11:7];
@@ -687,7 +690,7 @@
 </div>
 
 <h3 class="none"><a id="h7-2-9"></a><span class="secno">7.2.9</span> パイプライン処理をテストする</h3>
-<p>それでは、riscv-testsを実行してみましょう。RV64IのADDのテストを実行します。</p>
+<p>それでは、riscv-testsを実行してみましょう。試しに、RV64IのADDのテストを実行します。</p>
 <div id="pipeline.test" class="cmd-code">
 <span class="caption">リスト7.22: リスト7.22: パイプライン処理のテスト</span>
 <pre class="list language-test">$ <span class="userinput">make build</span>
@@ -697,12 +700,13 @@ FAIL : ~/core/test/share/riscv-tests/isa/rv64ui-p-add.bin.hex
 Test Result : 0 / 1
 </pre>
 </div>
-<p>おや?テストにパスしません。一体何が起きているのでしょうか?</p>
+<p>おや? テストに失敗してしまいました。一体何が起きているのでしょうか?</p>
 
 <h2 class="numbox"><a id="h7-3"></a><span class="secno">7.3</span> データ依存の対処</h2>
 
 <h3 class="none"><a id="h7-3-1"></a><span class="secno">7.3.1</span> 正しく動かないプログラムを確認する</h3>
-<p>実は、ただIF、ID、EX、MEM、WBステージに処理を分割するだけでは、正しく命令を実行できません。例えば、<span class="listref"><a href="./05a-pipeline.html#dh.example">リスト7.23</a></span>のようなプログラムは正しく動きません。<code class="inline-code">test/sample_datahazard.hex</code>として保存します(<span class="listref"><a href="./05a-pipeline.html#dh.example">リスト7.23</a></span>)。</p>
+<p>実は、ただIF、ID、EX、MEM、WBステージに処理を分割するだけでは、正しく命令を実行できません。例えば、<span class="listref"><a href="./05a-pipeline.html#dh.example">リスト7.23</a></span>のようなプログラムは正しく動きません。</p>
+<p><code class="inline-code">test/sample_datahazard.hex</code>を作成し、次のように記述します(<span class="listref"><a href="./05a-pipeline.html#dh.example">リスト7.23</a></span>)。</p>
 <div id="dh.example" class="caption-code">
 <span class="caption">リスト7.23: リスト7.23: sample_datahazard.hex</span>
 <pre class="list language-example">0010811300100093 // 0:addi x1, x0, 1    4: addi x2, x1, 1
@@ -746,13 +750,13 @@ MEM -----
 <p>この問題は、まだアドレス0の命令の結果がレジスタファイルに書き込まれていないのに、アドレス4の命令でレジスタファイルで結果を読み出しているために発生しています。</p>
 
 <h3 class="none"><a id="h7-3-2"></a><span class="secno">7.3.2</span> データ依存とは何か？</h3>
+<p>ある命令Aの実行結果の値を利用する命令Bが存在するとき、命令Aと命令Bの間には<b>データ依存</b>(data dependence)があると呼びます。データ依存に対処するためには、命令Aの結果がレジスタに書き込まれるのを待つ必要があります。データ依存があることにより発生するパイプラインハザードのことを<b>データハザード</b>(data hazard)と呼びます。</p>
 <div id="datahazard" class="image">
 <img src="images/05a-pipeline/datahazard.png" alt="データ依存関係のあるプログラム" class="img" style="width:40%" />
 <p class="caption">
 図7.6: データ依存関係のあるプログラム
 </p>
 </div>
-<p>ある命令Aの実行結果の値を利用する命令Bが存在するとき、命令Aと命令Bの間には<b>データ依存</b>(data dependence)があると呼びます。データ依存に対処するためには、命令Aの結果がレジスタに書き込まれるのを待つ必要があります。データ依存があることにより発生するパイプラインハザードのことを<b>データハザード</b>(data hazard)と呼びます。</p>
 
 <h3 class="none"><a id="h7-3-3"></a><span class="secno">7.3.3</span> データ依存に対処する</h3>
 <p>レジスタの値を読み出すのはEXステージです。データ依存に対処するために、データ依存関係があるときにEXステージをストールさせます。</p>
@@ -774,7 +778,7 @@ MEM -----
         memq_wvalid           = exq_rvalid<b> &amp;&amp; !exs_data_hazard</b>;
 </pre>
 </div>
-<p>最後に、データハザードが発生しているかどうかをデバッグ表示するようにします(<span class="listref"><a href="./05a-pipeline.html#core.veryl.datahazard-range.debug">リスト7.27</a></span>)。</p>
+<p>最後に、データハザードが発生しているかどうかをデバッグ表示します(<span class="listref"><a href="./05a-pipeline.html#core.veryl.datahazard-range.debug">リスト7.27</a></span>)。</p>
 <div id="core.veryl.datahazard-range.debug" class="caption-code">
 <span class="caption">リスト7.27: リスト7.27: データハザードが発生しているかをデバッグ表示する (core.veryl)</span>
 <pre class="list language-debug">    $display(&quot;EX -----&quot;);

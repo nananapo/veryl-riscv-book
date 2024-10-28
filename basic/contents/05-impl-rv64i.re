@@ -10,7 +10,7 @@ RISC-Vには64ビットの基本整数命令セットとしてRV64Iが定義さ�
 32ビット幅での整数演算を行う命令、
 64ビット幅でロードストアを行う命令が追加されます(@<table>{rv64i.new_insts})。
 また、演算の幅が64ビットに広がるだけではなく、
-動作が少し変わる命令が存在します(@<table>{rv64i.change})。
+一部の命令の動作が少し変わります(@<table>{rv64i.change})。
 
 //table[rv64i.new_insts][RV64Iで追加される命令]{
 命令	動作
@@ -62,7 +62,7 @@ RV32Iでは、シフト命令はrs1の値を0 ～ 31ビットシフトする命�
 これに対応するために、ALUのシフト演算する量を5ビットから6ビットに変更します
 (@<list>{alu.veryl.xlen-shift-range.shift})。
 I形式の命令(SLLI、SRLI、SRAI)のときは即値の下位6ビット、
-R形式の命令(SLL、SRL、SRA)のときはレジスタの下位6ビットが利用されるようにします。
+R形式の命令(SLL、SRL、SRA)のときはレジスタの下位6ビットを利用します。
 
 //list[alu.veryl.xlen-shift-range.shift][シフト命令でシフトする量を変更する (alu.veryl)]{
 #@maprange(scripts/05/xlen-shift-range/core/src/alu.veryl,shift)
@@ -160,7 +160,7 @@ RV32I向けのテストにすべて成功しました。
 これは、riscv-testsのRV32I向けのテストは、
 XLENが64のときはテストを実行せずに成功とするためです(@<list>{riscvtests.rv32i.xlen})。
 
-//list[riscvtests.rv32i.xlen][rv32ui-p-addはXLENが64のときにPASSする (rv32ui-p-add.dump)]{
+//list[riscvtests.rv32i.xlen][rv32ui-p-addはXLENが64のときにテストせずに成功する (rv32ui-p-add.dump)]{
 00000050 <reset_vector>:
  ...
  13c:	00100513          	li	a0,1 @<balloon>{a0 = 1}
@@ -181,7 +181,7 @@ XLENが64のとき、a0の符号は変わらないため、a0は0より大きく
 ==== RV64I向けのテストの実行
 
 それでは、RV64I向けのテストを実行します(@<list>{rv64ui-p.xlen})。
-RV64I向けのテストは、名前が@<code>{rv64ui-p-}から始まります、
+RV64I向けのテストは名前が@<code>{rv64ui-p-}から始まります、
 
 //terminal[rv64ui-p.xlen][RV64I向けのテストを実行する]{
 $ @<userinput>{make build}
@@ -194,7 +194,7 @@ Test Result : 14 / 52
 //}
 
 ADD命令のテストを含む、ほとんどのテストに失敗してしまいました。
-これは、riscv-testsのテストが、まだ未実装の命令を含むためです(@<list>{riscvtests.rv64ui-p-add.dump.addiw})。
+これはriscv-testsのテストが、まだ未実装の命令を含むためです(@<list>{riscvtests.rv64ui-p-add.dump.addiw})。
 
 //list[riscvtests.rv64ui-p-add.dump.addiw][ADD命令のテストは未実装の命令(ADDIW命令)を含む (rv64ui-p-add.dump)]{
 0000000000000208 <test_7>:
@@ -301,7 +301,7 @@ inst_decoderモジュールの@<code>{InstCtrl}と即値を生成している部
 === ALUにADDW、SUBWを実装する
 
 制御フラグを生成できたので、
-それに応じて32ビットのADDとSUBを計算するようにします。
+それに応じて32ビットのADDとSUBを計算します。
 
 まず、32ビットの足し算と引き算の結果を生成します
 (@<list>{alu.veryl.addsubw-range.32})。
@@ -351,7 +351,7 @@ case文の足し算と引き算の部分を次のように変更します
 
 === ADD[I]W、SUBW命令をテストする
 
-RV64I向けのテストを実行し、生成される結果ファイルを確認します
+RV64I向けのテストを実行して、結果ファイルを確認します
 (
 @<list>{rv64ui-p.test.addsubw}、
 @<list>{results.txt.addsubw}
@@ -384,8 +384,9 @@ PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-subw.bin.hex
 ...
 //}
 
-ADDIW、ADDW、SUBW命令のテストに成功していることを確認できます、
-また、未実装の命令以外のテストに成功するようになっています。
+ADDIW、ADDW、SUBWだけでなく、未実装の命令以外のテストにも成功しました。
+
+//clearpage
 
 == SLL[I]W、SRL[I]W、SRA[I]W命令の実装
 
@@ -402,7 +403,7 @@ SLLIW、SRLIW、SRAIW命令はI形式で、opcodeは@<code>{OP-IMM-32}です。
 どちらのopcodeの命令も、
 ADD[I]W命令とSUBW命令の実装時にデコードが完了しています。
 
-aluモジュールで、シフト演算の結果を生成します
+aluモジュールで、32ビットのシフト演算の結果を生成します
 (@<list>{alu.veryl.sllsrlsraw-range.let})。
 
 //list[alu.veryl.sllsrlsraw-range.let][32ビットのシフト演算をする (alu.veryl)]{
@@ -413,7 +414,7 @@ aluモジュールで、シフト演算の結果を生成します
 #@end
 //}
 
-生成したシフト演算の結果をsel_w関数で選択するようにします。
+生成したシフト演算の結果をsel_w関数で選択します。
 case文のシフト演算の部分を次のように変更します
 (@<list>{alu.veryl.sllsrlsraw-range.case})。
 
@@ -432,7 +433,7 @@ case文のシフト演算の部分を次のように変更します
 === SLL[I]W、SRL[I]W、SRA[I]W命令をテストする
 
 
-RV64I向けのテストを実行し、生成される結果ファイルを確認します
+RV64I向けのテストを実行し、結果ファイルを確認します
 (@<list>{rv64ui-p.test.sllsrlsraw}、@<list>{results.txt.sllsrlsraw})。
 
 //terminal[rv64ui-p.test.sllsrlsraw][RV64I向けのテストを実行する]{
@@ -483,9 +484,11 @@ LWU命令はI形式で、opcodeは@<code>{LOAD}です。
 ロードストア命令はfunct3によって区別できて、LWU命令のfunct3は@<code>{3'b110}です。
 デコード処理に変更は必要なく、メモリにアクセスする処理を変更する必要があります。
 
+//clearpage
+
 memunitモジュールの、ロードする部分を変更します。
 32ビットを@<code>{rdata}に割り当てるとき、
-sextによって符号かゼロで拡張するかを選択するようにします
+@<code>{sext}によって符号かゼロで拡張するかを選択します
 (@<list>{memunit.veryl.lwu-range.lwu})。
 
 //list[memunit.veryl.lwu-range.lwu][LWU命令の実装 (memunit.veryl)]{
@@ -539,7 +542,7 @@ SD命令はS形式で、opcodeは@<code>{STORE}です。
 そのため、topモジュールの@<code>{i_membus.rdata}の幅は32ビットなのに対し、
 @<code>{membus.rdata}は64ビットになり、ビット幅が一致しません。
 
-ビット幅を合わせ、正しく命令をフェッチするために、
+ビット幅を合わせて正しく命令をフェッチするために、
 64ビットの読み出しデータの上位32ビット、
 下位32ビットをアドレスの下位ビットで選択します。
 アドレスが8の倍数のときは下位32ビット、
@@ -594,18 +597,20 @@ SD命令はS形式で、opcodeは@<code>{STORE}です。
 SD命令の実装のためには、
 書き込むデータ(@<code>{wdata})と書き込みマスク(@<code>{wmask})を変更する必要があります。
 
-書き込むデータは、アドレスの下位2ビットではなく下位3ビット分だけシフトするようにします
+書き込むデータはアドレスの下位2ビットではなく下位3ビット分シフトします
 (@<list>{memunit.veryl.ldsd-range.wdata})。
 
-//list[memunit.veryl.ldsd-range.wdata][書き込みデータの変更 (memunit.veryl)]{
+//list[memunit.veryl.ldsd-range.wdata][書き込むデータの変更 (memunit.veryl)]{
 #@maprange(scripts/05/ldsd-range/core/src/memunit.veryl,wdata)
     req_wdata = rs2 << {addr[@<b>|2|:0], 3'b0};
 #@end
 //}
 
 書き込みマスクは4ビットから8ビットに拡張されるため、
-アドレスの下位2ビットではなく下位3ビットで選択するようにします
+アドレスの下位2ビットではなく下位3ビットで選択します
 (@<list>{memunit.veryl.ldsd-range.wmask})。
+
+//clearpage
 
 //list[memunit.veryl.ldsd-range.wmask][書き込みマスクの変更 (memunit.veryl)]{
 #@maprange(scripts/05/ldsd-range/core/src/memunit.veryl,wmask)
@@ -633,7 +638,7 @@ SD命令の実装のためには、
 
 メモリのデータ幅が64ビットに広がるため、
 @<code>{rdata}に割り当てる値を、
-アドレスの下位2ビットではなく下位3ビットで選択するようにします
+アドレスの下位2ビットではなく下位3ビットで選択します
 (@<list>{memunit.veryl.ldsd-range.rdata})。
 
 //list[memunit.veryl.ldsd-range.rdata][rdataの変更 (memunit.veryl)]{

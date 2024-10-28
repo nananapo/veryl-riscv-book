@@ -82,7 +82,7 @@ PCの値を次の命令のアドレスに設定します。
 
 ここまでの話をまとめると、CPUの動作は次のようになります(@<img>{cpu-arch})。
 
-//image[cpu-arch][雑なCPUの図]
+//image[cpu-arch][CPUの動作]
 
  1. PCに格納されたアドレスにある命令をフェッチする
  2. 命令を取得したらデコードする
@@ -100,7 +100,7 @@ CPUが一体どんなものなのかが分かりましたか?
 == プロジェクトの作成
 
 まず、Verylのプロジェクトを作成します(@<list>{veryl-new})。
-プロジェクト名はcoreという名前にしています。
+プロジェクトはcoreという名前にしています。
 
 //terminal[veryl-new][新規プロジェクトの作成]{
 $ @<userinput>{veryl new core}
@@ -339,7 +339,7 @@ memoryモジュールはジェネリックモジュールです。
 === メモリの初期化、環境変数の読み込み
 
 memoryモジュールのパラメータには、@<code>{FILEPATH_IS_ENV}と@<code>{FILEPATH}を定義しています。
-memoryモジュールをインスタンス化する時、
+memoryモジュールをインスタンス化するとき、
 @<code>{FILEPATH}には、
 メモリの初期値が格納されたファイルのパスか、
 ファイルパスが格納されている環境変数名を指定します。
@@ -528,7 +528,7 @@ always_combブロックでは、
 フェッチ中かどうかとメモリがready(要求を受け入れる)状態かどうかによって、
 @<code>{if_pc}と@<code>{if_is_requested}、@<code>{if_pc_requested}の値を変更しています。
 
-メモリにデータを要求する時、
+メモリにデータを要求するとき、
 @<code>{if_pc}を次の命令のアドレス(@<code>{4}を足したアドレス)に変更して、
 @<code>{if_is_requested}を@<code>{1}に変更しています。
 フェッチ中かつ@<code>{membus.rvalid}が@<code>{1}のとき、
@@ -536,8 +536,8 @@ always_combブロックでは、
 このとき、メモリがready状態なら、
 すぐに次の命令フェッチを開始します。
 この状態遷移を繰り返すことによって、
-アドレス@<code>{0}→@<code>{4}→@<code>{8}→@<code>{c}→@<code>{10}...の命令を、
-次々にフェッチするようになっています。
+アドレス@<code>{0}→@<code>{4}→@<code>{8}→@<code>{c}→@<code>{10}...の命令を
+次々にフェッチします。
 
 上から2つめのalways_ffブロックは、
 デバッグ用の表示を行うコードです。
@@ -888,7 +888,7 @@ $ @<userinput>{make clean} @<balloon>{ビルドした成果物の削除}
 例えばメモリにアクセスする命令は実行に何クロックかかるか分かりません。
 
 複数クロックかかる命令に対応するために、
-命令の処理が終わってから次の命令をフェッチするようにすると、
+命令の処理が終わってから次の命令をフェッチする場合、
 命令の実行の流れは次のようになります。
 
 //clearpage
@@ -1116,12 +1116,12 @@ FIFOに2つ以上空きがあるという条件に変更しています@<fn>{why
 #@end
 //}
 
-命令をフェッチできた時、
+命令をフェッチできたとき、
 @<code>{if_fifo_wvalid}の値を@<code>{1}にして、
 @<code>{if_fifo_wdata}にフェッチした命令とアドレスを格納します。
 これにより、次のクロック以降のFIFOに空きがあるタイミングでデータが追加されます。
 
-それ以外の時、
+それ以外のとき、
 FIFOにデータを格納しようとしていてFIFOに空きがあるとき、
 @<code>{if_fifo_wvalid}を@<code>{0}にすることでデータの追加を完了します。
 
@@ -1906,7 +1906,7 @@ CPUはレジスタから値を読み込み、計算して、
 レジスタに結果を書き込む命令かどうかを@<code>{InstCtrl.rwb_en}に格納しています(@<list>{inst_decoder.veryl.id})。
 
 LUI命令のときは即値をそのまま、
-それ以外の命令のときはALUの結果をライトバックするようにします(@<list>{core.veryl.wb-range.wb})。
+それ以外の命令のときはALUの結果をライトバックします(@<list>{core.veryl.wb-range.wb})。
 
 //list[core.veryl.wb-range.wb][ライトバック処理の実装 (core.veryl)]{
 #@maprange(scripts/04/wb-range/core/src/core.veryl,wb)
@@ -1995,7 +1995,9 @@ $ @<userinput>{obj_dir/sim sample.hex 6}
 おめでとうございます！
 このCPUは整数演算命令の実行ができるようになりました！
 
-最後に、テストのためにレジスタの値を初期化するようにしていたコードを削除します(@<list>{core.veryl.wb-rm-reset-range.wb})。
+最後に、テストのためにレジスタの値を初期化していたコードを削除します(@<list>{core.veryl.wb-rm-reset-range.wb})。
+
+//clearpage
 
 //list[core.veryl.wb-rm-reset-range.wb][レジスタの初期化をやめる (core.veryl)]{
 #@maprange(scripts/04/wb-rm-reset-range/core/src/core.veryl,wb)
@@ -2137,7 +2139,7 @@ module memunit (
 //}
 
 memunitモジュールでは、
-命令がメモリにアクセスする命令の時、
+命令がメモリにアクセスする命令のとき、
 ALUから受け取ったアドレスをメモリに渡して操作を実行します。
 
 命令がメモリにアクセスする命令かどうかはinst_is_memop関数で判定します。
@@ -2157,7 +2159,7 @@ memunitモジュールには次の状態が定義されています。
 	@<code>{req_wdata}に@<code>{rs2}を格納します。
 
  : State::WaitReady
-	この状態の時、命令に応じた要求をメモリに送り続けます。
+	命令に応じた要求をメモリに送り続けます。
 	メモリが要求を受け付ける(@<code>{ready})とき、
 	状態を@<code>{State::WaitValid}に移動します。
 
@@ -2420,7 +2422,7 @@ FIFOからの命令の取り出しを停止します。
 //}
 
 デバッグ表示も同様で、
-ライトバックするときにのみデバッグ表示するようにします(@<list>{core.veryl.lwsw-range.wb_debug})。
+ライトバックするときにのみデバッグ表示します(@<list>{core.veryl.lwsw-range.wb_debug})。
 
 //list[core.veryl.lwsw-range.wb_debug][ライトバックするときにのみデバッグ表示する (core.veryl)]{
 #@maprange(scripts/04/lwsw-range/core/src/core.veryl,wb_debug)
@@ -2759,7 +2761,7 @@ memoryモジュールは、書き込み要求が送られてきた場合、
 次のクロックで、書き込みマスクを使った書き込みを行い、要求の処理を終了します。
 
 topモジュールの調停処理で、
-@<code>{wmask}も調停するようにします(@<list>{top.veryl.lbhsbh-range.wmask})。
+@<code>{wmask}も調停します(@<list>{top.veryl.lbhsbh-range.wmask})。
 
 //list[top.veryl.lbhsbh-range.wmask][wmaskの調停 (top.veryl)]{
 #@maprange(scripts/04/lbhsbh-range/core/src/top.veryl,wmask)
@@ -2780,7 +2782,7 @@ topモジュールの調停処理で、
 
 ==== memunitモジュールの実装
 
-memoryモジュールが書き込みマスクをサポートするようになったので、
+memoryモジュールが書き込みマスクをサポートしたので、
 memunitモジュールでwmaskを設定します。
 
 @<code>{req_wmask}レジスタを作成し、
@@ -2944,7 +2946,7 @@ JALR命令(I形式)ならrs1と即値になっていることを確認してく�
 //}
 
 次に、次にフェッチする命令をジャンプ先の命令に変更します。
-フェッチ先の変更が発生したことを表す信号@<code>{control_hazard}と、
+フェッチ先の変更が発生を示す信号@<code>{control_hazard}と、
 新しいフェッチ先を示す信号@<code>{control_hazard_pc_next}を作成します
 (
 @<list>{core.veryl.jump-range.hazard_reg}、
@@ -2998,7 +3000,7 @@ JALR命令(I形式)ならrs1と即値になっていることを確認してく�
 //image[fifo-flush][ジャンプ命令とジャンプ先の間に余計な命令が入ってしまっている][width=80%]
 
 実行するべきではない命令を実行しないようにするために、
-ジャンプ命令を実行するときに、FIFOをリセットするようにします。
+ジャンプ命令を実行するときに、FIFOをリセットします。
 
 FIFOに、中身をリセットするための信号@<code>{flush}を実装します(@<list>{fifo.veryl.jump-range.port})。
 
@@ -3044,7 +3046,7 @@ module fifo #(
 
 coreモジュールで、
 @<code>{control_hazard}と@<code>{flush}を接続し、
-FIFOをリセットするようにします(@<list>{core.veryl.jump-range.fifo})。
+FIFOをリセットします(@<list>{core.veryl.jump-range.fifo})。
 
 //list[core.veryl.jump-range.fifo][ジャンプ命令のとき、FIFOをリセットする (core.veryl)]{
 #@maprange(scripts/04/jump-range/core/src/core.veryl,fifo)
@@ -3175,7 +3177,7 @@ coreモジュールでインスタンス化します(@<list>{core.veryl.br-range
 //}
 
 命令が条件分岐命令で@<code>{brunit_take}が@<code>{1}のとき、
-次のPCをPC + 即値にするようにします
+次のPCをPC + 即値にします
 (
 @<list>{core.veryl.br-range.function}、
 @<list>{core.veryl.br-range.hazard}
@@ -3206,9 +3208,11 @@ coreモジュールでインスタンス化します(@<list>{core.veryl.br-range
 @<code>{control_hazard}は、命令が無条件ジャンプ命令か、命令が条件分岐命令かつ分岐が成立するときに@<code>{1}になります。
 @<code>{control_hazard_pc_next}は、無条件ジャンプ命令のときは@<code>{alu_result}、条件分岐命令のときはPC + 即値になります。
 
+//clearpage
+
 ==== 条件分岐命令のテスト
 
-条件分岐命令を実行するとき、分岐の成否をデバッグ表示するようにします。
+条件分岐命令を実行するとき、分岐の成否をデバッグ表示します。
 デバッグ表示を行っているalways_ffブロック内に、次のコードを追加します(@<list>{core.very.br-range.debug})。
 
 //list[core.very.br-range.debug][分岐判定のデバッグ表示 (core.veryl)]{
@@ -3260,5 +3264,5 @@ $ @<userinput>{obj_dir/sim src/sample_br.hex 15}
 BLT、BLTU、BGEU命令は後の章で紹介するriscv-testsでテストします。
 
 //caution[実装していないRV32Iの命令]{
-メモリフェンス命令、ECALL、EBREAK命令は後の章で実装します。
+メモリフェンス命令、ECALL命令、EBREAK命令は後の章で実装します。
 //}

@@ -8,15 +8,14 @@ CPUがある程度正しく動いているらしいことを確かめます。
 
 == riscv-testsとは何か?
 
-riscv-testsは、RISC-Vのプロセッサ向けのユニットテストやベンチマークの集合です。
+riscv-testsは、RISC-Vのプロセッサ向けのユニットテストやベンチマークテストの集合です。
 命令や機能ごとにテストが用意されており、
 これを利用することで簡単に実装を確かめられます。
 すべての命令のすべての場合を網羅するようなテストではないため、
-riscv-testsをパスしても、確実に実装が正しいとは言えないことに注意してください(@<fn>{about.formal})。
+riscv-testsをパスしても、確実に実装が正しいとは言えないことに注意してください@<fn>{about.formal}。
 
 //footnote[about.formal][実装の正しさを完全に確かめるには形式的検証(formal verification)を行う必要があります]
 
-riscv-testsは、
 GitHubの@<href>{https://github.com/riscv-software-src/riscv-tests, riscv-software-src/riscv-tests}
 からソースコードをダウンロードできます。
 
@@ -42,7 +41,7 @@ $ @<userinput>{git submodule update --init --recursive}
 
 riscv-testsは、
 プログラムの実行が@<code>{0x80000000}から始まると仮定した設定になっています。
-しかし、今のところ、CPUはアドレス@<code>{0x00000000}から実行を開始するため、
+しかし、CPUはアドレス@<code>{0x00000000}から実行を開始するため、
 リンカにわたす設定ファイル@<code>{env/p/link.ld}を変更する必要があります(@<list>{link.ld})。
 
 //list[link.ld][riscv-tests/env/p/link.ld]{
@@ -151,7 +150,7 @@ $ @<userinput>{find share/ -type f -name "*.bin" -exec sh -c "python3 bin2hex.py
 riscv-testsには複数のテストが用意されていますが、
 本章では、名前が@<code>{rv32ui-p-}から始まるRV32I向けのテストを利用します。
 
-例えば、ADD命令のテストである@<code>{test/share/riscv-tests/isa/rv32ui-p-add.dump}を読んでみます。
+例えば、ADD命令のテストである@<code>{test/share/riscv-tests/isa/rv32ui-p-add.dump}を読んでみます(@<list>{rv32ui-p-add.dump})。
 @<code>{rv32ui-p-add.dump}は、@<code>{rv32ui-p-add}のダンプファイルです。
 
 //list[rv32ui-p-add.dump][rv32ui-p-add.dump]{
@@ -211,14 +210,14 @@ Disassembly of section .text.init:
  69c:	c0001073          	unimp
 //}
 
-riscv-testsは、基本的に次の流れで実行されます。
+命令のテストは次の流れで実行されます。
 
- 1. _start : reset_vectorにジャンプする
- 2. reset_vector : 各種状態を初期化する
- 3. test_* : テストを実行する。命令の結果がおかしかったらfailに飛ぶ。最後まで正常に実行できたらpassに飛ぶ。
- 4. fail、pass : テストの成否をレジスタに書き込み、trap_vectorに飛ぶ
- 5. trap_vector : write_tohostに飛ぶ
- 6. write_tohost : テスト結果をメモリに書き込む。ここでループする
+ 1. _start : reset_vectorにジャンプする。
+ 2. reset_vector : 各種状態を初期化する。
+ 3. test_* : テストを実行する。命令の結果がおかしかったらfailにジャンプする。最後まで正常に実行できたらpassにジャンプする。
+ 4. fail、pass : テストの成否をレジスタに書き込み、trap_vectorにジャンプする。
+ 5. trap_vector : write_tohostにジャンプする。
+ 6. write_tohost : テスト結果をメモリに書き込む。ここでループする。
 
 @<code>{_start}から実行を開始し、最終的に@<code>{write_tohost}に移動します。
 テスト結果はメモリの@<code>{.tohost}に書き込まれます。
@@ -238,17 +237,15 @@ SECTIONS
   @<b>|.tohost : { *(.tohost) }|
 //}
 
+//clearpage
+
 == テストの終了検知
 
-テストを実行する場合、
-テストが終了したことを検知し、
-それが成功か失敗かどうかを報告する必要があります。
+テストを実行するとき、テストの終了を検知して、成功か失敗かを報告する必要があります。
 
-riscv-testsは、
-テストが終了したことを示すために、
-@<code>{.tohost}にLSBが@<code>{1}な値を書き込みます。
-書き込まれる値が@<code>{32'h1}のとき、riscv-testsが正常に終了したことを示します。
-それ以外の時は、riscv-testsが失敗したことを示します。
+riscv-testsはテストの終了を示すために、@<code>{.tohost}にLSBが@<code>{1}な値を書き込みます。
+書き込まれた値が@<code>{32'h1}のとき、テストが正常に終了したことを表しています。
+それ以外のときは、テストが失敗したことを表しています。
 
 riscv-testsが終了したことを検知する処理をtopモジュールに記述します。
 topモジュールでメモリへのアクセスを監視し、
@@ -291,14 +288,15 @@ module top (
 //}
 
 アトリビュートによって、
-終了検知のコードと@<code>{test_success}ポートは@<code>{TEST_MODE}マクロが定義されているときにのみ存在するようにしています。
+終了検知のコードと@<code>{test_success}ポートは
+@<code>{TEST_MODE}マクロが定義されているときにのみ存在するようになっています。
 
 == テストの実行
 
 試しにADD命令のテストを実行してみましょう。
 ADD命令のテストのHEXファイルは@<code>{test/share/riscv-tests/isa/rv32ui-p-add.bin.hex}です。
 
-シミュレータを実行し、正常に動くことを確認します(@<list>{test.add.sim})。
+TEST_MODEマクロを定義してシミュレータをビルドし、正常に動くことを確認します(@<list>{test.add.sim})。
 
 //terminal[test.add.sim][ADD命令のriscv-testsを実行する]{
 $ @<userinput>{make build}
@@ -322,17 +320,16 @@ $ @<userinput>{./obj_dir/sim test/share/riscv-tests/isa/rv32ui-p-add.bin.hex 0}
   mem rdata : ff1ff06f
 riscv-tests success!
 - ~/core/src/top.sv:26: Verilog $finish
-- ~/core/src/top.sv:26: Second verilog $finish, exiting
 //}
 
 @<code>{riscv-tests success!}と表示され、テストが正常終了しました@<fn>{if_not_success}。
 
-//footnote[if_not_success][実行が終了しない場合はどこかしらにバグがあります。rv32ui-p-add.dumpと実行ログを見比べて、頑張って原因を探してください...]
+//footnote[if_not_success][実行が終了しない場合はどこかしらにバグがあります。rv32ui-p-add.dumpと実行ログを見比べて、頑張って原因を探してください]
 
 == 複数のテストの自動実行
 
 ADD命令以外の命令もテストしたいですが、わざわざコマンドを手打ちしたくありません。
-本書では、自動でテストを実行し、その結果を報告するプログラムを作成します。
+自動でテストを実行して、その結果を報告するプログラムを作成しましょう。
 
 @<code>{test/test.py}を作成し、次のように記述します(@<list>{test.py})。
 
@@ -419,10 +416,10 @@ if __name__ == '__main__':
 第1引数で指定したシミュレータで実行し、
 その結果を報告します。
 
-このPythonプログラムには、次のオプションの引数が存在します。
+次のオプションの引数が存在します。
 
  : -r
-    第2引数で指定されたディレクトリの中にあるディレクトリも走査するようにします。
+    第2引数で指定されたディレクトリの中にあるディレクトリも走査します。
     デフォルトでは走査しません。
 
  : -e 拡張子
@@ -441,8 +438,8 @@ if __name__ == '__main__':
 
 テストが成功したか失敗したかの判定には、
 シミュレータの終了コードを利用しています。
-テストが失敗した時に終了コードが@<code>{1}になるように、
-Verilatorに渡しているプログラムを変更します
+テストが失敗したときに終了コードが@<code>{1}になるように、
+Verilatorに渡しているC++プログラムを変更します
 (@<list>{tb_verilator.cpp.detect-finish-range.return})。
 
 //list[tb_verilator.cpp.detect-finish-range.return][tb_verilator.cpp]{
@@ -459,7 +456,7 @@ riscv-testsのRV32I向けのテストの接頭辞である@<code>{rv32ui-p-}を�
 //terminal[python.test.py][rv32ui-pから始まるテストを実行する]{
 $ @<userinput>{make build}
 $ @<userinput>{make sim VERILATOR_FLAGS="-DTEST_MODE"}
-$ @<userinput>{python3 test/test.py obj_dir/sim test/share rv32ui-p- -r}
+$ @<userinput>{python3 test/test.py -r obj_dir/sim test/share rv32ui-p-}
 PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-lh.bin.hex
 PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-sb.bin.hex
 PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-sltiu.bin.hex
@@ -503,7 +500,7 @@ PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-srl.bin.hex
 Test Result : 39 / 40
 //}
 
-@<code>{rv32ui-p-}から始まる40個のテストの内、39個のテストにパスしました。
+@<code>{rv32ui-p-}から始まる40個のテストの内、39個のテストに成功しました。
 テストの詳細な結果はresultsディレクトリに格納されています。
 
 @<code>{rv32ui-p-ma_data}は、
