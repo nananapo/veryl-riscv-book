@@ -5,26 +5,40 @@
 
 //blankline
 
-本書は「Verylで作るCPU 基本編」の第I部のみを発行したものです。
-本書の電子版は@<href>{https://github.com/nananapo/veryl-riscv-book}から無料で入手できます。
-
-本書に関する質問やお問い合わせは、以下のサポートページを確認してください。
-
- * @<w>{support-page}
-
-
-//blankline
-//blankline
-
-
 ===[notoc] 著者紹介
 
-//sideimage[tw-icon][20mm][side=L,sep=7mm,border=on]{
+//sideimage[tw-icon][18mm][side=L,sep=7mm,border=on]{
 //noindent
-@<strong>{kanataso} (@<hlink>{https://twitter.com/kanapipopipo, kanapipopipo@X/Twitter}, @<hlink>{https://github.com/nananapo, nananapo@GitHub})
+@<strong>{阿部奏太} (@<hlink>{https://twitter.com/kanapipopipo, kanapipopipo@X/Twitter}, @<hlink>{https://github.com/nananapo, nananapo@GitHub})
 
 //noindent
 いつの間にか自作CPUの沼に沈んでいました。@<br>{}
-自ら外堀を埋めてしまい、もう抜け出せそうにありません。@<br>{}
-計算機と法律に興味があります
+カラオケまねきねこ(のまねっきー)とコメダ珈琲(のエッグサンド)が好き。@<br>{}
+計算機と法律に興味があります。
 //}
+
+//blankline
+
+===[notoc] 謝辞
+
+本書は次の方々にレビューしていただきました。
+
+ * 石谷太一 (@<href>{https://x.com/taichi600730, @taichi600730})
+ * 井田健太 (@<href>{https://github.com/ciniml, @ciniml})
+ * 内田公太 (@<href>{https://x.com/uchan_nos, @uchan_nos})
+ * 初田直也 (@<href>{https://github.com/dalance, @dalance})
+
+筆者がCPUを作り始めたのは、
+井田さんの「RISC-VとChiselで学ぶ はじめてのCPU自作」を読んだのがきっかけでした。
+この本が無ければ、筆者はCPUを作ろうとは思わなかったかもしれません。
+
+その半年後から約一年間、
+サイボウズ・ラボ株式会社のサイボウズ・ラボユースの支援を受けることで、
+自作CPUに集中することができました(本書の一部はラボユースの期間に執筆されました)。
+メンターの内田さんにはとても感謝しています。
+
+Verylの作者の初田さんと石谷さんには、
+筆者がVerylでCPUを作るにあたって見つけた不具合を迅速に修正していただきました。
+お二方にはレビューでとても多くの指摘をいただき、品質を向上することができました。
+
+執筆にあたって関わったすべての方に、この場をお借りしてお礼申し上げます。

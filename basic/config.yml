@@ -33,8 +33,8 @@ subtitle: |-
 # 著者名。「, 」で区切って複数指定できる
 # 読みを入れる例 aut: [{name: "青木峰郎", file-as: "アオキミネロウ"}, {name: "武藤健志", file-as: "ムトウケンシ"}, {name: "高橋征義", file-as: "タカハシマサヨシ"}, {name: "角征典", file-as: "カドマサノリ"}]
 aut:
-  - name:    kanataso
-    file-as: kanataso
+  - name:    阿部奏太
+    file-as: アベカナタ
 
 # (Starter拡張) 奥付に載せるデータ。現在はPDFのみ対応。
 additional:
@@ -42,7 +42,7 @@ additional:
   # 詳しくはこのページを参照：
   # https://esa-pages.io/p/sharing/13039/posts/115/7fbe936149a836eac678.html#奥付の記載
   - key:     発行者   # サークル名ではなく個人名（ペンネーム可）
-    value:   kanataso
+    value:   阿部奏太
   - key:     連絡先   # メールアドレス推奨
     value:   kanastudio@oekaki.chat
     ### 連絡先の例：

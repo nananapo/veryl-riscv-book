@@ -1,6 +1,6 @@
-<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:126.0) Gecko/20100101 Firefox/126.0" version="24.8.1">
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:126.0) Gecko/20100101 Firefox/126.0" version="24.8.3">
   <diagram name="Page-1" id="9wqTwC_VcRmrC4IbnjFo">
-    <mxGraphModel dx="299" dy="161" grid="0" gridSize="10" guides="0" tooltips="1" connect="0" arrows="0" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="797" dy="430" grid="0" gridSize="10" guides="0" tooltips="1" connect="0" arrows="0" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -498,7 +498,7 @@
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="7KpVv2kTKi0RYn0vFTpY-138" value="4.ALUで計算" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Garamond;" parent="1" vertex="1">
+        <mxCell id="7KpVv2kTKi0RYn0vFTpY-138" value="&lt;div&gt;4.計算&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Garamond;" parent="1" vertex="1">
           <mxGeometry x="185.5" y="1640" width="82" height="35" as="geometry" />
         </mxCell>
         <mxCell id="7KpVv2kTKi0RYn0vFTpY-146" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.75;entryY=0;entryDx=0;entryDy=0;fontFamily=Garamond;" parent="1" source="7KpVv2kTKi0RYn0vFTpY-143" target="7KpVv2kTKi0RYn0vFTpY-138" edge="1">
@@ -564,52 +564,52 @@
             <mxPoint x="1" y="1" as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="TDS3gWY0blJskkFoiAuT-24" value="&lt;p style=&quot;line-height: 100%;&quot;&gt;&lt;font face=&quot;Times New Roman&quot; style=&quot;font-size: 10px;&quot;&gt;v[2]&lt;/font&gt;&lt;/p&gt;" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=0.4;verticalAlign=middle;fontFamily=Georgia;spacingBottom=3;" vertex="1" parent="1">
+        <mxCell id="TDS3gWY0blJskkFoiAuT-24" value="&lt;p style=&quot;line-height: 100%;&quot;&gt;&lt;font face=&quot;Times New Roman&quot; style=&quot;font-size: 10px;&quot;&gt;v[2]&lt;/font&gt;&lt;/p&gt;" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=0.4;verticalAlign=middle;fontFamily=Georgia;spacingBottom=3;" parent="1" vertex="1">
           <mxGeometry x="1133" y="1678" width="140" height="15" as="geometry" />
         </mxCell>
-        <mxCell id="TDS3gWY0blJskkFoiAuT-37" value="&lt;p style=&quot;line-height: 100%;&quot;&gt;&lt;font face=&quot;Times New Roman&quot; style=&quot;font-size: 10px;&quot;&gt;v[2][0]&lt;/font&gt;&lt;/p&gt;" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=0.4;verticalAlign=middle;fontFamily=Helvetica;spacingBottom=3;" vertex="1" parent="1">
+        <mxCell id="TDS3gWY0blJskkFoiAuT-37" value="&lt;p style=&quot;line-height: 100%;&quot;&gt;&lt;font face=&quot;Times New Roman&quot; style=&quot;font-size: 10px;&quot;&gt;v[2][0]&lt;/font&gt;&lt;/p&gt;" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=0.4;verticalAlign=middle;fontFamily=Helvetica;spacingBottom=3;" parent="1" vertex="1">
           <mxGeometry x="1238" y="1693" width="35" height="15" as="geometry" />
         </mxCell>
-        <mxCell id="TDS3gWY0blJskkFoiAuT-44" value="&lt;p style=&quot;line-height: 100%;&quot;&gt;&lt;/p&gt;&lt;div style=&quot;line-height: 100%;&quot; align=&quot;center&quot;&gt;&lt;font face=&quot;Times New Roman&quot; style=&quot;font-size: 10px;&quot;&gt;v[2][1]&lt;/font&gt;&lt;/div&gt;&lt;p&gt;&lt;/p&gt;" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=0.4;verticalAlign=middle;fontFamily=Helvetica;align=center;spacingBottom=3;" vertex="1" parent="1">
+        <mxCell id="TDS3gWY0blJskkFoiAuT-44" value="&lt;p style=&quot;line-height: 100%;&quot;&gt;&lt;/p&gt;&lt;div style=&quot;line-height: 100%;&quot; align=&quot;center&quot;&gt;&lt;font face=&quot;Times New Roman&quot; style=&quot;font-size: 10px;&quot;&gt;v[2][1]&lt;/font&gt;&lt;/div&gt;&lt;p&gt;&lt;/p&gt;" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=0.4;verticalAlign=middle;fontFamily=Helvetica;align=center;spacingBottom=3;" parent="1" vertex="1">
           <mxGeometry x="1203" y="1693" width="35" height="15" as="geometry" />
         </mxCell>
-        <mxCell id="TDS3gWY0blJskkFoiAuT-45" value="&lt;p style=&quot;line-height: 90%;&quot;&gt;&lt;font face=&quot;Times New Roman&quot; style=&quot;font-size: 10px;&quot;&gt;v[2][2]&lt;/font&gt;&lt;/p&gt;" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=0.4;verticalAlign=middle;fontFamily=Helvetica;spacingBottom=3;" vertex="1" parent="1">
+        <mxCell id="TDS3gWY0blJskkFoiAuT-45" value="&lt;p style=&quot;line-height: 90%;&quot;&gt;&lt;font face=&quot;Times New Roman&quot; style=&quot;font-size: 10px;&quot;&gt;v[2][2]&lt;/font&gt;&lt;/p&gt;" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=0.4;verticalAlign=middle;fontFamily=Helvetica;spacingBottom=3;" parent="1" vertex="1">
           <mxGeometry x="1168" y="1693" width="35" height="15" as="geometry" />
         </mxCell>
-        <mxCell id="TDS3gWY0blJskkFoiAuT-46" value="&lt;p style=&quot;line-height: 100%;&quot;&gt;&lt;font face=&quot;Times New Roman&quot; style=&quot;font-size: 10px;&quot;&gt;v[2][3]&lt;/font&gt;&lt;/p&gt;" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=0.4;verticalAlign=middle;fontFamily=Helvetica;spacingBottom=3;" vertex="1" parent="1">
+        <mxCell id="TDS3gWY0blJskkFoiAuT-46" value="&lt;p style=&quot;line-height: 100%;&quot;&gt;&lt;font face=&quot;Times New Roman&quot; style=&quot;font-size: 10px;&quot;&gt;v[2][3]&lt;/font&gt;&lt;/p&gt;" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=0.4;verticalAlign=middle;fontFamily=Helvetica;spacingBottom=3;" parent="1" vertex="1">
           <mxGeometry x="1133" y="1693" width="35" height="15" as="geometry" />
         </mxCell>
-        <mxCell id="TDS3gWY0blJskkFoiAuT-52" value="&lt;p style=&quot;line-height: 100%;&quot;&gt;&lt;font face=&quot;Times New Roman&quot; style=&quot;font-size: 10px;&quot;&gt;v[1]&lt;/font&gt;&lt;/p&gt;" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=0.4;verticalAlign=middle;fontFamily=Georgia;spacingBottom=3;" vertex="1" parent="1">
+        <mxCell id="TDS3gWY0blJskkFoiAuT-52" value="&lt;p style=&quot;line-height: 100%;&quot;&gt;&lt;font face=&quot;Times New Roman&quot; style=&quot;font-size: 10px;&quot;&gt;v[1]&lt;/font&gt;&lt;/p&gt;" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=0.4;verticalAlign=middle;fontFamily=Georgia;spacingBottom=3;" parent="1" vertex="1">
           <mxGeometry x="1273" y="1678" width="140" height="15" as="geometry" />
         </mxCell>
-        <mxCell id="TDS3gWY0blJskkFoiAuT-53" value="&lt;p style=&quot;line-height: 100%;&quot;&gt;&lt;font face=&quot;Times New Roman&quot; style=&quot;font-size: 10px;&quot;&gt;v[1][0]&lt;/font&gt;&lt;/p&gt;" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=0.4;verticalAlign=middle;fontFamily=Helvetica;spacingBottom=3;" vertex="1" parent="1">
+        <mxCell id="TDS3gWY0blJskkFoiAuT-53" value="&lt;p style=&quot;line-height: 100%;&quot;&gt;&lt;font face=&quot;Times New Roman&quot; style=&quot;font-size: 10px;&quot;&gt;v[1][0]&lt;/font&gt;&lt;/p&gt;" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=0.4;verticalAlign=middle;fontFamily=Helvetica;spacingBottom=3;" parent="1" vertex="1">
           <mxGeometry x="1378" y="1693" width="35" height="15" as="geometry" />
         </mxCell>
-        <mxCell id="TDS3gWY0blJskkFoiAuT-54" value="&lt;p style=&quot;line-height: 100%;&quot;&gt;&lt;/p&gt;&lt;div style=&quot;line-height: 100%;&quot; align=&quot;center&quot;&gt;&lt;font face=&quot;Times New Roman&quot; style=&quot;font-size: 10px;&quot;&gt;v[1][1]&lt;/font&gt;&lt;/div&gt;&lt;p&gt;&lt;/p&gt;" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=0.4;verticalAlign=middle;fontFamily=Helvetica;align=center;spacingBottom=3;" vertex="1" parent="1">
+        <mxCell id="TDS3gWY0blJskkFoiAuT-54" value="&lt;p style=&quot;line-height: 100%;&quot;&gt;&lt;/p&gt;&lt;div style=&quot;line-height: 100%;&quot; align=&quot;center&quot;&gt;&lt;font face=&quot;Times New Roman&quot; style=&quot;font-size: 10px;&quot;&gt;v[1][1]&lt;/font&gt;&lt;/div&gt;&lt;p&gt;&lt;/p&gt;" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=0.4;verticalAlign=middle;fontFamily=Helvetica;align=center;spacingBottom=3;" parent="1" vertex="1">
           <mxGeometry x="1343" y="1693" width="35" height="15" as="geometry" />
         </mxCell>
-        <mxCell id="TDS3gWY0blJskkFoiAuT-55" value="&lt;p style=&quot;line-height: 90%;&quot;&gt;&lt;font face=&quot;Times New Roman&quot; style=&quot;font-size: 10px;&quot;&gt;v[1][2]&lt;/font&gt;&lt;/p&gt;" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=0.4;verticalAlign=middle;fontFamily=Helvetica;spacingBottom=3;" vertex="1" parent="1">
+        <mxCell id="TDS3gWY0blJskkFoiAuT-55" value="&lt;p style=&quot;line-height: 90%;&quot;&gt;&lt;font face=&quot;Times New Roman&quot; style=&quot;font-size: 10px;&quot;&gt;v[1][2]&lt;/font&gt;&lt;/p&gt;" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=0.4;verticalAlign=middle;fontFamily=Helvetica;spacingBottom=3;" parent="1" vertex="1">
           <mxGeometry x="1308" y="1693" width="35" height="15" as="geometry" />
         </mxCell>
-        <mxCell id="TDS3gWY0blJskkFoiAuT-56" value="&lt;p style=&quot;line-height: 100%;&quot;&gt;&lt;font face=&quot;Times New Roman&quot; style=&quot;font-size: 10px;&quot;&gt;v[1][3]&lt;/font&gt;&lt;/p&gt;" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=0.4;verticalAlign=middle;fontFamily=Helvetica;spacingBottom=3;" vertex="1" parent="1">
+        <mxCell id="TDS3gWY0blJskkFoiAuT-56" value="&lt;p style=&quot;line-height: 100%;&quot;&gt;&lt;font face=&quot;Times New Roman&quot; style=&quot;font-size: 10px;&quot;&gt;v[1][3]&lt;/font&gt;&lt;/p&gt;" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=0.4;verticalAlign=middle;fontFamily=Helvetica;spacingBottom=3;" parent="1" vertex="1">
           <mxGeometry x="1273" y="1693" width="35" height="15" as="geometry" />
         </mxCell>
-        <mxCell id="TDS3gWY0blJskkFoiAuT-57" value="&lt;p style=&quot;line-height: 100%;&quot;&gt;&lt;font face=&quot;Times New Roman&quot; style=&quot;font-size: 10px;&quot;&gt;v[0]&lt;/font&gt;&lt;/p&gt;" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=0.4;verticalAlign=middle;fontFamily=Georgia;spacingBottom=3;" vertex="1" parent="1">
+        <mxCell id="TDS3gWY0blJskkFoiAuT-57" value="&lt;p style=&quot;line-height: 100%;&quot;&gt;&lt;font face=&quot;Times New Roman&quot; style=&quot;font-size: 10px;&quot;&gt;v[0]&lt;/font&gt;&lt;/p&gt;" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=0.4;verticalAlign=middle;fontFamily=Georgia;spacingBottom=3;" parent="1" vertex="1">
           <mxGeometry x="1413" y="1678" width="140" height="15" as="geometry" />
         </mxCell>
-        <mxCell id="TDS3gWY0blJskkFoiAuT-58" value="&lt;p style=&quot;line-height: 100%;&quot;&gt;&lt;font face=&quot;Times New Roman&quot; style=&quot;font-size: 10px;&quot;&gt;v[0][0]&lt;/font&gt;&lt;/p&gt;" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=0.4;verticalAlign=middle;fontFamily=Helvetica;spacingBottom=3;" vertex="1" parent="1">
+        <mxCell id="TDS3gWY0blJskkFoiAuT-58" value="&lt;p style=&quot;line-height: 100%;&quot;&gt;&lt;font face=&quot;Times New Roman&quot; style=&quot;font-size: 10px;&quot;&gt;v[0][0]&lt;/font&gt;&lt;/p&gt;" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=0.4;verticalAlign=middle;fontFamily=Helvetica;spacingBottom=3;" parent="1" vertex="1">
           <mxGeometry x="1518" y="1693" width="35" height="15" as="geometry" />
         </mxCell>
-        <mxCell id="TDS3gWY0blJskkFoiAuT-59" value="&lt;p style=&quot;line-height: 100%;&quot;&gt;&lt;/p&gt;&lt;div style=&quot;line-height: 100%;&quot; align=&quot;center&quot;&gt;&lt;font face=&quot;Times New Roman&quot; style=&quot;font-size: 10px;&quot;&gt;v[0][1]&lt;/font&gt;&lt;/div&gt;&lt;p&gt;&lt;/p&gt;" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=0.4;verticalAlign=middle;fontFamily=Helvetica;align=center;spacingBottom=3;" vertex="1" parent="1">
+        <mxCell id="TDS3gWY0blJskkFoiAuT-59" value="&lt;p style=&quot;line-height: 100%;&quot;&gt;&lt;/p&gt;&lt;div style=&quot;line-height: 100%;&quot; align=&quot;center&quot;&gt;&lt;font face=&quot;Times New Roman&quot; style=&quot;font-size: 10px;&quot;&gt;v[0][1]&lt;/font&gt;&lt;/div&gt;&lt;p&gt;&lt;/p&gt;" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=0.4;verticalAlign=middle;fontFamily=Helvetica;align=center;spacingBottom=3;" parent="1" vertex="1">
           <mxGeometry x="1483" y="1693" width="35" height="15" as="geometry" />
         </mxCell>
-        <mxCell id="TDS3gWY0blJskkFoiAuT-60" value="&lt;p style=&quot;line-height: 90%;&quot;&gt;&lt;font face=&quot;Times New Roman&quot; style=&quot;font-size: 10px;&quot;&gt;v[0][2]&lt;/font&gt;&lt;/p&gt;" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=0.4;verticalAlign=middle;fontFamily=Helvetica;spacingBottom=3;" vertex="1" parent="1">
+        <mxCell id="TDS3gWY0blJskkFoiAuT-60" value="&lt;p style=&quot;line-height: 90%;&quot;&gt;&lt;font face=&quot;Times New Roman&quot; style=&quot;font-size: 10px;&quot;&gt;v[0][2]&lt;/font&gt;&lt;/p&gt;" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=0.4;verticalAlign=middle;fontFamily=Helvetica;spacingBottom=3;" parent="1" vertex="1">
           <mxGeometry x="1448" y="1693" width="35" height="15" as="geometry" />
         </mxCell>
-        <mxCell id="TDS3gWY0blJskkFoiAuT-61" value="&lt;p style=&quot;line-height: 100%;&quot;&gt;&lt;font face=&quot;Times New Roman&quot; style=&quot;font-size: 10px;&quot;&gt;v[0][3]&lt;/font&gt;&lt;/p&gt;" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=0.4;verticalAlign=middle;fontFamily=Helvetica;spacingBottom=3;" vertex="1" parent="1">
+        <mxCell id="TDS3gWY0blJskkFoiAuT-61" value="&lt;p style=&quot;line-height: 100%;&quot;&gt;&lt;font face=&quot;Times New Roman&quot; style=&quot;font-size: 10px;&quot;&gt;v[0][3]&lt;/font&gt;&lt;/p&gt;" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=0.4;verticalAlign=middle;fontFamily=Helvetica;spacingBottom=3;" parent="1" vertex="1">
           <mxGeometry x="1413" y="1693" width="35" height="15" as="geometry" />
         </mxCell>
-        <mxCell id="TDS3gWY0blJskkFoiAuT-63" value="&lt;div align=&quot;center&quot;&gt;&lt;font style=&quot;font-size: 17px;&quot; face=&quot;Times New Roman&quot;&gt;var v : logic&amp;lt;3, 4&amp;gt;;&lt;/font&gt;&lt;/div&gt;" style="text;whiteSpace=wrap;html=1;align=center;" vertex="1" parent="1">
+        <mxCell id="TDS3gWY0blJskkFoiAuT-63" value="&lt;div align=&quot;center&quot;&gt;&lt;font style=&quot;font-size: 17px;&quot; face=&quot;Times New Roman&quot;&gt;var v : logic&amp;lt;3, 4&amp;gt;;&lt;/font&gt;&lt;/div&gt;" style="text;whiteSpace=wrap;html=1;align=center;" parent="1" vertex="1">
           <mxGeometry x="1268" y="1641" width="153" height="36" as="geometry" />
         </mxCell>
       </root>

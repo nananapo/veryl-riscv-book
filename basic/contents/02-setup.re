@@ -107,10 +107,8 @@ SystemVerilogのシミュレータを生成するためのソフトウェアで�
 //caution[本書で利用するVerilatorのバージョン]{
 2024/10/28時点の最新バージョンはv5.030ですが、
 Verilatorの問題によりシミュレータをビルドできない場合があります。
-対処方法はサポートページ@<fn>{support-page}を確認してください。
+対処方法はサポートページを確認してください。
 //}
-
-//footnote[support-page][@<w>{support-page}]
 
 == riscv-gnu-toolchain
 
