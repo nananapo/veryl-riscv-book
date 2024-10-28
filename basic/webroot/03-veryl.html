@@ -158,7 +158,7 @@ endmodule
 <tr class="hline"><td>z</td><td>ハイインピーダンス</td><td>偽</td></tr>
 </table>
 </div>
-<p><b>不定値</b>(unknown value, <code class="inline-code">x</code>)とは、<code class="inline-code">0</code>か<code class="inline-code">1</code>のどちらか分からない値です。不定値は、未初期化のレジスタの値の表現に利用されたり、不定値との演算の結果として生成されます。<b>ハイインピーダンス</b>(high-inpedance, <code class="inline-code">z</code>)とは、どのレジスタや信号とも接続されていないことを表す値です。物理的なハードウェア上では、全ての値は<code class="inline-code">0</code>か<code class="inline-code">1</code>の二値として解釈されます。不定値とハイインピーダンスはシミュレーションのときに利用します。</p>
+<p><b>不定値</b>(unknown value, <code class="inline-code">x</code>)とは、<code class="inline-code">0</code>か<code class="inline-code">1</code>のどちらか分からない値です。不定値は、未初期化のレジスタの値の表現に利用されたり、不定値との演算の結果として生成されます。<b>ハイインピーダンス</b>(high-inpedance, <code class="inline-code">z</code>)とは、どのレジスタや信号とも接続されていないことを表す値です。物理的なハードウェア上では、全ての値は<code class="inline-code">0</code>か<code class="inline-code">1</code>の二値として解釈されますが、信号の状態としてハイインピーダンスを持ちます。不定値はシミュレーションのときに利用します。</p>
 <p>1ビットの四値を表現するための型は<b>logic</b>です。Nビットのlogic型は<code class="inline-code">logic&lt;N&gt;</code>と記述できます。1ビットの二値を表現する型は<b>bit</b>です。基本的に、レジスタや信号の定義にbit型は利用せず、logic型を利用します。</p>
 <p>logic型とbit型は、デフォルトで符号が無い型として扱われます。符号付き型として扱いたいときは、型名の前に<b>signed</b>キーワードを追加します(<span class="listref"><a href="./03-veryl.html#code.signed_keyword">リスト2.4</a></span>)。</p>
 <div id="code.signed_keyword" class="caption-code">
