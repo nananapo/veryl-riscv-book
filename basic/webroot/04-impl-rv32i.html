@@ -313,11 +313,11 @@ $ <span class="userinput">mkdir src</span>
 	<code class="inline-code">membus.wen</code>が<code class="inline-code">0</code>、
 	<code class="inline-code">membus.addr</code>が対象アドレスになっています。
 	次のクロックで、<code class="inline-code">membus.rvalid</code>が<code class="inline-code">1</code>になり、
-	<code class="inline-code">membus.rdata</code>はメモリのデータになります。
+	<code class="inline-code">membus.rdata</code>は対象アドレスのデータになります。
 </dd>
 <dt>書き込み</dt>
 <dd>
-	読み込みが要求されるとき、
+	書き込みが要求されるとき、
 	<code class="inline-code">membus.valid</code>が<code class="inline-code">1</code>、
 	<code class="inline-code">membus.wen</code>が<code class="inline-code">1</code>、
 	<code class="inline-code">membus.addr</code>が対象アドレスになっています。
@@ -331,7 +331,7 @@ $ <span class="userinput">mkdir src</span>
 <h3 class="none"><a id="h3-4-3"></a><span class="secno">3.4.3</span> メモリの初期化、環境変数の読み込み</h3>
 <p>memoryモジュールのパラメータには、<code class="inline-code">FILEPATH_IS_ENV</code>と<code class="inline-code">FILEPATH</code>を定義しています。memoryモジュールをインスタンス化するとき、<code class="inline-code">FILEPATH</code>には、メモリの初期値が格納されたファイルのパスか、ファイルパスが格納されている環境変数名を指定します。初期化は<code class="inline-code">$readmemh</code>システムタスクで行います。</p>
 <p><code class="inline-code">FILEPATH_IS_ENV</code>が<code class="inline-code">1</code>のとき、環境変数の値を取得して、初期化用のファイルのパスとして利用します。環境変数はutilパッケージのget_env関数で取得します。</p>
-<p>まず、utilパッケージとget_env関数を作成します。<code class="inline-code">src/util.veryl</code>を作成し、次のように記述します(<span class="listref"><a href="./04-impl-rv32i.html#util.veryl">リスト3.7</a></span>)。</p>
+<p>utilパッケージとget_env関数を作成します。<code class="inline-code">src/util.veryl</code>を作成し、次のように記述します(<span class="listref"><a href="./04-impl-rv32i.html#util.veryl">リスト3.7</a></span>)。</p>
 <div id="util.veryl" class="caption-code">
 <span class="caption">リスト3.7: リスト3.7: util.veryl</span>
 <pre class="list language-veryl">embed (inline) sv{{{
@@ -356,7 +356,7 @@ package util {
 
 <h2 class="numbox"><a id="h3-5"></a><span class="secno">3.5</span> 最上位モジュールの作成</h2>
 <p>次に、最上位のモジュール(Top Module)を作成して、memoryモジュールをインスタンス化します。</p>
-<p>最上位のモジュールとは、デザインの階層の最上位に位置するモジュールのことです。論理設計では、最上位モジュールの中に、あらゆるモジュールやレジスタなどをインスタンス化します。</p>
+<p>最上位のモジュールとは、設計の階層の最上位に位置するモジュールのことです。論理設計では、最上位モジュールの中に、あらゆるモジュールやレジスタなどをインスタンス化します。</p>
 <p>memoryモジュールはジェネリックモジュールであるため、1つのデータのビット幅とメモリのサイズを指定する必要があります。これらを示す定数をeeiパッケージに定義します(<span class="listref"><a href="./04-impl-rv32i.html#eei.veryl.memif.width">リスト3.8</a></span>)。メモリのアドレス幅(サイズ)には、適当に16を設定しています。これによりメモリ容量は32ビット * (2 ** 16) = 256KiBになります。</p>
 <div id="eei.veryl.memif.width" class="caption-code">
 <span class="caption">リスト3.8: リスト3.8: メモリのデータ幅とアドレスの幅の定数を定義する (eei.veryl)</span>
@@ -457,7 +457,7 @@ module core (
 <p><code class="inline-code">if_pc</code>レジスタはPC(プログラムカウンタ)です。ここで<code class="inline-code">if_</code>という接頭辞はinstruction fetch(命令フェッチ)の略です。<code class="inline-code">if_is_requested</code>はフェッチ中かどうかを管理しており、フェッチ中のアドレスを<code class="inline-code">if_pc_requested</code>に格納しています。どのレジスタも<code class="inline-code">0</code>で初期化しています。</p>
 <p>always_combブロックでは、アドレス<code class="inline-code">if_pc</code>にあるデータを常にメモリに要求しています。命令フェッチではメモリの読み込みしか行わないため、<code class="inline-code">membus.wen</code>は<code class="inline-code">0</code>にしています。</p>
 <p>上から1つめのalways_ffブロックでは、フェッチ中かどうかとメモリがready(要求を受け入れる)状態かどうかによって、<code class="inline-code">if_pc</code>と<code class="inline-code">if_is_requested</code>、<code class="inline-code">if_pc_requested</code>の値を変更しています。</p>
-<p>メモリにデータを要求するとき、<code class="inline-code">if_pc</code>を次の命令のアドレス(<code class="inline-code">4</code>を足したアドレス)に変更して、<code class="inline-code">if_is_requested</code>を<code class="inline-code">1</code>に変更しています。フェッチ中かつ<code class="inline-code">membus.rvalid</code>が<code class="inline-code">1</code>のとき、命令フェッチが完了し、データが<code class="inline-code">membus.rdata</code>に供給されています。このとき、メモリがready状態なら、すぐに次の命令フェッチを開始します。この状態遷移を繰り返すことによって、アドレス<code class="inline-code">0</code>→<code class="inline-code">4</code>→<code class="inline-code">8</code>→<code class="inline-code">c</code>→<code class="inline-code">10</code>...の命令を次々にフェッチします。</p>
+<p>メモリにデータを要求するとき、<code class="inline-code">if_pc</code>を次の命令のアドレス(<code class="inline-code">4</code>を足したアドレス)に変更して、<code class="inline-code">if_is_requested</code>を<code class="inline-code">1</code>に変更しています。フェッチ中かつ<code class="inline-code">membus.rvalid</code>が<code class="inline-code">1</code>のとき、命令フェッチが完了し、データが<code class="inline-code">membus.rdata</code>に供給されています。メモリがready状態なら、すぐに次の命令フェッチを開始します。この状態遷移を繰り返すことによって、アドレス<code class="inline-code">0</code>→<code class="inline-code">4</code>→<code class="inline-code">8</code>→<code class="inline-code">c</code>→<code class="inline-code">10</code>...の命令を次々にフェッチします。</p>
 <p>上から2つめのalways_ffブロックは、デバッグ用の表示を行うコードです。命令フェッチが完了したとき、その結果を<code class="inline-code">$display</code>システムタスクによって出力します。</p>
 
 <h3 class="none"><a id="h3-6-2"></a><span class="secno">3.6.2</span> memoryモジュールとcoreモジュールを接続する</h3>
@@ -499,7 +499,7 @@ module core (
 </div>
 <p>最後にcoreモジュールをインスタンス化します(<span class="listref"><a href="./04-impl-rv32i.html#top.veryl.create-core-range.core">リスト3.14</a></span>)。メモリとCPUが接続されました。</p>
 <div id="top.veryl.create-core-range.core" class="caption-code">
-<span class="caption">リスト3.14: リスト3.14: top.veryl内でcoreモジュールをインスタンス化する</span>
+<span class="caption">リスト3.14: リスト3.14: coreモジュールをインスタンス化する (top.veryl)</span>
 <pre class="list language-core">    inst c: core (
         clk                ,
         rst                ,
@@ -511,7 +511,7 @@ module core (
 <h3 class="none"><a id="h3-6-3"></a><span class="secno">3.6.3</span> 命令フェッチをテストする</h3>
 <p>ここまでのコードが正しく動くかを検証します。</p>
 <p>Verylで記述されたコードは<code class="inline-code">veryl build</code>コマンドでSystemVerilogのコードに変換できます。変換されたソースコードをオープンソースのVerilogシミュレータであるVerilatorで実行することで、命令フェッチが正しく動いていることを確認します。</p>
-<p>まず、Verylのプロジェクトをビルドします。</p>
+<p>まず、Verylのプロジェクトをビルドします(<span class="listref"><a href="./04-impl-rv32i.html#veryl.build.first">リスト3.15</a></span>)。</p>
 <div id="veryl.build.first" class="cmd-code">
 <span class="caption">リスト3.15: リスト3.15: Verylのプロジェクトのビルド</span>
 <pre class="list language-first">$ <span class="userinput">veryl fmt</span> <span class="balloon">← フォーマットする</span>
@@ -602,7 +602,7 @@ int main(int argc, char** argv) {
 }
 </pre>
 </div>
-<p>このC++プログラムは、topモジュール(プログラム中ではVtop_coreクラス)をインスタンス化し、そのクロックを反転して実行するのを繰り返しています。</p>
+<p>このC++プログラムは、topモジュール(プログラム中ではVtop_coreクラス)をインスタンス化し、そのクロック信号を反転して実行するのを繰り返しています。</p>
 <p>このプログラムは、コマンドライン引数として次の2つの値を受け取ります。</p>
 <dl>
 <dt>MEMORY_FILE_PATH</dt>
@@ -735,7 +735,7 @@ $ <span class="userinput">make clean</span> <span class="balloon">← ビルド�
 </p>
 </div>
 <p>フェッチした命令は次々に実行されますが、その命令が何クロックで実行されるかは分かりません。命令が常に1クロックで実行される場合は、現状の常にフェッチし続けるようなコードで問題ありませんが、例えばメモリにアクセスする命令は実行に何クロックかかるか分かりません。</p>
-<p>複数クロックかかる命令に対応するために、命令の処理が終わってから次の命令をフェッチする場合、命令の実行の流れは次のようになります。</p>
+<p>複数クロックかかる命令に対応するために、命令の処理が終わってから次の命令をフェッチするように変更する場合、命令の実行の流れは次のようになります。</p>
 <p></p>
 <hr />
 <p></p>
@@ -1212,7 +1212,7 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 7</span>
 <p>RV32Iには、32ビット幅のレジスタが32個用意されています。ただし、0番目のレジスタの値は常に<code class="inline-code">0</code>です。</p>
 
 <h3 class="none"><a id="h3-8-1"></a><span class="secno">3.8.1</span> レジスタファイルを定義する</h3>
-<p>coreモジュールにレジスタを定義します。レジスタの幅はXLEN(=32)ビットであるため、<code class="inline-code">UIntX</code>型のレジスタの配列を定義します。</p>
+<p>coreモジュールにレジスタを定義します。レジスタの幅はXLEN(=32)ビットであるため、<code class="inline-code">UIntX</code>型のレジスタの配列を定義します(<span class="listref"><a href="./04-impl-rv32i.html#core.reg.define">リスト3.37</a></span>)。</p>
 <div id="core.reg.define" class="caption-code">
 <span class="caption">リスト3.37: リスト3.37: レジスタの定義 (core.veryl)</span>
 <pre class="list language-define">    // レジスタ
@@ -1263,7 +1263,7 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 7</span>
 <div class="footnote-list">
 <div class="footnote" id="fn-verilator.x" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*5] </span>Verilatorはデフォルト設定では不定値に対応していないため、不定値は0になります</p></div>
 </div><!--/.footnote-list-->
-<p>これではテストする意味がないため、レジスタの値を適当な値に初期化します。always_ffブロックのif_resetで、i番目(0 &lt; i &lt; 32)のレジスタの値を<code class="inline-code">i + 100</code>で初期化します(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.reg-range.init">リスト3.40</a></span>)。</p>
+<p>これではテストする意味がないため、レジスタの値を適当な値に初期化します。always_ffブロックのif_resetで、<code class="inline-code">i</code>番目(0 &lt; <code class="inline-code">i</code> &lt; 32)のレジスタの値を<code class="inline-code">i + 100</code>で初期化します(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.reg-range.init">リスト3.40</a></span>)。</p>
 <div id="core.veryl.reg-range.init" class="caption-code">
 <span class="caption">リスト3.40: リスト3.40: レジスタを適当な値で初期化する (core.veryl)</span>
 <pre class="list language-init">    // レジスタの初期化
@@ -1542,7 +1542,7 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 6</span>
 <dt>addi x1, x0, 32</dt>
 <dd>
 	<code class="inline-code">op1</code>は0番目のレジスタの値です。
-	0番目のレジスタの値は常に0であるため、<code class="inline-code">32'h00000000</code>と表示されています。
+	0番目のレジスタの値は常に<code class="inline-code">0</code>であるため、<code class="inline-code">32'h00000000</code>と表示されています。
 	<code class="inline-code">op2</code>は即値です。
 	即値は32であるため、<code class="inline-code">32'h00000020</code>と表示されています。
 	ALUの計算結果として、0と32を足した結果<code class="inline-code">32'h00000020</code>が表示されています。
@@ -1692,7 +1692,7 @@ $ <span class="userinput">obj_dir/sim sample.hex 6</span>
 <p>8ビット、16ビット単位で読み書きを行う命令の実装は少し大変です。まず、32ビット単位で読み書きを行うLW命令とSW命令を実装します。</p>
 
 <h4><a id="h3-11-1-1"></a>memunitモジュールの作成</h4>
-<p>メモリ操作を行うモジュールを、<code class="inline-code">src/memunit.veryl</code>に記述します。</p>
+<p>メモリ操作を行うモジュールを、<code class="inline-code">src/memunit.veryl</code>に記述します(<span class="listref"><a href="./04-impl-rv32i.html#memunit.veryl.lwsw">リスト3.53</a></span>)。</p>
 <div id="memunit.veryl.lwsw" class="caption-code">
 <span class="caption">リスト3.53: リスト3.53: memunit.veryl</span>
 <pre class="list language-lwsw">import eei::*;
@@ -2145,7 +2145,7 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 13</span>
     };
 </pre>
 </div>
-<p>ロードした値の拡張を行うとき、値の最上位ビットと<code class="inline-code">sext</code>をAND演算した値を使って拡張します。これにより、符号拡張するときは最上位ビットの値が、ゼロで拡張するときは0が拡張に利用されます。</p>
+<p>ロードした値の拡張を行うとき、値の最上位ビットと<code class="inline-code">sext</code>をAND演算した値を使って拡張します。これにより、符号拡張するときは最上位ビットの値が、ゼロで拡張するときは<code class="inline-code">0</code>が拡張に利用されます。</p>
 
 <h3 class="none"><a id="h3-11-3"></a><span class="secno">3.11.3</span> SB、SH命令を実装する</h3>
 <p>次に、SB、SH命令を実装します。</p>
@@ -2301,7 +2301,7 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 13</span>
 </div>
 
 <h4><a id="h3-11-3-2"></a>memunitモジュールの実装</h4>
-<p>memoryモジュールが書き込みマスクをサポートしたので、memunitモジュールでwmaskを設定します。</p>
+<p>memoryモジュールが書き込みマスクをサポートしたので、memunitモジュールで<code class="inline-code">wmask</code>を設定します。</p>
 <p><code class="inline-code">req_wmask</code>レジスタを作成し、<code class="inline-code">membus.wmask</code>と接続します(<span class="listref"><a href="./04-impl-rv32i.html#memunit.veryl.lbhsbh-range.def_wmask">リスト3.76</a></span>、<span class="listref"><a href="./04-impl-rv32i.html#memunit.veryl.lbhsbh-range.mem_wmask">リスト3.77</a></span>)。</p>
 <div id="memunit.veryl.lbhsbh-range.def_wmask" class="caption-code">
 <span class="caption">リスト3.76: リスト3.76: req_wmaskの定義 (memunit.veryl)</span>
@@ -2318,7 +2318,7 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 13</span>
     <b>membus.wmask = req_wmask;</b>
 </pre>
 </div>
-<p>always_ffの中で、<code class="inline-code">req_wmask</code>の値を設定します。それぞれの命令のとき、wmaskがどうなるかを確認してください(<span class="listref"><a href="./04-impl-rv32i.html#memunit.veryl.lbhsbh-range.always_reset">リスト3.78</a></span>、<span class="listref"><a href="./04-impl-rv32i.html#memunit.veryl.lbhsbh-range.always_wmask">リスト3.79</a></span>)。</p>
+<p>always_ffの中で、<code class="inline-code">req_wmask</code>の値を設定します。それぞれの命令のとき、<code class="inline-code">wmask</code>がどうなるかを確認してください(<span class="listref"><a href="./04-impl-rv32i.html#memunit.veryl.lbhsbh-range.always_reset">リスト3.78</a></span>、<span class="listref"><a href="./04-impl-rv32i.html#memunit.veryl.lbhsbh-range.always_wmask">リスト3.79</a></span>)。</p>
 <div id="memunit.veryl.lbhsbh-range.always_reset" class="caption-code">
 <span class="caption">リスト3.78: リスト3.78: if_resetでreq_wmaskを初期化する (memunit.veryl)</span>
 <pre class="list language-always_reset">    if_reset {
@@ -2393,7 +2393,7 @@ deadbeef // 0x0
 
 <h3 class="none"><a id="h3-12-1"></a><span class="secno">3.12.1</span> JAL、JALR命令を実装する</h3>
 <p>まず、無条件ジャンプを実装します。</p>
-<p>JAL(Jump And Link)命令は、PC+即値でジャンプ先を指定します。Linkとは、rdレジスタにPC+4を記録しておくことで、分岐元に戻れるようにしておく操作のことです。即値の幅は20ビットです。PCの下位1ビットは常に0なため、即値を1ビット左シフトして符号拡張した値をPCに加算します(即値の生成は<span class="listref"><a href="./04-impl-rv32i.html#inst_decoder.veryl.id">リスト3.33</a></span>を確認してください)。JAL命令でジャンプ可能な範囲は、PC±1MiBです。</p>
+<p>JAL(Jump And Link)命令は、PC+即値でジャンプ先を指定します。Linkとは、rdレジスタにPC+4を記録しておくことで、分岐元に戻れるようにしておく操作のことです。即値の幅は20ビットです。PCの下位1ビットは常に<code class="inline-code">0</code>なため、即値を1ビット左シフトして符号拡張した値をPCに加算します(即値の生成は<span class="listref"><a href="./04-impl-rv32i.html#inst_decoder.veryl.id">リスト3.33</a></span>を確認してください)。JAL命令でジャンプ可能な範囲は、PC±1MiBです。</p>
 <p>JALR (Jump And Link Register)命令は、rs1+即値でジャンプ先を指定します。即値はI形式の即値です。JAL命令と同様に、rdレジスタにPC+4を格納(link)します。JALR命令でジャンプ可能な範囲は、rs1レジスタの値±4KiBです。</p>
 <p>inst_decoderモジュールは、JAL命令かJALR命令のとき、<code class="inline-code">InstCtrl.rwb_en</code>を<code class="inline-code">1</code>、<code class="inline-code">InstCtrl.is_aluop</code>を<code class="inline-code">0</code>、<code class="inline-code">InstCtrl.is_jump</code>を<code class="inline-code">1</code>としてデコードします。</p>
 <p>無条件ジャンプであるかどうかは<code class="inline-code">InstCtrl.is_jump</code>で確かめられます。また、<code class="inline-code">InstCtrl.is_aluop</code>が<code class="inline-code">0</code>なため、ALUは常に加算を行います。加算の対象のデータが、JAL命令(J形式)ならPCと即値、JALR命令(I形式)ならrs1と即値になっていることを確認してください(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.alu-range.data">リスト3.44</a></span>)。</p>

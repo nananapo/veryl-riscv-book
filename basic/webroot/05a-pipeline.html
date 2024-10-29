@@ -220,7 +220,7 @@
     }
 </pre>
 </div>
-<p>IDステージは、IFステージから命令のアドレスと命令のビット列を受け取ります。命令のビット列をデコードして、制御フラグと即値を生成し、EXステージに渡します。</p>
+<p>IDステージは、IFステージから命令のアドレスと命令のビット列を受け取ります。命令のビット列をデコードして、制御フラグと即値を生成し、EXステージに渡します(<span class="listref"><a href="./05a-pipeline.html#fifo.type.ex">リスト7.2</a></span>)。</p>
 <div id="fifo.type.mem" class="caption-code">
 <span class="caption">リスト7.3: リスト7.3: EX → MEMの間のFIFOのデータ型 (core.veryl)</span>
 <pre class="list language-mem">    struct memq_type {
@@ -237,7 +237,7 @@
     }
 </pre>
 </div>
-<p>EXステージは、IDステージで生成された制御フラグと即値と受け取ります。整数演算命令のとき、レジスタの値を読み取り、ALUで計算します。分岐命令のとき、分岐判定を行います。CSRやメモリアクセスでrs1とrs2を利用するため、演算の結果とともにMEMステージに渡します。</p>
+<p>EXステージは、IDステージで生成された制御フラグと即値と受け取ります。整数演算命令のとき、レジスタの値を使って計算します。分岐命令のとき、分岐判定を行います。CSRやメモリアクセスでrs1とrs2を利用するため、演算の結果とともにMEMステージに渡します(<span class="listref"><a href="./05a-pipeline.html#fifo.type.mem">リスト7.3</a></span>)。</p>
 <div id="fifo.type.wb" class="caption-code">
 <span class="caption">リスト7.4: リスト7.4: MEM → WBの間のFIFOのデータ型 (core.veryl)</span>
 <pre class="list language-wb">    struct wbq_type {
@@ -251,7 +251,7 @@
     }
 </pre>
 </div>
-<p>MEMステージは、メモリのロード結果とCSRの読み込みデータを生成し、WBステージに渡します。</p>
+<p>MEMステージは、メモリのロード結果とCSRの読み込みデータを生成し、WBステージに渡します(<span class="listref"><a href="./05a-pipeline.html#fifo.type.wb">リスト7.4</a></span>)。</p>
 <p>WBステージでは、命令がライトバックする命令のとき、即値、ALUの計算結果、メモリのロード結果、CSRの読み込みデータから1つを選択し、レジスタに値を書き込みます。</p>
 <p>構造体のフィールドの生存区間が<span class="imgref"><a href="./05a-pipeline.html#fifo_type">図7.5</a></span>のようになっている理由が分かったでしょうか?</p>
 

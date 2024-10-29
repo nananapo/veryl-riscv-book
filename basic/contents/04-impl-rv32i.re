@@ -323,10 +323,10 @@ memoryモジュールはジェネリックモジュールです。
 	@<code>{membus.wen}が@<code>{0}、
 	@<code>{membus.addr}が対象アドレスになっています。
 	次のクロックで、@<code>{membus.rvalid}が@<code>{1}になり、
-	@<code>{membus.rdata}はメモリのデータになります。
+	@<code>{membus.rdata}は対象アドレスのデータになります。
 
  : 書き込み
-	読み込みが要求されるとき、
+	書き込みが要求されるとき、
 	@<code>{membus.valid}が@<code>{1}、
 	@<code>{membus.wen}が@<code>{1}、
 	@<code>{membus.addr}が対象アドレスになっています。
@@ -349,7 +349,7 @@ memoryモジュールをインスタンス化するとき、
 環境変数の値を取得して、初期化用のファイルのパスとして利用します。
 環境変数はutilパッケージのget_env関数で取得します。
 
-まず、utilパッケージとget_env関数を作成します。
+utilパッケージとget_env関数を作成します。
 @<code>{src/util.veryl}を作成し、次のように記述します(@<list>{util.veryl})。
 
 //list[util.veryl][util.veryl]{
@@ -386,7 +386,7 @@ get_env_value関数は後で定義します。
 memoryモジュールをインスタンス化します。
 
 最上位のモジュールとは、
-デザインの階層の最上位に位置するモジュールのことです。
+設計の階層の最上位に位置するモジュールのことです。
 論理設計では、最上位モジュールの中に、
 あらゆるモジュールやレジスタなどをインスタンス化します。
 
@@ -533,7 +533,7 @@ always_combブロックでは、
 @<code>{if_is_requested}を@<code>{1}に変更しています。
 フェッチ中かつ@<code>{membus.rvalid}が@<code>{1}のとき、
 命令フェッチが完了し、データが@<code>{membus.rdata}に供給されています。
-このとき、メモリがready状態なら、
+メモリがready状態なら、
 すぐに次の命令フェッチを開始します。
 この状態遷移を繰り返すことによって、
 アドレス@<code>{0}→@<code>{4}→@<code>{8}→@<code>{c}→@<code>{10}...の命令を
@@ -611,7 +611,7 @@ ILENとXLENを割り当てます。
 (@<list>{top.veryl.create-core-range.core})。
 メモリとCPUが接続されました。
 
-//list[top.veryl.create-core-range.core][top.veryl内でcoreモジュールをインスタンス化する]{
+//list[top.veryl.create-core-range.core][coreモジュールをインスタンス化する (top.veryl)]{
 #@maprange(scripts/04/create-core-range/core/src/top.veryl,core)
     inst c: core (
         clk                ,
@@ -629,7 +629,8 @@ Verylで記述されたコードは@<code>{veryl build}コマンドでSystemVeri
 変換されたソースコードをオープンソースのVerilogシミュレータであるVerilatorで実行することで、
 命令フェッチが正しく動いていることを確認します。
 
-まず、Verylのプロジェクトをビルドします。
+まず、Verylのプロジェクトをビルドします(@<list>{veryl.build.first})。
+
 //terminal[veryl.build.first][Verylのプロジェクトのビルド]{
 $ @<userinput>{veryl fmt} @<balloon>{フォーマットする}
 $ @<userinput>{veryl build} @<balloon>{ビルドする}
@@ -730,7 +731,7 @@ int main(int argc, char** argv) {
 
 このC++プログラムは、
 topモジュール(プログラム中ではVtop_coreクラス)をインスタンス化し、
-そのクロックを反転して実行するのを繰り返しています。
+そのクロック信号を反転して実行するのを繰り返しています。
 
 このプログラムは、コマンドライン引数として次の2つの値を受け取ります。
 
@@ -888,7 +889,7 @@ $ @<userinput>{make clean} @<balloon>{ビルドした成果物の削除}
 例えばメモリにアクセスする命令は実行に何クロックかかるか分かりません。
 
 複数クロックかかる命令に対応するために、
-命令の処理が終わってから次の命令をフェッチする場合、
+命令の処理が終わってから次の命令をフェッチするように変更する場合、
 命令の実行の流れは次のようになります。
 
 //clearpage
@@ -1471,7 +1472,7 @@ RV32Iには、32ビット幅のレジスタが32個用意されています。
 
 coreモジュールにレジスタを定義します。
 レジスタの幅はXLEN(=32)ビットであるため、
-@<code>{UIntX}型のレジスタの配列を定義します。
+@<code>{UIntX}型のレジスタの配列を定義します(@<list>{core.reg.define})。
 
 //list[core.reg.define][レジスタの定義 (core.veryl)]{
 #@maprange(scripts/04/reg-range/core/src/core.veryl,define)
@@ -1551,7 +1552,7 @@ if式を使うことで、
 これではテストする意味がないため、
 レジスタの値を適当な値に初期化します。
 always_ffブロックのif_resetで、
-i番目(0 < i < 32)のレジスタの値を@<code>{i + 100}で初期化します(@<list>{core.veryl.reg-range.init})。
+@<code>{i}番目(0 < @<code>{i} < 32)のレジスタの値を@<code>{i + 100}で初期化します(@<list>{core.veryl.reg-range.init})。
 
 //list[core.veryl.reg-range.init][レジスタを適当な値で初期化する (core.veryl)]{
 #@maprange(scripts/04/reg-range/core/src/core.veryl,init)
@@ -1868,7 +1869,7 @@ $ @<userinput>{obj_dir/sim src/sample.hex 6}
 
  : addi x1, x0, 32
 	@<code>{op1}は0番目のレジスタの値です。
-	0番目のレジスタの値は常に0であるため、@<code>{32'h00000000}と表示されています。
+	0番目のレジスタの値は常に@<code>{0}であるため、@<code>{32'h00000000}と表示されています。
 	@<code>{op2}は即値です。
 	即値は32であるため、@<code>{32'h00000020}と表示されています。
 	ALUの計算結果として、0と32を足した結果@<code>{32'h00000020}が表示されています。
@@ -2044,7 +2045,7 @@ ALUに渡すデータがrs1と即値になっていることを確認してく�
 ==== memunitモジュールの作成
 
 メモリ操作を行うモジュールを、
-@<code>{src/memunit.veryl}に記述します。
+@<code>{src/memunit.veryl}に記述します(@<list>{memunit.veryl.lwsw})。
 
 //list[memunit.veryl.lwsw][memunit.veryl]{
 #@mapfile(scripts/04/lwsw/core/src/memunit.veryl)
@@ -2602,7 +2603,7 @@ funct3をcase文で分岐し、
 ロードした値の拡張を行うとき、
 値の最上位ビットと@<code>{sext}をAND演算した値を使って拡張します。
 これにより、符号拡張するときは最上位ビットの値が、
-ゼロで拡張するときは0が拡張に利用されます。
+ゼロで拡張するときは@<code>{0}が拡張に利用されます。
 
 === SB、SH命令を実装する
 
@@ -2783,7 +2784,7 @@ topモジュールの調停処理で、
 ==== memunitモジュールの実装
 
 memoryモジュールが書き込みマスクをサポートしたので、
-memunitモジュールでwmaskを設定します。
+memunitモジュールで@<code>{wmask}を設定します。
 
 @<code>{req_wmask}レジスタを作成し、
 @<code>{membus.wmask}と接続します
@@ -2810,7 +2811,7 @@ memunitモジュールでwmaskを設定します。
 //}
 
 always_ffの中で、@<code>{req_wmask}の値を設定します。
-それぞれの命令のとき、wmaskがどうなるかを確認してください(
+それぞれの命令のとき、@<code>{wmask}がどうなるかを確認してください(
 @<list>{memunit.veryl.lbhsbh-range.always_reset}、
 @<list>{memunit.veryl.lbhsbh-range.always_wmask}
 )。
@@ -2904,7 +2905,7 @@ BGEU	B形式	rs1(符号なし整数)がrs2(符号なし整数)より大きいと
 JAL(Jump And Link)命令は、PC+即値でジャンプ先を指定します。
 Linkとは、rdレジスタにPC+4を記録しておくことで、分岐元に戻れるようにしておく操作のことです。
 即値の幅は20ビットです。
-PCの下位1ビットは常に0なため、即値を1ビット左シフトして符号拡張した値をPCに加算します
+PCの下位1ビットは常に@<code>{0}なため、即値を1ビット左シフトして符号拡張した値をPCに加算します
 (即値の生成は@<list>{inst_decoder.veryl.id}を確認してください)。
 JAL命令でジャンプ可能な範囲は、PC±1MiBです。
 

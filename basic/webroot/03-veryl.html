@@ -655,7 +655,7 @@ a = x || y; // xまたはyが真のとき真
 <tr class="hline"><td><code class="inline-code">&amp;&amp;</code></td><td>左</td><td></td></tr>
 <tr class="hline"><td><code class="inline-code">||</code></td><td>左</td><td></td></tr>
 <tr class="hline"><td><code class="inline-code">=</code> <code class="inline-code">+=</code> <code class="inline-code">-=</code> <code class="inline-code">*=</code> <code class="inline-code">/=</code> <code class="inline-code">%=</code> <code class="inline-code">&amp;=</code> <code class="inline-code">^=</code> <code class="inline-code">|=</code> <code class="inline-code">&lt;&lt;=</code> <code class="inline-code">&gt;&gt;=</code> <code class="inline-code">&lt;&lt;&lt;=</code> <code class="inline-code">&gt;&gt;&gt;=</code></td><td>なし</td><td></td></tr>
-<tr class="hline"><td><code class="inline-code">{} inside outside if case switch</code></td><td>なし</td><td>低い</td></tr>
+<tr class="hline"><td><code class="inline-code">{}</code> <code class="inline-code">inside</code> <code class="inline-code">outside</code> <code class="inline-code">if</code> <code class="inline-code">case</code> <code class="inline-code">switch</code></td><td>なし</td><td>低い</td></tr>
 </table>
 </div>
 
@@ -755,7 +755,7 @@ always_comb {
 for i: u32 in 0..32 { ... }
 </pre>
 </div>
-<p><b>break</b>文を使うとループから抜け出せます。例えば<span class="listref"><a href="./03-veryl.html#always_comb.for">リスト2.37</a></span>では、xの値は256になります。</p>
+<p><b>break</b>文を使うとループから抜け出せます。例えば<span class="listref"><a href="./03-veryl.html#always_comb.for">リスト2.37</a></span>では<code class="inline-code">x</code>の値は256になります。</p>
 <div id="always_comb.for" class="caption-code">
 <span class="caption">リスト2.37: リスト2.37: always_combブロック内でfor文を記述する例</span>
 <pre class="list language-for">var x: u32;
@@ -895,7 +895,7 @@ module Top{
 }
 </pre>
 </div>
-<p>インターフェースはポートの宣言と接続を抽象化します。インターフェース内に変数を定義すると、<b>modport</b>文によってポートと向きを宣言できます。モジュールでのポートの宣言は、<code class="inline-code">ポート名 : modport インターフェース名::modport名</code>と記述できます。modportで宣言されたポートにインターフェースのインスタンスを渡すことにより、ポートの接続を一気に行えます。</p>
+<p>インターフェースはポートの宣言と接続を抽象化します。インターフェース内に変数を定義すると、<b>modport</b>文によってポートと向きを宣言できます。モジュールでのポートの宣言は、<code class="inline-code">ポート名 : <b>modport</b> インターフェース名::modport名</code>と記述できます。modportで宣言されたポートにインターフェースのインスタンスを渡すことにより、ポートの接続を一気に行えます。</p>
 <p>モジュールと同じように、インターフェースにはパラメータを宣言できます(<span class="listref"><a href="./03-veryl.html#interface.param">リスト2.43</a></span>)。</p>
 <div id="interface.param" class="caption-code">
 <span class="caption">リスト2.43: リスト2.43: パラメータ付きのインターフェース</span>
@@ -974,7 +974,7 @@ import PackageA::*; // 全ての要素をimportする
 <h3 class="none"><a id="h2-2-9"></a><span class="secno">2.2.9</span> その他の機能、文</h3>
 
 <h4><a id="h2-2-9-1"></a>initial、final</h4>
-<p><b>initial</b>ブロックの中の文はシミュレーションの開始時に実行されます。<b>final</b>ブロックの中の文はシミュレーションの終了時に実行されます。</p>
+<p><b>initial</b>ブロックの中の文はシミュレーションの開始時に実行されます。<b>final</b>ブロックの中の文はシミュレーションの終了時に実行されます(<span class="listref"><a href="./03-veryl.html#initial.final">リスト2.48</a></span>)。</p>
 <div id="initial.final" class="caption-code">
 <span class="caption">リスト2.48: リスト2.48: initial、finalブロック</span>
 <pre class="list language-final">module ModuleA {
@@ -989,7 +989,7 @@ import PackageA::*; // 全ての要素をimportする
 </div>
 
 <h4><a id="h2-2-9-2"></a>SystemVerilogとの連携</h4>
-<p>SystemVerilogのモジュールやパッケージ、インターフェースを利用できます。SystemVerilogのリソースにアクセスするには<code class="inline-code">$sv::</code>を使用します。</p>
+<p>SystemVerilogのモジュールやパッケージ、インターフェースを利用できます。SystemVerilogのリソースにアクセスするには<code class="inline-code">$sv::</code>を使用します(<span class="listref"><a href="./03-veryl.html#sv.use">リスト2.49</a></span>)。</p>
 <div id="sv.use" class="caption-code">
 <span class="caption">リスト2.49: リスト2.49: SystemVerilogの要素を利用する</span>
 <pre class="list language-use">module ModuleA {

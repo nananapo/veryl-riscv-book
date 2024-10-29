@@ -792,7 +792,7 @@ a = x || y; // xまたはyが真のとき真
 @<code>{&&}																																							左
 @<code>{||}																																							左
 @<code>{=} @<code>{+=} @<code>{-=} @<code>{*=} @<code>{/=} @<code>{%=} @<code>{&=} @<code>{^=} @<code>{|=} @<code>{<<=} @<code>{>>=} @<code>{<<<=} @<code>{>>>=}	なし
-@<code>{{\} inside outside if case switch}																															なし	低い
+@<code>{{\}} @<code>{inside} @<code>{outside} @<code>{if} @<code>{case} @<code>{switch}																				なし	低い
 //}
 
 ==== if、switch、case
@@ -909,7 +909,7 @@ for i: u32 in 0..32 { ... }
 //}
 
 @<b>{break}文を使うとループから抜け出せます。
-例えば@<list>{always_comb.for}では、xの値は256になります。
+例えば@<list>{always_comb.for}では@<code>{x}の値は256になります。
 
 //list[always_comb.for][always_combブロック内でfor文を記述する例]{
 var x: u32;
@@ -1073,7 +1073,7 @@ module Top{
 インターフェースはポートの宣言と接続を抽象化します。
 インターフェース内に変数を定義すると、
 @<b>{modport}文によってポートと向きを宣言できます。
-モジュールでのポートの宣言は、@<code>{ポート名 : modport インターフェース名::modport名}と記述できます。
+モジュールでのポートの宣言は、@<code>{ポート名 : @<b>|modport| インターフェース名::modport名}と記述できます。
 modportで宣言されたポートにインターフェースのインスタンスを渡すことにより、
 ポートの接続を一気に行えます。
 
@@ -1167,7 +1167,7 @@ module ModuleA {
 ==== initial、final
 
 @<b>{initial}ブロックの中の文はシミュレーションの開始時に実行されます。
-@<b>{final}ブロックの中の文はシミュレーションの終了時に実行されます。
+@<b>{final}ブロックの中の文はシミュレーションの終了時に実行されます(@<list>{initial.final})。
 
 //list[initial.final][initial、finalブロック]{
 module ModuleA {
@@ -1183,7 +1183,7 @@ module ModuleA {
 ==== SystemVerilogとの連携
 
 SystemVerilogのモジュールやパッケージ、インターフェースを利用できます。
-SystemVerilogのリソースにアクセスするには@<code>{$sv::}を使用します。
+SystemVerilogのリソースにアクセスするには@<code>{$sv::}を使用します(@<list>{sv.use})。
 
 //list[sv.use][SystemVerilogの要素を利用する]{
 module ModuleA {

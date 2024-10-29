@@ -118,7 +118,7 @@ except:
     print_usage()
 FILE_NAME = args[1]
 
-# バイナリファイルを読み込み
+# バイナリファイルを読み込む
 allbytes = []
 with open(FILE_NAME, &quot;rb&quot;) as f:
     allbytes = f.read()
@@ -428,7 +428,10 @@ if __name__ == '__main__':
     #endif
 </pre>
 </div>
-<p>それでは、RV32Iのテストを実行しましょう。riscv-testsのRV32I向けのテストの接頭辞である<code class="inline-code">rv32ui-p-</code>を引数に指定します。</p>
+<p>それでは、RV32Iのテストを実行しましょう。riscv-testsのRV32I向けのテストの接頭辞である<code class="inline-code">rv32ui-p-</code>を引数に指定します(<span class="listref"><a href="./04b-riscvtests.html#python.test.py">リスト5.14</a></span>)。</p>
+<p></p>
+<hr />
+<p></p>
 <div id="python.test.py" class="cmd-code">
 <span class="caption">リスト5.14: リスト5.14: rv32ui-pから始まるテストを実行する</span>
 <pre class="list language-py">$ <span class="userinput">make build</span>

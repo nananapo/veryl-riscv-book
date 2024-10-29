@@ -242,7 +242,7 @@ mtvecのアドレスは@<code>{12'h305}です。
 MXLENはmisaレジスタに定義されていますが、
 今のところはXLENと等しいという認識で問題ありません。
 WARLはWrite Any Values, Reads Legal Valuesの略です。
-その名の通り、好きな値を書き込めるが、
+その名の通り、好きな値を書き込めますが
 読み出すときには合法な値@<fn>{what.is.legal}になっているという認識で問題ありません。
 
 //footnote[what.is.legal][合法な値とは実装がサポートしている有効な値のことです]

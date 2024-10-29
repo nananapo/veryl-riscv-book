@@ -283,7 +283,7 @@ IDからEX、EXからMEM、MEMからWBへのFIFOを作成します。
 //}
 
 IDステージは、IFステージから命令のアドレスと命令のビット列を受け取ります。
-命令のビット列をデコードして、制御フラグと即値を生成し、EXステージに渡します。
+命令のビット列をデコードして、制御フラグと即値を生成し、EXステージに渡します(@<list>{fifo.type.ex})。
 
 //list[fifo.type.mem][EX → MEMの間のFIFOのデータ型 (core.veryl)]{
 #@maprange(scripts/05a/create-fifo-range/core/src/core.veryl,memtype)
@@ -303,10 +303,10 @@ IDステージは、IFステージから命令のアドレスと命令のビッ�
 //}
 
 EXステージは、IDステージで生成された制御フラグと即値と受け取ります。
-整数演算命令のとき、レジスタの値を読み取り、ALUで計算します。
+整数演算命令のとき、レジスタの値を使って計算します。
 分岐命令のとき、分岐判定を行います。
 CSRやメモリアクセスでrs1とrs2を利用するため、
-演算の結果とともにMEMステージに渡します。
+演算の結果とともにMEMステージに渡します(@<list>{fifo.type.mem})。
 
 //list[fifo.type.wb][MEM → WBの間のFIFOのデータ型 (core.veryl)]{
 #@maprange(scripts/05a/create-fifo-range/core/src/core.veryl,wbtype)
@@ -324,7 +324,7 @@ CSRやメモリアクセスでrs1とrs2を利用するため、
 
 MEMステージは、
 メモリのロード結果とCSRの読み込みデータを生成し、
-WBステージに渡します。
+WBステージに渡します(@<list>{fifo.type.wb})。
 
 WBステージでは、
 命令がライトバックする命令のとき、
