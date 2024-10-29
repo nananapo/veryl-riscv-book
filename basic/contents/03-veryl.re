@@ -432,7 +432,7 @@ always_ff(clk, rst) {
 always_ffブロックのクロック信号とリセット信号の指定を省略できます
 (@<list>{always_ff.omit})。
 
-//list[always_ff.omit][クロック信号とリセット信号の推論]{
+//list[always_ff.omit][クロック信号とリセット信号の省略]{
 module ModuleA(
   clk: input clock,
   rst: input reset,
