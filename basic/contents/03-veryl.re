@@ -465,7 +465,7 @@ always_ff(clk, rst) {
 //}
 
 @<list>{multi.always_ff.nonblocking}の@<code>{A}と@<code>{B}の代入文は、
-1つのalways_ffブロックでまとめて記述できます(@<list>{always_ff.nonblocking})。
+1つのalways_ffブロックにまとめて記述できます(@<list>{always_ff.nonblocking})。
 この場合も@<list>{multi.always_ff.nonblocking}と同様に、
 @<code>{A}と@<code>{B}の代入文の右辺を評価した後に、
 レジスタの値が変更されます。

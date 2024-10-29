@@ -367,7 +367,7 @@ always_ff(clk, rst) {
 }
 </pre>
 </div>
-<p><span class="listref"><a href="./03-veryl.html#multi.always_ff.nonblocking">リスト2.16</a></span>の<code class="inline-code">A</code>と<code class="inline-code">B</code>の代入文は、1つのalways_ffブロックでまとめて記述できます(<span class="listref"><a href="./03-veryl.html#always_ff.nonblocking">リスト2.17</a></span>)。この場合も<span class="listref"><a href="./03-veryl.html#multi.always_ff.nonblocking">リスト2.16</a></span>と同様に、<code class="inline-code">A</code>と<code class="inline-code">B</code>の代入文の右辺を評価した後に、レジスタの値が変更されます。</p>
+<p><span class="listref"><a href="./03-veryl.html#multi.always_ff.nonblocking">リスト2.16</a></span>の<code class="inline-code">A</code>と<code class="inline-code">B</code>の代入文は、1つのalways_ffブロックにまとめて記述できます(<span class="listref"><a href="./03-veryl.html#always_ff.nonblocking">リスト2.17</a></span>)。この場合も<span class="listref"><a href="./03-veryl.html#multi.always_ff.nonblocking">リスト2.16</a></span>と同様に、<code class="inline-code">A</code>と<code class="inline-code">B</code>の代入文の右辺を評価した後に、レジスタの値が変更されます。</p>
 <div id="always_ff.nonblocking" class="caption-code">
 <span class="caption">リスト2.17: リスト2.17: ノンブロッキング代入の更新タイミングは同じ</span>
 <pre class="list language-nonblocking">always_ff {
