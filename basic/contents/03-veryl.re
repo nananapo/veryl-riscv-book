@@ -442,41 +442,43 @@ module ModuleA(
 }
 //}
 
-1つのalways_ffブロックで、複数のレジスタの値を変更できます。
+
+
 レジスタの値は、
-always_ffブロックの中の全ての代入文の右辺を評価した後に変更されます。
+同じタイミングで動くalways_ffブロックの中の全ての代入文の右辺を評価した後に変更されます
+(@<list>{multi.always_ff.nonblocking})。
 この代入はブロッキング代入と違って逐次実行されないので、
 @<b>{ノンブロッキング代入}(non-blocking assignment)と呼びます。
+
+2つ以上のalways_ffブロックで、
+1つの同じレジスタの値を変更することはできません。
+
+//list[multi.always_ff.nonblocking][複数のレジスタの値を同じタイミングで変更する (if_resetは省略)]{
+// 全ての代入文の右辺を評価した後に、AとBが変更される
+// その結果、AとBの値が入れ替わる
+always_ff(clk, rst) {
+	A = B;
+}
+always_ff(clk, rst) {
+	B = A;
+}
+//}
+
+@<list>{multi.always_ff.nonblocking}の@<code>{A}と@<code>{B}の代入文は、
+1つのalways_ffブロックでまとめて記述できます(@<list>{always_ff.nonblocking})。
+この場合も@<list>{multi.always_ff.nonblocking}と同様に、
+@<code>{A}と@<code>{B}の代入文の右辺を評価した後に、
+レジスタの値が変更されます。
 
 //list[always_ff.nonblocking][ノンブロッキング代入の更新タイミングは同じ]{
 always_ff {
 	if_reset {
 		...
 	} else {
-		// 全ての代入文の右辺を評価した後に、AとBが変更される
-		// その結果、AとBの値が入れ替わる
+		// AとBの値を入れ替える
 		A = B;
 		B = A;
 	}
-}
-//}
-
-@<list>{always_ff.nonblocking}の@<code>{A}と@<code>{B}の代入文は、
-2つのalways_ffブロックに分けて記述できます(@<list>{multi.always_ff.nonblocking})。
-この場合も@<list>{always_ff.nonblocking}と同様に、
-同じタイミングで更新されるalways_ffブロック内の全ての代入文の右辺が評価された後に、
-レジスタの値が変更されます。
-
-2つ以上のalways_ffブロックで、
-1つの同じレジスタの値を変更することはできません。
-
-//list[multi.always_ff.nonblocking][同じタイミングで更新されるalways_ffブロック]{
-// AとBの値を入れ替える
-always_ff(clk, rst) {
-	A = B;
-}
-always_ff(clk, rst) {
-	B = A;
 }
 //}
 

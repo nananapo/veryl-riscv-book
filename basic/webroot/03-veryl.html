@@ -353,31 +353,31 @@ always_ff(clk, rst) {
 }
 </pre>
 </div>
-<p>1つのalways_ffブロックで、複数のレジスタの値を変更できます。レジスタの値は、always_ffブロックの中の全ての代入文の右辺を評価した後に変更されます。この代入はブロッキング代入と違って逐次実行されないので、<b>ノンブロッキング代入</b>(non-blocking assignment)と呼びます。</p>
-<div id="always_ff.nonblocking" class="caption-code">
-<span class="caption">リスト2.16: リスト2.16: ノンブロッキング代入の更新タイミングは同じ</span>
-<pre class="list language-nonblocking">always_ff {
-        if_reset {
-                ...
-        } else {
-                // 全ての代入文の右辺を評価した後に、AとBが変更される
-                // その結果、AとBの値が入れ替わる
-                A = B;
-                B = A;
-        }
-}
-</pre>
-</div>
-<p><span class="listref"><a href="./03-veryl.html#always_ff.nonblocking">リスト2.16</a></span>の<code class="inline-code">A</code>と<code class="inline-code">B</code>の代入文は、2つのalways_ffブロックに分けて記述できます(<span class="listref"><a href="./03-veryl.html#multi.always_ff.nonblocking">リスト2.17</a></span>)。この場合も<span class="listref"><a href="./03-veryl.html#always_ff.nonblocking">リスト2.16</a></span>と同様に、同じタイミングで更新されるalways_ffブロック内の全ての代入文の右辺が評価された後に、レジスタの値が変更されます。</p>
+<p>レジスタの値は、同じタイミングで動くalways_ffブロックの中の全ての代入文の右辺を評価した後に変更されます(<span class="listref"><a href="./03-veryl.html#multi.always_ff.nonblocking">リスト2.16</a></span>)。この代入はブロッキング代入と違って逐次実行されないので、<b>ノンブロッキング代入</b>(non-blocking assignment)と呼びます。</p>
 <p>2つ以上のalways_ffブロックで、1つの同じレジスタの値を変更することはできません。</p>
 <div id="multi.always_ff.nonblocking" class="caption-code">
-<span class="caption">リスト2.17: リスト2.17: 同じタイミングで更新されるalways_ffブロック</span>
-<pre class="list language-nonblocking">// AとBの値を入れ替える
+<span class="caption">リスト2.16: リスト2.16: 複数のレジスタの値を同じタイミングで変更する (if_resetは省略)</span>
+<pre class="list language-nonblocking">// 全ての代入文の右辺を評価した後に、AとBが変更される
+// その結果、AとBの値が入れ替わる
 always_ff(clk, rst) {
         A = B;
 }
 always_ff(clk, rst) {
         B = A;
+}
+</pre>
+</div>
+<p><span class="listref"><a href="./03-veryl.html#multi.always_ff.nonblocking">リスト2.16</a></span>の<code class="inline-code">A</code>と<code class="inline-code">B</code>の代入文は、1つのalways_ffブロックでまとめて記述できます(<span class="listref"><a href="./03-veryl.html#always_ff.nonblocking">リスト2.17</a></span>)。この場合も<span class="listref"><a href="./03-veryl.html#multi.always_ff.nonblocking">リスト2.16</a></span>と同様に、<code class="inline-code">A</code>と<code class="inline-code">B</code>の代入文の右辺を評価した後に、レジスタの値が変更されます。</p>
+<div id="always_ff.nonblocking" class="caption-code">
+<span class="caption">リスト2.17: リスト2.17: ノンブロッキング代入の更新タイミングは同じ</span>
+<pre class="list language-nonblocking">always_ff {
+        if_reset {
+                ...
+        } else {
+                // AとBの値を入れ替える
+                A = B;
+                B = A;
+        }
 }
 </pre>
 </div>
