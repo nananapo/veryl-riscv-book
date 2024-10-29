@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width">
-    <title>あとがき / おわりに | Verylで作るCPU</title>
+    <title>あとがき | Verylで作るCPU</title>
     <link rel="stylesheet" type="text/css" href="css/normalize.css" />
     <link rel="stylesheet" type="text/css" href="css/webstyle.css" />
     <link rel="next" title="参考文献" href="bib.html">
@@ -15,7 +15,7 @@
       <div class="side-content">
                 <a class="nav-title" href="index.html">Verylで作るCPU</a>
 <ul class="toc toc-1">
-    <li class="toc-chapter"><a href="./00-preface.html">まえがき / はじめに</a></li>
+    <li class="toc-chapter"><a href="./00-preface.html">まえがき</a></li>
 <li class="toc-part">第I部 RV32I/RV64Iの実装
   <ul class="toc toc-2">
     <li class="toc-chapter"><a href="./02-setup.html">1 環境構築</a></li>
@@ -28,7 +28,12 @@
     <li class="toc-chapter"><a href="./05b-synth.html">8 CPUを合成する</a></li>
   </ul>
 </li>
-    <li class="toc-chapter"><a href="./99-postface.html">あとがき / おわりに</a></li>
+    <li class="toc-chapter"><a href="./99-postface.html">あとがき</a>
+      <ul class="toc toc-2">
+        <li class="toc-section"><a href="#h">著者について</a></li>
+        <li class="toc-section"><a href="#h">謝辞</a></li>
+      </ul>
+    </li>
     <li class="toc-chapter"><a href="./bib.html">参考文献</a></li>
 </ul>
       </div>
@@ -36,28 +41,28 @@
         <header class="page-header">
         </header>
         <main class="page-main">
-<h1 class="none center"><a id="h"></a><br/>あとがき / おわりに</h1>
+<h1 class="none center"><a id="h"></a><br/>あとがき</h1>
 <p>いかがだったでしょうか。本書が自作CPUの助けになれば幸いです。</p>
 <p><br /></p>
 
-<h3 id="id_99-postface_nonum1" notoc="true">著者紹介</h3>
+<h2 id="id_99-postface_nonum1" notoc="true">著者について</h2>
 <div class="sideimage">
   <div class="sideimage-image" style="float:left;text-align:center;width:18mm">
     <img src="./images/tw-icon.png" class="image-bordered" style="width:18mm"/>
   </div>
   <div class="sideimage-text" style="margin-left:18mm">
     <div style="padding-left:7mm">
-<p class="noindent"><strong>阿部奏太</strong> (<a href="https://twitter.com/kanapipopipo" class="link">kanapipopipo@X/Twitter</a>, <a href="https://github.com/nananapo" class="link">nananapo@GitHub</a>)</p>
+<p class="noindent"><span style="font-size:large"><strong>阿部奏太</strong> (kanataso)</span><small style="font-size:small">(<a href="https://twitter.com/kanapipopipo" class="link">kanapipopipo@X/Twitter</a>, <a href="https://github.com/nananapo" class="link">nananapo@GitHub</a>)</small></p>
 <p class="noindent">いつの間にか自作CPUの沼に沈んでいました。<br />カラオケまねきねこ(のまねっきー)とコメダ珈琲(のエッグサンド)が好き。<br />計算機と法律に興味があります。</p>
     </div>
   </div>
 </div>
 <p><br /></p>
 
-<h3 id="id_99-postface_nonum2" notoc="true">謝辞</h3>
+<h2 id="id_99-postface_nonum2" notoc="true">謝辞</h2>
 <p>本書は次の方々にレビューしていただきました。</p>
 <ul>
-<li>石谷太一 (<a href="https://x.com/taichi600730" class="link">@taichi600730</a>)
+<li>石谷太一 (<a href="https://github.com/taichi-ishitani" class="link">@taichi-ishitani</a>)
 </li>
 <li>井田健太 (<a href="https://github.com/ciniml" class="link">@ciniml</a>)
 </li>
@@ -66,9 +71,9 @@
 <li>初田直也 (<a href="https://github.com/dalance" class="link">@dalance</a>)
 </li>
 </ul>
-<p>筆者がCPUを作り始めたのは、井田さんの「RISC-VとChiselで学ぶ はじめてのCPU自作」を読んだのがきっかけでした。この本が無ければ、筆者はCPUを作ろうとは思わなかったかもしれません。</p>
+<p>筆者がCPUを作り始めたのは、井田さんの「<a href="https://gihyo.jp/book/2021/978-4-297-12305-5" class="link">RISC-VとChiselで学ぶ はじめてのCPU自作</a>」を読んだのがきっかけでした。この本が無ければ、筆者はCPUを作ろうとは思わなかったかもしれません。</p>
 <p>その半年後から約一年間、サイボウズ・ラボ株式会社のサイボウズ・ラボユースの支援を受けることで、自作CPUに集中することができました(本書の一部はラボユースの期間に執筆されました)。メンターの内田さんにはとても感謝しています。</p>
-<p>Verylの作者の初田さんと石谷さんには、筆者がVerylでCPUを作るにあたって見つけた不具合を迅速に修正していただきました。お二方にはレビューでとても多くの指摘をいただき、品質を向上することができました。</p>
+<p>Verylの作者の初田さんには、筆者がVerylでCPUを作るにあたって見つけた不具合を迅速に修正していただきました。初田さんと石谷さんにはレビューでとても多くの指摘をいただき、品質を向上することができました。</p>
 <p>執筆にあたって関わったすべての方に、この場をお借りしてお礼申し上げます。</p>
 
         </main>
