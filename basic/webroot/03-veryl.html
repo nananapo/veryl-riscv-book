@@ -341,7 +341,11 @@ always_ff(clk, rst) {
 }
 </pre>
 </div>
+<p><b>if_reset</b>文の中の文は、リセット信号のタイミングで実行されます。if_reset文にelse文を付けることで、クロック信号のタイミングで処理を実行できます。レジスタの値をリセットしない場合、リセット信号とif_reset文を省略することができます。逆に、リセット信号を指定する場合は必ずif_reset文を書かなければいけません。</p>
 <p>クロック信号はclock型、リセット信号はreset型で定義します。モジュールのポートに１組のクロック信号とリセット信号が定義されているとき、always_ffブロックのクロック信号とリセット信号の指定を省略できます(<span class="listref"><a href="./03-veryl.html#always_ff.omit">リスト2.15</a></span>)。</p>
+<p></p>
+<hr />
+<p></p>
 <div id="always_ff.omit" class="caption-code">
 <span class="caption">リスト2.15: リスト2.15: クロック信号とリセット信号の省略</span>
 <pre class="list language-omit">module ModuleA(
@@ -356,7 +360,7 @@ always_ff(clk, rst) {
 <p>レジスタの値は、同じタイミングで動くalways_ffブロックの中の全ての代入文の右辺を評価した後に変更されます(<span class="listref"><a href="./03-veryl.html#multi.always_ff.nonblocking">リスト2.16</a></span>)。この代入はブロッキング代入と違って逐次実行されないので、<b>ノンブロッキング代入</b>(non-blocking assignment)と呼びます。</p>
 <p>2つ以上のalways_ffブロックで、1つの同じレジスタの値を変更することはできません。</p>
 <div id="multi.always_ff.nonblocking" class="caption-code">
-<span class="caption">リスト2.16: リスト2.16: 複数のレジスタの値を同じタイミングで変更する (if_resetは省略)</span>
+<span class="caption">リスト2.16: リスト2.16: 複数のレジスタの値を同じタイミングで変更する</span>
 <pre class="list language-nonblocking">// 全ての代入文の右辺を評価した後に、AとBが変更される
 // その結果、AとBの値が入れ替わる
 always_ff(clk, rst) {
@@ -371,13 +375,9 @@ always_ff(clk, rst) {
 <div id="always_ff.nonblocking" class="caption-code">
 <span class="caption">リスト2.17: リスト2.17: ノンブロッキング代入の更新タイミングは同じ</span>
 <pre class="list language-nonblocking">always_ff {
-        if_reset {
-                ...
-        } else {
-                // AとBの値を入れ替える
-                A = B;
-                B = A;
-        }
+        // AとBの値を入れ替える
+        A = B;
+        B = A;
 }
 </pre>
 </div>

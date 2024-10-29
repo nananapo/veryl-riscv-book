@@ -427,10 +427,17 @@ always_ff(clk, rst) {
 }
 //}
 
+@<b>{if_reset}文の中の文は、リセット信号のタイミングで実行されます。
+if_reset文にelse文を付けることで、クロック信号のタイミングで処理を実行できます。
+レジスタの値をリセットしない場合、リセット信号とif_reset文を省略することができます。
+逆に、リセット信号を指定する場合は必ずif_reset文を書かなければいけません。
+
 クロック信号はclock型、リセット信号はreset型で定義します。
 モジュールのポートに１組のクロック信号とリセット信号が定義されているとき、
 always_ffブロックのクロック信号とリセット信号の指定を省略できます
 (@<list>{always_ff.omit})。
+
+//clearpage
 
 //list[always_ff.omit][クロック信号とリセット信号の省略]{
 module ModuleA(
@@ -442,8 +449,6 @@ module ModuleA(
 }
 //}
 
-
-
 レジスタの値は、
 同じタイミングで動くalways_ffブロックの中の全ての代入文の右辺を評価した後に変更されます
 (@<list>{multi.always_ff.nonblocking})。
@@ -453,7 +458,7 @@ module ModuleA(
 2つ以上のalways_ffブロックで、
 1つの同じレジスタの値を変更することはできません。
 
-//list[multi.always_ff.nonblocking][複数のレジスタの値を同じタイミングで変更する (if_resetは省略)]{
+//list[multi.always_ff.nonblocking][複数のレジスタの値を同じタイミングで変更する]{
 // 全ての代入文の右辺を評価した後に、AとBが変更される
 // その結果、AとBの値が入れ替わる
 always_ff(clk, rst) {
@@ -472,13 +477,9 @@ always_ff(clk, rst) {
 
 //list[always_ff.nonblocking][ノンブロッキング代入の更新タイミングは同じ]{
 always_ff {
-	if_reset {
-		...
-	} else {
-		// AとBの値を入れ替える
-		A = B;
-		B = A;
-	}
+	// AとBの値を入れ替える
+	A = B;
+	B = A;
 }
 //}
 
