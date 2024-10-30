@@ -5,4 +5,4 @@
 コンピュータアーキテクチャは、CPUを作ることで大体理解することができます。  
 「Verylで作るCPU」は、ハードウェア記述言語VerylでRISC-VのCPUを自作する方法を解説するプロジェクトです。
 
-[/basic](https://github.com/nananapo/veryl-riscv-book/tree/main/basic) : 基本編
+[/basic](https://github.com/nananapo/veryl-riscv-book/tree/main/basic/README.md) : 基本編
