@@ -17,11 +17,16 @@ CPUの性能指標は、
 性能の比較にはクロック周波数やコア数などが用いられますが、
 プログラムの実行速度を比較する場合、
 プログラムの実行にかかる時間のみが絶対的な指標になります。
-プログラムの実行時間は、次のような式で表せます(@<eq>{cpu-seino-houteisiki})。
+プログラムの実行時間は、次のような式で表せます
+(@<img>{cpu-seino-houteisiki})
 
-//texequation[cpu-seino-houteisiki][CPU性能方程式@<bib>{patahene}]{
-CPU時間 = \frac{実行命令数 \times CPI}{クロック周波数}
-//}
+//image[cpu-seino-houteisiki][CPU性能方程式@<bib>{patahene}][width=40%]
+
+#@# TODO imageからtexに置き換える
+#@# (@<eq>{cpu-seino-houteisiki})。
+#@# //texequation[cpu-seino-houteisiki][CPU性能方程式@<bib>{patahene}]{
+#@# CPU時間 = \frac{実行命令数 \times CPI}{クロック周波数}
+#@# //}
 
 それぞれの用語の定義は次の通りです。
 

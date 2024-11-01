@@ -49,11 +49,12 @@
 <p>CPUの性能指標は、例えば消費電力や実行速度が考えられます。本章では、プログラムの実行速度を考えます。</p>
 
 <h3 class="none"><a id="h7-1-1"></a><span class="secno">7.1.1</span> CPUの性能を考える</h3>
-<p>性能の比較にはクロック周波数やコア数などが用いられますが、プログラムの実行速度を比較する場合、プログラムの実行にかかる時間のみが絶対的な指標になります。プログラムの実行時間は、次のような式で表せます(<a>式7.1</a>)。</p>
-<span class="caption">式7.1: CPU性能方程式<a href="bib.html#bib-patahene">[12]</a></span>
-<div class="equation">
-<pre>CPU時間 = \frac{実行命令数 \times CPI}{クロック周波数}
-</pre>
+<p>性能の比較にはクロック周波数やコア数などが用いられますが、プログラムの実行速度を比較する場合、プログラムの実行にかかる時間のみが絶対的な指標になります。プログラムの実行時間は、次のような式で表せます(<span class="imgref"><a href="./05a-pipeline.html#cpu-seino-houteisiki">図7.1</a></span>)</p>
+<div id="cpu-seino-houteisiki" class="image">
+<img src="images/05a-pipeline/cpu-seino-houteisiki.png" alt="CPU性能方程式&lt;a href=&quot;bib.html#bib-patahene&quot;&gt;[12]&lt;/a&gt;" class="img" style="width:40%" />
+<p class="caption">
+図7.1: CPU性能方程式<a href="bib.html#bib-patahene">[12]</a>
+</p>
 </div>
 <p>それぞれの用語の定義は次の通りです。</p>
 <dl>
@@ -99,19 +100,19 @@
 <div id="multicycle" class="image">
 <img src="images/05a-pipeline/multicycle.png" alt="命令の実行 (マルチサイクル)" class="img" />
 <p class="caption">
-図7.1: 命令の実行 (マルチサイクル)
+図7.2: 命令の実行 (マルチサイクル)
 </p>
 </div>
 <p>命令の処理をいくつかのステージに分割すると、それに合わせて回路の深さが軽減され、クロック周波数を増大させられます。</p>
-<p><span class="imgref"><a href="./05a-pipeline.html#multicycle">図7.1</a></span>では、1つの命令を3クロック(ステージ)で実行しています。3クロックもかかるのであれば、CPIが3倍になり、CPU時間が増えてしまいそうです。しかし、処理を均等な3ステージに分割できた場合、クロック周波数は3分の1になる<sup><a id="fnb-multicycle.clock" href="#fn-multicycle.clock" class="noteref" epub:type="noteref">*2</a></sup>ため、それほどCPU時間は増えません。</p>
+<p><span class="imgref"><a href="./05a-pipeline.html#multicycle">図7.2</a></span>では、1つの命令を3クロック(ステージ)で実行しています。3クロックもかかるのであれば、CPIが3倍になり、CPU時間が増えてしまいそうです。しかし、処理を均等な3ステージに分割できた場合、クロック周波数は3分の1になる<sup><a id="fnb-multicycle.clock" href="#fn-multicycle.clock" class="noteref" epub:type="noteref">*2</a></sup>ため、それほどCPU時間は増えません。</p>
 <div class="footnote-list">
 <div class="footnote" id="fn-multicycle.clock" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*2] </span>実際のところは均等に分割することはできないため、Nステージに分割してもクロック周波数はN分の1になりません</p></div>
 </div><!--/.footnote-list-->
-<p>しかし、CPIがステージ分だけ増大してしまうのは問題です。この問題は、命令の処理を、まるで車の組立のように流れ作業で行うことで緩和できます(<span class="imgref"><a href="./05a-pipeline.html#pipeline">図7.2</a></span>)。このような処理のことを、<b>パイプライン処理</b>と呼びます。</p>
+<p>しかし、CPIがステージ分だけ増大してしまうのは問題です。この問題は、命令の処理を、まるで車の組立のように流れ作業で行うことで緩和できます(<span class="imgref"><a href="./05a-pipeline.html#pipeline">図7.3</a></span>)。このような処理のことを、<b>パイプライン処理</b>と呼びます。</p>
 <div id="pipeline" class="image">
 <img src="images/05a-pipeline/pipeline.png" alt="命令の実行 (パイプライン処理)" class="img" />
 <p class="caption">
-図7.2: 命令の実行 (パイプライン処理)
+図7.3: 命令の実行 (パイプライン処理)
 </p>
 </div>
 <p>本章では、CPUをパイプライン化することで性能の向上を図ります。</p>
@@ -173,7 +174,7 @@
 <div id="pipeline_reg" class="image">
 <img src="images/05a-pipeline/pipeline_reg.png" alt="パイプライン処理の概略図" class="img" />
 <p class="caption">
-図7.3: パイプライン処理の概略図
+図7.4: パイプライン処理の概略図
 </p>
 </div>
 <p>まず、処理を複数ステージに分割する前に、既存の変数の名前を変更します。</p>
@@ -193,11 +194,11 @@
 
 <h3 class="none"><a id="h7-2-2"></a><span class="secno">7.2.2</span> FIFOを作成する</h3>
 <p>命令フェッチ処理とそれ以降の処理は、それぞれ独立して動作しています。実は既にCPUは、IFとIDステージ(命令フェッチ以外の処理を行うステージ)の2ステージのパイプライン処理を行っています。</p>
-<p>IFステージとIDステージはFIFOで区切られており、FIFOのレジスタを経由して命令の受け渡しを行います。これと同様に、5ステージのパイプライン処理の実装では、それぞれのステージをFIFOで接続します(<span class="imgref"><a href="./05a-pipeline.html#pipeline_fifo">図7.4</a></span>)。ただし、FIFOのサイズは1とします。この場合、FIFOはただの1つのレジスタです。</p>
+<p>IFステージとIDステージはFIFOで区切られており、FIFOのレジスタを経由して命令の受け渡しを行います。これと同様に、5ステージのパイプライン処理の実装では、それぞれのステージをFIFOで接続します(<span class="imgref"><a href="./05a-pipeline.html#pipeline_fifo">図7.5</a></span>)。ただし、FIFOのサイズは1とします。この場合、FIFOはただの1つのレジスタです。</p>
 <div id="pipeline_fifo" class="image">
 <img src="images/05a-pipeline/pipeline_fifo.png" alt="FIFOを利用したパイプライン処理" class="img" />
 <p class="caption">
-図7.4: FIFOを利用したパイプライン処理
+図7.5: FIFOを利用したパイプライン処理
 </p>
 </div>
 <p>IFからIDへのFIFOは存在するため、IDからEX、EXからMEM、MEMからWBへのFIFOを作成します。</p>
@@ -206,10 +207,10 @@
 <div id="fifo_type" class="image">
 <img src="images/05a-pipeline/fifo_type.png" alt="構造体のフィールドの生存区間" class="img" />
 <p class="caption">
-図7.5: 構造体のフィールドの生存区間
+図7.6: 構造体のフィールドの生存区間
 </p>
 </div>
-<p>まず、FIFOに格納するデータの型を定義します。それぞれのフィールドが存在する区間は<span class="imgref"><a href="./05a-pipeline.html#fifo_type">図7.5</a></span>の通りです。</p>
+<p>まず、FIFOに格納するデータの型を定義します。それぞれのフィールドが存在する区間は<span class="imgref"><a href="./05a-pipeline.html#fifo_type">図7.6</a></span>の通りです。</p>
 <div id="fifo.type.ex" class="caption-code">
 <span class="caption">リスト7.2: リスト7.2: ID → EXの間のFIFOのデータ型 (core.veryl)</span>
 <pre class="list language-ex">    struct exq_type {
@@ -253,7 +254,7 @@
 </div>
 <p>MEMステージは、メモリのロード結果とCSRの読み込みデータを生成し、WBステージに渡します(<span class="listref"><a href="./05a-pipeline.html#fifo.type.wb">リスト7.4</a></span>)。</p>
 <p>WBステージでは、命令がライトバックする命令のとき、即値、ALUの計算結果、メモリのロード結果、CSRの読み込みデータから1つを選択し、レジスタに値を書き込みます。</p>
-<p>構造体のフィールドの生存区間が<span class="imgref"><a href="./05a-pipeline.html#fifo_type">図7.5</a></span>のようになっている理由が分かったでしょうか?</p>
+<p>構造体のフィールドの生存区間が<span class="imgref"><a href="./05a-pipeline.html#fifo_type">図7.6</a></span>のようになっている理由が分かったでしょうか?</p>
 
 <h4><a id="h7-2-2-2"></a>FIFOのインスタンス化</h4>
 <p>FIFOと接続するための変数を定義し、FIFOをインスタンス化します(<span class="listref"><a href="./05a-pipeline.html#fifo.vars">リスト7.5</a></span>、<span class="listref"><a href="./05a-pipeline.html#fifo.inst">リスト7.6</a></span>)。<code class="inline-code">DATA_TYPE</code>パラメータには先ほど作成した構造体を設定します。FIFOのデータ個数は1であるため、<code class="inline-code">WIDTH</code>パラメータには<code class="inline-code">1</code>を設定します<sup><a id="fnb-fifo.width" href="#fn-fifo.width" class="noteref" epub:type="noteref">*3</a></sup>。<code class="inline-code">mem_wb_fifo</code>の<code class="inline-code">flush</code>は<code class="inline-code">0</code>にしています。</p>
@@ -754,7 +755,7 @@ MEM -----
 <div id="datahazard" class="image">
 <img src="images/05a-pipeline/datahazard.png" alt="データ依存関係のあるプログラム" class="img" style="width:40%" />
 <p class="caption">
-図7.6: データ依存関係のあるプログラム
+図7.7: データ依存関係のあるプログラム
 </p>
 </div>
 
