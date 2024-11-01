@@ -338,7 +338,7 @@ module ReVIEW
       return @compiler.text(str)
     end
 
-    def _render_li(arr, buf, n)
+    def _render_li(arr, buf, n, chappath = nil)
       tag, attr, children = arr
       case tag
       when "part"
@@ -348,17 +348,17 @@ module ReVIEW
         buf << "  </ul>\n"
         buf << "</li>\n"
       when "chapter"
-        buf << "    <li class=\"toc-chapter\"><a href=\"#{h attr[:path]}\">#{parse_inline(attr[:label])}</a>"
+        buf << "    <li class=\"toc-chapter\"><a href=\"#{attr[:path]}\">#{parse_inline(attr[:label])}</a>"
         if children && !children.empty?
           buf << "\n      <ul class=\"toc toc-#{n+1}\">\n"
-          children.each {|child| _render_li(child, buf, n+1) }
+          children.each {|child| _render_li(child, buf, n+1, attr[:path]) }
           buf << "      </ul>\n"
           buf << "    </li>\n"
         else
           buf << "</li>\n"
         end
       when "section"
-        buf << "        <li class=\"toc-section\"><a href=\"##{attr[:anchor]}\">#{parse_inline(attr[:label])}</a></li>\n"
+        buf << "        <li class=\"toc-section\"><a href=\"#{chappath}##{attr[:anchor]}\">#{parse_inline(attr[:label])}</a></li>\n"
       end
       buf
     end
