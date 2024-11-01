@@ -386,8 +386,6 @@ PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-subw.bin.hex
 
 ADDIW、ADDW、SUBWだけでなく、未実装の命令以外のテストにも成功しました。
 
-//clearpage
-
 == SLL[I]W、SRL[I]W、SRA[I]W命令の実装
 
 RV64Iでは、SLL[I]、SRL[I]、SRA[I]命令はrs1を0 ～ 63ビットシフトする命令になり、
@@ -483,8 +481,6 @@ LWU命令が追加されます。
 LWU命令はI形式で、opcodeは@<code>{LOAD}です。
 ロードストア命令はfunct3によって区別できて、LWU命令のfunct3は@<code>{3'b110}です。
 デコード処理に変更は必要なく、メモリにアクセスする処理を変更する必要があります。
-
-//clearpage
 
 memunitモジュールの、ロードする部分を変更します。
 32ビットを@<code>{rdata}に割り当てるとき、
@@ -609,8 +605,6 @@ SD命令の実装のためには、
 書き込みマスクは4ビットから8ビットに拡張されるため、
 アドレスの下位2ビットではなく下位3ビットで選択します
 (@<list>{memunit.veryl.ldsd-range.wmask})。
-
-//clearpage
 
 //list[memunit.veryl.ldsd-range.wmask][書き込みマスクの変更 (memunit.veryl)]{
 #@maprange(scripts/05/ldsd-range/core/src/memunit.veryl,wmask)

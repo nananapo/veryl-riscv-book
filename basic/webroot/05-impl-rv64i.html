@@ -332,9 +332,6 @@ PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-subw.bin.hex
 </pre>
 </div>
 <p>ADDIW、ADDW、SUBWだけでなく、未実装の命令以外のテストにも成功しました。</p>
-<p></p>
-<hr />
-<p></p>
 
 <h2 class="numbox"><a id="h6-3"></a><span class="secno">6.3</span> SLL[I]W、SRL[I]W、SRA[I]W命令の実装</h2>
 <p>RV64Iでは、SLL[I]、SRL[I]、SRA[I]命令はrs1を0 ～ 63ビットシフトする命令になり、rs1の下位32ビットを0 ～ 31ビットシフトするSLL[I]W、SRL[I]W、SRA[I]W命令が追加されます。32ビットの演算結果は符号拡張します。</p>
@@ -411,9 +408,6 @@ PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-srlw.bin.hex
 </p>
 </div>
 <p>LWU命令はI形式で、opcodeは<code class="inline-code">LOAD</code>です。ロードストア命令はfunct3によって区別できて、LWU命令のfunct3は<code class="inline-code">3'b110</code>です。デコード処理に変更は必要なく、メモリにアクセスする処理を変更する必要があります。</p>
-<p></p>
-<hr />
-<p></p>
 <p>memunitモジュールの、ロードする部分を変更します。32ビットを<code class="inline-code">rdata</code>に割り当てるとき、<code class="inline-code">sext</code>によって符号かゼロで拡張するかを選択します(<span class="listref"><a href="./05-impl-rv64i.html#memunit.veryl.lwu-range.lwu">リスト6.24</a></span>)。</p>
 <div id="memunit.veryl.lwu-range.lwu" class="caption-code">
 <span class="caption">リスト6.24: リスト6.24: LWU命令の実装 (memunit.veryl)</span>
@@ -497,9 +491,6 @@ Test Result : 1 / 1
 </pre>
 </div>
 <p>書き込みマスクは4ビットから8ビットに拡張されるため、アドレスの下位2ビットではなく下位3ビットで選択します(<span class="listref"><a href="./05-impl-rv64i.html#memunit.veryl.ldsd-range.wmask">リスト6.31</a></span>)。</p>
-<p></p>
-<hr />
-<p></p>
 <div id="memunit.veryl.ldsd-range.wmask" class="caption-code">
 <span class="caption">リスト6.31: リスト6.31: 書き込みマスクの変更 (memunit.veryl)</span>
 <pre class="list language-wmask">    req_wmask = case ctrl.funct3[1:0] {

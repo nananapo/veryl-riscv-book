@@ -31,8 +31,6 @@ module Adder (
  * @<large>{VerylでのCPUの実装方法}
  * @<large>{RISC-Vの基本整数命令セット}
 
-//clearpage
-
 ==[notoc] 対象読者
 
  * @<large>{@<b>{自作CPUに興味がある人}}

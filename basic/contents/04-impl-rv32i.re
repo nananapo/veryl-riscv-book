@@ -35,8 +35,6 @@ CPUが読み込んで実行できる形式のプログラムです。
 メモリから機械語を読み込んで実行するのがCPUの仕事ということが分かりました。
 これをもう少し掘り下げます。
 
-//clearpage
-
 まず、機械語をメモリから読み込むためには、
 メモリのどこを読み込みたいのかという情報(@<b>{アドレス}, address)をメモリに与える必要があります。
 また、当然ながらメモリが必要です。
@@ -891,8 +889,6 @@ $ @<userinput>{make clean} @<balloon>{ビルドした成果物の削除}
 複数クロックかかる命令に対応するために、
 命令の処理が終わってから次の命令をフェッチするように変更する場合、
 命令の実行の流れは次のようになります。
-
-//clearpage
 
  1. 命令の処理が終わる
  2. 次の命令のフェッチ要求をメモリに送る
@@ -1832,8 +1828,6 @@ always_ffブロックで、
 
 シミュレータを実行し、結果を確かめます(@<list>{alu.debug})。
 
-//clearpage
-
 //terminal[alu.debug][ALUのデバッグ]{
 $ @<userinput>{make build}
 $ @<userinput>{make sim}
@@ -1997,8 +1991,6 @@ $ @<userinput>{obj_dir/sim sample.hex 6}
 このCPUは整数演算命令の実行ができるようになりました！
 
 最後に、テストのためにレジスタの値を初期化していたコードを削除します(@<list>{core.veryl.wb-rm-reset-range.wb})。
-
-//clearpage
 
 //list[core.veryl.wb-rm-reset-range.wb][レジスタの初期化をやめる (core.veryl)]{
 #@maprange(scripts/04/wb-rm-reset-range/core/src/core.veryl,wb)
@@ -2213,8 +2205,6 @@ coreモジュール内にmemunitモジュールをインスタンス化します
     var inst_is_new: logic   ; // 命令が現在のクロックで供給されたかどうか
 #@end
 //}
-
-//clearpage
 
 次に、@<code>{inst_is_new}の値を更新します(@<list>{core.veryl.lwsw-range.new_ff})。
 命令が現在のクロックで供給されたかどうかは、
@@ -2872,8 +2862,6 @@ deadbeef // 0x0
 #@end
 //}
 
-//clearpage
-
 == ジャンプ命令、分岐命令の実装
 
 まだ重要な命令を実装できていません。
@@ -3208,8 +3196,6 @@ coreモジュールでインスタンス化します(@<list>{core.veryl.br-range
 
 @<code>{control_hazard}は、命令が無条件ジャンプ命令か、命令が条件分岐命令かつ分岐が成立するときに@<code>{1}になります。
 @<code>{control_hazard_pc_next}は、無条件ジャンプ命令のときは@<code>{alu_result}、条件分岐命令のときはPC + 即値になります。
-
-//clearpage
 
 ==== 条件分岐命令のテスト
 

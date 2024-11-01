@@ -224,8 +224,6 @@ i64		@<code>{signed bit<64>}
 
 数値は@<list>{code.num_literal}のように記述できます。
 
-//clearpage
-
 //list[code.num_literal][数値リテラル]{
 4'b0101 // 4ビットの数値 (2進数表記)
 4'bxxzz // 4ビットの数値 (2進数表記)
@@ -329,8 +327,6 @@ always_comb {
 @<code>{x}に@<code>{y}ではなく@<code>{a + b}を代入すると、@<code>{a}か@<code>{b}の変化をトリガーに@<code>{x}の値が変化します。
 
 //image[assign_wave][xはyの値の変化に追従する][width=60%]
-
-//clearpage
 
 always_combブロックには複数の代入文を記述できます。
 このとき、代入文は上から順番に実行(逐次実行)されます。
@@ -437,8 +433,6 @@ if_reset文にelse文を付けることで、クロック信号のタイミン�
 always_ffブロックのクロック信号とリセット信号の指定を省略できます
 (@<list>{always_ff.omit})。
 
-//clearpage
-
 //list[always_ff.omit][クロック信号とリセット信号の省略]{
 module ModuleA(
   clk: input clock,
@@ -495,8 +489,6 @@ always_ff {
 always_comb	ブロッキング代入		ブロック内の式で参照されている変数が更新されたとき。@<br>{}上から順に実行される。
 always_ff	ノンブロッキング代入	クロック信号、リセット信号のタイミング。@<br>{}同じタイミングで実行される全ての代入文の右辺を評価した後@<br>{}にレジスタの値が変更される。
 //}
-
-//clearpage
 
 ==== モジュールのインスタンス化
 
@@ -557,8 +549,6 @@ inst ma : ModuleA #(
 	DATA_TYPE: logic<10>
 ) ( /* ポートの接続 */ );
 //}
-
-//clearpage
 
 パラメータに指定する値は、合成時に確定する値(定数)である必要があります。
 
@@ -670,8 +660,6 @@ type ptr = logic<32>;
 type ptr_array = ptr<32>;
 //}
 
-//clearpage
-
 === 式、文、宣言
 
 ==== ビット選択
@@ -770,8 +758,6 @@ a = 1 | 1;  // ビット単位OR
 a = x && y; // xとyの両方が真のとき真
 a = x || y; // xまたはyが真のとき真
 //}
-
-//clearpage
 
 #@# TODO 表
 
@@ -1159,8 +1145,6 @@ module ModuleA {
 	type C = StructB::<18, B, 19>;
 }
 //}
-
-//clearpage
 
 === その他の機能、文
 

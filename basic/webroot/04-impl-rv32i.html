@@ -67,9 +67,6 @@
 <div class="footnote" id="fn-trit.computer" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>その昔、Setunという3進数のコンピュータが存在したらしく、機械語は3進数のトリット(trit)で構成されていたようです</p></div>
 </div><!--/.footnote-list-->
 <p>メモリから機械語を読み込んで実行するのがCPUの仕事ということが分かりました。これをもう少し掘り下げます。</p>
-<p></p>
-<hr />
-<p></p>
 <p>まず、機械語をメモリから読み込むためには、メモリのどこを読み込みたいのかという情報(<b>アドレス</b>, address)をメモリに与える必要があります。また、当然ながらメモリが必要です。</p>
 <p>CPUは機械語を実行しますが、一気にすべての機械語を読み込んだり実行するわけではなく、機械語の最小単位である<b>命令</b>(instruction)を一つずつ読み込んで実行します。命令をメモリに要求、取得することを、命令をフェッチすると呼びます。</p>
 <p>命令がCPUに供給されると、CPUは命令のビット列がどのような意味を持っていて、何をすればいいかを判定します。このことを、命令をデコードすると呼びます。</p>
@@ -736,9 +733,6 @@ $ <span class="userinput">make clean</span> <span class="balloon">← ビルド�
 </div>
 <p>フェッチした命令は次々に実行されますが、その命令が何クロックで実行されるかは分かりません。命令が常に1クロックで実行される場合は、現状の常にフェッチし続けるようなコードで問題ありませんが、例えばメモリにアクセスする命令は実行に何クロックかかるか分かりません。</p>
 <p>複数クロックかかる命令に対応するために、命令の処理が終わってから次の命令をフェッチするように変更する場合、命令の実行の流れは次のようになります。</p>
-<p></p>
-<hr />
-<p></p>
 <ol start="1" type="1">
 <li>命令の処理が終わる</li>
 <li>次の命令のフェッチ要求をメモリに送る</li>
@@ -1503,9 +1497,6 @@ module alu (
 </table>
 </div>
 <p>シミュレータを実行し、結果を確かめます(<span class="listref"><a href="./04-impl-rv32i.html#alu.debug">リスト3.48</a></span>)。</p>
-<p></p>
-<hr />
-<p></p>
 <div id="alu.debug" class="cmd-code">
 <span class="caption">リスト3.48: リスト3.48: ALUのデバッグ</span>
 <pre class="list language-debug">$ <span class="userinput">make build</span>
@@ -1657,9 +1648,6 @@ $ <span class="userinput">obj_dir/sim sample.hex 6</span>
 </dl>
 <p>おめでとうございます！このCPUは整数演算命令の実行ができるようになりました！</p>
 <p>最後に、テストのためにレジスタの値を初期化していたコードを削除します(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.wb-rm-reset-range.wb">リスト3.52</a></span>)。</p>
-<p></p>
-<hr />
-<p></p>
 <div id="core.veryl.wb-rm-reset-range.wb" class="caption-code">
 <span class="caption">リスト3.52: リスト3.52: レジスタの初期化をやめる (core.veryl)</span>
 <pre class="list language-wb">    always_ff {
@@ -1835,9 +1823,6 @@ module memunit (
     var inst_is_new: logic   ; // 命令が現在のクロックで供給されたかどうか
 </pre>
 </div>
-<p></p>
-<hr />
-<p></p>
 <p>次に、<code class="inline-code">inst_is_new</code>の値を更新します(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.lwsw-range.new_ff">リスト3.55</a></span>)。命令が現在のクロックで供給されたかどうかは、FIFOの<code class="inline-code">rvalid</code>と<code class="inline-code">rready</code>を観測することでわかります。<code class="inline-code">rvalid</code>が<code class="inline-code">1</code>のとき、<code class="inline-code">rready</code>が<code class="inline-code">1</code>なら、次のクロックで供給される命令は新しく供給される命令です。<code class="inline-code">rready</code>が<code class="inline-code">0</code>なら、次のクロックで供給されている命令は現在のクロックと同じ命令になります。<code class="inline-code">rvalid</code>が<code class="inline-code">0</code>のとき、次のクロックで供給される命令は常に新しく供給される命令になります(次のクロックで<code class="inline-code">rvalid</code>が<code class="inline-code">1</code>かどうかは考えません)。</p>
 <div id="core.veryl.lwsw-range.new_ff" class="caption-code">
 <span class="caption">リスト3.55: リスト3.55: inst_is_newの実装 (core.veryl)</span>
@@ -2369,9 +2354,6 @@ deadbeef // 0x0
 02001183 // lh x3, 0x20(x0) : x3 = 00000123
 </pre>
 </div>
-<p></p>
-<hr />
-<p></p>
 
 <h2 class="numbox"><a id="h3-12"></a><span class="secno">3.12</span> ジャンプ命令、分岐命令の実装</h2>
 <p>まだ重要な命令を実装できていません。プログラムで分岐やループを実現するためにはジャンプや分岐をする命令が必要です。RV32Iには、仕様書<a href="bib.html#bib-isa-manual.1.2.5">[8]</a>に次の命令が定義されています(<span class="tableref"><a href="./04-impl-rv32i.html#jump.br.insts">表3.10</a></span>)。</p>
@@ -2630,9 +2612,6 @@ module brunit (
 </pre>
 </div>
 <p><code class="inline-code">control_hazard</code>は、命令が無条件ジャンプ命令か、命令が条件分岐命令かつ分岐が成立するときに<code class="inline-code">1</code>になります。<code class="inline-code">control_hazard_pc_next</code>は、無条件ジャンプ命令のときは<code class="inline-code">alu_result</code>、条件分岐命令のときはPC + 即値になります。</p>
-<p></p>
-<hr />
-<p></p>
 
 <h4><a id="h3-12-2-2"></a>条件分岐命令のテスト</h4>
 <p>条件分岐命令を実行するとき、分岐の成否をデバッグ表示します。デバッグ表示を行っているalways_ffブロック内に、次のコードを追加します(<span class="listref"><a href="./04-impl-rv32i.html#core.very.br-range.debug">リスト3.95</a></span>)。</p>

@@ -237,8 +237,6 @@ SECTIONS
   @<b>|.tohost : { *(.tohost) }|
 //}
 
-//clearpage
-
 == テストの終了検知
 
 テストを実行するとき、テストの終了を検知して、成功か失敗かを報告する必要があります。
@@ -452,8 +450,6 @@ Verilatorに渡しているC++プログラムを変更します
 
 それでは、RV32Iのテストを実行しましょう。
 riscv-testsのRV32I向けのテストの接頭辞である@<code>{rv32ui-p-}を引数に指定します(@<list>{python.test.py})。
-
-//clearpage
 
 //terminal[python.test.py][rv32ui-pから始まるテストを実行する]{
 $ @<userinput>{make build}

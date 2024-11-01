@@ -145,8 +145,6 @@ module csrunit (
 csrunitモジュールの主要なポートの定義は@<table>{csrunit.port}のとおりです。
 まだcsrunitモジュールにはCSRが一つもないため、中身が空になっています。
 
-//clearpage
-
 //table[csrunit.port][csrunitモジュールのポート定義]{
 ポート名	型			向き	意味
 -------------------------------------------------------------
@@ -697,8 +695,6 @@ funct3は@<code>{0}、
 opcodeは@<code>{SYSTEM}な命令です(@<img>{ecall_enc})。
 これを判定するための変数を作成します(@<list>{csrunit.veryl.create-ecall-range.is_ecall})。
 
-//clearpage
-
 //list[csrunit.veryl.create-ecall-range.is_ecall][ECALL命令かどうかの判定 (csrunit.veryl)]{
 #@maprange(scripts/04a/create-ecall-range/core/src/csrunit.veryl,is_ecall)
     // ECALL命令かどうか
@@ -825,8 +821,6 @@ ECALL命令の実行時にレジスタに値がライトバックされてしま
 ECALL命令のrdは常に0番目のレジスタであり、
 0番目のレジスタは常に値が@<code>{0}になるため問題ありません。
 
-//clearpage
-
 == MRET命令の実装
 
 #@# @<fn>{mret.manual}
@@ -883,8 +877,6 @@ trap_vectorには、
 これは、MRET命令によって発生する例外があるからです。
 MRET命令の判定を優先すると、例外が発生するのにmepcにジャンプしてしまいます。
 //}
-
-//clearpage
 
 === MRET命令をテストする
 

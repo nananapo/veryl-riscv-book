@@ -376,8 +376,6 @@ FIFOのデータ個数は1であるため、@<code>{WIDTH}パラメータには@
 #@end
 //}
 
-//clearpage
-
 //list[fifo.inst][FIFOのインスタンス化 (core.veryl)]{
 #@maprange(scripts/05a/create-fifo-range/core/src/core.veryl,fifos)
     inst id_ex_fifo: fifo #(
