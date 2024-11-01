@@ -118,7 +118,7 @@ GitHubの@<href>{https://github.com/riscv-collab/riscv-gnu-toolchain, riscv-coll
 のREADMEにインストール方法が書かれています。
 READMEの@<code>{Installation (Newlib)}を参考にインストールしてください。
 
-#@# //info[FPGAを利用する方へ]{
-#@# TangMega138Kを利用する人はGOWIN EDA、
-#@# PYNQ-Z1を利用する人はVivadoのインストールが必要です。
-#@# //}
+//info[FPGAを利用する方へ]{
+TangMega138Kを利用する人はGOWIN EDA、
+PYNQ-Z1を利用する人はVivadoのインストールが必要です。
+//}

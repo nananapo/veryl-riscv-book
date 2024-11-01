@@ -264,9 +264,9 @@ inst_decoderモジュールの@<code>{InstCtrl}と即値を生成している部
 これでデコードは完了です。
 
 //list[inst_decoder.veryl.addsubw-range.ctrl][OP-32、OP-IMM-32のInstCtrlの生成 (inst_decoder.veryl)]{
-#@# #@maprange(scripts/05/addsubw-range/core/src/inst_decoder.veryl,ctrl)
-                                     is_op32を追加
-    ctrl = {case op {                      ↓
+#@maprange(scripts/05/addsubw-range/core/src/inst_decoder.veryl,ctrl)
+                                       is_op32を追加
+    ctrl = {case op {                        ↓
         OP_LUI      : {InstType::U, T, T, F, @<b>|F|, F, F, F},
         OP_AUIPC    : {InstType::U, T, F, F, @<b>|F|, F, F, F},
         OP_JAL      : {InstType::J, T, F, F, @<b>|F|, T, F, F},
@@ -281,7 +281,7 @@ inst_decoderモジュールの@<code>{InstCtrl}と即値を生成している部
         OP_SYSTEM   : {InstType::I, T, F, F, @<b>|F|, F, F, T},
         default     : {InstType::X, F, F, F, @<b>|F|, F, F, F},
     }, f3, f7};
-#@# #@end
+#@end
 //}
 
 //list[inst_decoder.veryl.addsubw-range.imm][OP-IMM-32の即値の生成 (inst_decoder.veryl)]{

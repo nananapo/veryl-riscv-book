@@ -68,10 +68,12 @@ CSRを制御する命令であることを示す@<code>{is_csr}フラグを追�
 これでデコード処理を書く準備が整いました。
 inst_decoderモジュールの@<code>{InstCtrl}を生成している部分を変更します(@<list>{inst_decoder.veryl.create-csrunit-range.decode})。
 
+#@# TODO 矢印の位置がずれる
+
 //list[inst_decoder.veryl.create-csrunit-range.decode][OP_SYSTEMとis_csrを追加する (inst_decoder.veryl)]{
-#@# #@maprange(scripts/04a/create-csrunit-range/core/src/inst_decoder.veryl,decode)
-                                         is_csrを追加
-    ctrl = {case op {                         ↓
+#@maprange(scripts/04a/create-csrunit-range/core/src/inst_decoder.veryl,decode)
+                                           is_csrを追加
+    ctrl = {case op {                           ↓
         OP_LUI   : {InstType::U, T, T, F, F, F, @<b>|F|},
         OP_AUIPC : {InstType::U, T, F, F, F, F, @<b>|F|},
         OP_JAL   : {InstType::J, T, F, F, T, F, @<b>|F|},
@@ -84,7 +86,7 @@ inst_decoderモジュールの@<code>{InstCtrl}を生成している部分を変
         @<b>|OP_SYSTEM: {InstType::I, T, F, F, F, F, T},|
         default  : {InstType::X, F, F, F, F, F, @<b>|F|},
     }, f3, f7};
-#@# #@end
+#@end
 //}
 
 @<list>{inst_decoder.veryl.create-csrunit-range.decode}では、
@@ -823,15 +825,13 @@ ECALL命令のrdは常に0番目のレジスタであり、
 
 == MRET命令の実装
 
-#@# @<fn>{mret.manual}
-
-MRET命令は、
+MRET命令@<fn>{mret.manual}は、
 トラップ先からトラップ元に戻るための命令です。
 MRET命令を実行すると、
 mepcレジスタに格納されたアドレスにジャンプします@<fn>{mret.other}。
 例えば、権限のあるOSから権限のないユーザー空間に戻るために利用します。
 
-#@# //footnote[mret.manual][MRET命令はVolume IIの3.3.2. Trap-Return Instructionsに定義されています]
+//footnote[mret.manual][MRET命令はVolume IIの3.3.2. Trap-Return Instructionsに定義されています]
 //footnote[mret.other][他のCSRや権限レベルが実装されている場合は、他にも行うことがあります]
 
 === MRET命令を実装する

@@ -759,8 +759,6 @@ a = x && y; // xとyの両方が真のとき真
 a = x || y; // xまたはyが真のとき真
 //}
 
-#@# TODO 表
-
 //table[operator.priority][演算子と優先度 @<bib>{veryl-doc.operator.precedence}]{
 演算子	結合性	優先順位
 ==============================================

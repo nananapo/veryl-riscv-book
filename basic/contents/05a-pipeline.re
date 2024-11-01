@@ -187,8 +187,6 @@ MEMステージではジャンプするときにIF、ID、EXステージにあ�
 IF、ID、EX、MEM、WBの5段の構成を、
 @<b>{5段パイプライン}(Five Stage Pipeline)と呼ぶことがあります。
 
-#@# https://docs.amd.com/r/en-US/ug984-vivado-microblaze-ref/Five-Stage-Pipeline
-
 //note[CSRをMEMステージで処理する]{
 上記の5段のパイプライン処理では、CSRの処理をMEMステージで行っています。
 これはいったいなぜでしょうか?
