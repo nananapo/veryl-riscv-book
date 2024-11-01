@@ -1,11 +1,21 @@
-= CPUを合成する
+= CPUの合成
 
-本章ではFPGAでCPUを動作させます。
+これまでの章では、RV64IのCPUを作成してパイプライン化しました。
+動作確認とテストはシミュレータで行いましたが、
+本章では実機(FPGA)でCPUを動かします。
 
-本章はWeb版で提供します。
-以下のサポートページを確認してください。
+//image[pynq_z1][PYNQ-Z1][width=30%]
+//image[tangmega138k][TangMega138K][width=30%]
 
- * @<w>{support-page}
+== FPGAとは何か？
 
-//image[pynq_z1][PYNQ-Z1][width=55%]
-//image[tangmega138k][TangMega138K][width=55%]
+執筆中...!
+
+== テスト用の最上位モジュールの作成
+
+
+== FPGAへの合成① (TangMega138K)
+
+
+== FPGAへの合成② (PYNQ-Z1)
+

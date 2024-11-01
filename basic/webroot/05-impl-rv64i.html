@@ -33,7 +33,7 @@
       </ul>
     </li>
     <li class="toc-chapter"><a href="./05a-pipeline.html">7 CPUのパイプライン化</a></li>
-    <li class="toc-chapter"><a href="./05b-synth.html">8 CPUを合成する</a></li>
+    <li class="toc-chapter"><a href="./05b-synth.html">8 CPUの合成</a></li>
   </ul>
 </li>
     <li class="toc-chapter"><a href="./99-postface.html">あとがき</a></li>
@@ -232,8 +232,8 @@ Test Result : 14 / 52
 <p>inst_decoderモジュールの<code class="inline-code">InstCtrl</code>と即値を生成している部分を変更します(<span class="listref"><a href="./05-impl-rv64i.html#inst_decoder.veryl.addsubw-range.ctrl">リスト6.13</a></span>、<span class="listref"><a href="./05-impl-rv64i.html#inst_decoder.veryl.addsubw-range.imm">リスト6.14</a></span>)。これでデコードは完了です。</p>
 <div id="inst_decoder.veryl.addsubw-range.ctrl" class="caption-code">
 <span class="caption">リスト6.13: リスト6.13: OP-32、OP-IMM-32のInstCtrlの生成 (inst_decoder.veryl)</span>
-<pre class="list language-ctrl">                                     is_op32を追加
-    ctrl = {case op {                      ↓
+<pre class="list language-ctrl">                                       is_op32を追加
+    ctrl = {case op {                        ↓
         OP_LUI      : {InstType::U, T, T, F, <b>F</b>, F, F, F},
         OP_AUIPC    : {InstType::U, T, F, F, <b>F</b>, F, F, F},
         OP_JAL      : {InstType::J, T, F, F, <b>F</b>, T, F, F},
