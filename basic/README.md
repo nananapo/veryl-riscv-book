@@ -106,7 +106,7 @@ Web版 : https://nananapo.github.io/veryl-riscv-book/
     * 外部装置との接続
         * UART RX
         * VirtIO (他はどうしようか)
-    * OSを動かす① : xv6
+ * OSを動かす① : xv6
     * 設定
     * 実行
  * OSを動かす② : Linuxの実行
