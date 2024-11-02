@@ -11,6 +11,7 @@ body {
 }
 .page-outer {
 	display: flex;
+	flex-wrap: wrap;
 	flex-direction: column;
 	max-width: 1000px;
 	margin: 0 auto;
@@ -19,6 +20,7 @@ body {
 }
 .page-inner {
 	/* margin-right: 200px; */
+	padding-right: 10px;
 }
 
 @media screen and (max-width: 480px) {

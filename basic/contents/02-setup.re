@@ -100,9 +100,9 @@ SystemVerilogのシミュレータを生成するためのソフトウェアで�
 
 パッケージマネージャ(apt、Homebrewなど)を利用してインストールできます。
 パッケージマネージャが入っていない場合は、
-以下のページを参考にインストールしてください。
+@<href>{https://verilator.org/guide/latest/install.html, ドキュメント}
+を参考にインストールしてください。
 
- * @<href>{https://verilator.org/guide/latest/install.html}
 
 //caution[本書で利用するVerilatorのバージョン]{
 2024/10/28時点の最新バージョンはv5.030ですが、
