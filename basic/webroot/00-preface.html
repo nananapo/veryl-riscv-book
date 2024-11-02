@@ -8,19 +8,24 @@
     <link rel="stylesheet" type="text/css" href="css/webstyle.css" />
     <link rel="next" title="環境構築" href="02-setup.html">
     <meta name="generator" content="Re:VIEW Starter">
+
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+
   </head>
   <body>
     <div class="page-outer">
       <div class="side-content">
                 <a class="nav-title" href="index.html">Verylで作るCPU</a>
-<ul class="toc toc-1">
+
+        <a class="github-button" href="https://github.com/nananapo/veryl-riscv-book" data-color-scheme="no-preference: light_high_contrast; light: light; dark: dark;" data-size="large" data-show-count="true" aria-label="Star nananapo/veryl-riscv-book on GitHub">Star</a>
+
+        <ul class="toc toc-1">
     <li class="toc-chapter"><a href="./00-preface.html">まえがき</a>
       <ul class="toc toc-2">
         <li class="toc-section"><a href="./00-preface.html#h">本書を読むとわかること</a></li>
         <li class="toc-section"><a href="./00-preface.html#h">対象読者</a></li>
         <li class="toc-section"><a href="./00-preface.html#h">必要な知識</a></li>
         <li class="toc-section"><a href="./00-preface.html#h">本書のソースコード / 問い合わせ先</a></li>
-        <li class="toc-section"><a href="./00-preface.html#h">注意</a></li>
         <li class="toc-section"><a href="./00-preface.html#h">CPUの自作</a></li>
         <li class="toc-section"><a href="./00-preface.html#h">RISC-V</a></li>
         <li class="toc-section"><a href="./00-preface.html#h">本書の構成</a></li>
@@ -40,6 +45,7 @@
   </ul>
 </li>
     <li class="toc-chapter"><a href="./99-postface.html">あとがき</a></li>
+    <li class="toc-chapter"><a href="./100-contribute.html">このプロジェクトに貢献する</a></li>
     <li class="toc-chapter"><a href="./bib.html">参考文献</a></li>
 </ul>
       </div>
@@ -104,14 +110,11 @@
 <li><span style="font-size:large">https://github.com/nananapo/veryl-riscv-book/wiki/techbookfest17-support-page</span>
 </li>
 </ul>
-
-<h2 id="id_00-preface_nonum5" notoc="true">注意</h2>
-<p><span style="font-size:large">本書は「Verylで作るCPU 基本編」の第I部のみを発行したものです。本文に「後の章」と書かれていても、本書には含まれない場合があります。完全版および電子版は無料で配布されており、<a href="https://github.com/nananapo/veryl-riscv-book" class="link">https://github.com/nananapo/veryl-riscv-book</a>で入手できます。</span></p>
 <p></p>
 <hr />
 <p></p>
 
-<h2 id="id_00-preface_nonum6" notoc="true">CPUの自作</h2>
+<h2 id="id_00-preface_nonum5" notoc="true">CPUの自作</h2>
 <p>CPUって自作できるのでしょうか?そもそもCPUの自作って何でしょうか?CPUの自作の一般的な定義はありませんが、筆者は「命令セットアーキテクチャの設計」「論理設計」「物理的に製造する」に分類できると考えています。</p>
 <p><b>命令セットアーキテクチャ</b>(Instruction Set Architecture, <b>ISA</b>)とは、CPUがどのような命令を実行できるかを定めたもの(仕様)です。<b>論理設計</b>とは、簡単に言うと、仕様の動作を実現する論理回路を設計することです。CPUは論理回路で構成されているため、CPUの設計には論理設計が必要になります。最近のCPUは、物理的には<b>VLSI</b>(Very Large Scale Integration, 超大規模集積回路)によって実装されています。VLSIの製造には莫大なお金が必要です<sup><a id="fnb-vlsi" href="#fn-vlsi" class="noteref" epub:type="noteref">*1</a></sup>。</p>
 <div class="footnote-list">
@@ -121,7 +124,7 @@
 <p>物理的な製造のハードルは高いですが、FPGAを使うことで簡単にお試しできます。<b>FPGA</b>(Field Programmable Gate Array)とは、任意の論理回路を実現できる集積回路のことです<a href="bib.html#bib-amano.fpga">[1]</a>。最近では、安価(数千 ～ 数万円)でFPGAを入手できます。</p>
 <p>CPUのテストはシミュレータとFPGAで行います。本書では、TangMega 138KとPYNQ-Z1というFPGAを利用します。FPGAを持っていると、自作CPUによってLEDを制御したり、手持ちのパソコンと直接通信したりして楽しむことができます。</p>
 
-<h2 id="id_00-preface_nonum7" notoc="true">RISC-V</h2>
+<h2 id="id_00-preface_nonum6" notoc="true">RISC-V</h2>
 <p><b>RISC-V</b>は、カリフォルニア大学バークレー校で開発されたISAです。仕様書の初版は2011年に公開されました。ISAとしての歴史はまだ浅いですが、仕様が広く公開されていてカスタマイズ可能であるという特徴もあって、着実に広がりつつあります。</p>
 <p>インターネット上には多くのRISC-Vの実装が公開されています。例として、<a href="https://github.com/chipsalliance/rocket-chip" class="link">RocketChip</a>(Chiselによる実装)、<a href="https://shakti.org.in/" class="link">Shakti</a>(Bluespec SystemVerilogによる実装)、<a href="https://github.com/rsd-devel/rsd" class="link">RSD</a>(SystemVerilogによる実装)が挙げられます。</p>
 <p>本書では、RISC-VのバージョンRISC-V ISA Manual, version 20240411 を利用します。RISC-Vの最新の仕様は、GitHubの<a href="https://github.com/riscv/riscv-isa-manual/" class="link">riscv/riscv-isa-manual</a>で確認できます。</p>
@@ -131,7 +134,7 @@
 </div><!--/.footnote-list-->
 <p>どの拡張を実装しているかを示すISA Stringという表現では、例えばかけ算と割り算、不可分操作ができるRV32IのCPUは<code class="inline-code">RV32IMA</code>と表現されます。本書では、まず、<code class="inline-code">RV32I</code>のCPUを実装します。これを、OSを実行できる程度までに進化させることを目標に実装を進めます。</p>
 
-<h2 id="id_00-preface_nonum8" notoc="true">本書の構成</h2>
+<h2 id="id_00-preface_nonum7" notoc="true">本書の構成</h2>
 <p>本シリーズ(基本編)では、次のようにCPUを実装していきます。</p>
 <ol start="1" type="1">
 <li>RV32IのCPUを実装する (<a href="./04-impl-rv32i.html">第3章</a>)</li>
@@ -145,9 +148,8 @@
 <li>OSを実行するために必要なCSRを実装する</li>
 <li>OSを実行する</li>
 </ol>
-<p>本書(基本編の第I部)では、上の1から6までを実装、解説します。</p>
 
-<h2 id="id_00-preface_nonum9" notoc="true">凡例</h2>
+<h2 id="id_00-preface_nonum8" notoc="true">凡例</h2>
 <p>プログラムコードの差分を表示する場合は、追加されたコードを太字で、削除されたコードを取り消し線で表します。ただし、リスト内のコードが全て新しく追加されるときは太字を利用しません。コードを置き換えるときは太字で示し、削除されたコードを示さない場合もあります。</p>
 <div class="caption-code">
 <pre class="emlist"><del>print(&quot;Hello, <b>world</b>!\n&quot;);</del>       <span class="balloon">← 取り消し線は削除したコード</span>

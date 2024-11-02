@@ -24,6 +24,9 @@ body_ext = @body_ext || (@error ? ' class="has-compile-error"' : nil)
     <link rel="prev" title="<%=h @prev_title %>" href="<%=h prev_page %>">
 <% end %>
     <meta name="generator" content="Re:VIEW Starter">
+
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+
   </head>
   <body<%= body_ext %>>
     <div class="page-outer">
@@ -35,7 +38,10 @@ body_ext = @body_ext || (@error ? ' class="has-compile-error"' : nil)
         </div>
         <% end %>
         <a class="nav-title" href="index.html"><%=h @book.config.name_of("booktitle") %></a>
-<%= @toc %>
+
+        <a class="github-button" href="https://github.com/nananapo/veryl-riscv-book" data-color-scheme="no-preference: light_high_contrast; light: light; dark: dark;" data-size="large" data-show-count="true" aria-label="Star nananapo/veryl-riscv-book on GitHub">Star</a>
+
+        <%= @toc %>
       </div>
 <% end %>
       <div class="page-inner">
