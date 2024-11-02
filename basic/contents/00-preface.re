@@ -48,7 +48,7 @@ module Adder (
 
 @<large>{本書で利用するソースコードは、以下のサポートページから入手できます。質問やお問い合わせ方法についてもサポートページを確認してください。}
 
- * @<large>{@<w>{support-page}}
+ * @<large>{@<href>{https://github.com/nananapo/veryl-riscv-book/wiki/techbookfest17-support-page}}
 
 //clearpage
 
