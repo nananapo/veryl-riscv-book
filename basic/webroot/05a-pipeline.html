@@ -3,7 +3,9 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width">
+    
     <title>CPUのパイプライン化 | Verylで作るCPU</title>
+
     <link rel="stylesheet" type="text/css" href="css/normalize.css" />
     <link rel="stylesheet" type="text/css" href="css/webstyle.css" />
     <link rel="next" title="CPUの合成" href="05b-synth.html">
@@ -49,7 +51,7 @@
         <header class="page-header">
         </header>
         <main class="page-main">
-<h1 class="boldlines center twolines"><a id="h7"></a><span class="secno">第7章</span> <br/>CPUのパイプライン化</h1>
+  <h1 class="boldlines center twolines"><a id="h7"></a><span class="secno">第7章</span> <br/>CPUのパイプライン化</h1>
 <p>これまでの章では、同時に1つの命令を実行するCPUを実装しました。高機能なCPUを実装するのは面白いですが、プログラムの実行が遅くてはいけません。機能を増やす前に、一度性能のことを考えてみましょう。</p>
 
 <h2 class="numbox"><a id="h7-1"></a><span class="secno">7.1</span> CPUの速度</h2>
@@ -871,13 +873,22 @@ Test Result : 51 / 52
 </pre>
 </div>
 <p>正しくパイプライン処理が動いていることを確認できました。</p>
-
         </main>
         <nav class="page-navi">
           <a href="05-impl-rv64i.html" class="page-prev">&#9664;</a>
           <a href="05b-synth.html" class="page-next">&#9654;</a>
         </nav>
-        <footer>
+        <br>
+        <br>
+        <footer style="background:#dddddd">
+      <div style="padding: 20px 20px 20px 20px;">
+          <div style="font-size:1.4rem"><b>コンピュータは、CPUを書けば理解できる！</b></div><br>
+          コンピュータアーキテクチャは、CPUを作ることで理解することができます。
+          「Verylで作るCPU」は、ハードウェア記述言語VerylでRISC-VのCPUを自作する方法を解説するプロジェクトです。<br>
+          「Verylで作るCPU 基本編」では、ハードウェア記述言語の基礎から、OSを実行できる程度のCPUの実装方法までを解説します。<br>
+          <br>
+          キーワード: 自作CPU , RISC-V , Veryl , FPGA<br>
+      <div>
         </footer>
       </div>
     </div>

@@ -3,7 +3,9 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width">
+    
     <title>RV32Iの実装 | Verylで作るCPU</title>
+
     <link rel="stylesheet" type="text/css" href="css/normalize.css" />
     <link rel="stylesheet" type="text/css" href="css/webstyle.css" />
     <link rel="next" title="Zicsr拡張の実装" href="04a-zicsr.html">
@@ -58,7 +60,7 @@
         <header class="page-header">
         </header>
         <main class="page-main">
-<h1 class="boldlines center twolines"><a id="h3"></a><span class="secno">第3章</span> <br/>RV32Iの実装</h1>
+  <h1 class="boldlines center twolines"><a id="h3"></a><span class="secno">第3章</span> <br/>RV32Iの実装</h1>
 <p>本章では、RISC-Vの基本整数命令セットである<b>RV32I</b>を実装します。基本整数命令という名前の通り、整数の足し引きやビット演算、ジャンプ、分岐命令などの最小限の命令しか実装されていません。また、32ビット幅の汎用レジスタが32個定義されています。ただし、0番目のレジスタの値は常に<code class="inline-code">0</code>です。</p>
 <p>RISC-VのCPUは基本整数命令セットを必ず実装して、他の命令や機能は拡張として実装します。複雑な機能を持つCPUを実装する前に、まずは最小限の命令を実行できるCPUを実装しましょう。</p>
 
@@ -2671,13 +2673,22 @@ $ <span class="userinput">obj_dir/sim src/sample_br.hex 15</span>
 <p class="miniblock-caption">実装していないRV32Iの命令</p>
 <p>メモリフェンス命令、ECALL命令、EBREAK命令は後の章で実装します。</p>
 </div>
-
         </main>
         <nav class="page-navi">
           <a href="03-veryl.html" class="page-prev">&#9664;</a>
           <a href="04a-zicsr.html" class="page-next">&#9654;</a>
         </nav>
-        <footer>
+        <br>
+        <br>
+        <footer style="background:#dddddd">
+      <div style="padding: 20px 20px 20px 20px;">
+          <div style="font-size:1.4rem"><b>コンピュータは、CPUを書けば理解できる！</b></div><br>
+          コンピュータアーキテクチャは、CPUを作ることで理解することができます。
+          「Verylで作るCPU」は、ハードウェア記述言語VerylでRISC-VのCPUを自作する方法を解説するプロジェクトです。<br>
+          「Verylで作るCPU 基本編」では、ハードウェア記述言語の基礎から、OSを実行できる程度のCPUの実装方法までを解説します。<br>
+          <br>
+          キーワード: 自作CPU , RISC-V , Veryl , FPGA<br>
+      <div>
         </footer>
       </div>
     </div>

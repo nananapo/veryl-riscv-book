@@ -3,7 +3,9 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width">
+    
     <title>RV64Iの実装 | Verylで作るCPU</title>
+
     <link rel="stylesheet" type="text/css" href="css/normalize.css" />
     <link rel="stylesheet" type="text/css" href="css/webstyle.css" />
     <link rel="next" title="CPUのパイプライン化" href="05a-pipeline.html">
@@ -51,7 +53,7 @@
         <header class="page-header">
         </header>
         <main class="page-main">
-<h1 class="boldlines center twolines"><a id="h6"></a><span class="secno">第6章</span> <br/>RV64Iの実装</h1>
+  <h1 class="boldlines center twolines"><a id="h6"></a><span class="secno">第6章</span> <br/>RV64Iの実装</h1>
 <p>これまでに、RISC-Vの32ビットの基本整数命令セットであるRV32IのCPUを実装しました。RISC-Vには64ビットの基本整数命令セットとしてRV64Iが定義されています。本章では、RV32IのCPUをRV64Iにアップグレードします。</p>
 <p>では、具体的にRV32IとRV64Iは何が違うのでしょうか?まず、RV64IではXLENが32ビットから64ビットに変更され、レジスタの幅や各種演算命令の演算の幅が64ビットになります。それに伴い、32ビット幅での整数演算を行う命令、64ビット幅でロードストアを行う命令が追加されます(<span class="tableref"><a href="./05-impl-rv64i.html#rv64i.new_insts">表6.1</a></span>)。また、演算の幅が64ビットに広がるだけではなく、一部の命令の動作が少し変わります(<span class="tableref"><a href="./05-impl-rv64i.html#rv64i.change">表6.2</a></span>)。</p>
 <div id="rv64i.new_insts" class="table">
@@ -581,13 +583,22 @@ Test Result : 51 / 52
 </pre>
 </div>
 <p>RV64IのCPUを実装できました。</p>
-
         </main>
         <nav class="page-navi">
           <a href="04b-riscvtests.html" class="page-prev">&#9664;</a>
           <a href="05a-pipeline.html" class="page-next">&#9654;</a>
         </nav>
-        <footer>
+        <br>
+        <br>
+        <footer style="background:#dddddd">
+      <div style="padding: 20px 20px 20px 20px;">
+          <div style="font-size:1.4rem"><b>コンピュータは、CPUを書けば理解できる！</b></div><br>
+          コンピュータアーキテクチャは、CPUを作ることで理解することができます。
+          「Verylで作るCPU」は、ハードウェア記述言語VerylでRISC-VのCPUを自作する方法を解説するプロジェクトです。<br>
+          「Verylで作るCPU 基本編」では、ハードウェア記述言語の基礎から、OSを実行できる程度のCPUの実装方法までを解説します。<br>
+          <br>
+          キーワード: 自作CPU , RISC-V , Veryl , FPGA<br>
+      <div>
         </footer>
       </div>
     </div>

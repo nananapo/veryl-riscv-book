@@ -3,7 +3,9 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width">
+    
     <title>ハードウェア記述言語 Veryl | Verylで作るCPU</title>
+
     <link rel="stylesheet" type="text/css" href="css/normalize.css" />
     <link rel="stylesheet" type="text/css" href="css/webstyle.css" />
     <link rel="next" title="RV32Iの実装" href="04-impl-rv32i.html">
@@ -48,7 +50,7 @@
         <header class="page-header">
         </header>
         <main class="page-main">
-<h1 class="boldlines center twolines"><a id="h2"></a><span class="secno">第2章</span> <br/>ハードウェア記述言語 Veryl</h1>
+  <h1 class="boldlines center twolines"><a id="h2"></a><span class="secno">第2章</span> <br/>ハードウェア記述言語 Veryl</h1>
 <p>CPU (Central Proccessing Unit, 中央演算処理装置)は、コンピュータを構成する主要な部品の1つであり、電気で動くとても複雑な回路で構成されています。</p>
 <p>本書では「ハードウェア記述言語」によってCPUをの回路を記述します。回路を記述するといっても、いったい何をどうやって記述するのでしょうか?</p>
 <p>まずは、論理回路を構成する方法から考えます。</p>
@@ -1086,13 +1088,22 @@ logic ccc;
 <h4><a id="h2-2-9-5"></a>標準ライブラリ</h4>
 <p>Verylには、よく使うモジュールなどが標準ライブラリとして準備されています。標準ライブラリは<a href="https://std.veryl-lang.org/" class="link">https://std.veryl-lang.org/</a>で確認できます。</p>
 <p>本書では標準ライブラリを使用していないため、説明は割愛します。</p>
-
         </main>
         <nav class="page-navi">
           <a href="02-setup.html" class="page-prev">&#9664;</a>
           <a href="04-impl-rv32i.html" class="page-next">&#9654;</a>
         </nav>
-        <footer>
+        <br>
+        <br>
+        <footer style="background:#dddddd">
+      <div style="padding: 20px 20px 20px 20px;">
+          <div style="font-size:1.4rem"><b>コンピュータは、CPUを書けば理解できる！</b></div><br>
+          コンピュータアーキテクチャは、CPUを作ることで理解することができます。
+          「Verylで作るCPU」は、ハードウェア記述言語VerylでRISC-VのCPUを自作する方法を解説するプロジェクトです。<br>
+          「Verylで作るCPU 基本編」では、ハードウェア記述言語の基礎から、OSを実行できる程度のCPUの実装方法までを解説します。<br>
+          <br>
+          キーワード: 自作CPU , RISC-V , Veryl , FPGA<br>
+      <div>
         </footer>
       </div>
     </div>
