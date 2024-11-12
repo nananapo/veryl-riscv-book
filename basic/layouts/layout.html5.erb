@@ -34,8 +34,8 @@ body_ext = @body_ext || (@error ? ' class="has-compile-error"' : nil)
     <script async defer src="https://buttons.github.io/buttons.js"></script>
 
   </head>
-  <body<%= body_ext %>>
-    <div class="page-outer">
+  <body<%= body_ext %> style="background-color:#eff4ff">
+    <div class="page-outer" style="background-color:white">
 <% if @chapter || @error %>
       <div class="side-content">
         <% if rebuild_js %>

@@ -9,14 +9,14 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css" />
     <link rel="stylesheet" type="text/css" href="css/webstyle.css" />
     <link rel="next" title="このプロジェクトに貢献する" href="100-contribute.html">
-    <link rel="prev" title="CPUの合成" href="05b-synth.html">
+    <link rel="prev" title="C拡張の実装" href="15-impl-c.html">
     <meta name="generator" content="Re:VIEW Starter">
 
     <script async defer src="https://buttons.github.io/buttons.js"></script>
 
   </head>
-  <body>
-    <div class="page-outer">
+  <body style="background-color:#eff4ff">
+    <div class="page-outer" style="background-color:white">
       <div class="side-content">
                 <a class="nav-title" href="index.html">Verylで作るCPU</a>
 
@@ -34,6 +34,17 @@
     <li class="toc-chapter"><a href="./05-impl-rv64i.html">6 RV64Iの実装</a></li>
     <li class="toc-chapter"><a href="./05a-pipeline.html">7 CPUのパイプライン化</a></li>
     <li class="toc-chapter"><a href="./05b-synth.html">8 CPUの合成</a></li>
+  </ul>
+</li>
+<li class="toc-part">第II部 RV64IMACの実装(未執筆)
+  <ul class="toc toc-2">
+    <li class="toc-chapter"><a href="./09-impl-m.html">9 M拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./10-impl-exception.html">10 例外の実装</a></li>
+    <li class="toc-chapter"><a href="./11-impl-mmio.html">11 Memory-mapped I/Oの実装</a></li>
+    <li class="toc-chapter"><a href="./12-visualize.html">12 可視化</a></li>
+    <li class="toc-chapter"><a href="./13-benchmark.html">13 ベンチマーク</a></li>
+    <li class="toc-chapter"><a href="./14-impl-a.html">14 A拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./15-impl-c.html">15 C拡張の実装</a></li>
   </ul>
 </li>
     <li class="toc-chapter"><a href="./99-postface.html">あとがき</a>
@@ -81,12 +92,12 @@
 </li>
 </ul>
 <p>筆者がCPUを作り始めたのは、井田さんの「<a href="https://gihyo.jp/book/2021/978-4-297-12305-5" class="link">RISC-VとChiselで学ぶ はじめてのCPU自作</a>」を読んだのがきっかけでした。この本が無ければ、筆者はCPUを作ろうとは思わなかったかと思います。</p>
-<p>その半年後から約一年間、サイボウズ・ラボ株式会社のサイボウズ・ラボユースの支援を受けることで、自作CPUに集中して取り組むことができました(本書の一部はラボユースの期間に執筆されました)。メンターの内田さんにはとても感謝しています。</p>
+<p>CPU自作を始めて半年後から約一年間、サイボウズ・ラボ株式会社のサイボウズ・ラボユースの支援を受けることで、自作CPUに集中して取り組むことができました(本書の一部はラボユースの期間に執筆されました)。メンターの内田さんにはとても感謝しています。</p>
 <p>Verylの作者の初田さんには、筆者がVerylでCPUを作るにあたって見つけた不具合を迅速に修正していただきました。初田さんと石谷さんにはレビューでとても多くの指摘をいただき、本書の品質を向上できました。</p>
 <p>執筆にあたって関わったすべての方に、この場をお借りしてお礼申し上げます。</p>
         </main>
         <nav class="page-navi">
-          <a href="05b-synth.html" class="page-prev">&#9664;</a>
+          <a href="15-impl-c.html" class="page-prev">&#9664;</a>
           <a href="100-contribute.html" class="page-next">&#9654;</a>
         </nav>
         <br>

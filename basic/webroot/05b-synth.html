@@ -8,15 +8,15 @@
 
     <link rel="stylesheet" type="text/css" href="css/normalize.css" />
     <link rel="stylesheet" type="text/css" href="css/webstyle.css" />
-    <link rel="next" title="あとがき" href="99-postface.html">
+    <link rel="next" title="M拡張の実装" href="09-impl-m.html">
     <link rel="prev" title="CPUのパイプライン化" href="05a-pipeline.html">
     <meta name="generator" content="Re:VIEW Starter">
 
     <script async defer src="https://buttons.github.io/buttons.js"></script>
 
   </head>
-  <body>
-    <div class="page-outer">
+  <body style="background-color:#eff4ff">
+    <div class="page-outer" style="background-color:white">
       <div class="side-content">
                 <a class="nav-title" href="index.html">Verylで作るCPU</a>
 
@@ -36,11 +36,22 @@
     <li class="toc-chapter"><a href="./05b-synth.html">8 CPUの合成</a>
       <ul class="toc toc-3">
         <li class="toc-section"><a href="./05b-synth.html#h8-1">8.1 FPGAとは何か？</a></li>
-        <li class="toc-section"><a href="./05b-synth.html#h8-2">8.2 テスト用の最上位モジュールの作成</a></li>
+        <li class="toc-section"><a href="./05b-synth.html#h8-2">8.2 LEDの制御</a></li>
         <li class="toc-section"><a href="./05b-synth.html#h8-3">8.3 FPGAへの合成① (TangMega138K)</a></li>
         <li class="toc-section"><a href="./05b-synth.html#h8-4">8.4 FPGAへの合成② (PYNQ-Z1)</a></li>
       </ul>
     </li>
+  </ul>
+</li>
+<li class="toc-part">第II部 RV64IMACの実装(未執筆)
+  <ul class="toc toc-2">
+    <li class="toc-chapter"><a href="./09-impl-m.html">9 M拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./10-impl-exception.html">10 例外の実装</a></li>
+    <li class="toc-chapter"><a href="./11-impl-mmio.html">11 Memory-mapped I/Oの実装</a></li>
+    <li class="toc-chapter"><a href="./12-visualize.html">12 可視化</a></li>
+    <li class="toc-chapter"><a href="./13-benchmark.html">13 ベンチマーク</a></li>
+    <li class="toc-chapter"><a href="./14-impl-a.html">14 A拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./15-impl-c.html">15 C拡張の実装</a></li>
   </ul>
 </li>
     <li class="toc-chapter"><a href="./99-postface.html">あとがき</a></li>
@@ -68,9 +79,97 @@
 </div>
 
 <h2 class="numbox"><a id="h8-1"></a><span class="secno">8.1</span> FPGAとは何か？</h2>
-<p>執筆中...!</p>
+<p>集積回路を製造するには手間と時間とお金が必要です。FPGAを使うと、少しの手間と少しの時間、安価に集積回路の実現をお試しすることができます。</p>
+<p><b>FPGA</b>(Field Programmable Gate Array)は、任意の論理回路を実現することができる集積回路のことです。ハードウェア記述言語で設計した論理回路をFPGA上に設定することで、実際に集積回路を製造しなくても実機で論理回路を再現できます。</p>
+<p>「任意の論理回路を実現することができる集積回路」は、主にプロダクトターム方式、またはルックアップ・テーブル方式で構成されています。本書では<b>ルックアップ・テーブル</b>(Lookup Table, <b>LUT</b>)方式のFPGAを利用します。</p>
+<div id="lut_sample_truth" class="table">
+<p class="caption">表8.1: 真理値表の例</p>
+<table>
+<tr class="hline"><th>X</th><th>Y</th><th>A</th></tr>
+<tr class="hline"><td>0</td><td>0</td><td>0</td></tr>
+<tr class="hline"><td>0</td><td>1</td><td>1</td></tr>
+<tr class="hline"><td>1</td><td>0</td><td>1</td></tr>
+<tr class="hline"><td>1</td><td>1</td><td>0</td></tr>
+</table>
+</div>
+<div id="lut" class="image">
+<img src="images/05b-synth/lut.png" alt="&lt;span class=&quot;tableref&quot;&gt;&lt;a href=&quot;./05b-synth.html#lut_sample_truth&quot;&gt;表8.1&lt;/a&gt;&lt;/span&gt;を実現するLUT" class="img" style="width:40%" />
+<p class="caption">
+図8.3: <span class="tableref"><a href="./05b-synth.html#lut_sample_truth">表8.1</a></span>を実現するLUT
+</p>
+</div>
+<p>LUTとは、真理値表を記憶素子に保存しておいて、入力によって記憶された真理値を選択して出力する回路のことです。例えば、2つの入力<code class="inline-code">X</code>と<code class="inline-code">Y</code>を受け取って<code class="inline-code">A</code>を出力する論理回路(<span class="tableref"><a href="./05b-synth.html#lut_sample_truth">表8.1</a></span>)は、<span class="imgref"><a href="./05b-synth.html#lut">図8.3</a></span>の回路で実現することができます。ここでマルチプレクサ(multiplexer, MUX)とは、複数の入力を選択信号によって選択して出力する回路のことです。</p>
+<p><span class="imgref"><a href="./05b-synth.html#lut">図8.3</a></span>では、記憶素子のデータを<code class="inline-code">Y</code>によって選択し、さらに<code class="inline-code">X</code>によって選択することで2入力1出力の真理値表の論理回路を実現しています。入力がN個で出力がM個のLUTのことをN入力M出力LUTと呼びます。</p>
+<p>ルックアップ・テーブル方式のFPGAは、多数のLUT、入出力装置、これらを相互接続するための配線によって構成されています。また、乗算回路やメモリなどの部品はFPGAよりも専用の回路で実現した方が良い<sup><a id="fnb-memory.fpga" href="#fn-memory.fpga" class="noteref" epub:type="noteref">*1</a></sup>ので、メモリや乗算回路の部品が内蔵されていることがあります。</p>
+<div class="footnote-list">
+<div class="footnote" id="fn-memory.fpga" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>例えばメモリは同じパターンの論理回路の繰り返しで大きな面積を要します。メモリはよく利用される回路であるため、専用の回路を用意した方が空間的な効率が改善される上に、遅延が少なくなるという利点があります</p></div>
+</div><!--/.footnote-list-->
+<p>本書では2つのFPGA(TangMega138K、PYNQ-Z1)を使用して実機でCPUを動作させます。2024年11月12日時点ではTangMega138KはAliExpressで30000円くらい、PYNQ-Z1は秋月電子通商で50000円くらいで入手できます。</p>
+<div class="miniblock miniblock-info">
+<p class="miniblock-caption">もう少し安いFPGA</p>
+<p>数万円もするFPGAはなかなか手が出せません。本章の範囲ではTangNano9K(3000円くらい)、TangPrimer20K(7000円くらい)、TangPrimer25K(6000円くらい)などの少し小規模で安価なFPGAでも動作させることができます。手始めにTangNano9Kを選ぶのも良いでしょう。</p>
+</div>
 
-<h2 class="numbox"><a id="h8-2"></a><span class="secno">8.2</span> テスト用の最上位モジュールの作成</h2>
+<h2 class="numbox"><a id="h8-2"></a><span class="secno">8.2</span> LEDの制御</h2>
+<p>大抵のFPGAボードにはLEDがついています。本章では簡単なテストプログラムによってLEDを点滅させた後、riscv-testsの結果をLEDによって確認します。</p>
+<p>LEDはトップモジュールのポートを経由して制御します。ポートとLEDの接続方法は合成系によって異なるため、それらの接続は後で考えます。</p>
+<p>CPUからLEDを制御するには、メモリ経由で制御する、CSRによって制御するなどの方法が考えられます。本書ではLEDを制御する用のCSRを作成して、トップモジュールのポートに接続することでLEDを制御します。</p>
+<div class="miniblock miniblock-warning">
+<p class="miniblock-caption">執筆中!!!</p>
+<p>未完成</p>
+</div>
+
+<h3 class="none"><a id="h8-2-1"></a><span class="secno">8.2.1</span> CSRにLED制御用レジスタを実装する</h3>
+<p>csrunitモジュールにLEDの制御用レジスタを実装します。RISC-VのCSRには、カスタムなCSRを定義するためのアドレス空間が用意されています(表)</p>
+<p>表</p>
+<p>表中のTODOをLEDのためのレジスタに割り当てることにします。</p>
+<p>まず、CsrAddr型にLED制御用レジスタのアドレスを追加します。</p>
+<div class="caption-code">
+<pre class="emlist">TODO
+</pre>
+</div>
+<p>書き込みマスクはすべて書き込み可にします。</p>
+<div class="caption-code">
+<pre class="emlist">TODO
+</pre>
+</div>
+<p>XLENビットのレジスタを定義します。</p>
+<div class="caption-code">
+<pre class="emlist">TODO
+</pre>
+</div>
+<p>読み込みデータ、書き込みマスクを変数に割り当てます。</p>
+<div class="caption-code">
+<pre class="emlist">TODO
+</pre>
+</div>
+<p>レジスタへの書き込み処理を実装します。</p>
+<div class="caption-code">
+<pre class="emlist">TODO
+</pre>
+</div>
+<p>csrunitモジュールのLED制御用レジスタは、最終的にトップモジュールのポートと接続します。そのために、csrunitモジュールのポートに<code class="inline-code">led</code>レジスタの値を露出させ、さらにcoreモジュールのポートに<code class="inline-code">led</code>レジスタの値を露出させます。</p>
+<div class="caption-code">
+<pre class="emlist">TODO
+</pre>
+</div>
+<div class="caption-code">
+<pre class="emlist">TODO
+</pre>
+</div>
+
+<h3 class="none"><a id="h8-2-2"></a><span class="secno">8.2.2</span> トップモジュールにポートを実装する</h3>
+<p>トップモジュールにLEDを制御するためのポートを追加します。LEDの個数はFPGAによって異なるため、とりあえずXLEN(=64)ビットのポートを用意します。</p>
+<div class="caption-code">
+<pre class="emlist">TODO
+</pre>
+</div>
+<p>ledポートとcsrunitモジュールのレジスタを接続します。</p>
+<div class="caption-code">
+<pre class="emlist">TODO
+</pre>
+</div>
+<p>CSRの読み書きでLED制御用のポートを制御することができるようになりました。</p>
 
 <h2 class="numbox"><a id="h8-3"></a><span class="secno">8.3</span> FPGAへの合成① (TangMega138K)</h2>
 
@@ -78,7 +177,7 @@
         </main>
         <nav class="page-navi">
           <a href="05a-pipeline.html" class="page-prev">&#9664;</a>
-          <a href="99-postface.html" class="page-next">&#9654;</a>
+          <a href="09-impl-m.html" class="page-next">&#9654;</a>
         </nav>
         <br>
         <br>
