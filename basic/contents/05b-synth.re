@@ -5,7 +5,7 @@
 本章では実機(FPGA)でCPUを動かします。
 
 //image[pynq_z1][PYNQ-Z1][width=30%]
-//image[tangmega138k][TangMega138K][width=30%]
+//image[tangmega138k][Tang Mega 138K Pro][width=30%]
 
 == FPGAとは何か？
 
@@ -47,17 +47,17 @@ LUTとは、真理値表を記憶素子に保存しておいて、
 
 //footnote[memory.fpga][例えばメモリは同じパターンの論理回路の繰り返しで大きな面積を要します。メモリはよく利用される回路であるため、専用の回路を用意した方が空間的な効率が改善される上に、遅延が少なくなるという利点があります]
 
-本書では2つのFPGA(TangMega138K、PYNQ-Z1)を使用して実機でCPUを動作させます。
-2024年11月12日時点ではTangMega138KはAliExpressで30000円くらい、
+本書では2つのFPGA(Tang Mega 138K Pro、PYNQ-Z1)を使用して実機でCPUを動作させます。
+2024年11月12日時点ではTang Mega 138K ProはAliExpressで30000円くらい、
 PYNQ-Z1は秋月電子通商で50000円くらいで入手できます。
 
 //info[もう少し安いFPGA]{
 数万円もするFPGAはなかなか手が出せません。
 本章の範囲では
-TangNano9K(3000円くらい)、
-TangPrimer20K(7000円くらい)、
-TangPrimer25K(6000円くらい)などの少し小規模で安価なFPGAでも動作させることができます。
-手始めにTangNano9Kを選ぶのも良いでしょう。
+Tang Nano 9K(3000円くらい)、
+Tang Primer 20K(7000円くらい)、
+Tang Primer 25K(6000円くらい)などの少し小規模で安価なFPGAでも動作させることができます。
+手始めにTang Nano 9Kを選ぶのも良いでしょう。
 //}
 
 == LEDの制御
@@ -147,7 +147,7 @@ TODO
 
 CSRの読み書きでLED制御用のポートを制御することができるようになりました。
 
-== FPGAへの合成① (TangMega138K)
+== FPGAへの合成① (Tang Mega 138K Pro)
 
 
 == FPGAへの合成② (PYNQ-Z1)
