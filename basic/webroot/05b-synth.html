@@ -173,6 +173,42 @@
 
 <h2 class="numbox"><a id="h8-3"></a><span class="secno">8.3</span> FPGAへの合成① (Tang Mega 138K Pro)</h2>
 
+<h3 class="none"><a id="h8-3-1"></a><span class="secno">8.3.1</span> プロジェクトの作成</h3>
+<p>GW5AST-LV138FPG676AC1/10https://wiki.sipeed.com/hardware/en/tang/tang-mega-138k/mega-138k-pro.html</p>
+<p>ファイルのインポート</p>
+<div class="caption-code">
+<pre class="emlist">import_files -force --fileList ../../core/core.f
+</pre>
+</div>
+<p>config</p>
+<p>SystemVerilog 2017core_top_tangmega138k</p>
+<p>タイミング</p>
+<div class="caption-code">
+<pre class="emlist">create_clock -name clk -period 20 -waveform {0 10} [get_ports {clk}]
+</pre>
+</div>
+<p>制約</p>
+<div class="caption-code">
+<pre class="emlist">IO_LOC &quot;led[5]&quot; N23;
+IO_LOC &quot;led[4]&quot; N21;
+IO_LOC &quot;led[3]&quot; M25;
+IO_LOC &quot;led[2]&quot; L20;
+IO_LOC &quot;led[1]&quot; R26;
+IO_LOC &quot;led[0]&quot; J14;
+IO_LOC &quot;clk&quot; P16;
+IO_LOC &quot;rst&quot; U4;
+
+IO_PORT &quot;led[5]&quot; PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
+IO_PORT &quot;led[4]&quot; PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
+IO_PORT &quot;led[3]&quot; PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
+IO_PORT &quot;led[2]&quot; PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
+IO_PORT &quot;led[1]&quot; PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
+IO_PORT &quot;led[0]&quot; PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
+IO_PORT &quot;clk&quot; PULL_MODE=NONE DRIVE=OFF BANK_VCCIO=3.3;
+IO_PORT &quot;rst&quot; PULL_MODE=UP DRIVE=OFF BANK_VCCIO=3.3;
+</pre>
+</div>
+
 <h2 class="numbox"><a id="h8-4"></a><span class="secno">8.4</span> FPGAへの合成② (PYNQ-Z1)</h2>
         </main>
         <nav class="page-navi">
