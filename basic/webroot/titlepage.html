@@ -48,5 +48,17 @@
         </footer>
       </div>
     </div>
+    
+    <script>
+      let url = window.location.href;
+      let encoded_url = encodeURI(url);
+      let fb = document.getElementById("share-facebook");
+      fb["data-href"] = url;
+      console.log(fb);
+    </script>
+    <div id="fb-root"></div>
+    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/ja_JP/sdk.js#xfbml=1&version=v21.0"></script>
+    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
 
 

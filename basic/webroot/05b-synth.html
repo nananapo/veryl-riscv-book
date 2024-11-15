@@ -20,8 +20,13 @@
       <div class="side-content">
                 <a class="nav-title" href="index.html">Verylで作るCPU</a>
 
-        <a class="github-button" href="https://github.com/nananapo/veryl-riscv-book" data-color-scheme="no-preference: light_high_contrast; light: light; dark: dark;" data-size="large" data-show-count="true" aria-label="Star nananapo/veryl-riscv-book on GitHub">Star</a>
-
+        <div style="display:flex; gap:10px; align-items: center;">
+          <a class="github-button" href="https://github.com/nananapo/veryl-riscv-book" data-color-scheme="no-preference: light_high_contrast; light: light; dark: dark;" data-size="large" data-show-count="true" aria-label="Star nananapo/veryl-riscv-book on GitHub">Star</a>
+          <div style="">
+            <a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-show-count="false">Tweet</a>
+          </div>
+          <div style="margin-bottom: 14px;" id="share-facebook" class="fb-share-button" data-href="" data-layout="" data-size=""><a target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Finvalid.invalid%2F&amp;src=sdkpreparse" class="fb-xfbml-parse-ignore">Facebookでシェアする</a></div>
+        </div>
         <ul class="toc toc-1">
     <li class="toc-chapter"><a href="./00-preface.html">まえがき</a></li>
 <li class="toc-part">第I部 RV32I/RV64Iの実装
@@ -229,6 +234,18 @@ IO_PORT &quot;rst&quot; PULL_MODE=UP DRIVE=OFF BANK_VCCIO=3.3;
         </footer>
       </div>
     </div>
+    
+    <script>
+      let url = window.location.href;
+      let encoded_url = encodeURI(url);
+      let fb = document.getElementById("share-facebook");
+      fb["data-href"] = url;
+      console.log(fb);
+    </script>
+    <div id="fb-root"></div>
+    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/ja_JP/sdk.js#xfbml=1&version=v21.0"></script>
+    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
   </body>
 </html>
 <!-- layout.html5.erb -->
