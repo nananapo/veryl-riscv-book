@@ -147,8 +147,14 @@ TODO
 
 CSRの読み書きでLED制御用のポートを制御することができるようになりました。
 
+=== テストを作成する
+
 == FPGAへの合成① (Tang Mega 138K Pro)
 
+=== 合成用の最上位モジュールの作成
+
+topをインスタンス化
+ファイルを設定
 
 === プロジェクトの作成
 
@@ -165,30 +171,40 @@ config
 SystemVerilog 2017
 core_top_tangmega138k
 
-タイミング
+=== 周波数の設定
+
+クロックは50MHzなので、sdcに書いておく
+
 //list[][]{
 create_clock -name clk -period 20 -waveform {0 10} [get_ports {clk}]
 //}
 
+合成したらわかることだが、50MHzにできない
+そのためPLLを挟んで10MHzにする。
+
+=== 物理制約の設定
+
 制約
 //list[][]{
-IO_LOC "led[5]" N23;
-IO_LOC "led[4]" N21;
-IO_LOC "led[3]" M25;
-IO_LOC "led[2]" L20;
-IO_LOC "led[1]" R26;
-IO_LOC "led[0]" J14;
+// Clock and Reset
 IO_LOC "clk" P16;
-IO_LOC "rst" U4;
+IO_LOC "rst" K16;
+IO_PORT "clk" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=OFF BANK_VCCIO=3.3;
+IO_PORT "rst" IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=3.3;
 
-IO_PORT "led[5]" PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
-IO_PORT "led[4]" PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
-IO_PORT "led[3]" PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
-IO_PORT "led[2]" PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
-IO_PORT "led[1]" PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
-IO_PORT "led[0]" PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
-IO_PORT "clk" PULL_MODE=NONE DRIVE=OFF BANK_VCCIO=3.3;
-IO_PORT "rst" PULL_MODE=UP DRIVE=OFF BANK_VCCIO=3.3;
+// LED
+IO_LOC "led[0]" J14;
+IO_LOC "led[1]" R26;
+IO_LOC "led[2]" L20;
+IO_LOC "led[3]" M25;
+IO_LOC "led[4]" N21;
+IO_LOC "led[5]" N23;
+IO_PORT "led[0]" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
+IO_PORT "led[1]" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
+IO_PORT "led[2]" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
+IO_PORT "led[3]" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
+IO_PORT "led[4]" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
+IO_PORT "led[5]" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
 //}
 
 == FPGAへの合成② (PYNQ-Z1)
