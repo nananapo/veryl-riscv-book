@@ -1,0 +1,764 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    
+    <title>Zicsr拡張の実装 | Verylで作るCPU</title>
+
+    <link rel="stylesheet" type="text/css" href="css/normalize.css" />
+    <link rel="stylesheet" type="text/css" href="css/webstyle.css" />
+    <link rel="next" title="riscv-testsによるテスト" href="04b-riscvtests.html">
+    <link rel="prev" title="RV32Iの実装" href="04-impl-rv32i.html">
+    <meta name="generator" content="Re:VIEW Starter">
+
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+
+  </head>
+  <body style="background-color:#eff4ff">
+    <div class="page-outer" style="background-color:white">
+      <div class="side-content">
+                <a class="nav-title" href="index.html">Verylで作るCPU</a>
+
+        <div style="display:flex; gap:10px; align-items: center;">
+          <a class="github-button" href="https://github.com/nananapo/veryl-riscv-book" data-color-scheme="no-preference: light_high_contrast; light: light; dark: dark;" data-size="large" data-show-count="true" aria-label="Star nananapo/veryl-riscv-book on GitHub">Star</a>
+          <div style="">
+            <a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-show-count="false">Tweet</a>
+          </div>
+          <div style="margin-bottom: 14px;" id="share-facebook" class="fb-share-button" data-href="" data-layout="" data-size=""><a target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Finvalid.invalid%2F&amp;src=sdkpreparse" class="fb-xfbml-parse-ignore">Facebookでシェアする</a></div>
+        </div>
+        <ul class="toc toc-1">
+    <li class="toc-chapter"><a href="./00-preface.html">まえがき</a></li>
+<li class="toc-part">第I部 RV32I/RV64Iの実装
+  <ul class="toc toc-2">
+    <li class="toc-chapter"><a href="./02-setup.html">1 環境構築</a></li>
+    <li class="toc-chapter"><a href="./03-veryl.html">2 ハードウェア記述言語 Veryl</a></li>
+    <li class="toc-chapter"><a href="./04-impl-rv32i.html">3 RV32Iの実装</a></li>
+    <li class="toc-chapter"><a href="./04a-zicsr.html">4 Zicsr拡張の実装</a>
+      <ul class="toc toc-3">
+        <li class="toc-section"><a href="./04a-zicsr.html#h4-1">4.1 CSRとは何か?</a></li>
+        <li class="toc-section"><a href="./04a-zicsr.html#h4-2">4.2 CSR命令のデコード</a></li>
+        <li class="toc-section"><a href="./04a-zicsr.html#h4-3">4.3 csrunitモジュールの実装</a></li>
+        <li class="toc-section"><a href="./04a-zicsr.html#h4-4">4.4 ECALL命令の実装</a></li>
+        <li class="toc-section"><a href="./04a-zicsr.html#h4-5">4.5 MRET命令の実装</a></li>
+      </ul>
+    </li>
+    <li class="toc-chapter"><a href="./04b-riscvtests.html">5 riscv-testsによるテスト</a></li>
+    <li class="toc-chapter"><a href="./05-impl-rv64i.html">6 RV64Iの実装</a></li>
+    <li class="toc-chapter"><a href="./05a-pipeline.html">7 CPUのパイプライン化</a></li>
+    <li class="toc-chapter"><a href="./05b-synth.html">8 CPUの合成</a></li>
+  </ul>
+</li>
+<li class="toc-part">第II部 RV64IMACの実装(未執筆)
+  <ul class="toc toc-2">
+    <li class="toc-chapter"><a href="./09-impl-m.html">9 M拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./10-impl-exception.html">10 例外の実装</a></li>
+    <li class="toc-chapter"><a href="./11-impl-mmio.html">11 Memory-mapped I/Oの実装</a></li>
+    <li class="toc-chapter"><a href="./12-visualize.html">12 可視化</a></li>
+    <li class="toc-chapter"><a href="./13-benchmark.html">13 ベンチマーク</a></li>
+    <li class="toc-chapter"><a href="./14-impl-a.html">14 A拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./15-impl-c.html">15 C拡張の実装</a></li>
+  </ul>
+</li>
+    <li class="toc-chapter"><a href="./99-postface.html">あとがき</a></li>
+    <li class="toc-chapter"><a href="./100-contribute.html">このプロジェクトに貢献する</a></li>
+    <li class="toc-chapter"><a href="./bib.html">参考文献</a></li>
+</ul>
+      </div>
+      <div class="page-inner">
+        <header class="page-header">
+        </header>
+        <main class="page-main">
+  <h1 class="boldlines center twolines"><a id="h4"></a><span class="secno">第4章</span> <br/>Zicsr拡張の実装</h1>
+
+<h2 class="numbox"><a id="h4-1"></a><span class="secno">4.1</span> CSRとは何か?</h2>
+<p>前の章では、RISC-Vの基本整数命令セットであるRV32Iを実装しました。既に簡単なプログラムを動かせますが、例外や割り込み、ページングなどの機能がありません<sup><a id="fnb-sorezore.atode" href="#fn-sorezore.atode" class="noteref" epub:type="noteref">*1</a></sup>。このような機能はCSRを介して提供されます。</p>
+<div class="footnote-list">
+<div class="footnote" id="fn-sorezore.atode" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>それぞれの機能は実装するときに解説します</p></div>
+</div><!--/.footnote-list-->
+<p>RISC-Vには、CSR(Control and Status Register)というレジスタが4096個存在しています。例えば<code class="inline-code">mtvec</code>というレジスタは、例外や割り込みが発生したときのジャンプ先のアドレスを格納しています。RISC-VのCPUは、CSRの読み書きによって制御(Control)や状態(Status)の読み取りを行います。</p>
+<p>CSRの読み書きを行う命令は、Zicsr拡張によって定義されています(<span class="tableref"><a href="./04a-zicsr.html#zicsr.insts">表4.1</a></span>)。本章では、Zicsrに定義されている命令、RV32Iに定義されているECALL命令、MRET命令、mtvecレジスタ、mepcレジスタ、mcauseレジスタを実装します。</p>
+<div id="zicsr.insts" class="table">
+<p class="caption">表4.1: Zicsr拡張に定義されている命令</p>
+<table>
+<tr class="hline"><th>命令</th><th>作用</th></tr>
+<tr class="hline"><td>CSRRW</td><td>CSRにrs1を書き込み、元のCSRの値をrdに書き込む</td></tr>
+<tr class="hline"><td>CSRRWI</td><td>CSRRWのrs1を、即値をゼロ拡張した値に置き換えた動作</td></tr>
+<tr class="hline"><td>CSRRS</td><td>CSRとrs1をビットORした値をCSRに書き込み、元のCSRの値をrdに書き込む</td></tr>
+<tr class="hline"><td>CSRRSI</td><td>CSRRSのrs1を、即値をゼロ拡張した値に置き換えた動作</td></tr>
+<tr class="hline"><td>CSRRC</td><td>CSRと~rs1(rs1のビットNOT)をビットANDした値をCSRに書き込み、<br />元のCSRの値をrdに書き込む</td></tr>
+<tr class="hline"><td>CSRRCI</td><td>CSRRCのrs1を、即値をゼロ拡張した値に置き換えた動作</td></tr>
+</table>
+</div>
+
+<h2 class="numbox"><a id="h4-2"></a><span class="secno">4.2</span> CSR命令のデコード</h2>
+<p>まず、Zicsrに定義されている命令(<span class="tableref"><a href="./04a-zicsr.html#zicsr.insts">表4.1</a></span>)をデコードします。</p>
+<p>これらの命令のopcodeは<code class="inline-code">SYSTEM</code>(<code class="inline-code">7'b1110011</code>)です。この値をeeiパッケージに定義します(<span class="listref"><a href="./04a-zicsr.html#eei.veryl.create-csrunit-range.opcode">リスト4.1</a></span>)。</p>
+<div id="eei.veryl.create-csrunit-range.opcode" class="caption-code">
+<span class="caption">リスト4.1: リスト4.1: opcode用の定数の定義 (eei.veryl)</span>
+<pre class="list language-opcode">    const OP_SYSTEM: logic&lt;7&gt; = 7'b1110011;
+</pre>
+</div>
+<p>次に、<code class="inline-code">InstCtrl</code>構造体に、CSRを制御する命令であることを示す<code class="inline-code">is_csr</code>フラグを追加します(<span class="listref"><a href="./04a-zicsr.html#corectrl.veryl.create-csrunit-range.is_csr">リスト4.2</a></span>)。</p>
+<div id="corectrl.veryl.create-csrunit-range.is_csr" class="caption-code">
+<span class="caption">リスト4.2: リスト4.2: is_csrを追加する (corectrl.veryl)</span>
+<pre class="list language-is_csr">    // 制御に使うフラグ用の構造体
+    struct InstCtrl {
+        itype   : InstType   , // 命令の形式
+        rwb_en  : logic      , // レジスタに書き込むかどうか
+        is_lui  : logic      , // LUI命令である
+        is_aluop: logic      , // ALUを利用する命令である
+        is_jump : logic      , // ジャンプ命令である
+        is_load : logic      , // ロード命令である
+        <b>is_csr  : logic      , // CSR命令である</b>
+        funct3  : logic   &lt;3&gt;, // 命令のfunct3フィールド
+        funct7  : logic   &lt;7&gt;, // 命令のfunct7フィールド
+    }
+</pre>
+</div>
+<p>これでデコード処理を書く準備が整いました。inst_decoderモジュールの<code class="inline-code">InstCtrl</code>を生成している部分を変更します(<span class="listref"><a href="./04a-zicsr.html#inst_decoder.veryl.create-csrunit-range.decode">リスト4.3</a></span>)。</p>
+<div id="inst_decoder.veryl.create-csrunit-range.decode" class="caption-code">
+<span class="caption">リスト4.3: リスト4.3: OP_SYSTEMとis_csrを追加する (inst_decoder.veryl)</span>
+<pre class="list language-decode">                                           is_csrを追加
+    ctrl = {case op {                           ↓
+        OP_LUI   : {InstType::U, T, T, F, F, F, <b>F</b>},
+        OP_AUIPC : {InstType::U, T, F, F, F, F, <b>F</b>},
+        OP_JAL   : {InstType::J, T, F, F, T, F, <b>F</b>},
+        OP_JALR  : {InstType::I, T, F, F, T, F, <b>F</b>},
+        OP_BRANCH: {InstType::B, F, F, F, F, F, <b>F</b>},
+        OP_LOAD  : {InstType::I, T, F, F, F, T, <b>F</b>},
+        OP_STORE : {InstType::S, F, F, F, F, F, <b>F</b>},
+        OP_OP    : {InstType::R, T, F, T, F, F, <b>F</b>},
+        OP_OP_IMM: {InstType::I, T, F, T, F, F, <b>F</b>},
+        <b>OP_SYSTEM: {InstType::I, T, F, F, F, F, T},</b>
+        default  : {InstType::X, F, F, F, F, F, <b>F</b>},
+    }, f3, f7};
+</pre>
+</div>
+<p><span class="listref"><a href="./04a-zicsr.html#inst_decoder.veryl.create-csrunit-range.decode">リスト4.3</a></span>では、opcodeが<code class="inline-code">OP_SYSTEM</code>な命令を、I形式、レジスタに結果を書き込む、CSRを操作する命令であるということにしています。他のopcodeの命令はCSRを操作しない命令であるということにしています。</p>
+<p>CSRRW、CSRRS、CSRRC命令は、rs1レジスタの値を利用します。CSRRWI、CSRRSI、CSRRCI命令は、命令のビット列中のrs1にあたるビット列(5ビット)を<code class="inline-code">0</code>で拡張した値を利用します。それぞれの命令はfunct3で区別できます(<span class="tableref"><a href="./04a-zicsr.html#zicsr.f3">表4.2</a></span>)。</p>
+<div id="zicsr.f3" class="table">
+<p class="caption">表4.2: Zicsrに定義されている命令(funct3による区別)</p>
+<table>
+<tr class="hline"><th>funct3</th><th>命令</th></tr>
+<tr class="hline"><td>3'b001</td><td>CSRRW</td></tr>
+<tr class="hline"><td>3'b101</td><td>CSRRWI</td></tr>
+<tr class="hline"><td>3'b010</td><td>CSRRS</td></tr>
+<tr class="hline"><td>3'b110</td><td>CSRRSI</td></tr>
+<tr class="hline"><td>3'b011</td><td>CSRRC</td></tr>
+<tr class="hline"><td>3'b111</td><td>CSRRCI</td></tr>
+</table>
+</div>
+<p>操作対象のCSRのアドレス(12ビット)は、命令のビットの上位12ビット(I形式の即値)をそのまま利用します。</p>
+
+<h2 class="numbox"><a id="h4-3"></a><span class="secno">4.3</span> csrunitモジュールの実装</h2>
+<p>CSRを操作する命令のデコードができたので、CSR関連の処理を行うモジュールを作成します。</p>
+
+<h3 class="none"><a id="h4-3-1"></a><span class="secno">4.3.1</span> csrunitモジュールを作成する</h3>
+<p><code class="inline-code">src/csrunit.veryl</code>を作成し、次のように記述します(<span class="listref"><a href="./04a-zicsr.html#csrunit.veryl.create-csrunit">リスト4.4</a></span>)。</p>
+<div id="csrunit.veryl.create-csrunit" class="caption-code">
+<span class="caption">リスト4.4: リスト4.4: csrunit.veryl</span>
+<pre class="list language-create-csrunit">import eei::*;
+import corectrl::*;
+
+module csrunit (
+    clk     : input  clock       ,
+    rst     : input  reset       ,
+    valid   : input  logic       ,
+    ctrl    : input  InstCtrl    ,
+    csr_addr: input  logic   &lt;12&gt;,
+    rs1     : input  UIntX       ,
+    rdata   : output UIntX       ,
+) {
+    // CSRR(W|S|C)[I]命令かどうか
+    let is_wsc: logic = ctrl.is_csr &amp;&amp; ctrl.funct3[1:0] != 0;
+}
+</pre>
+</div>
+<p>csrunitモジュールの主要なポートの定義は<span class="tableref"><a href="./04a-zicsr.html#csrunit.port">表4.3</a></span>のとおりです。まだcsrunitモジュールにはCSRが一つもないため、中身が空になっています。</p>
+<div id="csrunit.port" class="table">
+<p class="caption">表4.3: csrunitモジュールのポート定義</p>
+<table>
+<tr class="hline"><th>ポート名</th><th>型</th><th>向き</th><th>意味</th></tr>
+<tr class="hline"><td>valid</td><td>logic</td><td>input</td><td>命令が供給されているかどうか</td></tr>
+<tr class="hline"><td>ctrl</td><td>InstCtrl</td><td>input</td><td>命令のInstCtrl</td></tr>
+<tr class="hline"><td>csr_addr</td><td>logic&lt;12&gt;</td><td>input</td><td>命令が指定するCSRのアドレス (命令の上位12ビット)</td></tr>
+<tr class="hline"><td>rs1</td><td>UIntX</td><td>input</td><td>CSRR(W|S|C)のときrs1の値、<br />CSRR(W|S|C)Iのとき即値(5ビット)をゼロで拡張した値</td></tr>
+<tr class="hline"><td>rdata</td><td>UIntX</td><td>output</td><td>CSR命令よるCSR読み込みの結果</td></tr>
+</table>
+</div>
+<p>csrunitモジュールを、coreモジュールの中でインスタンス化します(<span class="listref"><a href="./04a-zicsr.html#core.veryl.create-csrunit-range.csru">リスト4.5</a></span>)。</p>
+<div id="core.veryl.create-csrunit-range.csru" class="caption-code">
+<span class="caption">リスト4.5: リスト4.5: csrunitモジュールのインスタンス化 (core.veryl)</span>
+<pre class="list language-csru">    var csru_rdata: UIntX;
+
+    inst csru: csrunit (
+        clk                       ,
+        rst                       ,
+        valid   : inst_valid      ,
+        ctrl    : inst_ctrl       ,
+        csr_addr: inst_bits[31:20],
+        rs1     : if inst_ctrl.funct3[2] == 1 &amp;&amp; inst_ctrl.funct3[1:0] != 0 {
+            {1'b0 repeat XLEN - $bits(rs1_addr), rs1_addr} // rs1を0で拡張する
+        } else {
+            rs1_data
+        },
+        rdata: csru_rdata,
+    );
+</pre>
+</div>
+<p>CSR命令の結果の受け取りのために変数<code class="inline-code">csru_rdata</code>を作成し、csrunitモジュールをインスタンス化しています。</p>
+<p><code class="inline-code">csr_addr</code>ポートには命令の上位12ビットを設定しています。<code class="inline-code">rs1</code>ポートには、即値を利用する命令(CSRR(W|S|C)I)の場合はrs1_addrを<code class="inline-code">0</code>で拡張した値を、それ以外の命令の場合はrs1のデータを設定しています。</p>
+<p>次に、CSRを読み込んだデータをレジスタにライトバックします。具体的には、<code class="inline-code">InstCtrl.is_csr</code>が<code class="inline-code">1</code>のとき、<code class="inline-code">wb_data</code>が<code class="inline-code">csru_rdata</code>になるようにします(<span class="listref"><a href="./04a-zicsr.html#core.veryl.create-csrunit-range.wb">リスト4.6</a></span>)。</p>
+<div id="core.veryl.create-csrunit-range.wb" class="caption-code">
+<span class="caption">リスト4.6: リスト4.6: CSR命令の結果がライトバックされるようにする (core.veryl)</span>
+<pre class="list language-wb">    let rd_addr: logic&lt;5&gt; = inst_bits[11:7];
+    let wb_data: UIntX    = if inst_ctrl.is_lui {
+        inst_imm
+    } else if inst_ctrl.is_jump {
+        inst_pc + 4
+    } else if inst_ctrl.is_load {
+        memu_rdata
+    } <b>else if inst_ctrl.is_csr {</b>
+        <b>csru_rdata</b>
+    <b>}</b> else {
+        alu_result
+    };
+</pre>
+</div>
+<p>最後に、デバッグ用の表示を追加します。デバッグ表示用のalways_ffブロックに、次のコードを追加してください(<span class="listref"><a href="./04a-zicsr.html#core.veryl.create-csrunit-range.debug">リスト4.7</a></span>)。</p>
+<div id="core.veryl.create-csrunit-range.debug" class="caption-code">
+<span class="caption">リスト4.7: リスト4.7: rdataをデバッグ表示する (core.veryl)</span>
+<pre class="list language-debug">    if inst_ctrl.is_csr {
+        $display(&quot;  csr rdata : %h&quot;, csru_rdata);
+    }
+</pre>
+</div>
+<p>これらのテストは、csrunitモジュールにCSRを追加してから行います。</p>
+
+<h3 class="none"><a id="h4-3-2"></a><span class="secno">4.3.2</span> mtvecレジスタを実装する</h3>
+<p>csrunitモジュールには、まだCSRが定義されていません。1つ目のCSRとして、mtvecレジスタを実装します。</p>
+
+<h4><a id="h4-3-2-1"></a>mtvecレジスタ、トラップ</h4>
+<div id="mtvec" class="image">
+<img src="images/04a-zicsr/mtvec.png" alt="mtvecのエンコーディング&lt;a href=&quot;bib.html#bib-isa-manual.2.fig10&quot;&gt;[9]&lt;/a&gt;" class="img" />
+<p class="caption">
+図4.1: mtvecのエンコーディング<a href="bib.html#bib-isa-manual.2.fig10">[9]</a>
+</p>
+</div>
+<p>mtvecレジスタは、仕様書<a href="bib.html#bib-isa-manual.2.3.1.7">[10]</a>に定義されています。mtvecは、MXLENビットのWARLなレジスタです。mtvecのアドレスは<code class="inline-code">12'h305</code>です。</p>
+<p>MXLENはmisaレジスタに定義されていますが、今のところはXLENと等しいという認識で問題ありません。WARLはWrite Any Values, Reads Legal Valuesの略です。その名の通り、好きな値を書き込めますが読み出すときには合法な値<sup><a id="fnb-what.is.legal" href="#fn-what.is.legal" class="noteref" epub:type="noteref">*2</a></sup>になっているという認識で問題ありません。</p>
+<div class="footnote-list">
+<div class="footnote" id="fn-what.is.legal" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*2] </span>合法な値とは実装がサポートしている有効な値のことです</p></div>
+</div><!--/.footnote-list-->
+<p>mtvecは、トラップ(Trap)が発生したときのジャンプ先(Trap-Vector)の基準となるアドレスを格納するレジスタです。<b>トラップ</b>とは、例外(Exception)、または割り込み(Interrupt)により、CPUの制御を変更することです<sup><a id="fnb-trap.define" href="#fn-trap.define" class="noteref" epub:type="noteref">*3</a></sup>。トラップが発生するとき、CPUはCSRを変更した後、mtvecに格納されたアドレスにジャンプします。</p>
+<p><b>例外</b>とは、命令の実行によって引き起こされる異常な状態(unusual condition)のことです。例えば、不正な命令を実行しようとしたときにはIllegal Instruction例外が発生します。CPUは、例外が発生したときのジャンプ先(対処方法)を決めておくことで、CPUが異常な状態に陥ったままにならないようにしています。</p>
+<p>mtvecはBASEとMODEの2つのフィールドで構成されています。MODEはジャンプ先の決め方を指定するためのフィールドですが、簡単のために常に<code class="inline-code">2'b00</code>(Directモード)になるようにします。Directモードのとき、トラップ時のジャンプ先は<code class="inline-code">BASE &lt;&lt; 2</code>になります。</p>
+<div class="footnote-list">
+<div class="footnote" id="fn-trap.define" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*3] </span>トラップや例外、割り込みはVolume Iの1.6Exceptions, Traps, and Interruptsに定義されています</p></div>
+</div><!--/.footnote-list-->
+
+<h4><a id="h4-3-2-2"></a>mtvecレジスタの実装</h4>
+<p>それでは、mtvecレジスタを実装します。まず、CSRのアドレスを表す列挙型を定義します(<span class="listref"><a href="./04a-zicsr.html#csrunit.veryl.create-mtvec-range.csr_addr">リスト4.8</a></span>)。</p>
+<div id="csrunit.veryl.create-mtvec-range.csr_addr" class="caption-code">
+<span class="caption">リスト4.8: リスト4.8: CsrAddr型を定義する (csrunit.veryl)</span>
+<pre class="list language-csr_addr">    // CSRのアドレス
+    enum CsrAddr: logic&lt;12&gt; {
+        MTVEC = 12'h305,
+    }
+</pre>
+</div>
+<p>次に、mtvecレジスタを作成します。MXLEN=XLENとしているので、型は<code class="inline-code">UIntX</code>にします(<span class="listref"><a href="./04a-zicsr.html#csrunit.veryl.create-mtvec-range.mtvec">リスト4.9</a></span>)。</p>
+<div id="csrunit.veryl.create-mtvec-range.mtvec" class="caption-code">
+<span class="caption">リスト4.9: リスト4.9: mtvecレジスタの定義 (csrunit.veryl)</span>
+<pre class="list language-mtvec">    // CSR
+    var mtvec: UIntX;
+</pre>
+</div>
+<p>MODEはDirectモード(<code class="inline-code">2'b00</code>)しか対応していません。mtvecはWARLなレジスタなので、MODEフィールドには書き込めないようにする必要があります。これを制御するためにmtvecレジスタの書き込みマスク用の定数を定義します(<span class="listref"><a href="./04a-zicsr.html#csrunit.veryl.create-mtvec-range.wmask">リスト4.10</a></span>)。</p>
+<div id="csrunit.veryl.create-mtvec-range.wmask" class="caption-code">
+<span class="caption">リスト4.10: リスト4.10: mtvecレジスタの書き込みマスクの定義 (csrunit.veryl)</span>
+<pre class="list language-wmask">    // wmasks
+    const MTVEC_WMASK: UIntX = 'hffff_fffc;
+</pre>
+</div>
+<p>次に、書き込むデータ<code class="inline-code">wdata</code>の生成と、mtvecレジスタの読み込みを実装します(<span class="listref"><a href="./04a-zicsr.html#csrunit.veryl.create-mtvec-range.rw">リスト4.11</a></span>)。</p>
+<div id="csrunit.veryl.create-mtvec-range.rw" class="caption-code">
+<span class="caption">リスト4.11: リスト4.11: レジスタの読み込みと書き込むデータの作成 (csrunit.veryl)</span>
+<pre class="list language-rw">    var wmask: UIntX; // write mask
+    var wdata: UIntX; // write data
+
+     always_comb {
+        // read
+        rdata = case csr_addr {
+            CsrAddr::MTVEC: mtvec,
+            default       : 'x,
+        };
+        // write
+        wmask = case csr_addr {
+            CsrAddr::MTVEC: MTVEC_WMASK,
+            default       : 0,
+        };
+        wdata = case ctrl.funct3[1:0] {
+            2'b01  : rs1,
+            2'b10  : rdata | rs1,
+            2'b11  : rdata &amp; ~rs1,
+            default: 'x,
+        } &amp; wmask;
+    }
+</pre>
+</div>
+<p>always_combブロックで、<code class="inline-code">rdata</code>ポートに<code class="inline-code">csr_addr</code>に応じたCSRの値を割り当てます。<code class="inline-code">wdata</code>には、CSRに書き込むデータを割り当てます。CSRに書き込むデータは、書き込む命令(CSRRW[I]、CSRRS[I]、CSRRC[I])によって異なります。<code class="inline-code">rs1</code>ポートにはrs1の値か即値が供給されているため、これと<code class="inline-code">rdata</code>を利用して<code class="inline-code">wdata</code>を生成しています。funct3と演算の種類の関係は<span class="tableref"><a href="./04a-zicsr.html#zicsr.f3">表4.2</a></span>を参照してください。</p>
+<p>最後に、mtvecレジスタへの書き込み処理を実装します。mtvecへの書き込みは、命令がCSR命令である場合(<code class="inline-code">is_wsc</code>)にのみ行います(<span class="listref"><a href="./04a-zicsr.html#csrunit.veryl.create-mtvec-range.always">リスト4.12</a></span>)。</p>
+<div id="csrunit.veryl.create-mtvec-range.always" class="caption-code">
+<span class="caption">リスト4.12: リスト4.12: CSRへの書き込み処理 (csrunit.veryl)</span>
+<pre class="list language-always">    always_ff {
+        if_reset {
+            mtvec = 0;
+        } else {
+            if valid {
+                if is_wsc {
+                    case csr_addr {
+                        CsrAddr::MTVEC: mtvec = wdata;
+                        default       : {}
+                    }
+                }
+            }
+        }
+    }
+</pre>
+</div>
+<p>mtvecの初期値は<code class="inline-code">0</code>です。mtvecに<code class="inline-code">wdata</code>を書き込むとき、MODEが常に<code class="inline-code">2'b00</code>になります。</p>
+
+<h3 class="none"><a id="h4-3-3"></a><span class="secno">4.3.3</span> csrunitモジュールをテストする</h3>
+<p>mtvecレジスタの書き込み、読み込みができることを確認します。</p>
+<p><code class="inline-code">test/sample_csr.hex</code>を作成し、次のように記述します(<span class="listref"><a href="./04a-zicsr.html#sample_csr.hex">リスト4.13</a></span>)。</p>
+<div id="sample_csr.hex" class="caption-code">
+<span class="caption">リスト4.13: リスト4.13: sample_csr.hex</span>
+<pre class="list language-hex">305bd0f3 // 0: csrrwi x1, mtvec, 0b10111
+30502173 // 4: csrrs  x2, mtvec, x0
+</pre>
+</div>
+<p>テストでは、CSRRWI命令でmtvecに<code class="inline-code">32'b10111</code>を書き込んだ後、CSRRS命令でmtvecの値を読み込みます。CSRRS命令で読み込むとき、rs1をx0(ゼロレジスタ)にすることで、mtvecの値を変更せずに読み込みます。</p>
+<p>シミュレータを実行し、結果を確かめます(<span class="listref"><a href="./04a-zicsr.html#mtvec.rw.test">リスト4.14</a></span>)。</p>
+<div id="mtvec.rw.test" class="cmd-code">
+<span class="caption">リスト4.14: リスト4.14: mtvecの読み込み/書き込みテストの実行</span>
+<pre class="list language-test">$ <span class="userinput">make build</span>
+$ <span class="userinput">make sim</span>
+$ <span class="userinput">./obj_dir/sim test/sample_csr.hex 5</span>
+#                    4
+00000000 : 305bd0f3 <span class="balloon">← mtvecに32'b10111を書き込む</span>
+  itype     : 000010
+  rs1[23]   : 00000000 <span class="balloon">← CSRRWIなので、mtvecに32'b10111(=23)を書き込む</span>
+  csr rdata : 00000000 <span class="balloon">← mtvecの初期値(0)が読み込まれている</span>
+  reg[ 1] &lt;= 00000000
+#                    5
+00000004 : 30502173 <span class="balloon">← mtvecを読み込む</span>
+  itype     : 000010
+  csr rdata : 00000014 <span class="balloon">← mtvecに書き込まれた値を読み込んでいる</span>
+  reg[ 2] &lt;= 00000014 <span class="balloon">← 32'b10111のMODE部分がマスクされて、32'b10100 = 14になっている</span>
+</pre>
+</div>
+<p>mtvecのBASEフィールドにのみ書き込みが行われ、<code class="inline-code">32'h00000014</code>が読み込まれることを確認できます。</p>
+
+<h2 class="numbox"><a id="h4-4"></a><span class="secno">4.4</span> ECALL命令の実装</h2>
+<p>せっかくmtvecレジスタを実装したので、これを使う命令を実装します。</p>
+
+<h3 class="none"><a id="h4-4-1"></a><span class="secno">4.4.1</span> ECALL命令とは何か?</h3>
+<p>RV32Iには、意図的に例外を発生させる命令としてECALL命令が定義されています。ECALL命令を実行すると、現在の権限レベル(Privilege Level)に応じて<span class="tableref"><a href="./04a-zicsr.html#ecall.expts">表4.4</a></span>のような例外が発生します。</p>
+<p><b>権限レベル</b>とは、権限(特権)を持つソフトウェアを実装するための機能です。例えばOS上で動くソフトウェアは、セキュリティのために、他のソフトウェアのメモリを侵害できないようにする必要があります。権限レベル機能があると、このような保護を、権限のあるOSが権限のないソフトウェアを管理するという風に実現できます。</p>
+<p>権限レベルはいくつか定義されていますが、本章では最高の権限レベルであるMachineレベル(M-mode)しかないものとします。</p>
+<div id="ecall.expts" class="table">
+<p class="caption">表4.4: 権限レベルとECALLによる例外</p>
+<table>
+<tr class="hline"><th>権限レベル</th><th>ECALLによって発生する例外</th></tr>
+<tr class="hline"><td>M</td><td>Environment call from M-mode</td></tr>
+<tr class="hline"><td>S</td><td>Environment call from S-mode</td></tr>
+<tr class="hline"><td>U</td><td>Environment call from U-mode</td></tr>
+</table>
+</div>
+
+<h4><a id="h4-4-1-1"></a>mcause、mepcレジスタ</h4>
+<p>ECALL命令を実行すると例外が発生します。例外が発生するとmtvecにジャンプし、例外が発生した時の処理を行います。これだけでもいいのですが、例外が発生したときに、どこで(PC)、どのような例外が発生したのかを知りたいことがあります。これを知るために、RISC-Vには、どこで例外が発生したかを格納するmepcレジスタと、例外の発生原因を格納するmcauseレジスタが存在しています。</p>
+<p>CPUは例外が発生すると、mtvecにジャンプする前に、mepcに現在のPC、mcauseに発生原因を格納します。これにより、mtvecにジャンプしてから例外に応じた処理を実行できるようになります。</p>
+<p>例外の発生原因は数値で表現されており、Environment call from M-mode例外には11が割り当てられています。</p>
+
+<h3 class="none"><a id="h4-4-2"></a><span class="secno">4.4.2</span> トラップを実装する</h3>
+<p>それでは、ECALL命令とトラップの仕組みを実装します。</p>
+
+<h4><a id="h4-4-2-1"></a>定数の定義</h4>
+<p>まず、mepcとmcauseのアドレスを<code class="inline-code">CsrAddr</code>型に追加します(<span class="listref"><a href="./04a-zicsr.html#csrunit.veryl.create-ecall-range.addr">リスト4.15</a></span>)。</p>
+<div id="csrunit.veryl.create-ecall-range.addr" class="caption-code">
+<span class="caption">リスト4.15: リスト4.15: mepcとmcauseのアドレスを追加する (csrunit.veryl)</span>
+<pre class="list language-addr">    // CSRのアドレス
+    enum CsrAddr: logic&lt;12&gt; {
+        MTVEC = 12'h305,
+        <b>MEPC = 12'h341,</b>
+        <b>MCAUSE = 12'h342,</b>
+    }
+</pre>
+</div>
+<p>次に、トラップの発生原因を表現する型<code class="inline-code">CsrCause</code>を定義します。今のところ、発生原因はECALL命令によるEnvironment Call From M-mode例外しかありません(<span class="listref"><a href="./04a-zicsr.html#csrunit.veryl.create-ecall-range.cause">リスト4.16</a></span>)。</p>
+<div id="csrunit.veryl.create-ecall-range.cause" class="caption-code">
+<span class="caption">リスト4.16: リスト4.16: CsrCause型の定義 (csrunit.veryl)</span>
+<pre class="list language-cause">    enum CsrCause: UIntX {
+        ENVIRONMENT_CALL_FROM_M_MODE = 11,
+    }
+</pre>
+</div>
+<p>最後に、mepcとmcauseの書き込みマスクを定義します(<span class="listref"><a href="./04a-zicsr.html#csrunit.veryl.create-ecall-range.wmask">リスト4.17</a></span>)。mepcに格納されるのは例外が発生した時の命令のアドレスです。命令は4バイトに整列して配置されているため、mepcの下位2ビットは常に<code class="inline-code">2'b00</code>になるようにします。</p>
+<div id="csrunit.veryl.create-ecall-range.wmask" class="caption-code">
+<span class="caption">リスト4.17: リスト4.17: mepcとmcauseの書き込みマスクの定義 (csrunit.veryl)</span>
+<pre class="list language-wmask">    const MTVEC_WMASK : UIntX = 'hffff_fffc;
+    <b>const MEPC_WMASK  : UIntX = 'hffff_fffc;</b>
+    <b>const MCAUSE_WMASK: UIntX = 'hffff_ffff;</b>
+</pre>
+</div>
+
+<h4><a id="h4-4-2-2"></a>mepcとmcauseレジスタの実装</h4>
+<p>mepcとmcauseレジスタを作成します。サイズはMXLEN(=XLEN)なため、型は<code class="inline-code">UIntX</code>とします(<span class="listref"><a href="./04a-zicsr.html#csrunit.veryl.create-ecall-range.reg">リスト4.18</a></span>)。</p>
+<div id="csrunit.veryl.create-ecall-range.reg" class="caption-code">
+<span class="caption">リスト4.18: リスト4.18: mepcとmcauseレジスタの定義 (csrunit.veryl)</span>
+<pre class="list language-reg">    // CSR
+    var mtvec : UIntX;
+    <b>var mepc  : UIntX;</b>
+    <b>var mcause: UIntX;</b>
+</pre>
+</div>
+<p>次に、mepcとmcauseの読み込み処理と、書き込みマスクの割り当てを実装します。どちらもcase文にアドレスと値のペアを追加するだけです(<span class="listref"><a href="./04a-zicsr.html#csrunit.veryl.create-ecall-range.rdata">リスト4.19</a></span>、<span class="listref"><a href="./04a-zicsr.html#csrunit.veryl.create-ecall-range.always_wmask">リスト4.20</a></span>)。</p>
+<div id="csrunit.veryl.create-ecall-range.rdata" class="caption-code">
+<span class="caption">リスト4.19: リスト4.19: mepcとmcauseの読み込み (csrunit.veryl)</span>
+<pre class="list language-rdata">    rdata = case csr_addr {
+        CsrAddr::MTVEC : mtvec,
+        <b>CsrAddr::MEPC  : mepc,</b>
+        <b>CsrAddr::MCAUSE: mcause,</b>
+        default        : 'x,
+    };
+</pre>
+</div>
+<div id="csrunit.veryl.create-ecall-range.always_wmask" class="caption-code">
+<span class="caption">リスト4.20: リスト4.20: mepcとmcauseの書き込みマスクの設定 (csrunit.veryl)</span>
+<pre class="list language-always_wmask">    wmask = case csr_addr {
+        CsrAddr::MTVEC : MTVEC_WMASK,
+        <b>CsrAddr::MEPC  : MEPC_WMASK,</b>
+        <b>CsrAddr::MCAUSE: MCAUSE_WMASK,</b>
+        default        : 0,
+    };
+</pre>
+</div>
+<p>最後に、mepcとmcauseの書き込みを実装します。if_resetで値を<code class="inline-code">0</code>に初期化し、case文にmepcとmcauseの場合を実装します(<span class="listref"><a href="./04a-zicsr.html#csrunit.veryl.create-ecall-range.always_ff_csr">リスト4.21</a></span>)。</p>
+<div id="csrunit.veryl.create-ecall-range.always_ff_csr" class="caption-code">
+<span class="caption">リスト4.21: リスト4.21: mepcとmcauseの書き込み (csrunit.veryl)</span>
+<pre class="list language-always_ff_csr">always_ff {
+    if_reset {
+        mtvec  = 0;
+        <b>mepc   = 0;</b>
+        <b>mcause = 0;</b>
+    } else {
+        if valid {
+            if is_wsc {
+                case csr_addr {
+                    CsrAddr::MTVEC : mtvec  = wdata;
+                    <b>CsrAddr::MEPC  : mepc   = wdata;</b>
+                    <b>CsrAddr::MCAUSE: mcause = wdata;</b>
+                    default        : {}
+                }
+            }
+        }
+    }
+}
+</pre>
+</div>
+
+<h4><a id="h4-4-2-3"></a>例外の実装</h4>
+<p>ECALL命令と、それによって発生するトラップを実装します。まず、csrunitモジュールにポートを追加します(<span class="listref"><a href="./04a-zicsr.html#csrunit.veryl.create-ecall-range.port">リスト4.22</a></span>)。</p>
+<div id="csrunit.veryl.create-ecall-range.port" class="caption-code">
+<span class="caption">リスト4.22: リスト4.22: csrunitモジュールにポートを追加する (csrunit.veryl)</span>
+<pre class="list language-port">module csrunit (
+    clk        : input  clock       ,
+    rst        : input  reset       ,
+    valid      : input  logic       ,
+    <b>pc         : input  Addr        ,</b>
+    ctrl       : input  InstCtrl    ,
+    <b>rd_addr    : input  logic   &lt;5&gt; ,</b>
+    csr_addr   : input  logic   &lt;12&gt;,
+    rs1        : input  UIntX       ,
+    rdata      : output UIntX       ,
+    <b>raise_trap : output logic       ,</b>
+    <b>trap_vector: output Addr        ,</b>
+) {
+</pre>
+</div>
+<p>それぞれの用途は次の通りです。</p>
+<dl>
+<dt>pc</dt>
+<dd>
+	現在処理している命令のアドレスを受け取ります。<br />
+	例外が発生するとき、mepcにPCを格納するために使います。
+</dd>
+<dt>rd_addr</dt>
+<dd>
+	現在処理している命令のrdの番号を受け取ります。<br />
+	命令がECALL命令かどうかを判定するために使います。
+</dd>
+<dt>raise_trap</dt>
+<dd>
+	例外が発生するとき、値を<code class="inline-code">1</code>にします。
+</dd>
+<dt>trap_vector</dt>
+<dd>
+	例外が発生するとき、ジャンプ先のアドレスを出力します。
+</dd>
+</dl>
+<p>csrunitモジュールの中身を実装する前に、coreモジュールに例外発生時の動作を実装します。</p>
+<p>csrunitモジュールと接続するための変数を定義してcsrunitモジュールと接続します(<span class="listref"><a href="./04a-zicsr.html#core.veryl.create-ecall-range.reg">リスト4.23</a></span>、<span class="listref"><a href="./04a-zicsr.html#core.veryl.create-ecall-range.inst">リスト4.24</a></span>)。</p>
+<div id="core.veryl.create-ecall-range.reg" class="caption-code">
+<span class="caption">リスト4.23: リスト4.23: csrunitモジュールのポートの定義を変更する ① (core.veryl)</span>
+<pre class="list language-reg">    var csru_rdata      : UIntX;
+    <b>var csru_raise_trap : logic;</b>
+    <b>var csru_trap_vector: Addr ;</b>
+</pre>
+</div>
+<div id="core.veryl.create-ecall-range.inst" class="caption-code">
+<span class="caption">リスト4.24: リスト4.24: csrunitモジュールのポートの定義を変更する ② (core.veryl)</span>
+<pre class="list language-inst">    inst csru: csrunit (
+        clk                       ,
+        rst                       ,
+        valid   : inst_valid      ,
+        <b>pc      : inst_pc         ,</b>
+        ctrl    : inst_ctrl       ,
+        <b>rd_addr                   ,</b>
+        csr_addr: inst_bits[31:20],
+        rs1     : if inst_ctrl.funct3[2] == 1 &amp;&amp; inst_ctrl.funct3[1:0] != 0 {
+            {1'b0 repeat XLEN - $bits(rs1_addr), rs1_addr} // rs1を0で拡張する
+        } else {
+            rs1_data
+        },
+        rdata      : csru_rdata,
+        <b>raise_trap : csru_raise_trap,</b>
+        <b>trap_vector: csru_trap_vector,</b>
+    );
+</pre>
+</div>
+<p>次に、トラップするときにトラップ先にジャンプさせます。</p>
+<p>例外が発生するとき、<code class="inline-code">csru_raise_trap</code>が<code class="inline-code">1</code>になり、<code class="inline-code">csru_trap_vector</code>がトラップ先になります。トラップするときの動作には、ジャンプと分岐命令の仕組みを利用します。<code class="inline-code">control_hazard</code>の条件に<code class="inline-code">csru_raise_trap</code>を追加して、トラップするときに<code class="inline-code">control_hazard_pc_next</code>を<code class="inline-code">csru_trap_vector</code>に設定します(<span class="listref"><a href="./04a-zicsr.html#core.veryl.create-ecall-range.hazard">リスト4.25</a></span>)。</p>
+<div id="core.veryl.create-ecall-range.hazard" class="caption-code">
+<span class="caption">リスト4.25: リスト4.25: 例外の発生時にジャンプさせる (core.veryl)</span>
+<pre class="list language-hazard">    assign control_hazard = inst_valid &amp;&amp; (
+        <b>csru_raise_trap ||</b>
+        inst_ctrl.is_jump ||
+        inst_is_br(inst_ctrl) &amp;&amp; brunit_take
+    );
+    assign control_hazard_pc_next = <b>if csru_raise_trap {</b>
+        <b>csru_trap_vector</b> <span class="balloon">← トラップするとき、trap_vectorに飛ぶ</span>
+    <b>} else </b>if inst_is_br(inst_ctrl) {
+        inst_pc + inst_imm
+    } else {
+        alu_result
+    };
+</pre>
+</div>
+<div id="ecall_enc" class="image">
+<img src="images/04a-zicsr/ecall_enc.png" alt="ECALL命令のフォーマット&lt;a href=&quot;bib.html#bib-isa-manual.1.37&quot;&gt;[6]&lt;/a&gt;" class="img" />
+<p class="caption">
+図4.2: ECALL命令のフォーマット<a href="bib.html#bib-isa-manual.1.37">[6]</a>
+</p>
+</div>
+<p>それでは、csrunitモジュールにトラップの処理を実装します。</p>
+<p>ECALL命令は、I形式、即値は<code class="inline-code">0</code>、rs1とrdは<code class="inline-code">0</code>、funct3は<code class="inline-code">0</code>、opcodeは<code class="inline-code">SYSTEM</code>な命令です(<span class="imgref"><a href="./04a-zicsr.html#ecall_enc">図4.2</a></span>)。これを判定するための変数を作成します(<span class="listref"><a href="./04a-zicsr.html#csrunit.veryl.create-ecall-range.is_ecall">リスト4.26</a></span>)。</p>
+<div id="csrunit.veryl.create-ecall-range.is_ecall" class="caption-code">
+<span class="caption">リスト4.26: リスト4.26: ECALL命令かどうかの判定 (csrunit.veryl)</span>
+<pre class="list language-is_ecall">    // ECALL命令かどうか
+    let is_ecall: logic = ctrl.is_csr &amp;&amp; csr_addr == 0 &amp;&amp; rs1[4:0] == 0 &amp;&amp; ctrl.funct3 == 0 &amp;&amp; rd_addr == 0;
+</pre>
+</div>
+<p>次に、例外が発生するかどうかを示す<code class="inline-code">raise_expt</code>と、例外の発生の原因を示す<code class="inline-code">expt_cause</code>を作成します。今のところ、例外はECALL命令によってのみ発生するため、<code class="inline-code">expt_cause</code>は実質的に定数になっています(<span class="listref"><a href="./04a-zicsr.html#csrunit.veryl.create-ecall-range.expt">リスト4.27</a></span>)。</p>
+<div id="csrunit.veryl.create-ecall-range.expt" class="caption-code">
+<span class="caption">リスト4.27: リスト4.27: 例外とトラップの判定 (csrunit.veryl)</span>
+<pre class="list language-expt">    // Exception
+    let raise_expt: logic = valid &amp;&amp; is_ecall;
+    let expt_cause: UIntX = CsrCause::ENVIRONMENT_CALL_FROM_M_MODE;
+
+    // Trap
+    assign raise_trap  = raise_expt;
+    let trap_cause : UIntX = expt_cause;
+    assign trap_vector = mtvec;
+</pre>
+</div>
+<p>トラップが発生するかどうかを示す<code class="inline-code">raise_trap</code>には、例外が発生するかどうかを割り当てます。トラップの原因を示す<code class="inline-code">trap_cause</code>には、例外の発生原因を割り当てます。また、トラップ先には<code class="inline-code">mtvec</code>を割り当てます。</p>
+<p>最後に、トラップに伴うCSRの変更を実装します。トラップが発生するとき、mepcレジスタにPC、mcauseレジスタにトラップの発生原因を格納します(<span class="listref"><a href="./04a-zicsr.html#csrunit.veryl.create-ecall-range.always_ff_trap">リスト4.28</a></span>)。</p>
+<div id="csrunit.veryl.create-ecall-range.always_ff_trap" class="caption-code">
+<span class="caption">リスト4.28: リスト4.28: トラップが発生したらCSRを変更する (csrunit.veryl)</span>
+<pre class="list language-always_ff_trap">always_ff {
+    if_reset {
+        ...
+    } else {
+        if valid {
+            <b>if raise_trap {</b> <span class="balloon">← トラップ時の動作</span>
+                <b>mepc   = pc;</b>
+                <b>mcause = trap_cause;</b>
+            <b>} else {</b>
+                if is_wsc {
+                    ...
+</pre>
+</div>
+
+<h3 class="none"><a id="h4-4-3"></a><span class="secno">4.4.3</span> ECALL命令をテストする</h3>
+<p>ECALL命令をテストする前に、デバッグのために<code class="inline-code">$display</code>システムタスクで、例外が発生したかどうかと、トラップ先を表示します(<span class="listref"><a href="./04a-zicsr.html#core.veryl.create-ecall-range.debug">リスト4.29</a></span>)。</p>
+<div id="core.veryl.create-ecall-range.debug" class="caption-code">
+<span class="caption">リスト4.29: リスト4.29: トラップの情報をデバッグ表示する (core.veryl)</span>
+<pre class="list language-debug">    if inst_ctrl.is_csr {
+        $display(&quot;  csr rdata : %h&quot;, csru_rdata);
+        <b>$display(&quot;  csr trap  : %b&quot;, csru_raise_trap);</b>
+        <b>$display(&quot;  csr vec   : %h&quot;, csru_trap_vector);</b>
+    }
+</pre>
+</div>
+<p><code class="inline-code">test/sample_ecall.hex</code>を作成し、次のように記述します(<span class="listref"><a href="./04a-zicsr.html#sample_ecall.hex">リスト4.30</a></span>)。</p>
+<div id="sample_ecall.hex" class="caption-code">
+<span class="caption">リスト4.30: リスト4.30: sample_ecall.hex</span>
+<pre class="list language-hex">30585073 //  0: csrrwi x0, mtvec, 0x10
+00000073 //  4: ecall
+00000000 //  8:
+00000000 //  c:
+342020f3 // 10: csrrs x1, mcause, x0
+34102173 // 14: csrrs x2, mepc, x0
+</pre>
+</div>
+<p>CSRRWI命令でmtvecレジスタに値を書き込み、ECALL命令で例外を発生させてジャンプします。ジャンプ先では、mcauseレジスタとmepcレジスタの値を読み取ります。</p>
+<p>シミュレータを実行し、結果を確かめます(<span class="listref"><a href="./04a-zicsr.html#ecall.test">リスト4.31</a></span>)。</p>
+<div id="ecall.test" class="cmd-code">
+<span class="caption">リスト4.31: リスト4.31: ECALL命令のテストの実行</span>
+<pre class="list language-test">$ <span class="userinput">make build</span>
+$ <span class="userinput">make sim</span>
+$ <span class="userinput">./obj_dir/sim test/sample_ecall.hex 10</span>
+#                    4
+00000000 : 30585073 <span class="balloon">← CSRRWIでmtvecに書き込み</span>
+  rs1[16]   : 00000000 <span class="balloon">← 10(=16)をmtvecに書き込む</span>
+  csr trap  : 0
+  csr vec   : 00000000
+  reg[ 0] &lt;= 00000000
+#                    5
+00000004 : 00000073
+  csr trap  : 1 <span class="balloon">← ECALL命令により、例外が発生する</span>
+  csr vec   : 00000010 <span class="balloon">← ジャンプ先は0x10</span>
+  reg[ 0] &lt;= 00000000
+#                    9
+00000010 : 342020f3
+  csr rdata : 0000000b <span class="balloon">← CSRRSでmcauseを読み込む</span>
+  reg[ 1] &lt;= 0000000b <span class="balloon">← Environment call from M-modeなのでb(=11)</span>
+#                   10
+00000014 : 34102173
+  csr rdata : 00000004 <span class="balloon">← CSRRSでmepcを読み込む</span>
+  reg[ 2] &lt;= 00000004 <span class="balloon">← 例外はアドレス4で発生したので4</span>
+</pre>
+</div>
+<p>ECALL命令によって例外が発生し、mcauseとmepcに書き込みが行われてからmtvecにジャンプしていることを確認できます。</p>
+<p>ECALL命令の実行時にレジスタに値がライトバックされてしまっていますが、ECALL命令のrdは常に0番目のレジスタであり、0番目のレジスタは常に値が<code class="inline-code">0</code>になるため問題ありません。</p>
+
+<h2 class="numbox"><a id="h4-5"></a><span class="secno">4.5</span> MRET命令の実装</h2>
+<p>MRET命令<sup><a id="fnb-mret.manual" href="#fn-mret.manual" class="noteref" epub:type="noteref">*4</a></sup>は、トラップ先からトラップ元に戻るための命令です。MRET命令を実行すると、mepcレジスタに格納されたアドレスにジャンプします<sup><a id="fnb-mret.other" href="#fn-mret.other" class="noteref" epub:type="noteref">*5</a></sup>。例えば、権限のあるOSから権限のないユーザー空間に戻るために利用します。</p>
+<div class="footnote-list">
+<div class="footnote" id="fn-mret.manual" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*4] </span>MRET命令はVolume IIの3.3.2. Trap-Return Instructionsに定義されています</p></div>
+<div class="footnote" id="fn-mret.other" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*5] </span>他のCSRや権限レベルが実装されている場合は、他にも行うことがあります</p></div>
+</div><!--/.footnote-list-->
+
+<h3 class="none"><a id="h4-5-1"></a><span class="secno">4.5.1</span> MRET命令を実装する</h3>
+<div id="mret_enc" class="image">
+<img src="images/04a-zicsr/mret_enc.png" alt="MRET命令のフォーマット&lt;a href=&quot;bib.html#bib-isa-manual.2.15&quot;&gt;[11]&lt;/a&gt;" class="img" />
+<p class="caption">
+図4.3: MRET命令のフォーマット<a href="bib.html#bib-isa-manual.2.15">[11]</a>
+</p>
+</div>
+<p>まず、csrunitモジュールに供給されている命令がMRET命令かどうかを判定する変数<code class="inline-code">is_mret</code>を作成します(<span class="listref"><a href="./04a-zicsr.html#csrunit.veryl.create-mret-range.is_mret">リスト4.32</a></span>)。MRET命令は、上位12ビットは<code class="inline-code">12'b001100000010</code>、rs1は<code class="inline-code">0</code>、funct3は<code class="inline-code">0</code>、rdは<code class="inline-code">0</code>です(<span class="imgref"><a href="./04a-zicsr.html#mret_enc">図4.3</a></span>)。</p>
+<div id="csrunit.veryl.create-mret-range.is_mret" class="caption-code">
+<span class="caption">リスト4.32: リスト4.32: MRET命令の判定 (csrunit.veryl)</span>
+<pre class="list language-is_mret">    // MRET命令かどうか
+    let is_mret: logic = ctrl.is_csr &amp;&amp; csr_addr == 12'b0011000_00010 &amp;&amp; rs1[4:0] == 0 &amp;&amp; ctrl.funct3 == 0 &amp;&amp; rd_addr == 0;
+</pre>
+</div>
+<p>次に、csrunitモジュールにMRET命令が供給されているときにmepcにジャンプする仕組みを実装します。ジャンプするための仕組みには、トラップによってジャンプする仕組みを利用します(<span class="listref"><a href="./04a-zicsr.html#csrunit.veryl.create-mret-range.trap">リスト4.33</a></span>)。<code class="inline-code">raise_trap</code>に<code class="inline-code">is_mret</code>を追加し、トラップ先も変更します。</p>
+<div id="csrunit.veryl.create-mret-range.trap" class="caption-code">
+<span class="caption">リスト4.33: リスト4.33: MRET命令によってジャンプさせる (csrunit.veryl)</span>
+<pre class="list language-trap">    // Trap
+    assign raise_trap  = raise_expt <b>|| (valid &amp;&amp; is_mret)</b>;
+    let trap_cause : UIntX = expt_cause;
+    assign trap_vector = <b>if raise_expt {</b>
+        mtvec
+    <b>} else {</b>
+        <b>mepc</b>
+    <b>}</b>;
+</pre>
+</div>
+<div class="note">
+<h5>例外が優先</h5>
+<p>trap_vectorには、<code class="inline-code">is_mret</code>のときに<code class="inline-code">mepc</code>を割り当てるのではなく、<code class="inline-code">raise_expt</code>のときに<code class="inline-code">mtvec</code>を割り当てています。これは、MRET命令によって発生する例外があるからです。MRET命令の判定を優先すると、例外が発生するのにmepcにジャンプしてしまいます。</p>
+</div>
+
+<h3 class="none"><a id="h4-5-2"></a><span class="secno">4.5.2</span> MRET命令をテストする</h3>
+<p>mepcに値を設定してからMRET命令を実行することでmepcにジャンプするようなテストを作成します(<span class="listref"><a href="./04a-zicsr.html#sample_mret.hex">リスト4.34</a></span>)。</p>
+<div id="sample_mret.hex" class="caption-code">
+<span class="caption">リスト4.34: リスト4.34: sample_mret.hex</span>
+<pre class="list language-hex">34185073 //  0: csrrwi x0, mepc, 0x10
+30200073 //  4: mret
+00000000 //  8:
+00000000 //  c:
+00000013 // 10: addi x0, x0, 0
+</pre>
+</div>
+<p>シミュレータを実行し、結果を確かめます(<span class="listref"><a href="./04a-zicsr.html#mret.test">リスト4.35</a></span>)。</p>
+<div id="mret.test" class="cmd-code">
+<span class="caption">リスト4.35: リスト4.35: MRET命令のテストの実行</span>
+<pre class="list language-test">$ <span class="userinput">make build</span>
+$ <span class="userinput">make sim</span>
+$ <span class="userinput">./obj_dir/sim test/sample_mret.hex 9</span>
+#                    4
+00000000 : 34185073 <span class="balloon">← CSRRWIでmepcに書き込み</span>
+  rs1[16]   : 00000000 <span class="balloon">← 0x10(=16)をmepcに書き込む</span>
+  csr trap  : 0
+  csr vec   : 00000000
+  reg[ 0] &lt;= 00000000
+#                    5
+00000004 : 30200073
+  csr trap  : 1 <span class="balloon">← MRET命令によってmepcにジャンプする</span>
+  csr vec   : 00000010 <span class="balloon">← 10にジャンプする</span>
+#                    9
+00000010 : 00000013 <span class="balloon">← 10にジャンプしている</span>
+</pre>
+</div>
+<p>MRET命令によってmepcにジャンプすることを確認できます。</p>
+<p>MRET命令はレジスタに値をライトバックしていますが、ECALL命令と同じく0番目のレジスタが指定されるため問題ありません。</p>
+        </main>
+        <nav class="page-navi">
+          <a href="04-impl-rv32i.html" class="page-prev">&#9664;</a>
+          <a href="04b-riscvtests.html" class="page-next">&#9654;</a>
+        </nav>
+        <br>
+        <br>
+        <footer style="background:#dddddd">
+      <div style="padding: 20px 20px 20px 20px;">
+          <div style="font-size:1.4rem"><b>コンピュータは、CPUを書けば理解できる！</b></div><br>
+          コンピュータアーキテクチャは、CPUを作ることで理解することができます。
+          「Verylで作るCPU」は、ハードウェア記述言語VerylでRISC-VのCPUを自作する方法を解説するプロジェクトです。<br>
+          「Verylで作るCPU 基本編」では、ハードウェア記述言語の基礎から、OSを実行できる程度のCPUの実装方法までを解説します。<br>
+          <br>
+          キーワード: 自作CPU , RISC-V , Veryl , FPGA<br>
+      <div>
+        </footer>
+      </div>
+    </div>
+    
+    <script>
+      let url = window.location.href;
+      let encoded_url = encodeURI(url);
+      let fb = document.getElementById("share-facebook");
+      fb["data-href"] = url;
+      console.log(fb);
+    </script>
+    <div id="fb-root"></div>
+    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/ja_JP/sdk.js#xfbml=1&version=v21.0"></script>
+    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+  </body>
+</html>
+<!-- layout.html5.erb -->
