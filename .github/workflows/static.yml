@@ -32,12 +32,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Add robots.txt
+        run: |
+          echo -e "User-agent: *\nDisallow: /nightly/" > ./basic/webroot/robots.txt
+          cat ./basic/webroot/robots.txt
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           cname: cpu.kanataso.net
-          publish_dir: ./veryl-riscv-book/basic/webroot
+          publish_dir: ./basic/webroot
           keep_files: true
 
   deploy-other:
@@ -48,6 +52,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Add robots.txt
+        run: |
+          echo -e "User-agent: *\nDisallow: /nightly/" > ./basic/webroot/robots.txt
+          cat ./basic/webroot/robots.txt
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
