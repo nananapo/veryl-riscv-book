@@ -294,7 +294,10 @@ SECTIONS
 <p><code class="inline-code">test_success</code>はポートとして定義します(<span class="listref"><a href="./04b-riscvtests.html#top.veryl.detect-finish-range.port">リスト5.10</a></span>)。</p>
 <div id="top.veryl.detect-finish-range.port" class="caption-code">
 <span class="caption">リスト5.10: リスト5.10: テスト結果を報告するためのポートを宣言する (top.veryl)</span>
-<pre class="list language-port">module top (
+<pre class="list language-port">module top #(
+    param MEMORY_FILEPATH_IS_ENV: bit    = 1                 ,
+    param MEMORY_FILEPATH       : string = &quot;MEMORY_FILE_PATH&quot;,
+) (
     clk: input clock,
     rst: input reset,
     <b>#[ifdef(TEST_MODE)]</b>

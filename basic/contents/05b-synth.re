@@ -51,15 +51,6 @@ LUTとは、真理値表を記憶素子に保存しておいて、
 Tang Nano 9KはAliExpressで3000円くらい、
 PYNQ-Z1は秋月電子通商で50000円くらいで入手できます。
 
-#@# //info[もう少し安いFPGA]{
-#@# 数万円もするFPGAはなかなか手が出せません。
-#@# 本章の範囲では
-#@# Tang Nano 9K(3000円くらい)、
-#@# Tang Primer 20K(7000円くらい)、
-#@# Tang Primer 25K(6000円くらい)などの少し小規模で安価なFPGAでも動作させることができるはずです。
-#@# 手始めにTang Nano 9Kを選ぶのも良いでしょう。
-#@# //}
-
 == LEDの制御
 
 //image[tangmega138k_led][Tang Mega 138K ProのLED(6個)][width=100%]
@@ -198,7 +189,10 @@ module core (
 
 //list[top.veryl.ledcsr-range.port][topモジュールにポートを追加する (top.veryl)]{
 #@maprange(scripts/05b/ledcsr-range/core/src/top.veryl,port)
-module top (
+module top #(
+    param MEMORY_FILEPATH_IS_ENV: bit    = 1                 ,
+    param MEMORY_FILEPATH       : string = "MEMORY_FILE_PATH",
+) (
     clk: input  clock,
     rst: input  reset,
     @<b>|led: output UIntX,|
@@ -285,65 +279,254 @@ fe209ee3 // 10: bne x1, x2, -4
 
 == FPGAへの合成① (Tang Nano 9K)
 
-//warning[執筆中!!!]{
-未完成
+Tang Nano 9KをターゲットにCPUを合成します。
+使用するEDAのバージョンは次の通りです。
+
+ * GOWIN FPGA Designer V1.9.10.03
+ * Gowin Programmer Version 1.9.9
+
+=== 合成用のモジュールを作成する
+
+//image[tangnano9k_led][Tang Nano 9KのLED][width=70%]
+
+Tang Nano 9KにはLEDが6個実装されています(@<img>{tangnano9k_led})。
+そのため、LEDの制御には6ビット必要です。
+それに対して、topモジュールの@<code>{led}ポートは64ビットであるため、ビット幅が一致しません。
+
+Tang Nano 9Kのためだけにtopモジュールの@<code>{led}ポートのビット幅を変更すると柔軟性がなくなってしまうため、
+topモジュールの上位に合成用のモジュールを作成して調整します。
+
+@<code>{src/top_tang.veryl}を作成し、次のように記述します(@<list>{top_tang.veryl.tangnano9k})。
+top_tangモジュールの@<code>{led}ポートは6ビットとして定義して、topモジュールの@<code>{led}ポートの下位6ビットを接続しています。
+
+//list[top_tang.veryl.tangnano9k][Tang Nano 9K用の最上位モジュール (top_tang.veryl)]{
+#@mapfile(scripts/05b/tangnano9k/core/src/top_tang.veryl)
+import eei::*;
+
+module top_tang (
+    clk: input  clock   ,
+    rst: input     reset   ,
+    led: output    logic<6>,
+) {
+    // CSRの下位ビットをLEDに接続する
+    var led_top: UIntX;
+    always_comb {
+        led = led_top[5:0];
+    }
+
+    inst t: top #(
+        MEMORY_FILEPATH_IS_ENV: 0,
+        MEMORY_FILEPATH       : "",
+    ) (
+        clk,
+        rst         ,
+        led: led_top,
+        #[ifdef(TEST_MODE)]
+        test_success: _,
+    );
+}
+#@end
 //}
 
-#@# === 合成用の最上位モジュールの作成
+=== プロジェクトを作成する
 
-#@# topモジュールをインスタンス化
-#@# ファイルを設定
+新規プロジェクトを作成します。
+GOWIN FPGA Designerを開いて、Quick StartのNew Project...を選択します。
+選択したら表示されるウィンドウでは、FPGA Design Projectを選択してOKを押してください(@<img>{gowin_new_project})。
 
-#@# === プロジェクトの作成
+//image[gowin_new_project][FPGA Design Projectを選択する]
 
-#@# GW5AST-LV138FPG676AC1/10  
-#@# https://wiki.sipeed.com/hardware/en/tang/tang-mega-138k/mega-138k-pro.html
+プロジェクト名と場所を指定します。
+プロジェクト名はtangnano9k、場所は好きな場所に指定してください(@<img>{gowin_project_name})。
 
-#@# ファイルのインポート  
-#@# //list[][]{
-#@# import_files -force --fileList ../../core/core.f
-#@# //}
+//image[gowin_project_name][プロジェクト名と場所の指定]
 
-#@# config
+ターゲットのFPGAを選択します。
+@<code>{GW1NR-LV9QN88PC6/I5}を選択して、Nextを押してください(@<img>{gowin_select_device})。
 
-#@# SystemVerilog 2017
-#@# core_top_tangmega138k
+//image[gowin_select_device][ターゲットを選択する]
 
-#@# === 周波数の設定
+プロジェクトが作成されました(@<img>{gowin_created_project})。
 
-#@# クロックは50MHzなので、sdcに書いておく
+//image[gowin_created_project][プロジェクトが作成された]
 
-#@# //list[][]{
-#@# create_clock -name clk -period 20 -waveform {0 10} [get_ports {clk}]
-#@# //}
+=== 設定を変更する
 
-#@# 合成したらわかることだが、50MHzにできない
-#@# そのためPLLを挟んで10MHzにする。
+プロジェクトのデフォルト設定ではSystemVerilogを利用できないため、設定を変更します。
 
-#@# === 物理制約の設定
+ProjectのConfigurationから、設定画面を開きます(@<img>{gowin_open_configuration})。
 
-#@# 制約
-#@# //list[][]{
-#@# // Clock and Reset
-#@# IO_LOC "clk" P16;
-#@# IO_LOC "rst" K16;
-#@# IO_PORT "clk" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=OFF BANK_VCCIO=3.3;
-#@# IO_PORT "rst" IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=3.3;
+//image[gowin_open_configuration][設定画面を開く]
 
-#@# // LED
-#@# IO_LOC "led[0]" J14;
-#@# IO_LOC "led[1]" R26;
-#@# IO_LOC "led[2]" L20;
-#@# IO_LOC "led[3]" M25;
-#@# IO_LOC "led[4]" N21;
-#@# IO_LOC "led[5]" N23;
-#@# IO_PORT "led[0]" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
-#@# IO_PORT "led[1]" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
-#@# IO_PORT "led[2]" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
-#@# IO_PORT "led[3]" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
-#@# IO_PORT "led[4]" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
-#@# IO_PORT "led[5]" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
-#@# //}
+SynthesizeのVerilog Languageを@<code>{System Verilog 2017}に設定します。
+同じ画面でトップモジュール(Top Module/Entity)を設定できるため、@<code>{core_top_tang}を指定します(@<img>{gowin_configuration})。
+
+//image[gowin_configuration][設定を変更する]
+
+=== ファイルをインポートする
+
+Verylのソースファイルをビルドして生成されるファイルリスト(@<code>{core.f})を利用して、
+生成されたSystemVerilogソースファイルをインポートします。
+
+ウィンドウの下部にあるConsole画面で、次のコマンドを実行します(@<list>{import_files.command}、@<img>{gowin_import_files})。
+VerylをWSLで実行してGOWIN FPGA DesignerをWindowsで開いている場合、ファイルリスト内のパスをWindowsから参照できるパスに変更する必要があります。
+
+//list[import_files.command][SystemVerilogファイルをインポートするコマンド]{
+import_files -force -fileList ファイルリストへのパス
+//}
+
+//image[gowin_import_files][コマンドを実行する]
+
+ソースファイルをインポートできました(@<img>{gowin_imported_files})。
+@<code>{import_files}コマンドはプロジェクトフォルダにコピーするコマンドであるため、
+Verylのソースファイルが更新されたら再度コマンドを実行してインポートする必要があります。
+
+//image[gowin_imported_files][インポートに成功した]
+
+=== 制約ファイルを作成する
+
+==== 物理制約
+
+top_tangモジュールのclk、rst、ledポートを、
+それぞれTang Nano 9Kの水晶発振器、ボタン、LEDに接続します。
+接続の設定には物理制約ファイルを作成します。
+
+新しくファイルを作成するので、プロジェクトを左クリックしてNew Fileを選択します(@<img>{gowin_new_file})。
+
+//image[gowin_new_file][New Fileを選択する]
+
+物理制約ファイルを選択します(@<img>{gowin_select_cst})。
+
+//image[gowin_select_cst][物理制約ファイルを選択する]
+
+名前は@<code>{tangnano9k.cst}にします(@<img>{gowin_new_cst_file})。
+
+//image[gowin_new_cst_file][名前を設定する]
+
+物理制約ファイルには、次のように記述します(@<list>{tangnano9k.cst.tangnano9k})。
+
+//list[tangnano9k.cst.tangnano9k][物理制約ファイル (tangnano9k.cst)]{
+#@mapfile(scripts/05b/tangnano9k/synth/tangnano9k/tangnano9k.cst)
+// Clock and Reset
+IO_LOC "clk" 52;
+IO_PORT "clk" IO_TYPE=LVCMOS33 PULL_MODE=UP;
+IO_LOC "rst" 4;
+IO_PORT "rst" PULL_MODE=UP;
+
+// LED
+IO_LOC "led[5]" 16;
+IO_LOC "led[4]" 15;
+IO_LOC "led[3]" 14;
+IO_LOC "led[2]" 13;
+IO_LOC "led[1]" 11;
+IO_LOC "led[0]" 10;
+
+IO_PORT "led[5]" PULL_MODE=UP DRIVE=8;
+IO_PORT "led[4]" PULL_MODE=UP DRIVE=8;
+IO_PORT "led[3]" PULL_MODE=UP DRIVE=8;
+IO_PORT "led[2]" PULL_MODE=UP DRIVE=8;
+IO_PORT "led[1]" PULL_MODE=UP DRIVE=8;
+IO_PORT "led[0]" PULL_MODE=UP DRIVE=8;
+#@end
+//}
+
+@<code>{IO_LOC}で接続する場所の名前を指定します。
+
+場所の名前はTang Nano 9Kのデータシートで確認できます。
+例えば@<img>{tangnano9k_datasheet_led}と@<img>{tangnano9k_datasheet_ledpos}から、
+LEDは@<code>{10}、@<code>{11}、@<code>{13}、@<code>{14}、@<code>{15}、@<code>{16}に割り当てられていることが分かります。
+また、LEDが負論理(@<code>{1}で消灯、@<code>{0}で点灯)であることが分かります。
+水晶発信器とボタンについても、データシートを見て確認してください。
+
+//image[tangnano9k_datasheet_led][LED]
+//image[tangnano9k_datasheet_ledpos][PIN10_IOL～の接続先]
+
+==== タイミング制約
+
+FPGAが何MHzで動くかをタイミング制約ファイルに記述します。
+
+物理制約ファイルと同じようにAdd Fileを選択して、
+タイミング制約ファイルを作成します(@<img>{gowin_select_timing})。
+
+//image[gowin_select_timing][タイミング制約ファイルを選択する]
+
+名前は@<code>{timing.sdc}にします(@<img>{gowin_new_timing_file})。
+
+//image[gowin_new_timing_file][名前を設定する]
+
+タイミング制約ファイルには、次のように記述します(@<list>{timing.sdc.tangnano9k})。
+
+//list[timing.sdc.tangnano9k][タイミング制約ファイル (timing.sdc)]{
+#@mapfile(scripts/05b/tangnano9k/synth/tangnano9k/timing.sdc)
+create_clock -name clk -period 37.037 -waveform {0 18.518} [get_ports {clk}]
+#@end
+//}
+
+Tang Nano 9Kの水晶発振器は27MHzで振動します。
+そのため、@<code>{create_clock}で@<code>{clk}ポートの周期を@<code>{37.037}ナノ秒(27MHz)に設定しています。
+
+=== LEDの点灯を確認する
+
+まず、LEDの点灯を確認します。
+
+インポートされた@<code>{top_tang.sv}のtopモジュールをインスタンス化している場所で、
+@<code>{MEMORY_FILEPATH}パラメータの値を@<code>{test/led.hex}のパスに設定します(@<list>{led.hex.set})。
+
+#@# TODO mapにする
+//list[led.hex.set][読み込むファイルを設定する (top_tang.sv)]{
+core_top #(
+    .MEMORY_FILEPATH_IS_ENV (0 ),
+    .MEMORY_FILEPATH        ("test/led.hexへのパス")
+) t (
+//}
+
+ProcessタブのSynthesizeをクリックし、合成します(@<img>{gowin_process_tab})。
+//image[gowin_process_tab][Processタブ]
+
+そうすると、合成に失敗して@<img>{gowin_ram_error}のようなエラーが表示されます。
+
+//image[gowin_ram_error][合成するとエラーが発生する]
+
+これは、Tang Nano 9Kに搭載されているメモリ用の部品の数が足りないために発生しているエラーです。
+この問題を回避するために、eeiパッケージの@<code>{MEM_ADDR_WIDTH}の値を@<code>{10}に変更します。
+@<code>{eei.sv}を変更する場合は、ファイルリストをインポートする度に変更するようにしてください。
+@<code>{eei.veryl}を変更する場合は、ファイルリストをインポートしなおしてください。
+
+メモリ幅を変更したら、もう一度合成します。
+
+//image[gowin_synth_success][合成と配置配線に成功した]
+
+合成に成功したら、@<code>{Place & Route}を押して、論理回路の配置配線情報を生成します(@<img>{gowin_synth_success})。
+それが終了したら、Tang Nano 9KをPCに接続して、Gowin Programmerを開いて設計をFPGAに書き込みます(@<img>{gowin_programmer})。
+
+//image[gowin_programmer][Program / Configureボタンを押して書き込む]
+
+Tang Nano 9Kの中央2つ以外のLEDが点灯していることを確認できます。
+
+//image[tangnano9k_test_led][LEDの制御用レジスタの値が12(@<code>{64'b1100})なので中央2つのLEDが点灯せず、それ以外が点灯する][width=70%]
+
+=== LEDの点滅を確認する
+
+@<code>{MEMORY_FILEPATH}パラメータの値を@<code>{test/led_counter.hex}のパスに設定します(@<list>{led_counter.hex.set})。
+
+#@# TODO
+//list[led_counter.hex.set][読み込むファイルを変更する (top_tang.sv)]{
+core_top #(
+    .MEMORY_FILEPATH_IS_ENV (0 ),
+    .MEMORY_FILEPATH        ("test/led_counter.hexへのパス")
+) t (
+//}
+
+合成、配置配線しなおして、設計をFPGAに書き込むとLEDが点灯します@<fn>{tangnano9k.led_counter}。
+
+//raw[|html|<iframe width="100%" max-width="640" style="aspect-ratio: 16 / 9;" src="https://www.youtube.com/embed/OpXiXha-ZnI" title="tangnano9k test ledcounter" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>]
+
+//footnote[tangnano9k.led_counter][@<href>{https://youtu.be/OpXiXha-ZnI}]
 
 == FPGAへの合成② (PYNQ-Z1)
 
+合成、配置配線しなおして、設計をFPGAに書き込むとLEDが点灯します@<fn>{pynq_z1.led_counter}。
+
+//raw[|html|<iframe width="100%" max-width="640" style="aspect-ratio: 16 / 9;" src="https://www.youtube.com/embed/byCr_464dW4" title="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>]
+
+//footnote[pynq_z1.led_counter][@<href>{https://youtu.be/byCr_464dW4}]

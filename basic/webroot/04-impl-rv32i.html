@@ -393,15 +393,18 @@ package util {
 <span class="caption">リスト3.9: リスト3.9: 最上位モジュールの定義 (top.veryl)</span>
 <pre class="list language-inst">import eei::*;
 
-module top (
+module top #(
+    param MEMORY_FILEPATH_IS_ENV: bit    = 1                 ,
+    param MEMORY_FILEPATH       : string = &quot;MEMORY_FILE_PATH&quot;,
+) (
     clk: input clock,
     rst: input reset,
 ) {
     inst membus: membus_if::&lt;MEM_DATA_WIDTH, MEM_ADDR_WIDTH&gt;;
 
     inst mem: memory::&lt;MEM_DATA_WIDTH, MEM_ADDR_WIDTH&gt; #(
-        FILEPATH_IS_ENV: 1                 ,
-        FILEPATH       : &quot;MEMORY_FILE_PATH&quot;,
+        FILEPATH_IS_ENV: MEMORY_FILEPATH_IS_ENV,
+        FILEPATH       : MEMORY_FILEPATH       ,
     ) (
         clk     ,
         rst     ,
@@ -653,7 +656,7 @@ $ mv obj_dir/Vcore_top obj_dir/sim <span class="balloon">← シミュレータ�
 <dl>
 <dt>-f</dt>
 <dd>
-	SystemVerilogプログラムのファイルリストを指定します。
+	SystemVerilogソースファイルのファイルリストを指定します。
 	今回は<code class="inline-code">core.f</code>を指定しています。
 </dd>
 <dt>--exe</dt>

@@ -410,15 +410,18 @@ memoryモジュールはジェネリックモジュールであるため、
 #@mapfile(scripts/04/memif/core/src/top.veryl)
 import eei::*;
 
-module top (
+module top #(
+    param MEMORY_FILEPATH_IS_ENV: bit    = 1                 ,
+    param MEMORY_FILEPATH       : string = "MEMORY_FILE_PATH",
+) (
     clk: input clock,
     rst: input reset,
 ) {
     inst membus: membus_if::<MEM_DATA_WIDTH, MEM_ADDR_WIDTH>;
 
     inst mem: memory::<MEM_DATA_WIDTH, MEM_ADDR_WIDTH> #(
-        FILEPATH_IS_ENV: 1                 ,
-        FILEPATH       : "MEMORY_FILE_PATH",
+        FILEPATH_IS_ENV: MEMORY_FILEPATH_IS_ENV,
+        FILEPATH       : MEMORY_FILEPATH       ,
     ) (
         clk     ,
         rst     ,
@@ -766,7 +769,7 @@ $ mv obj_dir/Vcore_top obj_dir/sim @<balloon>{シミュレータの名前をsim�
 シミュレータを生成するためのプログラムが@<code>{obj_dir}に生成されます。
 
  : -f
-	SystemVerilogプログラムのファイルリストを指定します。
+	SystemVerilogソースファイルのファイルリストを指定します。
 	今回は@<code>{core.f}を指定しています。
 
  : --exe
