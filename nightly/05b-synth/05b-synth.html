@@ -540,7 +540,7 @@ IO_PORT &quot;led[0]&quot; PULL_MODE=UP DRIVE=8;
 図8.23: 合成に成功した
 </p>
 </div>
-<p>合成に成功したら、<code class="inline-code">Place &amp; Route</code>を押して、論理回路の配置配線情報を生成します。それが終了したら、Gowin Programmerを開いて設計をFPGAに書き込みます(<span class="imgref"><a href="./05b-synth.html#gowin_programmer">図8.24</a></span>)。Tang Nano 9KをPCに接続してください。</p>
+<p>合成に成功したら、<code class="inline-code">Place &amp; Route</code>を押して、論理回路の配置配線情報を生成します。それが終了したら、Tang Nano 9KをPCに接続して、Gowin Programmerを開いて設計をFPGAに書き込みます(<span class="imgref"><a href="./05b-synth.html#gowin_programmer">図8.24</a></span>)。</p>
 <div id="gowin_programmer" class="image">
 <img src="images/05b-synth/gowin_programmer.png" alt="Program / Configureボタンを押して書き込む" class="img" />
 <p class="caption">
@@ -556,7 +556,7 @@ IO_PORT &quot;led[0]&quot; PULL_MODE=UP DRIVE=8;
 </div>
 
 <h3 class="none"><a id="h8-3-7"></a><span class="secno">8.3.7</span> LEDの点滅を確認する</h3>
-<p><code class="inline-code">MEMORY_FILEPATH</code>パラメータの値を<code class="inline-code">test/led_counter.hex</code>のパスに設定します(<span class="listref"><a href="./05b-synth.html#led.hex.set">リスト8.19</a></span>)。</p>
+<p><code class="inline-code">MEMORY_FILEPATH</code>パラメータの値を<code class="inline-code">test/led_counter.hex</code>のパスに設定します(<span class="listref"><a href="./05b-synth.html#led_counter.hex.set">リスト8.20</a></span>)。</p>
 <div id="led_counter.hex.set" class="caption-code">
 <span class="caption">リスト8.20: リスト8.20: 読み込むファイルを変更する (top_tang.sv)</span>
 <pre class="list language-set">core_top #(
