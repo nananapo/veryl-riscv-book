@@ -42,8 +42,8 @@
       <ul class="toc toc-3">
         <li class="toc-section"><a href="./05b-synth.html#h8-1">8.1 FPGAとは何か？</a></li>
         <li class="toc-section"><a href="./05b-synth.html#h8-2">8.2 LEDの制御</a></li>
-        <li class="toc-section"><a href="./05b-synth.html#h8-3">8.3 FPGAへの合成① (Tang Mega 138K Pro)</a></li>
-        <li class="toc-section"><a href="./05b-synth.html#h8-4">8.4 FPGAへの合成② (PYNQ-Z1)</a></li>
+        <li class="toc-section"><a href="./05b-synth.html#h8-3">8.3 FPGAへの合成 (Tang Nano 9K)</a></li>
+        <li class="toc-section"><a href="./05b-synth.html#h8-4">8.4 FPGAへの合成 (PYNQ-Z1)</a></li>
       </ul>
     </li>
   </ul>
@@ -69,17 +69,11 @@
         </header>
         <main class="page-main">
   <h1 class="boldlines center twolines"><a id="h8"></a><span class="secno">第8章</span> <br/>CPUの合成</h1>
-<p>これまでの章では、RV64IのCPUを作成してパイプライン化しました。動作確認とテストはシミュレータで行いましたが、本章では実機(FPGA)でCPUを動かします。</p>
+<p>これまでの章では、RV64IのCPUを作成してパイプライン化しました。今までは動作確認とテストはシミュレータで行っていましたが、本章では実機(FPGA)でCPUを動かします。</p>
 <div id="pynq_z1" class="image">
 <img src="images/05b-synth/pynq_z1.png" alt="PYNQ-Z1" class="img" style="width:30%" />
 <p class="caption">
 図8.1: PYNQ-Z1
-</p>
-</div>
-<div id="tangmega138k" class="image">
-<img src="images/05b-synth/tangmega138k.png" alt="Tang Mega 138K Pro" class="img" style="width:30%" />
-<p class="caption">
-図8.2: Tang Mega 138K Pro
 </p>
 </div>
 
@@ -100,133 +94,217 @@
 <div id="lut" class="image">
 <img src="images/05b-synth/lut.png" alt="&lt;span class=&quot;tableref&quot;&gt;&lt;a href=&quot;./05b-synth.html#lut_sample_truth&quot;&gt;表8.1&lt;/a&gt;&lt;/span&gt;を実現するLUT" class="img" style="width:40%" />
 <p class="caption">
-図8.3: <span class="tableref"><a href="./05b-synth.html#lut_sample_truth">表8.1</a></span>を実現するLUT
+図8.2: <span class="tableref"><a href="./05b-synth.html#lut_sample_truth">表8.1</a></span>を実現するLUT
 </p>
 </div>
-<p>LUTとは、真理値表を記憶素子に保存しておいて、入力によって記憶された真理値を選択して出力する回路のことです。例えば、2つの入力<code class="inline-code">X</code>と<code class="inline-code">Y</code>を受け取って<code class="inline-code">A</code>を出力する論理回路(<span class="tableref"><a href="./05b-synth.html#lut_sample_truth">表8.1</a></span>)は、<span class="imgref"><a href="./05b-synth.html#lut">図8.3</a></span>の回路で実現することができます。ここでマルチプレクサ(multiplexer, MUX)とは、複数の入力を選択信号によって選択して出力する回路のことです。</p>
-<p><span class="imgref"><a href="./05b-synth.html#lut">図8.3</a></span>では、記憶素子のデータを<code class="inline-code">Y</code>によって選択し、さらに<code class="inline-code">X</code>によって選択することで2入力1出力の真理値表の論理回路を実現しています。入力がN個で出力がM個のLUTのことをN入力M出力LUTと呼びます。</p>
+<p>LUTとは、真理値表を記憶素子に保存しておいて、入力によって記憶された真理値を選択して出力する回路のことです。例えば、2つの入力<code class="inline-code">X</code>と<code class="inline-code">Y</code>を受け取って<code class="inline-code">A</code>を出力する論理回路(<span class="tableref"><a href="./05b-synth.html#lut_sample_truth">表8.1</a></span>)は、<span class="imgref"><a href="./05b-synth.html#lut">図8.2</a></span>の回路で実現することができます。ここでマルチプレクサ(multiplexer, MUX)とは、複数の入力を選択信号によって選択して出力する回路のことです。</p>
+<p><span class="imgref"><a href="./05b-synth.html#lut">図8.2</a></span>では、記憶素子のデータを<code class="inline-code">Y</code>によって選択し、さらに<code class="inline-code">X</code>によって選択することで2入力1出力の真理値表の論理回路を実現しています。入力がN個で出力がM個のLUTのことをN入力M出力LUTと呼びます。</p>
 <p>ルックアップ・テーブル方式のFPGAは、多数のLUT、入出力装置、これらを相互接続するための配線によって構成されています。また、乗算回路やメモリなどの部品はFPGAよりも専用の回路で実現した方が良い<sup><a id="fnb-memory.fpga" href="#fn-memory.fpga" class="noteref" epub:type="noteref">*1</a></sup>ので、メモリや乗算回路の部品が内蔵されていることがあります。</p>
 <div class="footnote-list">
 <div class="footnote" id="fn-memory.fpga" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>例えばメモリは同じパターンの論理回路の繰り返しで大きな面積を要します。メモリはよく利用される回路であるため、専用の回路を用意した方が空間的な効率が改善される上に、遅延が少なくなるという利点があります</p></div>
 </div><!--/.footnote-list-->
-<p>本書では2つのFPGA(Tang Mega 138K Pro、PYNQ-Z1)を使用して実機でCPUを動作させます。2024年11月12日時点ではTang Mega 138K ProはAliExpressで30000円くらい、PYNQ-Z1は秋月電子通商で50000円くらいで入手できます。</p>
-<div class="miniblock miniblock-info">
-<p class="miniblock-caption">もう少し安いFPGA</p>
-<p>数万円もするFPGAはなかなか手が出せません。本章の範囲ではTang Nano 9K(3000円くらい)、Tang Primer 20K(7000円くらい)、Tang Primer 25K(6000円くらい)などの少し小規模で安価なFPGAでも動作させることができます。手始めにTang Nano 9Kを選ぶのも良いでしょう。</p>
-</div>
+<p>本書では2つのFPGA(Tang Nano 9K、PYNQ-Z1)を使用して実機でCPUを動作させます。2024年11月12日時点ではどちらも秋月電子通商で入手することができて、Tang Nano 9KはAliExpressで3000円くらい、PYNQ-Z1は秋月電子通商で50000円くらいで入手できます。</p>
 
 <h2 class="numbox"><a id="h8-2"></a><span class="secno">8.2</span> LEDの制御</h2>
-<p>大抵のFPGAボードにはLEDがついています。本章では簡単なテストプログラムによってLEDを点滅させた後、riscv-testsの結果をLEDによって確認します。</p>
-<p>LEDはトップモジュールのポートを経由して制御します。ポートとLEDの接続方法は合成系によって異なるため、それらの接続は後で考えます。</p>
-<p>CPUからLEDを制御するには、メモリ経由で制御する、CSRによって制御するなどの方法が考えられます。本書ではLEDを制御する用のCSRを作成して、トップモジュールのポートに接続することでLEDを制御します。</p>
+<div id="tangmega138k_led" class="image">
+<img src="images/05b-synth/tangmega138k_led.jpg" alt="Tang Mega 138K ProのLED(6個)" class="img" style="width:100%" />
+<p class="caption">
+図8.3: Tang Mega 138K ProのLED(6個)
+</p>
+</div>
+<p>大抵のFPGAボードにはLEDがついています。本章では2つのテストプログラム(LEDを点灯させる、LEDを点滅させる)によって、CPUの動作確認を行います。</p>
+<p>LEDはトップモジュールのポートを経由して制御します(<span class="imgref"><a href="./05b-synth.html#ledreg_to_led">図8.4</a></span>)。ポートとLEDの接続方法は合成系によって異なるため、それらの接続方法は後で考えます。CPUからLEDを制御するには、メモリ経由で制御する、CSRによって制御するなどの方法が考えられます。本書ではLEDを制御するためのCSRを実装して、CSRをトップモジュールのポートに接続することでLEDを制御します。</p>
+<div id="ledreg_to_led" class="image">
+<img src="images/05b-synth/ledreg_to_led.png" alt="CSRのLED制御用レジスタがLEDに接続される" class="img" style="width:70%" />
+<p class="caption">
+図8.4: CSRのLED制御用レジスタがLEDに接続される
+</p>
+</div>
+
+<h3 class="none"><a id="h8-2-1"></a><span class="secno">8.2.1</span> CSRにLED制御用レジスタを実装する</h3>
+<p>RISC-VのCSRのアドレス空間には、読み込みと書き込みができるCSRを自由に定義できる場所(<code class="inline-code">0x800</code>から<code class="inline-code">0x8FF</code>)が用意されています<sup><a id="fnb-riscv.isa.csr_addr" href="#fn-riscv.isa.csr_addr" class="noteref" epub:type="noteref">*2</a></sup>。これの先頭アドレス<code class="inline-code">0x800</code>をLEDの制御用レジスタのアドレスとして実装を進めます。</p>
+<div class="footnote-list">
+<div class="footnote" id="fn-riscv.isa.csr_addr" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*2] </span>The RISC-V Instruction Set Manual Volume II: Privileged Architecture version 20240411 Table 3. Allocation of RISC-V CSR address ranges.</p></div>
+</div><!--/.footnote-list-->
+<p>まず、CsrAddr型にLED制御用レジスタのアドレスを追加します(<span class="listref"><a href="./05b-synth.html#csrunit.veryl.ledcsr-range.addr">リスト8.1</a></span>)。</p>
+<div id="csrunit.veryl.ledcsr-range.addr" class="caption-code">
+<span class="caption">リスト8.1: リスト8.1: LEDの制御用レジスタのアドレスを追加する (csrunit.veryl)</span>
+<pre class="list language-addr">    enum CsrAddr: logic&lt;12&gt; {
+        MTVEC = 12'h305,
+        MEPC = 12'h341,
+        MCAUSE = 12'h342,
+        <b>LED = 12'h800,</b>
+    }
+</pre>
+</div>
+<p>書き込みマスクはすべて書き込み可にします(<span class="listref"><a href="./05b-synth.html#csrunit.veryl.ledcsr-range.wmask">リスト8.2</a></span>)。</p>
+<div id="csrunit.veryl.ledcsr-range.wmask" class="caption-code">
+<span class="caption">リスト8.2: リスト8.2: LEDの制御用レジスタの書き込みマスク (csrunit.veryl)</span>
+<pre class="list language-wmask">    const LED_WMASK   : UIntX = 'hffff_ffff_ffff_ffff;
+</pre>
+</div>
+<p>LEDの制御用レジスタをcsrunitモジュールのポートに定義します。CSRの幅はUIntXです(<span class="listref"><a href="./05b-synth.html#csrunit.veryl.ledcsr-range.port">リスト8.3</a></span>)。</p>
+<div id="csrunit.veryl.ledcsr-range.port" class="caption-code">
+<span class="caption">リスト8.3: リスト8.3: LEDの制御用レジスタを定義する (csrunit.veryl)</span>
+<pre class="list language-port">module csrunit (
+    ...
+    rdata      : output UIntX       ,
+    raise_trap : output logic       ,
+    trap_vector: output Addr        ,
+    <b>led        : output UIntX       ,</b>
+) {
+</pre>
+</div>
+<p><code class="inline-code">rdata</code>と<code class="inline-code">wmask</code>にLEDの制御用レジスタの値を割り当てます(<span class="listref"><a href="./05b-synth.html#csrunit.veryl.ledcsr-range.rdata_wmask">リスト8.4</a></span>)。</p>
+<div id="csrunit.veryl.ledcsr-range.rdata_wmask" class="caption-code">
+<span class="caption">リスト8.4: リスト8.4: rdataとwmaskに値を割り当てる (csrunit.veryl)</span>
+<pre class="list language-rdata_wmask">    // read
+    rdata = case csr_addr {
+        CsrAddr::MTVEC : mtvec,
+        CsrAddr::MEPC  : mepc,
+        CsrAddr::MCAUSE: mcause,
+        <b>CsrAddr::LED   : led,</b>
+        default        : 'x,
+    };
+    // write
+    wmask = case csr_addr {
+        CsrAddr::MTVEC : MTVEC_WMASK,
+        CsrAddr::MEPC  : MEPC_WMASK,
+        CsrAddr::MCAUSE: MCAUSE_WMASK,
+        <b>CsrAddr::LED   : LED_WMASK,</b>
+        default        : 0,
+    };
+</pre>
+</div>
+<p>リセット時にLEDの制御用レジスタの値を0に設定します(<span class="listref"><a href="./05b-synth.html#csrunit.veryl.ledcsr-range.reset">リスト8.5</a></span>)。</p>
+<div id="csrunit.veryl.ledcsr-range.reset" class="caption-code">
+<span class="caption">リスト8.5: リスト8.5: リセット値の設定 (csrunit.veryl)</span>
+<pre class="list language-reset">    if_reset {
+        mtvec  = 0;
+        mepc   = 0;
+        mcause = 0;
+        <b>led    = 0;</b>
+    } else {
+</pre>
+</div>
+<p>LEDの制御用レジスタへの書き込み処理を実装します(<span class="listref"><a href="./05b-synth.html#csrunit.veryl.ledcsr-range.write">リスト8.6</a></span>)。</p>
+<div id="csrunit.veryl.ledcsr-range.write" class="caption-code">
+<span class="caption">リスト8.6: リスト8.6: LEDの制御用レジスタへの書き込み (csrunit.veryl)</span>
+<pre class="list language-write">    case csr_addr {
+        CsrAddr::MTVEC : mtvec  = wdata;
+        CsrAddr::MEPC  : mepc   = wdata;
+        CsrAddr::MCAUSE: mcause = wdata;
+        <b>CsrAddr::LED   : led    = wdata;</b>
+        default        : {}
+    }
+</pre>
+</div>
+
+<h3 class="none"><a id="h8-2-2"></a><span class="secno">8.2.2</span> トップモジュールにLEDを制御するポートを実装する</h3>
+<p>LEDはトップモジュールのポートを経由して制御します(<span class="imgref"><a href="./05b-synth.html#ledreg_to_led">図8.4</a></span>)。そのため、トップモジュールにLEDを制御するポートを作成して、csrunitのLEDの制御用レジスタの値を接続します(<span class="listref"><a href="./05b-synth.html#core.veryl.ledcsr-range.port">リスト8.7</a></span>、<span class="listref"><a href="./05b-synth.html#core.veryl.ledcsr-range.inst">リスト8.8</a></span>、<span class="listref"><a href="./05b-synth.html#top.veryl.ledcsr-range.port">リスト8.9</a></span>、<span class="listref"><a href="./05b-synth.html#top.veryl.ledcsr-range.inst">リスト8.10</a></span>)。LEDの個数はFPGAによって異なるため、とりあえずXLEN(=64)ビットのポートを定義します。</p>
+<div id="core.veryl.ledcsr-range.port" class="caption-code">
+<span class="caption">リスト8.7: リスト8.7: coreモジュールにポートを追加する (core.veryl)</span>
+<pre class="list language-port">module core (
+    clk     : input   clock                                    ,
+    rst     : input   reset                                    ,
+    i_membus: modport membus_if::&lt;ILEN, XLEN&gt;::master          ,
+    d_membus: modport membus_if::&lt;MEM_DATA_WIDTH, XLEN&gt;::master,
+    <b>led     : output  UIntX                                    ,</b>
+</pre>
+</div>
+<div id="core.veryl.ledcsr-range.inst" class="caption-code">
+<span class="caption">リスト8.8: リスト8.8: csrunitモジュールのledポートと接続する (core.veryl)</span>
+<pre class="list language-inst">    inst csru: csrunit (
+        ...
+        rdata      : csru_rdata      ,
+        raise_trap : csru_raise_trap ,
+        trap_vector: csru_trap_vector,
+        <b>led                          ,</b>
+    );
+</pre>
+</div>
+<div id="top.veryl.ledcsr-range.port" class="caption-code">
+<span class="caption">リスト8.9: リスト8.9: topモジュールにポートを追加する (top.veryl)</span>
+<pre class="list language-port">module top (
+    clk: input  clock,
+    rst: input  reset,
+    <b>led: output UIntX,</b>
+    #[ifdef(TEST_MODE)]
+    test_success: output bit,
+) {
+</pre>
+</div>
+<div id="top.veryl.ledcsr-range.inst" class="caption-code">
+<span class="caption">リスト8.10: リスト8.10: coreモジュールのledポートと接続する (top.veryl)</span>
+<pre class="list language-inst">    inst c: core (
+        clk       ,
+        rst       ,
+        i_membus  ,
+        d_membus  ,
+        <b>led       ,</b>
+    );
+</pre>
+</div>
+<p>CSRの読み書きによってLED制御用のポートを制御することができるようになりました。</p>
+
+<h3 class="none"><a id="h8-2-3"></a><span class="secno">8.2.3</span> テストを作成する</h3>
+
+<h4><a id="h8-2-3-1"></a>LEDを点灯させるプログラム</h4>
+<p>LEDを点灯させるプログラムを作成します(<span class="listref"><a href="./05b-synth.html#led.asm.led-test">リスト8.11</a></span>、<span class="listref"><a href="./05b-synth.html#led.hex.led-test">リスト8.12</a></span>)。CSRRWI命令で<code class="inline-code">0x800</code>に12(<code class="inline-code">'b01100</code>)を書き込みます。</p>
+<div id="led.asm.led-test" class="caption-code">
+<span class="caption">リスト8.11: リスト8.11: LEDを点灯させるプログラム (test/led.asm)</span>
+<pre class="list language-led-test">80065073 //  0: csrrwi x0, 0x800, 12
+00000067 //  4: jal x0, 0
+</pre>
+</div>
+<div id="led.hex.led-test" class="caption-code">
+<span class="caption">リスト8.12: リスト8.12: LEDを点灯させるプログラム (test/led.hex)</span>
+<pre class="list language-led-test">0000006780065073
+</pre>
+</div>
+
+<h4><a id="h8-2-3-2"></a>LEDを点滅させるプログラム</h4>
+<p>LEDを点滅させるプログラムを作成します(<span class="listref"><a href="./05b-synth.html#led_counter.asm.led-test">リスト8.13</a></span>、<span class="listref"><a href="./05b-synth.html#led_counter.hex.led-test">リスト8.14</a></span>)。これはちょっと複雑です。</p>
+<div id="led_counter.asm.led-test" class="caption-code">
+<span class="caption">リスト8.13: リスト8.13: LEDを点滅させるプログラム (test/led_counter.asm)</span>
+<pre class="list language-led-test">000f40b7 //  0: lui x1, 244
+24008093 //  4: addi x1, x1, 576
+00000113 //  8: addi x2, x0, 0
+00110113 //  c: addi x2, x2, 1
+fe209ee3 // 10: bne x1, x2, -4
+800031f3 // 14: csrrc x3, 0x800, x0
+00118193 // 18: addi x3, x3, 1
+80019073 // 1c: csrrw x0, 0x800, x3
+00000067 // 20: jalr x0, 0(x0)
+00000067 // 24: jalr x0, 0(x0)
+</pre>
+</div>
+<div id="led_counter.hex.led-test" class="caption-code">
+<span class="caption">リスト8.14: リスト8.14: LEDを点滅させるプログラム (test/led_counter.hex)</span>
+<pre class="list language-led-test">24008093000f40b7
+0011011300000113
+800031f3fe209ee3
+8001907300118193
+0000006700000067
+</pre>
+</div>
+<p><span class="listref"><a href="./05b-synth.html#led_counter.asm.led-test">リスト8.13</a></span>は次のように動作します。</p>
+<ol start="1" type="1">
+<li>x1に1000000(<code class="inline-code">(244 &lt;&lt; 12) + 576</code>)を代入する</li>
+<li>x2に0を代入</li>
+<li>x2がx1と一致するまでx2に1を足し続ける</li>
+<li>LEDのCSRをx3に読み取り、1を足した値を書き込む</li>
+<li>1 ~ 4を繰り返す</li>
+</ol>
+<p>これにより、LEDの制御用レジスタは一定の間隔ごとに<code class="inline-code">0</code>→<code class="inline-code">1</code>→<code class="inline-code">2</code>と値が変わっていきます。</p>
+
+<h2 class="numbox"><a id="h8-3"></a><span class="secno">8.3</span> FPGAへの合成 (Tang Nano 9K)</h2>
 <div class="miniblock miniblock-warning">
 <p class="miniblock-caption">執筆中!!!</p>
 <p>未完成</p>
 </div>
 
-<h3 class="none"><a id="h8-2-1"></a><span class="secno">8.2.1</span> CSRにLED制御用レジスタを実装する</h3>
-<p>csrunitモジュールにLEDの制御用レジスタを実装します。RISC-VのCSRには、カスタムなCSRを定義するためのアドレス空間が用意されています(表)</p>
-<p>表</p>
-<p>表中のTODOをLEDのためのレジスタに割り当てることにします。</p>
-<p>まず、CsrAddr型にLED制御用レジスタのアドレスを追加します。</p>
-<div class="caption-code">
-<pre class="emlist">TODO
-</pre>
-</div>
-<p>書き込みマスクはすべて書き込み可にします。</p>
-<div class="caption-code">
-<pre class="emlist">TODO
-</pre>
-</div>
-<p>XLENビットのレジスタを定義します。</p>
-<div class="caption-code">
-<pre class="emlist">TODO
-</pre>
-</div>
-<p>読み込みデータ、書き込みマスクを変数に割り当てます。</p>
-<div class="caption-code">
-<pre class="emlist">TODO
-</pre>
-</div>
-<p>レジスタへの書き込み処理を実装します。</p>
-<div class="caption-code">
-<pre class="emlist">TODO
-</pre>
-</div>
-<p>csrunitモジュールのLED制御用レジスタは、最終的にトップモジュールのポートと接続します。そのために、csrunitモジュールのポートに<code class="inline-code">led</code>レジスタの値を露出させ、さらにcoreモジュールのポートに<code class="inline-code">led</code>レジスタの値を露出させます。</p>
-<div class="caption-code">
-<pre class="emlist">TODO
-</pre>
-</div>
-<div class="caption-code">
-<pre class="emlist">TODO
-</pre>
-</div>
-
-<h3 class="none"><a id="h8-2-2"></a><span class="secno">8.2.2</span> トップモジュールにポートを実装する</h3>
-<p>トップモジュールにLEDを制御するためのポートを追加します。LEDの個数はFPGAによって異なるため、とりあえずXLEN(=64)ビットのポートを用意します。</p>
-<div class="caption-code">
-<pre class="emlist">TODO
-</pre>
-</div>
-<p>ledポートとcsrunitモジュールのレジスタを接続します。</p>
-<div class="caption-code">
-<pre class="emlist">TODO
-</pre>
-</div>
-<p>CSRの読み書きでLED制御用のポートを制御することができるようになりました。</p>
-
-<h3 class="none"><a id="h8-2-3"></a><span class="secno">8.2.3</span> テストを作成する</h3>
-
-<h2 class="numbox"><a id="h8-3"></a><span class="secno">8.3</span> FPGAへの合成① (Tang Mega 138K Pro)</h2>
-
-<h3 class="none"><a id="h8-3-1"></a><span class="secno">8.3.1</span> 合成用の最上位モジュールの作成</h3>
-<p>topをインスタンス化ファイルを設定</p>
-
-<h3 class="none"><a id="h8-3-2"></a><span class="secno">8.3.2</span> プロジェクトの作成</h3>
-<p>GW5AST-LV138FPG676AC1/10https://wiki.sipeed.com/hardware/en/tang/tang-mega-138k/mega-138k-pro.html</p>
-<p>ファイルのインポート</p>
-<div class="caption-code">
-<pre class="emlist">import_files -force --fileList ../../core/core.f
-</pre>
-</div>
-<p>config</p>
-<p>SystemVerilog 2017core_top_tangmega138k</p>
-
-<h3 class="none"><a id="h8-3-3"></a><span class="secno">8.3.3</span> 周波数の設定</h3>
-<p>クロックは50MHzなので、sdcに書いておく</p>
-<div class="caption-code">
-<pre class="emlist">create_clock -name clk -period 20 -waveform {0 10} [get_ports {clk}]
-</pre>
-</div>
-<p>合成したらわかることだが、50MHzにできないそのためPLLを挟んで10MHzにする。</p>
-
-<h3 class="none"><a id="h8-3-4"></a><span class="secno">8.3.4</span> 物理制約の設定</h3>
-<p>制約</p>
-<div class="caption-code">
-<pre class="emlist">// Clock and Reset
-IO_LOC &quot;clk&quot; P16;
-IO_LOC &quot;rst&quot; K16;
-IO_PORT &quot;clk&quot; IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=OFF BANK_VCCIO=3.3;
-IO_PORT &quot;rst&quot; IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=3.3;
-
-// LED
-IO_LOC &quot;led[0]&quot; J14;
-IO_LOC &quot;led[1]&quot; R26;
-IO_LOC &quot;led[2]&quot; L20;
-IO_LOC &quot;led[3]&quot; M25;
-IO_LOC &quot;led[4]&quot; N21;
-IO_LOC &quot;led[5]&quot; N23;
-IO_PORT &quot;led[0]&quot; IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
-IO_PORT &quot;led[1]&quot; IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
-IO_PORT &quot;led[2]&quot; IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
-IO_PORT &quot;led[3]&quot; IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
-IO_PORT &quot;led[4]&quot; IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
-IO_PORT &quot;led[5]&quot; IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
-</pre>
-</div>
-
-<h2 class="numbox"><a id="h8-4"></a><span class="secno">8.4</span> FPGAへの合成② (PYNQ-Z1)</h2>
+<h2 class="numbox"><a id="h8-4"></a><span class="secno">8.4</span> FPGAへの合成 (PYNQ-Z1)</h2>
         </main>
         <nav class="page-navi">
           <a href="05a-pipeline.html" class="page-prev">&#9664;</a>

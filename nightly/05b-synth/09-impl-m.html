@@ -103,6 +103,21 @@
 </div>
 
 <h2 class="numbox"><a id="h9-1"></a><span class="secno">9.1</span> MUL、MULH[[S]U]、MULW命令の実装</h2>
+<div class="caption-code">
+<pre class="emlist">import eei::*;
+module muldivunit (
+    clk   : input  clock    ,
+    rst   : input  reset    ,
+    valid : input  logic    ,
+    ready : output logic    ,
+    funct3: input  logic &lt;3&gt;,
+    op1   : input  UInt64   ,
+    op2   : input  UInt64   ,
+    rvalid: output logic    ,
+    result: output UInt64   ,
+) {}
+</pre>
+</div>
 
 <h3 class="none"><a id="h9-1-1"></a><span class="secno">9.1.1</span> MULHU命令の実装</h3>
 <ol start="1" type="1">
