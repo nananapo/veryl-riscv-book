@@ -512,10 +512,10 @@ IO_PORT &quot;led[0]&quot; PULL_MODE=UP DRIVE=8;
 <p>インポートされた<code class="inline-code">top_tang.sv</code>のtopモジュールをインスタンス化している場所で、<code class="inline-code">MEMORY_FILEPATH</code>パラメータの値を<code class="inline-code">test/led.hex</code>のパスに設定します(<span class="listref"><a href="./05b-synth.html#led.hex.set">リスト8.19</a></span>)。</p>
 <div id="led.hex.set" class="caption-code">
 <span class="caption">リスト8.19: リスト8.19: 読み込むファイルを設定する (top_tang.sv)</span>
-<pre class="list language-set">    core_top #(
-        .MEMORY_FILEPATH_IS_ENV (0 ),
-        .MEMORY_FILEPATH        (&quot;test/led.hexへのパス&quot;)
-    ) t (
+<pre class="list language-set">core_top #(
+    .MEMORY_FILEPATH_IS_ENV (0 ),
+    .MEMORY_FILEPATH        (&quot;test/led.hexへのパス&quot;)
+) t (
 </pre>
 </div>
 <p>ProcessタブのSynthesizeをクリックし、合成します(<span class="imgref"><a href="./05b-synth.html#gowin_process_tab">図8.21</a></span>)。</p>
@@ -559,21 +559,21 @@ IO_PORT &quot;led[0]&quot; PULL_MODE=UP DRIVE=8;
 <p><code class="inline-code">MEMORY_FILEPATH</code>パラメータの値を<code class="inline-code">test/led_counter.hex</code>のパスに設定します(<span class="listref"><a href="./05b-synth.html#led.hex.set">リスト8.19</a></span>)。</p>
 <div id="led_counter.hex.set" class="caption-code">
 <span class="caption">リスト8.20: リスト8.20: 読み込むファイルを変更する (top_tang.sv)</span>
-<pre class="list language-set">    core_top #(
-        .MEMORY_FILEPATH_IS_ENV (0 ),
-        .MEMORY_FILEPATH        (&quot;test/led_counter.hexへのパス&quot;)
-    ) t (
+<pre class="list language-set">core_top #(
+    .MEMORY_FILEPATH_IS_ENV (0 ),
+    .MEMORY_FILEPATH        (&quot;test/led_counter.hexへのパス&quot;)
+) t (
 </pre>
 </div>
 <p>合成、配置配線しなおして、設計をFPGAに書き込むとLEDが点灯します<sup><a id="fnb-tangnano9k.led_counter" href="#fn-tangnano9k.led_counter" class="noteref" epub:type="noteref">*3</a></sup>。</p>
-<iframe width="640" height="360" src="https://www.youtube.com/embed/OpXiXha-ZnI" title="tangnano9k test ledcounter" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe><div class="footnote-list">
-<div class="footnote" id="fn-tangnano9k.led_counter" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*3] </span>https://youtu.be/OpXiXha-ZnI</p></div>
+<iframe width="100%" max-width="640" style="aspect-ratio: 16 / 9;" src="https://www.youtube.com/embed/OpXiXha-ZnI" title="tangnano9k test ledcounter" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe><div class="footnote-list">
+<div class="footnote" id="fn-tangnano9k.led_counter" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*3] </span><a href="https://youtu.be/OpXiXha-ZnI" class="link">https://youtu.be/OpXiXha-ZnI</a></p></div>
 </div><!--/.footnote-list-->
 
 <h2 class="numbox"><a id="h8-4"></a><span class="secno">8.4</span> FPGAへの合成② (PYNQ-Z1)</h2>
 <p>合成、配置配線しなおして、設計をFPGAに書き込むとLEDが点灯します<sup><a id="fnb-pynq_z1.led_counter" href="#fn-pynq_z1.led_counter" class="noteref" epub:type="noteref">*4</a></sup>。</p>
-<iframe width="640" height="360" src="https://www.youtube.com/embed/byCr_464dW4" title="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe><div class="footnote-list">
-<div class="footnote" id="fn-pynq_z1.led_counter" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*4] </span>https://youtu.be/byCr_464dW4</p></div>
+<iframe width="100%" max-width="640" style="aspect-ratio: 16 / 9;" src="https://www.youtube.com/embed/byCr_464dW4" title="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe><div class="footnote-list">
+<div class="footnote" id="fn-pynq_z1.led_counter" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*4] </span><a href="https://youtu.be/byCr_464dW4" class="link">https://youtu.be/byCr_464dW4</a></p></div>
 </div><!--/.footnote-list-->
         </main>
         <nav class="page-navi">
