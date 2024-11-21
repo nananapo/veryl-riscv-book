@@ -532,15 +532,15 @@ IO_PORT &quot;led[0]&quot; PULL_MODE=UP DRIVE=8;
 図8.22: 合成するとエラーが発生する
 </p>
 </div>
-<p>これは、Tang Nano 9Kに搭載されているメモリ用の回路の数が足りないために発生しているエラーです。この問題を回避するために、eeiパッケージの<code class="inline-code">MEM_ADDR_WIDTH</code>の値を<code class="inline-code">10</code>に変更します。<code class="inline-code">eei.sv</code>を変更する場合は、ファイルリストをインポートする度に変更するようにしてください。<code class="inline-code">eei.veryl</code>を変更する場合は、ファイルリストをインポートしなおしてください。</p>
-<p>メモリ幅を変更したら、もう一度合成します(<span class="imgref"><a href="./05b-synth.html#gowin_synth_success">図8.23</a></span>)。</p>
+<p>これは、Tang Nano 9Kに搭載されているメモリ用の部品の数が足りないために発生しているエラーです。この問題を回避するために、eeiパッケージの<code class="inline-code">MEM_ADDR_WIDTH</code>の値を<code class="inline-code">10</code>に変更します。<code class="inline-code">eei.sv</code>を変更する場合は、ファイルリストをインポートする度に変更するようにしてください。<code class="inline-code">eei.veryl</code>を変更する場合は、ファイルリストをインポートしなおしてください。</p>
+<p>メモリ幅を変更したら、もう一度合成します。</p>
 <div id="gowin_synth_success" class="image">
-<img src="images/05b-synth/gowin_synth_success.png" alt="合成に成功した" class="img" />
+<img src="images/05b-synth/gowin_synth_success.png" alt="合成と配置配線に成功した" class="img" />
 <p class="caption">
-図8.23: 合成に成功した
+図8.23: 合成と配置配線に成功した
 </p>
 </div>
-<p>合成に成功したら、<code class="inline-code">Place &amp; Route</code>を押して、論理回路の配置配線情報を生成します。それが終了したら、Tang Nano 9KをPCに接続して、Gowin Programmerを開いて設計をFPGAに書き込みます(<span class="imgref"><a href="./05b-synth.html#gowin_programmer">図8.24</a></span>)。</p>
+<p>合成に成功したら、<code class="inline-code">Place &amp; Route</code>を押して、論理回路の配置配線情報を生成します(<span class="imgref"><a href="./05b-synth.html#gowin_synth_success">図8.23</a></span>)。それが終了したら、Tang Nano 9KをPCに接続して、Gowin Programmerを開いて設計をFPGAに書き込みます(<span class="imgref"><a href="./05b-synth.html#gowin_programmer">図8.24</a></span>)。</p>
 <div id="gowin_programmer" class="image">
 <img src="images/05b-synth/gowin_programmer.png" alt="Program / Configureボタンを押して書き込む" class="img" />
 <p class="caption">
@@ -549,9 +549,9 @@ IO_PORT &quot;led[0]&quot; PULL_MODE=UP DRIVE=8;
 </div>
 <p>Tang Nano 9Kの中央2つ以外のLEDが点灯していることを確認できます。</p>
 <div id="tangnano9k_test_led" class="image">
-<img src="images/05b-synth/tangnano9k_test_led.jpg" alt="LEDの制御用レジスタの値が12(64'b1100)なので中央2つのLEDが点灯せず、それ以外が点灯する" class="img" style="width:70%" />
+<img src="images/05b-synth/tangnano9k_test_led.jpg" alt="LEDの制御用レジスタの値が12(&lt;code class=&quot;inline-code&quot;&gt;64'b1100&lt;/code&gt;)なので中央2つのLEDが点灯せず、それ以外が点灯する" class="img" style="width:70%" />
 <p class="caption">
-図8.25: LEDの制御用レジスタの値が12(64'b1100)なので中央2つのLEDが点灯せず、それ以外が点灯する
+図8.25: LEDの制御用レジスタの値が12(<code class="inline-code">64'b1100</code>)なので中央2つのLEDが点灯せず、それ以外が点灯する
 </p>
 </div>
 
