@@ -929,40 +929,55 @@ module fifo #(
     rvalid: output logic    ,
     rdata : output DATA_TYPE,
 ) {
-    type Ptr = logic<WIDTH>;
-
-    var mem : DATA_TYPE [2 ** WIDTH];
-    var head: Ptr                   ;
-    var tail: Ptr                   ;
-
-    let tail_plus1: Ptr = tail + 1 as Ptr;
-    let tail_plus2: Ptr = tail + 2 as Ptr;
-
-    always_comb {
-        rvalid = head != tail;
-        rdata  = mem[head];
-    }
-
-    assign wready = if WIDTH == 1 {
-        head == tail || rready
-    } else {
-        tail_plus1 != head
-    };
-
     // 2つ以上空きがあるかどうか
-    let wready_two: logic = wready && tail_plus2 != head;
+    var wready_two: logic;
 
-    always_ff {
-        if_reset {
-            head = 0;
-            tail = 0;
-        } else {
-            if wready && wvalid {
-                mem[tail] = wdata;
-                tail      = tail + 1;
+    if WIDTH == 1 :width_one {
+        always_comb {
+            wready     = !rvalid || rready;
+            wready_two = 0;
+        }
+        always_ff {
+            if_reset {
+                rvalid = 0;
+            } else {
+                if wready && wvalid {
+                    rdata  = wdata;
+                    rvalid = 1;
+                } else if rready {
+                    rvalid = 0;
+                }
             }
-            if rready && rvalid {
-                head = head + 1;
+        }
+    } else {
+        type Ptr = logic<WIDTH>;
+
+        var head      : Ptr;
+        var tail      : Ptr;
+        let tail_plus1: Ptr = tail + 1 as Ptr;
+        let tail_plus2: Ptr = tail + 2 as Ptr;
+
+        var mem: DATA_TYPE [2 ** WIDTH];
+
+        always_comb {
+            wready     = tail_plus1 != head;
+            wready_two = wready && tail_plus2 != head;
+            rvalid     = head != tail;
+            rdata      = mem[head];
+        }
+
+        always_ff {
+            if_reset {
+                head = 0;
+                tail = 0;
+            } else {
+                if wready && wvalid {
+                    mem[tail] = wdata;
+                    tail      = tail + 1;
+                }
+                if rready && rvalid {
+                    head = head + 1;
+                }
             }
         }
     }
@@ -3007,10 +3022,31 @@ module fifo #(
 //}
 
 @<code>{flush}が@<code>{1}のとき、
-@<code>{head}と@<code>{tail}を@<code>{0}に初期化することでFIFOを空にします(@<list>{fifo.veryl.jump-range.always})。
+@<code>{head}と@<code>{tail}を@<code>{0}に初期化することでFIFOを空にします(@<list>{fifo.veryl.jump-range.always_one}、@<list>{fifo.veryl.jump-range.always_two})。
 
-//list[fifo.veryl.jump-range.always][flushが1のとき、FIFOを空にする (fifo.veryl)]{
-#@maprange(scripts/04/jump-range/core/src/fifo.veryl,always)
+//list[fifo.veryl.jump-range.always_one][flushが1のとき、FIFOを空にする (fifo.veryl、WIDTH==1)]{
+#@maprange(scripts/04/jump-range/core/src/fifo.veryl,always_one)
+    always_ff {
+        if_reset {
+            rvalid = 0;
+        } else {
+            @<b>|if flush {|
+            @<b>|    rvalid = 0;|
+            @<b>|} else {|
+                if wready && wvalid {
+                    rdata  = wdata;
+                    rvalid = 1;
+                } else if rready {
+                    rvalid = 0;
+                }
+            @<b>|}|
+        }
+    }
+#@end
+//}
+
+//list[fifo.veryl.jump-range.always_two][flushが1のとき、FIFOを空にする (fifo.veryl、WIDTH!=1)]{
+#@maprange(scripts/04/jump-range/core/src/fifo.veryl,always_two)
     always_ff {
         if_reset {
             head = 0;

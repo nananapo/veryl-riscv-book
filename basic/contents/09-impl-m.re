@@ -41,6 +41,21 @@ REMUW	rs1[31:0](符号無し) % rs2[31:0](符号無し)を求める@<br>{}結果
 
 == MUL、MULH[[S]U]、MULW命令の実装
 
+//list[][]{
+import eei::*;
+module muldivunit (
+    clk   : input  clock    ,
+    rst   : input  reset    ,
+    valid : input  logic    ,
+    ready : output logic    ,
+    funct3: input  logic <3>,
+    op1   : input  UInt64   ,
+    op2   : input  UInt64   ,
+    rvalid: output logic    ,
+    result: output UInt64   ,
+) {}
+//}
+
 === MULHU命令の実装
 
  1. 筆算をそのまま実行するかけ算モジュールを作成する
