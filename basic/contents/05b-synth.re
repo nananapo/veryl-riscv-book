@@ -285,9 +285,9 @@ Tang Nano 9KをターゲットにCPUを合成します。
  * GOWIN FPGA Designer V1.9.10.03
  * Gowin Programmer Version 1.9.9
 
-=== 合成用のモジュールを作成する
+==={tangnano9k.create_top} 合成用のモジュールを作成する
 
-//image[tangnano9k_led][Tang Nano 9KのLED][width=70%]
+//image[tangnano9k_led][Tang Nano 9KのLED(6個)][width=70%]
 
 Tang Nano 9KにはLEDが6個実装されています(@<img>{tangnano9k_led})。
 そのため、LEDの制御には6ビット必要です。
@@ -328,7 +328,7 @@ module top_tang (
 #@end
 //}
 
-=== プロジェクトを作成する
+==={tangnano9k.create_project} プロジェクトを作成する
 
 新規プロジェクトを作成します。
 GOWIN FPGA Designerを開いて、Quick StartのNew Project...を選択します。
@@ -350,7 +350,7 @@ GOWIN FPGA Designerを開いて、Quick StartのNew Project...を選択します
 
 //image[gowin_created_project][プロジェクトが作成された]
 
-=== 設定を変更する
+==={tangnano9k.change_setting} 設定を変更する
 
 プロジェクトのデフォルト設定ではSystemVerilogを利用できないため、設定を変更します。
 
@@ -363,7 +363,7 @@ SynthesizeのVerilog Languageを@<code>{System Verilog 2017}に設定します�
 
 //image[gowin_configuration][設定を変更する]
 
-=== ファイルをインポートする
+==={tangnano9k.import} ファイルをインポートする
 
 Verylのソースファイルをビルドして生成されるファイルリスト(@<code>{core.f})を利用して、
 生成されたSystemVerilogソースファイルをインポートします。
@@ -383,9 +383,9 @@ Verylのソースファイルが更新されたら再度コマンドを実行し
 
 //image[gowin_imported_files][インポートに成功した]
 
-=== 制約ファイルを作成する
+==={tangnano9k.create_constraint} 制約ファイルを作成する
 
-==== 物理制約
+===={tangnano9k.cst} 物理制約
 
 top_tangモジュールのclk、rst、ledポートを、
 それぞれTang Nano 9Kの水晶発振器、ボタン、LEDに接続します。
@@ -441,7 +441,7 @@ LEDは@<code>{10}、@<code>{11}、@<code>{13}、@<code>{14}、@<code>{15}、@<co
 //image[tangnano9k_datasheet_led][LED]
 //image[tangnano9k_datasheet_ledpos][PIN10_IOL～の接続先]
 
-==== タイミング制約
+===={tangnano9k.sdc} タイミング制約
 
 FPGAが何MHzで動くかをタイミング制約ファイルに記述します。
 
@@ -465,7 +465,9 @@ create_clock -name clk -period 37.037 -waveform {0 18.518} [get_ports {clk}]
 Tang Nano 9Kの水晶発振器は27MHzで振動します。
 そのため、@<code>{create_clock}で@<code>{clk}ポートの周期を@<code>{37.037}ナノ秒(27MHz)に設定しています。
 
-=== LEDの点灯を確認する
+==={tangnano9k.test} テスト
+
+===={tangnano9k.test.led} LEDの点灯を確認する
 
 まず、LEDの点灯を確認します。
 
@@ -505,11 +507,11 @@ Tang Nano 9Kの中央2つ以外のLEDが点灯していることを確認でき�
 
 //image[tangnano9k_test_led][LEDの制御用レジスタの値が12(@<code>{64'b1100})なので中央2つのLEDが点灯せず、それ以外が点灯する][width=70%]
 
-=== LEDの点滅を確認する
+===={tangnano9k.test.blink} LEDの点滅を確認する
 
 @<code>{MEMORY_FILEPATH}パラメータの値を@<code>{test/led_counter.hex}のパスに設定します(@<list>{led_counter.hex.set})。
 
-#@# TODO
+#@# TODO map
 //list[led_counter.hex.set][読み込むファイルを変更する (top_tang.sv)]{
 core_top #(
     .MEMORY_FILEPATH_IS_ENV (0 ),
@@ -517,7 +519,8 @@ core_top #(
 ) t (
 //}
 
-合成、配置配線しなおして、設計をFPGAに書き込むとLEDが点灯します@<fn>{tangnano9k.led_counter}。
+合成、配置配線しなおして、設計をFPGAに書き込むとLEDが点滅します@<fn>{tangnano9k.led_counter}。
+動画の左下のボタンを押すと状態がリセットされます。
 
 //raw[|html|<iframe width="100%" max-width="640" style="aspect-ratio: 16 / 9;" src="https://www.youtube.com/embed/OpXiXha-ZnI" title="tangnano9k test ledcounter" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>]
 
@@ -525,7 +528,110 @@ core_top #(
 
 == FPGAへの合成② (PYNQ-Z1)
 
+PYNQ-Z1をターゲットにCPUを合成します。
+使用するEDAのバージョンは次の通りです。
+
+ * Vivado v2023.2
+
+初めてPYNQ-Z1を使う人は、@<href>{https://www.pynq.io/boards.html, PYNQのドキュメント}やACRiの記事を参考に起動方法を確認して、Vivadoにボードファイルを追加してください。
+
+==={pynq_z1.create_top} 合成用のモジュールを作成する
+
+//image[pynq_z1_led][PYNQ-Z1のLED(6個)][width=70%]
+
+PYNQ-Z1にはLEDが6個実装されています(@<img>{pynq_z1_led})。
+本章ではボタンの上の横並びの4つのLED(@<img>{pynq_z1_led}右下)を使用します。
+
+@<secref>{tangnano9k.create_top}とおなじように、
+@<code>{led}ポートのビット幅を一致させるためにPYNQ-Z1の合成のためのトップモジュールを作成します。
+
+@<code>{src/top_pynq_z1.veryl}を作成し、次のように記述します(@<list>{top_pynq_z1.veryl.pynq_z1})。
+top_pynq_z1モジュールの@<code>{led}ポートは4ビットとして定義して、topモジュールの@<code>{led}ポートの下位4ビットを接続しています。
+
+//list[top_pynq_z1.veryl.pynq_z1][PYNQ-Z1用の最上位モジュール (top_tang.veryl)]{
+#@mapfile(scripts/05b/pynq_z1/core/src/top_pynq_z1.veryl)
+import eei::*;
+
+module top_pynq_z1 #(
+    param MEMORY_FILEPATH: string = "",
+) (
+    clk: input  clock   ,
+    rst: input  reset   ,
+    led: output logic<4>,
+) {
+
+    // CSRの下位ビットをLEDに接続する
+    var led_top: UIntX;
+    always_comb {
+        led = led_top[3:0];
+    }
+
+    inst t: top #(
+        MEMORY_FILEPATH_IS_ENV: 0              ,
+        MEMORY_FILEPATH       : MEMORY_FILEPATH,
+    ) (
+        clk         ,
+        rst         ,
+        led: led_top,
+        #[ifdef(TEST_MODE)]
+        test_success: _,
+    );
+}
+#@end
+//}
+
+==={pynq_z1.create_project} プロジェクトを作成する
+
+==={pynq_z1.import} ファイルをインポートする
+
+VerylファイルはSystemVerilogファイルに変換されますが、VivadoはトップモジュールにSystemVerilogファイルを使用することができません。
+この問題を回避するために、Verilogでtop_pynq_z1モジュールをインスタンス化するモジュールを記述します。
+
+//list[core_top_v.v.pynq_z1][PYNQ-Z1用の最上位モジュール (core_top_v.v)]{
+#@mapfile(scripts/05b/pynq_z1/synth/pynq_z1/core_top_v.v)
+module core_top_v #(
+    parameter MEMORY_FILEPATH = ""
+) (
+    input wire          clk,
+    input wire          rst,
+    output wire [3:0]   led
+);
+    core_top_pynq_z1 #(
+        .MEMORY_FILEPATH(MEMORY_FILEPATH)
+    ) t (
+        .clk(clk),
+        .rst(!rst),
+        .led(led)
+    );
+endmodule
+#@end
+//}
+
+==={pynq_z1.create_bd} ブロックデザインを作成する
+
+ * core_top_vを出す
+ * ledとrstをMake External
+ * ZYNQ7 Processing Systemを出す
+ * Cloking Wizardを出す
+   * 100MHz -> 50MHz
+   * resetとlockを消す
+ * DDRとFIXED_IOを出す
+ * クロックをつなぐ (ZYNQ7から供給)
+ * wrapper moduleを作る
+ * ブロックデザインのwrapperをSetTopする
+
+==={pynq_z1.create_constraint} 制約ファイルを作成する
+
+ * ledとrst
+
+==={pynq_z1.test} テスト
+
+===={pynq_z1.test.led} LEDの点灯を確認する
+
+===={pynq_z1.test.blink} LEDの点滅を確認する
+
 合成、配置配線しなおして、設計をFPGAに書き込むとLEDが点灯します@<fn>{pynq_z1.led_counter}。
+BTN0を押すと状態がリセットされます。
 
 //raw[|html|<iframe width="100%" max-width="640" style="aspect-ratio: 16 / 9;" src="https://www.youtube.com/embed/byCr_464dW4" title="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>]
 
