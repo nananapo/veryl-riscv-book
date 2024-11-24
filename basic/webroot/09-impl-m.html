@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    
+    <title>M拡張の実装 | Verylで作るCPU</title>
+
+    <link rel="stylesheet" type="text/css" href="css/normalize.css" />
+    <link rel="stylesheet" type="text/css" href="css/webstyle.css" />
+    <link rel="next" title="あとがき" href="99-postface.html">
+    <link rel="prev" title="CPUの合成" href="05b-synth.html">
+    <meta name="generator" content="Re:VIEW Starter">
+
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+
+  </head>
+  <body style="background-color:#eff4ff">
+    <div class="page-outer" style="background-color:white">
+      <div class="side-content">
+                <a class="nav-title" href="index.html">Verylで作るCPU</a>
+
+        <div style="display:flex; gap:10px; align-items: center;">
+          <a class="github-button" href="https://github.com/nananapo/veryl-riscv-book" data-color-scheme="no-preference: light_high_contrast; light: light; dark: dark;" data-size="large" data-show-count="true" aria-label="Star nananapo/veryl-riscv-book on GitHub">Star</a>
+          <div style="">
+            <a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-show-count="false">Tweet</a>
+          </div>
+          <div style="margin-bottom: 14px;" id="share-facebook" class="fb-share-button" data-href="" data-layout="" data-size=""><a target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Finvalid.invalid%2F&amp;src=sdkpreparse" class="fb-xfbml-parse-ignore">Facebookでシェアする</a></div>
+        </div>
+        <ul class="toc toc-1">
+    <li class="toc-chapter"><a href="./00-preface.html">まえがき</a></li>
+<li class="toc-part">第I部 RV32I/RV64Iの実装
+  <ul class="toc toc-2">
+    <li class="toc-chapter"><a href="./02-setup.html">1 環境構築</a></li>
+    <li class="toc-chapter"><a href="./03-veryl.html">2 ハードウェア記述言語 Veryl</a></li>
+    <li class="toc-chapter"><a href="./04-impl-rv32i.html">3 RV32Iの実装</a></li>
+    <li class="toc-chapter"><a href="./04a-zicsr.html">4 Zicsr拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./04b-riscvtests.html">5 riscv-testsによるテスト</a></li>
+    <li class="toc-chapter"><a href="./05-impl-rv64i.html">6 RV64Iの実装</a></li>
+    <li class="toc-chapter"><a href="./05a-pipeline.html">7 CPUのパイプライン化</a></li>
+    <li class="toc-chapter"><a href="./05b-synth.html">8 CPUの合成</a></li>
+  </ul>
+</li>
+<li class="toc-part">第II部 RV64IMACの実装
+  <ul class="toc toc-2">
+    <li class="toc-chapter"><a href="./09-impl-m.html">9 M拡張の実装</a>
+      <ul class="toc toc-3">
+        <li class="toc-section"><a href="./09-impl-m.html#h9-1">9.1 MUL、MULH[[S]U]、MULW命令の実装</a></li>
+        <li class="toc-section"><a href="./09-impl-m.html#h9-2">9.2 DIV[U]、DIV[U]W、REM[U]、REM[U]W命令の実装</a></li>
+      </ul>
+    </li>
+  </ul>
+</li>
+    <li class="toc-chapter"><a href="./99-postface.html">あとがき</a></li>
+    <li class="toc-chapter"><a href="./100-contribute.html">このプロジェクトに貢献する</a></li>
+    <li class="toc-chapter"><a href="./bib.html">参考文献</a></li>
+</ul>
+      </div>
+      <div class="page-inner">
+        <header class="page-header">
+        </header>
+        <main class="page-main">
+  <h1 class="boldlines center twolines"><a id="h9"></a><span class="secno">第9章</span> <br/>M拡張の実装</h1>
+<p>これまでの章で基本的な整数演算の命令を実装したので、本章では乗算、除算、剰余を求める命令を実装します。RISC-Vの乗算、除算を行う命令はM拡張に定義されており、M拡張を実装したRV64IのISAのことを<code class="inline-code">RV64IM</code>と表現します。</p>
+<p>M拡張には、XLENが32のときは<span class="tableref"><a href="./09-impl-m.html#m.instructions.32">表9.1</a></span>の命令が定義されています。XLENが64のときは<span class="tableref"><a href="./09-impl-m.html#m.instructions.64">表9.2</a></span>の命令が定義されています。</p>
+<div id="m.instructions.32" class="table">
+<p class="caption">表9.1: M拡張の命令 (XLEN=32)</p>
+<table>
+<tr class="hline"><th>命令</th><th>動作</th></tr>
+<tr class="hline"><td>MUL</td><td>rs1(符号付き) × rs2(符号付き)の結果(64ビット)の下位32ビットを求める</td></tr>
+<tr class="hline"><td>MULHU</td><td>rs1(符号無し) × rs2(符号無し)の結果(64ビット)の上位32ビットを求める</td></tr>
+<tr class="hline"><td>MULHSU</td><td>rs1(符号付き) × rs2(符号無し)の結果(64ビット)の上位32ビットを求める</td></tr>
+<tr class="hline"><td>DIV</td><td>rs1(符号付き) / rs2(符号付き)を求める</td></tr>
+<tr class="hline"><td>DIVU</td><td>rs1(符号無し) / rs2(符号無し)を求める</td></tr>
+<tr class="hline"><td>REM</td><td>rs1(符号付き) % rs2(符号付き)を求める</td></tr>
+<tr class="hline"><td>REMU</td><td>rs1(符号無し) % rs2(符号無し)を求める</td></tr>
+</table>
+</div>
+<div id="m.instructions.64" class="table">
+<p class="caption">表9.2: M拡張の命令 (XLEN=64)</p>
+<table>
+<tr class="hline"><th>命令</th><th>動作</th></tr>
+<tr class="hline"><td>MUL</td><td>rs1(符号付き) × rs2(符号付き)の結果(128ビット)の下位64ビットを求める</td></tr>
+<tr class="hline"><td>MULW</td><td>rs1[31:0](符号付き) × rs2[31:0](符号付き)の結果(64ビット)の下位32ビットを求める<br />結果は符号拡張する</td></tr>
+<tr class="hline"><td>MULHU</td><td>rs1(符号無し) × rs2(符号無し)の結果(128ビット)の上位64ビットを求める</td></tr>
+<tr class="hline"><td>MULHSU</td><td>rs1(符号付き) × rs2(符号無し)の結果(128ビット)の上位64ビットを求める</td></tr>
+<tr class="hline"><td>DIV</td><td>rs1(符号付き) / rs2(符号付き)を求める</td></tr>
+<tr class="hline"><td>DIVW</td><td>rs1[31:0](符号付き) / rs2[31:0](符号付き)を求める<br />結果は符号拡張する</td></tr>
+<tr class="hline"><td>DIVU</td><td>rs1(符号無し) / rs2(符号無し)を求める</td></tr>
+<tr class="hline"><td>DIVWU</td><td>rs1[31:0](符号無し) / rs2[31:0](符号無し)を求める<br />結果は符号拡張する</td></tr>
+<tr class="hline"><td>REM</td><td>rs1(符号付き) % rs2(符号付き)を求める</td></tr>
+<tr class="hline"><td>REMW</td><td>rs1[31:0](符号付き) % rs2[31:0](符号付き)を求める<br />結果は符号拡張する</td></tr>
+<tr class="hline"><td>REMU</td><td>rs1(符号無し) % rs2(符号無し)を求める</td></tr>
+<tr class="hline"><td>REMUW</td><td>rs1[31:0](符号無し) % rs2[31:0](符号無し)を求める<br />結果は符号拡張する</td></tr>
+</table>
+</div>
+
+<h2 class="numbox"><a id="h9-1"></a><span class="secno">9.1</span> MUL、MULH[[S]U]、MULW命令の実装</h2>
+<div class="caption-code">
+<pre class="emlist">import eei::*;
+module muldivunit (
+    clk   : input  clock    ,
+    rst   : input  reset    ,
+    valid : input  logic    ,
+    ready : output logic    ,
+    funct3: input  logic &lt;3&gt;,
+    op1   : input  UInt64   ,
+    op2   : input  UInt64   ,
+    rvalid: output logic    ,
+    result: output UInt64   ,
+) {}
+</pre>
+</div>
+
+<h3 class="none"><a id="h9-1-1"></a><span class="secno">9.1.1</span> MULHU命令の実装</h3>
+<ol start="1" type="1">
+<li>筆算をそのまま実行するかけ算モジュールを作成する</li>
+</ol>
+
+<h3 class="none"><a id="h9-1-2"></a><span class="secno">9.1.2</span> MUL、MULW命令の実装</h3>
+<ol start="1" type="1">
+<li>正 * 正に変更して計算、符号を戻す</li>
+<li>(-A[msb] * 2**63 + A[msb-1:lsb]) * (-B[msb] * 2**63 + B[msb-1:lsb])を展開して計算する</li>
+</ol>
+<p>付録でやる？1. 1ビットの加算器で構成2. ウォレス木で構成する3. パイプライン化する (しないと性能が駄目)</p>
+
+<h3 class="none"><a id="h9-1-3"></a><span class="secno">9.1.3</span> MULHSU命令の実装</h3>
+<ol start="1" type="1">
+<li>65ビットの演算にして、符号拡張の方法によって実装する</li>
+</ol>
+
+<h2 class="numbox"><a id="h9-2"></a><span class="secno">9.2</span> DIV[U]、DIV[U]W、REM[U]、REM[U]W命令の実装</h2>
+<ol start="1" type="1">
+<li>筆算をそのまま実行する割り算モジュールを作成する</li>
+<li>引き放し法を使う</li>
+</ol>
+        </main>
+        <nav class="page-navi">
+          <a href="05b-synth.html" class="page-prev">&#9664;</a>
+          <a href="99-postface.html" class="page-next">&#9654;</a>
+        </nav>
+        <br>
+        <br>
+        <footer style="background:#dddddd">
+      <div style="padding: 20px 20px 20px 20px;">
+          <div style="font-size:1.4rem"><b>コンピュータは、CPUを書けば理解できる！</b></div><br>
+          コンピュータアーキテクチャは、CPUを作ることで理解することができます。
+          「Verylで作るCPU」は、ハードウェア記述言語VerylでRISC-VのCPUを自作する方法を解説するプロジェクトです。<br>
+          「Verylで作るCPU 基本編」では、ハードウェア記述言語の基礎から、OSを実行できる程度のCPUの実装方法までを解説します。<br>
+          <br>
+          キーワード: 自作CPU , RISC-V , Veryl , FPGA<br>
+      <div>
+        </footer>
+      </div>
+    </div>
+    
+    <script>
+      let url = window.location.href;
+      let encoded_url = encodeURI(url);
+      let fb = document.getElementById("share-facebook");
+      fb["data-href"] = url;
+      console.log(fb);
+    </script>
+    <div id="fb-root"></div>
+    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/ja_JP/sdk.js#xfbml=1&version=v21.0"></script>
+    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+  </body>
+</html>
+<!-- layout.html5.erb -->
