@@ -606,7 +606,7 @@ always_comb {
 
 //list[enum.define][列挙型の定義]{
 // enum 型名 : logic<バリアント数を保持できるだけのビット数> { バリアントの定義 }
-enum abc : logic<2> {
+enum abcd : logic<2> {
 	// バリアント名 : バリアントを表す値,
 	A = 2'd0,
 	B = 2'd1,
@@ -615,11 +615,18 @@ enum abc : logic<2> {
 }
 //}
 
+enum型の値は@<code>{型名::バリアント名}で利用できます(@<list>{enum.use})。
+
+//list[enum.use][列挙型の値]{
+// enum型の変数の定義
+let v : abcd = abcd::A;
+//}
+
 バリアントを表す値や、バリアントを保持できるだけのビット数は省略できます
 (@<list>{enum.omit})。
 
 //list[enum.omit][列挙型の省略した定義]{
-enum abc {
+enum abcd {
 	A, B, C, D
 }
 //}
