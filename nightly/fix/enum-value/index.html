@@ -1,0 +1,184 @@
+
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    
+
+    <title>Verylで作るCPU</title>
+
+
+
+    <link rel="stylesheet" type="text/css" href="css/normalize.css" />
+
+    <link rel="stylesheet" type="text/css" href="css/webstyle.css" />
+
+
+    <link rel="next" title="まえがき" href="00-preface.html">
+
+
+    <meta name="generator" content="Re:VIEW Starter">
+
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+
+  </head>
+  <body style="background-color:#eff4ff">
+    <div class="page-outer" style="background-color:white">
+
+      <div class="page-inner">
+        <header class="page-header">
+        </header>
+        <main class="page-main">
+
+          <h1>Verylで作るCPU</h1>
+
+          <h3><b>コンピュータは、CPUを書けば理解できる！</b></h3>
+          コンピュータアーキテクチャは、CPUを作ることで理解することができます。
+          「Verylで作るCPU」は、ハードウェア記述言語VerylでRISC-VのCPUを自作する方法を解説するプロジェクトです。<br>
+          「Verylで作るCPU 基本編」では、ハードウェア記述言語の基礎から、OSを実行できる程度のCPUの実装方法までを解説します。<br>
+          <br>
+          キーワード: 自作CPU , RISC-V , Veryl , FPGA<br>
+          <br>
+          <div style="display:flex; column-gap: 20px; align-items: center;">
+            <a class="nav-link" href="https://github.com/nananapo/veryl-riscv-book">
+              <span style="color:black; font-weight:bolder;"> nananapo/veryl-riscv-book </span>
+            </a>
+            <a class="github-button" href="https://github.com/nananapo/veryl-riscv-book" data-color-scheme="no-preference: light_high_contrast; light: light; dark: dark;" data-size="large" data-show-count="true" aria-label="Star nananapo/veryl-riscv-book on GitHub">Star</a>
+          </div>
+          
+          <div style="display:flex; gap:10px; align-items: center;">
+            <div style="">
+              <a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-show-count="false">Tweet</a>
+            </div>
+            <div style="margin-bottom: 14px;" id="share-facebook" class="fb-share-button" data-href="" data-layout="" data-size=""><a target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Finvalid.invalid%2F&amp;src=sdkpreparse" class="fb-xfbml-parse-ignore">Facebookでシェアする</a></div>
+          </div>
+<ul class="toc toc-1">
+    <li class="toc-chapter"><a href="./00-preface.html">まえがき</a>
+      <ul class="toc toc-2">
+        <li class="toc-section"><a href="./00-preface.html#h">本書を読むとわかること</a></li>
+        <li class="toc-section"><a href="./00-preface.html#h">対象読者</a></li>
+        <li class="toc-section"><a href="./00-preface.html#h">必要な知識</a></li>
+        <li class="toc-section"><a href="./00-preface.html#h">本書のソースコード / 問い合わせ先</a></li>
+        <li class="toc-section"><a href="./00-preface.html#h">CPUの自作</a></li>
+        <li class="toc-section"><a href="./00-preface.html#h">RISC-V</a></li>
+        <li class="toc-section"><a href="./00-preface.html#h">本書の構成</a></li>
+        <li class="toc-section"><a href="./00-preface.html#h">凡例</a></li>
+      </ul>
+    </li>
+<li class="toc-part">第I部 RV32I/RV64Iの実装
+  <ul class="toc toc-2">
+    <li class="toc-chapter"><a href="./02-setup.html">1 環境構築</a>
+      <ul class="toc toc-3">
+        <li class="toc-section"><a href="./02-setup.html#h1-1">1.1 Veryl</a></li>
+        <li class="toc-section"><a href="./02-setup.html#h1-2">1.2 Verilator</a></li>
+        <li class="toc-section"><a href="./02-setup.html#h1-3">1.3 riscv-gnu-toolchain</a></li>
+      </ul>
+    </li>
+    <li class="toc-chapter"><a href="./03-veryl.html">2 ハードウェア記述言語 Veryl</a>
+      <ul class="toc toc-3">
+        <li class="toc-section"><a href="./03-veryl.html#h2-1">2.1 ハードウェア記述言語</a></li>
+        <li class="toc-section"><a href="./03-veryl.html#h2-2">2.2 Verylの基本文法、機能</a></li>
+      </ul>
+    </li>
+    <li class="toc-chapter"><a href="./04-impl-rv32i.html">3 RV32Iの実装</a>
+      <ul class="toc toc-3">
+        <li class="toc-section"><a href="./04-impl-rv32i.html#h3-1">3.1 CPUは何をやっているのか?</a></li>
+        <li class="toc-section"><a href="./04-impl-rv32i.html#h3-2">3.2 プロジェクトの作成</a></li>
+        <li class="toc-section"><a href="./04-impl-rv32i.html#h3-3">3.3 定数の定義</a></li>
+        <li class="toc-section"><a href="./04-impl-rv32i.html#h3-4">3.4 メモリ</a></li>
+        <li class="toc-section"><a href="./04-impl-rv32i.html#h3-5">3.5 最上位モジュールの作成</a></li>
+        <li class="toc-section"><a href="./04-impl-rv32i.html#h3-6">3.6 命令フェッチ</a></li>
+        <li class="toc-section"><a href="./04-impl-rv32i.html#h3-7">3.7 命令のデコードと即値の生成</a></li>
+        <li class="toc-section"><a href="./04-impl-rv32i.html#h3-8">3.8 レジスタの定義と読み込み</a></li>
+        <li class="toc-section"><a href="./04-impl-rv32i.html#h3-9">3.9 ALUによる計算の実装</a></li>
+        <li class="toc-section"><a href="./04-impl-rv32i.html#h3-10">3.10 レジスタに結果を書き込む</a></li>
+        <li class="toc-section"><a href="./04-impl-rv32i.html#h3-11">3.11 ロード命令とストア命令の実装</a></li>
+        <li class="toc-section"><a href="./04-impl-rv32i.html#h3-12">3.12 ジャンプ命令、分岐命令の実装</a></li>
+      </ul>
+    </li>
+    <li class="toc-chapter"><a href="./04a-zicsr.html">4 Zicsr拡張の実装</a>
+      <ul class="toc toc-3">
+        <li class="toc-section"><a href="./04a-zicsr.html#h4-1">4.1 CSRとは何か?</a></li>
+        <li class="toc-section"><a href="./04a-zicsr.html#h4-2">4.2 CSR命令のデコード</a></li>
+        <li class="toc-section"><a href="./04a-zicsr.html#h4-3">4.3 csrunitモジュールの実装</a></li>
+        <li class="toc-section"><a href="./04a-zicsr.html#h4-4">4.4 ECALL命令の実装</a></li>
+        <li class="toc-section"><a href="./04a-zicsr.html#h4-5">4.5 MRET命令の実装</a></li>
+      </ul>
+    </li>
+    <li class="toc-chapter"><a href="./04b-riscvtests.html">5 riscv-testsによるテスト</a>
+      <ul class="toc toc-3">
+        <li class="toc-section"><a href="./04b-riscvtests.html#h5-1">5.1 riscv-testsとは何か?</a></li>
+        <li class="toc-section"><a href="./04b-riscvtests.html#h5-2">5.2 riscv-testsのビルド</a></li>
+        <li class="toc-section"><a href="./04b-riscvtests.html#h5-3">5.3 テスト内容の確認</a></li>
+        <li class="toc-section"><a href="./04b-riscvtests.html#h5-4">5.4 テストの終了検知</a></li>
+        <li class="toc-section"><a href="./04b-riscvtests.html#h5-5">5.5 テストの実行</a></li>
+        <li class="toc-section"><a href="./04b-riscvtests.html#h5-6">5.6 複数のテストの自動実行</a></li>
+      </ul>
+    </li>
+    <li class="toc-chapter"><a href="./05-impl-rv64i.html">6 RV64Iの実装</a>
+      <ul class="toc toc-3">
+        <li class="toc-section"><a href="./05-impl-rv64i.html#h6-1">6.1 XLENの変更</a></li>
+        <li class="toc-section"><a href="./05-impl-rv64i.html#h6-2">6.2 ADD[I]W、SUBW命令の実装</a></li>
+        <li class="toc-section"><a href="./05-impl-rv64i.html#h6-3">6.3 SLL[I]W、SRL[I]W、SRA[I]W命令の実装</a></li>
+        <li class="toc-section"><a href="./05-impl-rv64i.html#h6-4">6.4 LWU命令の実装</a></li>
+        <li class="toc-section"><a href="./05-impl-rv64i.html#h6-5">6.5 LD、SD命令の実装</a></li>
+      </ul>
+    </li>
+    <li class="toc-chapter"><a href="./05a-pipeline.html">7 CPUのパイプライン化</a>
+      <ul class="toc toc-3">
+        <li class="toc-section"><a href="./05a-pipeline.html#h7-1">7.1 CPUの速度</a></li>
+        <li class="toc-section"><a href="./05a-pipeline.html#h7-2">7.2 パイプライン処理の実装</a></li>
+        <li class="toc-section"><a href="./05a-pipeline.html#h7-3">7.3 データ依存の対処</a></li>
+      </ul>
+    </li>
+    <li class="toc-chapter"><a href="./05b-synth.html">8 CPUの合成</a>
+      <ul class="toc toc-3">
+        <li class="toc-section"><a href="./05b-synth.html#h8-1">8.1 FPGAとは何か？</a></li>
+        <li class="toc-section"><a href="./05b-synth.html#h8-2">8.2 LEDの制御</a></li>
+        <li class="toc-section"><a href="./05b-synth.html#h8-3">8.3 FPGAへの合成① (Tang Nano 9K)</a></li>
+        <li class="toc-section"><a href="./05b-synth.html#h8-4">8.4 FPGAへの合成② (PYNQ-Z1)</a></li>
+      </ul>
+    </li>
+  </ul>
+</li>
+    <li class="toc-chapter"><a href="./99-postface.html">あとがき</a>
+      <ul class="toc toc-2">
+        <li class="toc-section"><a href="./99-postface.html#h">著者について</a></li>
+        <li class="toc-section"><a href="./99-postface.html#h">謝辞</a></li>
+      </ul>
+    </li>
+    <li class="toc-chapter"><a href="./100-contribute.html">このプロジェクトに貢献する</a></li>
+    <li class="toc-chapter"><a href="./bib.html">参考文献</a></li>
+</ul>
+
+
+        </main>
+        <nav class="page-navi">
+
+
+          <a href="00-preface.html" class="page-next">&#9654;</a>
+
+        </nav>
+        <br>
+        <br>
+        <footer style="background:#dddddd">
+
+
+        </footer>
+      </div>
+    </div>
+    
+    <script>
+      let url = window.location.href;
+      let encoded_url = encodeURI(url);
+      let fb = document.getElementById("share-facebook");
+      fb["data-href"] = url;
+      console.log(fb);
+    </script>
+    <div id="fb-root"></div>
+    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/ja_JP/sdk.js#xfbml=1&version=v21.0"></script>
+    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+
+
