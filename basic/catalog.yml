@@ -20,8 +20,8 @@ CHAPS:
     - 05-impl-rv64i.re
     - 05a-pipeline.re
     - 05b-synth.re
-  # - RV64IMACの実装(未執筆):
-    # - 09-impl-m.re
+  - RV64IMACの実装:
+    - 09-impl-m.re
     # - 10-impl-exception.re
     # - 11-impl-mmio.re
     # - 12-visualize.re
