@@ -21,8 +21,8 @@
     <script async defer src="https://buttons.github.io/buttons.js"></script>
 
   </head>
-  <body>
-    <div class="page-outer">
+  <body style="background-color:#eff4ff">
+    <div class="page-outer" style="background-color:white">
 
       <div class="page-inner">
         <header class="page-header">
@@ -58,5 +58,17 @@
         </footer>
       </div>
     </div>
+    
+    <script>
+      let url = window.location.href;
+      let encoded_url = encodeURI(url);
+      let fb = document.getElementById("share-facebook");
+      fb["data-href"] = url;
+      console.log(fb);
+    </script>
+    <div id="fb-root"></div>
+    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/ja_JP/sdk.js#xfbml=1&version=v21.0"></script>
+    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
 
 

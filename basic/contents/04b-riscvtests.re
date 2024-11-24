@@ -276,7 +276,10 @@ topモジュールでメモリへのアクセスを監視し、
 
 //list[top.veryl.detect-finish-range.port][テスト結果を報告するためのポートを宣言する (top.veryl)]{
 #@maprange(scripts/04b/detect-finish-range/core/src/top.veryl,port)
-module top (
+module top #(
+    param MEMORY_FILEPATH_IS_ENV: bit    = 1                 ,
+    param MEMORY_FILEPATH       : string = "MEMORY_FILE_PATH",
+) (
     clk: input clock,
     rst: input reset,
     @<b>|#[ifdef(TEST_MODE)]|

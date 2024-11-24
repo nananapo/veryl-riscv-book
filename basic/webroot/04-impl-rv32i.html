@@ -15,13 +15,18 @@
     <script async defer src="https://buttons.github.io/buttons.js"></script>
 
   </head>
-  <body>
-    <div class="page-outer">
+  <body style="background-color:#eff4ff">
+    <div class="page-outer" style="background-color:white">
       <div class="side-content">
                 <a class="nav-title" href="index.html">Verylで作るCPU</a>
 
-        <a class="github-button" href="https://github.com/nananapo/veryl-riscv-book" data-color-scheme="no-preference: light_high_contrast; light: light; dark: dark;" data-size="large" data-show-count="true" aria-label="Star nananapo/veryl-riscv-book on GitHub">Star</a>
-
+        <div style="display:flex; gap:10px; align-items: center;">
+          <a class="github-button" href="https://github.com/nananapo/veryl-riscv-book" data-color-scheme="no-preference: light_high_contrast; light: light; dark: dark;" data-size="large" data-show-count="true" aria-label="Star nananapo/veryl-riscv-book on GitHub">Star</a>
+          <div style="">
+            <a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-show-count="false">Tweet</a>
+          </div>
+          <div style="margin-bottom: 14px;" id="share-facebook" class="fb-share-button" data-href="" data-layout="" data-size=""><a target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Finvalid.invalid%2F&amp;src=sdkpreparse" class="fb-xfbml-parse-ignore">Facebookでシェアする</a></div>
+        </div>
         <ul class="toc toc-1">
     <li class="toc-chapter"><a href="./00-preface.html">まえがき</a></li>
 <li class="toc-part">第I部 RV32I/RV64Iの実装
@@ -377,15 +382,18 @@ package util {
 <span class="caption">リスト3.9: リスト3.9: 最上位モジュールの定義 (top.veryl)</span>
 <pre class="list language-inst">import eei::*;
 
-module top (
+module top #(
+    param MEMORY_FILEPATH_IS_ENV: bit    = 1                 ,
+    param MEMORY_FILEPATH       : string = &quot;MEMORY_FILE_PATH&quot;,
+) (
     clk: input clock,
     rst: input reset,
 ) {
     inst membus: membus_if::&lt;MEM_DATA_WIDTH, MEM_ADDR_WIDTH&gt;;
 
     inst mem: memory::&lt;MEM_DATA_WIDTH, MEM_ADDR_WIDTH&gt; #(
-        FILEPATH_IS_ENV: 1                 ,
-        FILEPATH       : &quot;MEMORY_FILE_PATH&quot;,
+        FILEPATH_IS_ENV: MEMORY_FILEPATH_IS_ENV,
+        FILEPATH       : MEMORY_FILEPATH       ,
     ) (
         clk     ,
         rst     ,
@@ -637,7 +645,7 @@ $ mv obj_dir/Vcore_top obj_dir/sim <span class="balloon">← シミュレータ�
 <dl>
 <dt>-f</dt>
 <dd>
-	SystemVerilogプログラムのファイルリストを指定します。
+	SystemVerilogソースファイルのファイルリストを指定します。
 	今回は<code class="inline-code">core.f</code>を指定しています。
 </dd>
 <dt>--exe</dt>
@@ -770,40 +778,55 @@ $ <span class="userinput">make clean</span> <span class="balloon">← ビルド�
     rvalid: output logic    ,
     rdata : output DATA_TYPE,
 ) {
-    type Ptr = logic&lt;WIDTH&gt;;
-
-    var mem : DATA_TYPE [2 ** WIDTH];
-    var head: Ptr                   ;
-    var tail: Ptr                   ;
-
-    let tail_plus1: Ptr = tail + 1 as Ptr;
-    let tail_plus2: Ptr = tail + 2 as Ptr;
-
-    always_comb {
-        rvalid = head != tail;
-        rdata  = mem[head];
-    }
-
-    assign wready = if WIDTH == 1 {
-        head == tail || rready
-    } else {
-        tail_plus1 != head
-    };
-
     // 2つ以上空きがあるかどうか
-    let wready_two: logic = wready &amp;&amp; tail_plus2 != head;
+    var wready_two: logic;
 
-    always_ff {
-        if_reset {
-            head = 0;
-            tail = 0;
-        } else {
-            if wready &amp;&amp; wvalid {
-                mem[tail] = wdata;
-                tail      = tail + 1;
+    if WIDTH == 1 :width_one {
+        always_comb {
+            wready     = !rvalid || rready;
+            wready_two = 0;
+        }
+        always_ff {
+            if_reset {
+                rvalid = 0;
+            } else {
+                if wready &amp;&amp; wvalid {
+                    rdata  = wdata;
+                    rvalid = 1;
+                } else if rready {
+                    rvalid = 0;
+                }
             }
-            if rready &amp;&amp; rvalid {
-                head = head + 1;
+        }
+    } else {
+        type Ptr = logic&lt;WIDTH&gt;;
+
+        var head      : Ptr;
+        var tail      : Ptr;
+        let tail_plus1: Ptr = tail + 1 as Ptr;
+        let tail_plus2: Ptr = tail + 2 as Ptr;
+
+        var mem: DATA_TYPE [2 ** WIDTH];
+
+        always_comb {
+            wready     = tail_plus1 != head;
+            wready_two = wready &amp;&amp; tail_plus2 != head;
+            rvalid     = head != tail;
+            rdata      = mem[head];
+        }
+
+        always_ff {
+            if_reset {
+                head = 0;
+                tail = 0;
+            } else {
+                if wready &amp;&amp; wvalid {
+                    mem[tail] = wdata;
+                    tail      = tail + 1;
+                }
+                if rready &amp;&amp; rvalid {
+                    head = head + 1;
+                }
             }
         }
     }
@@ -2462,10 +2485,30 @@ deadbeef // 0x0
     wready: output logic    ,
 </pre>
 </div>
-<p><code class="inline-code">flush</code>が<code class="inline-code">1</code>のとき、<code class="inline-code">head</code>と<code class="inline-code">tail</code>を<code class="inline-code">0</code>に初期化することでFIFOを空にします(<span class="listref"><a href="./04-impl-rv32i.html#fifo.veryl.jump-range.always">リスト3.87</a></span>)。</p>
-<div id="fifo.veryl.jump-range.always" class="caption-code">
-<span class="caption">リスト3.87: リスト3.87: flushが1のとき、FIFOを空にする (fifo.veryl)</span>
-<pre class="list language-always">    always_ff {
+<p><code class="inline-code">flush</code>が<code class="inline-code">1</code>のとき、<code class="inline-code">head</code>と<code class="inline-code">tail</code>を<code class="inline-code">0</code>に初期化することでFIFOを空にします(<span class="listref"><a href="./04-impl-rv32i.html#fifo.veryl.jump-range.always_one">リスト3.87</a></span>、<span class="listref"><a href="./04-impl-rv32i.html#fifo.veryl.jump-range.always_two">リスト3.88</a></span>)。</p>
+<div id="fifo.veryl.jump-range.always_one" class="caption-code">
+<span class="caption">リスト3.87: リスト3.87: flushが1のとき、FIFOを空にする (fifo.veryl、WIDTH==1)</span>
+<pre class="list language-always_one">    always_ff {
+        if_reset {
+            rvalid = 0;
+        } else {
+            <b>if flush {</b>
+            <b>    rvalid = 0;</b>
+            <b>} else {</b>
+                if wready &amp;&amp; wvalid {
+                    rdata  = wdata;
+                    rvalid = 1;
+                } else if rready {
+                    rvalid = 0;
+                }
+            <b>}</b>
+        }
+    }
+</pre>
+</div>
+<div id="fifo.veryl.jump-range.always_two" class="caption-code">
+<span class="caption">リスト3.88: リスト3.88: flushが1のとき、FIFOを空にする (fifo.veryl、WIDTH!=1)</span>
+<pre class="list language-always_two">    always_ff {
         if_reset {
             head = 0;
             tail = 0;
@@ -2486,9 +2529,9 @@ deadbeef // 0x0
     }
 </pre>
 </div>
-<p>coreモジュールで、<code class="inline-code">control_hazard</code>と<code class="inline-code">flush</code>を接続し、FIFOをリセットします(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.jump-range.fifo">リスト3.88</a></span>)。</p>
+<p>coreモジュールで、<code class="inline-code">control_hazard</code>と<code class="inline-code">flush</code>を接続し、FIFOをリセットします(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.jump-range.fifo">リスト3.89</a></span>)。</p>
 <div id="core.veryl.jump-range.fifo" class="caption-code">
-<span class="caption">リスト3.88: リスト3.88: ジャンプ命令のとき、FIFOをリセットする (core.veryl)</span>
+<span class="caption">リスト3.89: リスト3.89: ジャンプ命令のとき、FIFOをリセットする (core.veryl)</span>
 <pre class="list language-fifo">    inst if_fifo: fifo #(
         DATA_TYPE: if_fifo_type,
         WIDTH    : 3           ,
@@ -2502,9 +2545,9 @@ deadbeef // 0x0
 </div>
 
 <h4><a id="h3-12-1-2"></a>無条件ジャンプのテスト</h4>
-<p>簡単なテストを作成し、動作をテストします(<span class="listref"><a href="./04-impl-rv32i.html#sample_jump.hex">リスト3.89</a></span>、<span class="listref"><a href="./04-impl-rv32i.html#jump.test">リスト3.90</a></span>)。</p>
+<p>簡単なテストを作成し、動作をテストします(<span class="listref"><a href="./04-impl-rv32i.html#sample_jump.hex">リスト3.90</a></span>、<span class="listref"><a href="./04-impl-rv32i.html#jump.test">リスト3.91</a></span>)。</p>
 <div id="sample_jump.hex" class="caption-code">
-<span class="caption">リスト3.89: リスト3.89: sample_jump.hex</span>
+<span class="caption">リスト3.90: リスト3.90: sample_jump.hex</span>
 <pre class="list language-hex">0100006f //  0: jal x0, 0x10 : 0x10にジャンプする
 deadbeef //  4:
 deadbeef //  8:
@@ -2517,7 +2560,7 @@ fe1ff06f // 20: jal x0, -0x20 : 0にジャンプする
 </pre>
 </div>
 <div id="jump.test" class="cmd-code">
-<span class="caption">リスト3.90: リスト3.90: テストの実行</span>
+<span class="caption">リスト3.91: リスト3.91: テストの実行</span>
 <pre class="list language-test">$ <span class="userinput">make build</span>
 $ <span class="userinput">make sim</span>
 $ <span class="userinput">obj_dir/sim src/sample_jump.hex 17</span>
@@ -2555,9 +2598,9 @@ $ <span class="userinput">obj_dir/sim src/sample_jump.hex 17</span>
 </div>
 
 <h4><a id="h3-12-2-1"></a>条件分岐の実装</h4>
-<p>分岐の条件が成立するかどうかを判定するモジュールを作成します。<code class="inline-code">src/brunit.veryl</code>を作成し、次のように記述します(<span class="listref"><a href="./04-impl-rv32i.html#brunit.veryl.br-range">リスト3.91</a></span>)。</p>
+<p>分岐の条件が成立するかどうかを判定するモジュールを作成します。<code class="inline-code">src/brunit.veryl</code>を作成し、次のように記述します(<span class="listref"><a href="./04-impl-rv32i.html#brunit.veryl.br-range">リスト3.92</a></span>)。</p>
 <div id="brunit.veryl.br-range" class="caption-code">
-<span class="caption">リスト3.91: リスト3.91: brunit.veryl</span>
+<span class="caption">リスト3.92: リスト3.92: brunit.veryl</span>
 <pre class="list language-br-range">import eei::*;
 import corectrl::*;
 
@@ -2586,9 +2629,9 @@ module brunit (
 </pre>
 </div>
 <p>brunitモジュールは、<code class="inline-code">funct3</code>に応じて<code class="inline-code">take</code>の条件を切り替えます。分岐が成立するときに<code class="inline-code">take</code>が<code class="inline-code">1</code>になります。</p>
-<p>brunitモジュールを、coreモジュールでインスタンス化します(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.br-range.inst">リスト3.92</a></span>)。命令がB形式のとき、<code class="inline-code">op1</code>は<code class="inline-code">rs1_data</code>、<code class="inline-code">op2</code>は<code class="inline-code">rs2_data</code>になっていることを確認してください(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.alu-range.data">リスト3.44</a></span>)。</p>
+<p>brunitモジュールを、coreモジュールでインスタンス化します(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.br-range.inst">リスト3.93</a></span>)。命令がB形式のとき、<code class="inline-code">op1</code>は<code class="inline-code">rs1_data</code>、<code class="inline-code">op2</code>は<code class="inline-code">rs2_data</code>になっていることを確認してください(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.alu-range.data">リスト3.44</a></span>)。</p>
 <div id="core.veryl.br-range.inst" class="caption-code">
-<span class="caption">リスト3.92: リスト3.92: brunitモジュールのインスタンス化 (core.veryl)</span>
+<span class="caption">リスト3.93: リスト3.93: brunitモジュールのインスタンス化 (core.veryl)</span>
 <pre class="list language-inst">    var brunit_take: logic;
 
     inst bru: brunit (
@@ -2599,9 +2642,9 @@ module brunit (
     );
 </pre>
 </div>
-<p>命令が条件分岐命令で<code class="inline-code">brunit_take</code>が<code class="inline-code">1</code>のとき、次のPCをPC + 即値にします(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.br-range.function">リスト3.93</a></span>、<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.br-range.hazard">リスト3.94</a></span>)。</p>
+<p>命令が条件分岐命令で<code class="inline-code">brunit_take</code>が<code class="inline-code">1</code>のとき、次のPCをPC + 即値にします(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.br-range.function">リスト3.94</a></span>、<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.br-range.hazard">リスト3.95</a></span>)。</p>
 <div id="core.veryl.br-range.function" class="caption-code">
-<span class="caption">リスト3.93: リスト3.93: 命令が条件分岐命令か判定する関数 (core.veryl)</span>
+<span class="caption">リスト3.94: リスト3.94: 命令が条件分岐命令か判定する関数 (core.veryl)</span>
 <pre class="list language-function">    // 命令が分岐命令かどうかを判定する
     function inst_is_br (
         ctrl: input InstCtrl,
@@ -2611,7 +2654,7 @@ module brunit (
 </pre>
 </div>
 <div id="core.veryl.br-range.hazard" class="caption-code">
-<span class="caption">リスト3.94: リスト3.94: 分岐成立時のPCの設定 (core.veryl)</span>
+<span class="caption">リスト3.95: リスト3.95: 分岐成立時のPCの設定 (core.veryl)</span>
 <pre class="list language-hazard">    assign control_hazard         = inst_valid &amp;&amp; <b>(</b>inst_ctrl.is_jump <b>|| inst_is_br(inst_ctrl) &amp;&amp; brunit_take)</b>;
     assign control_hazard_pc_next = <b>if inst_is_br(inst_ctrl) {</b>
         <b>inst_pc + inst_imm</b>
@@ -2623,17 +2666,17 @@ module brunit (
 <p><code class="inline-code">control_hazard</code>は、命令が無条件ジャンプ命令か、命令が条件分岐命令かつ分岐が成立するときに<code class="inline-code">1</code>になります。<code class="inline-code">control_hazard_pc_next</code>は、無条件ジャンプ命令のときは<code class="inline-code">alu_result</code>、条件分岐命令のときはPC + 即値になります。</p>
 
 <h4><a id="h3-12-2-2"></a>条件分岐命令のテスト</h4>
-<p>条件分岐命令を実行するとき、分岐の成否をデバッグ表示します。デバッグ表示を行っているalways_ffブロック内に、次のコードを追加します(<span class="listref"><a href="./04-impl-rv32i.html#core.very.br-range.debug">リスト3.95</a></span>)。</p>
+<p>条件分岐命令を実行するとき、分岐の成否をデバッグ表示します。デバッグ表示を行っているalways_ffブロック内に、次のコードを追加します(<span class="listref"><a href="./04-impl-rv32i.html#core.very.br-range.debug">リスト3.96</a></span>)。</p>
 <div id="core.very.br-range.debug" class="caption-code">
-<span class="caption">リスト3.95: リスト3.95: 分岐判定のデバッグ表示 (core.veryl)</span>
+<span class="caption">リスト3.96: リスト3.96: 分岐判定のデバッグ表示 (core.veryl)</span>
 <pre class="list language-debug">    if inst_is_br(inst_ctrl) {
         $display(&quot;  br take   : %b&quot;, brunit_take);
     }
 </pre>
 </div>
-<p>簡単なテストを作成し、動作をテストします(<span class="listref"><a href="./04-impl-rv32i.html#sample_br.hex">リスト3.96</a></span>, <span class="listref"><a href="./04-impl-rv32i.html#br.test">リスト3.97</a></span>)。</p>
+<p>簡単なテストを作成し、動作をテストします(<span class="listref"><a href="./04-impl-rv32i.html#sample_br.hex">リスト3.97</a></span>, <span class="listref"><a href="./04-impl-rv32i.html#br.test">リスト3.98</a></span>)。</p>
 <div id="sample_br.hex" class="caption-code">
-<span class="caption">リスト3.96: リスト3.96: sample_br.hex</span>
+<span class="caption">リスト3.97: リスト3.97: sample_br.hex</span>
 <pre class="list language-hex">00100093 //  0: addi x1, x0, 1
 10100063 //  4: beq x0, x1, 0x100
 00101863 //  8: bne x0, x1, 0x10
@@ -2644,7 +2687,7 @@ deadbeef // 14:
 </pre>
 </div>
 <div id="br.test" class="cmd-code">
-<span class="caption">リスト3.97: リスト3.97: テストの実行</span>
+<span class="caption">リスト3.98: リスト3.98: テストの実行</span>
 <pre class="list language-test">$ <span class="userinput">make build</span>
 $ <span class="userinput">make sim</span>
 $ <span class="userinput">obj_dir/sim src/sample_br.hex 15</span>
@@ -2692,6 +2735,18 @@ $ <span class="userinput">obj_dir/sim src/sample_br.hex 15</span>
         </footer>
       </div>
     </div>
+    
+    <script>
+      let url = window.location.href;
+      let encoded_url = encodeURI(url);
+      let fb = document.getElementById("share-facebook");
+      fb["data-href"] = url;
+      console.log(fb);
+    </script>
+    <div id="fb-root"></div>
+    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/ja_JP/sdk.js#xfbml=1&version=v21.0"></script>
+    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
   </body>
 </html>
 <!-- layout.html5.erb -->

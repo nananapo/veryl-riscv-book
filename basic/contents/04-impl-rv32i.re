@@ -410,15 +410,18 @@ memoryモジュールはジェネリックモジュールであるため、
 #@mapfile(scripts/04/memif/core/src/top.veryl)
 import eei::*;
 
-module top (
+module top #(
+    param MEMORY_FILEPATH_IS_ENV: bit    = 1                 ,
+    param MEMORY_FILEPATH       : string = "MEMORY_FILE_PATH",
+) (
     clk: input clock,
     rst: input reset,
 ) {
     inst membus: membus_if::<MEM_DATA_WIDTH, MEM_ADDR_WIDTH>;
 
     inst mem: memory::<MEM_DATA_WIDTH, MEM_ADDR_WIDTH> #(
-        FILEPATH_IS_ENV: 1                 ,
-        FILEPATH       : "MEMORY_FILE_PATH",
+        FILEPATH_IS_ENV: MEMORY_FILEPATH_IS_ENV,
+        FILEPATH       : MEMORY_FILEPATH       ,
     ) (
         clk     ,
         rst     ,
@@ -766,7 +769,7 @@ $ mv obj_dir/Vcore_top obj_dir/sim @<balloon>{シミュレータの名前をsim�
 シミュレータを生成するためのプログラムが@<code>{obj_dir}に生成されます。
 
  : -f
-	SystemVerilogプログラムのファイルリストを指定します。
+	SystemVerilogソースファイルのファイルリストを指定します。
 	今回は@<code>{core.f}を指定しています。
 
  : --exe
@@ -929,40 +932,55 @@ module fifo #(
     rvalid: output logic    ,
     rdata : output DATA_TYPE,
 ) {
-    type Ptr = logic<WIDTH>;
-
-    var mem : DATA_TYPE [2 ** WIDTH];
-    var head: Ptr                   ;
-    var tail: Ptr                   ;
-
-    let tail_plus1: Ptr = tail + 1 as Ptr;
-    let tail_plus2: Ptr = tail + 2 as Ptr;
-
-    always_comb {
-        rvalid = head != tail;
-        rdata  = mem[head];
-    }
-
-    assign wready = if WIDTH == 1 {
-        head == tail || rready
-    } else {
-        tail_plus1 != head
-    };
-
     // 2つ以上空きがあるかどうか
-    let wready_two: logic = wready && tail_plus2 != head;
+    var wready_two: logic;
 
-    always_ff {
-        if_reset {
-            head = 0;
-            tail = 0;
-        } else {
-            if wready && wvalid {
-                mem[tail] = wdata;
-                tail      = tail + 1;
+    if WIDTH == 1 :width_one {
+        always_comb {
+            wready     = !rvalid || rready;
+            wready_two = 0;
+        }
+        always_ff {
+            if_reset {
+                rvalid = 0;
+            } else {
+                if wready && wvalid {
+                    rdata  = wdata;
+                    rvalid = 1;
+                } else if rready {
+                    rvalid = 0;
+                }
             }
-            if rready && rvalid {
-                head = head + 1;
+        }
+    } else {
+        type Ptr = logic<WIDTH>;
+
+        var head      : Ptr;
+        var tail      : Ptr;
+        let tail_plus1: Ptr = tail + 1 as Ptr;
+        let tail_plus2: Ptr = tail + 2 as Ptr;
+
+        var mem: DATA_TYPE [2 ** WIDTH];
+
+        always_comb {
+            wready     = tail_plus1 != head;
+            wready_two = wready && tail_plus2 != head;
+            rvalid     = head != tail;
+            rdata      = mem[head];
+        }
+
+        always_ff {
+            if_reset {
+                head = 0;
+                tail = 0;
+            } else {
+                if wready && wvalid {
+                    mem[tail] = wdata;
+                    tail      = tail + 1;
+                }
+                if rready && rvalid {
+                    head = head + 1;
+                }
             }
         }
     }
@@ -3007,10 +3025,31 @@ module fifo #(
 //}
 
 @<code>{flush}が@<code>{1}のとき、
-@<code>{head}と@<code>{tail}を@<code>{0}に初期化することでFIFOを空にします(@<list>{fifo.veryl.jump-range.always})。
+@<code>{head}と@<code>{tail}を@<code>{0}に初期化することでFIFOを空にします(@<list>{fifo.veryl.jump-range.always_one}、@<list>{fifo.veryl.jump-range.always_two})。
 
-//list[fifo.veryl.jump-range.always][flushが1のとき、FIFOを空にする (fifo.veryl)]{
-#@maprange(scripts/04/jump-range/core/src/fifo.veryl,always)
+//list[fifo.veryl.jump-range.always_one][flushが1のとき、FIFOを空にする (fifo.veryl、WIDTH==1)]{
+#@maprange(scripts/04/jump-range/core/src/fifo.veryl,always_one)
+    always_ff {
+        if_reset {
+            rvalid = 0;
+        } else {
+            @<b>|if flush {|
+            @<b>|    rvalid = 0;|
+            @<b>|} else {|
+                if wready && wvalid {
+                    rdata  = wdata;
+                    rvalid = 1;
+                } else if rready {
+                    rvalid = 0;
+                }
+            @<b>|}|
+        }
+    }
+#@end
+//}
+
+//list[fifo.veryl.jump-range.always_two][flushが1のとき、FIFOを空にする (fifo.veryl、WIDTH!=1)]{
+#@maprange(scripts/04/jump-range/core/src/fifo.veryl,always_two)
     always_ff {
         if_reset {
             head = 0;
