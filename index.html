@@ -23,8 +23,8 @@
     <script async defer src="https://buttons.github.io/buttons.js"></script>
 
   </head>
-  <body>
-    <div class="page-outer">
+  <body style="background-color:#eff4ff">
+    <div class="page-outer" style="background-color:white">
 
       <div class="page-inner">
         <header class="page-header">
@@ -45,6 +45,13 @@
               <span style="color:black; font-weight:bolder;"> nananapo/veryl-riscv-book </span>
             </a>
             <a class="github-button" href="https://github.com/nananapo/veryl-riscv-book" data-color-scheme="no-preference: light_high_contrast; light: light; dark: dark;" data-size="large" data-show-count="true" aria-label="Star nananapo/veryl-riscv-book on GitHub">Star</a>
+          </div>
+          
+          <div style="display:flex; gap:10px; align-items: center;">
+            <div style="">
+              <a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-show-count="false">Tweet</a>
+            </div>
+            <div style="margin-bottom: 14px;" id="share-facebook" class="fb-share-button" data-href="" data-layout="" data-size=""><a target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Finvalid.invalid%2F&amp;src=sdkpreparse" class="fb-xfbml-parse-ignore">Facebookでシェアする</a></div>
           </div>
 <ul class="toc toc-1">
     <li class="toc-chapter"><a href="./00-preface.html">まえがき</a>
@@ -128,8 +135,8 @@
     <li class="toc-chapter"><a href="./05b-synth.html">8 CPUの合成</a>
       <ul class="toc toc-3">
         <li class="toc-section"><a href="./05b-synth.html#h8-1">8.1 FPGAとは何か？</a></li>
-        <li class="toc-section"><a href="./05b-synth.html#h8-2">8.2 テスト用の最上位モジュールの作成</a></li>
-        <li class="toc-section"><a href="./05b-synth.html#h8-3">8.3 FPGAへの合成① (TangMega138K)</a></li>
+        <li class="toc-section"><a href="./05b-synth.html#h8-2">8.2 LEDの制御</a></li>
+        <li class="toc-section"><a href="./05b-synth.html#h8-3">8.3 FPGAへの合成① (Tang Nano 9K)</a></li>
         <li class="toc-section"><a href="./05b-synth.html#h8-4">8.4 FPGAへの合成② (PYNQ-Z1)</a></li>
       </ul>
     </li>
@@ -161,5 +168,17 @@
         </footer>
       </div>
     </div>
+    
+    <script>
+      let url = window.location.href;
+      let encoded_url = encodeURI(url);
+      let fb = document.getElementById("share-facebook");
+      fb["data-href"] = url;
+      console.log(fb);
+    </script>
+    <div id="fb-root"></div>
+    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/ja_JP/sdk.js#xfbml=1&version=v21.0"></script>
+    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
 
 

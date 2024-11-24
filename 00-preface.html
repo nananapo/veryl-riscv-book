@@ -14,13 +14,18 @@
     <script async defer src="https://buttons.github.io/buttons.js"></script>
 
   </head>
-  <body>
-    <div class="page-outer">
+  <body style="background-color:#eff4ff">
+    <div class="page-outer" style="background-color:white">
       <div class="side-content">
                 <a class="nav-title" href="index.html">Verylで作るCPU</a>
 
-        <a class="github-button" href="https://github.com/nananapo/veryl-riscv-book" data-color-scheme="no-preference: light_high_contrast; light: light; dark: dark;" data-size="large" data-show-count="true" aria-label="Star nananapo/veryl-riscv-book on GitHub">Star</a>
-
+        <div style="display:flex; gap:10px; align-items: center;">
+          <a class="github-button" href="https://github.com/nananapo/veryl-riscv-book" data-color-scheme="no-preference: light_high_contrast; light: light; dark: dark;" data-size="large" data-show-count="true" aria-label="Star nananapo/veryl-riscv-book on GitHub">Star</a>
+          <div style="">
+            <a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-show-count="false">Tweet</a>
+          </div>
+          <div style="margin-bottom: 14px;" id="share-facebook" class="fb-share-button" data-href="" data-layout="" data-size=""><a target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Finvalid.invalid%2F&amp;src=sdkpreparse" class="fb-xfbml-parse-ignore">Facebookでシェアする</a></div>
+        </div>
         <ul class="toc toc-1">
     <li class="toc-chapter"><a href="./00-preface.html">まえがき</a>
       <ul class="toc toc-2">
@@ -124,7 +129,7 @@
 </div><!--/.footnote-list-->
 <p>ISAと実装(設計と製造)には深い関わりがあるため、ISAを知らずして実装はできないし、実装を知らずしてISAを作ることはできません。本書では、RISC-VというISAのCPUを実装することで、一般的なCPUの作り方やアーキテクチャについて学びます。</p>
 <p>物理的な製造のハードルは高いですが、FPGAを使うことで簡単にお試しできます。<b>FPGA</b>(Field Programmable Gate Array)とは、任意の論理回路を実現できる集積回路のことです<a href="bib.html#bib-amano.fpga">[1]</a>。最近では、安価(数千 ～ 数万円)でFPGAを入手できます。</p>
-<p>CPUのテストはシミュレータとFPGAで行います。本書では、TangMega 138KとPYNQ-Z1というFPGAを利用します。FPGAを持っていると、自作CPUによってLEDを制御したり、手持ちのパソコンと直接通信したりして楽しむことができます。</p>
+<p>CPUのテストはシミュレータとFPGAで行います。本書では、Tang Nano 9KとPYNQ-Z1というFPGAを利用します。FPGAを持っていると、自作CPUによってLEDを制御したり、手持ちのパソコンと直接通信したりして楽しむことができます。</p>
 
 <h2 id="id_00-preface_nonum6" notoc="true">RISC-V</h2>
 <p><b>RISC-V</b>は、カリフォルニア大学バークレー校で開発されたISAです。仕様書の初版は2011年に公開されました。ISAとしての歴史はまだ浅いですが、仕様が広く公開されていてカスタマイズ可能であるという特徴もあって、着実に広がりつつあります。</p>
@@ -134,7 +139,7 @@
 <div class="footnote-list">
 <div class="footnote" id="fn-rv128i" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*2] </span>RV128Iもありますが、まだDraft段階(準備中)です</p></div>
 </div><!--/.footnote-list-->
-<p>どの拡張を実装しているかを示すISA Stringという表現では、例えばかけ算と割り算、不可分操作ができるRV32IのCPUは<code class="inline-code">RV32IMA</code>と表現されます。本書では、まず、<code class="inline-code">RV32I</code>のCPUを実装します。これを、OSを実行できる程度までに進化させることを目標に実装を進めます。</p>
+<p>どの拡張を実装しているかを示す文字列では、例えばかけ算と割り算、不可分操作ができるRV32IのCPUは<code class="inline-code">RV32IMA</code>と表現されます。本書では、まず、<code class="inline-code">RV32I</code>のCPUを実装します。これを、OSを実行できる程度までに進化させることを目標に実装を進めます。</p>
 
 <h2 id="id_00-preface_nonum7" notoc="true">本書の構成</h2>
 <p>本シリーズ(基本編)では、次のようにCPUを実装していきます。</p>
@@ -187,6 +192,18 @@
         </footer>
       </div>
     </div>
+    
+    <script>
+      let url = window.location.href;
+      let encoded_url = encodeURI(url);
+      let fb = document.getElementById("share-facebook");
+      fb["data-href"] = url;
+      console.log(fb);
+    </script>
+    <div id="fb-root"></div>
+    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/ja_JP/sdk.js#xfbml=1&version=v21.0"></script>
+    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
   </body>
 </html>
 <!-- layout.html5.erb -->

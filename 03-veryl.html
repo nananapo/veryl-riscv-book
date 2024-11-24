@@ -15,13 +15,18 @@
     <script async defer src="https://buttons.github.io/buttons.js"></script>
 
   </head>
-  <body>
-    <div class="page-outer">
+  <body style="background-color:#eff4ff">
+    <div class="page-outer" style="background-color:white">
       <div class="side-content">
                 <a class="nav-title" href="index.html">Verylで作るCPU</a>
 
-        <a class="github-button" href="https://github.com/nananapo/veryl-riscv-book" data-color-scheme="no-preference: light_high_contrast; light: light; dark: dark;" data-size="large" data-show-count="true" aria-label="Star nananapo/veryl-riscv-book on GitHub">Star</a>
-
+        <div style="display:flex; gap:10px; align-items: center;">
+          <a class="github-button" href="https://github.com/nananapo/veryl-riscv-book" data-color-scheme="no-preference: light_high_contrast; light: light; dark: dark;" data-size="large" data-show-count="true" aria-label="Star nananapo/veryl-riscv-book on GitHub">Star</a>
+          <div style="">
+            <a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-show-count="false">Tweet</a>
+          </div>
+          <div style="margin-bottom: 14px;" id="share-facebook" class="fb-share-button" data-href="" data-layout="" data-size=""><a target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Finvalid.invalid%2F&amp;src=sdkpreparse" class="fb-xfbml-parse-ignore">Facebookでシェアする</a></div>
+        </div>
         <ul class="toc toc-1">
     <li class="toc-chapter"><a href="./00-preface.html">まえがき</a></li>
 <li class="toc-part">第I部 RV32I/RV64Iの実装
@@ -344,7 +349,7 @@ always_ff(clk, rst) {
 }
 </pre>
 </div>
-<p><b>if_reset</b>文の中の文は、リセット信号のタイミングで実行されます。if_reset文にelse文を付けることで、クロック信号のタイミングで処理を実行できます。レジスタの値をリセットしない場合、リセット信号とif_reset文を省略することができます。逆に、リセット信号を指定する場合は必ずif_reset文を書かなければいけません。</p>
+<p><b>if_reset</b>文の中の文は、リセット信号のタイミングで実行されます。if_reset文にelse文を付けることで、クロック信号のタイミングで処理を実行できます。レジスタの値をリセットしない場合、リセット信号とif_reset文を省略できます。逆に、リセット信号を指定する場合は必ずif_reset文を書かなければいけません。</p>
 <p>クロック信号はclock型、リセット信号はreset型で定義します。モジュールのポートに１組のクロック信号とリセット信号が定義されているとき、always_ffブロックのクロック信号とリセット信号の指定を省略できます(<span class="listref"><a href="./03-veryl.html#always_ff.omit">リスト2.15</a></span>)。</p>
 <div id="always_ff.omit" class="caption-code">
 <span class="caption">リスト2.15: リスト2.15: クロック信号とリセット信号の省略</span>
@@ -1107,6 +1112,18 @@ logic ccc;
         </footer>
       </div>
     </div>
+    
+    <script>
+      let url = window.location.href;
+      let encoded_url = encodeURI(url);
+      let fb = document.getElementById("share-facebook");
+      fb["data-href"] = url;
+      console.log(fb);
+    </script>
+    <div id="fb-root"></div>
+    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/ja_JP/sdk.js#xfbml=1&version=v21.0"></script>
+    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
   </body>
 </html>
 <!-- layout.html5.erb -->
