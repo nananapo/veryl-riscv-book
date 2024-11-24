@@ -20,20 +20,23 @@ CHAPS:
     - 05-impl-rv64i.re
     - 05a-pipeline.re
     - 05b-synth.re
-  - RV64IMACの実装(未執筆):
-    - 09-impl-m.re
-    - 10-impl-exception.re
-    - 11-impl-mmio.re
-    - 12-visualize.re
-    - 13-benchmark.re
-    - 14-impl-a.re
-    - 15-impl-c.re
-  # - CSRの実装 / OSの実行(未執筆):
-  #   - 12-impl-mmode-csr.re
-  #   - 13-impl-smode-csr.re
-  #   - 14-impl-paging.re
-  #   - 15-impl-virtio.re
-  #   - 16-run-xv6.re
+  # - RV64IMACの実装(未執筆):
+    # - 09-impl-m.re
+    # - 10-impl-exception.re
+    # - 11-impl-mmio.re
+    # - 12-visualize.re
+    # - 13-benchmark.re
+    # - 14-impl-a.re
+    # - 15-impl-c.re
+  # - CSRの実装 (未執筆):
+    # - 20-impl-interrupt.re
+    # - 21-impl-clint.re
+    # - 22-impl-mmode.re
+    # - 23-impl-smode.re
+    # - 24-impl-paging.re
+    # - 25-impl-plic.re
+    # - 30-run-xv6.re
+    # - 31-run-linux.re
 ## 付録
 APPENDIX:
   # - old-04-bluecore.re
