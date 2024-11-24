@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    
+    <title>まえがき | Verylで作るCPU</title>
+
+    <link rel="stylesheet" type="text/css" href="css/normalize.css" />
+    <link rel="stylesheet" type="text/css" href="css/webstyle.css" />
+    <link rel="next" title="環境構築" href="02-setup.html">
+    <meta name="generator" content="Re:VIEW Starter">
+
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+
+  </head>
+  <body style="background-color:#eff4ff">
+    <div class="page-outer" style="background-color:white">
+      <div class="side-content">
+                <a class="nav-title" href="index.html">Verylで作るCPU</a>
+
+        <div style="display:flex; gap:10px; align-items: center;">
+          <a class="github-button" href="https://github.com/nananapo/veryl-riscv-book" data-color-scheme="no-preference: light_high_contrast; light: light; dark: dark;" data-size="large" data-show-count="true" aria-label="Star nananapo/veryl-riscv-book on GitHub">Star</a>
+          <div style="">
+            <a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-show-count="false">Tweet</a>
+          </div>
+          <div style="margin-bottom: 14px;" id="share-facebook" class="fb-share-button" data-href="" data-layout="" data-size=""><a target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Finvalid.invalid%2F&amp;src=sdkpreparse" class="fb-xfbml-parse-ignore">Facebookでシェアする</a></div>
+        </div>
+        <ul class="toc toc-1">
+    <li class="toc-chapter"><a href="./00-preface.html">まえがき</a>
+      <ul class="toc toc-2">
+        <li class="toc-section"><a href="./00-preface.html#h">本書を読むとわかること</a></li>
+        <li class="toc-section"><a href="./00-preface.html#h">対象読者</a></li>
+        <li class="toc-section"><a href="./00-preface.html#h">必要な知識</a></li>
+        <li class="toc-section"><a href="./00-preface.html#h">本書のソースコード / 問い合わせ先</a></li>
+        <li class="toc-section"><a href="./00-preface.html#h">CPUの自作</a></li>
+        <li class="toc-section"><a href="./00-preface.html#h">RISC-V</a></li>
+        <li class="toc-section"><a href="./00-preface.html#h">本書の構成</a></li>
+        <li class="toc-section"><a href="./00-preface.html#h">凡例</a></li>
+      </ul>
+    </li>
+<li class="toc-part">第I部 RV32I/RV64Iの実装
+  <ul class="toc toc-2">
+    <li class="toc-chapter"><a href="./02-setup.html">1 環境構築</a></li>
+    <li class="toc-chapter"><a href="./03-veryl.html">2 ハードウェア記述言語 Veryl</a></li>
+    <li class="toc-chapter"><a href="./04-impl-rv32i.html">3 RV32Iの実装</a></li>
+    <li class="toc-chapter"><a href="./04a-zicsr.html">4 Zicsr拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./04b-riscvtests.html">5 riscv-testsによるテスト</a></li>
+    <li class="toc-chapter"><a href="./05-impl-rv64i.html">6 RV64Iの実装</a></li>
+    <li class="toc-chapter"><a href="./05a-pipeline.html">7 CPUのパイプライン化</a></li>
+    <li class="toc-chapter"><a href="./05b-synth.html">8 CPUの合成</a></li>
+  </ul>
+</li>
+    <li class="toc-chapter"><a href="./99-postface.html">あとがき</a></li>
+    <li class="toc-chapter"><a href="./100-contribute.html">このプロジェクトに貢献する</a></li>
+    <li class="toc-chapter"><a href="./bib.html">参考文献</a></li>
+</ul>
+      </div>
+      <div class="page-inner">
+        <header class="page-header">
+        </header>
+        <main class="page-main">
+  <h1 class="none center"><a id="h"></a><br/>まえがき</h1>
+<p><span style="font-size:large">こんにちは! あなたはCPUを自作したことがありますか? 自作したことがあってもなくても大歓迎、この本はCPU自作の面白さを世に広めるために執筆されました。</span></p>
+<p><span style="font-size:large">パソコンの主要な部品であるCPUは、とても規模が大きくて複雑な電子回路で構成されています。現代的で、高速で、ゲームができるようなCPUを作るのは非常に難しいです。ですが、ちょっと遅くて機能が少ないCPUなら、誰でも簡単に作ることができます。</span></p>
+<p><span style="font-size:large">本書では、<b>Veryl</b>という「ハードウェアを記述するための言語」でCPUを自作する方法を解説しています。Verylを使うと、例えば32ビットの足し算をする回路を次のように記述できます。</span></p>
+<div class="caption-code">
+<pre class="emlist">module Adder (
+    x  : input  logic&lt;32&gt;,
+    y  : input  logic&lt;32&gt;,
+    sum: output logic&lt;32&gt;,
+) {
+    always_comb {
+        sum = x + y;
+    }
+}
+</pre>
+</div>
+<p><span style="font-size:large"><code class="inline-code">x</code>と<code class="inline-code">y</code>を受け取って、<code class="inline-code">sum</code>に<code class="inline-code">x + y</code>を割り当てるだけ....簡単ですね。これと同様に、入出力を書いて、足し算やAND、OR、NOT演算などを書くだけで、CPUを書くことができます。</span></p>
+<p><span style="font-size:large">CPUは大きな論理回路です。でも、Verylで書いた小さな部品を組み合わせていけば、簡単に作ることができます。</span></p>
+<p><span style="font-size:large"><b>あなたもCPUを自作してみませんか？</b>自分好みのCPUを作る第一歩を踏み出しましょう。</span></p>
+
+<h2 id="id_00-preface_nonum1" notoc="true">本書を読むとわかること</h2>
+<ul>
+<li><span style="font-size:large">CPUの仕組み、動作、実装</span>
+</li>
+<li><span style="font-size:large">Verylの基本文法</span>
+</li>
+<li><span style="font-size:large">VerylでのCPUの実装方法</span>
+</li>
+<li><span style="font-size:large">RISC-Vの基本整数命令セット</span>
+</li>
+</ul>
+
+<h2 id="id_00-preface_nonum2" notoc="true">対象読者</h2>
+<ul>
+<li><span style="font-size:large"><b>自作CPUに興味がある人</b></span>
+</li>
+<li><span style="font-size:large">コンピュータアーキテクチャに興味がある人</span>
+</li>
+<li><span style="font-size:large">Verylが気になっている人</span>
+</li>
+</ul>
+
+<h2 id="id_00-preface_nonum3" notoc="true">必要な知識</h2>
+<ul>
+<li><span style="font-size:large">基本的な論理演算 (AND、OR、NOTくらいしか使いません)</span>
+</li>
+<li><span style="font-size:large">C、C++、JavaScript、Python、Ruby、Rustのような一般的なプログラミング言語の経験</span>
+</li>
+</ul>
+<p><span style="font-size:large">本書では、Verylの他にC++, Python, Makefile, シェルスクリプトを使用します。Verylについては詳細を解説しています。他の言語については、動作とどのような機能を持つかは解説しますが、言語の仕様や書き方、ライブラリなどは説明しません。</span></p>
+
+<h2 id="id_00-preface_nonum4" notoc="true">本書のソースコード / 問い合わせ先</h2>
+<p><span style="font-size:large">本書で利用するソースコードは、以下のサポートページから入手できます。質問やお問い合わせ方法についてもサポートページを確認してください。</span></p>
+<ul>
+<li><span style="font-size:large"><a href="https://github.com/nananapo/veryl-riscv-book/wiki/techbookfest17-support-page" class="link">https://github.com/nananapo/veryl-riscv-book/wiki/techbookfest17-support-page</a></span>
+</li>
+</ul>
+<p></p>
+<hr />
+<p></p>
+
+<h2 id="id_00-preface_nonum5" notoc="true">CPUの自作</h2>
+<p>CPUって自作できるのでしょうか?そもそもCPUの自作って何でしょうか?CPUの自作の一般的な定義はありませんが、筆者は「命令セットアーキテクチャの設計」「論理設計」「物理的に製造する」に分類できると考えています。</p>
+<p><b>命令セットアーキテクチャ</b>(Instruction Set Architecture, <b>ISA</b>)とは、CPUがどのような命令を実行できるかを定めたもの(仕様)です。<b>論理設計</b>とは、簡単に言うと、仕様の動作を実現する論理回路を設計することです。CPUは論理回路で構成されているため、CPUの設計には論理設計が必要になります。最近のCPUは、物理的には<b>VLSI</b>(Very Large Scale Integration, 超大規模集積回路)によって実装されています。VLSIの製造には莫大なお金が必要です<sup><a id="fnb-vlsi" href="#fn-vlsi" class="noteref" epub:type="noteref">*1</a></sup>。</p>
+<div class="footnote-list">
+<div class="footnote" id="fn-vlsi" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>小さいチップなら安く(数万 ～ 数百万円で)製造できます。OpenMPWやTinyTapeoutで検索してください</p></div>
+</div><!--/.footnote-list-->
+<p>ISAと実装(設計と製造)には深い関わりがあるため、ISAを知らずして実装はできないし、実装を知らずしてISAを作ることはできません。本書では、RISC-VというISAのCPUを実装することで、一般的なCPUの作り方やアーキテクチャについて学びます。</p>
+<p>物理的な製造のハードルは高いですが、FPGAを使うことで簡単にお試しできます。<b>FPGA</b>(Field Programmable Gate Array)とは、任意の論理回路を実現できる集積回路のことです<a href="bib.html#bib-amano.fpga">[1]</a>。最近では、安価(数千 ～ 数万円)でFPGAを入手できます。</p>
+<p>CPUのテストはシミュレータとFPGAで行います。本書では、Tang Nano 9KとPYNQ-Z1というFPGAを利用します。FPGAを持っていると、自作CPUによってLEDを制御したり、手持ちのパソコンと直接通信したりして楽しむことができます。</p>
+
+<h2 id="id_00-preface_nonum6" notoc="true">RISC-V</h2>
+<p><b>RISC-V</b>は、カリフォルニア大学バークレー校で開発されたISAです。仕様書の初版は2011年に公開されました。ISAとしての歴史はまだ浅いですが、仕様が広く公開されていてカスタマイズ可能であるという特徴もあって、着実に広がりつつあります。</p>
+<p>インターネット上には多くのRISC-Vの実装が公開されています。例として、<a href="https://github.com/chipsalliance/rocket-chip" class="link">RocketChip</a>(Chiselによる実装)、<a href="https://shakti.org.in/" class="link">Shakti</a>(Bluespec SystemVerilogによる実装)、<a href="https://github.com/rsd-devel/rsd" class="link">RSD</a>(SystemVerilogによる実装)が挙げられます。</p>
+<p>本書では、RISC-VのバージョンRISC-V ISA Manual, version 20240411 を利用します。RISC-Vの最新の仕様は、GitHubの<a href="https://github.com/riscv/riscv-isa-manual/" class="link">riscv/riscv-isa-manual</a>で確認できます。</p>
+<p>RISC-Vには、基本整数命令セットとしてRV32I、RV64I、RV32E、RV64E<sup><a id="fnb-rv128i" href="#fn-rv128i" class="noteref" epub:type="noteref">*2</a></sup>が定義されています。RVの後ろにつく数字はレジスタの長さが何ビットかです。基本整数命令セットには最低限の命令しか定義されていません。それ以外のかけ算や割り算、不可分操作などの命令や機能は拡張として定義されています。</p>
+<div class="footnote-list">
+<div class="footnote" id="fn-rv128i" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*2] </span>RV128Iもありますが、まだDraft段階(準備中)です</p></div>
+</div><!--/.footnote-list-->
+<p>どの拡張を実装しているかを示す文字列では、例えばかけ算と割り算、不可分操作ができるRV32IのCPUは<code class="inline-code">RV32IMA</code>と表現されます。本書では、まず、<code class="inline-code">RV32I</code>のCPUを実装します。これを、OSを実行できる程度までに進化させることを目標に実装を進めます。</p>
+
+<h2 id="id_00-preface_nonum7" notoc="true">本書の構成</h2>
+<p>本シリーズ(基本編)では、次のようにCPUを実装していきます。</p>
+<ol start="1" type="1">
+<li>RV32IのCPUを実装する (<a href="./04-impl-rv32i.html">第3章</a>)</li>
+<li>Zicsr拡張を実装する (<a href="./04a-zicsr.html">第4章</a>)</li>
+<li>CPUをテストする (<a href="./04b-riscvtests.html">第5章</a>)</li>
+<li>RV64Iを実装する (<a href="./05-impl-rv64i.html">第6章</a>)</li>
+<li>パイプライン化する (<a href="./05a-pipeline.html">第7章</a>)</li>
+<li>実機でテストする (<a href="./05b-synth.html">第8章</a>)</li>
+<li>M拡張、A拡張、C拡張を実装する</li>
+<li>UARTと割り込みを実装する</li>
+<li>OSを実行するために必要なCSRを実装する</li>
+<li>OSを実行する</li>
+</ol>
+
+<h2 id="id_00-preface_nonum8" notoc="true">凡例</h2>
+<p>プログラムコードの差分を表示する場合は、追加されたコードを太字で、削除されたコードを取り消し線で表します。ただし、リスト内のコードが全て新しく追加されるときは太字を利用しません。コードを置き換えるときは太字で示し、削除されたコードを示さない場合もあります。</p>
+<div class="caption-code">
+<pre class="emlist"><del>print(&quot;Hello, <b>world</b>!\n&quot;);</del>       <span class="balloon">← 取り消し線は削除したコード</span>
+<b>print(&quot;Hello, &quot;+name+&quot;!\n&quot;);</b>    <span class="balloon">← 太字は追加したコード</span>
+</pre>
+</div>
+<p>長い行が右端で折り返されると、折り返されたことを表す小さな記号がつきます(pdf版のみ)。</p>
+<div class="caption-code">
+<pre class="emlist">123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789__123456789_123456789_123456789_123456789_
+</pre>
+</div>
+<p>ターミナル画面は、次のように表示します。行頭の「<code class="inline-code">$</code>」はプロンプトを表し、ユーザが入力するコマンドには下線を引いています。</p>
+<div class="cmd-code">
+<pre class="emlist">$ <span class="userinput">echo Hello</span>       <span class="balloon">← 行頭の「$」はプロンプト、それ以降がユーザ入力</span>
+</pre>
+</div>
+<p>プログラムコードやターミナル画面は、<code class="inline-code">...</code>などの複数の点で省略することがあります。</p>
+        </main>
+        <nav class="page-navi">
+          <a href="02-setup.html" class="page-next">&#9654;</a>
+        </nav>
+        <br>
+        <br>
+        <footer style="background:#dddddd">
+      <div style="padding: 20px 20px 20px 20px;">
+          <div style="font-size:1.4rem"><b>コンピュータは、CPUを書けば理解できる！</b></div><br>
+          コンピュータアーキテクチャは、CPUを作ることで理解することができます。
+          「Verylで作るCPU」は、ハードウェア記述言語VerylでRISC-VのCPUを自作する方法を解説するプロジェクトです。<br>
+          「Verylで作るCPU 基本編」では、ハードウェア記述言語の基礎から、OSを実行できる程度のCPUの実装方法までを解説します。<br>
+          <br>
+          キーワード: 自作CPU , RISC-V , Veryl , FPGA<br>
+      <div>
+        </footer>
+      </div>
+    </div>
+    
+    <script>
+      let url = window.location.href;
+      let encoded_url = encodeURI(url);
+      let fb = document.getElementById("share-facebook");
+      fb["data-href"] = url;
+      console.log(fb);
+    </script>
+    <div id="fb-root"></div>
+    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/ja_JP/sdk.js#xfbml=1&version=v21.0"></script>
+    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+  </body>
+</html>
+<!-- layout.html5.erb -->
