@@ -49,3 +49,7 @@ The RISC-V Instruction Set Manual Volume II: Privileged Architecture version 202
 //bibpaper[patahene][]{
 David Patterson, John Hennessy(著),成田 光彰 訳, コンピュータの構成と設計 MIPS Edition 第6版 [上] ～ハードウエアとソフトウエアのインタフェース～, 日経BP
 //}
+
+//bibpaper[pynq_z1.manual][]{
+PYNQ-Z1 Reference Manual - Digilent Reference, https://digilent.com/reference/programmable-logic/pynq-z1/reference-manual
+//}
