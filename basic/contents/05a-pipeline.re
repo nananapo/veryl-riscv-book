@@ -593,7 +593,7 @@ MEMステージにデータを渡すために、
         memq_wdata.jump_addr  = if inst_is_br(exs_ctrl) {
             exs_pc + exs_imm @<balloon>{分岐命令の分岐先アドレス}
         } else {
-            exs_alu_result @<balloon>{ジャンプ命令のジャンプ先アドレス}
+            exs_alu_result & ~1 @<balloon>{ジャンプ命令のジャンプ先アドレス}
         };
     }
 #@end

@@ -212,7 +212,7 @@ module ReVIEW
       lang = File.extname(id || "").gsub(".", "") if lang.blank?
       classattr << " language-#{lang}" unless lang.blank?
       classattr << " highlight"        if highlight?
-      print "<pre class=\"#{classattr}\">"
+      print "<pre class=\"#{classattr}\" translate=\"no\">"
       #
       gen = opts['lineno'] ? LineNumberGenerator.new(opts['lineno']).each : nil
       if gen
@@ -805,7 +805,7 @@ module ReVIEW
     def on_inline_balloon(); "<span class=\"balloon\">← #{yield}</span>"; end
 
     def on_inline_code()
-      return "<code class=\"inline-code\">#{yield}</code>"
+      return "<code class=\"inline-code\" translate=\"no\" >#{yield}</code>"
     end
 
     ## 「“」と「”」で囲む
