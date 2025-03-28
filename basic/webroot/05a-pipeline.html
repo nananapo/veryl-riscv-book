@@ -486,7 +486,7 @@
         memq_wdata.jump_addr  = if inst_is_br(exs_ctrl) {
             exs_pc + exs_imm <span class="balloon">← 分岐命令の分岐先アドレス</span>
         } else {
-            exs_alu_result <span class="balloon">← ジャンプ命令のジャンプ先アドレス</span>
+            exs_alu_result &amp; ~1 <span class="balloon">← ジャンプ命令のジャンプ先アドレス</span>
         };
     }
 </pre>

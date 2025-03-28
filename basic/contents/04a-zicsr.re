@@ -272,7 +272,7 @@ Directモードのとき、トラップ時のジャンプ先は@<code>{BASE << 2
 (@<list>{csrunit.veryl.create-mtvec-range.csr_addr})。
 
 //list[csrunit.veryl.create-mtvec-range.csr_addr][CsrAddr型を定義する (csrunit.veryl)]{
-#@maprange(scripts/04a/create-mtvec-range/core/src/csrunit.veryl,csr_addr)
+#@maprange(scripts/04a/create-mtvec-range/core/src/eei.veryl,csr_addr)
     // CSRのアドレス
     enum CsrAddr: logic<12> {
         MTVEC = 12'h305,
@@ -471,7 +471,7 @@ Environment call from M-mode例外には11が割り当てられています。
 (@<list>{csrunit.veryl.create-ecall-range.addr})。
 
 //list[csrunit.veryl.create-ecall-range.addr][mepcとmcauseのアドレスを追加する (csrunit.veryl)]{
-#@maprange(scripts/04a/create-ecall-range/core/src/csrunit.veryl,addr)
+#@maprange(scripts/04a/create-ecall-range/core/src/eei.veryl,addr)
     // CSRのアドレス
     enum CsrAddr: logic<12> {
         MTVEC = 12'h305,
@@ -486,7 +486,7 @@ Environment call from M-mode例外には11が割り当てられています。
 (@<list>{csrunit.veryl.create-ecall-range.cause})。
 
 //list[csrunit.veryl.create-ecall-range.cause][CsrCause型の定義 (csrunit.veryl)]{
-#@maprange(scripts/04a/create-ecall-range/core/src/csrunit.veryl,cause)
+#@maprange(scripts/04a/create-ecall-range/core/src/eei.veryl,cause)
     enum CsrCause: UIntX {
         ENVIRONMENT_CALL_FROM_M_MODE = 11,
     }
@@ -680,7 +680,7 @@ csrunitモジュールと接続するための変数を定義してcsrunitモジ
     @<b>|} else |if inst_is_br(inst_ctrl) {
         inst_pc + inst_imm
     } else {
-        alu_result
+        alu_result & ~1
     };
 #@end
 //}

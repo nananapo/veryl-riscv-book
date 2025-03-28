@@ -320,8 +320,8 @@ fe209ee3 // 10: bne x1, x2, -4
 
 module top_tang (
     clk: input  clock   ,
-    rst: input     reset   ,
-    led: output    logic&lt;6&gt;,
+    rst: input  reset   ,
+    led: output logic&lt;6&gt;,
 ) {
     // CSRの下位ビットをLEDに接続する
     var led_top: UIntX;
@@ -330,10 +330,10 @@ module top_tang (
     }
 
     inst t: top #(
-        MEMORY_FILEPATH_IS_ENV: 0,
+        MEMORY_FILEPATH_IS_ENV: 0 ,
         MEMORY_FILEPATH       : &quot;&quot;,
     ) (
-        clk,
+        clk         ,
         rst         ,
         led: led_top,
         #[ifdef(TEST_MODE)]

@@ -74,7 +74,7 @@ RISC-VのCSRのアドレス空間には、読み込みと書き込みができ�
 まず、CsrAddr型にLED制御用レジスタのアドレスを追加します(@<list>{csrunit.veryl.ledcsr-range.addr})。
 
 //list[csrunit.veryl.ledcsr-range.addr][LEDの制御用レジスタのアドレスを追加する (csrunit.veryl)]{
-#@maprange(scripts/05b/ledcsr-range/core/src/csrunit.veryl,addr)
+#@maprange(scripts/05b/ledcsr-range/core/src/eei.veryl,addr)
     enum CsrAddr: logic<12> {
         MTVEC = 12'h305,
         MEPC = 12'h341,
@@ -304,8 +304,8 @@ import eei::*;
 
 module top_tang (
     clk: input  clock   ,
-    rst: input     reset   ,
-    led: output    logic<6>,
+    rst: input  reset   ,
+    led: output logic<6>,
 ) {
     // CSRの下位ビットをLEDに接続する
     var led_top: UIntX;
@@ -314,10 +314,10 @@ module top_tang (
     }
 
     inst t: top #(
-        MEMORY_FILEPATH_IS_ENV: 0,
+        MEMORY_FILEPATH_IS_ENV: 0 ,
         MEMORY_FILEPATH       : "",
     ) (
-        clk,
+        clk         ,
         rst         ,
         led: led_top,
         #[ifdef(TEST_MODE)]

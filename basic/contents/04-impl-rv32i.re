@@ -2075,20 +2075,6 @@ module memunit (
     membus: modport membus_if::<MEM_DATA_WIDTH, XLEN>::master, // メモリとのinterface
 ) {
 
-    // 命令がメモリにアクセスする命令か判別する関数
-    function inst_is_memop (
-        ctrl: input InstCtrl,
-    ) -> logic    {
-        return ctrl.itype == InstType::S || ctrl.is_load;
-    }
-
-    // 命令がストア命令か判別する関数
-    function inst_is_store (
-        ctrl: input InstCtrl,
-    ) -> logic    {
-        return inst_is_memop(ctrl) && !ctrl.is_load;
-    }
-
     // memunitの状態を表す列挙型
     enum State: logic<2> {
         Init, // 命令を受け付ける状態
@@ -2970,7 +2956,7 @@ JALR命令(I形式)ならrs1と即値になっていることを確認してく�
 //list[core.veryl.jump-range.hazard_assign][control_hazardとcontrol_hazard_pc_nextの割り当て (core.veryl)]{
 #@maprange(scripts/04/jump-range/core/src/core.veryl,hazard_assign)
     assign control_hazard         = inst_valid && inst_ctrl.is_jump;
-    assign control_hazard_pc_next = alu_result;
+    assign control_hazard_pc_next = alu_result & ~1;
 #@end
 //}
 
@@ -3212,7 +3198,7 @@ coreモジュールでインスタンス化します(@<list>{core.veryl.br-range
 )。
 
 //list[core.veryl.br-range.function][命令が条件分岐命令か判定する関数 (core.veryl)]{
-#@maprange(scripts/04/br-range/core/src/core.veryl,function)
+#@maprange(scripts/04/br-range/core/src/corectrl.veryl,function)
     // 命令が分岐命令かどうかを判定する
     function inst_is_br (
         ctrl: input InstCtrl,
@@ -3228,7 +3214,7 @@ coreモジュールでインスタンス化します(@<list>{core.veryl.br-range
     assign control_hazard_pc_next = @<b>|if inst_is_br(inst_ctrl) {|
         @<b>|inst_pc + inst_imm|
     @<b>|} else {|
-        alu_result
+        alu_result & ~1
     @<b>|}|;
 #@end
 //}

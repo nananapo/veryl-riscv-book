@@ -1736,20 +1736,6 @@ module memunit (
     membus: modport membus_if::&lt;MEM_DATA_WIDTH, XLEN&gt;::master, // メモリとのinterface
 ) {
 
-    // 命令がメモリにアクセスする命令か判別する関数
-    function inst_is_memop (
-        ctrl: input InstCtrl,
-    ) -&gt; logic    {
-        return ctrl.itype == InstType::S || ctrl.is_load;
-    }
-
-    // 命令がストア命令か判別する関数
-    function inst_is_store (
-        ctrl: input InstCtrl,
-    ) -&gt; logic    {
-        return inst_is_memop(ctrl) &amp;&amp; !ctrl.is_load;
-    }
-
     // memunitの状態を表す列挙型
     enum State: logic&lt;2&gt; {
         Init, // 命令を受け付ける状態
@@ -2442,7 +2428,7 @@ deadbeef // 0x0
 <div id="core.veryl.jump-range.hazard_assign" class="caption-code">
 <span class="caption">リスト3.84: リスト3.84: control_hazardとcontrol_hazard_pc_nextの割り当て (core.veryl)</span>
 <pre class="list language-hazard_assign">    assign control_hazard         = inst_valid &amp;&amp; inst_ctrl.is_jump;
-    assign control_hazard_pc_next = alu_result;
+    assign control_hazard_pc_next = alu_result &amp; ~1;
 </pre>
 </div>
 <p><code class="inline-code">control_hazard</code>を利用して<code class="inline-code">if_pc</code>を更新し、新しく命令をフェッチしなおすようにします(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.jump-range.always">リスト3.85</a></span>)。</p>
@@ -2664,7 +2650,7 @@ module brunit (
     assign control_hazard_pc_next = <b>if inst_is_br(inst_ctrl) {</b>
         <b>inst_pc + inst_imm</b>
     <b>} else {</b>
-        alu_result
+        alu_result &amp; ~1
     <b>}</b>;
 </pre>
 </div>
