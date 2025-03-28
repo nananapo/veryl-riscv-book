@@ -548,7 +548,7 @@ $ <span class="userinput">./obj_dir/sim test/sample_csr.hex 5</span>
     <b>} else </b>if inst_is_br(inst_ctrl) {
         inst_pc + inst_imm
     } else {
-        alu_result
+        alu_result &amp; ~1
     };
 </pre>
 </div>
