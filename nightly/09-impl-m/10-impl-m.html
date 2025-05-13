@@ -338,7 +338,7 @@ module muldivunit (
     }
 </pre>
 </div>
-<p>muldivunitモジュールは計算が完了したクロックの間だけしか<code class="inline-code">rvalid</code>を1に設定しないため、既に計算が完了していることを示す<code class="inline-code">exs_muldiv_rvalided</code>変数を作成しています。これにより、M拡張の命令によってストールする条件は、命令がM拡張の命令であり(<code class="inline-code">exs_ctrl.is_muldiv</code>)、現在のクロックで計算が完了しておらず(<code class="inline-code">!exs_muldiv_rvalid</code>)、以前のクロックでも計算が完了していない(<code class="inline-code">!exs_muldiv_rvalided</code>)場合になります。</p>
+<p>muldivunitモジュールは計算が完了したクロックの間だけしか<code class="inline-code">rvalid</code>を<code class="inline-code">1</code>に設定しないため、既に計算が完了していることを示す<code class="inline-code">exs_muldiv_rvalided</code>変数を作成しています。これにより、M拡張の命令によってストールする条件は、命令がM拡張の命令であり(<code class="inline-code">exs_ctrl.is_muldiv</code>)、現在のクロックで計算が完了しておらず(<code class="inline-code">!exs_muldiv_rvalid</code>)、以前のクロックでも計算が完了していない(<code class="inline-code">!exs_muldiv_rvalided</code>)場合になります。</p>
 
 <h2 class="numbox"><a id="h1-4"></a><span class="secno">1.4</span> 符号無しの乗算器の実装</h2>
 
@@ -417,7 +417,7 @@ module muldivunit (
 <li>カウンタをインクリメントする</li>
 </ol>
 <div id="mul_process" class="image">
-<img src="images/10-impl-m/mul_process.png" alt="符号無し4ビットの乗算" class="img" style="width:100%" />
+<img src="images/10-impl-m/mul_process.png" alt="符号無し4ビットの乗算" class="img" style="width:70%" />
 <p class="caption">
 図1.1: 符号無し4ビットの乗算
 </p>
@@ -477,11 +477,10 @@ module muldivunit (
 <p>絶対値で計算することで乗算の実行途中で符号ビットを考慮する必要がなくなり、既に実装してある符号無しの乗算器だけで符号付きの乗算を実現できます。</p>
 
 <h3 class="none"><a id="h1-6-2"></a><span class="secno">1.6.2</span> 符号付き乗算を実装する</h3>
-<p><code class="inline-code">WIDTH</code>ビットの符号付きの値を<code class="inline-code">WIDTH</code>ビットの符号無しの絶対値に変換するabs関数を作成します(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.mulmulh-range.abs">リスト1.12</a></span>)。MSBが<code class="inline-code">1</code>ならビットを反転して<code class="inline-code">1</code>を足すことで2の補数に変換しています。</p>
+<p><code class="inline-code">WIDTH</code>ビットの符号付きの値を<code class="inline-code">WIDTH</code>ビットの<b>符号無し</b>の絶対値に変換するabs関数を作成します(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.mulmulh-range.abs">リスト1.12</a></span>)。abs関数は、値のMSBが<code class="inline-code">1</code>ならビットを反転して<code class="inline-code">1</code>を足すことで符号を反転しています。最小値<code class="inline-code">-2 ** (WIDTH - 1)</code>の絶対値も求められることを確認してください。</p>
 <div id="muldivunit.veryl.mulmulh-range.abs" class="caption-code">
 <span class="caption">リスト1.12: リスト1.12: abs関数を実装する (muldivunit.veryl)</span>
-<pre class="list language-abs">    // 符号なしの値を絶対値(符号付き)に変換する
-    function abs::&lt;WIDTH: u32&gt; (
+<pre class="list language-abs">    function abs::&lt;WIDTH: u32&gt; (
         value: input logic&lt;WIDTH&gt;,
     ) -&gt; logic&lt;WIDTH&gt; {
         return if value[msb] ? ~value + 1 : value;
@@ -800,7 +799,7 @@ module muldivunit (
 <li>除数を1ビット右シフトする</li>
 <li>カウンタをインクリメントする</li>
 </ol>
-<p>RISC-Vでは、除数が0であったり結果がオーバーフローするようなLビットの除算の結果は<span class="tableref"><a href="./10-impl-m.html#riscv.div.expt">表1.4</a></span>になると定められています。このうちdivunitモジュールは符号無しの除算(DIVU、REMU命令)のゼロ除算についてのみ対処しています。</p>
+<p>RISC-Vでは、除数が0であったり結果がオーバーフローするようなLビットの除算の結果は<span class="tableref"><a href="./10-impl-m.html#riscv.div.expt">表1.4</a></span>のようになると定められています。このうちdivunitモジュールは符号無しの除算(DIVU、REMU命令)のゼロ除算だけを対処しています。</p>
 <div id="riscv.div.expt" class="table">
 <p class="caption">表1.4: 除算の例外的な動作と結果</p>
 <table>
