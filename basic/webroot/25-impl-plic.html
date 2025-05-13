@@ -4,11 +4,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width">
     
-    <title>参考文献 | Verylで作るCPU</title>
+    <title>PLICの実装 | Verylで作るCPU</title>
 
     <link rel="stylesheet" type="text/css" href="css/normalize.css" />
     <link rel="stylesheet" type="text/css" href="css/webstyle.css" />
-    <link rel="prev" title="このプロジェクトに貢献する" href="100-contribute.html">
+    <link rel="next" title="Linuxを動かす" href="26-run-linux.html">
+    <link rel="prev" title="仮想記憶システムの実装" href="24-impl-paging.html">
     <meta name="generator" content="Re:VIEW Starter">
 
     <script async defer src="https://buttons.github.io/buttons.js"></script>
@@ -43,7 +44,14 @@
     <li class="toc-chapter"><a href="./22-umode-csr.html">8 U-modeの実装</a></li>
     <li class="toc-chapter"><a href="./23-smode-csr.html">9 S-modeの実装</a></li>
     <li class="toc-chapter"><a href="./24-impl-paging.html">10 仮想記憶システムの実装</a></li>
-    <li class="toc-chapter"><a href="./25-impl-plic.html">11 PLICの実装</a></li>
+    <li class="toc-chapter"><a href="./25-impl-plic.html">11 PLICの実装</a>
+      <ul class="toc toc-3">
+        <li class="toc-section"><a href="./25-impl-plic.html#h11-1">11.1 概要</a></li>
+        <li class="toc-section"><a href="./25-impl-plic.html#h11-2">11.2 デバッグ入力の実装</a></li>
+        <li class="toc-section"><a href="./25-impl-plic.html#h11-3">11.3 PLICモジュールの作成</a></li>
+        <li class="toc-section"><a href="./25-impl-plic.html#h11-4">11.4 外部割込みの実装</a></li>
+      </ul>
+    </li>
     <li class="toc-chapter"><a href="./26-run-linux.html">12 Linuxを動かす</a></li>
   </ul>
 </li>
@@ -56,49 +64,19 @@
         <header class="page-header">
         </header>
         <main class="page-main">
-  <h1 class="none center"><a id="h"></a><br/>参考文献</h1>
-<div class="bibpaper">
-<a id="bib-amano.fpga">[1]</a> 
-<p>天野 英晴, FPGAの原理と構成, オーム社</p></div>
-<div class="bibpaper">
-<a id="bib-ronrikairo">[2]</a> 
-<p>坂井 修一, 論理回路入門, 培風館</p></div>
-<div class="bibpaper">
-<a id="bib-veryl-doc.operator.precedence">[3]</a> 
-<p>演算子の優先順位 - The Veryl Hardware Description Language,https://doc.veryl-lang.org/book/ja/05_language_reference/04_expression/01_operator_precedence.html</p></div>
-<div class="bibpaper">
-<a id="bib-veryl-doc.operators">[4]</a> 
-<p>演算子 - The Veryl Hardware Description Language,https://doc.veryl-lang.org/book/ja/05_language_reference/02_lexical_structure/01_operator.html</p></div>
-<div class="bibpaper">
-<a id="bib-isa-manual.1.2.3.enc">[5]</a> 
-<p>The RISC-V Instruction Set Manual Volume I: Unprivileged Architecture version 20240411 2.3. Immediate Encoding Variants</p></div>
-<div class="bibpaper">
-<a id="bib-isa-manual.1.37">[6]</a> 
-<p>The RISC-V Instruction Set Manual Volume I: Unprivileged Architecture version 20240411 37. RV32/64G Instruction Set Listings</p></div>
-<div class="bibpaper">
-<a id="bib-isa-manual.1.2.4">[7]</a> 
-<p>The RISC-V Instruction Set Manual Volume I: Unprivileged Architecture version 20240411 2.4. Integer Computational Instructions</p></div>
-<div class="bibpaper">
-<a id="bib-isa-manual.1.2.5">[8]</a> 
-<p>The RISC-V Instruction Set Manual Volume I: Unprivileged Architecture version 20240411 2.5. Control Transfer Instructions</p></div>
-<div class="bibpaper">
-<a id="bib-isa-manual.2.fig10">[9]</a> 
-<p>The RISC-V Instruction Set Manual Volume II: Privileged Architecture version 20240411 Figure 10. Encoding of mtvec MODE field.</p></div>
-<div class="bibpaper">
-<a id="bib-isa-manual.2.3.1.7">[10]</a> 
-<p>The RISC-V Instruction Set Manual Volume II: Privileged Architecture version 20240411 3.1.7. Machine Trap-Vector Base-Address Register</p></div>
-<div class="bibpaper">
-<a id="bib-isa-manual.2.15">[11]</a> 
-<p>The RISC-V Instruction Set Manual Volume II: Privileged Architecture version 20240411 15. RISC-V Privileged Instruction Set Listings</p></div>
-<div class="bibpaper">
-<a id="bib-patahene">[12]</a> 
-<p>David Patterson, John Hennessy(著),成田 光彰 訳, コンピュータの構成と設計 MIPS Edition 第6版 [上] ～ハードウエアとソフトウエアのインタフェース～, 日経BP</p></div>
-<div class="bibpaper">
-<a id="bib-pynq_z1.manual">[13]</a> 
-<p>PYNQ-Z1 Reference Manual - Digilent Reference, https://digilent.com/reference/programmable-logic/pynq-z1/reference-manual</p></div>
+  <h1 class="boldlines center twolines"><a id="h11"></a><span class="secno">第11章</span> <br/>PLICの実装</h1>
+
+<h2 class="numbox"><a id="h11-1"></a><span class="secno">11.1</span> 概要</h2>
+
+<h2 class="numbox"><a id="h11-2"></a><span class="secno">11.2</span> デバッグ入力の実装</h2>
+
+<h2 class="numbox"><a id="h11-3"></a><span class="secno">11.3</span> PLICモジュールの作成</h2>
+
+<h2 class="numbox"><a id="h11-4"></a><span class="secno">11.4</span> 外部割込みの実装</h2>
         </main>
         <nav class="page-navi">
-          <a href="100-contribute.html" class="page-prev">&#9664;</a>
+          <a href="24-impl-paging.html" class="page-prev">&#9664;</a>
+          <a href="26-run-linux.html" class="page-next">&#9654;</a>
         </nav>
         <br>
         <br>

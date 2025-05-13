@@ -4,11 +4,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width">
     
-    <title>参考文献 | Verylで作るCPU</title>
+    <title>S-modeの実装 | Verylで作るCPU</title>
 
     <link rel="stylesheet" type="text/css" href="css/normalize.css" />
     <link rel="stylesheet" type="text/css" href="css/webstyle.css" />
-    <link rel="prev" title="このプロジェクトに貢献する" href="100-contribute.html">
+    <link rel="next" title="仮想記憶システムの実装" href="24-impl-paging.html">
+    <link rel="prev" title="U-modeの実装" href="22-umode-csr.html">
     <meta name="generator" content="Re:VIEW Starter">
 
     <script async defer src="https://buttons.github.io/buttons.js"></script>
@@ -41,7 +42,22 @@
     <li class="toc-chapter"><a href="./20-mmode-csr.html">6 M-modeの実装 (1. CSRの実装)</a></li>
     <li class="toc-chapter"><a href="./21-impl-interrupt.html">7 M-modeの実装 (2. 割り込みの実装)</a></li>
     <li class="toc-chapter"><a href="./22-umode-csr.html">8 U-modeの実装</a></li>
-    <li class="toc-chapter"><a href="./23-smode-csr.html">9 S-modeの実装</a></li>
+    <li class="toc-chapter"><a href="./23-smode-csr.html">9 S-modeの実装</a>
+      <ul class="toc toc-3">
+        <li class="toc-section"><a href="./23-smode-csr.html#h9-1">9.1 CSRのアドレスの追加</a></li>
+        <li class="toc-section"><a href="./23-smode-csr.html#h9-2">9.2 misaレジスタの変更</a></li>
+        <li class="toc-section"><a href="./23-smode-csr.html#h9-3">9.3 mstatusレジスタの変更</a></li>
+        <li class="toc-section"><a href="./23-smode-csr.html#h9-4">9.4 scounterenレジスタの実装</a></li>
+        <li class="toc-section"><a href="./23-smode-csr.html#h9-5">9.5 sstatusレジスタの実装</a></li>
+        <li class="toc-section"><a href="./23-smode-csr.html#h9-6">9.6 stvecレジスタの実装</a></li>
+        <li class="toc-section"><a href="./23-smode-csr.html#h9-7">9.7 sscratchレジスタの実装</a></li>
+        <li class="toc-section"><a href="./23-smode-csr.html#h9-8">9.8 sepcレジスタの実装</a></li>
+        <li class="toc-section"><a href="./23-smode-csr.html#h9-9">9.9 scauseレジスタの実装</a></li>
+        <li class="toc-section"><a href="./23-smode-csr.html#h9-10">9.10 stvalレジスタの実装</a></li>
+        <li class="toc-section"><a href="./23-smode-csr.html#h9-11">9.11 トラップ処理の変更</a></li>
+        <li class="toc-section"><a href="./23-smode-csr.html#h9-12">9.12 トラップの委譲の実装</a></li>
+      </ul>
+    </li>
     <li class="toc-chapter"><a href="./24-impl-paging.html">10 仮想記憶システムの実装</a></li>
     <li class="toc-chapter"><a href="./25-impl-plic.html">11 PLICの実装</a></li>
     <li class="toc-chapter"><a href="./26-run-linux.html">12 Linuxを動かす</a></li>
@@ -56,49 +72,53 @@
         <header class="page-header">
         </header>
         <main class="page-main">
-  <h1 class="none center"><a id="h"></a><br/>参考文献</h1>
-<div class="bibpaper">
-<a id="bib-amano.fpga">[1]</a> 
-<p>天野 英晴, FPGAの原理と構成, オーム社</p></div>
-<div class="bibpaper">
-<a id="bib-ronrikairo">[2]</a> 
-<p>坂井 修一, 論理回路入門, 培風館</p></div>
-<div class="bibpaper">
-<a id="bib-veryl-doc.operator.precedence">[3]</a> 
-<p>演算子の優先順位 - The Veryl Hardware Description Language,https://doc.veryl-lang.org/book/ja/05_language_reference/04_expression/01_operator_precedence.html</p></div>
-<div class="bibpaper">
-<a id="bib-veryl-doc.operators">[4]</a> 
-<p>演算子 - The Veryl Hardware Description Language,https://doc.veryl-lang.org/book/ja/05_language_reference/02_lexical_structure/01_operator.html</p></div>
-<div class="bibpaper">
-<a id="bib-isa-manual.1.2.3.enc">[5]</a> 
-<p>The RISC-V Instruction Set Manual Volume I: Unprivileged Architecture version 20240411 2.3. Immediate Encoding Variants</p></div>
-<div class="bibpaper">
-<a id="bib-isa-manual.1.37">[6]</a> 
-<p>The RISC-V Instruction Set Manual Volume I: Unprivileged Architecture version 20240411 37. RV32/64G Instruction Set Listings</p></div>
-<div class="bibpaper">
-<a id="bib-isa-manual.1.2.4">[7]</a> 
-<p>The RISC-V Instruction Set Manual Volume I: Unprivileged Architecture version 20240411 2.4. Integer Computational Instructions</p></div>
-<div class="bibpaper">
-<a id="bib-isa-manual.1.2.5">[8]</a> 
-<p>The RISC-V Instruction Set Manual Volume I: Unprivileged Architecture version 20240411 2.5. Control Transfer Instructions</p></div>
-<div class="bibpaper">
-<a id="bib-isa-manual.2.fig10">[9]</a> 
-<p>The RISC-V Instruction Set Manual Volume II: Privileged Architecture version 20240411 Figure 10. Encoding of mtvec MODE field.</p></div>
-<div class="bibpaper">
-<a id="bib-isa-manual.2.3.1.7">[10]</a> 
-<p>The RISC-V Instruction Set Manual Volume II: Privileged Architecture version 20240411 3.1.7. Machine Trap-Vector Base-Address Register</p></div>
-<div class="bibpaper">
-<a id="bib-isa-manual.2.15">[11]</a> 
-<p>The RISC-V Instruction Set Manual Volume II: Privileged Architecture version 20240411 15. RISC-V Privileged Instruction Set Listings</p></div>
-<div class="bibpaper">
-<a id="bib-patahene">[12]</a> 
-<p>David Patterson, John Hennessy(著),成田 光彰 訳, コンピュータの構成と設計 MIPS Edition 第6版 [上] ～ハードウエアとソフトウエアのインタフェース～, 日経BP</p></div>
-<div class="bibpaper">
-<a id="bib-pynq_z1.manual">[13]</a> 
-<p>PYNQ-Z1 Reference Manual - Digilent Reference, https://digilent.com/reference/programmable-logic/pynq-z1/reference-manual</p></div>
+  <h1 class="boldlines center twolines"><a id="h9"></a><span class="secno">第9章</span> <br/>S-modeの実装</h1>
+<p>権限レベルを追加する</p>
+
+<h2 class="numbox"><a id="h9-1"></a><span class="secno">9.1</span> CSRのアドレスの追加</h2>
+
+<h2 class="numbox"><a id="h9-2"></a><span class="secno">9.2</span> misaレジスタの変更</h2>
+
+<h2 class="numbox"><a id="h9-3"></a><span class="secno">9.3</span> mstatusレジスタの変更</h2>
+
+<h3 class="none"><a id="h9-3-1"></a><span class="secno">9.3.1</span> SXL</h3>
+
+<h3 class="none"><a id="h9-3-2"></a><span class="secno">9.3.2</span> MPP</h3>
+
+<h2 class="numbox"><a id="h9-4"></a><span class="secno">9.4</span> scounterenレジスタの実装</h2>
+
+<h2 class="numbox"><a id="h9-5"></a><span class="secno">9.5</span> sstatusレジスタの実装</h2>
+
+<h2 class="numbox"><a id="h9-6"></a><span class="secno">9.6</span> stvecレジスタの実装</h2>
+
+<h2 class="numbox"><a id="h9-7"></a><span class="secno">9.7</span> sscratchレジスタの実装</h2>
+
+<h2 class="numbox"><a id="h9-8"></a><span class="secno">9.8</span> sepcレジスタの実装</h2>
+
+<h2 class="numbox"><a id="h9-9"></a><span class="secno">9.9</span> scauseレジスタの実装</h2>
+
+<h2 class="numbox"><a id="h9-10"></a><span class="secno">9.10</span> stvalレジスタの実装</h2>
+
+<h2 class="numbox"><a id="h9-11"></a><span class="secno">9.11</span> トラップ処理の変更</h2>
+
+<h3 class="none"><a id="h9-11-1"></a><span class="secno">9.11.1</span> sstatusのSIE、SPIE、SPPレジスタの実装</h3>
+
+<h3 class="none"><a id="h9-11-2"></a><span class="secno">9.11.2</span> SRET命令の実装</h3>
+<p>mstatus.TSR</p>
+
+<h3 class="none"><a id="h9-11-3"></a><span class="secno">9.11.3</span> mipレジスタの変更</h3>
+
+<h2 class="numbox"><a id="h9-12"></a><span class="secno">9.12</span> トラップの委譲の実装</h2>
+
+<h3 class="none"><a id="h9-12-1"></a><span class="secno">9.12.1</span> medeleg、midelegレジスタを作成する</h3>
+
+<h3 class="none"><a id="h9-12-2"></a><span class="secno">9.12.2</span> sie、sipレジスタを実装する</h3>
+
+<h3 class="none"><a id="h9-12-3"></a><span class="secno">9.12.3</span> トラップの委譲を実装する</h3>
         </main>
         <nav class="page-navi">
-          <a href="100-contribute.html" class="page-prev">&#9664;</a>
+          <a href="22-umode-csr.html" class="page-prev">&#9664;</a>
+          <a href="24-impl-paging.html" class="page-next">&#9654;</a>
         </nav>
         <br>
         <br>

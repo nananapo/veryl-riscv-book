@@ -16,7 +16,6 @@ module Adder (
         sum = x + y;
     }
 }
-//}
 
 @<large>{@<code>{x}と@<code>{y}を受け取って、@<code>{sum}に@<code>{x + y}を割り当てるだけ....簡単ですね。これと同様に、入出力を書いて、足し算やAND、OR、NOT演算などを書くだけで、CPUを書くことができます。}
 
