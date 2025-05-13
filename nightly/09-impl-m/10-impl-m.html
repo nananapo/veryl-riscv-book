@@ -860,7 +860,7 @@ module muldivunit (
 
 <h3 class="none"><a id="h1-9-1"></a><span class="secno">1.9.1</span> 符号付き除算を符号無し除算器で実現する</h3>
 <p>DIV、REM命令は、それぞれDIVU、REMU命令の動作を符号付きに変えた命令です。本章では、符号付き乗算と同じように値を絶対値に変換して計算することで符号付き除算を実現します。</p>
-<p>RISC-Vの符号付き除算の結果は0の方向に丸められた整数になります。また、剰余演算の結果は被除数と同じ符号になります。符号付き剰余の絶対値は符号無し除算の値と一致するため、絶対値で計算してから符号を戻すことで符号無し除算器だけで符号付き除算を実現できます。</p>
+<p>RISC-Vの符号付き除算の結果は0の方向に丸められた整数になり、剰余演算の結果は被除数と同じ符号になります。符号付き剰余の絶対値は符号無し剰余の結果と一致するため、絶対値で計算してから符号を戻すことで符号無し除算器だけで符号付きの剰余演算を実現できます。</p>
 
 <h3 class="none"><a id="h1-9-2"></a><span class="secno">1.9.2</span> 符号付き除算を実装する</h3>
 <p>abs関数を利用して、DIV、REM命令のときにdivunitに渡す値を絶対値に設定します(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.divrem-range.op">リスト1.32</a></span><span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.divrem-range.du">リスト1.33</a></span>)。</p>
