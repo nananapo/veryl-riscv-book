@@ -134,9 +134,9 @@ assign rem = op1 % op2;
 <div class="footnote" id="fn-no.divider" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*2] </span>そもそも除算器が搭載されていない場合があります</p></div>
 </div><!--/.footnote-list-->
 <p><code class="inline-code">*</code>、<code class="inline-code">/</code>、<code class="inline-code">%</code>演算子がどのような回路に合成されるかは、合成系が全体の実装を考慮して自動的に決定するため、その挙動をコントロールするのは難しいです。そこで本章では、<code class="inline-code">*</code>、<code class="inline-code">/</code>、<code class="inline-code">%</code>演算子を使用せず、足し算やシフト演算などの基本的な論理だけを用いて同等の演算を実装します。</p>
-<p>基本編では積、商、剰余を効率よく<sup><a id="fnb-muldiv.sufficient" href="#fn-muldiv.sufficient" class="noteref" epub:type="noteref">*3</a></sup>求める実装は検討せず、できるだけ簡単に実装します。</p>
+<p>基本編では積、商、剰余を効率よく<sup><a id="fnb-muldiv.sufficient" href="#fn-muldiv.sufficient" class="noteref" epub:type="noteref">*3</a></sup>求める実装は検討せず、できるだけ単純な方法で実装します。</p>
 <div class="footnote-list">
-<div class="footnote" id="fn-muldiv.sufficient" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*3] </span>「効率よく」は、計算に要する時間や回路面積などの効率のことです</p></div>
+<div class="footnote" id="fn-muldiv.sufficient" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*3] </span>「効率」は、計算に要する時間や回路面積などの効率のことです。高速に計算する方法については応用編で検討します。</p></div>
 </div><!--/.footnote-list-->
 
 <h2 class="numbox"><a id="h1-2"></a><span class="secno">1.2</span> 命令のデコード</h2>
@@ -474,7 +474,7 @@ module muldivunit (
 <li>符号無しで積を計算する</li>
 <li>計算結果の符号を修正する</li>
 </ol>
-<p>符号付きのnビットの値の絶対値の最大値は<code class="inline-code">2 ** (n-1)</code>であり、符号付きのnビット同士の積の絶対値の最大値は<code class="inline-code">2 ** (2n - 2))</code>であるため、それぞれ符号無しnビットの値の範囲、nビットの符号無し乗算器の結果(2nビット)の範囲に収まります。そのため、絶対値の積を求めてから符号を正しく設定することで、符号付き乗算器を用いることなくnビットの符号なし乗算器だけで符号付き乗算を実現できます。</p>
+<p>絶対値で計算することで乗算の実行途中で符号ビットを考慮する必要がなくなり、既に実装してある符号無しの乗算器だけで符号付きの乗算を実現できます。</p>
 
 <h3 class="none"><a id="h1-6-2"></a><span class="secno">1.6.2</span> 符号付き乗算を実装する</h3>
 <p><code class="inline-code">WIDTH</code>ビットの符号付きの値を<code class="inline-code">WIDTH</code>ビットの符号無しの絶対値に変換するabs関数を作成します(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.mulmulh-range.abs">リスト1.12</a></span>)。MSBが<code class="inline-code">1</code>ならビットを反転して<code class="inline-code">1</code>を足すことで2の補数に変換しています。</p>
