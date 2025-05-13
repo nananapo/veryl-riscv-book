@@ -9,7 +9,7 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css" />
     <link rel="stylesheet" type="text/css" href="css/webstyle.css" />
     <link rel="next" title="このプロジェクトに貢献する" href="100-contribute.html">
-    <link rel="prev" title="M拡張の実装" href="09-impl-m.html">
+    <link rel="prev" title="Linuxを動かす" href="26-run-linux.html">
     <meta name="generator" content="Re:VIEW Starter">
 
     <script async defer src="https://buttons.github.io/buttons.js"></script>
@@ -28,22 +28,24 @@
           <div style="margin-bottom: 14px;" id="share-facebook" class="fb-share-button" data-href="" data-layout="" data-size=""><a target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Finvalid.invalid%2F&amp;src=sdkpreparse" class="fb-xfbml-parse-ignore">Facebookでシェアする</a></div>
         </div>
         <ul class="toc toc-1">
-    <li class="toc-chapter"><a href="./00-preface.html">まえがき</a></li>
-<li class="toc-part">第I部 RV32I/RV64Iの実装
+<li class="toc-part">第I部 RV64IMACの実装
   <ul class="toc toc-2">
-    <li class="toc-chapter"><a href="./02-setup.html">1 環境構築</a></li>
-    <li class="toc-chapter"><a href="./03-veryl.html">2 ハードウェア記述言語 Veryl</a></li>
-    <li class="toc-chapter"><a href="./04-impl-rv32i.html">3 RV32Iの実装</a></li>
-    <li class="toc-chapter"><a href="./04a-zicsr.html">4 Zicsr拡張の実装</a></li>
-    <li class="toc-chapter"><a href="./04b-riscvtests.html">5 riscv-testsによるテスト</a></li>
-    <li class="toc-chapter"><a href="./05-impl-rv64i.html">6 RV64Iの実装</a></li>
-    <li class="toc-chapter"><a href="./05a-pipeline.html">7 CPUのパイプライン化</a></li>
-    <li class="toc-chapter"><a href="./05b-synth.html">8 CPUの合成</a></li>
+    <li class="toc-chapter"><a href="./10-impl-m.html">1 M拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./11-impl-exception.html">2 例外の実装</a></li>
+    <li class="toc-chapter"><a href="./12-impl-mmio.html">3 MMIOの実装</a></li>
+    <li class="toc-chapter"><a href="./13-impl-a.html">4 A拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./14-impl-c.html">5 C拡張の実装</a></li>
   </ul>
 </li>
-<li class="toc-part">第II部 RV64IMACの実装
+<li class="toc-part">第II部 特権/割り込みの実装
   <ul class="toc toc-2">
-    <li class="toc-chapter"><a href="./09-impl-m.html">9 M拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./20-mmode-csr.html">6 M-modeの実装 (1. CSRの実装)</a></li>
+    <li class="toc-chapter"><a href="./21-impl-interrupt.html">7 M-modeの実装 (2. 割り込みの実装)</a></li>
+    <li class="toc-chapter"><a href="./22-umode-csr.html">8 U-modeの実装</a></li>
+    <li class="toc-chapter"><a href="./23-smode-csr.html">9 S-modeの実装</a></li>
+    <li class="toc-chapter"><a href="./24-impl-paging.html">10 仮想記憶システムの実装</a></li>
+    <li class="toc-chapter"><a href="./25-impl-plic.html">11 PLICの実装</a></li>
+    <li class="toc-chapter"><a href="./26-run-linux.html">12 Linuxを動かす</a></li>
   </ul>
 </li>
     <li class="toc-chapter"><a href="./99-postface.html">あとがき</a>
@@ -96,7 +98,7 @@
 <p>執筆にあたって関わったすべての方に、この場をお借りしてお礼申し上げます。</p>
         </main>
         <nav class="page-navi">
-          <a href="09-impl-m.html" class="page-prev">&#9664;</a>
+          <a href="26-run-linux.html" class="page-prev">&#9664;</a>
           <a href="100-contribute.html" class="page-next">&#9654;</a>
         </nav>
         <br>

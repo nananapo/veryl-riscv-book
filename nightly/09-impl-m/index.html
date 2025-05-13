@@ -15,7 +15,7 @@
     <link rel="stylesheet" type="text/css" href="css/webstyle.css" />
 
 
-    <link rel="next" title="まえがき" href="00-preface.html">
+    <link rel="next" title="M拡張の実装" href="10-impl-m.html">
 
 
     <meta name="generator" content="Re:VIEW Starter">
@@ -54,103 +54,133 @@
             <div style="margin-bottom: 14px;" id="share-facebook" class="fb-share-button" data-href="" data-layout="" data-size=""><a target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Finvalid.invalid%2F&amp;src=sdkpreparse" class="fb-xfbml-parse-ignore">Facebookでシェアする</a></div>
           </div>
 <ul class="toc toc-1">
-    <li class="toc-chapter"><a href="./00-preface.html">まえがき</a>
-      <ul class="toc toc-2">
-        <li class="toc-section"><a href="./00-preface.html#h">本書を読むとわかること</a></li>
-        <li class="toc-section"><a href="./00-preface.html#h">対象読者</a></li>
-        <li class="toc-section"><a href="./00-preface.html#h">必要な知識</a></li>
-        <li class="toc-section"><a href="./00-preface.html#h">本書のソースコード / 問い合わせ先</a></li>
-        <li class="toc-section"><a href="./00-preface.html#h">CPUの自作</a></li>
-        <li class="toc-section"><a href="./00-preface.html#h">RISC-V</a></li>
-        <li class="toc-section"><a href="./00-preface.html#h">本書の構成</a></li>
-        <li class="toc-section"><a href="./00-preface.html#h">凡例</a></li>
-      </ul>
-    </li>
-<li class="toc-part">第I部 RV32I/RV64Iの実装
+<li class="toc-part">第I部 RV64IMACの実装
   <ul class="toc toc-2">
-    <li class="toc-chapter"><a href="./02-setup.html">1 環境構築</a>
+    <li class="toc-chapter"><a href="./10-impl-m.html">1 M拡張の実装</a>
       <ul class="toc toc-3">
-        <li class="toc-section"><a href="./02-setup.html#h1-1">1.1 Veryl</a></li>
-        <li class="toc-section"><a href="./02-setup.html#h1-2">1.2 Verilator</a></li>
-        <li class="toc-section"><a href="./02-setup.html#h1-3">1.3 riscv-gnu-toolchain</a></li>
+        <li class="toc-section"><a href="./10-impl-m.html#h1-1">1.1 概要</a></li>
+        <li class="toc-section"><a href="./10-impl-m.html#h1-2">1.2 命令のデコード</a></li>
+        <li class="toc-section"><a href="./10-impl-m.html#h1-3">1.3 muldivunitモジュールの実装</a></li>
+        <li class="toc-section"><a href="./10-impl-m.html#h1-4">1.4 符号無しの乗算器の実装</a></li>
+        <li class="toc-section"><a href="./10-impl-m.html#h1-5">1.5 MULHU命令の実装</a></li>
+        <li class="toc-section"><a href="./10-impl-m.html#h1-6">1.6 MUL、MULH命令の実装</a></li>
+        <li class="toc-section"><a href="./10-impl-m.html#h1-7">1.7 符号無し割り算の実装</a></li>
+        <li class="toc-section"><a href="./10-impl-m.html#h1-8">1.8 DIVU、REMU命令の実装</a></li>
+        <li class="toc-section"><a href="./10-impl-m.html#h1-9">1.9 DIV、REM命令の実装</a></li>
+        <li class="toc-section"><a href="./10-impl-m.html#h1-10">1.10 DIVW、DIVUW、REMW、REMUW命令の実装</a></li>
       </ul>
     </li>
-    <li class="toc-chapter"><a href="./03-veryl.html">2 ハードウェア記述言語 Veryl</a>
+    <li class="toc-chapter"><a href="./11-impl-exception.html">2 例外の実装</a>
       <ul class="toc toc-3">
-        <li class="toc-section"><a href="./03-veryl.html#h2-1">2.1 ハードウェア記述言語</a></li>
-        <li class="toc-section"><a href="./03-veryl.html#h2-2">2.2 Verylの基本文法、機能</a></li>
+        <li class="toc-section"><a href="./11-impl-exception.html#h2-1">2.1 例外とは何か?</a></li>
+        <li class="toc-section"><a href="./11-impl-exception.html#h2-2">2.2 例外情報の伝達</a></li>
+        <li class="toc-section"><a href="./11-impl-exception.html#h2-3">2.3 Breakpoint例外の実装</a></li>
+        <li class="toc-section"><a href="./11-impl-exception.html#h2-4">2.4 Illegal Instruction例外の実装</a></li>
+        <li class="toc-section"><a href="./11-impl-exception.html#h2-5">2.5 ロードストア命令のミスアライン例外</a></li>
       </ul>
     </li>
-    <li class="toc-chapter"><a href="./04-impl-rv32i.html">3 RV32Iの実装</a>
+    <li class="toc-chapter"><a href="./12-impl-mmio.html">3 MMIOの実装</a>
       <ul class="toc toc-3">
-        <li class="toc-section"><a href="./04-impl-rv32i.html#h3-1">3.1 CPUは何をやっているのか?</a></li>
-        <li class="toc-section"><a href="./04-impl-rv32i.html#h3-2">3.2 プロジェクトの作成</a></li>
-        <li class="toc-section"><a href="./04-impl-rv32i.html#h3-3">3.3 定数の定義</a></li>
-        <li class="toc-section"><a href="./04-impl-rv32i.html#h3-4">3.4 メモリ</a></li>
-        <li class="toc-section"><a href="./04-impl-rv32i.html#h3-5">3.5 最上位モジュールの作成</a></li>
-        <li class="toc-section"><a href="./04-impl-rv32i.html#h3-6">3.6 命令フェッチ</a></li>
-        <li class="toc-section"><a href="./04-impl-rv32i.html#h3-7">3.7 命令のデコードと即値の生成</a></li>
-        <li class="toc-section"><a href="./04-impl-rv32i.html#h3-8">3.8 レジスタの定義と読み込み</a></li>
-        <li class="toc-section"><a href="./04-impl-rv32i.html#h3-9">3.9 ALUによる計算の実装</a></li>
-        <li class="toc-section"><a href="./04-impl-rv32i.html#h3-10">3.10 レジスタに結果を書き込む</a></li>
-        <li class="toc-section"><a href="./04-impl-rv32i.html#h3-11">3.11 ロード命令とストア命令の実装</a></li>
-        <li class="toc-section"><a href="./04-impl-rv32i.html#h3-12">3.12 ジャンプ命令、分岐命令の実装</a></li>
+        <li class="toc-section"><a href="./12-impl-mmio.html#h3-1">3.1 MMIOとは何か？</a></li>
+        <li class="toc-section"><a href="./12-impl-mmio.html#h3-2">3.2 アーキテクチャの変更</a></li>
+        <li class="toc-section"><a href="./12-impl-mmio.html#h3-3">3.3 RAMのベースアドレスの変更</a></li>
+        <li class="toc-section"><a href="./12-impl-mmio.html#h3-4">3.4 ROMの実装</a></li>
+        <li class="toc-section"><a href="./12-impl-mmio.html#h3-5">3.5 デバッグ用IOの実装</a></li>
       </ul>
     </li>
-    <li class="toc-chapter"><a href="./04a-zicsr.html">4 Zicsr拡張の実装</a>
+    <li class="toc-chapter"><a href="./13-impl-a.html">4 A拡張の実装</a>
       <ul class="toc toc-3">
-        <li class="toc-section"><a href="./04a-zicsr.html#h4-1">4.1 CSRとは何か?</a></li>
-        <li class="toc-section"><a href="./04a-zicsr.html#h4-2">4.2 CSR命令のデコード</a></li>
-        <li class="toc-section"><a href="./04a-zicsr.html#h4-3">4.3 csrunitモジュールの実装</a></li>
-        <li class="toc-section"><a href="./04a-zicsr.html#h4-4">4.4 ECALL命令の実装</a></li>
-        <li class="toc-section"><a href="./04a-zicsr.html#h4-5">4.5 MRET命令の実装</a></li>
+        <li class="toc-section"><a href="./13-impl-a.html#h4-1">4.1 概要</a></li>
+        <li class="toc-section"><a href="./13-impl-a.html#h4-2">4.2 デコーダの実装</a></li>
+        <li class="toc-section"><a href="./13-impl-a.html#h4-3">4.3 Zalrsc拡張の実装</a></li>
+        <li class="toc-section"><a href="./13-impl-a.html#h4-4">4.4 Zaamo拡張の実装</a></li>
       </ul>
     </li>
-    <li class="toc-chapter"><a href="./04b-riscvtests.html">5 riscv-testsによるテスト</a>
+    <li class="toc-chapter"><a href="./14-impl-c.html">5 C拡張の実装</a>
       <ul class="toc toc-3">
-        <li class="toc-section"><a href="./04b-riscvtests.html#h5-1">5.1 riscv-testsとは何か?</a></li>
-        <li class="toc-section"><a href="./04b-riscvtests.html#h5-2">5.2 riscv-testsのビルド</a></li>
-        <li class="toc-section"><a href="./04b-riscvtests.html#h5-3">5.3 テスト内容の確認</a></li>
-        <li class="toc-section"><a href="./04b-riscvtests.html#h5-4">5.4 テストの終了検知</a></li>
-        <li class="toc-section"><a href="./04b-riscvtests.html#h5-5">5.5 テストの実行</a></li>
-        <li class="toc-section"><a href="./04b-riscvtests.html#h5-6">5.6 複数のテストの自動実行</a></li>
-      </ul>
-    </li>
-    <li class="toc-chapter"><a href="./05-impl-rv64i.html">6 RV64Iの実装</a>
-      <ul class="toc toc-3">
-        <li class="toc-section"><a href="./05-impl-rv64i.html#h6-1">6.1 XLENの変更</a></li>
-        <li class="toc-section"><a href="./05-impl-rv64i.html#h6-2">6.2 ADD[I]W、SUBW命令の実装</a></li>
-        <li class="toc-section"><a href="./05-impl-rv64i.html#h6-3">6.3 SLL[I]W、SRL[I]W、SRA[I]W命令の実装</a></li>
-        <li class="toc-section"><a href="./05-impl-rv64i.html#h6-4">6.4 LWU命令の実装</a></li>
-        <li class="toc-section"><a href="./05-impl-rv64i.html#h6-5">6.5 LD、SD命令の実装</a></li>
-      </ul>
-    </li>
-    <li class="toc-chapter"><a href="./05a-pipeline.html">7 CPUのパイプライン化</a>
-      <ul class="toc toc-3">
-        <li class="toc-section"><a href="./05a-pipeline.html#h7-1">7.1 CPUの速度</a></li>
-        <li class="toc-section"><a href="./05a-pipeline.html#h7-2">7.2 パイプライン処理の実装</a></li>
-        <li class="toc-section"><a href="./05a-pipeline.html#h7-3">7.3 データ依存の対処</a></li>
-      </ul>
-    </li>
-    <li class="toc-chapter"><a href="./05b-synth.html">8 CPUの合成</a>
-      <ul class="toc toc-3">
-        <li class="toc-section"><a href="./05b-synth.html#h8-1">8.1 FPGAとは何か？</a></li>
-        <li class="toc-section"><a href="./05b-synth.html#h8-2">8.2 LEDの制御</a></li>
-        <li class="toc-section"><a href="./05b-synth.html#h8-3">8.3 FPGAへの合成① (Tang Nano 9K)</a></li>
-        <li class="toc-section"><a href="./05b-synth.html#h8-4">8.4 FPGAへの合成② (PYNQ-Z1)</a></li>
+        <li class="toc-section"><a href="./14-impl-c.html#h5-1">5.1 概要</a></li>
+        <li class="toc-section"><a href="./14-impl-c.html#h5-2">5.2 命令フェッチモジュールの実装</a></li>
+        <li class="toc-section"><a href="./14-impl-c.html#h5-3">5.3 RVC命令のデコード</a></li>
       </ul>
     </li>
   </ul>
 </li>
-<li class="toc-part">第II部 RV64IMACの実装
+<li class="toc-part">第II部 特権/割り込みの実装
   <ul class="toc toc-2">
-    <li class="toc-chapter"><a href="./09-impl-m.html">9 M拡張の実装</a>
+    <li class="toc-chapter"><a href="./20-mmode-csr.html">6 M-modeの実装 (1. CSRの実装)</a>
       <ul class="toc toc-3">
-        <li class="toc-section"><a href="./09-impl-m.html#h9-1">9.1 概要</a></li>
-        <li class="toc-section"><a href="./09-impl-m.html#h9-2">9.2 MUL、MULH[[S]U]、MULW命令の実装</a></li>
-        <li class="toc-section"><a href="./09-impl-m.html#h9-3">9.3 DIV[U]、DIV[U]W、REM[U]、REM[U]W命令の実装</a></li>
+        <li class="toc-section"><a href="./20-mmode-csr.html#h6-1">6.1 概要</a></li>
+        <li class="toc-section"><a href="./20-mmode-csr.html#h6-2">6.2 CSRのアドレスの追加</a></li>
+        <li class="toc-section"><a href="./20-mmode-csr.html#h6-3">6.3 misaレジスタ</a></li>
+        <li class="toc-section"><a href="./20-mmode-csr.html#h6-4">6.4 mimpidレジスタ</a></li>
+        <li class="toc-section"><a href="./20-mmode-csr.html#h6-5">6.5 mhartidレジスタ</a></li>
+        <li class="toc-section"><a href="./20-mmode-csr.html#h6-6">6.6 mstatusレジスタ</a></li>
+        <li class="toc-section"><a href="./20-mmode-csr.html#h6-7">6.7 mcycleレジスタ</a></li>
+        <li class="toc-section"><a href="./20-mmode-csr.html#h6-8">6.8 minstretレジスタ</a></li>
+        <li class="toc-section"><a href="./20-mmode-csr.html#h6-9">6.9 mscratchレジスタ</a></li>
       </ul>
     </li>
+    <li class="toc-chapter"><a href="./21-impl-interrupt.html">7 M-modeの実装 (2. 割り込みの実装)</a>
+      <ul class="toc toc-3">
+        <li class="toc-section"><a href="./21-impl-interrupt.html#h7-1">7.1 割り込みとは何か？</a></li>
+        <li class="toc-section"><a href="./21-impl-interrupt.html#h7-2">7.2 ACLINT</a></li>
+        <li class="toc-section"><a href="./21-impl-interrupt.html#h7-3">7.3 ソフトウェア割り込みの実装</a></li>
+        <li class="toc-section"><a href="./21-impl-interrupt.html#h7-4">7.4 タイマ割り込みの実装</a></li>
+        <li class="toc-section"><a href="./21-impl-interrupt.html#h7-5">7.5 WFI命令の実装</a></li>
+        <li class="toc-section"><a href="./21-impl-interrupt.html#h7-6">7.6 Zicntr拡張の実装</a></li>
+      </ul>
+    </li>
+    <li class="toc-chapter"><a href="./22-umode-csr.html">8 U-modeの実装</a>
+      <ul class="toc toc-3">
+        <li class="toc-section"><a href="./22-umode-csr.html#h8-1">8.1 misaレジスタの変更</a></li>
+        <li class="toc-section"><a href="./22-umode-csr.html#h8-2">8.2 mstatusのUXL、TWビットの実装</a></li>
+        <li class="toc-section"><a href="./22-umode-csr.html#h8-3">8.3 権限レベルの実装</a></li>
+        <li class="toc-section"><a href="./22-umode-csr.html#h8-4">8.4 CSRの読み書き権限の確認</a></li>
+        <li class="toc-section"><a href="./22-umode-csr.html#h8-5">8.5 mcounterenレジスタの実装</a></li>
+        <li class="toc-section"><a href="./22-umode-csr.html#h8-6">8.6 MRET命令の実行制限</a></li>
+        <li class="toc-section"><a href="./22-umode-csr.html#h8-7">8.7 トラップ処理の変更</a></li>
+      </ul>
+    </li>
+    <li class="toc-chapter"><a href="./23-smode-csr.html">9 S-modeの実装</a>
+      <ul class="toc toc-3">
+        <li class="toc-section"><a href="./23-smode-csr.html#h9-1">9.1 CSRのアドレスの追加</a></li>
+        <li class="toc-section"><a href="./23-smode-csr.html#h9-2">9.2 misaレジスタの変更</a></li>
+        <li class="toc-section"><a href="./23-smode-csr.html#h9-3">9.3 mstatusレジスタの変更</a></li>
+        <li class="toc-section"><a href="./23-smode-csr.html#h9-4">9.4 scounterenレジスタの実装</a></li>
+        <li class="toc-section"><a href="./23-smode-csr.html#h9-5">9.5 sstatusレジスタの実装</a></li>
+        <li class="toc-section"><a href="./23-smode-csr.html#h9-6">9.6 stvecレジスタの実装</a></li>
+        <li class="toc-section"><a href="./23-smode-csr.html#h9-7">9.7 sscratchレジスタの実装</a></li>
+        <li class="toc-section"><a href="./23-smode-csr.html#h9-8">9.8 sepcレジスタの実装</a></li>
+        <li class="toc-section"><a href="./23-smode-csr.html#h9-9">9.9 scauseレジスタの実装</a></li>
+        <li class="toc-section"><a href="./23-smode-csr.html#h9-10">9.10 stvalレジスタの実装</a></li>
+        <li class="toc-section"><a href="./23-smode-csr.html#h9-11">9.11 トラップ処理の変更</a></li>
+        <li class="toc-section"><a href="./23-smode-csr.html#h9-12">9.12 トラップの委譲の実装</a></li>
+      </ul>
+    </li>
+    <li class="toc-chapter"><a href="./24-impl-paging.html">10 仮想記憶システムの実装</a>
+      <ul class="toc toc-3">
+        <li class="toc-section"><a href="./24-impl-paging.html#h10-1">10.1 仮想記憶とは何か</a></li>
+        <li class="toc-section"><a href="./24-impl-paging.html#h10-2">10.2 RISC-Vのページング</a></li>
+        <li class="toc-section"><a href="./24-impl-paging.html#h10-3">10.3 メモリアクセス例外の実装</a></li>
+        <li class="toc-section"><a href="./24-impl-paging.html#h10-4">10.4 アドレス変換モジュールの作成</a></li>
+        <li class="toc-section"><a href="./24-impl-paging.html#h10-5">10.5 satpレジスタの作成</a></li>
+        <li class="toc-section"><a href="./24-impl-paging.html#h10-6">10.6 mstatusのMXR、SUMビットの作成</a></li>
+        <li class="toc-section"><a href="./24-impl-paging.html#h10-7">10.7 Sv39の実装</a></li>
+        <li class="toc-section"><a href="./24-impl-paging.html#h10-8">10.8 mstatusのMPRVビットの実装</a></li>
+        <li class="toc-section"><a href="./24-impl-paging.html#h10-9">10.9 SFENCE.VMA命令の実装</a></li>
+        <li class="toc-section"><a href="./24-impl-paging.html#h10-10">10.10 mstatusのTVMビットの実装</a></li>
+        <li class="toc-section"><a href="./24-impl-paging.html#h10-11">10.11 satp、mstatusレジスタの変更の対応</a></li>
+      </ul>
+    </li>
+    <li class="toc-chapter"><a href="./25-impl-plic.html">11 PLICの実装</a>
+      <ul class="toc toc-3">
+        <li class="toc-section"><a href="./25-impl-plic.html#h11-1">11.1 概要</a></li>
+        <li class="toc-section"><a href="./25-impl-plic.html#h11-2">11.2 デバッグ入力の実装</a></li>
+        <li class="toc-section"><a href="./25-impl-plic.html#h11-3">11.3 PLICモジュールの作成</a></li>
+        <li class="toc-section"><a href="./25-impl-plic.html#h11-4">11.4 外部割込みの実装</a></li>
+      </ul>
+    </li>
+    <li class="toc-chapter"><a href="./26-run-linux.html">12 Linuxを動かす</a></li>
   </ul>
 </li>
     <li class="toc-chapter"><a href="./99-postface.html">あとがき</a>
@@ -168,7 +198,7 @@
         <nav class="page-navi">
 
 
-          <a href="00-preface.html" class="page-next">&#9654;</a>
+          <a href="10-impl-m.html" class="page-next">&#9654;</a>
 
         </nav>
         <br>
