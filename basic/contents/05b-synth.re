@@ -71,7 +71,7 @@ RISC-VのCSRのアドレス空間には、読み込みと書き込みができ�
 
 //footnote[riscv.isa.csr_addr][The RISC-V Instruction Set Manual Volume II: Privileged Architecture version 20240411 Table 3. Allocation of RISC-V CSR address ranges.]
 
-まず、CsrAddr型にLED制御用レジスタのアドレスを追加します(@<list>{csrunit.veryl.ledcsr-range.addr})。
+まず、@<code>{CsrAddr}型にLED制御用レジスタのアドレスを追加します(@<list>{csrunit.veryl.ledcsr-range.addr})。
 
 //list[csrunit.veryl.ledcsr-range.addr][LEDの制御用レジスタのアドレスを追加する (csrunit.veryl)]{
 #@maprange(scripts/05b/ledcsr-range/core/src/eei.veryl,addr)

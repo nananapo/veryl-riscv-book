@@ -44,8 +44,8 @@ APPENDIX:
 ## あとがき
 POSTDEF:
   - 99-postface.re
-  - 100-contribute.re
-  - bib.re
+  # - 100-contribute.re
+  # - bib.re
 ##
 ## 【Tips】
 ##
