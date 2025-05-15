@@ -85,9 +85,9 @@
 
 <h2 class="numbox"><a id="h2-2"></a><span class="secno">2.2</span> 例外情報の伝達</h2>
 
-<h3 class="none"><a id="h2-2-1"></a><span class="secno">2.2.1</span> Environment Call例外をIFステージで処理する</h3>
+<h3 class="none"><a id="h2-2-1"></a><span class="secno">2.2.1</span> Environment call from M-mode例外をIFステージで処理する</h3>
 <p>今のところ、ECALL命令による例外はMEM(CSR)ステージのcsrunitモジュールで例外判定、処理されています。ECALL命令によって例外が発生するかどうかは命令がECALLであるかどうかを判定すれば分かるため、命令をデコードする時点、つまりIDステージで判定できます。</p>
-<p>本章で実装する例外にはMEM(CSR)ステージよりも前で発生する例外があるため、IDステージから順に次のステージに例外の有無、causeを受け渡していく仕組みを作っておきます。</p>
+<p>本章で実装する例外にはMEMステージよりも前で発生する例外があるため、IDステージから順に次のステージに例外の有無、causeを受け渡していく仕組みを作っておきます。</p>
 <p>まず、例外が発生するかどうか、例外の種類を示す値をまとめた<code class="inline-code">ExceptionInfo</code>構造体を定義します(<span class="listref"><a href="./11-impl-exception.html#corectrl.veryl.exptinfo-range.ExceptionInfo">リスト2.1</a></span>)。</p>
 <div id="corectrl.veryl.exptinfo-range.ExceptionInfo" class="caption-code">
 <span class="caption">リスト2.1: リスト2.1: ExceptionInfo構造体を定義する (corectrl.veryl)</span>
@@ -98,7 +98,7 @@
     }
 </pre>
 </div>
-<p>EXステージ、MEM(CSR)ステージのFIFOのデータ型に構造体を追加します(<span class="listref"><a href="./11-impl-exception.html#core.veryl.exptinfo-range.exq_type">リスト2.2</a></span>、<span class="listref"><a href="./11-impl-exception.html#core.veryl.exptinfo-range.memq_type">リスト2.3</a></span>)。</p>
+<p>EXステージ、MEMステージのFIFOのデータ型に構造体を追加します(<span class="listref"><a href="./11-impl-exception.html#core.veryl.exptinfo-range.exq_type">リスト2.2</a></span>、<span class="listref"><a href="./11-impl-exception.html#core.veryl.exptinfo-range.memq_type">リスト2.3</a></span>)。</p>
 <div id="core.veryl.exptinfo-range.exq_type" class="caption-code">
 <span class="caption">リスト2.2: リスト2.2: EXステージのFIFOにExceptionInfoを追加する (core.veryl)</span>
 <pre class="list language-exq_type">    struct exq_type {
@@ -151,7 +151,7 @@
     }
 </pre>
 </div>
-<p>csrunitモジュールを変更します。<code class="inline-code">expt_info</code>ポートを追加して、MEM(CSR)ステージ以前の例外情報を受け取ります(<span class="listref"><a href="./11-impl-exception.html#csrunit.veryl.exptinfo-range.port">リスト2.6</a></span>、<span class="listref"><a href="./11-impl-exception.html#core.veryl.exptinfo-range.memreg">リスト2.7</a></span>、<span class="listref"><a href="./11-impl-exception.html#core.veryl.exptinfo-range.csru">リスト2.8</a></span>)。</p>
+<p>csrunitモジュールを変更します。<code class="inline-code">expt_info</code>ポートを追加して、MEMステージ以前の例外情報を受け取ります(<span class="listref"><a href="./11-impl-exception.html#csrunit.veryl.exptinfo-range.port">リスト2.6</a></span>、<span class="listref"><a href="./11-impl-exception.html#core.veryl.exptinfo-range.memreg">リスト2.7</a></span>、<span class="listref"><a href="./11-impl-exception.html#core.veryl.exptinfo-range.csru">リスト2.8</a></span>)。</p>
 <div id="csrunit.veryl.exptinfo-range.port" class="caption-code">
 <span class="caption">リスト2.6: リスト2.6: csrunitモジュールに例外情報を受け取るためのポートを追加する (csrunit.veryl)</span>
 <pre class="list language-port">module csrunit (
@@ -188,7 +188,7 @@
         rd_addr  : mems_rd_addr         ,
 </pre>
 </div>
-<p>ECALL命令かどうかを判定する<code class="inline-code">is_ecall</code>変数を削除して、例外の発生条件、例外の種類を示す値を変更します(<span class="listref"><a href="./11-impl-exception.html#csrunit.veryl.exptinfo-range.remove_ecall">リスト2.9</a></span>)。</p>
+<p>ECALL命令かどうかを判定する<code class="inline-code">is_ecall</code>変数を削除して、例外の発生条件、例外の種類を示す値を変更します(<span class="listref"><a href="./11-impl-exception.html#csrunit.veryl.exptinfo-range.remove_ecall">リスト2.9</a></span>、<span class="listref"><a href="./11-impl-exception.html#csrunit.veryl.exptinfo-range.expt">リスト2.10</a></span>)。</p>
 <div id="csrunit.veryl.exptinfo-range.remove_ecall" class="caption-code">
 <span class="caption">リスト2.9: リスト2.9: csrunitモジュールでのECALL命令の判定を削除する (csrunit.veryl)</span>
 <pre class="list language-remove_ecall">    // CSRR(W|S|C)[I]命令かどうか
@@ -576,7 +576,7 @@
 <div id="core.veryl.csrro-range.wb" class="caption-code">
 <span class="caption">リスト2.36: リスト2.36: トラップが発生しているとき、レジスタにデータを書き込まないようにする (core.veryl)</span>
 <pre class="list language-wb">    always_ff {
-        if wbs_valid &amp;&amp; wbs_ctrl.rwb_en &amp;&amp; wbq_rdata.raise_trap {
+        if wbs_valid &amp;&amp; wbs_ctrl.rwb_en &amp;&amp; !wbq_rdata.raise_trap {
             regfile[wbs_rd_addr] = wbs_wb_data;
         }
     }
@@ -585,13 +585,10 @@
 
 <h2 class="numbox"><a id="h2-5"></a><span class="secno">2.5</span> 命令アドレスのミスアライン例外</h2>
 <p>RISC-Vでは、命令アドレスがIALIGNビット境界に整列されていない場合にInstruction address misaligned例外が発生します。causeは<code class="inline-code">0</code>で、tvalは命令のアドレスになります。</p>
-<p><a href="./14-impl-c.html">第5章「C拡張の実装」</a>で実装するC拡張が実装されていない場合、IALIGNは<code class="inline-code">32</code>と定義されています。C拡張<sup><a id="fnb-cext-later" href="#fn-cext-later" class="noteref" epub:type="noteref">*6</a></sup>が定義されている場合は<code class="inline-code">16</code>になります。</p>
+<p><a href="./14-impl-c.html">第5章「C拡張の実装」</a>で実装するC拡張が実装されていない場合、IALIGNは<code class="inline-code">32</code>と定義されています。C拡張が定義されている場合は<code class="inline-code">16</code>になります。</p>
+<p>IALIGNビット境界に整列されていない命令アドレスになるのはジャンプ命令、分岐命令を実行する場合です<sup><a id="fnb-epc-tvec-mask" href="#fn-epc-tvec-mask" class="noteref" epub:type="noteref">*6</a></sup>。プログラムカウンタの遷移先が整列されていない場合、ジャンプ命令、または分岐命令で例外が発生します。分岐命令の場合、分岐が成立する場合にしか例外が発生しません。</p>
 <div class="footnote-list">
-<div class="footnote" id="fn-cext-later" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*6] </span>C拡張は<a href="./14-impl-c.html">第5章「C拡張の実装」</a>で解説、実装します。</p></div>
-</div><!--/.footnote-list-->
-<p>IALIGNビット境界に整列されていない命令アドレスになるのはジャンプ命令、分岐命令を実行する場合です<sup><a id="fnb-epc-tvec-mask" href="#fn-epc-tvec-mask" class="noteref" epub:type="noteref">*7</a></sup>。プログラムカウンタの遷移先が整列されていない場合、ジャンプ命令、または分岐命令で例外が発生します。分岐命令の場合、分岐が成立する場合にしか例外が発生しません。</p>
-<div class="footnote-list">
-<div class="footnote" id="fn-epc-tvec-mask" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*7] </span>mepc、mtvecはIALIGNビットに整列されたアドレスしか書き込めないため、トラップ後のアドレスは常に整列されています。</p></div>
+<div class="footnote" id="fn-epc-tvec-mask" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*6] </span>mepc、mtvecはIALIGNビットに整列されたアドレスしか書き込めないため、トラップ後のアドレスは常に整列されています。</p></div>
 </div><!--/.footnote-list-->
 <p><code class="inline-code">CsrCause</code>型にInstruction address misaligned例外のcauseを追加します(<span class="listref"><a href="./11-impl-exception.html#core.veryl.instmisalign-range.CsrCause">リスト2.37</a></span>)。</p>
 <div id="core.veryl.instmisalign-range.CsrCause" class="caption-code">
@@ -622,9 +619,9 @@
 </div>
 
 <h2 class="numbox"><a id="h2-6"></a><span class="secno">2.6</span> ロードストア命令のミスアライン例外</h2>
-<p>RISC-Vでは、ロード、ストア命令でアクセスするメモリのアドレスが、ロード、ストアするビット幅に整列されていない場合に、それぞれLoad address misaligned例外、Store AMO address misaligned例外が発生します<sup><a id="fnb-enable-misalign" href="#fn-enable-misalign" class="noteref" epub:type="noteref">*8</a></sup>。例えばLW命令は4バイトに整列されたアドレス、LD命令は8バイトに整列されたアドレスにしかアクセスできません。causeはそれぞれ<code class="inline-code">4</code>、<code class="inline-code">6</code>で、tvalはアクセスするメモリのアドレスになります。</p>
+<p>RISC-Vでは、ロード、ストア命令でアクセスするメモリのアドレスが、ロード、ストアするビット幅に整列されていない場合に、それぞれLoad address misaligned例外、Store AMO address misaligned例外が発生します<sup><a id="fnb-enable-misalign" href="#fn-enable-misalign" class="noteref" epub:type="noteref">*7</a></sup>。例えばLW命令は4バイトに整列されたアドレス、LD命令は8バイトに整列されたアドレスにしかアクセスできません。causeはそれぞれ<code class="inline-code">4</code>、<code class="inline-code">6</code>で、tvalはアクセスするメモリのアドレスになります。</p>
 <div class="footnote-list">
-<div class="footnote" id="fn-enable-misalign" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*8] </span>例外を発生させず、そのようなロードストアをサポートすることもできます。本書ではCPUを単純に実装するために例外とします。</p></div>
+<div class="footnote" id="fn-enable-misalign" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*7] </span>例外を発生させず、そのようなロードストアをサポートすることもできます。本書ではCPUを単純に実装するために例外とします。</p></div>
 </div><!--/.footnote-list-->
 <p><code class="inline-code">CsrCause</code>型に例外のcauseを追加します(<span class="listref"><a href="./11-impl-exception.html#eei.veryl.memmisalign-range.CsrCause">リスト2.39</a></span>)。</p>
 <div id="eei.veryl.memmisalign-range.CsrCause" class="caption-code">
