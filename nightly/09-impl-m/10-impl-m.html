@@ -44,7 +44,7 @@
       </ul>
     </li>
     <li class="toc-chapter"><a href="./11-impl-exception.html">2 例外の実装</a></li>
-    <li class="toc-chapter"><a href="./12-impl-mmio.html">3 MMIOの実装</a></li>
+    <li class="toc-chapter"><a href="./12-impl-mmio.html">3 Memory-mapped I/Oの実装</a></li>
     <li class="toc-chapter"><a href="./13-impl-a.html">4 A拡張の実装</a></li>
     <li class="toc-chapter"><a href="./14-impl-c.html">5 C拡張の実装</a></li>
   </ul>
@@ -61,8 +61,6 @@
   </ul>
 </li>
     <li class="toc-chapter"><a href="./99-postface.html">あとがき</a></li>
-    <li class="toc-chapter"><a href="./100-contribute.html">このプロジェクトに貢献する</a></li>
-    <li class="toc-chapter"><a href="./bib.html">参考文献</a></li>
 </ul>
       </div>
       <div class="page-inner">
@@ -474,7 +472,7 @@ module muldivunit (
 <li>符号無しで積を計算する</li>
 <li>計算結果の符号を修正する</li>
 </ol>
-<p>絶対値で計算することで乗算の実行途中で符号ビットを考慮する必要がなくなり、既に実装してある符号無しの乗算器だけで符号付きの乗算を実現できます。</p>
+<p>絶対値で計算することで符号ビットを考慮する必要がなくなり、既に実装してある符号無しの乗算器を変更せずに符号付きの乗算を実現できます。</p>
 
 <h3 class="none"><a id="h1-6-2"></a><span class="secno">1.6.2</span> 符号付き乗算を実装する</h3>
 <p><code class="inline-code">WIDTH</code>ビットの符号付きの値を<code class="inline-code">WIDTH</code>ビットの<b>符号無し</b>の絶対値に変換するabs関数を作成します(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.mulmulh-range.abs">リスト1.12</a></span>)。abs関数は、値のMSBが<code class="inline-code">1</code>ならビットを反転して<code class="inline-code">1</code>を足すことで符号を反転しています。最小値<code class="inline-code">-2 ** (WIDTH - 1)</code>の絶対値も求められることを確認してください。</p>
@@ -860,7 +858,7 @@ module muldivunit (
 
 <h3 class="none"><a id="h1-9-1"></a><span class="secno">1.9.1</span> 符号付き除算を符号無し除算器で実現する</h3>
 <p>DIV、REM命令は、それぞれDIVU、REMU命令の動作を符号付きに変えた命令です。本章では、符号付き乗算と同じように値を絶対値に変換して計算することで符号付き除算を実現します。</p>
-<p>RISC-Vの符号付き除算の結果は0の方向に丸められた整数になり、剰余演算の結果は被除数と同じ符号になります。符号付き剰余の絶対値は符号無し剰余の結果と一致するため、絶対値で計算してから符号を戻すことで符号無し除算器だけで符号付きの剰余演算を実現できます。</p>
+<p>RISC-Vの符号付き除算の結果は0の方向に丸められた整数になり、剰余演算の結果は被除数と同じ符号になります。符号付き剰余の絶対値は符号無し剰余の結果と一致するため、絶対値で計算してから符号を戻すことで、符号無し除算器だけで符号付きの剰余演算を実現できます。</p>
 
 <h3 class="none"><a id="h1-9-2"></a><span class="secno">1.9.2</span> 符号付き除算を実装する</h3>
 <p>abs関数を利用して、DIV、REM命令のときにdivunitに渡す値を絶対値に設定します(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.divrem-range.op">リスト1.32</a></span><span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.divrem-range.du">リスト1.33</a></span>)。</p>
