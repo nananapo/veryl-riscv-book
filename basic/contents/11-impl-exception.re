@@ -29,13 +29,13 @@ RISC-Vでは、命令によって引き起こされる異常な状態のこと�
 
 == 例外情報の伝達
 
-=== Environment Call例外をIFステージで処理する
+=== Environment call from M-mode例外をIFステージで処理する
 
 今のところ、ECALL命令による例外はMEM(CSR)ステージのcsrunitモジュールで例外判定、処理されています。
 ECALL命令によって例外が発生するかどうかは命令がECALLであるかどうかを判定すれば分かるため、
 命令をデコードする時点、つまりIDステージで判定できます。
 
-本章で実装する例外にはMEM(CSR)ステージよりも前で発生する例外があるため、
+本章で実装する例外にはMEMステージよりも前で発生する例外があるため、
 IDステージから順に次のステージに例外の有無、causeを受け渡していく仕組みを作っておきます。
 
 まず、例外が発生するかどうか、例外の種類を示す値をまとめた@<code>{ExceptionInfo}構造体を定義します
@@ -51,7 +51,7 @@ IDステージから順に次のステージに例外の有無、causeを受け�
 #@end
 //}
 
-EXステージ、MEM(CSR)ステージのFIFOのデータ型に構造体を追加します
+EXステージ、MEMステージのFIFOのデータ型に構造体を追加します
 (@<list>{core.veryl.exptinfo-range.exq_type}、@<list>{core.veryl.exptinfo-range.memq_type})。
 
 //list[core.veryl.exptinfo-range.exq_type][EXステージのFIFOにExceptionInfoを追加する (core.veryl)]{
@@ -117,7 +117,7 @@ EXステージで例外は発生しないので、
 //}
 
 csrunitモジュールを変更します。
-@<code>{expt_info}ポートを追加して、MEM(CSR)ステージ以前の例外情報を受け取ります
+@<code>{expt_info}ポートを追加して、MEMステージ以前の例外情報を受け取ります
 (
 @<list>{csrunit.veryl.exptinfo-range.port}、
 @<list>{core.veryl.exptinfo-range.memreg}、
@@ -165,7 +165,10 @@ module csrunit (
 
 ECALL命令かどうかを判定する@<code>{is_ecall}変数を削除して、
 例外の発生条件、例外の種類を示す値を変更します
-(@<list>{csrunit.veryl.exptinfo-range.remove_ecall})。
+(
+@<list>{csrunit.veryl.exptinfo-range.remove_ecall}、
+@<list>{csrunit.veryl.exptinfo-range.expt}
+)。
 
 //list[csrunit.veryl.exptinfo-range.remove_ecall][csrunitモジュールでのECALL命令の判定を削除する (csrunit.veryl)]{
 #@maprange(scripts/11/exptinfo-range/core/src/csrunit.veryl,remove_ecall)
@@ -662,7 +665,7 @@ csrunitモジュールでトラップを起こすようになりました。
 //list[core.veryl.csrro-range.wb][トラップが発生しているとき、レジスタにデータを書き込まないようにする (core.veryl)]{
 #@maprange(scripts/11/csrro-range/core/src/core.veryl,wb)
     always_ff {
-        if wbs_valid && wbs_ctrl.rwb_en && wbq_rdata.raise_trap {
+        if wbs_valid && wbs_ctrl.rwb_en && !wbq_rdata.raise_trap {
             regfile[wbs_rd_addr] = wbs_wb_data;
         }
     }
@@ -677,9 +680,7 @@ causeは@<code>{0}で、tvalは命令のアドレスになります。
 
 @<chapref>{14-impl-c}で実装するC拡張が実装されていない場合、
 IALIGNは@<code>{32}と定義されています。
-C拡張@<fn>{cext-later}が定義されている場合は@<code>{16}になります。
-
-//footnote[cext-later][C拡張は@<chapref>{14-impl-c}で解説、実装します。]
+C拡張が定義されている場合は@<code>{16}になります。
 
 IALIGNビット境界に整列されていない命令アドレスになるのはジャンプ命令、分岐命令を実行する場合です@<fn>{epc-tvec-mask}。
 プログラムカウンタの遷移先が整列されていない場合、ジャンプ命令、または分岐命令で例外が発生します。
