@@ -8,7 +8,7 @@
 
     <link rel="stylesheet" type="text/css" href="css/normalize.css" />
     <link rel="stylesheet" type="text/css" href="css/webstyle.css" />
-    <link rel="next" title="M-modeの実装 (2. 割り込みの実装)" href="21-impl-interrupt.html">
+    <link rel="next" title="M-modeの実装 (2. 割り込み、Zicntr拡張の実装)" href="21-impl-interrupt.html">
     <link rel="prev" title="C拡張の実装" href="14-impl-c.html">
     <meta name="generator" content="Re:VIEW Starter">
 
@@ -52,7 +52,7 @@
         <li class="toc-section"><a href="./20-mmode-csr.html#h6-9">6.9 mscratchレジスタ</a></li>
       </ul>
     </li>
-    <li class="toc-chapter"><a href="./21-impl-interrupt.html">7 M-modeの実装 (2. 割り込みの実装)</a></li>
+    <li class="toc-chapter"><a href="./21-impl-interrupt.html">7 M-modeの実装 (2. 割り込み、Zicntr拡張の実装)</a></li>
     <li class="toc-chapter"><a href="./22-umode-csr.html">8 U-modeの実装</a></li>
     <li class="toc-chapter"><a href="./23-smode-csr.html">9 S-modeの実装</a></li>
     <li class="toc-chapter"><a href="./24-impl-paging.html">10 仮想記憶システムの実装</a></li>
@@ -70,8 +70,32 @@
   <h1 class="boldlines center twolines"><a id="h6"></a><span class="secno">第6章</span> <br/>M-modeの実装 (1. CSRの実装)</h1>
 
 <h2 class="numbox"><a id="h6-1"></a><span class="secno">6.1</span> 概要</h2>
-<p>特権とは何か？</p>
-<p>実装するレジスタとセクションの対応</p>
+<p>「第II部 RV64IMACの実装」では、RV64IMACと例外、MMIOを実装しました。「第III部 特権/割り込みの実装」次のような機能を実装します。</p>
+<ul>
+<li>特権 (M-mode、S-mode、U-mode)
+</li>
+<li>仮想記憶システム(ページング)
+</li>
+<li>割り込み(CLINT、PLIC)
+</li>
+</ul>
+
+<h3 class="none"><a id="h6-1-1"></a><span class="secno">6.1.1</span> 特権レベルとは何か？</h3>
+<p>CPUで動くアプリケーションは様々ですが、多くのアプリケーションはOS(Operating System、オペレーティングシステム)の上で動くように作成されています。「OSの上で動く」とは、アプリケーションはOSの機能を使い、OSに管理されながら実行されるということです。</p>
+<p>多くのOSはデバイスやメモリなどのリソースの管理を行い、アプリケーションに対して簡単にそれを扱うためのインターフェースを提供します。また、アプリケーションのデータを別のアプリケーションから保護したり、OSが提供する方法でしかデバイスにアクセスできなくするセキュリティ機能も備えています。</p>
+<p>セキュリティ機能を実現するためには、OSがアプリケーションを実行するときにCPUが提供する一部の機能を制限する機能が必要です。RISC-Vでは、この機能を特権レベル(privilege level)によって提供しています。ほとんどの特権レベルの機能はCSRを通じて提供されます。</p>
+<p>特権レベルは次の3種類<sup><a id="fnb-virtualization" href="#fn-virtualization" class="noteref" epub:type="noteref">*1</a></sup>が用意されています(TODO table)。それぞれの特権レベルは2ビットの数値で表すことができます。</p>
+<p>TODO table</p>
+<div class="footnote-list">
+<div class="footnote" id="fn-virtualization" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>V拡張が実装されている場合、さらに仮想化のためのレベルが追加されます。</p></div>
+</div><!--/.footnote-list-->
+<p>高い特権レベルには低い特権レベルの機能を制限する機能があったり、高い特権レベルでしか利用できない機能が定義されています。</p>
+
+<h3 class="none"><a id="h6-1-2"></a><span class="secno">6.1.2</span> 特権レベルの実装順序</h3>
+<p>RISC-VのCPUに特権レベルを実装するとき、TODOテーブルのいずれかの構成にする必要があります。特権レベルを実装していないときはM-modeのみになります。</p>
+<p>TODO M, MU, MSUテーブル</p>
+<p>本章ではM-mode向けのCSRの一部を実装します。実装する機能、レジスタと章の対応は表TODOの通りです</p>
+<p>table 実装する機能とレジスタと章の対応</p>
 
 <h2 class="numbox"><a id="h6-2"></a><span class="secno">6.2</span> CSRのアドレスの追加</h2>
 

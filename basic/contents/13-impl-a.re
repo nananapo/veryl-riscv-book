@@ -152,7 +152,7 @@ amounitモジュールにA拡張の操作を指示するために、データ用
 memunitモジュールとamounitモジュールの間のインターフェースを新しく定義します。
 
 membus_ifインターフェースに@<code>{is_amo}フラグ、@<code>{aq}ビット、@<code>{rl}ビット、@<code>{AMOOp}型を追加で定義したインターフェースを作成します。
-@<Code>{src/core_data_if.veryl}を作成し、次のように記述します
+@<code>{src/core_data_if.veryl}を作成し、次のように記述します
 ()。
 @<code>{wmask}を@<code>{DATA_WIDTH}ビットに展開する関数も定義しています。
 
@@ -179,18 +179,18 @@ amounitモジュールでLR.W命令とLR.D命令を区別する必要はあり�
 amounitモジュールに予約セットを作成します
 ()。
 
-//list[][]{ 
+//list[][]{
 //}
 
-//list[][]{ 
+//list[][]{
 //}
 
 LR命令を実行するとき、予約セットにアドレスを登録し、ロード結果を返すようにします。
 
-//list[][]{ 
+//list[][]{
 //}
 
-//list[][]{ 
+//list[][]{
 //}
 
 === SC.W、SC.D命令を実装する

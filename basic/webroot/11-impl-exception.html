@@ -49,7 +49,7 @@
 <li class="toc-part">第II部 特権/割り込みの実装
   <ul class="toc toc-2">
     <li class="toc-chapter"><a href="./20-mmode-csr.html">6 M-modeの実装 (1. CSRの実装)</a></li>
-    <li class="toc-chapter"><a href="./21-impl-interrupt.html">7 M-modeの実装 (2. 割り込みの実装)</a></li>
+    <li class="toc-chapter"><a href="./21-impl-interrupt.html">7 M-modeの実装 (2. 割り込み、Zicntr拡張の実装)</a></li>
     <li class="toc-chapter"><a href="./22-umode-csr.html">8 U-modeの実装</a></li>
     <li class="toc-chapter"><a href="./23-smode-csr.html">9 S-modeの実装</a></li>
     <li class="toc-chapter"><a href="./24-impl-paging.html">10 仮想記憶システムの実装</a></li>
@@ -67,13 +67,13 @@
   <h1 class="boldlines center twolines"><a id="h2"></a><span class="secno">第2章</span> <br/>例外の実装</h1>
 
 <h2 class="numbox"><a id="h2-1"></a><span class="secno">2.1</span> 例外とは何か?</h2>
-<p>CPUがソフトウェアを実行するとき、処理を中断したり終了したりしなければならないような異常な状態<sup><a id="fnb-unusual-condition" href="#fn-unusual-condition" class="noteref" epub:type="noteref">*1</a></sup>が発生することがあります。例えば、実行環境(EEI)がサポートしていない、または実行を禁止しているような不正な命令を実行しようとする場合です。このとき、CPUはどのような動作をすればいいのでしょうか？</p>
+<p>CPUがソフトウェアを実行するとき、処理を中断したり終了しなければならないような異常な状態<sup><a id="fnb-unusual-condition" href="#fn-unusual-condition" class="noteref" epub:type="noteref">*1</a></sup>が発生することがあります。例えば、実行環境(EEI)がサポートしていない、または実行を禁止しているような不正な命令を実行しようとする場合です。このとき、CPUはどのような動作をすればいいのでしょうか？</p>
 <div class="footnote-list">
 <div class="footnote" id="fn-unusual-condition" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>異常な状態(unusual condition)。予期しない(unexpected)事象と呼ぶ場合もあります。</p></div>
 </div><!--/.footnote-list-->
-<p>RISC-Vでは、命令によって引き起こされる異常な状態のことを<b>例外(Exception)</b>と呼び、例外が発生した場合には<b>トラップ(Trap)</b>を引き起こします。トラップとは例外、または割り込み(Interrupt)<sup><a id="fnb-interrupt" href="#fn-interrupt" class="noteref" epub:type="noteref">*2</a></sup>によってCPUの状態、制御を変更することです。具体的にはPCをトラップベクタ(trap vector)に移動したり、CSRを変更したりします。</p>
+<p>RISC-Vでは、命令によって引き起こされる異常な状態のことを<b>例外(Exception)</b>と呼び、例外が発生した場合には<b>トラップ(Trap)</b>を引き起こします。トラップとは例外、または割り込み(Interrupt)<sup><a id="fnb-interrupt" href="#fn-interrupt" class="noteref" epub:type="noteref">*2</a></sup>によってCPUの状態、制御を変更することです。具体的にはPCをトラップベクタ(trap vector)に移動したり、CSRを変更します。</p>
 <div class="footnote-list">
-<div class="footnote" id="fn-interrupt" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*2] </span>割り込みは<a href="./21-impl-interrupt.html">第7章「M-modeの実装 (2. 割り込みの実装)」</a>で実装します。</p></div>
+<div class="footnote" id="fn-interrupt" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*2] </span>割り込みは<a href="./21-impl-interrupt.html">第7章「M-modeの実装 (2. 割り込み、Zicntr拡張の実装)」</a>で実装します。</p></div>
 </div><!--/.footnote-list-->
 <p>本書では既にECALL命令の実行によって発生するEnvironment call from M-mode例外を実装しており、例外が発生したら次のように動作します。</p>
 <ol start="1" type="1">
@@ -583,7 +583,7 @@
 </pre>
 </div>
 
-<h2 class="numbox"><a id="h2-5"></a><span class="secno">2.5</span> 命令アドレスのミスアライン例外</h2>
+<h2 id="def-ialign" class="numbox"><a id="h2-5"></a><span class="secno">2.5</span> 命令アドレスのミスアライン例外</h2>
 <p>RISC-Vでは、命令アドレスがIALIGNビット境界に整列されていない場合にInstruction address misaligned例外が発生します。causeは<code class="inline-code">0</code>で、tvalは命令のアドレスになります。</p>
 <p><a href="./14-impl-c.html">第5章「C拡張の実装」</a>で実装するC拡張が実装されていない場合、IALIGNは<code class="inline-code">32</code>と定義されています。C拡張が定義されている場合は<code class="inline-code">16</code>になります。</p>
 <p>IALIGNビット境界に整列されていない命令アドレスになるのはジャンプ命令、分岐命令を実行する場合です<sup><a id="fnb-epc-tvec-mask" href="#fn-epc-tvec-mask" class="noteref" epub:type="noteref">*6</a></sup>。プログラムカウンタの遷移先が整列されていない場合、ジャンプ命令、または分岐命令で例外が発生します。分岐命令の場合、分岐が成立する場合にしか例外が発生しません。</p>

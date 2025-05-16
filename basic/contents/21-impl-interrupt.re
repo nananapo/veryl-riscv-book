@@ -1,4 +1,4 @@
-={21-impl-interrupt} M-modeの実装 (2. 割り込みの実装)
+= M-modeの実装 (2. 割り込み、Zicntr拡張の実装)
 
 == 割り込みとは何か？
 

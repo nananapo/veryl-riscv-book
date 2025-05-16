@@ -37,8 +37,10 @@
     <li class="toc-chapter"><a href="./14-impl-c.html">5 C拡張の実装</a>
       <ul class="toc toc-3">
         <li class="toc-section"><a href="./14-impl-c.html#h5-1">5.1 概要</a></li>
-        <li class="toc-section"><a href="./14-impl-c.html#h5-2">5.2 命令フェッチモジュールの実装</a></li>
-        <li class="toc-section"><a href="./14-impl-c.html#h5-3">5.3 RVC命令のデコード</a></li>
+        <li class="toc-section"><a href="./14-impl-c.html#h5-2">5.2 IALIGNの変更</a></li>
+        <li class="toc-section"><a href="./14-impl-c.html#h5-3">5.3 実装方針</a></li>
+        <li class="toc-section"><a href="./14-impl-c.html#h5-4">5.4 命令フェッチモジュールの実装</a></li>
+        <li class="toc-section"><a href="./14-impl-c.html#h5-5">5.5 RVC命令のデコード</a></li>
       </ul>
     </li>
   </ul>
@@ -46,7 +48,7 @@
 <li class="toc-part">第II部 特権/割り込みの実装
   <ul class="toc toc-2">
     <li class="toc-chapter"><a href="./20-mmode-csr.html">6 M-modeの実装 (1. CSRの実装)</a></li>
-    <li class="toc-chapter"><a href="./21-impl-interrupt.html">7 M-modeの実装 (2. 割り込みの実装)</a></li>
+    <li class="toc-chapter"><a href="./21-impl-interrupt.html">7 M-modeの実装 (2. 割り込み、Zicntr拡張の実装)</a></li>
     <li class="toc-chapter"><a href="./22-umode-csr.html">8 U-modeの実装</a></li>
     <li class="toc-chapter"><a href="./23-smode-csr.html">9 S-modeの実装</a></li>
     <li class="toc-chapter"><a href="./24-impl-paging.html">10 仮想記憶システムの実装</a></li>
@@ -64,21 +66,54 @@
   <h1 class="boldlines center twolines"><a id="h5"></a><span class="secno">第5章</span> <br/>C拡張の実装</h1>
 
 <h2 class="numbox"><a id="h5-1"></a><span class="secno">5.1</span> 概要</h2>
+<p>これまでに実装した命令はすべて32ビット幅のものでした。RISC-Vには32ビット幅以外の命令が定義されており、それぞれ命令の下位ビットで何ビット幅の命令か判断することができます(TODO 図)。</p>
+<p>TODO 図</p>
+<p>C拡張は16ビット幅の命令を定義する拡張です。よく使われる命令の幅を16ビットに圧縮できるようにすることでコードサイズを削減できます。これ以降、C拡張によって導入される16ビット幅の命令のことをRVC命令と呼びます。</p>
+<p>全てのRVC命令には同じ操作をする32ビット幅の命令が存在します<sup><a id="fnb-zc-pseudo" href="#fn-zc-pseudo" class="noteref" epub:type="noteref">*1</a></sup>。</p>
+<div class="footnote-list">
+<div class="footnote" id="fn-zc-pseudo" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>Zc*拡張の一部の命令は複数の命令になります</p></div>
+</div><!--/.footnote-list-->
+<p>RV32IのCPUに実装されるC拡張には表TODOのRVC命令が定義されています。RV64IのCPUに実装されるC拡張には表TODOに加えて表TODOのRVC命令が定義されています。一部のRV32IのRVC命令はRV64Iで別の命令に置き換わっていることに注意してください。</p>
+<p>表TODO表TODO</p>
+<p>C拡張は浮動小数点命令をサポートするF、D拡張が実装されている場合に他の命令を定義しますが、基本編ではF、D拡張を実装しないため解説しません。</p>
 
-<h3 class="none"><a id="h5-1-1"></a><span class="secno">5.1.1</span> 実装方針</h3>
+<h2 class="numbox"><a id="h5-2"></a><span class="secno">5.2</span> IALIGNの変更</h2>
+<p>TODO 図</p>
+<p>「<a href="11-impl-exception.html#h2-5">2.5 命令アドレスのミスアライン例外</a>」で解説したように、命令はIALIGNビットに整列したアドレスに配置されます。C拡張はIALIGNによる制限を16ビットに緩め、全ての命令が16ビットに整列されたアドレスに配置されるように変更します。これにより、RVC命令と32ビット幅の命令の組み合わせがあったとしても効果的にコードサイズを削減することができます(TODO 図)。</p>
+<p>eeiパッケージのIALIGNを変更します()。</p>
+<div class="caption-code">
+<pre class="emlist">
+</pre>
+</div>
+<p>mepcレジスタの書き込みマスクを変更して、トラップ時のジャンプ先アドレスに16ビットに整列されたアドレスを指定できるようにします()。mtvecレジスタの下位2ビットはモードを指定するために使用されているため、変更の必要はありません。</p>
+<div class="caption-code">
+<pre class="emlist">
+</pre>
+</div>
+<p>命令アドレスのミスアライン例外の判定を変更します。IALIGNが16の場合は例外が発生しないようにします()。ジャンプ、分岐命令は2バイト単位のアドレスしか指定できないため、C拡張が実装されている場合には例外が発生しません。</p>
+<div class="caption-code">
+<pre class="emlist">
+</pre>
+</div>
 
-<h2 class="numbox"><a id="h5-2"></a><span class="secno">5.2</span> 命令フェッチモジュールの実装</h2>
+<h2 class="numbox"><a id="h5-3"></a><span class="secno">5.3</span> 実装方針</h2>
+<p>本章では次の順序でC拡張を実装します。</p>
+<p>1. 命令フェッチ処理をcoreモジュールから分離する2. 16ビットに整列されたアドレスに配置された32ビット幅の命令を処理できるようにする3. RVC命令を32ビット幅の命令に変換するモジュールを作成する4. RVC命令をIFステージで扱えるようにする</p>
+<p>最終的な命令フェッチ処理の構成は図TODOのようになります。</p>
+<p>TODO core &lt;-&gt; inst_fetcher &lt;-&gt; memの図</p>
 
-<h3 class="none"><a id="h5-2-1"></a><span class="secno">5.2.1</span> 既存の動作を実現する</h3>
+<h2 class="numbox"><a id="h5-4"></a><span class="secno">5.4</span> 命令フェッチモジュールの実装</h2>
 
-<h3 class="none"><a id="h5-2-2"></a><span class="secno">5.2.2</span> 16ビット境界に配置された32ビット命令をサポートする</h3>
+<h3 class="none"><a id="h5-4-1"></a><span class="secno">5.4.1</span> 既存の動作を実現する</h3>
 
-<h2 class="numbox"><a id="h5-3"></a><span class="secno">5.3</span> RVC命令のデコード</h2>
+<h3 class="none"><a id="h5-4-2"></a><span class="secno">5.4.2</span> 16ビット境界に配置された32ビット幅の命令をサポートする</h3>
 
-<h3 class="none"><a id="h5-3-1"></a><span class="secno">5.3.1</span> 圧縮命令フラグを実装する</h3>
-<p>mepcも！</p>
+<h2 class="numbox"><a id="h5-5"></a><span class="secno">5.5</span> RVC命令のデコード</h2>
 
-<h3 class="none"><a id="h5-3-2"></a><span class="secno">5.3.2</span> 圧縮命令を32ビット命令に変換する</h3>
+<h3 class="none"><a id="h5-5-1"></a><span class="secno">5.5.1</span> 圧縮命令を32ビット幅の命令に変換する</h3>
+
+<h3 class="none"><a id="h5-5-2"></a><span class="secno">5.5.2</span> 圧縮命令フラグを実装する</h3>
+<p>interfaceやらcoreやらインスタンス化してつなぐ</p>
         </main>
         <nav class="page-navi">
           <a href="13-impl-a.html" class="page-prev">&#9664;</a>
