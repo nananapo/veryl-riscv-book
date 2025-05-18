@@ -36,7 +36,6 @@ mstatus.TSR
 
 === mipレジスタの変更
 
-
 == トラップの委譲の実装
 
 === medeleg、midelegレジスタを作成する

@@ -52,15 +52,13 @@ Web版 : https://nananapo.github.io/veryl-riscv-book/
     7.1 CPUの速度
     7.2 パイプライン処理の実装
     7.3 データ依存の対処
+8 CPUの合成
+    8.1 FPGAとは何か？
+    8.2 LEDの制御
+    8.3 FPGAへの合成① (Tang Nano 9K)
+    8.4 FPGAへの合成② (PYNQ-Z1)
 
-# 未執筆
-
-第1部の残り
-
- * CPUの合成
-    * riscv-testsのテスト結果をLEDで確認する
-    * TangMega138Kで動かす
-    * Pynq-Z1で動かす
+<-- ここから執筆中 -->
 
 第2部 「RV64IMACの実装」
  * M拡張の実装
@@ -106,9 +104,6 @@ Web版 : https://nananapo.github.io/veryl-riscv-book/
     * 外部装置との接続
         * UART RX
         * VirtIO (他はどうしようか)
- * OSを動かす① : xv6
-    * 設定
-    * 実行
  * OSを動かす② : Linuxの実行
      * 設定
      * 実行

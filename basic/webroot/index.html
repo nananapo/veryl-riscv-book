@@ -34,7 +34,7 @@
           <h1>Verylで作るCPU</h1>
 
           <h3><b>コンピュータは、CPUを書けば理解できる！</b></h3>
-          コンピュータアーキテクチャは、CPUを作ることで理解することができます。
+          コンピュータアーキテクチャはCPUを作れば理解できます。
           「Verylで作るCPU」は、ハードウェア記述言語VerylでRISC-VのCPUを自作する方法を解説するプロジェクトです。<br>
           「Verylで作るCPU 基本編」では、ハードウェア記述言語の基礎から、OSを実行できる程度のCPUの実装方法までを解説します。<br>
           <br>
@@ -117,31 +117,31 @@
     <li class="toc-chapter"><a href="./20-mmode-csr.html">6 M-modeの実装 (1. CSRの実装)</a>
       <ul class="toc toc-3">
         <li class="toc-section"><a href="./20-mmode-csr.html#h6-1">6.1 概要</a></li>
-        <li class="toc-section"><a href="./20-mmode-csr.html#h6-2">6.2 CSRのアドレスの追加</a></li>
-        <li class="toc-section"><a href="./20-mmode-csr.html#h6-3">6.3 misaレジスタ</a></li>
-        <li class="toc-section"><a href="./20-mmode-csr.html#h6-4">6.4 mimpidレジスタ</a></li>
-        <li class="toc-section"><a href="./20-mmode-csr.html#h6-5">6.5 mhartidレジスタ</a></li>
-        <li class="toc-section"><a href="./20-mmode-csr.html#h6-6">6.6 mstatusレジスタ</a></li>
-        <li class="toc-section"><a href="./20-mmode-csr.html#h6-7">6.7 mcycleレジスタ</a></li>
-        <li class="toc-section"><a href="./20-mmode-csr.html#h6-8">6.8 minstretレジスタ</a></li>
-        <li class="toc-section"><a href="./20-mmode-csr.html#h6-9">6.9 mscratchレジスタ</a></li>
+        <li class="toc-section"><a href="./20-mmode-csr.html#h6-2">6.2 CSRのアドレスの定義</a></li>
+        <li class="toc-section"><a href="./20-mmode-csr.html#h6-3">6.3 misaレジスタ (Machine ISA)</a></li>
+        <li class="toc-section"><a href="./20-mmode-csr.html#h6-4">6.4 mimpidレジスタ (Machine Implementation ID)</a></li>
+        <li class="toc-section"><a href="./20-mmode-csr.html#h6-5">6.5 mhartidレジスタ (Hart ID)</a></li>
+        <li class="toc-section"><a href="./20-mmode-csr.html#h6-6">6.6 mstatusレジスタ (Machine Status)</a></li>
+        <li class="toc-section"><a href="./20-mmode-csr.html#h6-7">6.7 ハードウェアパフォーマンスモニタ</a></li>
+        <li class="toc-section"><a href="./20-mmode-csr.html#h6-8">6.8 mscratchレジスタ (Machine Scratch)</a></li>
       </ul>
     </li>
-    <li class="toc-chapter"><a href="./21-impl-interrupt.html">7 M-modeの実装 (2. 割り込み、Zicntr拡張の実装)</a>
+    <li class="toc-chapter"><a href="./21-impl-interrupt.html">7 M-modeの実装 (2. 割り込みの実装)</a>
       <ul class="toc toc-3">
-        <li class="toc-section"><a href="./21-impl-interrupt.html#h7-1">7.1 割り込みとは何か？</a></li>
-        <li class="toc-section"><a href="./21-impl-interrupt.html#h7-2">7.2 ACLINT</a></li>
-        <li class="toc-section"><a href="./21-impl-interrupt.html#h7-3">7.3 ソフトウェア割り込みの実装</a></li>
-        <li class="toc-section"><a href="./21-impl-interrupt.html#h7-4">7.4 タイマ割り込みの実装</a></li>
-        <li class="toc-section"><a href="./21-impl-interrupt.html#h7-5">7.5 WFI命令の実装</a></li>
-        <li class="toc-section"><a href="./21-impl-interrupt.html#h7-6">7.6 Zicntr拡張の実装</a></li>
+        <li class="toc-section"><a href="./21-impl-interrupt.html#h7-1">7.1 概要</a></li>
+        <li class="toc-section"><a href="./21-impl-interrupt.html#h7-2">7.2 RISC-Vの割り込み</a></li>
+        <li class="toc-section"><a href="./21-impl-interrupt.html#h7-3">7.3 ACLINTモジュールの作成</a></li>
+        <li class="toc-section"><a href="./21-impl-interrupt.html#h7-4">7.4 ソフトウェア割り込みの実装 (MSWI)</a></li>
+        <li class="toc-section"><a href="./21-impl-interrupt.html#h7-5">7.5 タイマ割り込みの実装 (MTIMER)</a></li>
+        <li class="toc-section"><a href="./21-impl-interrupt.html#h7-6">7.6 WFI命令の実装</a></li>
+        <li class="toc-section"><a href="./21-impl-interrupt.html#h7-7">7.7 time、instret、cycleレジスタの実装</a></li>
       </ul>
     </li>
     <li class="toc-chapter"><a href="./22-umode-csr.html">8 U-modeの実装</a>
       <ul class="toc toc-3">
         <li class="toc-section"><a href="./22-umode-csr.html#h8-1">8.1 misaレジスタの変更</a></li>
         <li class="toc-section"><a href="./22-umode-csr.html#h8-2">8.2 mstatusのUXL、TWビットの実装</a></li>
-        <li class="toc-section"><a href="./22-umode-csr.html#h8-3">8.3 権限レベルの実装</a></li>
+        <li class="toc-section"><a href="./22-umode-csr.html#h8-3">8.3 特権レベルの実装</a></li>
         <li class="toc-section"><a href="./22-umode-csr.html#h8-4">8.4 CSRの読み書き権限の確認</a></li>
         <li class="toc-section"><a href="./22-umode-csr.html#h8-5">8.5 mcounterenレジスタの実装</a></li>
         <li class="toc-section"><a href="./22-umode-csr.html#h8-6">8.6 MRET命令の実行制限</a></li>
