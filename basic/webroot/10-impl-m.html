@@ -54,13 +54,13 @@
     <li class="toc-chapter"><a href="./20-mmode-csr.html">6 M-modeの実装 (1. CSRの実装)</a></li>
     <li class="toc-chapter"><a href="./21-impl-interrupt.html">7 M-modeの実装 (2. 割り込みの実装)</a></li>
     <li class="toc-chapter"><a href="./22-umode-csr.html">8 U-modeの実装</a></li>
-    <li class="toc-chapter"><a href="./23-smode-csr.html">9 S-modeの実装</a></li>
-    <li class="toc-chapter"><a href="./24-impl-paging.html">10 仮想記憶システムの実装</a></li>
+    <li class="toc-chapter"><a href="./23-smode-csr.html">9 S-modeの実装 (1. CSRの実装)</a></li>
+    <li class="toc-chapter"><a href="./24-impl-paging.html">10 S-modeの実装 (2. 仮想記憶システム)</a></li>
     <li class="toc-chapter"><a href="./25-impl-plic.html">11 PLICの実装</a></li>
     <li class="toc-chapter"><a href="./26-run-linux.html">12 Linuxを動かす</a></li>
   </ul>
 </li>
-    <li class="toc-chapter"><a href="./99-postface.html">あとがき</a></li>
+    <li class="toc-chapter"><a href="./99b-postface.html">あとがき</a></li>
 </ul>
       </div>
       <div class="page-inner">
@@ -128,8 +128,8 @@ assign rem = op1 % op2;
 </div>
 <p>例えば乗算回路をFPGA上に実装する場合、通常は合成系によってFPGAに搭載されている乗算器が自動的に利用されます<sup><a id="fnb-specify.multiplyer" href="#fn-specify.multiplyer" class="noteref" epub:type="noteref">*1</a></sup>。これにより、低遅延、低リソースコストで効率的な乗算回路を自動的に実現できます。しかし、32ビットや64ビットの乗算を実装する際、FPGA上の乗算器の数が不足すると、LUTを用いた大規模な乗算回路が構築されることがあります。このような大規模な回路はFPGAのリソースの使用量や遅延に大きな影響を与えるため好ましくありません。除算や剰余演算でも同じ問題<sup><a id="fnb-no.divider" href="#fn-no.divider" class="noteref" epub:type="noteref">*2</a></sup>が生じることがあります。</p>
 <div class="footnote-list">
-<div class="footnote" id="fn-specify.multiplyer" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>手動で何をどのように利用するかを選択することもできます</p></div>
-<div class="footnote" id="fn-no.divider" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*2] </span>そもそも除算器が搭載されていない場合があります</p></div>
+<div class="footnote" id="fn-specify.multiplyer" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>手動で何をどのように利用するかを選択することもできます。既に用意された回路(IP)を使うこともできますが、本書は自作することを主軸としているため利用しません。</p></div>
+<div class="footnote" id="fn-no.divider" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*2] </span>そもそも除算器が搭載されていない場合があります。</p></div>
 </div><!--/.footnote-list-->
 <p><code class="inline-code">*</code>、<code class="inline-code">/</code>、<code class="inline-code">%</code>演算子がどのような回路に合成されるかは、合成系が全体の実装を考慮して自動的に決定するため、その挙動をコントロールするのは難しいです。そこで本章では、<code class="inline-code">*</code>、<code class="inline-code">/</code>、<code class="inline-code">%</code>演算子を使用せず、足し算やシフト演算などの基本的な論理だけを用いて同等の演算を実装します。</p>
 <p>基本編では積、商、剰余を効率よく<sup><a id="fnb-muldiv.sufficient" href="#fn-muldiv.sufficient" class="noteref" epub:type="noteref">*3</a></sup>求める実装は検討せず、できるだけ単純な方法で実装します。</p>
@@ -408,7 +408,7 @@ module muldivunit (
 </div>
 <p>mulunitモジュールは<code class="inline-code">op1 * op2</code>を計算するモジュールです。<code class="inline-code">valid</code>が<code class="inline-code">1</code>になったら計算を開始し、計算が完了したら<code class="inline-code">rvalid</code>を<code class="inline-code">1</code>、<code class="inline-code">result</code>を<code class="inline-code">WIDTH * 2</code>ビットの計算結果に設定します。</p>
 <p>積は<code class="inline-code">WIDTH</code>回の足し算を<code class="inline-code">WIDTH</code>クロックかけて行うことによって求めています(<span class="imgref"><a href="./10-impl-m.html#mul_process">図1.1</a></span>)。計算を開始すると入力を<code class="inline-code">0</code>で<code class="inline-code">WIDTH * 2</code>ビットに拡張し、<code class="inline-code">result</code>を<code class="inline-code">0</code>でリセットします。</p>
-<p><code class="inline-code">State::AddLoop</code>では、次の操作を<code class="inline-code">WIDTH</code>回行います。<code class="inline-code">i</code>回目の操作のとき、</p>
+<p><code class="inline-code">State::AddLoop</code>では、次の操作を<code class="inline-code">WIDTH</code>回行います。<code class="inline-code">i</code>回目では次の操作を行います。</p>
 <ol start="1" type="1">
 <li><code class="inline-code">op2[i-1]</code>が<code class="inline-code">1</code>なら<code class="inline-code">result</code>に<code class="inline-code">op1</code>を足す</li>
 <li><code class="inline-code">op1</code>を1ビット左シフトする</li>
@@ -895,7 +895,7 @@ module muldivunit (
     );
 </pre>
 </div>
-<p><span class="tableref"><a href="./10-impl-m.html#riscv.div.expt">表1.4</a></span>にあるように、符号付き演算は結果がオーバーフローする場合とゼロで割る場合の結果が定められています。その場合には、divunitで除算を実行せず、muldivunitで計算結果を直接生成するようにします(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.divrem-range.error">リスト1.34</a></span><span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.divrem-range.idle">リスト1.35</a></span>)。符号付き演算かどうかを<code class="inline-code">funct3</code>のLSBで確認し、例外的な処理ではない場合にのみdivunitで計算を開始するようにしています。</p>
+<p><span class="tableref"><a href="./10-impl-m.html#riscv.div.expt">表1.4</a></span>にあるように、符号付き演算は結果がオーバーフローする場合とゼロで割る場合の結果が定められています。その場合には、divunitで除算を実行せず、muldivunitで計算結果を直接生成するように変更します(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.divrem-range.error">リスト1.34</a></span><span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.divrem-range.idle">リスト1.35</a></span>)。符号付き演算かどうかを<code class="inline-code">funct3</code>のLSBで確認し、例外的な処理ではない場合にのみdivunitで計算を開始するようにしています。</p>
 <div id="muldivunit.veryl.divrem-range.error" class="caption-code">
 <span class="caption">リスト1.34: リスト1.34: 符号付き除算がオーバーフローするか、ゼロ除算かどうかを判定する (muldivunit.veryl)</span>
 <pre class="list language-error">    var du_signed_overflow: logic;

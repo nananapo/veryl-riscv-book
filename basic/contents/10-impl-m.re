@@ -65,8 +65,8 @@ FPGA上の乗算器の数が不足すると、LUTを用いた大規模な乗算�
 このような大規模な回路はFPGAのリソースの使用量や遅延に大きな影響を与えるため好ましくありません。
 除算や剰余演算でも同じ問題@<fn>{no.divider}が生じることがあります。
 
-//footnote[specify.multiplyer][手動で何をどのように利用するかを選択することもできます]
-//footnote[no.divider][そもそも除算器が搭載されていない場合があります]
+//footnote[specify.multiplyer][手動で何をどのように利用するかを選択することもできます。既に用意された回路(IP)を使うこともできますが、本書は自作することを主軸としているため利用しません。]
+//footnote[no.divider][そもそも除算器が搭載されていない場合があります。]
 
 @<code>{*}、@<code>{/}、@<code>{%}演算子がどのような回路に合成されるかは、
 合成系が全体の実装を考慮して自動的に決定するため、
@@ -407,7 +407,7 @@ mulunitモジュールは@<code>{op1 * op2}を計算するモジュールです�
 @<code>{result}を@<code>{0}でリセットします。
 
 @<code>{State::AddLoop}では、次の操作を@<code>{WIDTH}回行います。
-@<code>{i}回目の操作のとき、
+@<code>{i}回目では次の操作を行います。
 
  1. @<code>{op2[i-1]}が@<code>{1}なら@<code>{result}に@<code>{op1}を足す
  2. @<code>{op1}を1ビット左シフトする
@@ -1006,7 +1006,7 @@ abs関数を利用して、DIV、REM命令のときにdivunitに渡す値を絶�
 //}
 
 @<table>{riscv.div.expt}にあるように、符号付き演算は結果がオーバーフローする場合とゼロで割る場合の結果が定められています。
-その場合には、divunitで除算を実行せず、muldivunitで計算結果を直接生成するようにします
+その場合には、divunitで除算を実行せず、muldivunitで計算結果を直接生成するように変更します
 (
 @<list>{muldivunit.veryl.divrem-range.error}
 @<list>{muldivunit.veryl.divrem-range.idle}

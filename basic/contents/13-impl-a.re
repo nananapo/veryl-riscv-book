@@ -260,7 +260,7 @@ Zaamo拡張の命令かどうかを判定する関数を作成します
 
 TODO 図
 
-Zaamo拡張の命令をTODO図のような状態遷移で処理するようにします。
+Zaamo拡張の命令をTODO図のような状態遷移で処理するように実装します。
 @<code>{is_zaamo_fetched}はロード済かを示すフラグで、
 @<code>{zaamo_fetched_data}はロードしたデータを保存するレジスタです。
 

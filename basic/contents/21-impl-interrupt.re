@@ -26,7 +26,7 @@ TODO 図
 割り込みとは、何らかのイベントの通知によって実行中のプログラムを中断して通知内容を処理する方式のことです。
 割り込みを使うと、ポーリングのように無駄にデバイスにアクセスをすることなく、入力の処理が必要な時にだけ実行できます(TODO 図)。
 
-== RISC-Vの割り込み
+=={riscv-interrupts} RISC-Vの割り込み
 
 RISC-Vでは割り込み機能がCSRによって提供されます。
 割り込みが発生するとトラップが発生します。
@@ -45,15 +45,15 @@ RISC-Vでは割り込み機能がCSRによって提供されます。
     タイマの設定と時間経過によって発生します。
 
 @<b>{M-modeだけ}が実装されたRISC-VのCPUでは、次にような順序で割り込みが提供されます。
-他に実装されている特権レベルがある場合については@<chapref>{22-umode-csr}、@<chapref>{23-smode-csr}で解説します。
+他に実装されている特権レベルがある場合については@<secref>{22-umode-csr|umode-int}、@<chapref>{23-smode-csr}で解説します。
 
  1. 割り込みを発生させるようなイベントがデバイスで発生する
  1. 割り込み原因に対応したmipレジスタのビットが@<code>{0}から@<code>{1}になる
  1. 割り込み原因に対応したmieレジスタのビットが@<code>{1}であることを確認する (@<code>{0}なら割り込みは発生しない)
- 1. mstatus.MIEが1であることを確認する (@<code>{0}なら割り込みは発生しない)
+ 1. mstatus.MIEが@<code>{1}であることを確認する (@<code>{0}なら割り込みは発生しない)
  1. (割り込み(トラップ)開始)
- 1. mstatus.MPIEにmstatus.MIEを代入する
- 1. mstatus.MIEに0を代入する
+ 1. mstatus.MPIEにmstatus.MIEを格納する
+ 1. mstatus.MIEに@<code>{0}を格納する
  1. mtvecレジスタの値(トラップベクタ)にジャンプする
 
 TODO mipとmieの図
@@ -96,7 +96,7 @@ ACLINTにはMTIMER、MSWI、SSWIの3つのデバイスが定義されていま�
 mipレジスタのMTIP、MSIP、SSIPビットに状態を通知します。
 
 本書ではACLINTを図TODOのようなメモリマップで実装します。
-本章ではMTIMER、MSWIデバイスを実装し、@<chapref>{23-smode-csr}でSSWIデバイスを実装します。
+本章ではMTIMER、MSWIデバイスを実装し、@<secref>{23-smode-csr|impl-sswi}でSSWIデバイスを実装します。
 デバイスのの具体的な仕様については後で解説します。
 
 メモリマップ用の定数をeeiパッケージに記述してください
@@ -322,7 +322,7 @@ MTIMEがMTIMECMPを上回ったときmip.MTIPを@<code>{1}にします。
 === MTIME、MTIMECMPレジスタを実装する
 
 ACLINTモジュールにMTIME、MTIMECMPレジスタを実装します。
-今のところCPUにはmhartidが0のハードウェアスレッドしか存在しないため、MTIMECMP0のみ実装します。
+今のところmhartidが@<code>{0}のハードウェアスレッドしか存在しないため、MTIMECMP0のみ実装します。
 
 @<code>{mtime}、@<code>{mtimecmp0}レジスタを作成し、読み書きできるようにします
 ()。
@@ -432,7 +432,9 @@ coreモジュールでcsrunitモジュールの@<code>{stall}フラグによっ�
 == time、instret、cycleレジスタの実装
 
 RISC-Vにはtime、instret、cycleという読み込み専用のCSRが定義されており、
-それぞれmtime、minstret、mcycleレジスタと同じ値をとります。
+それぞれmtime、minstret、mcycleレジスタと同じ値をとります@<fn>{hpmcounter}。
+
+//footnote[hpmcounter][mhpmcounterレジスタと同じ値をとるhpmcounterレジスタもありますが、mhpmcounterレジスタを実装していないので実装しません。]
 
 @<code>{CsrAddr}型にレジスタのアドレスを追加します
 ()。
