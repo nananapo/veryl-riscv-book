@@ -51,13 +51,13 @@
     <li class="toc-chapter"><a href="./20-mmode-csr.html">6 M-modeの実装 (1. CSRの実装)</a></li>
     <li class="toc-chapter"><a href="./21-impl-interrupt.html">7 M-modeの実装 (2. 割り込みの実装)</a></li>
     <li class="toc-chapter"><a href="./22-umode-csr.html">8 U-modeの実装</a></li>
-    <li class="toc-chapter"><a href="./23-smode-csr.html">9 S-modeの実装</a></li>
-    <li class="toc-chapter"><a href="./24-impl-paging.html">10 仮想記憶システムの実装</a></li>
+    <li class="toc-chapter"><a href="./23-smode-csr.html">9 S-modeの実装 (1. CSRの実装)</a></li>
+    <li class="toc-chapter"><a href="./24-impl-paging.html">10 S-modeの実装 (2. 仮想記憶システム)</a></li>
     <li class="toc-chapter"><a href="./25-impl-plic.html">11 PLICの実装</a></li>
     <li class="toc-chapter"><a href="./26-run-linux.html">12 Linuxを動かす</a></li>
   </ul>
 </li>
-    <li class="toc-chapter"><a href="./99-postface.html">あとがき</a></li>
+    <li class="toc-chapter"><a href="./99b-postface.html">あとがき</a></li>
 </ul>
       </div>
       <div class="page-inner">
@@ -214,7 +214,7 @@
 図2.1: mtvalレジスタ
 </p>
 </div>
-<p>RISC-Vには、例外が発生した時のソフトウェアによるハンドリングを補助するために、MXLENビットのmtvalレジスタが定義されています(<span class="imgref"><a href="./11-impl-exception.html#mtval">図2.1</a></span>)。例外が発生したとき、CPUはmtvalレジスタに例外に固有の情報を書き込みます。これ以降、例外に固有の情報のことをtvalと呼びます。</p>
+<p>RISC-Vには、例外が発生したときのソフトウェアによるハンドリングを補助するために、MXLENビットのmtvalレジスタが定義されています(<span class="imgref"><a href="./11-impl-exception.html#mtval">図2.1</a></span>)。例外が発生したとき、CPUはmtvalレジスタに例外に固有の情報を書き込みます。これ以降、例外に固有の情報のことをtvalと呼びます。</p>
 <p><code class="inline-code">ExceptionInfo</code>構造体に例外に固有の情報を示す<code class="inline-code">value</code>を追加します(<span class="listref"><a href="./11-impl-exception.html#corectrl.veryl.mtval-range.ExceptionInfo">リスト2.11</a></span>)。</p>
 <div id="corectrl.veryl.mtval-range.ExceptionInfo" class="caption-code">
 <span class="caption">リスト2.11: リスト2.11: tvalをExceptionInfoに追加する (corectrl.veryl)</span>
@@ -357,7 +357,7 @@
 
 <h3 class="none"><a id="h2-4-1"></a><span class="secno">2.4.1</span> 不正な命令ビット列で例外を起こす</h3>
 <p>CPUに実装していない命令、つまりデコードできない命令を実行しようとするとき、Illegal instruction例外が発生します。</p>
-<p>今のところopcodeが未知の命令は何もしない命令として実行し、それ以外の命令については何も対処していません。inst_decoderモジュールを変更し、実装していない命令で例外が発生するようにします。</p>
+<p>今のところopcodeが未知の命令は何もしない命令として実行し、それ以外の命令については何も対処していません。inst_decoderモジュールを、実装していない命令で例外が発生するように変更します。</p>
 <p>inst_decoderモジュールに、命令が有効かどうかを示す<code class="inline-code">valid</code>ポートを追加します(<span class="listref"><a href="./11-impl-exception.html#inst_decoder.veryl.instillegal-range.port">リスト2.23</a></span>、<span class="listref"><a href="./11-impl-exception.html#core.veryl.instillegal-range.ids">リスト2.24</a></span>)。</p>
 <div id="inst_decoder.veryl.instillegal-range.port" class="caption-code">
 <span class="caption">リスト2.23: リスト2.23: validポートを追加する (inst_decoder.veryl)</span>

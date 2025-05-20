@@ -51,13 +51,13 @@
     <li class="toc-chapter"><a href="./20-mmode-csr.html">6 M-modeの実装 (1. CSRの実装)</a></li>
     <li class="toc-chapter"><a href="./21-impl-interrupt.html">7 M-modeの実装 (2. 割り込みの実装)</a></li>
     <li class="toc-chapter"><a href="./22-umode-csr.html">8 U-modeの実装</a></li>
-    <li class="toc-chapter"><a href="./23-smode-csr.html">9 S-modeの実装</a></li>
-    <li class="toc-chapter"><a href="./24-impl-paging.html">10 仮想記憶システムの実装</a></li>
+    <li class="toc-chapter"><a href="./23-smode-csr.html">9 S-modeの実装 (1. CSRの実装)</a></li>
+    <li class="toc-chapter"><a href="./24-impl-paging.html">10 S-modeの実装 (2. 仮想記憶システム)</a></li>
     <li class="toc-chapter"><a href="./25-impl-plic.html">11 PLICの実装</a></li>
     <li class="toc-chapter"><a href="./26-run-linux.html">12 Linuxを動かす</a></li>
   </ul>
 </li>
-    <li class="toc-chapter"><a href="./99-postface.html">あとがき</a></li>
+    <li class="toc-chapter"><a href="./99b-postface.html">あとがき</a></li>
 </ul>
       </div>
       <div class="page-inner">
@@ -265,7 +265,7 @@
 
 <h3 class="none"><a id="h4-6-1"></a><span class="secno">4.6.1</span> Zaamo拡張の命令を実装する</h3>
 <p>TODO 図</p>
-<p>Zaamo拡張の命令をTODO図のような状態遷移で処理するようにします。<code class="inline-code">is_zaamo_fetched</code>はロード済かを示すフラグで、<code class="inline-code">zaamo_fetched_data</code>はロードしたデータを保存するレジスタです。</p>
+<p>Zaamo拡張の命令をTODO図のような状態遷移で処理するように実装します。<code class="inline-code">is_zaamo_fetched</code>はロード済かを示すフラグで、<code class="inline-code">zaamo_fetched_data</code>はロードしたデータを保存するレジスタです。</p>
 <p><code class="inline-code">is_zaamo_fetched</code>と<code class="inline-code">zaamo_fetched_data</code>レジスタを作成します。</p>
 <div class="caption-code">
 <pre class="emlist">
