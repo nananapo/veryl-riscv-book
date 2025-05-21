@@ -1108,14 +1108,15 @@ CPUが文字を送信したり受信するためのデバッグ用の入出力�
 今のところriscv-testsの結果を受け取るためのアドレスをRAMのベースアドレス + @<code>{0x1000}にしていますが、
 この処理もデバイスに実装します。
 
-本章では、デバッグ用の入出力デバイスのベースアドレスに次のようなレジスタを実装します。
+本章では、デバッグ用の入出力デバイスのベースアドレスに次のような64ビットレジスタを実装します。
 
  : 上位20ビットが@<code>{20'h01010}な値を書き込み
     下位8ビットを文字として解釈し@<code>{$write}システムタスクで出力します。
  : 上位20ビットが@<code>{20'h01010}ではないLSBが@<code>{1}な値を書き込み
     今までのriscv-testsの終了判定処理を行います。
  : 読み込み
-    C++プログラムの関数を利用して入力を受け取ります。
+    C++プログラムの関数を利用して1文字入力を受け取ります。
+    有効な入力の場合は上位20ビットが@<code>{20'h01010}、無効な入力の場合は@<code>{0}になります。
 
 === mmio_controllerモジュールにデバイスを追加する
 
@@ -1268,18 +1269,18 @@ mmio_controllerモジュールと接続します。
         dbg_membus.rvalid = dbg_membus.valid;
         if dbg_membus.valid {
             if dbg_membus.wen {
-                if d_membus.wdata[MEMBUS_DATA_WIDTH - 1-:20] == 20'h01010 {
-                    $display("%c", d_membus.wdata[7:0]);
-                } else if d_membus.wdata[lsb] == 1'b1 {
+                if dbg_membus.wdata[MEMBUS_DATA_WIDTH - 1-:20] == 20'h01010 {
+                    $write("%c", dbg_membus.wdata[7:0]);
+                } else if dbg_membus.wdata[lsb] == 1'b1 {
                     #[ifdef(TEST_MODE)]
                     {
-                        test_success = d_membus.wdata == 1;
+                        test_success = dbg_membus.wdata == 1;
                     }
-                    if d_membus.wdata == 1 {
+                    if dbg_membus.wdata == 1 {
                         $display("test success!");
                     } else {
                         $display("test failed!");
-                        $error  ("wdata : %h", d_membus.wdata);
+                        $error  ("wdata : %h", dbg_membus.wdata);
                     }
                     $finish();
                 }
@@ -1299,7 +1300,6 @@ LSBが@<code>{1}ならテストの成功判定をして@<code>{$finish}システ
 
 デバッグ用に@<code>{$display}システムタスクで表示している情報が邪魔になるので、
 デバッグ情報の表示を環境変数@<code>{PRINT_DEBUG}で制御できるようにします。
-
 
 //list[core.veryl.debugout.debug][ (core.veryl)]{
 #@maprange(scripts/12/debugout-range/core/src/core.veryl,debug)
@@ -1347,7 +1347,7 @@ void main(void) {
 
     for (int i = 0; i < strlen; i++) {
         unsigned long long c = str[i];
-        *DEBUG_REG = c | ((unsigned long long)0x01010 << 44);
+        *DEBUG_REG = c | (0x01010ULL << 44);
     }
     *DEBUG_REG = 1;
 }
@@ -1473,9 +1473,9 @@ riscv-testsをビルドしなおします。
 
 riscv-testsの@<code>{env/p/link.ld}の@<code>{.tohost}を次のように変更します
 ()。
-@<code>{}.tohost}はメモリにマップされたレジスタであり、
+@<code>{.tohost}はメモリにマップされたレジスタであり、
 メモリとしての実体は無いので@<code>{NOLOAD}属性を指定しています。
-@<secref>{changepc}と同じようにリビルド、HEXファイルを再生成してください。
+@<secref>{changepc}と同じようにリビルドして、HEXファイルを再生成してください。
 
 //list[][]{
 OUTPUT_ARCH( "riscv" )
@@ -1500,3 +1500,164 @@ riscv-testsが正常終了することを確かめてください。
 
 === 入力を実装する
 
+@<code>{dbg_membus}を使い、デバッグ入力処理を実装します。
+
+まず、@<code>{src/tb_verilator.cpp}に、標準入力を受け取る関数を定義します
+()。
+入力がない場合は@<code>{0}、ある場合は上位20ビットを@<code>{0x01010}にした値を返します。
+
+//list[tb_verilator.cpp.debuginput.get_input_dpic][ (src/tb_verilator.cpp)]{
+#@map_range(scripts/12/debuginput-range/core/src/tb_verilator.cpp,get_input_dpic)
+extern "C" const unsigned long long get_input_dpic() {
+    unsigned char c = 0;
+    ssize_t bytes_read = read(STDIN_FILENO, &c, 1);
+
+    if (bytes_read == 1) {
+        return static_cast<unsigned long long>(c) | (0x01010ULL << 44);
+    }
+    return 0;
+}
+#@end
+//}
+
+ここで、read関数の呼び出しでシミュレータを止めず(@<code>{O_NONBLOCK})、シェルが入力をバッファリングしなくする(@<code>{~ICANON})ために設定を変えるコードを挿入します
+()。
+また、シェルが文字列をローカルエコー(入力した文字列を表示)しないようにします(@<code>{~ECHO})。
+
+//list[tb_verilator.cpp.debuginput.include][ (src/tb_verilator.cpp)]{
+#@maprange(scripts/12/debuginput-range/core/src/tb_verilator.cpp,include)
+#include <fcntl.h>
+#include <termios.h>
+#@end
+//}
+
+//list[tb_verilator.cpp.debuginput.termios][ (src/tb_verilator.cpp)]{
+#@maprange(scripts/12/debuginput-range/core/src/tb_verilator.cpp,termios)
+struct termios old_setting;
+
+void restore_termios() {
+    tcsetattr(STDIN_FILENO, TCSANOW, &old_setting);
+}
+
+void set_nonblocking(void) {
+    struct termios new_setting;
+
+    if (tcgetattr(STDIN_FILENO, &old_setting) == -1) {
+        perror("tcgetattr");
+        return;
+    }
+    new_setting = old_setting;
+    new_setting.c_lflag &= ~(ICANON | ECHO);
+    if (tcsetattr(STDIN_FILENO, TCSANOW, &new_setting) == -1) {
+        perror("tcsetattr");
+        return;
+    }
+    atexit(restore_termios);
+
+    int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
+    if (flags == -1) {
+        perror("fcntl(F_GETFL)");
+        return;
+    }
+    if (fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK) == -1) {
+        perror("fcntl(F_SETFL)");
+        return;
+    }
+}
+#@end
+//}
+
+//list[tb_verilator.cpp.debuginput.set][ (src/tb_verilator.cpp)]{
+#@maprange(scripts/12/debuginput-range/core/src/tb_verilator.cpp,set)
+int main(int argc, char** argv) {
+    Verilated::commandArgs(argc, argv);
+
+    if (argc < 3) {
+        std::cout << "Usage: " << argv[0] << " ROM_FILE_PATH RAM_FILE_PATH [CYCLE]" << std::endl;
+        return 1;
+    }
+
+    @<b>|set_nonblocking();|
+#@end
+//}
+
+@<code>{src/util.veryl}にget_input_dpic関数を呼び出す関数を実装します
+()。
+
+//list[util.veryl.debuginput][ (src/util.veryl)]{
+#@mapfile(scripts/12/debuginput-range/core/src/util.veryl)
+embed (inline) sv{{{
+    package svutil;
+        ...
+        @<b>|import "DPI-C" context function longint get_input_dpic();|
+        @<b>|function longint get_input();|
+        @<b>|    return get_input_dpic();|
+        @<b>|endfunction|
+    endpackage
+}}}
+
+package util {
+    ...
+    @<b>|function get_input () -> u64 {|
+    @<b>|    return $sv::svutil::get_input();|
+    @<b>|}|
+}
+#@end
+//}
+
+デバッグ用の入出力デバイスのロードで@<code>{util::get_input}の結果を返すようにします
+)。
+このコードは合成できないので、有効化オプション@<code>{ENABLE_DEBUG_INPUT}をつけます。
+
+//list[top.veryl.debuginput.io][ (src/top.veryl)]{
+#@maprange(scripts/12/debuginput-range/core/src/top.veryl,io)
+    always_ff {
+        dbg_membus.ready  = 1;
+        dbg_membus.rvalid = dbg_membus.valid;
+        if dbg_membus.valid {
+            if dbg_membus.wen {
+                ...
+            @<b>|} else {|
+            @<b>|    #[ifdef(ENABLE_DEBUG_INPUT)]|
+            @<b>|    {|
+            @<b>|        dbg_membus.rdata = util::get_input();|
+            @<b>|    }|
+            }
+        }
+    }
+#@end
+//}
+
+=== 入力をテストする
+
+実装した入出力デバイスで文字を入出力できることを確認します。
+
+@<code>{test/debug_input.c}を作成し、次のように記述します
+()
+これは入力された文字に@<code>{1}を足した値を出力するプログラムです。
+
+//list[debug_input.c.debuginput][ (test/debug_input.c)]{
+#@mapfile(scripts/12/debuginput-range/core/test/debug_input.c)
+#define DEBUG_REG ((volatile unsigned long long*)0x40000000)
+
+void main(void) {
+    while (1) {
+        unsigned long long c = *DEBUG_REG;
+        if (c & (0x01010ULL << 44) == 0) {
+            continue;
+        }
+        c = c & 255;
+        *DEBUG_REG = (c + 1) | (0x01010ULL << 44);
+    }
+}
+#@end
+//}
+
+プログラムをコンパイルしてシミュレータを実行し、入力した文字が1文字ずれて表示されることを確認してください。
+
+//terminal[][]{
+$ @<userinput>{make build sim VERILATOR_FLAGS="-DENABLE_DEBUG_INPUT"} @<balloon>{入力を有効にしてシミュレータをビルド}
+$ @<userinput>{./obj_dir/sim bootrom.hex test/test.bin.hex} @<balloon>{(事前にHEXファイルを作成しておく}
+bcd@<balloon>{abcと入力して改行}
+   efg@<balloon>{defと入力する}
+//}

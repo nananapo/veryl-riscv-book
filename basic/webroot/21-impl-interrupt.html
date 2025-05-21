@@ -96,7 +96,7 @@
     タイマの設定と時間経過によって発生します。
 </dd>
 </dl>
-<p><b>M-modeだけ</b>が実装されたRISC-VのCPUでは、次にような順序で割り込みが提供されます。他に実装されている特権レベルがある場合については「<a href="22-umode-csr.html#h8-8">8.8 割り込み条件の変更</a>」、<a href="./23-smode-csr.html">第9章「S-modeの実装 (1. CSRの実装)」</a>で解説します。</p>
+<p><b>M-modeだけ</b>が実装されたRISC-VのCPUでは、次にような順序で割り込みが提供されます。他に実装されている特権レベルがある場合については「<a href="22-umode-csr.html#h8-8">8.8 割り込み条件の変更</a>」、「<a href="23-smode-csr.html#h9-6">9.6 トラップの委譲</a>」で解説します。</p>
 <ol start="1" type="1">
 <li>割り込みを発生させるようなイベントがデバイスで発生する</li>
 <li>割り込み原因に対応したmipレジスタのビットが<code class="inline-code">0</code>から<code class="inline-code">1</code>になる</li>

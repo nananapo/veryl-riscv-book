@@ -971,7 +971,7 @@ $ <span class="userinput">find share/ -type f -name &quot;*.bin&quot; -exec sh -
 
 <h2 class="numbox"><a id="h3-6"></a><span class="secno">3.6</span> デバッグ用の入出力デバイスの実装</h2>
 <p>CPUが文字を送信したり受信するためのデバッグ用の入出力デバイスを実装します。今のところriscv-testsの結果を受け取るためのアドレスをRAMのベースアドレス + <code class="inline-code">0x1000</code>にしていますが、この処理もデバイスに実装します。</p>
-<p>本章では、デバッグ用の入出力デバイスのベースアドレスに次のようなレジスタを実装します。</p>
+<p>本章では、デバッグ用の入出力デバイスのベースアドレスに次のような64ビットレジスタを実装します。</p>
 <dl>
 <dt>上位20ビットが<code class="inline-code">20'h01010</code>な値を書き込み</dt>
 <dd>
@@ -983,7 +983,8 @@ $ <span class="userinput">find share/ -type f -name &quot;*.bin&quot; -exec sh -
 </dd>
 <dt>読み込み</dt>
 <dd>
-    C++プログラムの関数を利用して入力を受け取ります。
+    C++プログラムの関数を利用して1文字入力を受け取ります。
+    有効な入力の場合は上位20ビットが<code class="inline-code">20'h01010</code>、無効な入力の場合は<code class="inline-code">0</code>になります。
 </dd>
 </dl>
 
@@ -1118,18 +1119,18 @@ $ <span class="userinput">find share/ -type f -name &quot;*.bin&quot; -exec sh -
         dbg_membus.rvalid = dbg_membus.valid;
         if dbg_membus.valid {
             if dbg_membus.wen {
-                if d_membus.wdata[MEMBUS_DATA_WIDTH - 1-:20] == 20'h01010 {
-                    $display(&quot;%c&quot;, d_membus.wdata[7:0]);
-                } else if d_membus.wdata[lsb] == 1'b1 {
+                if dbg_membus.wdata[MEMBUS_DATA_WIDTH - 1-:20] == 20'h01010 {
+                    $write(&quot;%c&quot;, dbg_membus.wdata[7:0]);
+                } else if dbg_membus.wdata[lsb] == 1'b1 {
                     #[ifdef(TEST_MODE)]
                     {
-                        test_success = d_membus.wdata == 1;
+                        test_success = dbg_membus.wdata == 1;
                     }
-                    if d_membus.wdata == 1 {
+                    if dbg_membus.wdata == 1 {
                         $display(&quot;test success!&quot;);
                     } else {
                         $display(&quot;test failed!&quot;);
-                        $error  (&quot;wdata : %h&quot;, d_membus.wdata);
+                        $error  (&quot;wdata : %h&quot;, dbg_membus.wdata);
                     }
                     $finish();
                 }
@@ -1185,7 +1186,7 @@ void main(void) {
 
     for (int i = 0; i &lt; strlen; i++) {
         unsigned long long c = str[i];
-        *DEBUG_REG = c | ((unsigned long long)0x01010 &lt;&lt; 44);
+        *DEBUG_REG = c | (0x01010ULL &lt;&lt; 44);
     }
     *DEBUG_REG = 1;
 }
@@ -1278,7 +1279,7 @@ Hello,world!
 
 <h3 class="none"><a id="h3-6-4"></a><span class="secno">3.6.4</span> riscv-testsのリビルド</h3>
 <p>riscv-testsの終了判定用のレジスタの位置を<code class="inline-code">MMAP_DEBUG_BEGIN</code>に移動し、riscv-testsをビルドしなおします。</p>
-<p>riscv-testsの<code class="inline-code">env/p/link.ld</code>の<code class="inline-code">.tohost</code>を次のように変更します()。<code class="inline-code"></code>.tohost}はメモリにマップされたレジスタであり、メモリとしての実体は無いので<code class="inline-code">NOLOAD</code>属性を指定しています。「<a href="12-impl-mmio.html#h3-4-3">3.4.3 PCの初期値の変更</a>」と同じようにリビルド、HEXファイルを再生成してください。</p>
+<p>riscv-testsの<code class="inline-code">env/p/link.ld</code>の<code class="inline-code">.tohost</code>を次のように変更します()。<code class="inline-code">.tohost</code>はメモリにマップされたレジスタであり、メモリとしての実体は無いので<code class="inline-code">NOLOAD</code>属性を指定しています。「<a href="12-impl-mmio.html#h3-4-3">3.4.3 PCの初期値の変更</a>」と同じようにリビルドして、HEXファイルを再生成してください。</p>
 <div class="caption-code">
 <pre class="emlist">OUTPUT_ARCH( &quot;riscv&quot; )
 ENTRY(_start)
@@ -1300,6 +1301,144 @@ _end = .;
 <p><code class="inline-code">VERILATOR_FLAGS=&quot;-DTEST_MODE&quot;</code>をつけてシミュレータをコンパイルしなおし、riscv-testsが正常終了することを確かめてください。</p>
 
 <h3 class="none"><a id="h3-6-5"></a><span class="secno">3.6.5</span> 入力を実装する</h3>
+<p><code class="inline-code">dbg_membus</code>を使い、デバッグ入力処理を実装します。</p>
+<p>まず、<code class="inline-code">src/tb_verilator.cpp</code>に、標準入力を受け取る関数を定義します()。入力がない場合は<code class="inline-code">0</code>、ある場合は上位20ビットを<code class="inline-code">0x01010</code>にした値を返します。</p>
+<div id="tb_verilator.cpp.debuginput.get_input_dpic" class="caption-code">
+<span class="caption">リスト3.73: リスト3.73:  (src/tb_verilator.cpp)</span>
+<pre class="list language-get_input_dpic">extern &quot;C&quot; const unsigned long long get_input_dpic() {
+    unsigned char c = 0;
+    ssize_t bytes_read = read(STDIN_FILENO, &amp;c, 1);
+
+    if (bytes_read == 1) {
+        return static_cast&lt;unsigned long long&gt;(c) | (0x01010ULL &lt;&lt; 44);
+    }
+    return 0;
+}
+</pre>
+</div>
+<p>ここで、read関数の呼び出しでシミュレータを止めず(<code class="inline-code">O_NONBLOCK</code>)、シェルが入力をバッファリングしなくする(<code class="inline-code">~ICANON</code>)ために設定を変えるコードを挿入します()。また、シェルが文字列をローカルエコー(入力した文字列を表示)しないようにします(<code class="inline-code">~ECHO</code>)。</p>
+<div id="tb_verilator.cpp.debuginput.include" class="caption-code">
+<span class="caption">リスト3.74: リスト3.74:  (src/tb_verilator.cpp)</span>
+<pre class="list language-include">#include &lt;fcntl.h&gt;
+#include &lt;termios.h&gt;
+</pre>
+</div>
+<div id="tb_verilator.cpp.debuginput.termios" class="caption-code">
+<span class="caption">リスト3.75: リスト3.75:  (src/tb_verilator.cpp)</span>
+<pre class="list language-termios">struct termios old_setting;
+
+void restore_termios() {
+    tcsetattr(STDIN_FILENO, TCSANOW, &amp;old_setting);
+}
+
+void set_nonblocking(void) {
+    struct termios new_setting;
+
+    if (tcgetattr(STDIN_FILENO, &amp;old_setting) == -1) {
+        perror(&quot;tcgetattr&quot;);
+        return;
+    }
+    new_setting = old_setting;
+    new_setting.c_lflag &amp;= ~(ICANON | ECHO);
+    if (tcsetattr(STDIN_FILENO, TCSANOW, &amp;new_setting) == -1) {
+        perror(&quot;tcsetattr&quot;);
+        return;
+    }
+    atexit(restore_termios);
+
+    int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
+    if (flags == -1) {
+        perror(&quot;fcntl(F_GETFL)&quot;);
+        return;
+    }
+    if (fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK) == -1) {
+        perror(&quot;fcntl(F_SETFL)&quot;);
+        return;
+    }
+}
+</pre>
+</div>
+<div id="tb_verilator.cpp.debuginput.set" class="caption-code">
+<span class="caption">リスト3.76: リスト3.76:  (src/tb_verilator.cpp)</span>
+<pre class="list language-set">int main(int argc, char** argv) {
+    Verilated::commandArgs(argc, argv);
+
+    if (argc &lt; 3) {
+        std::cout &lt;&lt; &quot;Usage: &quot; &lt;&lt; argv[0] &lt;&lt; &quot; ROM_FILE_PATH RAM_FILE_PATH [CYCLE]&quot; &lt;&lt; std::endl;
+        return 1;
+    }
+
+    <b>set_nonblocking();</b>
+</pre>
+</div>
+<p><code class="inline-code">src/util.veryl</code>にget_input_dpic関数を呼び出す関数を実装します()。</p>
+<div id="util.veryl.debuginput" class="caption-code">
+<span class="caption">リスト3.77: リスト3.77:  (src/util.veryl)</span>
+<pre class="list language-debuginput">embed (inline) sv{{{
+    package svutil;
+        ...
+        <b>import &quot;DPI-C&quot; context function longint get_input_dpic();</b>
+        <b>function longint get_input();</b>
+        <b>    return get_input_dpic();</b>
+        <b>endfunction</b>
+    endpackage
+}}}
+
+package util {
+    ...
+    <b>function get_input () -&gt; u64 {</b>
+    <b>    return $sv::svutil::get_input();</b>
+    <b>}</b>
+}
+</pre>
+</div>
+<p>デバッグ用の入出力デバイスのロードで<code class="inline-code">util::get_input</code>の結果を返すようにします)。このコードは合成できないので、有効化オプション<code class="inline-code">ENABLE_DEBUG_INPUT</code>をつけます。</p>
+<div id="top.veryl.debuginput.io" class="caption-code">
+<span class="caption">リスト3.78: リスト3.78:  (src/top.veryl)</span>
+<pre class="list language-io">    always_ff {
+        dbg_membus.ready  = 1;
+        dbg_membus.rvalid = dbg_membus.valid;
+        if dbg_membus.valid {
+            if dbg_membus.wen {
+                ...
+            <b>} else {</b>
+            <b>    #[ifdef(ENABLE_DEBUG_INPUT)]</b>
+            <b>    {</b>
+            <b>        dbg_membus.rdata = util::get_input();</b>
+            <b>    }</b>
+            }
+        }
+    }
+</pre>
+</div>
+
+<h3 class="none"><a id="h3-6-6"></a><span class="secno">3.6.6</span> 入力をテストする</h3>
+<p>実装した入出力デバイスで文字を入出力できることを確認します。</p>
+<p><code class="inline-code">test/debug_input.c</code>を作成し、次のように記述します()これは入力された文字に<code class="inline-code">1</code>を足した値を出力するプログラムです。</p>
+<div id="debug_input.c.debuginput" class="caption-code">
+<span class="caption">リスト3.79: リスト3.79:  (test/debug_input.c)</span>
+<pre class="list language-debuginput">#define DEBUG_REG ((volatile unsigned long long*)0x40000000)
+
+void main(void) {
+    while (1) {
+        unsigned long long c = *DEBUG_REG;
+        if (c &amp; (0x01010ULL &lt;&lt; 44) == 0) {
+            continue;
+        }
+        c = c &amp; 255;
+        *DEBUG_REG = (c + 1) | (0x01010ULL &lt;&lt; 44);
+    }
+}
+</pre>
+</div>
+<p>プログラムをコンパイルしてシミュレータを実行し、入力した文字が1文字ずれて表示されることを確認してください。</p>
+<div class="cmd-code">
+<pre class="emlist">$ <span class="userinput">make build sim VERILATOR_FLAGS=&quot;-DENABLE_DEBUG_INPUT&quot;</span> <span class="balloon">← 入力を有効にしてシミュレータをビルド</span>
+$ <span class="userinput">./obj_dir/sim bootrom.hex test/test.bin.hex</span> <span class="balloon">← (事前にHEXファイルを作成しておく</span>
+bcd<span class="balloon">← abcと入力して改行</span>
+   efg<span class="balloon">← defと入力する</span>
+</pre>
+</div>
         </main>
         <nav class="page-navi">
           <a href="11-impl-exception.html" class="page-prev">&#9664;</a>

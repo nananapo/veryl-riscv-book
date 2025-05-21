@@ -45,7 +45,7 @@ RISC-Vでは割り込み機能がCSRによって提供されます。
     タイマの設定と時間経過によって発生します。
 
 @<b>{M-modeだけ}が実装されたRISC-VのCPUでは、次にような順序で割り込みが提供されます。
-他に実装されている特権レベルがある場合については@<secref>{22-umode-csr|umode-int}、@<chapref>{23-smode-csr}で解説します。
+他に実装されている特権レベルがある場合については@<secref>{22-umode-csr|umode-int}、@<secref>{23-smode-csr|delegating-trap}で解説します。
 
  1. 割り込みを発生させるようなイベントがデバイスで発生する
  1. 割り込み原因に対応したmipレジスタのビットが@<code>{0}から@<code>{1}になる

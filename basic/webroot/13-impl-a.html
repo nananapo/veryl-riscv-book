@@ -36,11 +36,10 @@
     <li class="toc-chapter"><a href="./13-impl-a.html">4 A拡張の実装</a>
       <ul class="toc toc-3">
         <li class="toc-section"><a href="./13-impl-a.html#h4-1">4.1 アトミック操作</a></li>
-        <li class="toc-section"><a href="./13-impl-a.html#h4-2">4.2 命令の順序</a></li>
-        <li class="toc-section"><a href="./13-impl-a.html#h4-3">4.3 amounitモジュールの作成</a></li>
-        <li class="toc-section"><a href="./13-impl-a.html#h4-4">4.4 命令のデコード</a></li>
-        <li class="toc-section"><a href="./13-impl-a.html#h4-5">4.5 Zalrsc拡張の実装</a></li>
-        <li class="toc-section"><a href="./13-impl-a.html#h4-6">4.6 Zaamo拡張の実装</a></li>
+        <li class="toc-section"><a href="./13-impl-a.html#h4-2">4.2 amounitモジュールの作成</a></li>
+        <li class="toc-section"><a href="./13-impl-a.html#h4-3">4.3 命令のデコード</a></li>
+        <li class="toc-section"><a href="./13-impl-a.html#h4-4">4.4 Zalrsc拡張の実装</a></li>
+        <li class="toc-section"><a href="./13-impl-a.html#h4-5">4.5 Zaamo拡張の実装</a></li>
       </ul>
     </li>
     <li class="toc-chapter"><a href="./14-impl-c.html">5 C拡張の実装</a></li>
@@ -100,7 +99,7 @@
 <p>同時に他のコアが同じプログラムを実行するとき、間違った値の書き込みはSC命令で失敗します。失敗したらLR命令からやり直すことで、1つのコアで実行した場合と同一の結果になります。</p>
 <p>予約セットのサイズは実装によって異なります。</p>
 
-<h2 class="numbox"><a id="h4-2"></a><span class="secno">4.2</span> 命令の順序</h2>
+<h3 class="none"><a id="h4-1-4"></a><span class="secno">4.1.4</span> 命令の順序</h3>
 <p>A拡張の命令のビット列は、それぞれ1ビットのaq、rlビットを含んでいます。このビットは、他のコアやハードウェアスレッドからメモリ操作を観測したときにメモリ操作がどのような順序で観測されるかを制御するものです。</p>
 <p>A拡張の命令をAとするとき、それぞれのビットの状態に応じて、Aによるメモリ操作は次のように観測されます。</p>
 <dl>
@@ -127,7 +126,7 @@
 <div class="footnote" id="fn-impl-memory-order" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>メモリ操作の並び替えによる高速化は応用編で検討します。</p></div>
 </div><!--/.footnote-list-->
 
-<h2 class="numbox"><a id="h4-3"></a><span class="secno">4.3</span> amounitモジュールの作成</h2>
+<h2 class="numbox"><a id="h4-2"></a><span class="secno">4.2</span> amounitモジュールの作成</h2>
 <p>A拡張は他のコア、ハードウェアスレッドと同期してメモリ操作を行うためのものであるため、A拡張の操作はcoreモジュールの外、メモリよりも前で行うのが好ましいです。具体的には、coreモジュールとmmio_controllerモジュールの間にA拡張の命令を処理するモジュールを追加、実装します。</p>
 <p>TODORAMを外に出す→topから消すのをやめる</p>
 <p>メモリ操作をcoreモジュールからそのままmmio_controllerモジュールに受け渡しするだけのモジュールを作成します。<code class="inline-code">src/amounit.veryl</code>を作成し、次のように記述します()。</p>
@@ -138,12 +137,12 @@
 <p>TODO amounitはconnectではなくステートを持たせる</p>
 <p>amounitモジュールをtopモジュールでインスタンス化して、coreモジュールとmmio_controllerモジュールのインターフェースを接続します()。</p>
 
-<h2 class="numbox"><a id="h4-4"></a><span class="secno">4.4</span> 命令のデコード</h2>
+<h2 class="numbox"><a id="h4-3"></a><span class="secno">4.3</span> 命令のデコード</h2>
 <p>TODO 命令の図</p>
 <p>A拡張の命令のopcodeはすべてOP-AMO(<code class="inline-code">7'b0101111</code>)です(TODO 図)。それぞれの命令はfunct5とfunct3で区別できます(TODO テーブル)。</p>
 <p>TODO funct5と命令の対応のテーブル</p>
 
-<h3 class="none"><a id="h4-4-1"></a><span class="secno">4.4.1</span> is_amoフラグを実装する</h3>
+<h3 class="none"><a id="h4-3-1"></a><span class="secno">4.3.1</span> is_amoフラグを実装する</h3>
 <p><code class="inline-code">InstCtrl</code>構造体に、A拡張の命令であることを示す<code class="inline-code">is_amo</code>フラグを追加します()。</p>
 <div class="caption-code">
 <span class="caption">is_amoフラグを追加する (corectrl.veryl)</span>
@@ -168,7 +167,7 @@
 </pre>
 </div>
 
-<h3 class="none"><a id="h4-4-2"></a><span class="secno">4.4.2</span> アドレスを変更する</h3>
+<h3 class="none"><a id="h4-3-2"></a><span class="secno">4.3.2</span> アドレスを変更する</h3>
 <p>A拡張でアクセスするメモリのアドレスはrs1で指定されたレジスタの値です。これはRV64Iのロードストア命令で使用するrs1と即値を足し合わせたものとは異なるため、memunitモジュールの<code class="inline-code">addr</code>ポートに割り当てる値を<code class="inline-code">is_amo</code>フラグによって切り替えます()。</p>
 <p>TODO ここでmemu_addrを作る</p>
 <div class="caption-code">
@@ -177,7 +176,7 @@
 </pre>
 </div>
 
-<h3 class="none"><a id="h4-4-3"></a><span class="secno">4.4.3</span> メモリインターフェースを変更する</h3>
+<h3 class="none"><a id="h4-3-3"></a><span class="secno">4.3.3</span> メモリインターフェースを変更する</h3>
 <p>amounitモジュールにA拡張の操作を指示するために、データ用のメモリインターフェースに変更が必要です。memunitモジュールとamounitモジュールの間のインターフェースを新しく定義します。</p>
 <p>membus_ifインターフェースに<code class="inline-code">is_amo</code>フラグ、<code class="inline-code">aq</code>ビット、<code class="inline-code">rl</code>ビット、<code class="inline-code">AMOOp</code>型を追加で定義したインターフェースを作成します。<code class="inline-code">src/core_data_if.veryl</code>を作成し、次のように記述します()。<code class="inline-code">wmask</code>を<code class="inline-code">DATA_WIDTH</code>ビットに展開する関数も定義しています。</p>
 <div class="caption-code">
@@ -187,10 +186,10 @@
 <p>memunitモジュールからamounitモジュールへの接続でcore_data_ifを使用するように変更します()。</p>
 <p>memunitモジュールで、<code class="inline-code">is_amo</code>、<code class="inline-code">aq</code>、<code class="inline-code">rl</code>、<code class="inline-code">amoop</code>に値を割り当てます()。</p>
 
-<h2 class="numbox"><a id="h4-5"></a><span class="secno">4.5</span> Zalrsc拡張の実装</h2>
+<h2 class="numbox"><a id="h4-4"></a><span class="secno">4.4</span> Zalrsc拡張の実装</h2>
 <p>予約セットのサイズは実装が自由に決めることができるため、本書では1つのアドレスのみ保持できるようにします。</p>
 
-<h3 class="none"><a id="h4-5-1"></a><span class="secno">4.5.1</span> LR.W、LR.D命令を実装する</h3>
+<h3 class="none"><a id="h4-4-1"></a><span class="secno">4.4.1</span> LR.W、LR.D命令を実装する</h3>
 <p>32ビット幅、64ビット幅のLR命令を実装します。LR.W命令はmemunitモジュールで64ビットに符号拡張されるため、amounitモジュールでLR.W命令とLR.D命令を区別する必要はありません。</p>
 <p>amounitモジュールに予約セットを作成します()。</p>
 <div class="caption-code">
@@ -211,7 +210,7 @@
 </pre>
 </div>
 
-<h3 class="none"><a id="h4-5-2"></a><span class="secno">4.5.2</span> SC.W、SC.D命令を実装する</h3>
+<h3 class="none"><a id="h4-4-2"></a><span class="secno">4.4.2</span> SC.W、SC.D命令を実装する</h3>
 <p>32ビット幅、64ビット幅のSC命令を実装します。SC.W命令はmemunitモジュールで書き込みマスクを設定しているため、amounitモジュールでSC.W命令とSC.D命令を区別する必要はありません。</p>
 <p>SC命令が成功、失敗したときに結果を返すための状態をState型に追加します()。</p>
 <div class="caption-code">
@@ -239,7 +238,7 @@
 </pre>
 </div>
 
-<h2 class="numbox"><a id="h4-6"></a><span class="secno">4.6</span> Zaamo拡張の実装</h2>
+<h2 class="numbox"><a id="h4-5"></a><span class="secno">4.5</span> Zaamo拡張の実装</h2>
 <p>Zaamo拡張の命令はロード、演算、ストアを行います。</p>
 <p>32ビット演算と64ビット演算を区別するために、core_data_ifインターフェースに<code class="inline-code">is_op32</code>フラグを追加します()。</p>
 <div class="caption-code">
@@ -263,7 +262,7 @@
 </pre>
 </div>
 
-<h3 class="none"><a id="h4-6-1"></a><span class="secno">4.6.1</span> Zaamo拡張の命令を実装する</h3>
+<h3 class="none"><a id="h4-5-1"></a><span class="secno">4.5.1</span> Zaamo拡張の命令を実装する</h3>
 <p>TODO 図</p>
 <p>Zaamo拡張の命令をTODO図のような状態遷移で処理するように実装します。<code class="inline-code">is_zaamo_fetched</code>はロード済かを示すフラグで、<code class="inline-code">zaamo_fetched_data</code>はロードしたデータを保存するレジスタです。</p>
 <p><code class="inline-code">is_zaamo_fetched</code>と<code class="inline-code">zaamo_fetched_data</code>レジスタを作成します。</p>
