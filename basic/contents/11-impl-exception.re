@@ -182,9 +182,8 @@ ECALL命令かどうかを判定する@<code>{is_ecall}変数を削除して、
 //list[csrunit.veryl.exptinfo-range.expt][ExceptionInfoを使って例外を起こす (csrunit.veryl)]{
 #@maprange(scripts/11/exptinfo-range/core/src/csrunit.veryl,expt)
     // Exception
-    let raise_expt : logic = valid && expt_info.valid;
-    let expt_cause : UIntX = expt_info.cause;
-    let expt_vector: Addr  = mtvec;
+    let raise_expt: logic = valid && expt_info.valid;
+    let expt_cause: UIntX = expt_info.cause;
 #@end
 //}
 
@@ -320,7 +319,6 @@ mtvalレジスタを実装して、書き込み、読み込みできるように
     let raise_expt : logic = valid && expt_info.valid;
     let expt_cause : UIntX = expt_info.cause;
     @<b>|let expt_value : UIntX = expt_info.value;|
-    let expt_vector: Addr  = mtvec;
 #@end
 //}
 
@@ -633,7 +631,6 @@ module csrunit (
         @<b>|expt_cause == CsrCause::ILLEGAL_INSTRUCTION: {1'b0 repeat XLEN - $bits(Inst), inst_bits},|
         @<b>|default                                    : 0|
     @<b>|}|;
-    let expt_vector: Addr = mtvec;
 #@end
 //}
 
@@ -726,7 +723,7 @@ tvalは遷移しようとしたアドレスになることに注意してくだ�
 
 RISC-Vでは、ロード、ストア命令でアクセスするメモリのアドレスが、
 ロード、ストアするビット幅に整列されていない場合に、
-それぞれLoad address misaligned例外、Store AMO address misaligned例外が発生します@<fn>{enable-misalign}。
+それぞれLoad address misaligned例外、Store/AMO address misaligned例外が発生します@<fn>{enable-misalign}。
 例えばLW命令は4バイトに整列されたアドレス、LD命令は8バイトに整列されたアドレスにしかアクセスできません。
 causeはそれぞれ@<code>{4}、@<code>{6}で、tvalはアクセスするメモリのアドレスになります。
 

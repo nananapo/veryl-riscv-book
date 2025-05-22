@@ -60,25 +60,31 @@ eeiパッケージに定義しているメモリの定数をRAM用の定数に�
 #@end
 //}
 
-@<code>{MEM_DATA_WIDTH}、@<code>{MEM_ADDR_WIDTH}を使っている部分を@<code>{MEMBUS_DATA_WIDTH}に置き換えます
+@<code>{MEM_DATA_WIDTH}、@<code>{MEM_ADDR_WIDTH}を使っている部分を@<code>{MEMBUS_DATA_WIDTH}に置き換えます。
+@<code>{MEMBUS_DATA_WIDTH}と@<code>{XLEN}を使うmembus_ifインターフェースに別名@<code>{Membus}をつけて利用します
 ()。
 
+//list[membus_if.veryl.memtoram.Membus][ (membus_if.veryl)]{
+#@maprange(scripts/12/memtoram-range/core/src/membus_if.veryl,Membus)
+alias interface Membus = membus_if::<eei::MEMBUS_DATA_WIDTH, eei::XLEN>;
+#@end
+//}
 
 //list[core.veryl.memtoram.port][ (core.veryl)]{
 #@maprange(scripts/12/memtoram-range/core/src/core.veryl,port)
 module core (
-    clk     : input   clock                                       ,
-    rst     : input   reset                                       ,
-    i_membus: modport membus_if::<ILEN, XLEN>::master             ,
-    d_membus: modport membus_if::<MEM@<b>|BUS|_DATA_WIDTH, XLEN>::master,
-    led     : output  UIntX                                       ,
+    clk     : input   clock                          ,
+    rst     : input   reset                          ,
+    i_membus: modport membus_if::<ILEN, XLEN>::master,
+    d_membus: modport @<b>|Membus|::master                 ,
+    led     : output  UIntX                          ,
 ) {
 #@end
 //}
 
 //list[memunit.veryl.memtoram.port][ (memunit.veryl)]{
 #@maprange(scripts/12/memtoram-range/core/src/memunit.veryl,port)
-    membus: modport membus_if::<MEM@<b>|BUS|_DATA_WIDTH, XLEN>::master, // メモリとのinterface
+    membus: modport @<b>|Membus|::master, // メモリとのinterface
 #@end
 //}
 
@@ -97,12 +103,9 @@ module core (
 
 topモジュールでインスタンス化しているmembus_ifインターフェースのジェネリックパラメータを変更します
 ()。
-ここで@<code>{MEMBUS_DATA_WIDTH}と@<code>{XLEN}を使うmembus_ifインターフェースに別名@<code>{Membus}をつけます。
 
 //list[top.veryl.memtoram.membus][ (top.veryl)]{
 #@maprange(scripts/12/memtoram-range/core/src/top.veryl,membus)
-    @<b>|alias interface Membus = membus_if::<MEMBUS_DATA_WIDTH, XLEN>;|
-
     inst membus  : membus_if::<@<b>|RAM|_DATA_WIDTH, @<b>|RAM|_ADDR_WIDTH>;
     inst i_membus: membus_if::<ILEN, XLEN>; // 命令フェッチ用
     inst d_membus: @<b>|Membus|; // ロードストア命令用
@@ -198,8 +201,6 @@ module top #(
 //list[mmio_controller.veryl.emptymmio][ (mmio_controller.veryl)]{
 #@mapfile(scripts/12/emptymmio/core/src/mmio_controller.veryl)
 import eei::*;
-
-alias interface Membus = membus_if::<eei::MEMBUS_DATA_WIDTH, eei::XLEN>;
 
 module mmio_controller (
     clk     : input   clock        ,
@@ -1523,11 +1524,13 @@ extern "C" const unsigned long long get_input_dpic() {
 ここで、read関数の呼び出しでシミュレータを止めず(@<code>{O_NONBLOCK})、シェルが入力をバッファリングしなくする(@<code>{~ICANON})ために設定を変えるコードを挿入します
 ()。
 また、シェルが文字列をローカルエコー(入力した文字列を表示)しないようにします(@<code>{~ECHO})。
+TODO ENABLE_DEBUG_INPUT
 
 //list[tb_verilator.cpp.debuginput.include][ (src/tb_verilator.cpp)]{
 #@maprange(scripts/12/debuginput-range/core/src/tb_verilator.cpp,include)
 #include <fcntl.h>
 #include <termios.h>
+#include <signal.h>
 #@end
 //}
 
@@ -1535,8 +1538,13 @@ extern "C" const unsigned long long get_input_dpic() {
 #@maprange(scripts/12/debuginput-range/core/src/tb_verilator.cpp,termios)
 struct termios old_setting;
 
-void restore_termios() {
+void restore_termios_setting(void) {
     tcsetattr(STDIN_FILENO, TCSANOW, &old_setting);
+}
+
+void sighandler(int signum) {
+    restore_termios_setting();
+    exit(signum);
 }
 
 void set_nonblocking(void) {
@@ -1552,7 +1560,10 @@ void set_nonblocking(void) {
         perror("tcsetattr");
         return;
     }
-    atexit(restore_termios);
+    signal(SIGINT, sighandler);
+    signal(SIGTERM, sighandler);
+    signal(SIGQUIT, sighandler);
+    atexit(restore_termios_setting);
 
     int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
     if (flags == -1) {
