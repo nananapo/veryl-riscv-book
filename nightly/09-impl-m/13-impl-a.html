@@ -36,11 +36,10 @@
     <li class="toc-chapter"><a href="./13-impl-a.html">4 A拡張の実装</a>
       <ul class="toc toc-3">
         <li class="toc-section"><a href="./13-impl-a.html#h4-1">4.1 アトミック操作</a></li>
-        <li class="toc-section"><a href="./13-impl-a.html#h4-2">4.2 命令の順序</a></li>
+        <li class="toc-section"><a href="./13-impl-a.html#h4-2">4.2 命令のデコード</a></li>
         <li class="toc-section"><a href="./13-impl-a.html#h4-3">4.3 amounitモジュールの作成</a></li>
-        <li class="toc-section"><a href="./13-impl-a.html#h4-4">4.4 命令のデコード</a></li>
-        <li class="toc-section"><a href="./13-impl-a.html#h4-5">4.5 Zalrsc拡張の実装</a></li>
-        <li class="toc-section"><a href="./13-impl-a.html#h4-6">4.6 Zaamo拡張の実装</a></li>
+        <li class="toc-section"><a href="./13-impl-a.html#h4-4">4.4 Zalrsc拡張の実装</a></li>
+        <li class="toc-section"><a href="./13-impl-a.html#h4-5">4.5 Zaamo拡張の実装</a></li>
       </ul>
     </li>
     <li class="toc-chapter"><a href="./14-impl-c.html">5 C拡張の実装</a></li>
@@ -100,7 +99,7 @@
 <p>同時に他のコアが同じプログラムを実行するとき、間違った値の書き込みはSC命令で失敗します。失敗したらLR命令からやり直すことで、1つのコアで実行した場合と同一の結果になります。</p>
 <p>予約セットのサイズは実装によって異なります。</p>
 
-<h2 class="numbox"><a id="h4-2"></a><span class="secno">4.2</span> 命令の順序</h2>
+<h3 class="none"><a id="h4-1-4"></a><span class="secno">4.1.4</span> 命令の順序</h3>
 <p>A拡張の命令のビット列は、それぞれ1ビットのaq、rlビットを含んでいます。このビットは、他のコアやハードウェアスレッドからメモリ操作を観測したときにメモリ操作がどのような順序で観測されるかを制御するものです。</p>
 <p>A拡張の命令をAとするとき、それぞれのビットの状態に応じて、Aによるメモリ操作は次のように観測されます。</p>
 <dl>
@@ -127,170 +126,775 @@
 <div class="footnote" id="fn-impl-memory-order" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>メモリ操作の並び替えによる高速化は応用編で検討します。</p></div>
 </div><!--/.footnote-list-->
 
-<h2 class="numbox"><a id="h4-3"></a><span class="secno">4.3</span> amounitモジュールの作成</h2>
-<p>A拡張は他のコア、ハードウェアスレッドと同期してメモリ操作を行うためのものであるため、A拡張の操作はcoreモジュールの外、メモリよりも前で行うのが好ましいです。具体的には、coreモジュールとmmio_controllerモジュールの間にA拡張の命令を処理するモジュールを追加、実装します。</p>
-<p>TODORAMを外に出す→topから消すのをやめる</p>
-<p>メモリ操作をcoreモジュールからそのままmmio_controllerモジュールに受け渡しするだけのモジュールを作成します。<code class="inline-code">src/amounit.veryl</code>を作成し、次のように記述します()。</p>
-<div class="caption-code">
-<pre class="emlist">
-</pre>
-</div>
-<p>TODO amounitはconnectではなくステートを持たせる</p>
-<p>amounitモジュールをtopモジュールでインスタンス化して、coreモジュールとmmio_controllerモジュールのインターフェースを接続します()。</p>
-
-<h2 class="numbox"><a id="h4-4"></a><span class="secno">4.4</span> 命令のデコード</h2>
+<h2 class="numbox"><a id="h4-2"></a><span class="secno">4.2</span> 命令のデコード</h2>
 <p>TODO 命令の図</p>
-<p>A拡張の命令のopcodeはすべてOP-AMO(<code class="inline-code">7'b0101111</code>)です(TODO 図)。それぞれの命令はfunct5とfunct3で区別できます(TODO テーブル)。</p>
+<p>A拡張の命令はすべてR形式でのopcodeはOP-AMO(<code class="inline-code">7'b0101111</code>)です(TODO 図)。それぞれの命令はfunct5とfunct3で区別できます(TODO テーブル)。</p>
 <p>TODO funct5と命令の対応のテーブル</p>
-
-<h3 class="none"><a id="h4-4-1"></a><span class="secno">4.4.1</span> is_amoフラグを実装する</h3>
-<p><code class="inline-code">InstCtrl</code>構造体に、A拡張の命令であることを示す<code class="inline-code">is_amo</code>フラグを追加します()。</p>
-<div class="caption-code">
-<span class="caption">is_amoフラグを追加する (corectrl.veryl)</span>
-<pre class="list">
+<p>eeiパッケージにOP-AMOの定数を定義します。</p>
+<div id="eei.veryl.define.op" class="caption-code">
+<span class="caption">リスト4.1: リスト4.1:  (eei.veryl)</span>
+<pre class="list language-op">    const OP_AMO      : logic&lt;7&gt; = 7'b0101111;
 </pre>
 </div>
-<p>また、A拡張の命令を区別するための列挙型を定義します()。それぞれ、命令のfunct5と対応していることを確認してください。</p>
-<div class="caption-code">
-<pre class="emlist">
+<p>また、A拡張の命令を区別するための列挙型<code class="inline-code">AMOOp</code>を定義します()。それぞれ、命令のfunct5と対応していることを確認してください。</p>
+<div id="eei.veryl.define.AMOOp" class="caption-code">
+<span class="caption">リスト4.2: リスト4.2:  (eei.veryl)</span>
+<pre class="list language-AMOOp">    enum AMOOp: logic&lt;5&gt; {
+        LR = 5'b00010,
+        SC = 5'b00011,
+        SWAP = 5'b00001,
+        ADD = 5'b00000,
+        XOR = 5'b00100,
+        AND = 5'b01100,
+        OR = 5'b01000,
+        MIN = 5'b10000,
+        MAX = 5'b10100,
+        MINU = 5'b11000,
+        MAXU = 5'b11100,
+    }
+</pre>
+</div>
+
+<h3 class="none"><a id="h4-2-1"></a><span class="secno">4.2.1</span> is_amoフラグを実装する</h3>
+<p><code class="inline-code">InstCtrl</code>構造体に、A拡張の命令であることを示す<code class="inline-code">is_amo</code>フラグを追加します()。</p>
+<div id="corectrl.veryl.define.is_amo" class="caption-code">
+<span class="caption">リスト4.3: リスト4.3:  (corectrl.veryl)</span>
+<pre class="list language-is_amo">    struct InstCtrl {
+        itype    : InstType   , // 命令の形式
+        rwb_en   : logic      , // レジスタに書き込むかどうか
+        is_lui   : logic      , // LUI命令である
+        is_aluop : logic      , // ALUを利用する命令である
+        is_muldiv: logic      , // M拡張の命令である
+        is_op32  : logic      , // OP-32またはOP-IMM-32である
+        is_jump  : logic      , // ジャンプ命令である
+        is_load  : logic      , // ロード命令である
+        is_csr   : logic      , // CSR命令である
+        <b>is_amo   : logic      , // AMO instruction</b>
+        funct3   : logic   &lt;3&gt;, // 命令のfunct3フィールド
+        funct7   : logic   &lt;7&gt;, // 命令のfunct7フィールド
+    }
+</pre>
+</div>
+<p>命令がメモリにアクセスするかを判定するinst_is_memop関数を、<code class="inline-code">is_amo</code>フラグを利用するように変更します()。</p>
+<div id="corectrl.veryl.define.inst_is_memop" class="caption-code">
+<span class="caption">リスト4.4: リスト4.4:  (corectrl.veryl)</span>
+<pre class="list language-inst_is_memop">    function inst_is_memop (
+        ctrl: input InstCtrl,
+    ) -&gt; logic {
+        return ctrl.itype == InstType::S || ctrl.is_load <b>|| ctrl.is_amo</b>;
+    }
 </pre>
 </div>
 <p>inst_decoderモジュールの<code class="inline-code">InstCtrl</code>を生成している部分を変更します。opcodeが<code class="inline-code">OP-AMO</code>のとき、<code class="inline-code">is_amo</code>を<code class="inline-code">T</code>に設定します()。その他のopcodeの<code class="inline-code">is_amo</code>は<code class="inline-code">F</code>に設定してください。</p>
-<div class="caption-code">
-<span class="caption">is_amoフラグを追加する (corectrl.veryl)</span>
-<pre class="list">
+<div id="inst_decoder.veryl.define.ctrl" class="caption-code">
+<span class="caption">リスト4.5: リスト4.5: is_amoフラグを追加する (inst_decoder.veryl)</span>
+<pre class="list language-ctrl">                OP_SYSTEM: {
+                    InstType::I, T, F, F, F, F, F, F, T<b>, F</b>
+                },
+                OP_AMO: {
+                    InstType::R, T, F, F, F, F, F, F, F<b>, T</b>
+                },
+                default: {
+                    InstType::X, F, F, F, F, F, F, F, F<b>, F</b>
+                },
 </pre>
 </div>
 <p>また、A拡張の命令が有効な命令として判断されるようにします()。</p>
-<div class="caption-code">
-<span class="caption">A拡張の命令のとき、validフラグを立てる</span>
-<pre class="list">
+<div id="inst_decoder.veryl.define.valid" class="caption-code">
+<span class="caption">リスト4.6: リスト4.6: A拡張の命令のとき、validフラグを立てる (inst_decoder.veryl)</span>
+<pre class="list language-valid">            OP_MISC_MEM: T, // FENCE
+            <b>OP_AMO     : f3 == 3'b010 || f3 == 3'b011, // AMO</b>
+            default    : F,
 </pre>
 </div>
 
-<h3 class="none"><a id="h4-4-2"></a><span class="secno">4.4.2</span> アドレスを変更する</h3>
-<p>A拡張でアクセスするメモリのアドレスはrs1で指定されたレジスタの値です。これはRV64Iのロードストア命令で使用するrs1と即値を足し合わせたものとは異なるため、memunitモジュールの<code class="inline-code">addr</code>ポートに割り当てる値を<code class="inline-code">is_amo</code>フラグによって切り替えます()。</p>
-<p>TODO ここでmemu_addrを作る</p>
-<div class="caption-code">
-<span class="caption">core</span>
-<pre class="list">
+<h3 class="none"><a id="h4-2-2"></a><span class="secno">4.2.2</span> アドレスを変更する</h3>
+<p>A拡張でアクセスするメモリのアドレスはrs1で指定されたレジスタの値です。これは基本整数命令セットのロードストア命令のアドレス指定方法(rs1と即値を足し合わせる)とは異なるため、memunitモジュールの<code class="inline-code">addr</code>ポートに割り当てる値を<code class="inline-code">is_amo</code>フラグによって切り替えます()。</p>
+<div id="core.veryl.define.memu_addr" class="caption-code">
+<span class="caption">リスト4.7: リスト4.7:  (core.veryl)</span>
+<pre class="list language-memu_addr">    var memu_rdata: UIntX;
+    var memu_stall: logic;
+    <b>let memu_addr : Addr  = if mems_ctrl.is_amo ? memq_rdata.rs1_data : memq_rdata.alu_result;</b>
+
+    inst memu: memunit (
+        clk                                   ,
+        rst                                   ,
+        valid : mems_valid &amp;&amp; !mems_expt.valid,
+        is_new: mems_is_new                   ,
+        ctrl  : mems_ctrl                     ,
+        <b>addr  : memu_addr                     ,</b>
+        rs2   : memq_rdata.rs2_data           ,
+        rdata : memu_rdata                    ,
+        stall : memu_stall                    ,
+        membus: d_membus                      ,
+    );
+</pre>
+</div>
+<p>A拡張の命令でメモリアドレスが操作するデータの幅に整列されていないとき、Store/AMO address misaligned例外が発生します。この例外はストア命令の場合の例外と同じです。</p>
+<p>EXステージの例外判定でアドレスを使っている部分を変更します()。causeとtvalの割り当てがストア命令の場合と同じになっていることを確認してください。</p>
+<div id="core.veryl.define.exception" class="caption-code">
+<span class="caption">リスト4.8: リスト4.8:  (core.veryl)</span>
+<pre class="list language-exception">        <b>let memaddr                       : Addr  = if exs_ctrl.is_amo ? exs_rs1_data : exs_alu_result;</b>
+        let loadstore_address_misaligned  : logic = inst_is_memop(exs_ctrl) &amp;&amp; case exs_ctrl.funct3[1:0] {
+            2'b00  : 0, // B
+            2'b01  : <b>memaddr</b>[0] != 1'b0, // H
+            2'b10  : <b>memaddr</b>[1:0] != 2'b0, // W
+            2'b11  : <b>memaddr</b>[2:0] != 3'b0, // D
+            default: 0,
+        };
 </pre>
 </div>
 
-<h3 class="none"><a id="h4-4-3"></a><span class="secno">4.4.3</span> メモリインターフェースを変更する</h3>
-<p>amounitモジュールにA拡張の操作を指示するために、データ用のメモリインターフェースに変更が必要です。memunitモジュールとamounitモジュールの間のインターフェースを新しく定義します。</p>
-<p>membus_ifインターフェースに<code class="inline-code">is_amo</code>フラグ、<code class="inline-code">aq</code>ビット、<code class="inline-code">rl</code>ビット、<code class="inline-code">AMOOp</code>型を追加で定義したインターフェースを作成します。<code class="inline-code">src/core_data_if.veryl</code>を作成し、次のように記述します()。<code class="inline-code">wmask</code>を<code class="inline-code">DATA_WIDTH</code>ビットに展開する関数も定義しています。</p>
-<div class="caption-code">
-<pre class="emlist">
+<h3 class="none"><a id="h4-2-3"></a><span class="secno">4.2.3</span> ライトバックする条件を変更する</h3>
+<p>A拡張の命令を実行するとき、ロードした値をレジスタにライトバックするように変更します。</p>
+<div id="core.veryl.define.wb_data" class="caption-code">
+<span class="caption">リスト4.9: リスト4.9:  (core.veryl)</span>
+<pre class="list language-wb_data">    let wbs_wb_data: UIntX    = if wbs_ctrl.is_lui ?
+        wbs_imm
+    : if wbs_ctrl.is_jump ?
+        wbs_pc + 4
+    : if wbs_ctrl.is_load <b>|| wbs_ctrl.is_amo</b> ?
+        wbq_rdata.mem_rdata
+    : if wbs_ctrl.is_csr ?
 </pre>
 </div>
-<p>memunitモジュールからamounitモジュールへの接続でcore_data_ifを使用するように変更します()。</p>
-<p>memunitモジュールで、<code class="inline-code">is_amo</code>、<code class="inline-code">aq</code>、<code class="inline-code">rl</code>、<code class="inline-code">amoop</code>に値を割り当てます()。</p>
 
-<h2 class="numbox"><a id="h4-5"></a><span class="secno">4.5</span> Zalrsc拡張の実装</h2>
+<h2 class="numbox"><a id="h4-3"></a><span class="secno">4.3</span> amounitモジュールの作成</h2>
+<p>TODO 図</p>
+<p>A拡張は他のコア、ハードウェアスレッドと同期してメモリ操作を行うためのものであるため、A拡張の操作はcoreモジュールの外、メモリよりも前で行います。本書では、coreモジュールとmmio_controllerモジュールの間にA拡張の命令を処理するamounitモジュールを実装します(図)。</p>
+
+<h3 class="none"><a id="h4-3-1"></a><span class="secno">4.3.1</span> インターフェースを作成する</h3>
+<p>amounitモジュールにA拡張の操作を指示するために、<code class="inline-code">is_amo</code>フラグ、<code class="inline-code">aq</code>ビット、<code class="inline-code">rl</code>ビット、<code class="inline-code">AMOOp</code>型をmembus_ifインターフェースに追加で定義したインターフェースを作成します。</p>
+<p><code class="inline-code">src/core_data_if.veryl</code>を作成し、次のように記述します()。<code class="inline-code">wmask</code>を<code class="inline-code">DATA_WIDTH</code>ビットに展開する関数も定義しています。</p>
+<div id="core_data_if.veryl.empty.all" class="caption-code">
+<span class="caption">リスト4.10: リスト4.10:  (core_data_if.veryl)</span>
+<pre class="list language-all">import eei::*;
+
+interface core_data_if {
+    var valid : logic                       ;
+    var ready : logic                       ;
+    var addr  : logic&lt;XLEN&gt;                 ;
+    var wen   : logic                       ;
+    var wdata : logic&lt;MEMBUS_DATA_WIDTH&gt;    ;
+    var wmask : logic&lt;MEMBUS_DATA_WIDTH / 8&gt;;
+    var rvalid: logic                       ;
+    var rdata : logic&lt;MEMBUS_DATA_WIDTH&gt;    ;
+
+    var is_amo: logic   ;
+    var aq    : logic   ;
+    var rl    : logic   ;
+    var amoop : AMOOp   ;
+    var funct3: logic&lt;3&gt;;
+
+    modport master {
+        valid       : output,
+        ready       : input ,
+        addr        : output,
+        wen         : output,
+        wdata       : output,
+        wmask       : output,
+        rvalid      : input ,
+        rdata       : input ,
+        is_amo      : output,
+        aq          : output,
+        rl          : output,
+        amoop       : output,
+        funct3      : output,
+        wmask_expand: import,
+    }
+
+    modport slave {
+        wmask_expand: import,
+        ..converse(master)
+    }
+
+    modport all_input {
+        ..input
+    }
+
+    function wmask_expand () -&gt; logic&lt;MEMBUS_DATA_WIDTH&gt; {
+        var result: logic&lt;MEMBUS_DATA_WIDTH&gt;;
+
+        for i: u32 in 0..MEMBUS_DATA_WIDTH {
+            result[i] = wmask[i / 8];
+        }
+        return result;
+    }
+}
+</pre>
+</div>
+
+<h3 class="none"><a id="h4-3-2"></a><span class="secno">4.3.2</span> amounitモジュールの作成</h3>
+<p>メモリ操作をcoreモジュールからそのままmmio_controllerモジュールに受け渡しするだけのモジュールを作成します。<code class="inline-code">src/amounit.veryl</code>を作成し、次のように記述します()。</p>
+<div id="amounit.veryl.empty.all" class="caption-code">
+<span class="caption">リスト4.11: リスト4.11:  (amounit.veryl)</span>
+<pre class="list language-all">import eei::*;
+
+module amounit (
+    clk   : input   clock              ,
+    rst   : input   reset              ,
+    slave : modport core_data_if::slave,
+    master: modport Membus::master     ,
+) {
+
+    enum State {
+        Init,
+        WaitReady,
+        WaitValid,
+    }
+
+    var state      : State;
+    inst slave_saved: core_data_if;
+
+    // masterをリセットする
+    function reset_master () {
+        master.valid = 0;
+        master.addr  = 0;
+        master.wen   = 0;
+        master.wdata = 0;
+        master.wmask = 0;
+    }
+
+    // masterに要求を割り当てる
+    function assign_master (
+        addr : input Addr                   ,
+        wen  : input logic                  ,
+        wdata: input UIntX                  ,
+        wmask: input logic&lt;$size(UIntX) / 8&gt;,
+    ) {
+        master.valid = 1;
+        master.addr  = addr;
+        master.wen   = wen;
+        master.wdata = wdata;
+        master.wmask = wmask;
+    }
+
+    // 新しく要求を受け入れる
+    function accept_request_comb () {
+        if slave.ready &amp;&amp; slave.valid {
+            assign_master(slave.addr, slave.wen, slave.wdata, slave.wmask);
+        }
+    }
+
+    // slaveに結果を割り当てる
+    always_comb {
+        slave.ready  = 0;
+        slave.rvalid = 0;
+        slave.rdata  = 0;
+
+        case state {
+            State::Init: {
+                slave.ready = 1;
+            }
+            State::WaitValid: {
+                slave.ready  = master.rvalid;
+                slave.rvalid = master.rvalid;
+                slave.rdata  = master.rdata;
+            }
+            default: {}
+        }
+    }
+
+    // masterに要求を割り当てる
+    always_comb {
+        reset_master();
+        case state {
+            State::Init     : accept_request_comb();
+            State::WaitReady: {
+                assign_master(slave_saved.addr, slave_saved.wen, slave_saved.wdata, slave_saved.wmask);
+            }
+            State::WaitValid: accept_request_comb();
+            default         : {}
+        }
+    }
+
+    // 新しく要求を受け入れる
+    function accept_request_ff () {
+        slave_saved.valid = slave.valid;
+        if slave.ready &amp;&amp; slave.valid {
+            slave_saved.addr   = slave.addr;
+            slave_saved.wen    = slave.wen;
+            slave_saved.wdata  = slave.wdata;
+            slave_saved.wmask  = slave.wmask;
+            slave_saved.is_amo = slave.is_amo;
+            slave_saved.amoop  = slave.amoop;
+            slave_saved.aq     = slave.aq;
+            slave_saved.rl     = slave.rl;
+            slave_saved.funct3 = slave.funct3;
+            state              = if master.ready ? State::WaitValid : State::WaitReady;
+        } else {
+            state = State::Init;
+        }
+    }
+
+    function on_clock () {
+        case state {
+            State::Init     : accept_request_ff();
+            State::WaitReady: if master.ready {
+                state = State::WaitValid;
+            }
+            State::WaitValid: if master.rvalid {
+                accept_request_ff();
+            }
+            default: {}
+        }
+    }
+
+    function on_reset () {
+        state              = State::Init;
+        slave_saved.addr   = 0;
+        slave_saved.wen    = 0;
+        slave_saved.wdata  = 0;
+        slave_saved.wmask  = 0;
+        slave_saved.is_amo = 0;
+        slave_saved.amoop  = 0 as AMOOp;
+        slave_saved.aq     = 0;
+        slave_saved.rl     = 0;
+        slave_saved.funct3 = 0;
+    }
+
+    always_ff {
+        if_reset {
+            on_reset();
+        } else {
+            on_clock();
+        }
+    }
+}
+</pre>
+</div>
+<p>amounitモジュールは<code class="inline-code">State::Init</code>、(<code class="inline-code">State::WaitReady</code>、)<code class="inline-code">State::WaitValid</code>の順に状態を移動し、通常のロードストア命令を処理します。</p>
+<p>coreモジュールのロードストア用のインターフェースをmembus_ifからcore_data_ifに変更します()。</p>
+<div id="core.veryl.empty.port" class="caption-code">
+<span class="caption">リスト4.12: リスト4.12:  (core.veryl)</span>
+<pre class="list language-port">    i_membus: modport membus_if::&lt;ILEN, XLEN&gt;::master,
+    d_membus: modport <b>core_data_if</b>::master           ,
+    led     : output  UIntX                          ,
+</pre>
+</div>
+<div id="top.veryl.empty.port" class="caption-code">
+<span class="caption">リスト4.13: リスト4.13:  (top.veryl)</span>
+<pre class="list language-port">    inst d_membus_core: core_data_if;
+</pre>
+</div>
+<div id="top.veryl.empty.core" class="caption-code">
+<span class="caption">リスト4.14: リスト4.14:  (top.veryl)</span>
+<pre class="list language-core">    inst c: core (
+        clk                    ,
+        rst                    ,
+        i_membus               ,
+        <b>d_membus: d_membus_core,</b>
+        led                    ,
+    );
+</pre>
+</div>
+<p>memunitモジュールのインターフェースも変更し、<code class="inline-code">is_amo</code>、<code class="inline-code">aq</code>、<code class="inline-code">rl</code>、<code class="inline-code">amoop</code>に値を割り当てます()。</p>
+<div id="memunit.veryl.empty.port" class="caption-code">
+<span class="caption">リスト4.15: リスト4.15:  (memunit.veryl)</span>
+<pre class="list language-port">    stall : output  logic               , // メモリアクセス命令が完了していない
+    membus: modport <b>core_data_if</b>::master, // メモリとのinterface
+) {
+</pre>
+</div>
+<div id="memunit.veryl.empty.reg" class="caption-code">
+<span class="caption">リスト4.16: リスト4.16:  (memunit.veryl)</span>
+<pre class="list language-reg">    var req_wen   : logic                       ;
+    var req_addr  : Addr                        ;
+    var req_wdata : logic&lt;MEMBUS_DATA_WIDTH&gt;    ;
+    var req_wmask : logic&lt;MEMBUS_DATA_WIDTH / 8&gt;;
+    <b>var req_is_amo: logic                       ;</b>
+    <b>var req_amoop : AMOOp                       ;</b>
+    <b>var req_aq    : logic                       ;</b>
+    <b>var req_rl    : logic                       ;</b>
+    <b>var req_funct3: logic&lt;3&gt;                    ;</b>
+</pre>
+</div>
+<div id="memunit.veryl.empty.assign" class="caption-code">
+<span class="caption">リスト4.17: リスト4.17:  (memunit.veryl)</span>
+<pre class="list language-assign">    always_comb {
+        // メモリアクセス
+        membus.valid  = state == State::WaitReady;
+        membus.addr   = req_addr;
+        membus.wen    = req_wen;
+        membus.wdata  = req_wdata;
+        membus.wmask  = req_wmask;
+        <b>membus.is_amo = req_is_amo;</b>
+        <b>membus.amoop  = req_amoop;</b>
+        <b>membus.aq     = req_aq;</b>
+        <b>membus.rl     = req_rl;</b>
+        <b>membus.funct3 = req_funct3;</b>
+</pre>
+</div>
+<div id="memunit.veryl.empty.reset" class="caption-code">
+<span class="caption">リスト4.18: リスト4.18:  (memunit.veryl)</span>
+<pre class="list language-reset">    always_ff {
+        if_reset {
+            state      = State::Init;
+            req_wen    = 0;
+            req_addr   = 0;
+            req_wdata  = 0;
+            req_wmask  = 0;
+            <b>req_is_amo = 0;</b>
+            <b>req_amoop  = 0 as AMOOp;</b>
+            <b>req_aq     = 0;</b>
+            <b>req_rl     = 0;</b>
+            <b>req_funct3 = 0;</b>
+        } else {
+</pre>
+</div>
+<div id="memunit.veryl.empty.Init" class="caption-code">
+<span class="caption">リスト4.19: リスト4.19:  (memunit.veryl)</span>
+<pre class="list language-Init">                case state {
+                    State::Init: if is_new &amp; inst_is_memop(ctrl) {
+                        ...
+                        <b>req_is_amo = ctrl.is_amo;</b>
+                        <b>req_amoop  = ctrl.funct7[6:2] as AMOOp;</b>
+                        <b>req_aq     = ctrl.funct7[1];</b>
+                        <b>req_rl     = ctrl.funct7[0];</b>
+                        <b>req_funct3 = ctrl.funct3;</b>
+                    }
+                    State::WaitReady: if membus.ready {
+</pre>
+</div>
+<p>amounitモジュールをtopモジュールでインスタンス化し、coreモジュールとmmio_controllerモジュールのインターフェースを接続します()。</p>
+<div id="top.veryl.empty.amou" class="caption-code">
+<span class="caption">リスト4.20: リスト4.20:  (top.veryl)</span>
+<pre class="list language-amou">    inst amou: amounit (
+        clk                  ,
+        rst                  ,
+        slave : d_membus_core,
+        master: d_membus     ,
+    );
+</pre>
+</div>
+
+<h2 class="numbox"><a id="h4-4"></a><span class="secno">4.4</span> Zalrsc拡張の実装</h2>
 <p>予約セットのサイズは実装が自由に決めることができるため、本書では1つのアドレスのみ保持できるようにします。</p>
 
-<h3 class="none"><a id="h4-5-1"></a><span class="secno">4.5.1</span> LR.W、LR.D命令を実装する</h3>
+<h3 class="none"><a id="h4-4-1"></a><span class="secno">4.4.1</span> LR.W、LR.D命令を実装する</h3>
 <p>32ビット幅、64ビット幅のLR命令を実装します。LR.W命令はmemunitモジュールで64ビットに符号拡張されるため、amounitモジュールでLR.W命令とLR.D命令を区別する必要はありません。</p>
-<p>amounitモジュールに予約セットを作成します()。</p>
-<div class="caption-code">
-<pre class="emlist">
+<p>amounitモジュールに予約セットを作成します()。<code class="inline-code">is_addr_reserved</code>で、予約セットに有効なアドレスが格納されているかを管理します。</p>
+<div id="amounit.veryl.lr.list" class="caption-code">
+<span class="caption">リスト4.21: リスト4.21:  (amounit.veryl)</span>
+<pre class="list language-list">    // lr/sc
+    var is_addr_reserved: logic;
+    var reserved_addr   : Addr ;
 </pre>
 </div>
-<div class="caption-code">
-<pre class="emlist">
+<div id="amounit.veryl.lr.reset" class="caption-code">
+<span class="caption">リスト4.22: リスト4.22:  (amounit.veryl)</span>
+<pre class="list language-reset">        is_addr_reserved   = 0;
+        reserved_addr      = 0;
 </pre>
 </div>
-<p>LR命令を実行するとき、予約セットにアドレスを登録し、ロード結果を返すようにします。</p>
-<div class="caption-code">
-<pre class="emlist">
+<p>LR命令を実行するとき、予約セットにアドレスを登録してロード結果を返すようにします()。既に予約セットが使われている場合でもアドレスを上書きします。</p>
+<div id="amounit.veryl.lr.accept_request_comb" class="caption-code">
+<span class="caption">リスト4.23: リスト4.23:  (amounit.veryl)</span>
+<pre class="list language-accept_request_comb">    function accept_request_comb () {
+        if slave.ready &amp;&amp; slave.valid {
+            <b>if slave.is_amo {</b>
+            <b>    case slave.amoop {</b>
+            <b>        AMOOp::LR: assign_master(slave.addr, 0, 0, 0);</b>
+            <b>        default  : {}</b>
+            <b>    }</b>
+            <b>} else {</b>
+                assign_master(slave.addr, slave.wen, slave.wdata, slave.wmask);
+            <b>}</b>
+        }
+    }
 </pre>
 </div>
-<div class="caption-code">
-<pre class="emlist">
+<div id="amounit.veryl.lr.master_comb" class="caption-code">
+<span class="caption">リスト4.24: リスト4.24:  (amounit.veryl)</span>
+<pre class="list language-master_comb">    always_comb {
+        reset_master();
+        case state {
+            State::Init     : accept_request_comb();
+            <b>State::WaitReady: if slave_saved.is_amo {</b>
+            <b>    case slave_saved.amoop {</b>
+            <b>        AMOOp::LR: assign_master(slave_saved.addr, 0, 0, 0);</b>
+            <b>        default  : {}</b>
+            <b>    }</b>
+            <b>} else {</b>
+                assign_master(slave_saved.addr, slave_saved.wen, slave_saved.wdata, slave_saved.wmask);
+            <b>}</b>
+</pre>
+</div>
+<div id="amounit.veryl.lr.accept_request_ff" class="caption-code">
+<span class="caption">リスト4.25: リスト4.25:  (amounit.veryl)</span>
+<pre class="list language-accept_request_ff">    function accept_request_ff () {
+        slave_saved.valid = slave.valid;
+        if slave.ready &amp;&amp; slave.valid {
+            slave_saved.addr   = slave.addr;
+            ...
+            slave_saved.funct3 = slave.funct3;
+            <b>if slave.is_amo {</b>
+            <b>    case slave.amoop {</b>
+            <b>        AMOOp::LR: {</b>
+            <b>            // reserve address</b>
+            <b>            is_addr_reserved = 1;</b>
+            <b>            reserved_addr    = slave.addr;</b>
+            <b>            state            = if master.ready ? State::WaitValid : State::WaitReady;</b>
+            <b>        }</b>
+            <b>        default: {}</b>
+            <b>    }</b>
+            <b>} else {</b>
+                state = if master.ready ? State::WaitValid : State::WaitReady;
+            <b>}</b>
 </pre>
 </div>
 
-<h3 class="none"><a id="h4-5-2"></a><span class="secno">4.5.2</span> SC.W、SC.D命令を実装する</h3>
+<h3 class="none"><a id="h4-4-2"></a><span class="secno">4.4.2</span> SC.W、SC.D命令を実装する</h3>
 <p>32ビット幅、64ビット幅のSC命令を実装します。SC.W命令はmemunitモジュールで書き込みマスクを設定しているため、amounitモジュールでSC.W命令とSC.D命令を区別する必要はありません。</p>
 <p>SC命令が成功、失敗したときに結果を返すための状態をState型に追加します()。</p>
-<div class="caption-code">
-<pre class="emlist">
+<div id="amounit.veryl.sc.State" class="caption-code">
+<span class="caption">リスト4.26: リスト4.26:  (amounit.veryl)</span>
+<pre class="list language-State">    enum State {
+        Init,
+        WaitReady,
+        WaitValid,
+        <b>SCSuccess,</b>
+        <b>SCFail,</b>
+    }
 </pre>
 </div>
-<p>それぞれの状態で結果を返し、新しく要求を受け入れるようにします()。<code class="inline-code">State::SCSuccess</code>はSC命令に成功してストアが終わったときに結果を返します。</p>
-<div class="caption-code">
-<pre class="emlist">
+<p>それぞれの状態で結果を返し、新しく要求を受け入れるようにします()。<code class="inline-code">State::SCSuccess</code>はSC命令に成功してストアが終わったときに結果を返します。成功したら<code class="inline-code">0</code>、失敗したら<code class="inline-code">1</code>を返します。</p>
+<div id="amounit.veryl.sc.assign_slave" class="caption-code">
+<span class="caption">リスト4.27: リスト4.27:  (amounit.veryl)</span>
+<pre class="list language-assign_slave">    State::SCSuccess: {
+        slave.ready  = master.rvalid;
+        slave.rvalid = master.rvalid;
+        slave.rdata  = 0;
+    }
+    State::SCFail: {
+        slave.ready  = 1;
+        slave.rvalid = 1;
+        slave.rdata  = 1;
+    }
 </pre>
 </div>
-<div class="caption-code">
-<pre class="emlist">
-</pre>
-</div>
-<p>SC命令を受け入れるときに予約セットを確認し、アドレスが予約セットのアドレスと異なる場合は状態を<code class="inline-code">State::SCFail</code>に移動させます()。</p>
-<div class="caption-code">
-<pre class="emlist">
+<p>SC命令を受け入れるときに予約セットを確認し、アドレスが予約セットのアドレスと異なる場合は状態を<code class="inline-code">State::SCFail</code>に移動させます()。成功、失敗に関係なく、予約セットを空にします。</p>
+<div id="amounit.veryl.sc.accept_request_ff" class="caption-code">
+<span class="caption">リスト4.28: リスト4.28:  (amounit.veryl)</span>
+<pre class="list language-accept_request_ff">    AMOOp::SC: {
+        // reset reserved
+        let prev            : logic = is_addr_reserved;
+        is_addr_reserved = 0;
+        // check
+        if prev &amp;&amp; slave.addr == reserved_addr {
+            state = if master.ready ? State::SCSuccess : State::WaitReady;
+        } else {
+            state = State::SCFail;
+        }
+    }
 </pre>
 </div>
 <p>SC命令でメモリの<code class="inline-code">ready</code>が<code class="inline-code">1</code>になるのを待っているとき、<code class="inline-code">ready</code>が<code class="inline-code">1</code>になったら状態を<code class="inline-code">State::SCSuccess</code>に移動させます()。</p>
-<p>TODO 遷移がおかしいね (WaitReady)</p>
-<div class="caption-code">
-<pre class="emlist">
+<div id="amounit.veryl.sc.on_clock" class="caption-code">
+<span class="caption">リスト4.29: リスト4.29:  (amounit.veryl)</span>
+<pre class="list language-on_clock">    function on_clock () {
+        case state {
+            State::Init     : accept_request_ff();
+            State::WaitReady: if master.ready {
+                <b>if slave_saved.is_amo &amp;&amp; slave_saved.amoop == AMOOp::SC {</b>
+                <b>    state = State::SCSuccess;</b>
+                <b>} else {</b>
+                    state = State::WaitValid;
+                <b>}</b>
+            }
+            State::WaitValid: if master.rvalid {
+                accept_request_ff();
+            }
+            <b>State::SCSuccess: if master.rvalid {</b>
+            <b>    accept_request_ff();</b>
+            <b>}</b>
+            <b>State::SCFail: accept_request_ff();</b>
+            default      : {}
+        }
+    }
+</pre>
+</div>
+<p>SC命令によるメモリへの書き込みを実装します()。</p>
+<div id="amounit.veryl.sc.accept_request_comb" class="caption-code">
+<span class="caption">リスト4.30: リスト4.30:  (amounit.veryl)</span>
+<pre class="list language-accept_request_comb">    case slave.amoop {
+        AMOOp::LR: assign_master(slave.addr, 0, 0, 0);
+        <b>AMOOp::SC: if is_addr_reserved &amp;&amp; slave.addr == reserved_addr {</b>
+        @&lt;b&gt;     assign_master(slave.addr, 1, slave.wdata, slave.wmask);|
+        @&lt;b&gt; }|
+        default: {}
+    }
+</pre>
+</div>
+<div id="amounit.veryl.sc.master_comb" class="caption-code">
+<span class="caption">リスト4.31: リスト4.31:  (amounit.veryl)</span>
+<pre class="list language-master_comb">    always_comb {
+        reset_master();
+        case state {
+            State::Init     : accept_request_comb();
+            State::WaitReady: if slave_saved.is_amo {
+                case slave_saved.amoop {
+                    AMOOp::LR: assign_master(slave_saved.addr, 0, 0, 0);
+                    <b>AMOOp::SC: assign_master(slave_saved.addr, 1, slave_saved.wdata, slave_saved.wmask);</b>
+                    default  : {}
+                }
+            } else {
+                assign_master(slave_saved.addr, slave_saved.wen, slave_saved.wdata, slave_saved.wmask);
+            }
+            State::WaitValid               : accept_request_comb();
+            <b>State::SCFail, State::SCSuccess: accept_request_comb();</b>
+            default                        : {}
+        }
+    }
 </pre>
 </div>
 
-<h2 class="numbox"><a id="h4-6"></a><span class="secno">4.6</span> Zaamo拡張の実装</h2>
-<p>Zaamo拡張の命令はロード、演算、ストアを行います。</p>
-<p>32ビット演算と64ビット演算を区別するために、core_data_ifインターフェースに<code class="inline-code">is_op32</code>フラグを追加します()。</p>
-<div class="caption-code">
-<span class="caption">core_data_if</span>
-<pre class="list">
+<h2 class="numbox"><a id="h4-5"></a><span class="secno">4.5</span> Zaamo拡張の実装</h2>
+<p>図TODO</p>
+<p>Zaamo拡張の命令はロード、演算、ストアを行います。本章では、Zaamo拡張の命令を図TODOのような状態遷移で処理するように実装します。<code class="inline-code">State</code>型に新しい状態を定義してください()。</p>
+<div id="amounit.veryl.zaamo.State" class="caption-code">
+<span class="caption">リスト4.32: リスト4.32:  (amounit.veryl)</span>
+<pre class="list language-State">    enum State {
+        Init,
+        WaitReady,
+        WaitValid,
+        SCSuccess,
+        SCFail,
+        <b>AMOLoadReady,</b>
+        <b>AMOLoadValid,</b>
+        <b>AMOStoreReady,</b>
+        <b>AMOStoreValid,</b>
+    }
 </pre>
 </div>
-<div class="caption-code">
-<span class="caption">memunit</span>
-<pre class="list">
+<p>簡単にZalrsc拡張と区別するために、Zaamo拡張による要求かどうかを判定する関数(<code class="inline-code">is_Zaamo</code>)をcore_data_ifインターフェースに作成します()。modportにimport宣言を追加してください。</p>
+<div id="core_data_if.veryl.zaamo.is_Zaamo" class="caption-code">
+<span class="caption">リスト4.33: リスト4.33:  (core_data_if.veryl)</span>
+<pre class="list language-is_Zaamo">    function is_Zaamo () -&gt; logic {
+        return is_amo &amp;&amp; (amoop != AMOOp::LR &amp;&amp; amoop != AMOOp::SC);
+    }
 </pre>
 </div>
-<p>Zaamo拡張の命令かどうかを判定する関数を作成します()。</p>
-<div class="caption-code">
-<pre class="emlist">
+<div id="core_data_if.veryl.zaamo.master" class="caption-code">
+<span class="caption">リスト4.34: リスト4.34:  (core_data_if.veryl)</span>
+<pre class="list language-master">    wmask_expand: import,
+    <b>is_Zaamo    : import,</b>
 </pre>
 </div>
-<p>ロードしたデータと<code class="inline-code">wdata</code>、フラグを利用して、ストアする値を生成する関数を作成します()。</p>
-<div class="caption-code">
-<pre class="emlist">
-</pre>
-</div>
+<p>ロードしたデータと<code class="inline-code">wdata</code>、フラグを利用して、ストアする値を生成する関数を作成します()。32ビット演算のとき、下位32ビットと上位32ビットのどちらを使うかをアドレスによって判別しています。</p>
+<div id="amounit.veryl.zaamo.calc_amo" class="caption-code">
+<span class="caption">リスト4.35: リスト4.35:  (amounit.veryl)</span>
+<pre class="list language-calc_amo">    // AMO ALU
+    function calc_amo::&lt;W: u32&gt; (
+        amoop: input AMOOp   ,
+        wdata: input logic&lt;W&gt;,
+        rdata: input logic&lt;W&gt;,
+    ) -&gt; logic&lt;W&gt; {
+        let lts: logic = $signed(wdata) &lt;: $signed(rdata);
+        let ltu: logic = wdata &lt;: rdata;
 
-<h3 class="none"><a id="h4-6-1"></a><span class="secno">4.6.1</span> Zaamo拡張の命令を実装する</h3>
-<p>TODO 図</p>
-<p>Zaamo拡張の命令をTODO図のような状態遷移で処理するように実装します。<code class="inline-code">is_zaamo_fetched</code>はロード済かを示すフラグで、<code class="inline-code">zaamo_fetched_data</code>はロードしたデータを保存するレジスタです。</p>
-<p><code class="inline-code">is_zaamo_fetched</code>と<code class="inline-code">zaamo_fetched_data</code>レジスタを作成します。</p>
-<div class="caption-code">
-<pre class="emlist">
+        return case amoop {
+            AMOOp::SWAP: wdata,
+            AMOOp::ADD : rdata + wdata,
+            AMOOp::XOR : rdata ^ wdata,
+            AMOOp::AND : rdata &amp; wdata,
+            AMOOp::OR  : rdata | wdata,
+            AMOOp::MIN : if lts ? wdata : rdata,
+            AMOOp::MAX : if !lts ? wdata : rdata,
+            AMOOp::MINU: if ltu ? wdata : rdata,
+            AMOOp::MAXU: if !ltu ? wdata : rdata,
+            default    : 0,
+        };
+    }
+
+    // Zaamo拡張の命令のwdataを生成する
+    function gen_amo_wdata (
+        req  : modport core_data_if::all_input,
+        rdata: input   UIntX                  ,
+    ) -&gt; UIntX {
+        case req.funct3 {
+            3'b010: { // word
+                let low    : logic  = req.addr[2] == 0;
+                let rdata32: UInt32 = if low ? rdata[31:0] : rdata[63:32];
+                let wdata32: UInt32 = if low ? req.wdata[31:0] : req.wdata[63:32];
+                let result : UInt32 = calc_amo::&lt;32&gt;(req.amoop, wdata32, rdata32);
+                return if low ? {rdata[63:32], result} : {result, rdata[31:0]};
+            }
+            3'b011 : return calc_amo::&lt;64&gt;(req.amoop, req.wdata, rdata); // double
+            default: return 0;
+        }
+    }
 </pre>
 </div>
-<div class="caption-code">
-<span class="caption">reset</span>
-<pre class="list">
+<p>ロードした値を保存しておくレジスタを作成します()。</p>
+<div id="amounit.veryl.zaamo.reg" class="caption-code">
+<span class="caption">リスト4.36: リスト4.36:  (amounit.veryl)</span>
+<pre class="list language-reg">    // amo
+    var zaamo_fetched_data: UIntX;
 </pre>
 </div>
-<p>TODO図に基づいてメモリへのロード、ストア要求を割り当てます()。</p>
-<div class="caption-code">
-<pre class="emlist">
+<div id="amounit.veryl.zaamo.reset" class="caption-code">
+<span class="caption">リスト4.37: リスト4.37:  (amounit.veryl)</span>
+<pre class="list language-reset">        reserved_addr      = 0;
+        <b>zaamo_fetched_data = 0;</b>
+    }
+</pre>
+</div>
+<p>メモリアクセスが終了したら、ロードしておいた値を返します()。</p>
+<div id="amounit.veryl.zaamo.assign_slave_comb" class="caption-code">
+<span class="caption">リスト4.38: リスト4.38:  (amounit.veryl)</span>
+<pre class="list language-assign_slave_comb">    State::AMOStoreValid: {
+        slave.ready  = master.rvalid;
+        slave.rvalid = master.rvalid;
+        slave.rdata  = zaamo_fetched_data;
+    }
+</pre>
+</div>
+<p>状態に基づいて、メモリへのロード、ストア要求を割り当てます()。</p>
+<div id="amounit.veryl.zaamo.accept_request_comb" class="caption-code">
+<span class="caption">リスト4.39: リスト4.39:  (amounit.veryl)</span>
+<pre class="list language-accept_request_comb">    default: <b>if slave.is_Zaamo()</b> {
+        <b>assign_master(slave.addr, 0, 0, 0);</b>
+    }
+</pre>
+</div>
+<div id="amounit.veryl.zaamo.assign_master_comb" class="caption-code">
+<span class="caption">リスト4.40: リスト4.40:  (amounit.veryl)</span>
+<pre class="list language-assign_master_comb">    State::AMOLoadReady                      : assign_master      (slave_saved.addr, 0, 0, 0);
+    State::AMOLoadValid, State::AMOStoreReady: {
+        let rdata        : UIntX = if state == State::AMOLoadValid ? master.rdata : zaamo_fetched_data;
+        let wdata        : UIntX = gen_amo_wdata(slave_saved, rdata);
+        assign_master(slave_saved.addr, 1, wdata, slave_saved.wmask);
+    }
+    State::AMOStoreValid: accept_request_comb();
 </pre>
 </div>
 <p>TODO図に基づいて状態を遷移させます()。</p>
-<div class="caption-code">
-<pre class="emlist">
+<div id="amounit.veryl.zaamo.accept_request_ff" class="caption-code">
+<span class="caption">リスト4.41: リスト4.41:  (amounit.veryl)</span>
+<pre class="list language-accept_request_ff">    default: <b>if slave.is_Zaamo()</b> {
+        <b>state = if master.ready ? State::AMOLoadValid : State::AMOLoadReady;</b>
+    }
 </pre>
 </div>
-<p>ストアが完了したら結果を返し、新しく要求を受け入れます()。</p>
-<div class="caption-code">
-<pre class="emlist">
+<div id="amounit.veryl.zaamo.on_clock" class="caption-code">
+<span class="caption">リスト4.42: リスト4.42:  (amounit.veryl)</span>
+<pre class="list language-on_clock">    State::AMOLoadReady: if master.ready {
+        state = State::AMOLoadValid;
+    }
+    State::AMOLoadValid: if master.rvalid {
+        zaamo_fetched_data = master.rdata;
+        state              = if slave.ready ? State::AMOStoreValid : State::AMOStoreReady;
+    }
+    State::AMOStoreReady: if master.ready {
+        state = State::AMOStoreValid;
+    }
+    State::AMOStoreValid: if master.rvalid {
+        accept_request_ff();
+    }
 </pre>
 </div>
+<p>riscv-testsの<code class="inline-code">rv64ua-p-</code>から始まるテストを実行し、成功することを確認してください。</p>
         </main>
         <nav class="page-navi">
           <a href="12-impl-mmio.html" class="page-prev">&#9664;</a>

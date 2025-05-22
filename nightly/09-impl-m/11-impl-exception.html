@@ -200,9 +200,8 @@
 <div id="csrunit.veryl.exptinfo-range.expt" class="caption-code">
 <span class="caption">リスト2.10: リスト2.10: ExceptionInfoを使って例外を起こす (csrunit.veryl)</span>
 <pre class="list language-expt">    // Exception
-    let raise_expt : logic = valid &amp;&amp; expt_info.valid;
-    let expt_cause : UIntX = expt_info.cause;
-    let expt_vector: Addr  = mtvec;
+    let raise_expt: logic = valid &amp;&amp; expt_info.valid;
+    let expt_cause: UIntX = expt_info.cause;
 </pre>
 </div>
 
@@ -307,7 +306,6 @@
 <pre class="list language-info">    let raise_expt : logic = valid &amp;&amp; expt_info.valid;
     let expt_cause : UIntX = expt_info.cause;
     <b>let expt_value : UIntX = expt_info.value;</b>
-    let expt_vector: Addr  = mtvec;
 </pre>
 </div>
 <div id="csrunit.veryl.mtval-range.update" class="caption-code">
@@ -555,7 +553,6 @@
         <b>expt_cause == CsrCause::ILLEGAL_INSTRUCTION: {1'b0 repeat XLEN - $bits(Inst), inst_bits},</b>
         <b>default                                    : 0</b>
     <b>}</b>;
-    let expt_vector: Addr = mtvec;
 </pre>
 </div>
 <p>この変更により、レジスタにライトバックするようにデコードされた命令がcsrunitモジュールでトラップを起こすようになりました。トラップが発生するときにWBステージでライトバックしないように変更します(<span class="listref"><a href="./11-impl-exception.html#core.veryl.csrro-range.wbq_type">リスト2.34</a></span>、<span class="listref"><a href="./11-impl-exception.html#core.veryl.csrro-range.memwb">リスト2.35</a></span>、<span class="listref"><a href="./11-impl-exception.html#core.veryl.csrro-range.wb">リスト2.36</a></span>)。</p>
@@ -619,7 +616,7 @@
 </div>
 
 <h2 class="numbox"><a id="h2-6"></a><span class="secno">2.6</span> ロードストア命令のミスアライン例外</h2>
-<p>RISC-Vでは、ロード、ストア命令でアクセスするメモリのアドレスが、ロード、ストアするビット幅に整列されていない場合に、それぞれLoad address misaligned例外、Store AMO address misaligned例外が発生します<sup><a id="fnb-enable-misalign" href="#fn-enable-misalign" class="noteref" epub:type="noteref">*7</a></sup>。例えばLW命令は4バイトに整列されたアドレス、LD命令は8バイトに整列されたアドレスにしかアクセスできません。causeはそれぞれ<code class="inline-code">4</code>、<code class="inline-code">6</code>で、tvalはアクセスするメモリのアドレスになります。</p>
+<p>RISC-Vでは、ロード、ストア命令でアクセスするメモリのアドレスが、ロード、ストアするビット幅に整列されていない場合に、それぞれLoad address misaligned例外、Store/AMO address misaligned例外が発生します<sup><a id="fnb-enable-misalign" href="#fn-enable-misalign" class="noteref" epub:type="noteref">*7</a></sup>。例えばLW命令は4バイトに整列されたアドレス、LD命令は8バイトに整列されたアドレスにしかアクセスできません。causeはそれぞれ<code class="inline-code">4</code>、<code class="inline-code">6</code>で、tvalはアクセスするメモリのアドレスになります。</p>
 <div class="footnote-list">
 <div class="footnote" id="fn-enable-misalign" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*7] </span>例外を発生させず、そのようなロードストアをサポートすることもできます。本書ではCPUを単純に実装するために例外とします。</p></div>
 </div><!--/.footnote-list-->
