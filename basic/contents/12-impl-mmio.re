@@ -1521,10 +1521,10 @@ extern "C" const unsigned long long get_input_dpic() {
 #@end
 //}
 
-ここで、read関数の呼び出しでシミュレータを止めず(@<code>{O_NONBLOCK})、シェルが入力をバッファリングしなくする(@<code>{~ICANON})ために設定を変えるコードを挿入します
+ここで、read関数の呼び出しでシミュレータを止めず(@<code>{O_NONBLOCK})、
+シェルが入力をバッファリングしなくする(@<code>{~ICANON})ために設定を変えるコードを挿入します
 ()。
 また、シェルが文字列をローカルエコー(入力した文字列を表示)しないようにします(@<code>{~ECHO})。
-TODO ENABLE_DEBUG_INPUT
 
 //list[tb_verilator.cpp.debuginput.include][ (src/tb_verilator.cpp)]{
 #@maprange(scripts/12/debuginput-range/core/src/tb_verilator.cpp,include)
@@ -1588,7 +1588,10 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    @<b>|set_nonblocking();|
+    @<b>|#ifdef ENABLE_DEBUG_INPUT|
+        @<b>|set_nonblocking();|
+    @<b>|#endif|
+=======
 #@end
 //}
 

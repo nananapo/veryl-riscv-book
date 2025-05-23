@@ -4,11 +4,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width">
     
-    <title>あとがき | Verylで作るCPU</title>
+    <title>まえがき | Verylで作るCPU</title>
 
     <link rel="stylesheet" type="text/css" href="css/normalize.css" />
     <link rel="stylesheet" type="text/css" href="css/webstyle.css" />
-    <link rel="prev" title="Linuxを動かす" href="26-run-linux.html">
+    <link rel="next" title="M拡張の実装" href="10-impl-m.html">
     <meta name="generator" content="Re:VIEW Starter">
 
     <script async defer src="https://buttons.github.io/buttons.js"></script>
@@ -27,7 +27,13 @@
           <div style="margin-bottom: 14px;" id="share-facebook" class="fb-share-button" data-href="" data-layout="" data-size=""><a target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Finvalid.invalid%2F&amp;src=sdkpreparse" class="fb-xfbml-parse-ignore">Facebookでシェアする</a></div>
         </div>
         <ul class="toc toc-1">
-    <li class="toc-chapter"><a href="./00-preface.html">まえがき</a></li>
+    <li class="toc-chapter"><a href="./00-preface.html">まえがき</a>
+      <ul class="toc toc-2">
+        <li class="toc-section"><a href="./00-preface.html#h">注意</a></li>
+        <li class="toc-section"><a href="./00-preface.html#h">本書のソースコード / 問い合わせ先</a></li>
+        <li class="toc-section"><a href="./00-preface.html#h">凡例</a></li>
+      </ul>
+    </li>
 <li class="toc-part">第I部 RV64IMACの実装
   <ul class="toc toc-2">
     <li class="toc-chapter"><a href="./10-impl-m.html">1 M拡張の実装</a></li>
@@ -48,47 +54,47 @@
     <li class="toc-chapter"><a href="./26-run-linux.html">12 Linuxを動かす</a></li>
   </ul>
 </li>
-    <li class="toc-chapter"><a href="./99b-postface.html">あとがき</a>
-      <ul class="toc toc-2">
-        <li class="toc-section"><a href="./99b-postface.html#h">著者について</a></li>
-        <li class="toc-section"><a href="./99b-postface.html#h">謝辞</a></li>
-      </ul>
-    </li>
+    <li class="toc-chapter"><a href="./99b-postface.html">あとがき</a></li>
 </ul>
       </div>
       <div class="page-inner">
         <header class="page-header">
         </header>
         <main class="page-main">
-  <h1 class="none center"><a id="h"></a><br/>あとがき</h1>
-<p>いかがだったでしょうか。</p>
-<p>本書(基本編)はこれで終わりになります。だいぶ駆け足になってしまいましたが、RISC-VのCPUの具体的な書き方が分かったかと思います。</p>
-<p>基本編ではRISC-VのCPUをゼロから書き始め、Linuxを起動できるくらいの基本的な機能を実装する方法を解説しました。しかし、Linuxを起動できるといっても速度や機能は現代的なCPUに遠く及びません。次巻の「Verylで作るCPU」応用編ではキャッシュ、アウトオブオーダー実行などを実装し、CPUの高速化と他の機能について解説する予定です。</p>
-<p>教科書を読んでなんとなくCPUを理解した気がするけど作り方がわからない、既存のCPU実装を参考に自分でCPUを書いてみたいけど何から作れば良いかわからない、という方に本書が役立つことを願っています。</p>
-<p>2025年5月20日</p>
-<p><br /></p>
+  <h1 class="none center"><a id="h"></a><br/>まえがき</h1>
+<p><span style="font-size:large">TODO。Linuxを起動できるくらいのCPUにするよ。一部はWeb版だけだよ</span></p>
 
-<h2 id="id_99b-postface_nonum1" notoc="true">著者について</h2>
-<div class="sideimage">
-  <div class="sideimage-image" style="float:left;text-align:center;width:18mm">
-    <img src="./images/tw-icon.png" class="image-bordered" style="width:18mm"/>
-  </div>
-  <div class="sideimage-text" style="margin-left:18mm">
-    <div style="padding-left:7mm">
-<p class="noindent"><span style="font-size:large"><strong>阿部奏太</strong> (kanataso)</span><small style="font-size:small">(<a href="https://twitter.com/kanapipopipo" class="link">kanapipopipo@X/Twitter</a>, <a href="https://github.com/nananapo" class="link">nananapo@GitHub</a>)</small></p>
-<p class="noindent">カラオケまねきねこダイヤモンド会員 (3期目)<br />最近はキョーちゃん(有斐閣のキャラクター)が気になっている。<br />今後数年間はCPUから逃げられなくなりました。<br /></p>
-    </div>
-  </div>
+<h2 id="id_00-preface_nonum1" notoc="true">注意</h2>
+<p><span style="font-size:large">本書は「Verylで作るCPU 基本編」の<b>第II部と第III部</b>です。</span><span style="font-size:large">第I部の内容は含まれていません。</span></p>
+
+<h2 id="id_00-preface_nonum2" notoc="true">本書のソースコード / 問い合わせ先</h2>
+<p><span style="font-size:large">本書で利用するソースコードは、以下のサポートページから入手できます。質問やお問い合わせ方法についてもサポートページを確認してください。</span></p>
+<ul>
+<li><span style="font-size:large"><a href="https://github.com/nananapo/veryl-riscv-book/wiki/techbookfest18-support-page" class="link">https://github.com/nananapo/veryl-riscv-book/wiki/techbookfest18-support-page</a></span>
+</li>
+</ul>
+
+<h2 id="id_00-preface_nonum3" notoc="true">凡例</h2>
+<p>プログラムコードの差分を表示する場合は、追加されたコードを太字で、削除されたコードを取り消し線で表します。ただし、リスト内のコードが全て新しく追加されるときは太字を利用しません。コードを置き換えるときは太字で示し、削除されたコードを示さない場合もあります。</p>
+<div class="caption-code">
+<pre class="emlist"><del>print(&quot;Hello, <b>world</b>!\n&quot;);</del>       <span class="balloon">← 取り消し線は削除したコード</span>
+<b>print(&quot;Hello, &quot;+name+&quot;!\n&quot;);</b>    <span class="balloon">← 太字は追加したコード</span>
+</pre>
 </div>
-<p><br /></p>
-
-<h2 id="id_99b-postface_nonum2" notoc="true">謝辞</h2>
-<p>本書は次の方々にレビューしていただきました。</p>
-<p>TODO</p>
-<p>執筆にあたって関わったすべての方に、この場をお借りしてお礼申し上げます。</p>
+<p>長い行が右端で折り返されると、折り返されたことを表す小さな記号がつきます(pdf版のみ)。</p>
+<div class="caption-code">
+<pre class="emlist">123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789__123456789_123456789_123456789_123456789_
+</pre>
+</div>
+<p>ターミナル画面は、次のように表示します。行頭の「<code class="inline-code">$</code>」はプロンプトを表し、ユーザが入力するコマンドには下線を引いています。</p>
+<div class="cmd-code">
+<pre class="emlist">$ <span class="userinput">echo Hello</span>       <span class="balloon">← 行頭の「$」はプロンプト、それ以降がユーザ入力</span>
+</pre>
+</div>
+<p>プログラムコードやターミナル画面は、<code class="inline-code">...</code>などの複数の点で省略することがあります。</p>
         </main>
         <nav class="page-navi">
-          <a href="26-run-linux.html" class="page-prev">&#9664;</a>
+          <a href="10-impl-m.html" class="page-next">&#9654;</a>
         </nav>
         <br>
         <br>
