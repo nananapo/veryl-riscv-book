@@ -1142,7 +1142,7 @@ $ <span class="userinput">find share/ -type f -name &quot;*.bin&quot; -exec sh -
 </div>
 <p>常に要求を受け付け、書き込みの時は書き込むデータ(<code class="inline-code">wdata</code>)を確認します。<code class="inline-code">wdata</code>の上位20ビットが<code class="inline-code">20'h01010</code>なら下位8ビットを出力し、LSBが<code class="inline-code">1</code>ならテストの成功判定をして<code class="inline-code">$finish</code>システムタスクを呼び出します。</p>
 
-<h3 class="none"><a id="h3-6-3"></a><span class="secno">3.6.3</span> 出力をテストする</h3>
+<h3 id="debugout_howto" class="none"><a id="h3-6-3"></a><span class="secno">3.6.3</span> 出力をテストする</h3>
 <p>実装した出力デバイスで文字を出力できることを確認します。</p>
 <p>デバッグ用に<code class="inline-code">$display</code>システムタスクで表示している情報が邪魔になるので、デバッグ情報の表示を環境変数<code class="inline-code">PRINT_DEBUG</code>で制御できるようにします。</p>
 <div id="core.veryl.debugout.debug" class="caption-code">
@@ -1263,7 +1263,7 @@ SECTIONS
 <p>これらのファイルを利用し、テストプログラムをコンパイルします()。gccの<code class="inline-code">-march</code>フラグではC拡張を抜いたISAを指定しています。このフラグを記述しないと、実装していない命令が含まれたELFファイルにコンパイルされてしまいます。</p>
 <div class="cmd-code">
 <pre class="emlist">$ <span class="userinput">cd test</span>
-$ <span class="userinput">riscv64-unknown-elf-gcc -nostartfiles -nostdlib -T link.ld -march=rv64imad debug_output.c entry.S</span>
+$ <span class="userinput">riscv64-unknown-elf-gcc -nostartfiles -nostdlib -mcmodel=medany -T link.ld -march=rv64imad debug_output.c entry.S</span>
 $ <span class="userinput">riscv64-unknown-elf-objcopy a.out -O binary test.bin</span>
 $ <span class="userinput">python3 bin2hex.py 8 test.bin &gt; test.bin.hex</span> <span class="balloon">← HEXファイルに変換する</span>
 </pre>
