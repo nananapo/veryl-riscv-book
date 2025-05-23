@@ -1294,7 +1294,7 @@ mmio_controllerモジュールと接続します。
 @<code>{wdata}の上位20ビットが@<code>{20'h01010}なら下位8ビットを出力し、
 LSBが@<code>{1}ならテストの成功判定をして@<code>{$finish}システムタスクを呼び出します。
 
-=== 出力をテストする
+==={debugout_howto} 出力をテストする
 
 実装した出力デバイスで文字を出力できることを確認します。
 
@@ -1449,7 +1449,7 @@ gccの@<code>{-march}フラグではC拡張を抜いたISAを指定していま�
 
 //terminal[][]{
 $ @<userinput>{cd test}
-$ @<userinput>{riscv64-unknown-elf-gcc -nostartfiles -nostdlib -T link.ld -march=rv64imad debug_output.c entry.S}
+$ @<userinput>{riscv64-unknown-elf-gcc -nostartfiles -nostdlib -mcmodel=medany -T link.ld -march=rv64imad debug_output.c entry.S}
 $ @<userinput>{riscv64-unknown-elf-objcopy a.out -O binary test.bin}
 $ @<userinput>{python3 bin2hex.py 8 test.bin > test.bin.hex} @<balloon>{HEXファイルに変換する}
 //}

@@ -47,9 +47,10 @@
         <li class="toc-section"><a href="./21-impl-interrupt.html#h7-2">7.2 RISC-Vの割り込み</a></li>
         <li class="toc-section"><a href="./21-impl-interrupt.html#h7-3">7.3 aclint_memoryモジュールの作成</a></li>
         <li class="toc-section"><a href="./21-impl-interrupt.html#h7-4">7.4 ソフトウェア割り込みの実装 (MSWI)</a></li>
-        <li class="toc-section"><a href="./21-impl-interrupt.html#h7-5">7.5 タイマ割り込みの実装 (MTIMER)</a></li>
-        <li class="toc-section"><a href="./21-impl-interrupt.html#h7-6">7.6 WFI命令の実装</a></li>
-        <li class="toc-section"><a href="./21-impl-interrupt.html#h7-7">7.7 time、instret、cycleレジスタの実装</a></li>
+        <li class="toc-section"><a href="./21-impl-interrupt.html#h7-5">7.5 mtvecのVectoredモードの実装</a></li>
+        <li class="toc-section"><a href="./21-impl-interrupt.html#h7-6">7.6 タイマ割り込みの実装 (MTIMER)</a></li>
+        <li class="toc-section"><a href="./21-impl-interrupt.html#h7-7">7.7 WFI命令の実装</a></li>
+        <li class="toc-section"><a href="./21-impl-interrupt.html#h7-8">7.8 time、instret、cycleレジスタの実装</a></li>
       </ul>
     </li>
     <li class="toc-chapter"><a href="./22-umode-csr.html">8 U-modeの実装</a></li>
@@ -459,7 +460,7 @@ module aclint_memory (
 CsrAddr::MCYCLE  : mcycle,
 </pre>
 </div>
-<p>mieレジスタの書き込みマスクを設定して、MSIEビットだけ書き込めるようにします()。</p>
+<p>mieレジスタの書き込みマスクを設定して、MSIEビットを書き込めるようにします()。あとでMTIMEデバイスを実装するときにMTIEビットを使うため、ここでMTIEビットも書き込めるようにしておきます。</p>
 <div id="csrunit.veryl.miemip.WMASK" class="caption-code">
 <span class="caption">リスト7.30: リスト7.30:  (csrunit.veryl)</span>
 <pre class="list language-WMASK">    const MIE_WMASK     : UIntX = 'h0000_0000_0000_0088 as UIntX;
@@ -484,7 +485,7 @@ CsrAddr::MSCRATCH: MSCRATCH_WMASK,
 </div>
 
 <h3 class="none"><a id="h7-4-3"></a><span class="secno">7.4.3</span> mstatusのMIE、MPIEビットを実装する</h3>
-<p>mstatus.MIE、MPIEを変更できるようにします()。ビットを使った処理は後で実装します。</p>
+<p>mstatus.MIE、MPIEを変更できるようにします()。</p>
 <div id="csrunit.veryl.mstatuswmask.WMASK" class="caption-code">
 <span class="caption">リスト7.33: リスト7.33:  (csrunit.veryl)</span>
 <pre class="list language-WMASK">    const MSTATUS_WMASK : UIntX = 'h0000_0000_0000_0088 as UIntX;
@@ -497,70 +498,195 @@ CsrAddr::MSCRATCH: MSCRATCH_WMASK,
     let mstatus_mie : logic = mstatus[3];
 </pre>
 </div>
+<p>トラップが発生するとき、mstatus.MPIEにmstatus.MIE、mstatus.MIEに<code class="inline-code">0</code>を設定します()。また、MRET命令でmmstatus.MIEにmstatus.MPIE、mstatus.MPIEに<code class="inline-code">0</code>を設定します。</p>
+<div id="csrunit.veryl.mstatuswmask.change" class="caption-code">
+<span class="caption">リスト7.35: リスト7.35:  (csrunit.veryl)</span>
+<pre class="list language-change">if raise_trap {
+    if raise_expt {
+        mepc   = pc;
+        mcause = trap_cause;
+        mtval  = expt_value;
+        <b>// save mstatus.mie to mstatus.mpie</b>
+        <b>// and set mstatus.mie = 0</b>
+        <b>mstatus[7] = mstatus[3];</b>
+        <b>mstatus[3] = 0;</b>
+    } <b>else if trap_return {</b>
+        <b>// set mstatus.mie = mstatus.mpie</b>
+        <b>//     mstatus.mpie = 0</b>
+        <b>mstatus[3] = mstatus[7];</b>
+        <b>mstatus[7] = 0;</b>
+    <b>}</b>
+</pre>
+</div>
+<p>これによりトラップで割り込みを無効化して、トラップから戻るときにmstatus.MIEを元に戻す、という動作が実現されます。</p>
 
 <h3 class="none"><a id="h7-4-4"></a><span class="secno">7.4.4</span> 割り込み処理の実装</h3>
 <p>必要なレジスタを実装できたので、割り込みを起こす処理を実装します。割り込みはmip、mieの両方のビット、mstatus.MIEビットが立っているときに発生します。</p>
-<p>割り込みを起こすべきかを判定する変数、cause、ジャンプ先を示す変数を作成します()。</p>
-<div class="caption-code">
-<pre class="emlist">
+
+<h4><a id="h7-4-4-1"></a>割り込みのタイミング</h4>
+<p>割り込みはcsrunitモジュールに有効な命令が供給されているときにのみ発生させることができ、割り込みが発生したときにcsrunitモジュールに供給されていた命令は実行されません。</p>
+<p>ここで、割り込みを起こすタイミングに注意が必要です。</p>
+<p>今のところ、CSRの処理はMEMステージと同時に行っているため、例えばストア命令をmemunitモジュールで実行している途中に割り込みを発生させてしまうと、ストア命令の結果がメモリに反映されるにもかかわらず、mepcレジスタにストア命令のアドレスを書き込んでしまいます。</p>
+<p>それならば、単純に次の命令のアドレスをmepcレジスタに格納するようにすればいいと思うかもしれませんが、そもそも実行中のストア命令が本来は最終的に例外を発生させるものかもしれません。</p>
+<p>この問題に対処するために本章では、割り込みはMEM(CSR)ステージに新しく命令が供給されたクロックでしか起こせなくして、トラップが発生するときにMEMステージを無効化します。</p>
+<p>割り込みを発生させられるかを示すフラグをcsrunitモジュールに定義し、<code class="inline-code">mems_is_new</code>フラグを割り当てます()。</p>
+<div id="csrunit.veryl.intr.port" class="caption-code">
+<span class="caption">リスト7.36: リスト7.36:  (csrunit.veryl)</span>
+<pre class="list language-port">    rs1_data   : input   UIntX               ,
+    <b>can_intr   : input   logic               ,</b>
+    rdata      : output  UIntX               ,
 </pre>
 </div>
-<p>トラップ情報についての変数に割り込みの変数を割り当てます()。割り込みよりも例外を優先します。</p>
-<div class="caption-code">
-<pre class="emlist">
+<div id="core.veryl.intr.csru" class="caption-code">
+<span class="caption">リスト7.37: リスト7.37:  (core.veryl)</span>
+<pre class="list language-csru">    rs1_data   : memq_rdata.rs1_data  ,
+    <b>can_intr   : mems_is_new          ,</b>
+    rdata      : csru_rdata           ,
 </pre>
 </div>
-<p>トラップが発生するとき、mstatus.MPIEにmstatus.MIE、mstatus.MIEに<code class="inline-code">0</code>を設定します()。また、例外が発生したときにのみmtvalレジスタに例外の原因を書き込むようにします。</p>
-<div class="caption-code">
-<pre class="emlist">
+<p>トラップが発生するときにmemunitモジュールを無効にします()。今まではEXステージまでに例外が発生することが分かっていたら無効にしていましたが、csrunitモジュールからトラップが発生するかどうかの情報を直接得るようにします。</p>
+<div id="core.veryl.intr.memu" class="caption-code">
+<span class="caption">リスト7.38: リスト7.38:  (core.veryl)</span>
+<pre class="list language-memu">    inst memu: memunit (
+        clk                                   ,
+        rst                                   ,
+        valid : mems_valid &amp;&amp; !<b>csru_raise_trap</b>,
 </pre>
 </div>
 
-<h3 class="none"><a id="h7-4-5"></a><span class="secno">7.4.5</span> MRET命令の実装</h3>
-<p>トラップから戻る(trap return)とき、mstatus.MIEにmstatus.MPIE、mstatus.MPIEに<code class="inline-code">0</code>を書き込みます()。これにより、トラップによって変更されていたmstatus.MIEを元に戻されます。</p>
-<div class="caption-code">
-<pre class="emlist">
+<h4><a id="h7-4-4-2"></a>割り込みの判定</h4>
+<p>割り込みを起こせるかどうか、cause、ジャンプ先を示す変数を作成します()。</p>
+<div id="csrunit.veryl.intr.intr" class="caption-code">
+<span class="caption">リスト7.39: リスト7.39:  (csrunit.veryl)</span>
+<pre class="list language-intr">    // Interrupt
+    let raise_interrupt : logic = valid &amp;&amp; can_intr &amp;&amp; mstatus_mie &amp;&amp; (mip &amp; mie) != 0;
+    let interrupt_cause : UIntX = CsrCause::MACHINE_SOFTWARE_INTERRUPT;
+    let interrupt_vector: Addr  = mtvec;
+</pre>
+</div>
+<p>トラップ情報の変数に、割り込みの情報を割り当てます()。本書では例外を優先します。</p>
+<div id="csrunit.veryl.intr.trap" class="caption-code">
+<span class="caption">リスト7.40: リスト7.40:  (csrunit.veryl)</span>
+<pre class="list language-trap">    assign raise_trap = raise_expt || <b>raise_interrupt ||</b> trap_return;
+    let trap_cause: UIntX = <b>switch {</b>
+    <b>    raise_expt     : expt_cause,</b>
+    <b>    raise_interrupt: interrupt_cause,</b>
+    <b>    default        : 0,</b>
+    <b>};</b>
+    assign trap_vector = <b>switch {</b>
+    <b>    raise_expt     : mtvec,</b>
+    <b>    raise_interrupt: interrupt_vector,</b>
+    <b>    trap_return    : mepc,</b>
+    <b>    default        : 0,</b>
+    <b>};</b>
+</pre>
+</div>
+<p>割り込みの時にMRET命令の判定が<code class="inline-code">0</code>になるようにしておきます()。</p>
+<div id="csrunit.veryl.intr.ret" class="caption-code">
+<span class="caption">リスト7.41: リスト7.41:  (csrunit.veryl)</span>
+<pre class="list language-ret">    // Trap Return
+    assign trap_return = valid &amp;&amp; is_mret &amp;&amp; !raise_expt <b>&amp;&amp; !raise_interrupt</b>;
+</pre>
+</div>
+<p>トラップが発生するとき、例外の場合にのみmtvalレジスタに例外の情報が書き込まれます。本書では例外を優先するので、<code class="inline-code">raise_expt</code>が<code class="inline-code">1</code>ならmtvalレジスタに書き込むようにします()。</p>
+<div id="csrunit.veryl.intr.ff" class="caption-code">
+<span class="caption">リスト7.42: リスト7.42:  (csrunit.veryl)</span>
+<pre class="list language-ff">    if raise_trap {
+        if raise_expt <b>|| raise_interrupt</b> {
+            mepc   = pc;
+            mcause = trap_cause;
+            <b>if raise_expt {</b>
+                mtval = expt_value;
+            <b>}</b>
 </pre>
 </div>
 
-<h3 class="none"><a id="h7-4-6"></a><span class="secno">7.4.6</span> ソフトウェア割り込みをテストする</h3>
+<h3 class="none"><a id="h7-4-5"></a><span class="secno">7.4.5</span> ソフトウェア割り込みをテストする</h3>
 <p>ソフトウェア割り込みが正しく動くことを確認します。</p>
-<p><code class="inline-code">test/aclint_msi.c</code>を作成し、次のように記述します()。</p>
-<div class="caption-code">
-<pre class="emlist">
+<p><code class="inline-code">test/mswi.c</code>を作成し、次のように記述します()。</p>
+<div id="mswi.c.mswitest" class="caption-code">
+<span class="caption">リスト7.43: リスト7.43:  (test/mswi.c)</span>
+<pre class="list language-mswitest">#define MSIP0 ((volatile unsigned int *)0x2000000)
+#define DEBUG_REG ((volatile unsigned long long*)0x40000000)
+#define MIE_MSIE (1 &lt;&lt; 3)
+#define MSTATUS_MIE (1 &lt;&lt; 3)
+
+void interrupt_handler(void);
+
+void w_mtvec(unsigned long long x) {
+    asm volatile(&quot;csrw mtvec, %0&quot; : : &quot;r&quot; (x));
+}
+
+void w_mie(unsigned long long x) {
+    asm volatile(&quot;csrw mie, %0&quot; : : &quot;r&quot; (x));
+}
+
+void w_mstatus(unsigned long long x) {
+    asm volatile(&quot;csrw mstatus, %0&quot; : : &quot;r&quot; (x));
+}
+
+void main(void) {
+    w_mtvec((unsigned long long)interrupt_handler);
+    w_mie(MIE_MSIE);
+    w_mstatus(MSTATUS_MIE);
+    *MSIP0 = 1;
+    while (1) *DEBUG_REG = 3; // fail
+}
+
+void interrupt_handler(void) {
+    *DEBUG_REG = 1; // success
+}
 </pre>
 </div>
 <p>プログラムでは、mtvecにinterrupt_handler関数のアドレスを書き込み、mstatus.MIE、mie.MSIEを<code class="inline-code">1</code>に設定して割り込みを許可してからMSIP0レジスタに1を書き込んでいます。</p>
-<p>プログラムをコンパイルして実行すると、TODOリストのように表示されます。main関数からinterrupt_handler関数にトラップしていることが分かります。</p>
-<div class="caption-code">
-<pre class="emlist">
-</pre>
-</div>
-<p>ソフトウェア割り込みが発生していることを確認できました。</p>
+<p>プログラムをコンパイルして実行<sup><a id="fnb-howtocompile" href="#fn-howtocompile" class="noteref" epub:type="noteref">*1</a></sup>すると、ソフトウェア割り込みが発生することでinterrupt_handlerにジャンプし、デバッグ用のデバイスに<code class="inline-code">1</code>を書き込んで終了することを確認できます。</p>
+<div class="footnote-list">
+<div class="footnote" id="fn-howtocompile" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>コンパイル、実行方法は「<a href="12-impl-mmio.html#h3-6-3">3.6.3 出力をテストする</a>」を参考にしてください。</p></div>
+</div><!--/.footnote-list-->
 
-<h3 class="none"><a id="h7-4-7"></a><span class="secno">7.4.7</span> mtvecのVectoredモードの実装</h3>
+<h2 class="numbox"><a id="h7-5"></a><span class="secno">7.5</span> mtvecのVectoredモードの実装</h2>
 <p>mtvecレジスタにはMODEフィールドがあり、割り込みが発生するときのジャンプ先の決定方法を制御できます。</p>
 <p>MODEがDirect(<code class="inline-code">2'b00</code>)のとき、<code class="inline-code">mtvec.BASE &lt;&lt; 2</code>のアドレスにトラップします。Vectored(<code class="inline-code">2'b01</code>)のとき、<code class="inline-code">(mtvec.BASE &lt;&lt; 2) + 4 * cause</code>のアドレスにトラップします。ここでcauseは割り込みのcauseのMSBを除いた値です。例えばmachine software interruptの場合、<code class="inline-code">(mtvec.BASE &lt;&lt; 2) + 4 * 3</code>がジャンプ先になります。</p>
-<p>mtvec.MODEにVectoredを書き込めるようにします()。</p>
-<div class="caption-code">
-<pre class="emlist">
+<p>例外のジャンプ先のアドレスは、常にMODEがDirectとして計算します。</p>
+<p>下位1ビットに書き込めるようにすることで、mtvec.MODEにVectoredを書き込めるようにします()。</p>
+<div id="csrunit.veryl.mtvectored.WMASK" class="caption-code">
+<span class="caption">リスト7.44: リスト7.44:  (csrunit.veryl)</span>
+<pre class="list language-WMASK">    const MTVEC_WMASK   : UIntX = 'hffff_ffff_ffff_fff<b>e</b>;
 </pre>
 </div>
-<p>MODEとcauseに応じて割り込みのジャンプ先を変更します()。</p>
-<div class="caption-code">
-<pre class="emlist">
+<p>割り込みのジャンプ先をMODEとcauseに応じて変更します()。</p>
+<div id="csrunit.veryl.mtvectored.interrupt_vector" class="caption-code">
+<span class="caption">リスト7.45: リスト7.45:  (csrunit.veryl)</span>
+<pre class="list language-interrupt_vector">    let interrupt_vector: Addr  = if mtvec[0] == 0 ? {mtvec[msb:2], 2'b0} : // Direct
+     {mtvec[msb:2] + interrupt_cause[msb - 2:0], 2'b0}; // Vectored
+</pre>
+</div>
+<p>例外のジャンプ先を、mtvecレジスタの下位2ビットを<code class="inline-code">0</code>にしたアドレス(Direct)に変更します()。新しく<code class="inline-code">expt_vector</code>を定義し、<code class="inline-code">trap_vector</code>に割り当てます。</p>
+<div id="csrunit.veryl.mtvectored.expt_vector" class="caption-code">
+<span class="caption">リスト7.46: リスト7.46:  (csrunit.veryl)</span>
+<pre class="list language-expt_vector">    let expt_vector: Addr = {mtvec[msb:2], 2'b0};
+</pre>
+</div>
+<div id="csrunit.veryl.mtvectored.trap_vector" class="caption-code">
+<span class="caption">リスト7.47: リスト7.47:  (csrunit.veryl)</span>
+<pre class="list language-trap_vector">    assign trap_vector = switch {
+        raise_expt     : <b>expt_vector</b>,
+        raise_interrupt: interrupt_vector,
+        trap_return    : mepc,
+        default        : 0,
+    };
 </pre>
 </div>
 
-<h2 class="numbox"><a id="h7-5"></a><span class="secno">7.5</span> タイマ割り込みの実装 (MTIMER)</h2>
+<h2 class="numbox"><a id="h7-6"></a><span class="secno">7.6</span> タイマ割り込みの実装 (MTIMER)</h2>
 
-<h3 class="none"><a id="h7-5-1"></a><span class="secno">7.5.1</span> タイマ割り込みの仕組み</h3>
+<h3 class="none"><a id="h7-6-1"></a><span class="secno">7.6.1</span> タイマ割り込みの仕組み</h3>
 <p>MTIMERデバイスは、タイマ割り込み(machine timer interrupt)を提供するためのデバイスです。MTIMERデバイスには1つの8バイトのMTIMEレジスタ、ハードウェアスレッド毎に8バイトのMTIMECMPレジスタが用意されています(TODOテーブル)。本書ではMTIMECMPの後ろにMTIMEを配置します。</p>
 <p>TODO テーブル (MTIME)TODO テーブル (MTIMECMP 最大4095個)</p>
 <p>MTIMEレジスタは、固定された周波数でのサイクル数をカウントするレジスタです。リセット時に<code class="inline-code">0</code>になります。</p>
 <p>MTIMERデバイスは、それに対応するハードウェアスレッドのmip.MTIPと接続されており、MTIMEがMTIMECMPを上回ったときmip.MTIPを<code class="inline-code">1</code>にします。これにより、指定した時間に割り込みを発生させることが可能になります。</p>
 
-<h3 class="none"><a id="h7-5-2"></a><span class="secno">7.5.2</span> MTIME、MTIMECMPレジスタを実装する</h3>
+<h3 class="none"><a id="h7-6-2"></a><span class="secno">7.6.2</span> MTIME、MTIMECMPレジスタを実装する</h3>
 <p>ACLINTモジュールにMTIME、MTIMECMPレジスタを実装します。今のところmhartidが<code class="inline-code">0</code>のハードウェアスレッドしか存在しないため、MTIMECMP0のみ実装します。</p>
 <p><code class="inline-code">mtime</code>、<code class="inline-code">mtimecmp0</code>レジスタを作成し、読み書きできるようにします()。<code class="inline-code">mtime</code>に値が書き込まれないとき、クロック毎にインクリメントします。</p>
 <div class="caption-code">
@@ -589,15 +715,14 @@ CsrAddr::MSCRATCH: MSCRATCH_WMASK,
 </pre>
 </div>
 
-<h3 class="none"><a id="h7-5-3"></a><span class="secno">7.5.3</span> 割り込み原因を設定する</h3>
-<p>TODO memunitを止められていない -&gt; 割り込めるのは最初の1クロックだけ</p>
+<h3 class="none"><a id="h7-6-3"></a><span class="secno">7.6.3</span> 割り込み原因を設定する</h3>
 <p>割り込み原因を優先順位に応じて設定します。タイマ割り込みはソフトウェア割り込みよりも優先順位が低いため、ソフトウェア割り込みの下で原因を設定します()。</p>
 <div class="caption-code">
 <pre class="emlist">
 </pre>
 </div>
 
-<h3 class="none"><a id="h7-5-4"></a><span class="secno">7.5.4</span> タイマ割り込みをテストする</h3>
+<h3 class="none"><a id="h7-6-4"></a><span class="secno">7.6.4</span> タイマ割り込みをテストする</h3>
 <p>タイマ割り込みが正しく動くことを確認します。</p>
 <p><code class="inline-code">test/aclint_mti.c</code>を作成し、次のように記述します()。</p>
 <div class="caption-code">
@@ -612,7 +737,7 @@ CsrAddr::MSCRATCH: MSCRATCH_WMASK,
 </div>
 <p>タイマ割り込みが発生していることを確認できました。</p>
 
-<h2 class="numbox"><a id="h7-6"></a><span class="secno">7.6</span> WFI命令の実装</h2>
+<h2 class="numbox"><a id="h7-7"></a><span class="secno">7.7</span> WFI命令の実装</h2>
 <p>WFI命令は割り込みが発生するまで、CPUをストールさせる命令です。ただし、グローバル割り込みイネーブルビットは考慮せず、ある割り込みの待機(pending)ビットと許可(enable)ビットの両方が立っているときに実行を再開します。また、それ以外の自由な理由で実行を再開させてもいいです。WFI命令で割り込みが発生するとき、WFI命令の次のアドレスの命令で割り込みが起こったことにします。</p>
 <p>本書ではWFI命令でCPUをストールさせるように実装します。</p>
 <p>inst_decoderモジュールでWFI命令をデコードできるようにします()。</p>
@@ -652,10 +777,10 @@ CsrAddr::MSCRATCH: MSCRATCH_WMASK,
 </pre>
 </div>
 
-<h2 class="numbox"><a id="h7-7"></a><span class="secno">7.7</span> time、instret、cycleレジスタの実装</h2>
-<p>RISC-Vにはtime、instret、cycleという読み込み専用のCSRが定義されており、それぞれmtime、minstret、mcycleレジスタと同じ値をとります<sup><a id="fnb-hpmcounter" href="#fn-hpmcounter" class="noteref" epub:type="noteref">*1</a></sup>。</p>
+<h2 class="numbox"><a id="h7-8"></a><span class="secno">7.8</span> time、instret、cycleレジスタの実装</h2>
+<p>RISC-Vにはtime、instret、cycleという読み込み専用のCSRが定義されており、それぞれmtime、minstret、mcycleレジスタと同じ値をとります<sup><a id="fnb-hpmcounter" href="#fn-hpmcounter" class="noteref" epub:type="noteref">*2</a></sup>。</p>
 <div class="footnote-list">
-<div class="footnote" id="fn-hpmcounter" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>mhpmcounterレジスタと同じ値をとるhpmcounterレジスタもありますが、mhpmcounterレジスタを実装していないので実装しません。</p></div>
+<div class="footnote" id="fn-hpmcounter" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*2] </span>mhpmcounterレジスタと同じ値をとるhpmcounterレジスタもありますが、mhpmcounterレジスタを実装していないので実装しません。</p></div>
 </div><!--/.footnote-list-->
 <p><code class="inline-code">CsrAddr</code>型にレジスタのアドレスを追加します()。</p>
 <div class="caption-code">

@@ -522,8 +522,12 @@ CsrAddr::MCYCLE  : mcycle,
 #@end
 //}
 
-mieレジスタの書き込みマスクを設定して、MSIEビットだけ書き込めるようにします
+mieレジスタの書き込みマスクを設定して、MSIEビットを書き込めるようにします
 ()。
+あとでMTIMEデバイスを実装するときにMTIEビットを使うため、
+ここでMTIEビットも書き込めるようにしておきます。
+
+#@# FIXME 別でMTIEの書き込みマスクを変更するステップを入れたい
 
 //list[csrunit.veryl.miemip.WMASK][ (csrunit.veryl)]{
 #@maprange(scripts/21/miemip-range/core/src/csrunit.veryl,WMASK)
@@ -554,7 +558,6 @@ if is_wsc {
 
 mstatus.MIE、MPIEを変更できるようにします
 ()。
-ビットを使った処理は後で実装します。
 
 //list[csrunit.veryl.mstatuswmask.WMASK][ (csrunit.veryl)]{
 #@maprange(scripts/21/mstatuswmask-range/core/src/csrunit.veryl,WMASK)
@@ -570,49 +573,195 @@ mstatus.MIE、MPIEを変更できるようにします
 #@end
 //}
 
+トラップが発生するとき、mstatus.MPIEにmstatus.MIE、mstatus.MIEに@<code>{0}を設定します
+()。
+また、MRET命令でmmstatus.MIEにmstatus.MPIE、mstatus.MPIEに@<code>{0}を設定します。
+
+//list[csrunit.veryl.mstatuswmask.change][ (csrunit.veryl)]{
+#@maprange(scripts/21/mstatuswmask-range/core/src/csrunit.veryl,change)
+if raise_trap {
+    if raise_expt {
+        mepc   = pc;
+        mcause = trap_cause;
+        mtval  = expt_value;
+        @<b>|// save mstatus.mie to mstatus.mpie|
+        @<b>|// and set mstatus.mie = 0|
+        @<b>|mstatus[7] = mstatus[3];|
+        @<b>|mstatus[3] = 0;|
+    } @<b>|else if trap_return {|
+        @<b>|// set mstatus.mie = mstatus.mpie|
+        @<b>|//     mstatus.mpie = 0|
+        @<b>|mstatus[3] = mstatus[7];|
+        @<b>|mstatus[7] = 0;|
+    @<b>|}|
+#@end
+//}
+
+これによりトラップで割り込みを無効化して、
+トラップから戻るときにmstatus.MIEを元に戻す、
+という動作が実現されます。
+
 === 割り込み処理の実装
 
 必要なレジスタを実装できたので、割り込みを起こす処理を実装します。
 割り込みはmip、mieの両方のビット、mstatus.MIEビットが立っているときに発生します。
 
-割り込みを起こすべきかを判定する変数、cause、ジャンプ先を示す変数を作成します
+==== 割り込みのタイミング
+
+割り込みはcsrunitモジュールに有効な命令が供給されているときにのみ発生させることができ、
+割り込みが発生したときにcsrunitモジュールに供給されていた命令は実行されません。
+
+ここで、割り込みを起こすタイミングに注意が必要です。
+
+今のところ、CSRの処理はMEMステージと同時に行っているため、
+例えばストア命令をmemunitモジュールで実行している途中に割り込みを発生させてしまうと、
+ストア命令の結果がメモリに反映されるにもかかわらず、
+mepcレジスタにストア命令のアドレスを書き込んでしまいます。
+
+それならば、単純に次の命令のアドレスをmepcレジスタに格納するようにすればいいと思うかもしれませんが、
+そもそも実行中のストア命令が本来は最終的に例外を発生させるものかもしれません。
+
+この問題に対処するために本章では、
+割り込みはMEM(CSR)ステージに新しく命令が供給されたクロックでしか起こせなくして、
+トラップが発生するときにMEMステージを無効化します。
+
+割り込みを発生させられるかを示すフラグをcsrunitモジュールに定義し、
+@<code>{mems_is_new}フラグを割り当てます
 ()。
 
-//list[][]{
+//list[csrunit.veryl.intr.port][ (csrunit.veryl)]{
+#@maprange(scripts/21/intr-range/core/src/csrunit.veryl,port)
+    rs1_data   : input   UIntX               ,
+    @<b>|can_intr   : input   logic               ,|
+    rdata      : output  UIntX               ,
+#@end
 //}
 
-トラップ情報についての変数に割り込みの変数を割り当てます
-()。
-割り込みよりも例外を優先します。
-
-//list[][]{
+//list[core.veryl.intr.csru][ (core.veryl)]{
+#@maprange(scripts/21/intr-range/core/src/core.veryl,csru)
+    rs1_data   : memq_rdata.rs1_data  ,
+    @<b>|can_intr   : mems_is_new          ,|
+    rdata      : csru_rdata           ,
+#@end
 //}
 
-トラップが発生するとき、mstatus.MPIEにmstatus.MIE、mstatus.MIEに@<code>{0}を設定します
+トラップが発生するときにmemunitモジュールを無効にします
 ()。
-また、例外が発生したときにのみmtvalレジスタに例外の原因を書き込むようにします。
+今まではEXステージまでに例外が発生することが分かっていたら無効にしていましたが、
+csrunitモジュールからトラップが発生するかどうかの情報を直接得るようにします。
 
-//list[][]{
+//list[core.veryl.intr.memu][ (core.veryl)]{
+#@maprange(scripts/21/intr-range/core/src/core.veryl,memu)
+    inst memu: memunit (
+        clk                                   ,
+        rst                                   ,
+        valid : mems_valid && !@<b>|csru_raise_trap|,
+#@end
 //}
 
-=== MRET命令の実装
+==== 割り込みの判定
 
-トラップから戻る(trap return)とき、
-mstatus.MIEにmstatus.MPIE、mstatus.MPIEに@<code>{0}を書き込みます
+割り込みを起こせるかどうか、cause、ジャンプ先を示す変数を作成します
 ()。
-これにより、トラップによって変更されていたmstatus.MIEを元に戻されます。
 
-//list[][]{
+//list[csrunit.veryl.intr.intr][ (csrunit.veryl)]{
+#@maprange(scripts/21/intr-range/core/src/csrunit.veryl,intr)
+    // Interrupt
+    let raise_interrupt : logic = valid && can_intr && mstatus_mie && (mip & mie) != 0;
+    let interrupt_cause : UIntX = CsrCause::MACHINE_SOFTWARE_INTERRUPT;
+    let interrupt_vector: Addr  = mtvec;
+#@end
+//}
+
+トラップ情報の変数に、割り込みの情報を割り当てます
+()。
+本書では例外を優先します。
+
+//list[csrunit.veryl.intr.trap][ (csrunit.veryl)]{
+#@maprange(scripts/21/intr-range/core/src/csrunit.veryl,trap)
+    assign raise_trap = raise_expt || @<b>{raise_interrupt ||} trap_return;
+    let trap_cause: UIntX = @<b>|switch {|
+    @<b>|    raise_expt     : expt_cause,|
+    @<b>|    raise_interrupt: interrupt_cause,|
+    @<b>|    default        : 0,|
+    @<b>|};|
+    assign trap_vector = @<b>|switch {|
+    @<b>|    raise_expt     : mtvec,|
+    @<b>|    raise_interrupt: interrupt_vector,|
+    @<b>|    trap_return    : mepc,|
+    @<b>|    default        : 0,|
+    @<b>|};|
+#@end
+//}
+
+割り込みの時にMRET命令の判定が@<code>{0}になるようにしておきます
+()。
+
+//list[csrunit.veryl.intr.ret][ (csrunit.veryl)]{
+#@maprange(scripts/21/intr-range/core/src/csrunit.veryl,ret)
+    // Trap Return
+    assign trap_return = valid && is_mret && !raise_expt @<b>|&& !raise_interrupt|;
+#@end
+//}
+
+トラップが発生するとき、
+例外の場合にのみmtvalレジスタに例外の情報が書き込まれます。
+本書では例外を優先するので、
+@<code>{raise_expt}が@<code>{1}ならmtvalレジスタに書き込むようにします
+()。
+
+//list[csrunit.veryl.intr.ff][ (csrunit.veryl)]{
+#@maprange(scripts/21/intr-range/core/src/csrunit.veryl,ff)
+    if raise_trap {
+        if raise_expt @<b>{|| raise_interrupt} {
+            mepc   = pc;
+            mcause = trap_cause;
+            @<b>|if raise_expt {|
+                mtval = expt_value;
+            @<b>|}|
+#@end
 //}
 
 === ソフトウェア割り込みをテストする
 
 ソフトウェア割り込みが正しく動くことを確認します。
 
-@<code>{test/aclint_msi.c}を作成し、次のように記述します
+@<code>{test/mswi.c}を作成し、次のように記述します
 ()。
 
-//list[][]{
+//list[mswi.c.mswitest][ (test/mswi.c)]{
+#@mapfile(scripts/21/mswitest/core/test/mswi.c)
+#define MSIP0 ((volatile unsigned int *)0x2000000)
+#define DEBUG_REG ((volatile unsigned long long*)0x40000000)
+#define MIE_MSIE (1 << 3)
+#define MSTATUS_MIE (1 << 3)
+
+void interrupt_handler(void);
+
+void w_mtvec(unsigned long long x) {
+    asm volatile("csrw mtvec, %0" : : "r" (x));
+}
+
+void w_mie(unsigned long long x) {
+    asm volatile("csrw mie, %0" : : "r" (x));
+}
+
+void w_mstatus(unsigned long long x) {
+    asm volatile("csrw mstatus, %0" : : "r" (x));
+}
+
+void main(void) {
+    w_mtvec((unsigned long long)interrupt_handler);
+    w_mie(MIE_MSIE);
+    w_mstatus(MSTATUS_MIE);
+    *MSIP0 = 1;
+    while (1) *DEBUG_REG = 3; // fail
+}
+
+void interrupt_handler(void) {
+    *DEBUG_REG = 1; // success
+}
+#@end
 //}
 
 プログラムでは、
@@ -620,15 +769,13 @@ mtvecにinterrupt_handler関数のアドレスを書き込み、
 mstatus.MIE、mie.MSIEを@<code>{1}に設定して割り込みを許可してから
 MSIP0レジスタに1を書き込んでいます。
 
-プログラムをコンパイルして実行すると、TODOリストのように表示されます。
-main関数からinterrupt_handler関数にトラップしていることが分かります。
+プログラムをコンパイルして実行@<fn>{howtocompile}すると、
+ソフトウェア割り込みが発生することでinterrupt_handlerにジャンプし、
+デバッグ用のデバイスに@<code>{1}を書き込んで終了することを確認できます。
 
-//list[][]{
-//}
+//footnote[howtocompile][コンパイル、実行方法は@<secref>{12-impl-mmio|debugout_howto}を参考にしてください。]
 
-ソフトウェア割り込みが発生していることを確認できました。
-
-=== mtvecのVectoredモードの実装
+== mtvecのVectoredモードの実装
 
 mtvecレジスタにはMODEフィールドがあり、
 割り込みが発生するときのジャンプ先の決定方法を制御できます。
@@ -638,16 +785,47 @@ Vectored(@<code>{2'b01})のとき、@<code>{(mtvec.BASE << 2) + 4 * cause}のア
 ここでcauseは割り込みのcauseのMSBを除いた値です。
 例えばmachine software interruptの場合、@<code>{(mtvec.BASE << 2) + 4 * 3}がジャンプ先になります。
 
+例外のジャンプ先のアドレスは、常にMODEがDirectとして計算します。
+
+下位1ビットに書き込めるようにすることで、
 mtvec.MODEにVectoredを書き込めるようにします
 ()。
 
-//list[][]{
+//list[csrunit.veryl.mtvectored.WMASK][ (csrunit.veryl)]{
+#@maprange(scripts/21/mtvectored-range/core/src/csrunit.veryl,WMASK)
+    const MTVEC_WMASK   : UIntX = 'hffff_ffff_ffff_fff@<b>|e|;
+#@end
 //}
 
-MODEとcauseに応じて割り込みのジャンプ先を変更します
+割り込みのジャンプ先をMODEとcauseに応じて変更します
 ()。
 
-//list[][]{
+//list[csrunit.veryl.mtvectored.interrupt_vector][ (csrunit.veryl)]{
+#@maprange(scripts/21/mtvectored-range/core/src/csrunit.veryl,interrupt_vector)
+    let interrupt_vector: Addr  = if mtvec[0] == 0 ? {mtvec[msb:2], 2'b0} : // Direct
+     {mtvec[msb:2] + interrupt_cause[msb - 2:0], 2'b0}; // Vectored
+#@end
+//}
+
+例外のジャンプ先を、mtvecレジスタの下位2ビットを@<code>{0}にしたアドレス(Direct)に変更します
+()。
+新しく@<code>{expt_vector}を定義し、@<code>{trap_vector}に割り当てます。
+
+//list[csrunit.veryl.mtvectored.expt_vector][ (csrunit.veryl)]{
+#@maprange(scripts/21/mtvectored-range/core/src/csrunit.veryl,expt_vector)
+    let expt_vector: Addr = {mtvec[msb:2], 2'b0};
+#@end
+//}
+
+//list[csrunit.veryl.mtvectored.trap_vector][ (csrunit.veryl)]{
+#@maprange(scripts/21/mtvectored-range/core/src/csrunit.veryl,trap_vector)
+    assign trap_vector = switch {
+        raise_expt     : @<b>|expt_vector|,
+        raise_interrupt: interrupt_vector,
+        trap_return    : mepc,
+        default        : 0,
+    };
+#@end
 //}
 
 == タイマ割り込みの実装 (MTIMER)
@@ -700,8 +878,6 @@ aclint_ifインターフェースに@<code>{mtip}を作成し、タイマ割り�
 //}
 
 === 割り込み原因を設定する
-
-TODO memunitを止められていない -> 割り込めるのは最初の1クロックだけ
 
 割り込み原因を優先順位に応じて設定します。
 タイマ割り込みはソフトウェア割り込みよりも優先順位が低いため、
