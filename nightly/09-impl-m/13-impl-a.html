@@ -266,7 +266,7 @@
 
 <h3 class="none"><a id="h4-3-1"></a><span class="secno">4.3.1</span> インターフェースを作成する</h3>
 <p>amounitモジュールにA拡張の操作を指示するために、<code class="inline-code">is_amo</code>フラグ、<code class="inline-code">aq</code>ビット、<code class="inline-code">rl</code>ビット、<code class="inline-code">AMOOp</code>型をmembus_ifインターフェースに追加で定義したインターフェースを作成します。</p>
-<p><code class="inline-code">src/core_data_if.veryl</code>を作成し、次のように記述します()。<code class="inline-code">wmask</code>を<code class="inline-code">DATA_WIDTH</code>ビットに展開する関数も定義しています。</p>
+<p><code class="inline-code">src/core_data_if.veryl</code>を作成し、次のように記述します()。</p>
 <div id="core_data_if.veryl.empty.all" class="caption-code">
 <span class="caption">リスト4.10: リスト4.10:  (core_data_if.veryl)</span>
 <pre class="list language-all">import eei::*;
@@ -288,38 +288,27 @@ interface core_data_if {
     var funct3: logic&lt;3&gt;;
 
     modport master {
-        valid       : output,
-        ready       : input ,
-        addr        : output,
-        wen         : output,
-        wdata       : output,
-        wmask       : output,
-        rvalid      : input ,
-        rdata       : input ,
-        is_amo      : output,
-        aq          : output,
-        rl          : output,
-        amoop       : output,
-        funct3      : output,
-        wmask_expand: import,
+        valid : output,
+        ready : input ,
+        addr  : output,
+        wen   : output,
+        wdata : output,
+        wmask : output,
+        rvalid: input ,
+        rdata : input ,
+        is_amo: output,
+        aq    : output,
+        rl    : output,
+        amoop : output,
+        funct3: output,
     }
 
     modport slave {
-        wmask_expand: import,
         ..converse(master)
     }
 
     modport all_input {
         ..input
-    }
-
-    function wmask_expand () -&gt; logic&lt;MEMBUS_DATA_WIDTH&gt; {
-        var result: logic&lt;MEMBUS_DATA_WIDTH&gt;;
-
-        for i: u32 in 0..MEMBUS_DATA_WIDTH {
-            result[i] = wmask[i / 8];
-        }
-        return result;
     }
 }
 </pre>
@@ -778,8 +767,10 @@ module amounit (
 </div>
 <div id="core_data_if.veryl.zaamo.master" class="caption-code">
 <span class="caption">リスト4.34: リスト4.34:  (core_data_if.veryl)</span>
-<pre class="list language-master">    wmask_expand: import,
-    <b>is_Zaamo    : import,</b>
+<pre class="list language-master">    amoop   : output,
+    funct3  : output,
+    <b>is_Zaamo: import,</b>
+}
 </pre>
 </div>
 <p>ロードしたデータと<code class="inline-code">wdata</code>、フラグを利用して、ストアする値を生成する関数を作成します()。32ビット演算のとき、下位32ビットと上位32ビットのどちらを使うかをアドレスによって判別しています。</p>
