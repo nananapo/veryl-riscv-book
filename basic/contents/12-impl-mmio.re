@@ -502,8 +502,8 @@ mmio_controllerモジュールにRAMとのインターフェースを実装し�
 //}
 
 RAMとのインターフェースを追加し、
-()。
 reset_all_device_masters関数にインターフェースをリセットするコードを追加します
+()。
 
 //list[mmio_controller.veryl.ram.port][ (mmio_controller.veryl)]{
 #@maprange(scripts/12/ram-range/core/src/mmio_controller.veryl,port)
@@ -570,7 +570,6 @@ RAMの@<code>{rvalid}、@<code>{rdata}を@<code>{req_core}に割り当てます
         @<b>|    Device::RAM: req <> ram_membus;|
         @<b>|    default    : {}|
         @<b>|}|
->>>>>>> 4651f669 (book/12/ram-range)
     }
 #@end
 //}

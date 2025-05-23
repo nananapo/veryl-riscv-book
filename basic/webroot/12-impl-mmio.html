@@ -483,7 +483,7 @@ module mmio_controller (
     }
 </pre>
 </div>
-<p>RAMとのインターフェースを追加し、()。reset_all_device_masters関数にインターフェースをリセットするコードを追加します</p>
+<p>RAMとのインターフェースを追加し、reset_all_device_masters関数にインターフェースをリセットするコードを追加します()。</p>
 <div id="mmio_controller.veryl.ram.port" class="caption-code">
 <span class="caption">リスト3.21: リスト3.21:  (mmio_controller.veryl)</span>
 <pre class="list language-port">module mmio_controller (
@@ -541,7 +541,6 @@ module mmio_controller (
         <b>    Device::RAM: req &lt;&gt; ram_membus;</b>
         <b>    default    : {}</b>
         <b>}</b>
-&gt;&gt;&gt;&gt;&gt;&gt;&gt; 4651f669 (book/12/ram-range)
     }
 </pre>
 </div>
