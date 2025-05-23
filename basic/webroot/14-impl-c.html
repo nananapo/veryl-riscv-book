@@ -600,30 +600,30 @@ interface core_inst_if {
 </div>
 <div id="inst_fetcher.veryl.is_rvc.issue_comb" class="caption-code">
 <span class="caption">リスト5.32: リスト5.32:  (inst_fetcher.veryl)</span>
-<pre class="list language-issue_comb">                if offset == 6 {
-                    // offsetが6な32ビット命令の場合、
-                    // 命令は{rdata_next[15:0], rdata[63:48}になる
-                    if issue_is_rdata_saved {
-                        issue_fifo_wvalid       = 1;
-                        issue_fifo_wdata.addr   = {issue_saved_addr[msb:3], offset};
-                        issue_fifo_wdata.bits   = {rdata[15:0], issue_saved_bits};
-                        <b>issue_fifo_wdata.is_rvc = 0;</b>
-                    } else {
-                        // Read next 8 bytes
-                        fetch_fifo_rready = 1;
-                    }
-                } else {
-                    fetch_fifo_rready     = offset == 4;
-                    issue_fifo_wvalid     = 1;
-                    issue_fifo_wdata.addr = {raddr[msb:3], offset};
-                    issue_fifo_wdata.bits = case offset {
-                        0      : rdata[31:0],
-                        2      : rdata[47:16],
-                        4      : rdata[63:32],
-                        default: 0,
-                    };
-                    <b>issue_fifo_wdata.is_rvc = 0;</b>
-                }
+<pre class="list language-issue_comb">    if offset == 6 {
+        // offsetが6な32ビット命令の場合、
+        // 命令は{rdata_next[15:0], rdata[63:48}になる
+        if issue_is_rdata_saved {
+            issue_fifo_wvalid       = 1;
+            issue_fifo_wdata.addr   = {issue_saved_addr[msb:3], offset};
+            issue_fifo_wdata.bits   = {rdata[15:0], issue_saved_bits};
+            <b>issue_fifo_wdata.is_rvc = 0;</b>
+        } else {
+            // Read next 8 bytes
+            fetch_fifo_rready = 1;
+        }
+    } else {
+        fetch_fifo_rready     = offset == 4;
+        issue_fifo_wvalid     = 1;
+        issue_fifo_wdata.addr = {raddr[msb:3], offset};
+        issue_fifo_wdata.bits = case offset {
+            0      : rdata[31:0],
+            2      : rdata[47:16],
+            4      : rdata[63:32],
+            default: 0,
+        };
+        <b>issue_fifo_wdata.is_rvc = 0;</b>
+    }
 </pre>
 </div>
 <div id="inst_fetcher.veryl.is_rvc.issue_core" class="caption-code">
@@ -697,163 +697,83 @@ interface core_inst_if {
 <pre class="list language-rvcc">import eei::*;
 
 package inst_gen_pkg {
-    function add (
-        rd : input logic&lt;5&gt;,
-        rs1: input logic&lt;5&gt;,
-        rs2: input logic&lt;5&gt;,
-    ) -&gt; Inst {
+    function add (rd: input logic&lt;5&gt;, rs1: input logic&lt;5&gt;, rs2: input logic&lt;5&gt;) -&gt; Inst {
         return {7'b0000000, rs2, rs1, 3'b000, rd, OP_OP};
     }
 
-    function addw (
-        rd : input logic&lt;5&gt;,
-        rs1: input logic&lt;5&gt;,
-        rs2: input logic&lt;5&gt;,
-    ) -&gt; Inst {
+    function addw (rd: input logic&lt;5&gt;, rs1: input logic&lt;5&gt;, rs2: input logic&lt;5&gt;) -&gt; Inst {
         return {7'b0000000, rs2, rs1, 3'b000, rd, OP_OP_32};
     }
 
-    function addi (
-        rd : input logic&lt;5&gt; ,
-        rs1: input logic&lt;5&gt; ,
-        imm: input logic&lt;12&gt;,
-    ) -&gt; Inst {
+    function addi (rd : input logic&lt;5&gt; , rs1: input logic&lt;5&gt; , imm: input logic&lt;12&gt;) -&gt; Inst {
         return {imm, rs1, 3'b000, rd, OP_OP_IMM};
     }
 
-    function addiw (
-        rd : input logic&lt;5&gt; ,
-        rs1: input logic&lt;5&gt; ,
-        imm: input logic&lt;12&gt;,
-    ) -&gt; Inst {
+    function addiw (rd: input logic&lt;5&gt; ,rs1: input logic&lt;5&gt;, imm: input logic&lt;12&gt;) -&gt; Inst {
         return {imm, rs1, 3'b000, rd, OP_OP_IMM_32};
     }
 
-    function sub (
-        rd : input logic&lt;5&gt;,
-        rs1: input logic&lt;5&gt;,
-        rs2: input logic&lt;5&gt;,
-    ) -&gt; Inst {
+    function sub (rd: input logic&lt;5&gt;,rs1: input logic&lt;5&gt;, rs2: input logic&lt;5&gt;) -&gt; Inst {
         return {7'b0100000, rs2, rs1, 3'b000, rd, OP_OP};
     }
 
-    function subw (
-        rd : input logic&lt;5&gt;,
-        rs1: input logic&lt;5&gt;,
-        rs2: input logic&lt;5&gt;,
-    ) -&gt; Inst {
+    function subw (rd: input logic&lt;5&gt;, rs1: input logic&lt;5&gt;, rs2: input logic&lt;5&gt;) -&gt; Inst {
         return {7'b0100000, rs2, rs1, 3'b000, rd, OP_OP_32};
     }
 
-    function inst_xor (
-        rd : input logic&lt;5&gt;,
-        rs1: input logic&lt;5&gt;,
-        rs2: input logic&lt;5&gt;,
-    ) -&gt; Inst {
+    function inst_xor (rd: input logic&lt;5&gt;, rs1: input logic&lt;5&gt;, rs2: input logic&lt;5&gt;) -&gt; Inst {
         return {7'b0000000, rs2, rs1, 3'b100, rd, OP_OP};
     }
 
-    function inst_or (
-        rd : input logic&lt;5&gt;,
-        rs1: input logic&lt;5&gt;,
-        rs2: input logic&lt;5&gt;,
-    ) -&gt; Inst {
+    function inst_or (rd: input logic&lt;5&gt;, rs1: input logic&lt;5&gt;, rs2: input logic&lt;5&gt;) -&gt; Inst {
         return {7'b0000000, rs2, rs1, 3'b110, rd, OP_OP};
     }
 
-    function inst_and (
-        rd : input logic&lt;5&gt;,
-        rs1: input logic&lt;5&gt;,
-        rs2: input logic&lt;5&gt;,
-    ) -&gt; Inst {
+    function inst_and (rd: input logic&lt;5&gt;, rs1: input logic&lt;5&gt;, rs2: input logic&lt;5&gt;) -&gt; Inst {
         return {7'b0000000, rs2, rs1, 3'b111, rd, OP_OP};
     }
 
-    function andi (
-        rd : input logic&lt;5&gt; ,
-        rs1: input logic&lt;5&gt; ,
-        imm: input logic&lt;12&gt;,
-    ) -&gt; Inst {
+    function andi (rd: input logic&lt;5&gt; , rs1: input logic&lt;5&gt;, imm: input logic&lt;12&gt;) -&gt; Inst {
         return {imm, rs1, 3'b111, rd, OP_OP_IMM};
     }
 
-    function slli (
-        rd   : input logic&lt;5&gt;,
-        rs1  : input logic&lt;5&gt;,
-        shamt: input logic&lt;6&gt;,
-    ) -&gt; Inst {
+    function slli (rd: input logic&lt;5&gt;, rs1: input logic&lt;5&gt;, shamt: input logic&lt;6&gt;) -&gt; Inst {
         return {6'b000000, shamt, rs1, 3'b001, rd, OP_OP_IMM};
     }
 
-    function srli (
-        rd   : input logic&lt;5&gt;,
-        rs1  : input logic&lt;5&gt;,
-        shamt: input logic&lt;6&gt;,
-    ) -&gt; Inst {
+    function srli (rd: input logic&lt;5&gt;, rs1: input logic&lt;5&gt;, shamt: input logic&lt;6&gt;) -&gt; Inst {
         return {6'b000000, shamt, rs1, 3'b101, rd, OP_OP_IMM};
     }
 
-    function srai (
-        rd   : input logic&lt;5&gt;,
-        rs1  : input logic&lt;5&gt;,
-        shamt: input logic&lt;6&gt;,
-    ) -&gt; Inst {
+    function srai (rd: input logic&lt;5&gt;, rs1: input logic&lt;5&gt;, shamt: input logic&lt;6&gt;) -&gt; Inst {
         return {6'b010000, shamt, rs1, 3'b101, rd, OP_OP_IMM};
     }
 
-    function lui (
-        rd : input logic&lt;5&gt; ,
-        imm: input logic&lt;20&gt;,
-    ) -&gt; Inst {
+    function lui (rd: input logic&lt;5&gt;, imm: input logic&lt;20&gt;) -&gt; Inst {
         return {imm, rd, OP_LUI};
     }
 
-    function load (
-        rd    : input logic&lt;5&gt; ,
-        rs1   : input logic&lt;5&gt; ,
-        imm   : input logic&lt;12&gt;,
-        funct3: input logic&lt;3&gt; ,
-    ) -&gt; Inst {
+    function load (rd: input logic&lt;5&gt; ,rs1: input logic&lt;5&gt;, imm: input logic&lt;12&gt;, funct3: input logic&lt;3&gt;) -&gt; Inst {
         return {imm, rs1, funct3, rd, OP_LOAD};
     }
 
-    function store (
-        rs1   : input logic&lt;5&gt; ,
-        rs2   : input logic&lt;5&gt; ,
-        imm   : input logic&lt;12&gt;,
-        funct3: input logic&lt;3&gt; ,
-    ) -&gt; Inst {
+    function store (rs1: input logic&lt;5&gt;, rs2: input logic&lt;5&gt;, imm: input logic&lt;12&gt;, funct3: input logic&lt;3&gt;) -&gt; Inst {
         return {imm[11:5], rs2, rs1, funct3, imm[4:0], OP_STORE};
     }
 
-    function jal (
-        rd : input logic&lt;5&gt; ,
-        imm: input logic&lt;20&gt;,
-    ) -&gt; Inst {
+    function jal (rd : input logic&lt;5&gt;, imm: input logic&lt;20&gt;) -&gt; Inst {
         return {imm[19], imm[9:0], imm[10], imm[18:11], rd, OP_JAL};
     }
 
-    function jalr (
-        rd : input logic&lt;5&gt; ,
-        rs1: input logic&lt;5&gt; ,
-        imm: input logic&lt;12&gt;,
-    ) -&gt; Inst {
+    function jalr (rd: input logic&lt;5&gt;, rs1: input logic&lt;5&gt;, imm: input logic&lt;12&gt;) -&gt; Inst {
         return {imm, rs1, 3'b000, rd, OP_JALR};
     }
 
-    function beq (
-        rs1: input logic&lt;5&gt; ,
-        rs2: input logic&lt;5&gt; ,
-        imm: input logic&lt;12&gt;,
-    ) -&gt; Inst {
+    function beq (rs1: input logic&lt;5&gt;, rs2: input logic&lt;5&gt;, imm: input logic&lt;12&gt;) -&gt; Inst {
         return {imm[11], imm[9:4], rs2, rs1, 3'b000, imm[3:0], imm[10], OP_BRANCH};
     }
 
-    function bne (
-        rs1: input logic&lt;5&gt; ,
-        rs2: input logic&lt;5&gt; ,
-        imm: input logic&lt;12&gt;,
-    ) -&gt; Inst {
+    function bne (rs1: input logic&lt;5&gt;, rs2: input logic&lt;5&gt;, imm: input logic&lt;12&gt;) -&gt; Inst {
         return {imm[11], imm[9:4], rs2, rs1, 3'b001, imm[3:0], imm[10], OP_BRANCH};
     }
 

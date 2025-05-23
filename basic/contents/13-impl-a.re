@@ -264,7 +264,6 @@ amounitモジュールにA拡張の操作を指示するために、
 
 @<code>{src/core_data_if.veryl}を作成し、次のように記述します
 ()。
-@<code>{wmask}を@<code>{DATA_WIDTH}ビットに展開する関数も定義しています。
 
 //list[core_data_if.veryl.empty.all][ (core_data_if.veryl)]{
 #@mapfile(scripts/13/empty-range/core/src/core_data_if.veryl)
@@ -287,38 +286,27 @@ interface core_data_if {
     var funct3: logic<3>;
 
     modport master {
-        valid       : output,
-        ready       : input ,
-        addr        : output,
-        wen         : output,
-        wdata       : output,
-        wmask       : output,
-        rvalid      : input ,
-        rdata       : input ,
-        is_amo      : output,
-        aq          : output,
-        rl          : output,
-        amoop       : output,
-        funct3      : output,
-        wmask_expand: import,
+        valid : output,
+        ready : input ,
+        addr  : output,
+        wen   : output,
+        wdata : output,
+        wmask : output,
+        rvalid: input ,
+        rdata : input ,
+        is_amo: output,
+        aq    : output,
+        rl    : output,
+        amoop : output,
+        funct3: output,
     }
 
     modport slave {
-        wmask_expand: import,
         ..converse(master)
     }
 
     modport all_input {
         ..input
-    }
-
-    function wmask_expand () -> logic<MEMBUS_DATA_WIDTH> {
-        var result: logic<MEMBUS_DATA_WIDTH>;
-
-        for i: u32 in 0..MEMBUS_DATA_WIDTH {
-            result[i] = wmask[i / 8];
-        }
-        return result;
     }
 }
 #@end
@@ -854,8 +842,10 @@ modportにimport宣言を追加してください。
 
 //list[core_data_if.veryl.zaamo.master][ (core_data_if.veryl)]{
 #@maprange(scripts/13/zaamo-range/core/src/core_data_if.veryl,master)
-    wmask_expand: import,
-    @<b>|is_Zaamo    : import,|
+    amoop   : output,
+    funct3  : output,
+    @<b>|is_Zaamo: import,|
+}
 #@end
 //}
 

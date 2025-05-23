@@ -665,30 +665,30 @@ inst_fetcherモジュールで、@<code>{is_rvc}を@<code>{0}に設定してcore
 
 //list[inst_fetcher.veryl.is_rvc.issue_comb][ (inst_fetcher.veryl)]{
 #@maprange(scripts/14/is_rvc-range/core/src/inst_fetcher.veryl,issue_comb)
-                if offset == 6 {
-                    // offsetが6な32ビット命令の場合、
-                    // 命令は{rdata_next[15:0], rdata[63:48}になる
-                    if issue_is_rdata_saved {
-                        issue_fifo_wvalid       = 1;
-                        issue_fifo_wdata.addr   = {issue_saved_addr[msb:3], offset};
-                        issue_fifo_wdata.bits   = {rdata[15:0], issue_saved_bits};
-                        @<b>|issue_fifo_wdata.is_rvc = 0;|
-                    } else {
-                        // Read next 8 bytes
-                        fetch_fifo_rready = 1;
-                    }
-                } else {
-                    fetch_fifo_rready     = offset == 4;
-                    issue_fifo_wvalid     = 1;
-                    issue_fifo_wdata.addr = {raddr[msb:3], offset};
-                    issue_fifo_wdata.bits = case offset {
-                        0      : rdata[31:0],
-                        2      : rdata[47:16],
-                        4      : rdata[63:32],
-                        default: 0,
-                    };
-                    @<b>|issue_fifo_wdata.is_rvc = 0;|
-                }
+    if offset == 6 {
+        // offsetが6な32ビット命令の場合、
+        // 命令は{rdata_next[15:0], rdata[63:48}になる
+        if issue_is_rdata_saved {
+            issue_fifo_wvalid       = 1;
+            issue_fifo_wdata.addr   = {issue_saved_addr[msb:3], offset};
+            issue_fifo_wdata.bits   = {rdata[15:0], issue_saved_bits};
+            @<b>|issue_fifo_wdata.is_rvc = 0;|
+        } else {
+            // Read next 8 bytes
+            fetch_fifo_rready = 1;
+        }
+    } else {
+        fetch_fifo_rready     = offset == 4;
+        issue_fifo_wvalid     = 1;
+        issue_fifo_wdata.addr = {raddr[msb:3], offset};
+        issue_fifo_wdata.bits = case offset {
+            0      : rdata[31:0],
+            2      : rdata[47:16],
+            4      : rdata[63:32],
+            default: 0,
+        };
+        @<b>|issue_fifo_wdata.is_rvc = 0;|
+    }
 #@end
 //}
 
@@ -777,168 +777,88 @@ RVC命令のopcode、functなどのフィールドを読んで、
 @<code>{src/inst_gen_pkg.veryl}を作成し、次のように記述します
 ()。
 
+#@# TODO フォーマット
 //list[inst_gen_pkg.veryl.rvcc][ (inst_gen_pkg.veryl)]{
-#@mapfile(scripts/14/rvcc-range/core/src/inst_gen_pkg.veryl)
 import eei::*;
 
 package inst_gen_pkg {
-    function add (
-        rd : input logic<5>,
-        rs1: input logic<5>,
-        rs2: input logic<5>,
-    ) -> Inst {
+    function add (rd: input logic<5>, rs1: input logic<5>, rs2: input logic<5>) -> Inst {
         return {7'b0000000, rs2, rs1, 3'b000, rd, OP_OP};
     }
 
-    function addw (
-        rd : input logic<5>,
-        rs1: input logic<5>,
-        rs2: input logic<5>,
-    ) -> Inst {
+    function addw (rd: input logic<5>, rs1: input logic<5>, rs2: input logic<5>) -> Inst {
         return {7'b0000000, rs2, rs1, 3'b000, rd, OP_OP_32};
     }
 
-    function addi (
-        rd : input logic<5> ,
-        rs1: input logic<5> ,
-        imm: input logic<12>,
-    ) -> Inst {
+    function addi (rd : input logic<5> , rs1: input logic<5> , imm: input logic<12>) -> Inst {
         return {imm, rs1, 3'b000, rd, OP_OP_IMM};
     }
 
-    function addiw (
-        rd : input logic<5> ,
-        rs1: input logic<5> ,
-        imm: input logic<12>,
-    ) -> Inst {
+    function addiw (rd: input logic<5> ,rs1: input logic<5>, imm: input logic<12>) -> Inst {
         return {imm, rs1, 3'b000, rd, OP_OP_IMM_32};
     }
 
-    function sub (
-        rd : input logic<5>,
-        rs1: input logic<5>,
-        rs2: input logic<5>,
-    ) -> Inst {
+    function sub (rd: input logic<5>,rs1: input logic<5>, rs2: input logic<5>) -> Inst {
         return {7'b0100000, rs2, rs1, 3'b000, rd, OP_OP};
     }
 
-    function subw (
-        rd : input logic<5>,
-        rs1: input logic<5>,
-        rs2: input logic<5>,
-    ) -> Inst {
+    function subw (rd: input logic<5>, rs1: input logic<5>, rs2: input logic<5>) -> Inst {
         return {7'b0100000, rs2, rs1, 3'b000, rd, OP_OP_32};
     }
 
-    function inst_xor (
-        rd : input logic<5>,
-        rs1: input logic<5>,
-        rs2: input logic<5>,
-    ) -> Inst {
+    function inst_xor (rd: input logic<5>, rs1: input logic<5>, rs2: input logic<5>) -> Inst {
         return {7'b0000000, rs2, rs1, 3'b100, rd, OP_OP};
     }
 
-    function inst_or (
-        rd : input logic<5>,
-        rs1: input logic<5>,
-        rs2: input logic<5>,
-    ) -> Inst {
+    function inst_or (rd: input logic<5>, rs1: input logic<5>, rs2: input logic<5>) -> Inst {
         return {7'b0000000, rs2, rs1, 3'b110, rd, OP_OP};
     }
 
-    function inst_and (
-        rd : input logic<5>,
-        rs1: input logic<5>,
-        rs2: input logic<5>,
-    ) -> Inst {
+    function inst_and (rd: input logic<5>, rs1: input logic<5>, rs2: input logic<5>) -> Inst {
         return {7'b0000000, rs2, rs1, 3'b111, rd, OP_OP};
     }
 
-    function andi (
-        rd : input logic<5> ,
-        rs1: input logic<5> ,
-        imm: input logic<12>,
-    ) -> Inst {
+    function andi (rd: input logic<5> , rs1: input logic<5>, imm: input logic<12>) -> Inst {
         return {imm, rs1, 3'b111, rd, OP_OP_IMM};
     }
 
-    function slli (
-        rd   : input logic<5>,
-        rs1  : input logic<5>,
-        shamt: input logic<6>,
-    ) -> Inst {
+    function slli (rd: input logic<5>, rs1: input logic<5>, shamt: input logic<6>) -> Inst {
         return {6'b000000, shamt, rs1, 3'b001, rd, OP_OP_IMM};
     }
 
-    function srli (
-        rd   : input logic<5>,
-        rs1  : input logic<5>,
-        shamt: input logic<6>,
-    ) -> Inst {
+    function srli (rd: input logic<5>, rs1: input logic<5>, shamt: input logic<6>) -> Inst {
         return {6'b000000, shamt, rs1, 3'b101, rd, OP_OP_IMM};
     }
 
-    function srai (
-        rd   : input logic<5>,
-        rs1  : input logic<5>,
-        shamt: input logic<6>,
-    ) -> Inst {
+    function srai (rd: input logic<5>, rs1: input logic<5>, shamt: input logic<6>) -> Inst {
         return {6'b010000, shamt, rs1, 3'b101, rd, OP_OP_IMM};
     }
 
-    function lui (
-        rd : input logic<5> ,
-        imm: input logic<20>,
-    ) -> Inst {
+    function lui (rd: input logic<5>, imm: input logic<20>) -> Inst {
         return {imm, rd, OP_LUI};
     }
 
-    function load (
-        rd    : input logic<5> ,
-        rs1   : input logic<5> ,
-        imm   : input logic<12>,
-        funct3: input logic<3> ,
-    ) -> Inst {
+    function load (rd: input logic<5> ,rs1: input logic<5>, imm: input logic<12>, funct3: input logic<3>) -> Inst {
         return {imm, rs1, funct3, rd, OP_LOAD};
     }
 
-    function store (
-        rs1   : input logic<5> ,
-        rs2   : input logic<5> ,
-        imm   : input logic<12>,
-        funct3: input logic<3> ,
-    ) -> Inst {
+    function store (rs1: input logic<5>, rs2: input logic<5>, imm: input logic<12>, funct3: input logic<3>) -> Inst {
         return {imm[11:5], rs2, rs1, funct3, imm[4:0], OP_STORE};
     }
 
-    function jal (
-        rd : input logic<5> ,
-        imm: input logic<20>,
-    ) -> Inst {
+    function jal (rd : input logic<5>, imm: input logic<20>) -> Inst {
         return {imm[19], imm[9:0], imm[10], imm[18:11], rd, OP_JAL};
     }
 
-    function jalr (
-        rd : input logic<5> ,
-        rs1: input logic<5> ,
-        imm: input logic<12>,
-    ) -> Inst {
+    function jalr (rd: input logic<5>, rs1: input logic<5>, imm: input logic<12>) -> Inst {
         return {imm, rs1, 3'b000, rd, OP_JALR};
     }
 
-    function beq (
-        rs1: input logic<5> ,
-        rs2: input logic<5> ,
-        imm: input logic<12>,
-    ) -> Inst {
+    function beq (rs1: input logic<5>, rs2: input logic<5>, imm: input logic<12>) -> Inst {
         return {imm[11], imm[9:4], rs2, rs1, 3'b000, imm[3:0], imm[10], OP_BRANCH};
     }
 
-    function bne (
-        rs1: input logic<5> ,
-        rs2: input logic<5> ,
-        imm: input logic<12>,
-    ) -> Inst {
+    function bne (rs1: input logic<5>, rs2: input logic<5>, imm: input logic<12>) -> Inst {
         return {imm[11], imm[9:4], rs2, rs1, 3'b001, imm[3:0], imm[10], OP_BRANCH};
     }
 
@@ -946,7 +866,6 @@ package inst_gen_pkg {
         return 32'h00100073;
     }
 }
-#@end
 //}
 
 rvc_conveterモジュールのポートを定義します。
