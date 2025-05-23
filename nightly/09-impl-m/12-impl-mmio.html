@@ -28,6 +28,7 @@
           <div style="margin-bottom: 14px;" id="share-facebook" class="fb-share-button" data-href="" data-layout="" data-size=""><a target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Finvalid.invalid%2F&amp;src=sdkpreparse" class="fb-xfbml-parse-ignore">Facebookでシェアする</a></div>
         </div>
         <ul class="toc toc-1">
+    <li class="toc-chapter"><a href="./00-preface.html">まえがき</a></li>
 <li class="toc-part">第I部 RV64IMACの実装
   <ul class="toc toc-2">
     <li class="toc-chapter"><a href="./10-impl-m.html">1 M拡張の実装</a></li>
@@ -1317,7 +1318,7 @@ _end = .;
 }
 </pre>
 </div>
-<p>ここで、read関数の呼び出しでシミュレータを止めず(<code class="inline-code">O_NONBLOCK</code>)、シェルが入力をバッファリングしなくする(<code class="inline-code">~ICANON</code>)ために設定を変えるコードを挿入します()。また、シェルが文字列をローカルエコー(入力した文字列を表示)しないようにします(<code class="inline-code">~ECHO</code>)。TODO ENABLE_DEBUG_INPUT</p>
+<p>ここで、read関数の呼び出しでシミュレータを止めず(<code class="inline-code">O_NONBLOCK</code>)、シェルが入力をバッファリングしなくする(<code class="inline-code">~ICANON</code>)ために設定を変えるコードを挿入します()。また、シェルが文字列をローカルエコー(入力した文字列を表示)しないようにします(<code class="inline-code">~ECHO</code>)。</p>
 <div id="tb_verilator.cpp.debuginput.include" class="caption-code">
 <span class="caption">リスト3.75: リスト3.75:  (src/tb_verilator.cpp)</span>
 <pre class="list language-include">#include &lt;fcntl.h&gt;
@@ -1378,7 +1379,10 @@ void set_nonblocking(void) {
         return 1;
     }
 
-    <b>set_nonblocking();</b>
+    <b>#ifdef ENABLE_DEBUG_INPUT</b>
+        <b>set_nonblocking();</b>
+    <b>#endif</b>
+=======
 </pre>
 </div>
 <p><code class="inline-code">src/util.veryl</code>にget_input_dpic関数を呼び出す関数を実装します()。</p>
