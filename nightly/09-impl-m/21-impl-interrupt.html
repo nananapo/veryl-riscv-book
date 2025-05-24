@@ -651,7 +651,7 @@ void interrupt_handler(void) {
 <p>下位1ビットに書き込めるようにすることで、mtvec.MODEにVectoredを書き込めるようにします()。</p>
 <div id="csrunit.veryl.mtvectored.WMASK" class="caption-code">
 <span class="caption">リスト7.44: リスト7.44:  (csrunit.veryl)</span>
-<pre class="list language-WMASK">    const MTVEC_WMASK   : UIntX = 'hffff_ffff_ffff_fff<b>e</b>;
+<pre class="list language-WMASK">    const MTVEC_WMASK   : UIntX = 'hffff_ffff_ffff_fff<b>d</b>;
 </pre>
 </div>
 <p>割り込みのジャンプ先をMODEとcauseに応じて変更します()。</p>
