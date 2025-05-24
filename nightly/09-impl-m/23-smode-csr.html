@@ -102,7 +102,7 @@
 </div>
 
 <h2 class="numbox"><a id="h9-4"></a><span class="secno">9.4</span> scounterenレジスタの実装</h2>
-<p>「<a href="22-umode-csr.html#h8-5">8.5 mcounterenレジスタの実装</a>」ではmcounterenレジスタによってハードウェアパフォーマンスモニタにU-modeでアクセスできるようにしました。S-modeを導入するとmcounternレジスタはS-modeがハードウェアパフォーマンスモニタにアクセスできるようにするかを制御するレジスタに変わります。また、mcounterenレジスタの代わりにU-modeでハードウェアパフォーマンスモニタにアクセスできるようにするかを制御する32ビットのscounterenレジスタが追加されます。</p>
+<p>「<a href="22-umode-csr.html#h8-6">8.6 mcounterenレジスタの実装</a>」ではmcounterenレジスタによってハードウェアパフォーマンスモニタにU-modeでアクセスできるようにしました。S-modeを導入するとmcounternレジスタはS-modeがハードウェアパフォーマンスモニタにアクセスできるようにするかを制御するレジスタに変わります。また、mcounterenレジスタの代わりにU-modeでハードウェアパフォーマンスモニタにアクセスできるようにするかを制御する32ビットのscounterenレジスタが追加されます。</p>
 <p>scounternレジスタのフィールドのビット配置はmcounternレジスタと等しいです。また、U-modeでハードウェアパフォーマンスにアクセスできる条件は、mcounterenレジスタとscounterenレジスタの両方によって許可されている場合になります。</p>
 <p>scounterenレジスタを作成し、読み書きできるようにします()。</p>
 <div class="caption-code">
