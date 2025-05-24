@@ -45,14 +45,11 @@
     <li class="toc-chapter"><a href="./22-umode-csr.html">8 U-modeの実装</a></li>
     <li class="toc-chapter"><a href="./23-smode-csr.html">9 S-modeの実装 (1. CSRの実装)</a>
       <ul class="toc toc-3">
-        <li class="toc-section"><a href="./23-smode-csr.html#h9-1">9.1 CSRのアドレスの追加</a></li>
-        <li class="toc-section"><a href="./23-smode-csr.html#h9-2">9.2 misa.Extensionsの変更</a></li>
-        <li class="toc-section"><a href="./23-smode-csr.html#h9-3">9.3 mstatusのSXL、MPPビットの実装</a></li>
-        <li class="toc-section"><a href="./23-smode-csr.html#h9-4">9.4 scounterenレジスタの実装</a></li>
-        <li class="toc-section"><a href="./23-smode-csr.html#h9-5">9.5 sstatusレジスタの実装</a></li>
-        <li class="toc-section"><a href="./23-smode-csr.html#h9-6">9.6 トラップの委譲</a></li>
-        <li class="toc-section"><a href="./23-smode-csr.html#h9-7">9.7 mstatus.TSRの実装</a></li>
-        <li class="toc-section"><a href="./23-smode-csr.html#h9-8">9.8 ソフトウェア割り込みの実装 (SSWI)</a></li>
+        <li class="toc-section"><a href="./23-smode-csr.html#h9-1">9.1 misa.Extensions、mstatus.SXL、mstatus.MPPの実装</a></li>
+        <li class="toc-section"><a href="./23-smode-csr.html#h9-2">9.2 scounterenレジスタの実装</a></li>
+        <li class="toc-section"><a href="./23-smode-csr.html#h9-3">9.3 sstatusレジスタの実装</a></li>
+        <li class="toc-section"><a href="./23-smode-csr.html#h9-4">9.4 トラップの委譲</a></li>
+        <li class="toc-section"><a href="./23-smode-csr.html#h9-5">9.5 ソフトウェア割り込みの実装 (SSWI)</a></li>
       </ul>
     </li>
     <li class="toc-chapter"><a href="./24-impl-paging.html">10 S-modeの実装 (2. 仮想記憶システム)</a></li>
@@ -72,99 +69,178 @@
 <p>S-modeを導入することで変わる主要な機能はトラップです。M-mode、U-modeだけの環境ではトラップで特権レベルをM-modeに変更していましたが、M-modeではなくS-modeに遷移するように変更できるようになります。これに伴い、トラップ関連のCSR(stvec、sepc、scause、stvalなど)が追加されます。</p>
 <p>S-modeで新しく導入される大きな機能として仮想記憶システムがあります。仮想記憶システムはページングを使って仮想的なアドレスを使用できるようにする仕組みです。これについては<a href="./24-impl-paging.html">第10章「S-modeの実装 (2. 仮想記憶システム)」</a>で解説します。</p>
 <p>他にはscounterenレジスタ、トラップから戻るためのSRET命令などが追加されます。また、Supervisor software interruptを提供するSSWIデバイスも実装します。それぞれ解説しながら実装していきます。</p>
-
-<h2 class="numbox"><a id="h9-1"></a><span class="secno">9.1</span> CSRのアドレスの追加</h2>
-<p>本書で実装するS-modeのCSRをすべて定義します。</p>
-<div class="caption-code">
-<pre class="emlist">
+<p>eeiパッケージに、本書で実装するS-modeのCSRをすべて定義します。</p>
+<div id="eei.veryl.addr.CsrAddr" class="caption-code">
+<span class="caption">リスト9.1: リスト9.1:  (eei.veryl)</span>
+<pre class="list language-CsrAddr">    enum CsrAddr: logic&lt;12&gt; {
+        // Supervisor Trap Setup
+        SSTATUS = 12'h100,
+        SIE = 12'h104,
+        STVEC = 12'h105,
+        SCOUNTEREN = 12'h106,
+        // Supervisor Trap Handling
+        SSCRATCH = 12'h140,
+        SEPC = 12'h141,
+        SCAUSE = 12'h142,
+        STVAL = 12'h143,
+        SIP = 12'h144,
 </pre>
 </div>
 
-<h2 class="numbox"><a id="h9-2"></a><span class="secno">9.2</span> misa.Extensionsの変更</h2>
+<h2 class="numbox"><a id="h9-1"></a><span class="secno">9.1</span> misa.Extensions、mstatus.SXL、mstatus.MPPの実装</h2>
 <p>S-modeを実装しているかどうかはmisa.ExtensionsのSビットで確認できます。</p>
-<p>misa.Extensionsの値を変更します()。</p>
-<div class="caption-code">
-<pre class="emlist">
+<p>misa.ExtensionsのSビットを<code class="inline-code">1</code>に設定します()。</p>
+<div id="csrunit.veryl.misamppsxl.misa" class="caption-code">
+<span class="caption">リスト9.2: リスト9.2:  (csrunit.veryl)</span>
+<pre class="list language-misa">    let misa      : UIntX  = {2'd2, 1'b0 repeat XLEN - 28, 26'b0000010<b>1</b>000001000100000101}; // U, <b>S</b>, M, I, C, A
 </pre>
 </div>
-
-<h2 class="numbox"><a id="h9-3"></a><span class="secno">9.3</span> mstatusのSXL、MPPビットの実装</h2>
 <p>S-modeのときのXLENはSXLENと定義されており、UXLENと同じようにmstatus.SXLで確認できます。本書ではSXLENが常に<code class="inline-code">64</code>になるように実装します。</p>
 <p>mstatus.SXLを<code class="inline-code">64</code>を示す値である<code class="inline-code">2</code>に設定します()。</p>
-<div class="caption-code">
-<pre class="emlist">
+<div id="eei.veryl.misamppsxl.sxl" class="caption-code">
+<span class="caption">リスト9.3: リスト9.3:  (eei.veryl)</span>
+<pre class="list language-sxl">    const MSTATUS_UXL: UInt64 = 2 &lt;&lt; 32;
+    <b>const MSTATUS_SXL: UInt64 = 2 &lt;&lt; 34;</b>
 </pre>
 </div>
-<p>mstatus.MPPにM-modeとU-modeを示す値しか書き込めないようになっています。これをS-modeの値(<code class="inline-code">2'b10</code>)も書き込めるように変更します()。これにより、MRET命令でS-modeに移動できるようになります。</p>
-<div class="caption-code">
-<pre class="emlist">
+<div id="csrunit.veryl.misamppsxl.reset" class="caption-code">
+<span class="caption">リスト9.4: リスト9.4:  (csrunit.veryl)</span>
+<pre class="list language-reset">    always_ff {
+        if_reset {
+            mode       = PrivMode::M;
+            mstatus    = MSTATUS_SXL <b>| MSTATUS_UXL</b>;
+</pre>
+</div>
+<p>今のところmstatus.MPPにはM-modeとU-modeを示す値しか書き込めないようにしているため、これをS-modeの値(<code class="inline-code">2'b10</code>)も書き込めるように変更します()。これにより、MRET命令でS-modeに移動できるようになります。</p>
+<div id="csrunit.veryl.misamppsxl.mstatus" class="caption-code">
+<span class="caption">リスト9.5: リスト9.5:  (csrunit.veryl)</span>
+<pre class="list language-mstatus">    function validate_mstatus (
+        mstatus: input UIntX,
+        wdata  : input UIntX,
+    ) -&gt; UIntX {
+        var result: UIntX;
+        result = wdata;
+        // MPP
+        if <b>wdata[12:11] == 2'b10</b> {
+            result[12:11] = mstatus[12:11];
+        }
+        return result;
+    }
 </pre>
 </div>
 
-<h2 class="numbox"><a id="h9-4"></a><span class="secno">9.4</span> scounterenレジスタの実装</h2>
-<p>「<a href="22-umode-csr.html#h8-6">8.6 mcounterenレジスタの実装</a>」ではmcounterenレジスタによってハードウェアパフォーマンスモニタにU-modeでアクセスできるようにしました。S-modeを導入するとmcounternレジスタはS-modeがハードウェアパフォーマンスモニタにアクセスできるようにするかを制御するレジスタに変わります。また、mcounterenレジスタの代わりにU-modeでハードウェアパフォーマンスモニタにアクセスできるようにするかを制御する32ビットのscounterenレジスタが追加されます。</p>
-<p>scounternレジスタのフィールドのビット配置はmcounternレジスタと等しいです。また、U-modeでハードウェアパフォーマンスにアクセスできる条件は、mcounterenレジスタとscounterenレジスタの両方によって許可されている場合になります。</p>
+<h2 class="numbox"><a id="h9-2"></a><span class="secno">9.2</span> scounterenレジスタの実装</h2>
+<p>「<a href="22-umode-csr.html#h8-6">8.6 mcounterenレジスタの実装</a>」ではmcounterenレジスタによってハードウェアパフォーマンスモニタにU-modeでアクセスできるようにしました。S-modeを導入するとmcounterenレジスタはS-modeがハードウェアパフォーマンスモニタにアクセスできるようにするかを制御するレジスタに変わります。また、mcounterenレジスタの代わりにU-modeでハードウェアパフォーマンスモニタにアクセスできるようにするかを制御する32ビットのscounterenレジスタが追加されます。</p>
+<p>scounterenレジスタのフィールドのビット配置はmcounterenレジスタと等しいです。また、U-modeでハードウェアパフォーマンスにアクセスできる条件は、mcounterenレジスタとscounterenレジスタの両方によって許可されている場合になります。</p>
 <p>scounterenレジスタを作成し、読み書きできるようにします()。</p>
-<div class="caption-code">
-<pre class="emlist">
+<div id="csrunit.veryl.scounteren.reg" class="caption-code">
+<span class="caption">リスト9.6: リスト9.6:  (csrunit.veryl)</span>
+<pre class="list language-reg">    var scounteren: UInt32;
 </pre>
 </div>
-<div class="caption-code">
-<pre class="emlist">
+<div id="csrunit.veryl.scounteren.reset" class="caption-code">
+<span class="caption">リスト9.7: リスト9.7:  (csrunit.veryl)</span>
+<pre class="list language-reset">    mtval      = 0;
+    <b>scounteren = 0;</b>
+    led        = 0;
 </pre>
 </div>
-<div class="caption-code">
-<pre class="emlist">
+<div id="csrunit.veryl.scounteren.rdata" class="caption-code">
+<span class="caption">リスト9.8: リスト9.8:  (csrunit.veryl)</span>
+<pre class="list language-rdata">    CsrAddr::MTVAL     : mtval,
+    <b>CsrAddr::SCOUNTEREN: {1'b0 repeat XLEN - 32, scounteren},</b>
+    CsrAddr::LED       : led,
 </pre>
 </div>
-<p>ハードウェアパフォーマンスモニタにアクセスするときの許可確認ロジックを変更します()。</p>
-<div class="caption-code">
-<pre class="emlist">
+<div id="csrunit.veryl.scounteren.WMASK" class="caption-code">
+<span class="caption">リスト9.9: リスト9.9:  (csrunit.veryl)</span>
+<pre class="list language-WMASK">    const SCOUNTEREN_WMASK: UIntX = 'h0000_0000_0000_0007 as UIntX;
+</pre>
+</div>
+<div id="csrunit.veryl.scounteren.wmask" class="caption-code">
+<span class="caption">リスト9.10: リスト9.10:  (csrunit.veryl)</span>
+<pre class="list language-wmask">    CsrAddr::MTVAL     : MTVAL_WMASK,
+    <b>CsrAddr::SCOUNTEREN: SCOUNTEREN_WMASK,</b>
+    CsrAddr::LED       : LED_WMASK,
+</pre>
+</div>
+<div id="csrunit.veryl.scounteren.write" class="caption-code">
+<span class="caption">リスト9.11: リスト9.11:  (csrunit.veryl)</span>
+<pre class="list language-write">    CsrAddr::MTVAL     : mtval      = wdata;
+    <b>CsrAddr::SCOUNTEREN: scounteren = wdata[31:0];</b>
+    CsrAddr::LED       : led        = wdata;
+</pre>
+</div>
+<p>ハードウェアパフォーマンスモニタにアクセスするときに許可を確認する仕組みを実装します()。S-modeでアクセスするときはmcounterenレジスタだけ確認し、U-modeでアクセスするときはmcounterenレジスタとscounterenレジスタを確認します。</p>
+<div id="csrunit.veryl.scounteren.priv" class="caption-code">
+<span class="caption">リスト9.12: リスト9.12:  (csrunit.veryl)</span>
+<pre class="list language-priv">    let expt_zicntr_priv       : logic = is_wsc &amp;&amp; <b>(</b>mode <b>&lt;=</b> PrivMode::S &amp;&amp; case csr_addr {
+        CsrAddr::CYCLE  : !mcounteren[0],
+        CsrAddr::TIME   : !mcounteren[1],
+        CsrAddr::INSTRET: !mcounteren[2],
+        default         : 0,
+    } <b>|| mode &lt;= PrivMode::U &amp;&amp; case csr_addr</b> <b>{</b>
+        <b>CsrAddr::CYCLE  : !scounteren[0],</b>
+        <b>CsrAddr::TIME   : !scounteren[1],</b>
+        <b>CsrAddr::INSTRET: !scounteren[2],</b>
+        <b>default         : 0,</b>
+    <b>})</b>; // attempt to access Zicntr CSR without permission
 </pre>
 </div>
 
-<h2 class="numbox"><a id="h9-5"></a><span class="secno">9.5</span> sstatusレジスタの実装</h2>
+<h2 class="numbox"><a id="h9-3"></a><span class="secno">9.3</span> sstatusレジスタの実装</h2>
 <p>TODO 図</p>
 <p>sstatusレジスタはmstatusレジスタの一部をS-modeで読み込み、書き込みできるようにしたSXLENビットのレジスタです。本章ではmstatusレジスタに読み込み、書き込みマスクを適用することでsstatusレジスタを実装します。</p>
-<p>sstatusレジスタの読み込み、書き込みマスクを定義します()。</p>
-<div class="caption-code">
-<pre class="emlist">
+<p>sstatusレジスタの書き込みマスクを定義します()。</p>
+<div id="csrunit.veryl.sstatus.WMASK" class="caption-code">
+<span class="caption">リスト9.13: リスト9.13:  (csrunit.veryl)</span>
+<pre class="list language-WMASK">    const SSTATUS_WMASK   : UIntX = 'h0000_0000_0000_0000 as UIntX;
 </pre>
 </div>
-<div class="caption-code">
-<pre class="emlist">
+<div id="csrunit.veryl.sstatus.wmask" class="caption-code">
+<span class="caption">リスト9.14: リスト9.14:  (csrunit.veryl)</span>
+<pre class="list language-wmask">    CsrAddr::MTVAL     : MTVAL_WMASK,
+    <b>CsrAddr::SSTATUS   : SSTATUS_WMASK,</b>
+    CsrAddr::SCOUNTEREN: SCOUNTEREN_WMASK,
 </pre>
 </div>
-<div class="caption-code">
-<pre class="emlist">
+<p>読み込みマスクを定義し、mstatusレジスタにマスクを適用した値をsstatusレジスタの値にします()。</p>
+<div id="csrunit.veryl.sstatus.RMASK" class="caption-code">
+<span class="caption">リスト9.15: リスト9.15:  (csrunit.veryl)</span>
+<pre class="list language-RMASK">    const SSTATUS_RMASK: UIntX = 'h8000_0003_018f_e762;
 </pre>
 </div>
-<p>マスクを適用した読み込み、書き込みを実装します()。書き込みマスクでマスクされたwdataと、書き込みマスクをビット反転した値でマスクされたmstatusレジスタの和(OR)を書き込みデータとします。</p>
-<div class="caption-code">
-<pre class="emlist">
+<div id="csrunit.veryl.sstatus.reg" class="caption-code">
+<span class="caption">リスト9.16: リスト9.16:  (csrunit.veryl)</span>
+<pre class="list language-reg">    let sstatus   : UIntX  = mstatus &amp; SSTATUS_RMASK;
 </pre>
 </div>
-<div class="caption-code">
-<pre class="emlist">
+<div id="csrunit.veryl.sstatus.rdata" class="caption-code">
+<span class="caption">リスト9.17: リスト9.17:  (csrunit.veryl)</span>
+<pre class="list language-rdata">    CsrAddr::MTVAL     : mtval,
+    <b>CsrAddr::SSTATUS   : sstatus,</b>
+    CsrAddr::SCOUNTEREN: {1'b0 repeat XLEN - 32, scounteren},
 </pre>
 </div>
-<div class="caption-code">
-<pre class="emlist">
+<p>マスクを適用した書き込みを実装します()。書き込みマスクが適用されたwdataと、書き込みマスクをビット反転した値でマスクされたmstatusレジスタの値のORを書き込みます。</p>
+<div id="csrunit.veryl.sstatus.write" class="caption-code">
+<span class="caption">リスト9.18: リスト9.18:  (csrunit.veryl)</span>
+<pre class="list language-write">    CsrAddr::SSTATUS   : mstatus    = validate_mstatus(mstatus, wdata | mstatus &amp; ~SSTATUS_WMASK);
 </pre>
 </div>
 
-<h2 id="delegating-trap" class="numbox"><a id="h9-6"></a><span class="secno">9.6</span> トラップの委譲</h2>
+<h2 id="delegating-trap" class="numbox"><a id="h9-4"></a><span class="secno">9.4</span> トラップの委譲</h2>
 
-<h3 class="none"><a id="h9-6-1"></a><span class="secno">9.6.1</span> トラップの委譲</h3>
+<h3 class="none"><a id="h9-4-1"></a><span class="secno">9.4.1</span> トラップの委譲</h3>
 <p>S-modeが実装されているとき、S-modeとU-modeで発生する割り込みと例外のトラップ先の特権レベルをM-modeからS-modeに委譲することができます。現在の特権レベルがM-modeのときに発生したトラップの特権レベルの遷移先をS-modeに変更することはできません。</p>
 <p>M-modeからS-modeに委譲されたトラップは、mtvecではなくstvecにプログラムカウンタを移動します。また、mepcではなくsepcにトラップが発生した命令アドレスを格納し、scauseにトラップの原因を示す値、stvalに例外に固有の情報、sstatus.SPPにトラップ前の特権レベル、sstatus.SPIEにsstatus.SIE、sstatus.SIEに<code class="inline-code">0</code>を格納します。これ以降、トラップでx-modeに遷移するときに変更、参照するCSRを例えばxtvec、xepc、xcause、xtval、mstatus.xPPのように頭文字をxにして呼ぶことがあります。</p>
 
-<h4><a id="h9-6-1-1"></a>例外の委譲</h4>
+<h4><a id="h9-4-1-1"></a>例外の委譲</h4>
 <p>図TODO</p>
 <p>medelegレジスタは、どの例外を委譲するかを制御する64ビットのレジスタです(図TODO)。medelegレジスタの下からi番目のビットが立っているとき、S-mode、U-modeで発生したcauseがiの例外をS-modeに委譲します。M-modeで発生した例外はS-modeに委譲されません。</p>
 <p>Environment call from M-mode例外のように委譲することができない命令のmedelegレジスタのビットは<code class="inline-code">1</code>に変更できません。</p>
 
-<h4><a id="h9-6-1-2"></a>割り込みの委譲</h4>
+<h4><a id="h9-4-1-2"></a>割り込みの委譲</h4>
 <p>図TODO</p>
 <p>midelegレジスタは、どの割り込みを委譲するかを制御するMXLENビットのレジスタです(図TODO)。各割り込みはmie、mipレジスタと同じ場所のmidelegレジスタのビットによって委譲されるかどうかが制御されます。</p>
 <p>M-mode、S-mode、U-modeが実装されたCPUで、割り込みでM-modeに遷移する条件は次の通りです。</p>
@@ -188,14 +264,10 @@
 </div><!--/.footnote-list-->
 <p>TODO 無駄な論理 (mode &lt;= PrivMode::S &amp;&amp; (mode != PrivMode::S || mstatus_sie)) -&gt; (mode &lt;= PrivMode::S || mstatus_sie)</p>
 
-<h3 class="none"><a id="h9-6-2"></a><span class="secno">9.6.2</span> トラップに関連するCSRを作成する</h3>
+<h3 class="none"><a id="h9-4-2"></a><span class="secno">9.4.2</span> トラップに関連するレジスタを作成する</h3>
 <p>S-modeに委譲されたトラップで使用するレジスタを作成します。stvec、sscratch、sepc、scause、stvalレジスタを作成します()。</p>
-<div class="caption-code">
-<pre class="emlist">
-</pre>
-</div>
 
-<h3 class="none"><a id="h9-6-3"></a><span class="secno">9.6.3</span> mstatusのSIE、SPIE、SPPビットを実装する</h3>
+<h3 class="none"><a id="h9-4-3"></a><span class="secno">9.4.3</span> mstatusのSIE、SPIE、SPPビットを実装する</h3>
 <p>mstatusレジスタのSIE、SPIE、SPPビットを実装します。mstatus.SIEはS-modeに委譲された割り込みのグローバル割り込みイネーブルビットです。mstatus.SPIEはS-modeに委譲されたトラップが発生するときにmstatus.SIEを退避するビットです。mstatus.SPPはS-modeに委譲されたトラップが発生するときに、トラップ前の特権レベルを書き込むビットです。S-modeに委譲されたトラップはS-modeかU-modeでしか発生しないため、mstatus.SPPはそれを区別するために必要な1ビット幅のフィールドになっています。</p>
 <p>mstatusのSIE、SPIE、SPPビットを書き込みできるようにします()。sstatusでも読み込み、書き込みできるようにします。</p>
 <div class="caption-code">
@@ -203,7 +275,9 @@
 </pre>
 </div>
 
-<h3 class="none"><a id="h9-6-4"></a><span class="secno">9.6.4</span> SRET命令の実装</h3>
+<h3 class="none"><a id="h9-4-4"></a><span class="secno">9.4.4</span> SRET命令を実装する</h3>
+
+<h4><a id="h9-4-4-1"></a>SRET命令の実装</h4>
 <p>SRET命令は、S-modeのCSR(sepc、sstatusなど)を利用してトラップ処理から戻るための命令です。SRET命令はS-mode以上の特権レベルのときにしか実行できません。</p>
 <p>SRET命令を判定し、SRET命令を実行するときはMRETで参照、変更していたCSRをS-modeのレジスタに置き換えた処理を実行するように実装します()。</p>
 <div class="caption-code">
@@ -224,8 +298,25 @@
 </pre>
 </div>
 
-<h3 class="none"><a id="h9-6-5"></a><span class="secno">9.6.5</span> mip、mieレジスタを変更する</h3>
-<p>S-modeを導入すると、S-modeのmip、mieレジスタの外部割り込み(Supervisor external interrupt)、ソフトウェア割り込み(Supervisor software interrupt)、タイマ割り込み(Supervisor timer interrupt)用のビットを変更できるようになります。</p>
+<h4><a id="h9-4-4-2"></a>mstatus.TSRの実装</h4>
+<p>mstatusレジスタのTSR(Trap SRET)ビットは、SRET命令をS-modeで実行したときに例外を発生させるかを制御するビットです。<code class="inline-code">1</code>のときにIllegal instruction例外が発生するようになります。</p>
+<p>mstatus.TSRを変更できるようにします()。</p>
+<div class="caption-code">
+<pre class="emlist">
+</pre>
+</div>
+<p>例外を判定します()。</p>
+<div class="caption-code">
+<pre class="emlist">
+</pre>
+</div>
+<div class="caption-code">
+<pre class="emlist">
+</pre>
+</div>
+
+<h3 class="none"><a id="h9-4-5"></a><span class="secno">9.4.5</span> mip、mieレジスタを変更する</h3>
+<p>S-modeを導入すると、mip、mieレジスタのS-modeの外部割り込み(Supervisor external interrupt)、ソフトウェア割り込み(Supervisor software interrupt)、タイマ割り込み(Supervisor timer interrupt)のビットを変更できるようになります。</p>
 <p>mipレジスタのSEIP、SSIE、STIEビット、mieレジスタのSEIP、SSIP、STIPビットを変更できるようにします()。</p>
 <div class="caption-code">
 <pre class="emlist">
@@ -236,7 +327,7 @@
 </pre>
 </div>
 
-<h3 class="none"><a id="h9-6-6"></a><span class="secno">9.6.6</span> medeleg、midelegレジスタを作成する</h3>
+<h3 class="none"><a id="h9-4-6"></a><span class="secno">9.4.6</span> medeleg、midelegレジスタを作成する</h3>
 <p>medeleg、midelegレジスタを作成します。それぞれ委譲できる例外、割り込みに対応するビットだけ書き換えられるようにします()。</p>
 <div class="caption-code">
 <pre class="emlist">
@@ -247,7 +338,7 @@
 </pre>
 </div>
 
-<h3 class="none"><a id="h9-6-7"></a><span class="secno">9.6.7</span> sie、sipレジスタを実装する</h3>
+<h3 class="none"><a id="h9-4-7"></a><span class="secno">9.4.7</span> sie、sipレジスタを実装する</h3>
 <p>sie、sipレジスタを作成します。どちらもmidelegレジスタで委譲されているときだけ値を参照できるように、sieレジスタはmidelegレジスタで委譲された割り込みに対応するビットだけ書き換えられるようにします()。</p>
 <div class="caption-code">
 <pre class="emlist">
@@ -266,7 +357,7 @@
 </pre>
 </div>
 
-<h3 class="none"><a id="h9-6-8"></a><span class="secno">9.6.8</span> 割り込み条件、トラップの動作を変更する</h3>
+<h3 class="none"><a id="h9-4-8"></a><span class="secno">9.4.8</span> 割り込み条件、トラップの動作を変更する</h3>
 <p>作成したCSRを利用して、割り込みが発生する条件、トラップが発生したときのCSRの操作を変更します。</p>
 <p>例外が発生するとき、遷移先の特権レベル、利用するレジスタを変更します()。</p>
 <div class="caption-code">
@@ -297,24 +388,7 @@
 </pre>
 </div>
 
-<h2 class="numbox"><a id="h9-7"></a><span class="secno">9.7</span> mstatus.TSRの実装</h2>
-<p>mstatusレジスタのTSR(Trap SRET)ビットは、SRET命令をS-modeで実行したときに例外を発生させるかを制御するビットです。<code class="inline-code">1</code>のときにIllegal instruction例外が発生するようになります。</p>
-<p>mstatus.TSRを変更できるようにします()。</p>
-<div class="caption-code">
-<pre class="emlist">
-</pre>
-</div>
-<p>例外を判定します()。</p>
-<div class="caption-code">
-<pre class="emlist">
-</pre>
-</div>
-<div class="caption-code">
-<pre class="emlist">
-</pre>
-</div>
-
-<h2 id="impl-sswi" class="numbox"><a id="h9-8"></a><span class="secno">9.8</span> ソフトウェア割り込みの実装 (SSWI)</h2>
+<h2 id="impl-sswi" class="numbox"><a id="h9-5"></a><span class="secno">9.5</span> ソフトウェア割り込みの実装 (SSWI)</h2>
 <p>SSWIデバイスはソフトウェア割り込み(supervisor software insterrupt)を提供するためのデバイスです。SSWIデバイスにはハードウェアスレッド毎に4バイトのSETSSIPレジスタが用意されています(TODO テーブル)SETSSIPレジスタを読み込むと常に<code class="inline-code">0</code>を返しますが、最下位ビットに<code class="inline-code">1</code>を書き込むとそれに対応するハードウェアスレッドのmip.SSIPビットが<code class="inline-code">1</code>になります。</p>
 <p>TODOテーブル4095個</p>
 <p>今のところmhartidが<code class="inline-code">0</code>のハードウェアスレッドしか存在しないため、SETSSIP0のみ実装します。aclint_ifインターフェースに、mipレジスタのSSIPビットを<code class="inline-code">1</code>にする要求のための<code class="inline-code">setssip</code>を作成します()。</p>

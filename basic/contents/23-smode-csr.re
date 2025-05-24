@@ -17,24 +17,37 @@ S-modeで新しく導入される大きな機能として仮想記憶システ�
 また、Supervisor software interruptを提供するSSWIデバイスも実装します。
 それぞれ解説しながら実装していきます。
 
-== CSRのアドレスの追加
+eeiパッケージに、本書で実装するS-modeのCSRをすべて定義します。
 
-本書で実装するS-modeのCSRをすべて定義します。
-
-//list[][]{
+//list[eei.veryl.addr.CsrAddr][ (eei.veryl)]{
+#@maprange(scripts/23/addr-range/core/src/eei.veryl,CsrAddr)
+    enum CsrAddr: logic<12> {
+        // Supervisor Trap Setup
+        SSTATUS = 12'h100,
+        SIE = 12'h104,
+        STVEC = 12'h105,
+        SCOUNTEREN = 12'h106,
+        // Supervisor Trap Handling
+        SSCRATCH = 12'h140,
+        SEPC = 12'h141,
+        SCAUSE = 12'h142,
+        STVAL = 12'h143,
+        SIP = 12'h144,
+#@end
 //}
 
-== misa.Extensionsの変更
+== misa.Extensions、mstatus.SXL、mstatus.MPPの実装
 
 S-modeを実装しているかどうかはmisa.ExtensionsのSビットで確認できます。
 
-misa.Extensionsの値を変更します
+misa.ExtensionsのSビットを@<code>{1}に設定します
 ()。
 
-//list[][]{
+//list[csrunit.veryl.misamppsxl.misa][ (csrunit.veryl)]{
+#@maprange(scripts/23/misamppsxl-range/core/src/csrunit.veryl,misa)
+    let misa      : UIntX  = {2'd2, 1'b0 repeat XLEN - 28, 26'b0000010@<b>|1|000001000100000101}; // U, @<b>|S|, M, I, C, A
+#@end
 //}
-
-== mstatusのSXL、MPPビットの実装
 
 S-modeのときのXLENはSXLENと定義されており、UXLENと同じようにmstatus.SXLで確認できます。
 本書ではSXLENが常に@<code>{64}になるように実装します。
@@ -42,46 +55,123 @@ S-modeのときのXLENはSXLENと定義されており、UXLENと同じように
 mstatus.SXLを@<code>{64}を示す値である@<code>{2}に設定します
 ()。
 
-//list[][]{
+//list[eei.veryl.misamppsxl.sxl][ (eei.veryl)]{
+#@maprange(scripts/23/misamppsxl-range/core/src/eei.veryl,sxl)
+    const MSTATUS_UXL: UInt64 = 2 << 32;
+    @<b>|const MSTATUS_SXL: UInt64 = 2 << 34;|
+#@end
 //}
 
-mstatus.MPPにM-modeとU-modeを示す値しか書き込めないようになっています。
+//list[csrunit.veryl.misamppsxl.reset][ (csrunit.veryl)]{
+#@maprange(scripts/23/misamppsxl-range/core/src/csrunit.veryl,reset)
+    always_ff {
+        if_reset {
+            mode       = PrivMode::M;
+            mstatus    = MSTATUS_SXL @<b>{| MSTATUS_UXL};
+#@end
+//}
+
+今のところmstatus.MPPにはM-modeとU-modeを示す値しか書き込めないようにしているため、
 これをS-modeの値(@<code>{2'b10})も書き込めるように変更します
 ()。
 これにより、MRET命令でS-modeに移動できるようになります。
 
-//list[][]{
+//list[csrunit.veryl.misamppsxl.mstatus][ (csrunit.veryl)]{
+#@maprange(scripts/23/misamppsxl-range/core/src/csrunit.veryl,mstatus)
+    function validate_mstatus (
+        mstatus: input UIntX,
+        wdata  : input UIntX,
+    ) -> UIntX {
+        var result: UIntX;
+        result = wdata;
+        // MPP
+        if @<b>|wdata[12:11] == 2'b10| {
+            result[12:11] = mstatus[12:11];
+        }
+        return result;
+    }
+#@end
 //}
 
 == scounterenレジスタの実装
 
 @<secref>{22-umode-csr|impl-mcounteren}ではmcounterenレジスタによって
 ハードウェアパフォーマンスモニタにU-modeでアクセスできるようにしました。
-S-modeを導入するとmcounternレジスタは
+S-modeを導入するとmcounterenレジスタは
 S-modeがハードウェアパフォーマンスモニタにアクセスできるようにするかを制御するレジスタに変わります。
 また、mcounterenレジスタの代わりに
 U-modeでハードウェアパフォーマンスモニタにアクセスできるようにするかを制御する32ビットのscounterenレジスタが追加されます。
 
-scounternレジスタのフィールドのビット配置はmcounternレジスタと等しいです。
+scounterenレジスタのフィールドのビット配置はmcounterenレジスタと等しいです。
 また、U-modeでハードウェアパフォーマンスにアクセスできる条件は、
 mcounterenレジスタとscounterenレジスタの両方によって許可されている場合になります。
 
 scounterenレジスタを作成し、読み書きできるようにします
 ()。
 
-//list[][]{
+//list[csrunit.veryl.scounteren.reg][ (csrunit.veryl)]{
+#@maprange(scripts/23/scounteren-range/core/src/csrunit.veryl,reg)
+    var scounteren: UInt32;
+#@end
 //}
 
-//list[][]{
+//list[csrunit.veryl.scounteren.reset][ (csrunit.veryl)]{
+#@maprange(scripts/23/scounteren-range/core/src/csrunit.veryl,reset)
+    mtval      = 0;
+    @<b>|scounteren = 0;|
+    led        = 0;
+#@end
 //}
 
-//list[][]{
+//list[csrunit.veryl.scounteren.rdata][ (csrunit.veryl)]{
+#@maprange(scripts/23/scounteren-range/core/src/csrunit.veryl,rdata)
+    CsrAddr::MTVAL     : mtval,
+    @<b>|CsrAddr::SCOUNTEREN: {1'b0 repeat XLEN - 32, scounteren},|
+    CsrAddr::LED       : led,
+#@end
 //}
 
-ハードウェアパフォーマンスモニタにアクセスするときの許可確認ロジックを変更します
+//list[csrunit.veryl.scounteren.WMASK][ (csrunit.veryl)]{
+#@maprange(scripts/23/scounteren-range/core/src/csrunit.veryl,WMASK)
+    const SCOUNTEREN_WMASK: UIntX = 'h0000_0000_0000_0007 as UIntX;
+#@end
+//}
+
+//list[csrunit.veryl.scounteren.wmask][ (csrunit.veryl)]{
+#@maprange(scripts/23/scounteren-range/core/src/csrunit.veryl,wmask)
+    CsrAddr::MTVAL     : MTVAL_WMASK,
+    @<b>|CsrAddr::SCOUNTEREN: SCOUNTEREN_WMASK,|
+    CsrAddr::LED       : LED_WMASK,
+#@end
+//}
+
+//list[csrunit.veryl.scounteren.write][ (csrunit.veryl)]{
+#@maprange(scripts/23/scounteren-range/core/src/csrunit.veryl,write)
+    CsrAddr::MTVAL     : mtval      = wdata;
+    @<b>|CsrAddr::SCOUNTEREN: scounteren = wdata[31:0];|
+    CsrAddr::LED       : led        = wdata;
+#@end
+//}
+
+ハードウェアパフォーマンスモニタにアクセスするときに許可を確認する仕組みを実装します
 ()。
+S-modeでアクセスするときはmcounterenレジスタだけ確認し、
+U-modeでアクセスするときはmcounterenレジスタとscounterenレジスタを確認します。
 
-//list[][]{
+//list[csrunit.veryl.scounteren.priv][ (csrunit.veryl)]{
+#@maprange(scripts/23/scounteren-range/core/src/csrunit.veryl,priv)
+    let expt_zicntr_priv       : logic = is_wsc && @<b>|(|mode @<b>{<=} PrivMode::S && case csr_addr {
+        CsrAddr::CYCLE  : !mcounteren[0],
+        CsrAddr::TIME   : !mcounteren[1],
+        CsrAddr::INSTRET: !mcounteren[2],
+        default         : 0,
+    } @<b>{|| mode <= PrivMode::U && case csr_addr} @<b>|{|
+        @<b>|CsrAddr::CYCLE  : !scounteren[0],|
+        @<b>|CsrAddr::TIME   : !scounteren[1],|
+        @<b>|CsrAddr::INSTRET: !scounteren[2],|
+        @<b>|default         : 0,|
+    @<b>|})|; // attempt to access Zicntr CSR without permission
+#@end
 //}
 
 == sstatusレジスタの実装
@@ -91,29 +181,55 @@ TODO 図
 sstatusレジスタはmstatusレジスタの一部をS-modeで読み込み、書き込みできるようにしたSXLENビットのレジスタです。
 本章ではmstatusレジスタに読み込み、書き込みマスクを適用することでsstatusレジスタを実装します。
 
-sstatusレジスタの読み込み、書き込みマスクを定義します
+sstatusレジスタの書き込みマスクを定義します
 ()。
 
-//list[][]{
+//list[csrunit.veryl.sstatus.WMASK][ (csrunit.veryl)]{
+#@maprange(scripts/23/sstatus-range/core/src/csrunit.veryl,WMASK)
+    const SSTATUS_WMASK   : UIntX = 'h0000_0000_0000_0000 as UIntX;
+#@end
 //}
 
-//list[][]{
+//list[csrunit.veryl.sstatus.wmask][ (csrunit.veryl)]{
+#@maprange(scripts/23/sstatus-range/core/src/csrunit.veryl,wmask)
+    CsrAddr::MTVAL     : MTVAL_WMASK,
+    @<b>|CsrAddr::SSTATUS   : SSTATUS_WMASK,|
+    CsrAddr::SCOUNTEREN: SCOUNTEREN_WMASK,
+#@end
 //}
 
-//list[][]{
-//}
-
-マスクを適用した読み込み、書き込みを実装します
+読み込みマスクを定義し、mstatusレジスタにマスクを適用した値をsstatusレジスタの値にします
 ()。
-書き込みマスクでマスクされたwdataと、書き込みマスクをビット反転した値でマスクされたmstatusレジスタの和(OR)を書き込みデータとします。
 
-//list[][]{
+//list[csrunit.veryl.sstatus.RMASK][ (csrunit.veryl)]{
+#@maprange(scripts/23/sstatus-range/core/src/csrunit.veryl,RMASK)
+    const SSTATUS_RMASK: UIntX = 'h8000_0003_018f_e762;
+#@end
 //}
 
-//list[][]{
+//list[csrunit.veryl.sstatus.reg][ (csrunit.veryl)]{
+#@maprange(scripts/23/sstatus-range/core/src/csrunit.veryl,reg)
+    let sstatus   : UIntX  = mstatus & SSTATUS_RMASK;
+#@end
 //}
 
-//list[][]{
+//list[csrunit.veryl.sstatus.rdata][ (csrunit.veryl)]{
+#@maprange(scripts/23/sstatus-range/core/src/csrunit.veryl,rdata)
+    CsrAddr::MTVAL     : mtval,
+    @<b>|CsrAddr::SSTATUS   : sstatus,|
+    CsrAddr::SCOUNTEREN: {1'b0 repeat XLEN - 32, scounteren},
+#@end
+//}
+
+マスクを適用した書き込みを実装します
+()。
+書き込みマスクが適用されたwdataと、
+書き込みマスクをビット反転した値でマスクされたmstatusレジスタの値のORを書き込みます。
+
+//list[csrunit.veryl.sstatus.write][ (csrunit.veryl)]{
+#@maprange(scripts/23/sstatus-range/core/src/csrunit.veryl,write)
+    CsrAddr::SSTATUS   : mstatus    = validate_mstatus(mstatus, wdata | mstatus & ~SSTATUS_WMASK);
+#@end
 //}
 
 =={delegating-trap} トラップの委譲
@@ -180,14 +296,12 @@ S-modeに委譲された割り込みは外部割り込み、ソフトウェア�
 
 TODO 無駄な論理 (mode <= PrivMode::S && (mode != PrivMode::S || mstatus_sie)) -> (mode <= PrivMode::S || mstatus_sie)
 
-=== トラップに関連するCSRを作成する
+=== トラップに関連するレジスタを作成する
 
 S-modeに委譲されたトラップで使用するレジスタを作成します。
 stvec、sscratch、sepc、scause、stvalレジスタを作成します
 ()。
 
-//list[][]{
-//}
 
 === mstatusのSIE、SPIE、SPPビットを実装する
 
@@ -205,7 +319,9 @@ sstatusでも読み込み、書き込みできるようにします。
 //list[][]{
 //}
 
-=== SRET命令の実装
+=== SRET命令を実装する
+
+==== SRET命令の実装
 
 SRET命令は、S-modeのCSR(sepc、sstatusなど)を利用してトラップ処理から戻るための命令です。
 SRET命令はS-mode以上の特権レベルのときにしか実行できません。
@@ -228,14 +344,37 @@ SRET命令がS-mode未満の特権レベルで実行されたときに例外が�
 //list[][]{
 //}
 
+
+==== mstatus.TSRの実装
+
+mstatusレジスタのTSR(Trap SRET)ビットは、
+SRET命令をS-modeで実行したときに例外を発生させるかを制御するビットです。
+@<code>{1}のときにIllegal instruction例外が発生するようになります。
+
+mstatus.TSRを変更できるようにします
+()。
+
+//list[][]{
+//}
+
+例外を判定します
+()。
+
+//list[][]{
+//}
+
+//list[][]{
+//}
+
 === mip、mieレジスタを変更する
 
 S-modeを導入すると、
-S-modeのmip、mieレジスタの外部割り込み(Supervisor external interrupt)、
+mip、mieレジスタのS-modeの外部割り込み(Supervisor external interrupt)、
 ソフトウェア割り込み(Supervisor software interrupt)、
-タイマ割り込み(Supervisor timer interrupt)用のビットを変更できるようになります。
+タイマ割り込み(Supervisor timer interrupt)のビットを変更できるようになります。
 
-mipレジスタのSEIP、SSIE、STIEビット、mieレジスタのSEIP、SSIP、STIPビットを変更できるようにします
+mipレジスタのSEIP、SSIE、STIEビット、
+mieレジスタのSEIP、SSIP、STIPビットを変更できるようにします
 ()。
 
 //list[][]{
@@ -301,27 +440,6 @@ M-mode向けの割り込みを優先して利用します
 //}
 
 これらの変数を利用して、CSRの操作を変更します。
-
-//list[][]{
-//}
-
-//list[][]{
-//}
-
-== mstatus.TSRの実装
-
-mstatusレジスタのTSR(Trap SRET)ビットは、
-SRET命令をS-modeで実行したときに例外を発生させるかを制御するビットです。
-@<code>{1}のときにIllegal instruction例外が発生するようになります。
-
-mstatus.TSRを変更できるようにします
-()。
-
-//list[][]{
-//}
-
-例外を判定します
-()。
 
 //list[][]{
 //}

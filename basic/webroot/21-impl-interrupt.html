@@ -98,7 +98,7 @@
     タイマの設定と時間経過によって発生します。
 </dd>
 </dl>
-<p><b>M-modeだけ</b>が実装されたRISC-VのCPUでは、次にような順序で割り込みが提供されます。他に実装されている特権レベルがある場合については「<a href="22-umode-csr.html#h8-9">8.9 割り込み条件の変更</a>」、「<a href="23-smode-csr.html#h9-6">9.6 トラップの委譲</a>」で解説します。</p>
+<p><b>M-modeだけ</b>が実装されたRISC-VのCPUでは、次にような順序で割り込みが提供されます。他に実装されている特権レベルがある場合については「<a href="22-umode-csr.html#h8-9">8.9 割り込み条件の変更</a>」、「<a href="23-smode-csr.html#h9-4">9.4 トラップの委譲</a>」で解説します。</p>
 <ol start="1" type="1">
 <li>割り込みを発生させるようなイベントがデバイスで発生する</li>
 <li>割り込み原因に対応したmipレジスタのビットが<code class="inline-code">0</code>から<code class="inline-code">1</code>になる</li>
@@ -142,7 +142,7 @@
 <h3 class="none"><a id="h7-2-3"></a><span class="secno">7.2.3</span> ACLINT (Advanced Core Local Interruptor)</h3>
 <p>RISC-Vにはソフトウェア割り込みとタイマ割り込みを実現するデバイスの仕様であるACLINTが用意されています。ACLINTは、SiFive社が開発したCLINT(Core-Local Interruptor)デバイスが基になった仕様です。</p>
 <p>ACLINTにはMTIMER、MSWI、SSWIの3つのデバイスが定義されています。それぞれタイマ割り込み、ソフトウェア割り込み、ソフトウェア割り込み向けのデバイスで、mipレジスタのMTIP、MSIP、SSIPビットに状態を通知します。</p>
-<p>本書ではACLINTを図TODOのようなメモリマップで実装します。本章ではMTIMER、MSWIデバイスを実装し、「<a href="23-smode-csr.html#h9-8">9.8 ソフトウェア割り込みの実装 (SSWI)</a>」でSSWIデバイスを実装します。デバイスのの具体的な仕様については後で解説します。</p>
+<p>本書ではACLINTを図TODOのようなメモリマップで実装します。本章ではMTIMER、MSWIデバイスを実装し、「<a href="23-smode-csr.html#h9-5">9.5 ソフトウェア割り込みの実装 (SSWI)</a>」でSSWIデバイスを実装します。デバイスのの具体的な仕様については後で解説します。</p>
 <p>メモリマップ用の定数をeeiパッケージに記述してください()。</p>
 <div id="eei.veryl.mmapcause.mmap" class="caption-code">
 <span class="caption">リスト7.2: リスト7.2:  (eei.veryl)</span>
