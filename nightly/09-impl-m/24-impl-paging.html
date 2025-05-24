@@ -47,15 +47,12 @@
     <li class="toc-chapter"><a href="./24-impl-paging.html">10 S-modeの実装 (2. 仮想記憶システム)</a>
       <ul class="toc toc-3">
         <li class="toc-section"><a href="./24-impl-paging.html#h10-1">10.1 概要</a></li>
-        <li class="toc-section"><a href="./24-impl-paging.html#h10-2">10.2 ページフォルト例外のインターフェースの実装</a></li>
-        <li class="toc-section"><a href="./24-impl-paging.html#h10-3">10.3 アドレス変換モジュール(PTW)の作成</a></li>
-        <li class="toc-section"><a href="./24-impl-paging.html#h10-4">10.4 satpレジスタの作成</a></li>
-        <li class="toc-section"><a href="./24-impl-paging.html#h10-5">10.5 mstatusのMXR、SUMビットの作成</a></li>
+        <li class="toc-section"><a href="./24-impl-paging.html#h10-2">10.2 例外のインターフェースの実装</a></li>
+        <li class="toc-section"><a href="./24-impl-paging.html#h10-3">10.3 satpレジスタの作成</a></li>
+        <li class="toc-section"><a href="./24-impl-paging.html#h10-4">10.4 アドレス変換モジュール(PTW)の作成</a></li>
+        <li class="toc-section"><a href="./24-impl-paging.html#h10-5">10.5 mstatusのMXR、SUM、MPRVビットの作成</a></li>
         <li class="toc-section"><a href="./24-impl-paging.html#h10-6">10.6 Sv39の実装</a></li>
-        <li class="toc-section"><a href="./24-impl-paging.html#h10-7">10.7 mstatus.MPRVの実装</a></li>
-        <li class="toc-section"><a href="./24-impl-paging.html#h10-8">10.8 SFENCE.VMA命令の実装</a></li>
-        <li class="toc-section"><a href="./24-impl-paging.html#h10-9">10.9 mstatusのTVMビットの実装</a></li>
-        <li class="toc-section"><a href="./24-impl-paging.html#h10-10">10.10 satp、mstatusレジスタの変更の対応</a></li>
+        <li class="toc-section"><a href="./24-impl-paging.html#h10-7">10.7 SFENCE.VMA命令の実装</a></li>
       </ul>
     </li>
     <li class="toc-chapter"><a href="./25-impl-plic.html">11 PLICの実装</a></li>
@@ -129,35 +126,37 @@
 <ol start="1" type="1">
 <li>例外を伝達するインターフェースを実装する</li>
 <li>Bareにだけ対応したアドレス変換モジュールを実装する</li>
-<li>satpレジスタ、mstatusのMXR、SUMビットを作成する</li>
+<li>satpレジスタ、mstatusのMXR、SUM、MPRVビットを作成する</li>
 <li>Sv39を実装する</li>
-<li>mstatus.MPRVを実装する</li>
-<li>SFENCE.VMA命令、mstatus.TVMを実装する</li>
-<li>キャッシュをフラッシュする</li>
+<li>SFENCE.VMA命令、FENCEI命令を実装する</li>
 </ol>
 
-<h2 class="numbox"><a id="h10-2"></a><span class="secno">10.2</span> ページフォルト例外のインターフェースの実装</h2>
+<h2 class="numbox"><a id="h10-2"></a><span class="secno">10.2</span> 例外のインターフェースの実装</h2>
 
 <h3 class="none"><a id="h10-2-1"></a><span class="secno">10.2.1</span> 例外情報を作成する</h3>
 
 <h3 class="none"><a id="h10-2-2"></a><span class="secno">10.2.2</span> 例外の発生アドレスを特定する</h3>
 
-<h2 class="numbox"><a id="h10-3"></a><span class="secno">10.3</span> アドレス変換モジュール(PTW)の作成</h2>
+<h2 class="numbox"><a id="h10-3"></a><span class="secno">10.3</span> satpレジスタの作成</h2>
 
-<h2 class="numbox"><a id="h10-4"></a><span class="secno">10.4</span> satpレジスタの作成</h2>
+<h2 class="numbox"><a id="h10-4"></a><span class="secno">10.4</span> アドレス変換モジュール(PTW)の作成</h2>
 
-<h2 class="numbox"><a id="h10-5"></a><span class="secno">10.5</span> mstatusのMXR、SUMビットの作成</h2>
+<h2 class="numbox"><a id="h10-5"></a><span class="secno">10.5</span> mstatusのMXR、SUM、MPRVビットの作成</h2>
 
 <h2 class="numbox"><a id="h10-6"></a><span class="secno">10.6</span> Sv39の実装</h2>
 
-<h2 class="numbox"><a id="h10-7"></a><span class="secno">10.7</span> mstatus.MPRVの実装</h2>
+<h3 class="none"><a id="h10-6-1"></a><span class="secno">10.6.1</span> pte</h3>
 
-<h2 class="numbox"><a id="h10-8"></a><span class="secno">10.8</span> SFENCE.VMA命令の実装</h2>
+<h3 class="none"><a id="h10-6-2"></a><span class="secno">10.6.2</span> ptw</h3>
 
-<h2 class="numbox"><a id="h10-9"></a><span class="secno">10.9</span> mstatusのTVMビットの実装</h2>
+<h3 class="none"><a id="h10-6-3"></a><span class="secno">10.6.3</span> パイプラインのフラッシュ</h3>
+<p>TODO ↓ここに移動satp、mstatusレジスタの変更の対応fencei</p>
 
-<h2 class="numbox"><a id="h10-10"></a><span class="secno">10.10</span> satp、mstatusレジスタの変更の対応</h2>
-<p>fencei</p>
+<h2 class="numbox"><a id="h10-7"></a><span class="secno">10.7</span> SFENCE.VMA命令の実装</h2>
+
+<h3 class="none"><a id="h10-7-1"></a><span class="secno">10.7.1</span> SFENCE.VMA命令を実装する</h3>
+
+<h3 class="none"><a id="h10-7-2"></a><span class="secno">10.7.2</span> mstatus.TVMの実装</h3>
         </main>
         <nav class="page-navi">
           <a href="23-smode-csr.html" class="page-prev">&#9664;</a>
