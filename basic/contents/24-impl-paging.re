@@ -113,32 +113,36 @@ TODO 図
 
  1. 例外を伝達するインターフェースを実装する
  1. Bareにだけ対応したアドレス変換モジュールを実装する
- 1. satpレジスタ、mstatusのMXR、SUMビットを作成する
+ 1. satpレジスタ、mstatusのMXR、SUM、MPRVビットを作成する
  1. Sv39を実装する
- 1. mstatus.MPRVを実装する
- 1. SFENCE.VMA命令、mstatus.TVMを実装する
- 1. キャッシュをフラッシュする
+ 1. SFENCE.VMA命令、FENCEI命令を実装する
 
-== ページフォルト例外のインターフェースの実装
+== 例外のインターフェースの実装
 
 === 例外情報を作成する
 
 === 例外の発生アドレスを特定する
 
-== アドレス変換モジュール(PTW)の作成
-
 == satpレジスタの作成
 
-== mstatusのMXR、SUMビットの作成
+== アドレス変換モジュール(PTW)の作成
+
+== mstatusのMXR、SUM、MPRVビットの作成
 
 == Sv39の実装
 
-== mstatus.MPRVの実装
+=== pte
+
+=== ptw
+
+=== パイプラインのフラッシュ
+
+TODO ↓ここに移動
+satp、mstatusレジスタの変更の対応
+fencei
 
 == SFENCE.VMA命令の実装
 
-== mstatusのTVMビットの実装
+=== SFENCE.VMA命令を実装する
 
-== satp、mstatusレジスタの変更の対応
-
-fencei
+=== mstatus.TVMの実装

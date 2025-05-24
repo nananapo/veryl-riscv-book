@@ -125,6 +125,7 @@ mipレジスタのMTIP、MSIP、SSIPビットに状態を通知します。
     const MMAP_ACLINT_MSIP    : Addr = 0;
     const MMAP_ACLINT_MTIMECMP: Addr = 'h4000 as Addr;
     const MMAP_ACLINT_MTIME   : Addr = 'h7ff8 as Addr;
+    const MMAP_ACLINT_SETSSIP : Addr = 'h8000 as Addr;
     const MMAP_ACLINT_END     : Addr = MMAP_ACLINT_BEGIN + 'hbfff as Addr;
 #@end
 //}

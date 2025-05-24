@@ -33,6 +33,8 @@ eeiパッケージに、本書で実装するS-modeのCSRをすべて定義し�
         SCAUSE = 12'h142,
         STVAL = 12'h143,
         SIP = 12'h144,
+        // Supervisor Protection and Translation
+        SATP = 12'h180,
 #@end
 //}
 
