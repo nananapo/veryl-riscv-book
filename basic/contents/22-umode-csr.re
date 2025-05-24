@@ -19,10 +19,13 @@ U-modeを実装しているかどうかはmisa.ExtensionsのUビットで確認�
 misa.Extensionsの値を変更します
 ()。
 
-//list[][]{
+//list[csrunit.veryl.misa.misa][ (csrunit.veryl)]{
+#@maprange(scripts/22/misa-range/core/src/csrunit.veryl,misa)
+    let misa    : UIntX  = {2'd2, 1'b0 repeat XLEN - 28, 26'b00000@<b>|1|00000001000100000101}; // U, M, I, C, A
+#@end
 //}
 
-== mstatusのUXL、TWビットの実装
+== mstatus.UXLの実装
 
 U-modeのときのXLENはUXLENと定義されておりmstatus.UXLで確認できます。
 仕様上はmstatus.UXLを書き換えでUXLENを変更できるように実装できますが、
@@ -31,8 +34,24 @@ U-modeのときのXLENはUXLENと定義されておりmstatus.UXLで確認でき
 mstatus.UXLを@<code>{64}を示す値である@<code>{2}に設定します
 ()。
 
-//list[][]{
+//list[eei.veryl.misa.def][ (eei.veryl)]{
+#@maprange(scripts/22/misa-range/core/src/eei.veryl,def)
+    // mstatus
+    const MSTATUS_UXL: UInt64 = 2 << 32;
+#@end
 //}
+
+//list[csrunit.veryl.misa.reset][ (csrunit.veryl)]{
+#@maprange(scripts/22/misa-range/core/src/csrunit.veryl,reset)
+    always_ff {
+        if_reset {
+            mode     = PrivMode::M;
+            mstatus  = @<b>|MSTATUS_UXL|;
+            mtvec    = 0;
+#@end
+//}
+
+== mstatus.TWの実装
 
 mstatus.TWは、M-modeよりも低い特権レベルでWFI命令を実行するときに時間制限(Timeout Wait)を設けるためのビットです。
 mstatus.TWが@<code>{0}のとき時間制限はありません。
@@ -43,10 +62,13 @@ mstatus.TWが@<code>{0}のとき時間制限はありません。
 mstatus.TWを書き換えられるようにします
 ()。
 
-//list[][]{
+//list[csrunit.veryl.tw.WMASK][ (csrunit.veryl)]{
+#@maprange(scripts/22/tw-range/core/src/csrunit.veryl,WMASK)
+    const MSTATUS_WMASK : UIntX = 'h0000_0000_00@<b>|2|0_0088 as UIntX;
+#@end
 //}
 
-TODO make mstatus.TW readable -> writableだし、diffが入り込んでいる
+#@# FIXME コミットメッセージがmake it readableになってる (writableが正)
 
 == mstatus.MPPの実装
 
@@ -63,42 +85,112 @@ MRET命令によるM-modeからU-modeへの遷移(図TODO)を実現できます�
 
 MRET命令を実行するとmstatus.MPPは実装がサポートする最低の特権レベルに設定されます。
 
-M-modeからU-modeに遷移したいとき、mstatus.MPPをU-modeの値に変更し、
-U-modeで実行を開始したいアドレスをmepcレジスタに設定します
+M-modeからU-modeに遷移したいときは、mstatus.MPPをU-modeの値に変更し、
+U-modeで実行を開始したいアドレスをmepcレジスタに設定してMRET命令を実行します
 ()。
 
 //list[][]{
+    TODO M->Uのサンプルコード
 //}
 
 mstatus.MPPに値を書き込めるようにします
 ()。
 
-//list[][書き込みマスク]{
+//list[csrunit.veryl.mpp.WMASK][ (csrunit.veryl)]{
+#@maprange(scripts/22/mpp-range/core/src/csrunit.veryl,WMASK)
+    const MSTATUS_WMASK : UIntX = 'h0000_0000_0020_@<b>|18|88 as UIntX;
+#@end
 //}
 
 MPPには@<code>{2'b00}(U-mode)と@<code>{2'b11}(M-mode)のみ設定できるようにします。
 サポートしていない値を書き込もうとする場合は現在の値を維持します
 ()。
 
-//list[][]{
+//list[csrunit.veryl.mpp.write][ (csrunit.veryl)]{
+#@maprange(scripts/22/mpp-range/core/src/csrunit.veryl,write)
+    CsrAddr::MSTATUS : mstatus  = validate_mstatus(mstatus, wdata);
+#@end
 //}
 
-//list[][]{
+//list[csrunit.veryl.mpp.func][ (csrunit.veryl)]{
+#@maprange(scripts/22/mpp-range/core/src/csrunit.veryl,func)
+    function validate_mstatus (
+        mstatus: input UIntX,
+        wdata  : input UIntX,
+    ) -> UIntX {
+        var result: UIntX;
+        result = wdata;
+        // MPP
+        if wdata[12:11] != PrivMode::M && wdata[12:11] != PrivMode::U {
+            result[12:11] = mstatus[12:11];
+        }
+        return result;
+    }
+#@end
 //}
 
-トラップが発生するとき、mstatus.MPPに現在の特権レベルを格納します
+トラップが発生する、トラップから戻るときの遷移先の特権レベルを求めます
 ()。
 
-//list[][]{
+//list[csrunit.veryl.mpp.mpp][ (csrunit.veryl)]{
+#@maprange(scripts/22/mpp-range/core/src/csrunit.veryl,mpp)
+    @<b>|let mstatus_mpp : PrivMode = mstatus[12:11] as PrivMode;|
+    let mstatus_mpie: logic    = mstatus[7];
+    let mstatus_mie : logic    = mstatus[3];
+#@end
 //}
 
-トラップから戻るとき、特権レベルをmstatus.MPPに設定し、
-mstatus.MPPに実装がサポートする最小の特権レベルである@<code>{2'b00}を書き込みます。
-
-//list[][]{
+//list[csrunit.veryl.mpp.interrupt_mode][ (csrunit.veryl)]{
+#@maprange(scripts/22/mpp-range/core/src/csrunit.veryl,interrupt_mode)
+    let interrupt_mode: PrivMode = PrivMode::M;
+#@end
 //}
 
-== CSRの読み書き権限の確認
+//list[csrunit.veryl.mpp.expt_mode][ (csrunit.veryl)]{
+#@maprange(scripts/22/mpp-range/core/src/csrunit.veryl,expt_mode)
+    let expt_mode  : PrivMode = PrivMode::M;
+#@end
+//}
+
+//list[csrunit.veryl.mpp.trap_return_mode][ (csrunit.veryl)]{
+#@maprange(scripts/22/mpp-range/core/src/csrunit.veryl,trap_return_mode)
+    let trap_return_mode: PrivMode = mstatus_mpp;
+#@end
+//}
+
+//list[csrunit.veryl.mpp.trap_mode_next][ (csrunit.veryl)]{
+#@maprange(scripts/22/mpp-range/core/src/csrunit.veryl,trap_mode_next)
+    let trap_mode_next: PrivMode = switch {
+        raise_expt     : expt_mode,
+        raise_interrupt: interrupt_mode,
+        trap_return    : trap_return_mode,
+        default        : PrivMode::U,
+    };
+#@end
+//}
+
+トラップが発生するとき、mstatus.MPPに現在の特権レベルを保存します
+()。
+また、トラップから戻るとき、特権レベルをmstatus.MPPに設定し、
+mstatus.MPPに実装がサポートする最小の特権レベルである@<code>{PrivMode::U}を書き込みます。
+
+//list[csrunit.veryl.mpp.trap][ (csrunit.veryl)]{
+#@maprange(scripts/22/mpp-range/core/src/csrunit.veryl,trap)
+    if raise_trap {
+        if raise_expt || raise_interrupt {
+            ...
+            @<b>|// save current privilege level to mstatus.mpp|
+            @<b<|mstatus[12:11] = mode;|
+        } else if trap_return {
+            ...
+            @<b>|// set mstatus.mpp = U (least privilege level)|
+            @<b>|mstatus[12:11] = PrivMode::U;|
+        }
+        mode = trap_mode_next;
+#@end
+//}
+
+== CSRのアクセス権限の確認
 
 TODO図
 
@@ -109,12 +201,25 @@ CSRのアドレスを@<code>{csr_addr}とするとき、
 CSRのアドレスと特権レベルを確認して例外を起こすようにします
 ()。
 
-//list[][]{
+//list[csrunit.veryl.csrrwpriv.priv][ (csrunit.veryl)]{
+#@maprange(scripts/22/csrrwpriv-range/core/src/csrunit.veryl,priv)
+    let expt_csr_priv_violation: logic = is_wsc && csr_addr[9:8] >: mode; // attempt to access CSR without privilege level
+#@end
 //}
 
-//list[][]{
+//list[csrunit.veryl.csrrwpriv.raise_expt][ (csrunit.veryl)]{
+#@maprange(scripts/22/csrrwpriv-range/core/src/csrunit.veryl,raise_expt)
+    let raise_expt: logic = valid && (expt_info.valid || expt_write_readonly_csr || @<b>{expt_csr_priv_violation});
+#@end
 //}
 
+//list[csrunit.veryl.csrrwpriv.cause][ (csrunit.veryl)]{
+#@maprange(scripts/22/csrrwpriv-range/core/src/csrunit.veryl,cause)
+    expt_write_readonly_csr: CsrCause::ILLEGAL_INSTRUCTION,
+    @<b>|expt_csr_priv_violation: CsrCause::ILLEGAL_INSTRUCTION,|
+    default                : 0,
+#@end
+//}
 
 =={impl-mcounteren} mcounterenレジスタの実装
 
@@ -128,29 +233,79 @@ CY、TM、IRビットはそれぞれcycle、time、instretにアクセスでき�
 
 本章でM-modeの次に低い特権レベルとしてU-modeを実装するため、
 mcounterenレジスタはU-modeでのアクセスを制御します。
-U-modeでmcounterenレジスタで許可されていない状態でcycle、time、instretレジスタにアクセスしようとすると、
+mcounterenレジスタで許可されていないままU-modeでcycle、time、instretレジスタにアクセスしようとすると、
 Illelgal Instruction例外が発生します。
 
 mcounterenレジスタを作成し、CY、TM、IRビットに書き込みできるようにします
 ()。
 
-//list[][]{
+//list[csrunit.veryl.mcounteren.reg][ (csrunit.veryl)]{
+#@maprange(scripts/22/mcounteren-range/core/src/csrunit.veryl,reg)
+    var mcounteren: UInt32;
+#@end
 //}
 
-//list[][]{
+//list[csrunit.veryl.mcounteren.rdata][ (csrunit.veryl)]{
+#@maprange(scripts/22/mcounteren-range/core/src/csrunit.veryl,rdata)
+    CsrAddr::MIE       : mie,
+    @<b>|CsrAddr::MCOUNTEREN: {1'b0 repeat XLEN - 32, mcounteren},|
+    CsrAddr::MCYCLE    : mcycle,
+#@end
 //}
 
-//list[][]{
+//list[csrunit.veryl.mcounteren.WMASK][ (csrunit.veryl)]{
+#@maprange(scripts/22/mcounteren-range/core/src/csrunit.veryl,WMASK)
+    const MCOUNTEREN_WMASK: UIntX = 'h0000_0000_0000_0007 as UIntX;
+#@end
 //}
 
-mcounterenレジスタと特権レベルを確認し、例外を発生させます
+//list[csrunit.veryl.mcounteren.wmask][ (csrunit.veryl)]{
+#@maprange(scripts/22/mcounteren-range/core/src/csrunit.veryl,wmask)
+    CsrAddr::MIE       : MIE_WMASK,
+    @<b>|CsrAddr::MCOUNTEREN: MCOUNTEREN_WMASK,|
+    CsrAddr::MSCRATCH  : MSCRATCH_WMASK,
+#@end
+//}
+
+//list[csrunit.veryl.mcounteren.reset][ (csrunit.veryl)]{
+#@maprange(scripts/22/mcounteren-range/core/src/csrunit.veryl,reset)
+    mie        = 0;
+    @<b>|mcounteren = 0;|
+    mscratch   = 0;
+#@end
+//}
+
+//list[csrunit.veryl.mcounteren.write][ (csrunit.veryl)]{
+#@maprange(scripts/22/mcounteren-range/core/src/csrunit.veryl,write)
+    CsrAddr::MIE       : mie        = wdata;
+    @<b>|CsrAddr::MCOUNTEREN: mcounteren = wdata[31:0];|
+    CsrAddr::MSCRATCH  : mscratch   = wdata;
+#@end
+//}
+
+U-modeでハードウェアパフォーマンスモニタにアクセスするとき、
+mcounterenレジスタのビットが@<code>{0}ならIllegal instruction例外を発生させます
 ()。
 
-//list[][]{
+//list[csrunit.veryl.mcounteren.priv][ (csrunit.veryl)]{
+#@maprange(scripts/22/mcounteren-range/core/src/csrunit.veryl,priv)
+    let expt_zicntr_priv       : logic = is_wsc && mode == PrivMode::U && case csr_addr {
+        CsrAddr::CYCLE  : !mcounteren[0],
+        CsrAddr::TIME   : !mcounteren[1],
+        CsrAddr::INSTRET: !mcounteren[2],
+        default         : 0,
+    }; // attemp to access Zicntr CSR without permission
+#@end
 //}
 
-//list[][]{
+//list[csrunit.veryl.mcounteren.cause][ (csrunit.veryl)]{
+#@maprange(scripts/22/mcounteren-range/core/src/csrunit.veryl,cause)
+    expt_csr_priv_violation: CsrCause::ILLEGAL_INSTRUCTION,
+    @<b>|expt_zicntr_priv       : CsrCause::ILLEGAL_INSTRUCTION,|
+    default                : 0,
+#@end
 //}
+
 
 == MRET命令の実行を制限する
 
@@ -160,10 +315,25 @@ M-mode未満の特権レベルでMRET命令を実行しようとするとIllegal
 命令がMRET命令のとき、特権レベルを確認して例外を発生させます
 ()。
 
-//list[][]{
+//list[csrunit.veryl.umret.priv][ (csrunit.veryl)]{
+#@maprange(scripts/22/umret-range/core/src/csrunit.veryl,priv)
+    let expt_trap_return_priv: logic = is_mret && mode <: PrivMode::M; // attempt to execute trap return instruction in low privilege level
+#@end
 //}
 
-//list[][]{
+//list[csrunit.veryl.umret.raise_expt][ (csrunit.veryl)]{
+#@maprange(scripts/22/umret-range/core/src/csrunit.veryl,raise_expt)
+    let raise_expt: logic = valid && (expt_info.valid || expt_write_readonly_csr || expt_csr_priv_violation || expt_zicntr_priv @<b>{|| expt_trap_return_priv});
+#@end
+//}
+
+//list[csrunit.veryl.umret.cause][ (csrunit.veryl)]{
+#@maprange(scripts/22/umret-range/core/src/csrunit.veryl,cause)
+        expt_zicntr_priv       : CsrCause::ILLEGAL_INSTRUCTION,
+        @<b>|expt_trap_return_priv  : CsrCause::ILLEGAL_INSTRUCTION,|
+        default                : 0,
+    };
+#@end
 //}
 
 == ECALL命令のcauseを変更する
@@ -178,17 +348,49 @@ M-modeでECALL命令を実行するとEnvironment call from M-mode例外が発�
 @<code>{CsrCause}型にEnvironment call from U-mode例外のcauseを追加します
 ()。
 
-//list[][]{
+//list[eei.veryl.ecallm.CsrCause][ (eei.veryl)]{
+#@maprange(scripts/22/ecallm-range/core/src/eei.veryl,CsrCause)
+    STORE_AMO_ADDRESS_MISALIGNED = 6,
+    @<b>|ENVIRONMENT_CALL_FROM_U_MODE = 8,|
+    ENVIRONMENT_CALL_FROM_M_MODE = 11,
+#@end
 //}
 
-csrunitモジュールで、causeがEnvironment call from M-modeのとき
-@<code>{mode}レジスタの値をcauseに足すようにします
+csrunitモジュールの@<code>{mode}をポートとして宣言し、
+IDステージでECALL命令をデコードするときにcauseに@<code>{mode}を足します
 ()。
 
-//list[][]{
+//list[csrunit.veryl.ecallm.port][ (csrunit.veryl)]{
+#@maprange(scripts/22/ecallm-range/core/src/csrunit.veryl,port)
+    rdata      : output  UIntX               ,
+    @<b>|mode       : output  PrivMode            ,|
+    raise_trap : output  logic               ,
+#@end
 //}
 
-//list[][]{
+//list[core.veryl.ecallm.reg][ (core.veryl)]{
+#@maprange(scripts/22/ecallm-range/core/src/core.veryl,reg)
+    var csru_priv_mode  : PrivMode;
+#@end
+//}
+
+//list[core.veryl.ecallm.port][ (core.veryl)]{
+#@maprange(scripts/22/ecallm-range/core/src/core.veryl,port)
+    rdata      : csru_rdata           ,
+    @<b>|mode       : csru_priv_mode       ,|
+    raise_trap : csru_raise_trap      ,
+#@end
+//}
+
+//list[core.veryl.ecallm.expt][ (core.veryl)]{
+#@maprange(scripts/22/ecallm-range/core/src/core.veryl,expt)
+    } else if ids_inst_bits == 32'h00000073 {
+        // ECALL
+        exq_wdata.expt.valid      = 1;
+        exq_wdata.expt.cause      = @<b>|CsrCause::ENVIRONMENT_CALL_FROM_U_MODE;|
+        @<b>|exq_wdata.expt.cause[1:0] = csru_priv_mode;|
+        exq_wdata.expt.value      = 0;
+#@end
 //}
 
 =={umode-int} 割り込み条件の変更
@@ -204,8 +406,12 @@ M-modeとU-modeだけが実装されたCPUで割り込みが発生する条件�
 M-modeだけの場合と違い、
 現在の特権レベルがU-modeのときはグローバル割り込みイネーブルビット(mstatus.MIE)の値は考慮されずに割り込みが発生します。
 
-現在の特権レベルによって割り込みが発生する条件を切り替えるようにします
+現在の特権レベルによって割り込みが発生する条件を切り替えます。
+U-modeのときはmstatus.MIEを考慮しないようにします
 ()。
 
-//list[][]{
+//list[csrunit.veryl.intr.raise_interrupt][ (csrunit.veryl)]{
+#@maprange(scripts/22/intr-range/core/src/csrunit.veryl,raise_interrupt)
+    let raise_interrupt  : logic = valid && can_intr && @<b>{(mode != PrivMode::M ||} mstatus_mie@<b>{)} && interrupt_pending != 0;
+#@end
 //}

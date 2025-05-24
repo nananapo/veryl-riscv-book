@@ -429,7 +429,7 @@ always_ff {
 //list[aclint_memory.veryl.msip.rw][ (aclint_memory.veryl)]{
 #@maprange(scripts/21/msip-range/core/src/aclint_memory.veryl,rw)
 if membus.valid {
-    let addr: Addr = {membus.addr[XLEN - 1:2], 2'b0};
+    let addr: Addr = {membus.addr[XLEN - 1:3], 3'b0};
     if membus.wen {
         let M: logic<MEMBUS_DATA_WIDTH> = membus.wmask_expand();
         let D: logic<MEMBUS_DATA_WIDTH> = membus.wdata & M;
@@ -854,64 +854,174 @@ ACLINTモジュールにMTIME、MTIMECMPレジスタを実装します。
 
 @<code>{mtime}、@<code>{mtimecmp0}レジスタを作成し、読み書きできるようにします
 ()。
-@<code>{mtime}に値が書き込まれないとき、クロック毎にインクリメントします。
+@<code>{mtime}レジスタはクロック毎にインクリメントします。
 
-//list[][]{
+//list[aclint_memory.veryl.mtime.reg][ (aclint_memory.veryl)]{
+#@maprange(scripts/21/mtime-range/core/src/aclint_memory.veryl,reg)
+    var msip0    : logic ;
+    var mtime    : UInt64;
+    var mtimecmp0: UInt64;
+#@end
 //}
 
-//list[][]{
+//list[aclint_memory.veryl.mtime.reset][ (aclint_memory.veryl)]{
+#@maprange(scripts/21/mtime-range/core/src/aclint_memory.veryl,reset)
+    always_ff {
+        if_reset {
+            membus.rvalid = 0;
+            membus.rdata  = 0;
+            msip0         = 0;
+            @<b>|mtime         = 0;|
+            @<b>|mtimecmp0     = 0;|
+#@end
 //}
 
-//list[][]{
+//list[aclint_memory.veryl.mtime.rw][ (aclint_memory.veryl)]{
+#@maprange(scripts/21/mtime-range/core/src/aclint_memory.veryl,rw)
+    if membus.wen {
+        let M: logic<MEMBUS_DATA_WIDTH> = membus.wmask_expand();
+        let D: logic<MEMBUS_DATA_WIDTH> = membus.wdata & M;
+        case addr {
+            MMAP_ACLINT_MSIP    : msip0     = D[0] | msip0 & ~M[0];
+            @<b>{MMAP_ACLINT_MTIME   : mtime     = D | mtime & ~M;}
+            @<b>{MMAP_ACLINT_MTIMECMP: mtimecmp0 = D | mtimecmp0 & ~M;}
+            default             : {}
+        }
+    } else {
+        membus.rdata = case addr {
+            MMAP_ACLINT_MSIP    : {63'b0, msip0},
+            @<b>|MMAP_ACLINT_MTIME   : mtime,|
+            @<b>|MMAP_ACLINT_MTIMECMP: mtimecmp0,|
+            default             : 0,
+        };
+    }
+#@end
 //}
 
 aclint_ifインターフェースに@<code>{mtip}を作成し、タイマ割り込みが発生する条件を設定します
 ()。
 
-//list[][]{
+//list[aclint_if.veryl.mtime.mtip][ (aclint_if.veryl)]{
+#@maprange(scripts/21/mtime-range/core/src/aclint_if.veryl,mtip)
+    var msip: logic;
+    @<b>|var mtip: logic;|
+    modport master {
+        msip: output,
+        @<b>|mtip: output,|
+    }
+#@end
 //}
 
-//list[][]{
+//list[aclint_memory.veryl.mtime.comb][ (aclint_memory.veryl)]{
+#@maprange(scripts/21/mtime-range/core/src/aclint_memory.veryl,comb)
+    always_comb {
+        aclint.msip = msip0;
+        @<b>|aclint.mtip = mtime >= mtimecmp0;|
+    }
+#@end
 //}
 
-//list[][]{
-//}
+=== mip.MTIP、割り込み原因を設定する
 
-=== 割り込み原因を設定する
+mipレジスタのMTIPビットにaclint_ifインターフェースの@<code>{mtip}を接続します。
+
+//list[csrunit.veryl.mtime.mip][ (csrunit.veryl)]{
+#@maprange(scripts/21/mtime-range/core/src/csrunit.veryl,mip)
+    let mip: UIntX = {
+        1'b0 repeat XLEN - 12, // 0, LCOFIP
+        1'b0, // MEIP
+        1'b0, // 0
+        1'b0, // SEIP
+        1'b0, // 0
+        @<b>|aclint.mtip|, // MTIP
+        1'b0, // 0
+        1'b0, // STIP
+        1'b0, // 0
+        aclint.msip, // MSIP
+        1'b0, // 0
+        1'b0, // SSIP
+        1'b0, // 0
+    };
+#@end
+//}
 
 割り込み原因を優先順位に応じて設定します。
 タイマ割り込みはソフトウェア割り込みよりも優先順位が低いため、
 ソフトウェア割り込みの下で原因を設定します
 ()。
 
-//list[][]{
+//list[csrunit.veryl.mtime.intr][ (csrunit.veryl)]{
+#@maprange(scripts/21/mtime-range/core/src/csrunit.veryl,intr)
+    @<b>|let interrupt_pending: UIntX = mip & mie;|
+    let raise_interrupt  : logic = valid && can_intr && mstatus_mie && @<b>|interrupt_pending != 0|;
+    let interrupt_cause  : @<b>|UIntX = switch {|
+        @<b>|interrupt_pending[3]:| CsrCause::MACHINE_SOFTWARE_INTERRUPT@<b>|,|
+        @<b>|interrupt_pending[7]: CsrCause::MACHINE_TIMER_INTERRUPT,|
+        @<b>|default             : 0,|
+    @<b>|}|;
+    let interrupt_vector: Addr = if mtvec[0] == 0 ? {mtvec[msb:2], 2'b0} : // Direct
+     {mtvec[msb:2] + interrupt_cause[msb - 2:0], 2'b0}; // Vectored
+#@end
 //}
 
 === タイマ割り込みをテストする
 
 タイマ割り込みが正しく動くことを確認します。
 
-@<code>{test/aclint_mti.c}を作成し、次のように記述します
+@<code>{test/mtime.c}を作成し、次のように記述します
 ()。
 
-//list[][]{
+//list[mtime.c.mtime][ (mtime.c)]{
+#@mapfile(scripts/21/mtime-range/core/test/mtime.c)
+#define MTIMECMP0 ((volatile unsigned int *)0x2004000)
+#define MTIME     ((volatile unsigned int *)0x2007ff8)
+#define DEBUG_REG ((volatile unsigned long long*)0x40000000)
+#define MIE_MTIE (1 << 7)
+#define MSTATUS_MIE (1 << 3)
+
+void interrupt_handler(void);
+
+void w_mtvec(unsigned long long x) {
+    asm volatile("csrw mtvec, %0" : : "r" (x));
+}
+
+void w_mie(unsigned long long x) {
+    asm volatile("csrw mie, %0" : : "r" (x));
+}
+
+void w_mstatus(unsigned long long x) {
+    asm volatile("csrw mstatus, %0" : : "r" (x));
+}
+
+void main(void) {
+    w_mtvec((unsigned long long)interrupt_handler);
+    *MTIMECMP0 = *MTIME + 1000000; // この数値は適当に調整する
+    w_mie(MIE_MTIE);
+    w_mstatus(MSTATUS_MIE);
+    while (1);
+    *DEBUG_REG = 3; // fail
+}
+
+void interrupt_handler(void) {
+    *DEBUG_REG = 1; // success
+}
+#@end
 //}
 
-プログラムでは、mtimecmpをmtimeに@<code>{1000}を足した値に設定し、
-mtvecにinterrupt_handler関数のアドレスを書き込んだ後、
+プログラムでは、
+mtvecにinterrupt_handler関数のアドレスを設定し、
+mtimeに@<code>{10000000}を足した値をmtimecmp0に設定した後、
 mstatus.MIE、mie.MTIEを@<code>{1}に設定して割り込みを許可しています。
+タイマ割り込みが発生するまでwhile文で無限ループします。
 
-プログラムをコンパイルして実行すると、TODOリストのように表示されます。
-時間経過によってmain関数からinterrupt_handler関数にトラップしていることが分かります。
-
-//list[][]{
-//}
-
-タイマ割り込みが発生していることを確認できました。
+プログラムをコンパイルして実行すると、
+時間経過によってmain関数からinterrupt_handler関数にトラップしてテストが終了します。
+mtimecmp0に設定する値を変えることで、
+タイマ割り込みが発生するまでの時間が変わることを確認してください。
 
 == WFI命令の実装
 
-WFI命令は割り込みが発生するまで、CPUをストールさせる命令です。
+WFI命令は、割り込みが発生するまでCPUをストールさせる命令です。
 ただし、グローバル割り込みイネーブルビットは考慮せず、
 ある割り込みの待機(pending)ビットと許可(enable)ビットの両方が立っているときに実行を再開します。
 また、それ以外の自由な理由で実行を再開させてもいいです。
@@ -922,37 +1032,80 @@ WFI命令で割り込みが発生するとき、WFI命令の次のアドレス�
 inst_decoderモジュールでWFI命令をデコードできるようにします
 ()。
 
-//list[][]{
+//list[inst_decoder.veryl.wfi.wfi][ (inst_decoder.veryl)]{
+#@maprange(scripts/21/wfi-range/core/src/inst_decoder.veryl,wfi)
+    OP_SYSTEM: f3 != 3'b000 && f3 != 3'b100 || // CSRR(W|S|C)[I]
+     bits == 32'h00000073 || // ECALL
+     bits == 32'h00100073 || // EBREAK
+     bits == 32'h30200073 @<b>{||} //MRET
+     @<b>{bits == 32'h10500073}, @<b>{// WFI}
+    OP_MISC_MEM: T, // FENCE
+#@end
 //}
 
 csrunitモジュールに@<code>{stall}フラグを実装し、WFI命令の時にビットを立てるようにします
 ()。
 
-//list[][]{
+//list[csrunit.veryl.wfi.port][ (csrunit.veryl)]{
+#@maprange(scripts/21/wfi-range/core/src/csrunit.veryl,port)
+    minstret   : input   UInt64              ,
+    @<b>|stall      : output  logic               ,|
+    led        : output  UIntX               ,
+#@end
 //}
 
-//list[][]{
+//list[csrunit.veryl.wfi.is_wfi][ (csrunit.veryl)]{
+#@maprange(scripts/21/wfi-range/core/src/csrunit.veryl,is_wfi)
+    let is_wfi: logic = inst_bits == 32'h10500073;
+#@end
 //}
 
-//list[][]{
+//list[csrunit.veryl.wfi.stall_logic][ (csrunit.veryl)]{
+#@maprange(scripts/21/wfi-range/core/src/csrunit.veryl,stall_logic)
+    // stall logic
+    let stall_wfi: logic = valid && is_wfi && ((mip & mie) != 0);
+    assign stall     = !raise_trap && stall_wfi;
+#@end
 //}
 
 WFI命令で割り込みが発生するとき、mepcレジスタに@<code>{pc + 4}を書き込むようにします
 ()。
 
-//list[][]{
+//list[csrunit.veryl.wfi.expt][ (csrunit.veryl)]{
+#@maprange(scripts/21/wfi-range/core/src/csrunit.veryl,expt)
+    if raise_expt || raise_interrupt {
+        mepc = @<b>|if raise_expt ? pc : // exception|
+         @<b>|if raise_interrupt && is_wfi ? pc + 4 : pc; // interrupt when wfi / interrupt|
+        mcause = trap_cause;
+#@end
 //}
 
 coreモジュールでcsrunitモジュールの@<code>{stall}フラグによってMEM(CSR)ステージをストールさせます
 ()。
 
-//list[][]{
+//list[core.veryl.wfi.reg][ (core.veryl)]{
+#@maprange(scripts/21/wfi-range/core/src/core.veryl,reg)
+    var csru_stall      : logic ;
+#@end
 //}
 
-//list[][]{
+//list[core.veryl.wfi.port][ (core.veryl)]{
+#@maprange(scripts/21/wfi-range/core/src/core.veryl,port)
+    minstret                          ,
+    @<b>|stall      : csru_stall           ,|
+    led                               ,
+#@end
 //}
 
-//list[][]{
+//list[core.veryl.wfi.comb][ (core.veryl)]{
+#@maprange(scripts/21/wfi-range/core/src/core.veryl,comb)
+    let mems_stall: logic = memu_stall @<b>{|| csru_stall};
+
+    always_comb {
+        // MEM -> WB
+        memq_rready          = wbq_wready && !@<b>{mems_stall};
+        wbq_wvalid           = memq_rvalid && !@<b>{mems_stall};
+#@end
 //}
 
 == time、instret、cycleレジスタの実装
@@ -965,19 +1118,51 @@ RISC-Vにはtime、instret、cycleという読み込み専用のCSRが定義さ�
 @<code>{CsrAddr}型にレジスタのアドレスを追加します
 ()。
 
-//list[][]{
+//list[eei.veryl.zicntr.CsrAddr][ (eei.veryl)]{
+#@maprange(scripts/21/zicntr-range/core/src/eei.veryl,CsrAddr)
+    // Unprivileged Counter/Timers
+    CYCLE = 12'hC00,
+    TIME = 12'hC01,
+    INSTRET = 12'hC02,
+#@end
 //}
 
 mtimeレジスタの値をACLINTモジュールからcsrunitに渡します
 ()。
 
-//list[][]{
+//list[aclint_if.veryl.zicntr.mtime][ (aclint_if.veryl)]{
+#@maprange(scripts/21/zicntr-range/core/src/aclint_if.veryl,mtime)
+@<b>|import eei::*;|
+
+interface aclint_if {
+    var msip : logic ;
+    var mtip : logic ;
+    @<b>|var mtime: UInt64;|
+    modport master {
+        msip : output,
+        mtip : output,
+        @<b>|mtime: output,|
+    }
+#@end
 //}
 
-//list[][]{
+//list[aclint_memory.veryl.zicntr.comb][ (aclint_memory.veryl)]{
+#@maprange(scripts/21/zicntr-range/core/src/aclint_memory.veryl,comb)
+    always_comb {
+        aclint.msip  = msip0;
+        aclint.mtip  = mtime >= mtimecmp0;
+        @<b>|aclint.mtime = mtime;|
+    }
+#@end
 //}
 
-time、instret、cycleレジスタを読み込めるようにします。
+time、instret、cycleレジスタを読み込めるようにします
+()。
 
-//list[][]{
+//list[csrunit.veryl.zicntr.rdata][ (csrunit.veryl)]{
+#@maprange(scripts/21/zicntr-range/core/src/csrunit.veryl,rdata)
+    CsrAddr::CYCLE   : mcycle,
+    CsrAddr::TIME    : aclint.mtime,
+    CsrAddr::INSTRET : minstret,
+#@end
 //}
