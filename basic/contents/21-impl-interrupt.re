@@ -793,7 +793,7 @@ mtvec.MODEにVectoredを書き込めるようにします
 
 //list[csrunit.veryl.mtvectored.WMASK][ (csrunit.veryl)]{
 #@maprange(scripts/21/mtvectored-range/core/src/csrunit.veryl,WMASK)
-    const MTVEC_WMASK   : UIntX = 'hffff_ffff_ffff_fff@<b>|e|;
+    const MTVEC_WMASK   : UIntX = 'hffff_ffff_ffff_fff@<b>|d|;
 #@end
 //}
 
