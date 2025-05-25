@@ -44,13 +44,12 @@
     <li class="toc-chapter"><a href="./21-impl-interrupt.html">7 M-modeの実装 (2. 割り込みの実装)</a>
       <ul class="toc toc-3">
         <li class="toc-section"><a href="./21-impl-interrupt.html#h7-1">7.1 概要</a></li>
-        <li class="toc-section"><a href="./21-impl-interrupt.html#h7-2">7.2 RISC-Vの割り込み</a></li>
-        <li class="toc-section"><a href="./21-impl-interrupt.html#h7-3">7.3 aclint_memoryモジュールの作成</a></li>
-        <li class="toc-section"><a href="./21-impl-interrupt.html#h7-4">7.4 ソフトウェア割り込みの実装 (MSWI)</a></li>
-        <li class="toc-section"><a href="./21-impl-interrupt.html#h7-5">7.5 mtvecのVectoredモードの実装</a></li>
-        <li class="toc-section"><a href="./21-impl-interrupt.html#h7-6">7.6 タイマ割り込みの実装 (MTIMER)</a></li>
-        <li class="toc-section"><a href="./21-impl-interrupt.html#h7-7">7.7 WFI命令の実装</a></li>
-        <li class="toc-section"><a href="./21-impl-interrupt.html#h7-8">7.8 time、instret、cycleレジスタの実装</a></li>
+        <li class="toc-section"><a href="./21-impl-interrupt.html#h7-2">7.2 aclint_memoryモジュールの作成</a></li>
+        <li class="toc-section"><a href="./21-impl-interrupt.html#h7-3">7.3 ソフトウェア割り込みの実装 (MSWI)</a></li>
+        <li class="toc-section"><a href="./21-impl-interrupt.html#h7-4">7.4 mtvecのVectoredモードの実装</a></li>
+        <li class="toc-section"><a href="./21-impl-interrupt.html#h7-5">7.5 タイマ割り込みの実装 (MTIMER)</a></li>
+        <li class="toc-section"><a href="./21-impl-interrupt.html#h7-6">7.6 WFI命令の実装</a></li>
+        <li class="toc-section"><a href="./21-impl-interrupt.html#h7-7">7.7 time、instret、cycleレジスタの実装</a></li>
       </ul>
     </li>
     <li class="toc-chapter"><a href="./22-umode-csr.html">8 U-modeの実装</a></li>
@@ -79,7 +78,7 @@
 <p>TODO 図</p>
 <p>割り込みとは、何らかのイベントの通知によって実行中のプログラムを中断して通知内容を処理する方式のことです。割り込みを使うと、ポーリングのように無駄にデバイスにアクセスをすることなく、入力の処理が必要な時にだけ実行できます(TODO 図)。</p>
 
-<h2 id="riscv-interrupts" class="numbox"><a id="h7-2"></a><span class="secno">7.2</span> RISC-Vの割り込み</h2>
+<h3 id="riscv-interrupts" class="none"><a id="h7-1-2"></a><span class="secno">7.1.2</span> RISC-Vの割り込み</h3>
 <p>RISC-Vでは割り込み機能がCSRによって提供されます。割り込みが発生するとトラップが発生します。割り込みを発生させるようなイベントは外部割り込み、ソフトウェア割り込み、タイマ割り込みの3つに大別されます。</p>
 <dl>
 <dt>外部割り込み (External Interrupt)</dt>
@@ -113,11 +112,11 @@
 <p>mip(Machine Interrupt Pending)レジスタは割り込みの発生を待っている(待機)状態を示すMXLENビットのCSRです(TODO 図)。mie(Machine Interrupt Enable)レジスタは割り込みを許可するかを原因ごとに管理する制御するMXLENビットのCSRです(TODO 図)。mstatus.MIEはすべての割り込みを許可するかどうかを制御する1ビットのフィールドです。mieとmstatus.MIEのことを割り込みイネーブル(許可)レジスタと呼び、特にmstatus.MIEのようなすべての割り込みを制御するレジスタのことをグローバル割り込みイネーブルビットと呼びます</p>
 <p>割り込みの発生時にmstatus.MIEを0にすることで、割り込みの処理中に割り込みが発生することを防いでいます。また、トラップから戻る(MRET命令を実行する)とき、mstatus.MPIEの値をmstatus.MIEに書き戻すことで割り込みの許可状態を戻します。</p>
 
-<h3 class="none"><a id="h7-2-1"></a><span class="secno">7.2.1</span> 割り込みの優先順位</h3>
+<h3 class="none"><a id="h7-1-3"></a><span class="secno">7.1.3</span> 割り込みの優先順位</h3>
 <p>RISC-Vには外部割り込み、ソフトウェア割り込み、タイマ割り込みがそれぞれM-mode、S-mode向けに用意されています。それぞれの割り込みにはテーブルTODOのような優先順位が定義されていて、複数の割り込みを発生させられるときは優先順位が高い割り込みを発生させます。</p>
 <p>TODOテーブル</p>
 
-<h3 class="none"><a id="h7-2-2"></a><span class="secno">7.2.2</span> 割り込みの原因(cause)</h3>
+<h3 class="none"><a id="h7-1-4"></a><span class="secno">7.1.4</span> 割り込みの原因(cause)</h3>
 <p>それぞれの割り込みには原因を区別するための値(cause)が割り当てられています。割り込みのcauseのMSBは1です。</p>
 <p><code class="inline-code">CsrCause</code>型に割り込みのcauseを追加します()。</p>
 <div id="eei.veryl.mmapcause.CsrCause" class="caption-code">
@@ -139,7 +138,7 @@
 </pre>
 </div>
 
-<h3 class="none"><a id="h7-2-3"></a><span class="secno">7.2.3</span> ACLINT (Advanced Core Local Interruptor)</h3>
+<h3 class="none"><a id="h7-1-5"></a><span class="secno">7.1.5</span> ACLINT (Advanced Core Local Interruptor)</h3>
 <p>RISC-Vにはソフトウェア割り込みとタイマ割り込みを実現するデバイスの仕様であるACLINTが用意されています。ACLINTは、SiFive社が開発したCLINT(Core-Local Interruptor)デバイスが基になった仕様です。</p>
 <p>ACLINTにはMTIMER、MSWI、SSWIの3つのデバイスが定義されています。それぞれタイマ割り込み、ソフトウェア割り込み、ソフトウェア割り込み向けのデバイスで、mipレジスタのMTIP、MSIP、SSIPビットに状態を通知します。</p>
 <p>本書ではACLINTを図TODOのようなメモリマップで実装します。本章ではMTIMER、MSWIデバイスを実装し、「<a href="23-smode-csr.html#h9-5">9.5 ソフトウェア割り込みの実装 (SSWI)</a>」でSSWIデバイスを実装します。デバイスのの具体的な仕様については後で解説します。</p>
@@ -156,10 +155,10 @@
 </pre>
 </div>
 
-<h2 class="numbox"><a id="h7-3"></a><span class="secno">7.3</span> aclint_memoryモジュールの作成</h2>
+<h2 class="numbox"><a id="h7-2"></a><span class="secno">7.2</span> aclint_memoryモジュールの作成</h2>
 <p>本章では、ACLINTのデバイスを1つのaclint_memoryモジュールに実装します。aclint_memoryモジュールは割り込みを起こすためにcsrunitモジュールと接続します。</p>
 
-<h3 class="none"><a id="h7-3-1"></a><span class="secno">7.3.1</span> インターフェースを作成する</h3>
+<h3 class="none"><a id="h7-2-1"></a><span class="secno">7.2.1</span> インターフェースを作成する</h3>
 <p>まず、ACLINTのデバイスとcsrunitモジュールを接続するためのインターフェースを作成します。<code class="inline-code">src/aclint_if.veryl</code>を作成し、次のように記述します()。インターフェースの中身は各デバイスの実装時に実装します。</p>
 <div id="aclint_if.veryl.createaclint.mmap" class="caption-code">
 <span class="caption">リスト7.3: リスト7.3:  (aclint_if.veryl)</span>
@@ -174,7 +173,7 @@
 </pre>
 </div>
 
-<h3 class="none"><a id="h7-3-2"></a><span class="secno">7.3.2</span> aclint_memoryモジュールを作成する</h3>
+<h3 class="none"><a id="h7-2-2"></a><span class="secno">7.2.2</span> aclint_memoryモジュールを作成する</h3>
 <p>ACLINTのデバイスを実装するモジュールを作成します。<code class="inline-code">src/aclint_memory.veryl</code>を作成し、次のように記述します()。まだどのレジスタも実装していません。</p>
 <div id="aclint_memory.veryl.createaclint.mmap" class="caption-code">
 <span class="caption">リスト7.4: リスト7.4:  (aclint_memory.veryl)</span>
@@ -199,7 +198,7 @@ module aclint_memory (
 </pre>
 </div>
 
-<h3 class="none"><a id="h7-3-3"></a><span class="secno">7.3.3</span> mmio_controllerモジュールにACLINTを追加する</h3>
+<h3 class="none"><a id="h7-2-3"></a><span class="secno">7.2.3</span> mmio_controllerモジュールにACLINTを追加する</h3>
 <p>mmio_controllerモジュールにACLINTデバイスを追加して、aclint_memoryモジュールにアクセスできるようにします。</p>
 <p><code class="inline-code">Device</code>型にACLINTを追加して、アドレスにACLINTをマップします()。</p>
 <div id="mmio_controller.veryl.createaclint.Device" class="caption-code">
@@ -272,7 +271,7 @@ module aclint_memory (
 </pre>
 </div>
 
-<h3 class="none"><a id="h7-3-4"></a><span class="secno">7.3.4</span> ACLINTとmmio_controller、csrunitモジュールを接続する</h3>
+<h3 class="none"><a id="h7-2-4"></a><span class="secno">7.2.4</span> ACLINTとmmio_controller、csrunitモジュールを接続する</h3>
 <p>aclint_ifインターフェース、aclint_memoryモジュールとmmio_controllerモジュールを接続するインターフェースをインスタンス化します()。</p>
 <div id="top.veryl.createaclint.aclint_membus" class="caption-code">
 <span class="caption">リスト7.13: リスト7.13:  (top.veryl)</span>
@@ -351,12 +350,12 @@ module aclint_memory (
 </pre>
 </div>
 
-<h2 class="numbox"><a id="h7-4"></a><span class="secno">7.4</span> ソフトウェア割り込みの実装 (MSWI)</h2>
+<h2 class="numbox"><a id="h7-3"></a><span class="secno">7.3</span> ソフトウェア割り込みの実装 (MSWI)</h2>
 <p>MSWIデバイスはソフトウェア割り込み(machine software interrupt)を提供するためのデバイスです。MSWIデバイスにはハードウェアスレッド毎に4バイトのMSIPレジスタが用意されています(TODO テーブル)。MSIPレジスタの上位31ビットは読み込み専用の<code class="inline-code">0</code>であり、最下位ビットのみ変更できます。各MSIPレジスタは、それに対応するハードウェアスレッドのmip.MSIPと接続されています。</p>
 <p>TODOテーブル (最大4095個)</p>
 <p>仕様上はmhartidとACLINTのレジスタのhartIDが一致する必要はありませんが、本書ではmhartidとhartIDが同じになるように実装します。</p>
 
-<h3 class="none"><a id="h7-4-1"></a><span class="secno">7.4.1</span> MSIPレジスタを実装する</h3>
+<h3 class="none"><a id="h7-3-1"></a><span class="secno">7.3.1</span> MSIPレジスタを実装する</h3>
 <p>ACLINTモジュールにMSIPレジスタを実装します。今のところCPUにはmhartidが0のハードウェアスレッドしか存在しないため、MSIP0のみ実装します。</p>
 <p>aclint_ifインターフェースに<code class="inline-code">msip</code>を追加します()。</p>
 <div id="aclint_if.veryl.msip" class="caption-code">
@@ -416,7 +415,7 @@ module aclint_memory (
 </pre>
 </div>
 
-<h3 class="none"><a id="h7-4-2"></a><span class="secno">7.4.2</span> mip、mieレジスタを実装する</h3>
+<h3 class="none"><a id="h7-3-2"></a><span class="secno">7.3.2</span> mip、mieレジスタを実装する</h3>
 <p>mipレジスタのMSIPビット、MIEレジスタのMSIEビットを実装します。mie.MSIEはMSIPビットによる割り込み待機を許可するかを制御するビットです。mip.MSIPとmie.MSIEは同じ位置のビットに配置されています。mip.MSIPに書き込むことはできません。</p>
 <p>csrunitモジュールにmieレジスタを作成します()。</p>
 <div id="csrunit.veryl.miemip.regmie" class="caption-code">
@@ -487,7 +486,7 @@ CsrAddr::MSCRATCH: MSCRATCH_WMASK,
 </pre>
 </div>
 
-<h3 class="none"><a id="h7-4-3"></a><span class="secno">7.4.3</span> mstatusのMIE、MPIEビットを実装する</h3>
+<h3 class="none"><a id="h7-3-3"></a><span class="secno">7.3.3</span> mstatusのMIE、MPIEビットを実装する</h3>
 <p>mstatus.MIE、MPIEを変更できるようにします()。</p>
 <div id="csrunit.veryl.mstatuswmask.WMASK" class="caption-code">
 <span class="caption">リスト7.33: リスト7.33:  (csrunit.veryl)</span>
@@ -523,10 +522,10 @@ CsrAddr::MSCRATCH: MSCRATCH_WMASK,
 </div>
 <p>これによりトラップで割り込みを無効化して、トラップから戻るときにmstatus.MIEを元に戻す、という動作が実現されます。</p>
 
-<h3 class="none"><a id="h7-4-4"></a><span class="secno">7.4.4</span> 割り込み処理の実装</h3>
+<h3 class="none"><a id="h7-3-4"></a><span class="secno">7.3.4</span> 割り込み処理の実装</h3>
 <p>必要なレジスタを実装できたので、割り込みを起こす処理を実装します。割り込みはmip、mieの両方のビット、mstatus.MIEビットが立っているときに発生します。</p>
 
-<h4><a id="h7-4-4-1"></a>割り込みのタイミング</h4>
+<h4><a id="h7-3-4-1"></a>割り込みのタイミング</h4>
 <p>割り込みはcsrunitモジュールに有効な命令が供給されているときにのみ発生させることができ、割り込みが発生したときにcsrunitモジュールに供給されていた命令は実行されません。</p>
 <p>ここで、割り込みを起こすタイミングに注意が必要です。</p>
 <p>今のところ、CSRの処理はMEMステージと同時に行っているため、例えばストア命令をmemunitモジュールで実行している途中に割り込みを発生させてしまうと、ストア命令の結果がメモリに反映されるにもかかわらず、mepcレジスタにストア命令のアドレスを書き込んでしまいます。</p>
@@ -568,7 +567,7 @@ CsrAddr::MSCRATCH: MSCRATCH_WMASK,
 </pre>
 </div>
 
-<h4><a id="h7-4-4-2"></a>割り込みの判定</h4>
+<h4><a id="h7-3-4-2"></a>割り込みの判定</h4>
 <p>割り込みを起こせるかどうか、cause、ジャンプ先を示す変数を作成します()。</p>
 <div id="csrunit.veryl.intr.intr" class="caption-code">
 <span class="caption">リスト7.40: リスト7.40:  (csrunit.veryl)</span>
@@ -615,7 +614,7 @@ CsrAddr::MSCRATCH: MSCRATCH_WMASK,
 </pre>
 </div>
 
-<h3 class="none"><a id="h7-4-5"></a><span class="secno">7.4.5</span> ソフトウェア割り込みをテストする</h3>
+<h3 class="none"><a id="h7-3-5"></a><span class="secno">7.3.5</span> ソフトウェア割り込みをテストする</h3>
 <p>ソフトウェア割り込みが正しく動くことを確認します。</p>
 <p><code class="inline-code">test/mswi.c</code>を作成し、次のように記述します()。</p>
 <div id="mswi.c.mswitest" class="caption-code">
@@ -658,7 +657,7 @@ void interrupt_handler(void) {
 <div class="footnote" id="fn-howtocompile" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>コンパイル、実行方法は「<a href="12-impl-mmio.html#h3-6-4">3.6.4 出力をテストする</a>」を参考にしてください。</p></div>
 </div><!--/.footnote-list-->
 
-<h2 class="numbox"><a id="h7-5"></a><span class="secno">7.5</span> mtvecのVectoredモードの実装</h2>
+<h2 class="numbox"><a id="h7-4"></a><span class="secno">7.4</span> mtvecのVectoredモードの実装</h2>
 <p>mtvecレジスタにはMODEフィールドがあり、割り込みが発生するときのジャンプ先の決定方法を制御できます。</p>
 <p>MODEがDirect(<code class="inline-code">2'b00</code>)のとき、<code class="inline-code">mtvec.BASE &lt;&lt; 2</code>のアドレスにトラップします。Vectored(<code class="inline-code">2'b01</code>)のとき、<code class="inline-code">(mtvec.BASE &lt;&lt; 2) + 4 * cause</code>のアドレスにトラップします。ここでcauseは割り込みのcauseのMSBを除いた値です。例えばmachine software interruptの場合、<code class="inline-code">(mtvec.BASE &lt;&lt; 2) + 4 * 3</code>がジャンプ先になります。</p>
 <p>例外のジャンプ先のアドレスは、常にMODEがDirectとして計算します。</p>
@@ -692,15 +691,15 @@ void interrupt_handler(void) {
 </pre>
 </div>
 
-<h2 class="numbox"><a id="h7-6"></a><span class="secno">7.6</span> タイマ割り込みの実装 (MTIMER)</h2>
+<h2 class="numbox"><a id="h7-5"></a><span class="secno">7.5</span> タイマ割り込みの実装 (MTIMER)</h2>
 
-<h3 class="none"><a id="h7-6-1"></a><span class="secno">7.6.1</span> タイマ割り込みの仕組み</h3>
+<h3 class="none"><a id="h7-5-1"></a><span class="secno">7.5.1</span> タイマ割り込みの仕組み</h3>
 <p>MTIMERデバイスは、タイマ割り込み(machine timer interrupt)を提供するためのデバイスです。MTIMERデバイスには1つの8バイトのMTIMEレジスタ、ハードウェアスレッド毎に8バイトのMTIMECMPレジスタが用意されています(TODOテーブル)。本書ではMTIMECMPの後ろにMTIMEを配置します。</p>
 <p>TODO テーブル (MTIME)TODO テーブル (MTIMECMP 最大4095個)</p>
 <p>MTIMEレジスタは、固定された周波数でのサイクル数をカウントするレジスタです。リセット時に<code class="inline-code">0</code>になります。</p>
 <p>MTIMERデバイスは、それに対応するハードウェアスレッドのmip.MTIPと接続されており、MTIMEがMTIMECMPを上回ったときmip.MTIPを<code class="inline-code">1</code>にします。これにより、指定した時間に割り込みを発生させることが可能になります。</p>
 
-<h3 class="none"><a id="h7-6-2"></a><span class="secno">7.6.2</span> MTIME、MTIMECMPレジスタを実装する</h3>
+<h3 class="none"><a id="h7-5-2"></a><span class="secno">7.5.2</span> MTIME、MTIMECMPレジスタを実装する</h3>
 <p>ACLINTモジュールにMTIME、MTIMECMPレジスタを実装します。今のところmhartidが<code class="inline-code">0</code>のハードウェアスレッドしか存在しないため、MTIMECMP0のみ実装します。</p>
 <p><code class="inline-code">mtime</code>、<code class="inline-code">mtimecmp0</code>レジスタを作成し、読み書きできるようにします()。<code class="inline-code">mtime</code>レジスタはクロック毎にインクリメントします。</p>
 <div id="aclint_memory.veryl.mtime.reg" class="caption-code">
@@ -762,7 +761,7 @@ void interrupt_handler(void) {
 </pre>
 </div>
 
-<h3 class="none"><a id="h7-6-3"></a><span class="secno">7.6.3</span> mip.MTIP、割り込み原因を設定する</h3>
+<h3 class="none"><a id="h7-5-3"></a><span class="secno">7.5.3</span> mip.MTIP、割り込み原因を設定する</h3>
 <p>mipレジスタのMTIPビットにaclint_ifインターフェースの<code class="inline-code">mtip</code>を接続します。</p>
 <div id="csrunit.veryl.mtime.mip" class="caption-code">
 <span class="caption">リスト7.54: リスト7.54:  (csrunit.veryl)</span>
@@ -798,7 +797,7 @@ void interrupt_handler(void) {
 </pre>
 </div>
 
-<h3 class="none"><a id="h7-6-4"></a><span class="secno">7.6.4</span> タイマ割り込みをテストする</h3>
+<h3 class="none"><a id="h7-5-4"></a><span class="secno">7.5.4</span> タイマ割り込みをテストする</h3>
 <p>タイマ割り込みが正しく動くことを確認します。</p>
 <p><code class="inline-code">test/mtime.c</code>を作成し、次のように記述します()。</p>
 <div id="mtime.c.mtime" class="caption-code">
@@ -840,7 +839,7 @@ void interrupt_handler(void) {
 <p>プログラムでは、mtvecにinterrupt_handler関数のアドレスを設定し、mtimeに<code class="inline-code">10000000</code>を足した値をmtimecmp0に設定した後、mstatus.MIE、mie.MTIEを<code class="inline-code">1</code>に設定して割り込みを許可しています。タイマ割り込みが発生するまでwhile文で無限ループします。</p>
 <p>プログラムをコンパイルして実行すると、時間経過によってmain関数からinterrupt_handler関数にトラップしてテストが終了します。mtimecmp0に設定する値を変えることで、タイマ割り込みが発生するまでの時間が変わることを確認してください。</p>
 
-<h2 class="numbox"><a id="h7-7"></a><span class="secno">7.7</span> WFI命令の実装</h2>
+<h2 class="numbox"><a id="h7-6"></a><span class="secno">7.6</span> WFI命令の実装</h2>
 <p>WFI命令は、割り込みが発生するまでCPUをストールさせる命令です。ただし、グローバル割り込みイネーブルビットは考慮せず、ある割り込みの待機(pending)ビットと許可(enable)ビットの両方が立っているときに実行を再開します。また、それ以外の自由な理由で実行を再開させてもいいです。WFI命令で割り込みが発生するとき、WFI命令の次のアドレスの命令で割り込みが起こったことにします。</p>
 <p>本書ではWFI命令を何もしない命令として実装します。</p>
 <p>inst_decoderモジュールでWFI命令をデコードできるようにします()。</p>
@@ -869,7 +868,7 @@ void interrupt_handler(void) {
 </pre>
 </div>
 
-<h2 class="numbox"><a id="h7-8"></a><span class="secno">7.8</span> time、instret、cycleレジスタの実装</h2>
+<h2 class="numbox"><a id="h7-7"></a><span class="secno">7.7</span> time、instret、cycleレジスタの実装</h2>
 <p>RISC-Vにはtime、instret、cycleという読み込み専用のCSRが定義されており、それぞれmtime、minstret、mcycleレジスタと同じ値をとります<sup><a id="fnb-hpmcounter" href="#fn-hpmcounter" class="noteref" epub:type="noteref">*2</a></sup>。</p>
 <div class="footnote-list">
 <div class="footnote" id="fn-hpmcounter" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*2] </span>mhpmcounterレジスタと同じ値をとるhpmcounterレジスタもありますが、mhpmcounterレジスタを実装していないので実装しません。</p></div>

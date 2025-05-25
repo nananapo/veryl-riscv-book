@@ -49,11 +49,11 @@
         <li class="toc-section"><a href="./24-impl-paging.html#h10-1">10.1 概要</a></li>
         <li class="toc-section"><a href="./24-impl-paging.html#h10-2">10.2 メモリインターフェースの例外の実装</a></li>
         <li class="toc-section"><a href="./24-impl-paging.html#h10-3">10.3 satpレジスタの作成</a></li>
-        <li class="toc-section"><a href="./24-impl-paging.html#h10-4">10.4 アドレス変換モジュール(PTW)の作成</a></li>
-        <li class="toc-section"><a href="./24-impl-paging.html#h10-5">10.5 mstatusのMXR、SUM、MPRVビットの作成</a></li>
+        <li class="toc-section"><a href="./24-impl-paging.html#h10-4">10.4 mstatusのMXR、SUM、MPRVビットの作成</a></li>
+        <li class="toc-section"><a href="./24-impl-paging.html#h10-5">10.5 アドレス変換モジュール(PTW)の作成</a></li>
         <li class="toc-section"><a href="./24-impl-paging.html#h10-6">10.6 Sv39の実装</a></li>
         <li class="toc-section"><a href="./24-impl-paging.html#h10-7">10.7 SFENCE.VMA命令の実装</a></li>
-        <li class="toc-section"><a href="./24-impl-paging.html#h10-8">10.8 FENCE.I命令の実装</a></li>
+        <li class="toc-section"><a href="./24-impl-paging.html#h10-8">10.8 パイプラインをフラッシュする</a></li>
       </ul>
     </li>
     <li class="toc-chapter"><a href="./25-impl-plic.html">11 PLICの実装</a></li>
@@ -134,17 +134,409 @@
 
 <h2 class="numbox"><a id="h10-2"></a><span class="secno">10.2</span> メモリインターフェースの例外の実装</h2>
 <p>PTWで発生した例外は、最終的にcsrunitモジュールで処理します。そのために、例外の情報をメモリのインターフェースを使って伝達します。</p>
+<p>ページングによって発生する例外のcauseを<code class="inline-code">CsrCause</code>型に追加してください()。</p>
+<div id="eei.veryl.CsrCause.def" class="caption-code">
+<span class="caption">リスト10.1: リスト10.1:  (eei.veryl)</span>
+<pre class="list language-def">    INSTRUCTION_PAGE_FAULT = 12,
+    LOAD_PAGE_FAULT = 13,
+    STORE_AMO_PAGE_FAULT = 15,
+</pre>
+</div>
 
 <h3 class="none"><a id="h10-2-1"></a><span class="secno">10.2.1</span> 例外を伝達する</h3>
-<p><code class="inline-code"></code></p>
 
-<h3 class="none"><a id="h10-2-2"></a><span class="secno">10.2.2</span> 例外の発生アドレスを特定する</h3>
+<h4><a id="h10-2-1-1"></a>構造体の定義</h4>
+<p><code class="inline-code">MemException</code>構造体を定義します()。メモリアクセス中に発生する例外の情報はこの構造体で管理します。</p>
+<div id="eei.veryl.newexpt.def" class="caption-code">
+<span class="caption">リスト10.2: リスト10.2:  (eei.veryl)</span>
+<pre class="list language-def">    struct MemException {
+        valid     : logic,
+        page_fault: logic,
+    }
+</pre>
+</div>
+<p><code class="inline-code">membus_if</code>、<code class="inline-code">core_data_if</code>、<code class="inline-code">core_inst_if</code>インターフェースに<code class="inline-code">MemException</code>構造体を追加します()。インターフェースの<code class="inline-code">rvalid</code>が<code class="inline-code">1</code>で、構造体の<code class="inline-code">valid</code>と<code class="inline-code">is_page_fault</code>が<code class="inline-code">1</code>ならページフォルト例外が発生したことを示します。</p>
+<div id="membus_if.veryl.newexpt.var" class="caption-code">
+<span class="caption">リスト10.3: リスト10.3:  (membus_if.veryl, core_data_if.veryl, core_inst_if.veryl)</span>
+<pre class="list language-var">    var expt  : eei::MemException                ;
+</pre>
+</div>
+<div id="membus_if.veryl.newexpt.master" class="caption-code">
+<span class="caption">リスト10.4: リスト10.4:  (membus_if.veryl, core_data_if.veryl, core_inst_if.veryl)</span>
+<pre class="list language-master">    modport master {
+        ...
+        <b>expt        : input ,</b>
+        ...
+    }
+</pre>
+</div>
+<div id="membus_if.veryl.newexpt.slave" class="caption-code">
+<span class="caption">リスト10.5: リスト10.5:  (membus_if.veryl)</span>
+<pre class="list language-slave">    modport slave {
+        ...
+        <b>expt        : output,</b>
+        ...
+    }
+</pre>
+</div>
+<div id="membus_if.veryl.newexpt.response" class="caption-code">
+<span class="caption">リスト10.6: リスト10.6:  (membus_if.veryl)</span>
+<pre class="list language-response">    modport response {
+        rvalid: output,
+        rdata : output,
+        expt  : output,
+    }
+</pre>
+</div>
+
+<h4><a id="h10-2-1-2"></a>mmio_controllerモジュールの対応</h4>
+<p>mmio_controllerモジュールで構造体の値をすべて<code class="inline-code">0</code>に設定します()。いまのところ、デバイスは例外を発生させません。</p>
+<div id="mmio_controller.veryl.newexpt.comb" class="caption-code">
+<span class="caption">リスト10.7: リスト10.7:  (membus_if.veryl)</span>
+<pre class="list language-comb">    always_comb {
+        req_core.ready  = 0;
+        req_core.rvalid = 0;
+        req_core.rdata  = 0;
+        req_core.expt   = 0;
+</pre>
+</div>
+<p>mmio_controllerモジュールからの例外情報を<code class="inline-code">core_data_if</code>、<code class="inline-code">core_inst_if</code>インターフェースに伝達します。</p>
+<div id="top.veryl.newexpt.comb" class="caption-code">
+<span class="caption">リスト10.8: リスト10.8:  (top.veryl)</span>
+<pre class="list language-comb">    always_comb {
+        i_membus.ready  = mmio_membus.ready &amp;&amp; !d_membus.valid;
+        i_membus.rvalid = mmio_membus.rvalid &amp;&amp; memarb_last_i;
+        i_membus.rdata  = mmio_membus.rdata;
+        <b>i_membus.expt   = mmio_membus.expt;</b>
+
+        d_membus.ready  = mmio_membus.ready;
+        d_membus.rvalid = mmio_membus.rvalid &amp;&amp; !memarb_last_i;
+        d_membus.rdata  = mmio_membus.rdata;
+        <b>d_membus.expt   = mmio_membus.expt;</b>
+</pre>
+</div>
+
+<h4><a id="h10-2-1-3"></a>inst_fetcherモジュールの対応</h4>
+<p>inst_fetcherモジュールからcoreモジュールに例外情報を伝達します。まず、FIFOの型に例外情報を追加します()。</p>
+<div id="inst_fetcher.veryl.newexpt.fft" class="caption-code">
+<span class="caption">リスト10.9: リスト10.9:  (inst_fetcher.veryl)</span>
+<pre class="list language-fft">    struct fetch_fifo_type {
+        addr: Addr                           ,
+        bits: logic       &lt;MEMBUS_DATA_WIDTH&gt;,
+        <b>expt: MemException                   ,</b>
+    }
+</pre>
+</div>
+<div id="inst_fetcher.veryl.newexpt.ift" class="caption-code">
+<span class="caption">リスト10.10: リスト10.10:  (inst_fetcher.veryl)</span>
+<pre class="list language-ift">    struct issue_fifo_type {
+        addr  : Addr        ,
+        bits  : Inst        ,
+        is_rvc: logic       ,
+        <b>expt  : MemException,</b>
+    }
+</pre>
+</div>
+<p>メモリからの例外情報を<code class="inline-code">fetch_fifo</code>に保存します()。</p>
+<div id="inst_fetcher.veryl.newexpt.fetch" class="caption-code">
+<span class="caption">リスト10.11: リスト10.11:  (inst_fetcher.veryl)</span>
+<pre class="list language-fetch">    always_comb {
+        fetch_fifo_flush      = core_if.is_hazard;
+        fetch_fifo_wvalid     = fetch_requested &amp;&amp; mem_if.rvalid;
+        fetch_fifo_wdata.addr = fetch_pc_requested;
+        fetch_fifo_wdata.bits = mem_if.rdata;
+        <b>fetch_fifo_wdata.expt = mem_if.expt;</b>
+    }
+</pre>
+</div>
+<p><code class="inline-code">fetch_fifo</code>から<code class="inline-code">issue_fifo</code>に例外情報を伝達します()。offsetが<code class="inline-code">6</code>で例外が発生しているとき、32ビット幅の命令の上位16ビットを取得せずにすぐに<code class="inline-code">issue_fifo</code>に例外を書き込みます。</p>
+<div id="inst_fetcher.veryl.newexpt.feif" class="caption-code">
+<span class="caption">リスト10.12: リスト10.12:  (inst_fetcher.veryl)</span>
+<pre class="list language-feif">    always_comb {
+        let raddr : Addr                            = fetch_fifo_rdata.addr;
+        let rdata : logic       &lt;MEMBUS_DATA_WIDTH&gt; = fetch_fifo_rdata.bits;
+        <b>let expt  : MemException                    = fetch_fifo_rdata.expt;</b>
+        let offset: logic       &lt;3&gt;                 = issue_pc_offset;
+
+        fetch_fifo_rready     = 0;
+        issue_fifo_wvalid     = 0;
+        issue_fifo_wdata      = 0;
+        <b>issue_fifo_wdata.expt = expt;</b>
+</pre>
+</div>
+<div id="inst_fetcher.veryl.newexpt.offset_comb" class="caption-code">
+<span class="caption">リスト10.13: リスト10.13:  (inst_fetcher.veryl)</span>
+<pre class="list language-offset_comb">    fetch_fifo_rready = 1;
+    if rvcc_is_rvc <b>|| expt.valid</b> {
+        issue_fifo_wvalid       = 1;
+        issue_fifo_wdata.addr   = {raddr[msb:3], offset};
+        issue_fifo_wdata.is_rvc = 1;
+        issue_fifo_wdata.bits   = rvcc_inst32;
+</pre>
+</div>
+<div id="inst_fetcher.veryl.newexpt.offset_ff" class="caption-code">
+<span class="caption">リスト10.14: リスト10.14:  (inst_fetcher.veryl)</span>
+<pre class="list language-offset_ff">    if issue_pc_offset == 6 &amp;&amp; !rvcc_is_rvc &amp;&amp; !issue_is_rdata_saved <b>&amp;&amp; !fetch_fifo_rdata.expt.valid</b> {
+        if fetch_fifo_rvalid {
+            issue_is_rdata_saved = 1;
+</pre>
+</div>
+<p><code class="inline-code">issue_fifo</code>からcoreモジュールに例外情報を伝達します()。</p>
+<div id="inst_fetcher.veryl.newexpt.issue" class="caption-code">
+<span class="caption">リスト10.15: リスト10.15:  (inst_fetcher.veryl)</span>
+<pre class="list language-issue">    always_comb {
+        issue_fifo_flush  = core_if.is_hazard;
+        issue_fifo_rready = core_if.rready;
+        core_if.rvalid    = issue_fifo_rvalid;
+        core_if.raddr     = issue_fifo_rdata.addr;
+        core_if.rdata     = issue_fifo_rdata.bits;
+        core_if.is_rvc    = issue_fifo_rdata.is_rvc;
+        <b>core_if.expt      = issue_fifo_rdata.expt;</b>
+    }
+</pre>
+</div>
+
+<h4><a id="h10-2-1-4"></a>amounitモジュールの対応</h4>
+<p><code class="inline-code">state</code>が<code class="inline-code">State::Init</code>以外の時に例外が発生した場合、すぐに結果を返すようにします()。例外が発生したクロックでは要求を受け付けないようにします。</p>
+<div id="amounit.veryl.newexpt.slave" class="caption-code">
+<span class="caption">リスト10.16: リスト10.16:  (amounit.veryl)</span>
+<pre class="list language-slave">    always_comb {
+        slave.ready  = 0;
+        slave.rvalid = 0;
+        slave.rdata  = 0;
+        <b>slave.expt   = master.expt;</b>
+</pre>
+</div>
+<div id="amounit.veryl.newexpt.slave_end" class="caption-code">
+<span class="caption">リスト10.17: リスト10.17:  (amounit.veryl)</span>
+<pre class="list language-slave_end">            default: {}
+        }
+
+        <b>if state != State::Init &amp;&amp; master.expt.valid {</b>
+        <b>    slave.ready  = 0;</b>
+        <b>    slave.rvalid = 1;</b>
+        <b>}</b>
+    }
+</pre>
+</div>
+<div id="amounit.veryl.newexpt.master_end" class="caption-code">
+<span class="caption">リスト10.18: リスト10.18:  (amounit.veryl)</span>
+<pre class="list language-master_end">            State::AMOStoreValid: accept_request_comb();
+            default             : {}
+        }
+
+        <b>if state != State::Init &amp;&amp; master.expt.valid {</b>
+        <b>    reset_master();</b>
+        <b>}</b>
+    }
+</pre>
+</div>
+<p>例外が発生したら、<code class="inline-code">state</code>を<code class="inline-code">State::Init</code>にリセットするようにします()。</p>
+<div id="amounit.veryl.newexpt.on_clock" class="caption-code">
+<span class="caption">リスト10.19: リスト10.19:  (amounit.veryl)</span>
+<pre class="list language-on_clock">    function on_clock () {
+        <b>if state != State::Init &amp;&amp; master.expt.valid {</b>
+        <b>    state = State::Init;</b>
+        <b>} else {</b>
+            case state {
+                State::Init     : accept_request_ff();
+</pre>
+</div>
+
+<h4><a id="h10-2-1-5"></a>Instruction page fault例外の実装</h4>
+<p>命令フェッチ処理中にページフォルト例外が発生していたとき、Instruction page fault例外を発生させます。xtvalには例外が発生したアドレスを設定します()。</p>
+<div id="core.veryl.newexpt.inst" class="caption-code">
+<span class="caption">リスト10.20: リスト10.20:  (core.veryl)</span>
+<pre class="list language-inst">        <b>if i_membus.expt.valid {</b>
+        <b>    // fault</b>
+        <b>    exq_wdata.expt.valid = 1;</b>
+        <b>    exq_wdata.expt.cause = CsrCause::INSTRUCTION_PAGE_FAULT;</b>
+        <b>    exq_wdata.expt.value = ids_pc;</b>
+        <b>} else</b> if !ids_inst_valid {
+</pre>
+</div>
+
+<h4><a id="h10-2-1-6"></a>ロード、ストア命令のpage fault例外の実装</h4>
+<p>ロード命令、ストア命令、A拡張の命令のメモリアクセス中にページフォルト例外が発生していたとき、Load page fault例外、Store/AMO page fault例外を発生させます。</p>
+<p>csrunitモジュールに、メモリにアクセスする命令の例外情報を監視するためのポートを作成します()。</p>
+<div id="csrunit.veryl.newexpt.port" class="caption-code">
+<span class="caption">リスト10.21: リスト10.21:  (csrunit.veryl)</span>
+<pre class="list language-port">module csrunit (
+    ...
+    can_intr   : input   logic                   ,
+    <b>mem_addr   : input   Addr                    ,</b>
+    rdata      : output  UIntX                   ,
+    ...
+    <b>membus     : modport core_data_if::master    ,</b>
+) {
+</pre>
+</div>
+<div id="core.veryl.newexpt.csru" class="caption-code">
+<span class="caption">リスト10.22: リスト10.22:  (core.veryl)</span>
+<pre class="list language-csru">    inst csru: csrunit (
+        ...
+        <b>mem_addr   : memu_addr            ,</b>
+        ...
+        <b>membus     : d_membus             ,</b>
+    );
+</pre>
+</div>
+<p>例外を発生させます。</p>
+<div id="csrunit.veryl.newexpt.fault" class="caption-code">
+<span class="caption">リスト10.23: リスト10.23:  (csrunit.veryl)</span>
+<pre class="list language-fault">    let expt_memory_fault    : logic = membus.rvalid &amp;&amp; membus.expt.valid;
+</pre>
+</div>
+<div id="csrunit.veryl.newexpt.raise" class="caption-code">
+<span class="caption">リスト10.24: リスト10.24:  (csrunit.veryl)</span>
+<pre class="list language-raise">    let raise_expt: logic = valid &amp;&amp; (expt_info.valid || expt_write_readonly_csr || expt_csr_priv_violation || expt_zicntr_priv || expt_trap_return_priv <b>|| expt_memory_fault</b>);
+    let expt_cause: UIntX = switch {
+        ...
+        <b>expt_memory_fault      : if ctrl.is_load ? CsrCause::LOAD_PAGE_FAULT : CsrCause::STORE_AMO_PAGE_FAULT,</b>
+        default                : 0,
+    };
+</pre>
+</div>
+<p>xtvalに例外が発生したアドレスを設定します。</p>
+<div id="csrunit.veryl.newexpt.cause" class="caption-code">
+<span class="caption">リスト10.25: リスト10.25:  (csrunit.veryl)</span>
+<pre class="list language-cause">    let expt_value: UIntX = switch {
+        expt_info.valid                             : expt_info.value,
+        expt_cause == CsrCause::ILLEGAL_INSTRUCTION : {1'b0 repeat XLEN - $bits(Inst), inst_bits},
+        <b>expt_cause == CsrCause::LOAD_PAGE_FAULT     : mem_addr,</b>
+        <b>expt_cause == CsrCause::STORE_AMO_PAGE_FAULT: mem_addr,</b>
+        default                                     : 0
+    };
+</pre>
+</div>
+
+<h3 class="none"><a id="h10-2-2"></a><span class="secno">10.2.2</span> ページフォルトが発生した正確なアドレスを特定する</h3>
+<p>ページフォルト例外が発生したとき、xtvalにはページフォルトが発生した仮想アドレスを格納します。</p>
+<p>実は現状の実装では、メモリにアクセスする操作がページの境界をまたぐとき、ページフォルトが発生した正確な仮想アドレスをxtvalに格納できていません。</p>
+<p>例えば、inst_fetcherモジュールで32ビット幅の命令を2回のメモリ読み込みでフェッチするとき、1回目(下位16ビット)のロードは成功して、2回目(上位16ビット)のロードでページフォルトが発生したとします。このとき、ページフォルトが発生したアドレスは2回目のロードでアクセスしたアドレスなのに、xtvalには1回目のロードでアクセスしたアドレスが書き込まれます。</p>
+<p>これに対処するために、例外が発生したアドレスのオフセットを例外情報に追加します()。</p>
+<div id="eei.veryl.exptoffset.def" class="caption-code">
+<span class="caption">リスト10.26: リスト10.26:  (eei.veryl)</span>
+<pre class="list language-def">    struct MemException {
+        valid      : logic   ,
+        page_fault : logic   ,
+        <b>addr_offset: logic&lt;3&gt;,</b>
+    }
+</pre>
+</div>
+<p>inst_fetcherモジュールで、32ビット幅の命令の上位16ビットを読み込んで<code class="inline-code">issue_fifo</code>に書き込むときに、オフセットを<code class="inline-code">2</code>に設定します()。</p>
+<div id="inst_fetcher.veryl.exptoffset.offset" class="caption-code">
+<span class="caption">リスト10.27: リスト10.27:  (inst_fetcher.veryl)</span>
+<pre class="list language-offset">    if issue_is_rdata_saved {
+        issue_fifo_wvalid                 = 1;
+        issue_fifo_wdata.addr             = {issue_saved_addr[msb:3], offset};
+        issue_fifo_wdata.bits             = {rdata[15:0], issue_saved_bits};
+        issue_fifo_wdata.is_rvc           = 0;
+        <b>issue_fifo_wdata.expt.addr_offset = 2;</b>
+</pre>
+</div>
+<p>tvalを生成するとき、オフセット足します。</p>
+<div id="core.veryl.exptoffset.offset" class="caption-code">
+<span class="caption">リスト10.28: リスト10.28:  (core.veryl)</span>
+<pre class="list language-offset">    exq_wdata.expt.valid = 1;
+    exq_wdata.expt.cause = CsrCause::INSTRUCTION_PAGE_FAULT;
+    exq_wdata.expt.value = ids_pc <b>+ {1'b0 repeat XLEN - 3, i_membus.expt.addr_offset}</b>;
+</pre>
+</div>
+<div id="csrunit.veryl.exptoffset.offset" class="caption-code">
+<span class="caption">リスト10.29: リスト10.29:  (csrunit.veryl)</span>
+<pre class="list language-offset">    let expt_value: UIntX = switch {
+        expt_info.valid                             : expt_info.value,
+        expt_cause == CsrCause::ILLEGAL_INSTRUCTION : {1'b0 repeat XLEN - $bits(Inst), inst_bits},
+        expt_cause == CsrCause::LOAD_PAGE_FAULT     : mem_addr <b>+ {1'b0 repeat XLEN - 3, membus.expt.addr_offset}</b>,
+        expt_cause == CsrCause::STORE_AMO_PAGE_FAULT: mem_addr <b>+ {1'b0 repeat XLEN - 3, membus.expt.addr_offset}</b>,
+        default                                     : 0
+    };
+</pre>
+</div>
 
 <h2 class="numbox"><a id="h10-3"></a><span class="secno">10.3</span> satpレジスタの作成</h2>
+<p>satpレジスタを実装します()。すべてのフィールドを読み書きできるように設定して、値を<code class="inline-code">0</code>でリセットします。</p>
+<div id="csrunit.veryl.satp.reg" class="caption-code">
+<span class="caption">リスト10.30: リスト10.30:  (csrunit.veryl)</span>
+<pre class="list language-reg">    var satp      : UIntX ;
+</pre>
+</div>
+<div id="csrunit.veryl.satp.reset" class="caption-code">
+<span class="caption">リスト10.31: リスト10.31:  (csrunit.veryl)</span>
+<pre class="list language-reset">    satp       = 0;
+</pre>
+</div>
+<div id="csrunit.veryl.satp.rdata" class="caption-code">
+<span class="caption">リスト10.32: リスト10.32:  (csrunit.veryl)</span>
+<pre class="list language-rdata">    CsrAddr::SATP      : satp,
+</pre>
+</div>
+<div id="csrunit.veryl.satp.wmask" class="caption-code">
+<span class="caption">リスト10.33: リスト10.33:  (csrunit.veryl)</span>
+<pre class="list language-wmask">    CsrAddr::SATP      : SATP_WMASK,
+</pre>
+</div>
+<div id="csrunit.veryl.satp.WMASK" class="caption-code">
+<span class="caption">リスト10.34: リスト10.34:  (csrunit.veryl)</span>
+<pre class="list language-WMASK">    const SATP_WMASK      : UIntX = 'hffff_ffff_ffff_ffff;
+</pre>
+</div>
+<p>satpレジスタは、MODEフィールド変更するときに書き込もうとしている値がサポートしないMODEなら、satpレジスタの変更を全ビット無視すると定められています。</p>
+<p>本章ではBareとSv39だけをサポートするため、MODEには<code class="inline-code">0</code>と<code class="inline-code">8</code>のみ書き込めるようにして、それ以外の値を書き込もうとしたらsatpレジスタへの書き込みを無視します。</p>
+<div id="csrunit.veryl.satp.validate" class="caption-code">
+<span class="caption">リスト10.35: リスト10.35:  (csrunit.veryl)</span>
+<pre class="list language-validate">    function validate_satp (
+        satp : input UIntX,
+        wdata: input UIntX,
+    ) -&gt; UIntX {
+        // mode
+        if wdata[msb-:4] != 0 &amp;&amp; wdata[msb-:4] != 8 {
+            return satp;
+        }
+        return wdata;
+    }
+</pre>
+</div>
+<div id="csrunit.veryl.satp.write" class="caption-code">
+<span class="caption">リスト10.36: リスト10.36:  (csrunit.veryl)</span>
+<pre class="list language-write">    CsrAddr::SATP      : satp       = validate_satp(satp, wdata);
+</pre>
+</div>
 
-<h2 class="numbox"><a id="h10-4"></a><span class="secno">10.4</span> アドレス変換モジュール(PTW)の作成</h2>
+<h2 class="numbox"><a id="h10-4"></a><span class="secno">10.4</span> mstatusのMXR、SUM、MPRVビットの作成</h2>
+<p>mstatusレジスタのMXR、SUM、MPRVビットを変更できるようにします()。</p>
+<div id="csrunit.veryl.mstatuses.WMASK_mstatus" class="caption-code">
+<span class="caption">リスト10.37: リスト10.37:  (csrunit.veryl)</span>
+<pre class="list language-WMASK_mstatus">    const MSTATUS_WMASK   : UIntX = 'h0000_0000_006<b>e</b>_19aa as UIntX;
+</pre>
+</div>
+<div id="csrunit.veryl.mstatuses.WMASK_sstatus" class="caption-code">
+<span class="caption">リスト10.38: リスト10.38:  (csrunit.veryl)</span>
+<pre class="list language-WMASK_sstatus">    const SSTATUS_WMASK   : UIntX = 'h0000_0000_000<b>c</b>_0122 as UIntX;
+</pre>
+</div>
+<p>それぞれのビットを示す変数を作成します()。</p>
+<div id="csrunit.veryl.mstatuses.reg" class="caption-code">
+<span class="caption">リスト10.39: リスト10.39:  (csrunit.veryl)</span>
+<pre class="list language-reg">    let mstatus_mxr : logic    = mstatus[19];
+    let mstatus_sum : logic    = mstatus[18];
+    let mstatus_mprv: logic    = mstatus[17];
+</pre>
+</div>
+<p>mstatus.MPRVは、M-mode以外のモードにトラップするときに<code class="inline-code">0</code>に設定すると定められています。そのため、<code class="inline-code">trap_mode_next</code>を確認して<code class="inline-code">0</code>を設定します。</p>
+<div id="csrunit.veryl.mstatuses.mprv" class="caption-code">
+<span class="caption">リスト10.40: リスト10.40:  (csrunit.veryl)</span>
+<pre class="list language-mprv">    } else if trap_return {
+        <b>// set mstatus.mprv = 0 when new mode != M-mode</b>
+        <b>if trap_mode_next &lt;: PrivMode::M {</b>
+        <b>    mstatus[17] = 0;</b>
+        <b>}</b>
+        if is_mret {
+</pre>
+</div>
 
-<h2 class="numbox"><a id="h10-5"></a><span class="secno">10.5</span> mstatusのMXR、SUM、MPRVビットの作成</h2>
+<h2 class="numbox"><a id="h10-5"></a><span class="secno">10.5</span> アドレス変換モジュール(PTW)の作成</h2>
 
 <h2 class="numbox"><a id="h10-6"></a><span class="secno">10.6</span> Sv39の実装</h2>
 
@@ -152,16 +544,13 @@
 
 <h3 class="none"><a id="h10-6-2"></a><span class="secno">10.6.2</span> ptw</h3>
 
-<h3 class="none"><a id="h10-6-3"></a><span class="secno">10.6.3</span> パイプラインのフラッシュ</h3>
-<p>TODO ↓ここに移動satp、mstatusレジスタの変更の対応fencei</p>
-
 <h2 class="numbox"><a id="h10-7"></a><span class="secno">10.7</span> SFENCE.VMA命令の実装</h2>
 
-<h3 class="none"><a id="h10-7-1"></a><span class="secno">10.7.1</span> SFENCE.VMA命令を実装する</h3>
+<h2 class="numbox"><a id="h10-8"></a><span class="secno">10.8</span> パイプラインをフラッシュする</h2>
 
-<h3 class="none"><a id="h10-7-2"></a><span class="secno">10.7.2</span> mstatus.TVMの実装</h3>
+<h3 class="none"><a id="h10-8-1"></a><span class="secno">10.8.1</span> CSRの変更</h3>
 
-<h2 class="numbox"><a id="h10-8"></a><span class="secno">10.8</span> FENCE.I命令の実装</h2>
+<h3 class="none"><a id="h10-8-2"></a><span class="secno">10.8.2</span> FENCE.I命令の実装</h3>
         </main>
         <nav class="page-navi">
           <a href="23-smode-csr.html" class="page-prev">&#9664;</a>
