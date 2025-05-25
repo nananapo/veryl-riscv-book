@@ -47,12 +47,13 @@
     <li class="toc-chapter"><a href="./24-impl-paging.html">10 S-modeの実装 (2. 仮想記憶システム)</a>
       <ul class="toc toc-3">
         <li class="toc-section"><a href="./24-impl-paging.html#h10-1">10.1 概要</a></li>
-        <li class="toc-section"><a href="./24-impl-paging.html#h10-2">10.2 例外のインターフェースの実装</a></li>
+        <li class="toc-section"><a href="./24-impl-paging.html#h10-2">10.2 メモリインターフェースの例外の実装</a></li>
         <li class="toc-section"><a href="./24-impl-paging.html#h10-3">10.3 satpレジスタの作成</a></li>
         <li class="toc-section"><a href="./24-impl-paging.html#h10-4">10.4 アドレス変換モジュール(PTW)の作成</a></li>
         <li class="toc-section"><a href="./24-impl-paging.html#h10-5">10.5 mstatusのMXR、SUM、MPRVビットの作成</a></li>
         <li class="toc-section"><a href="./24-impl-paging.html#h10-6">10.6 Sv39の実装</a></li>
         <li class="toc-section"><a href="./24-impl-paging.html#h10-7">10.7 SFENCE.VMA命令の実装</a></li>
+        <li class="toc-section"><a href="./24-impl-paging.html#h10-8">10.8 FENCE.I命令の実装</a></li>
       </ul>
     </li>
     <li class="toc-chapter"><a href="./25-impl-plic.html">11 PLICの実装</a></li>
@@ -116,7 +117,7 @@
 </div><!--/.footnote-list-->
 <p>TODO プロセス</p>
 <p>基本的にアドレス変換はS-mode、U-modeで有効になります。TODO ここで説明mstatusレジスタのMXR、SUM、MPRVビットを利用すると、プロセスTODOの特権レベル、PTEの権限について挙動を少し変更できます。これらのビットについては実装するときに解説します。</p>
-<p>アドレスの変換途中でPTEが不正な値だったり、ページが求める権限を持たずにページにアクセスにアクセスしようとした場合、PTWにアクセスする目的に応じたページフォルト(Page fault)例外が発生します。命令フェッチはInstruction page fault例外、ロード命令はLoad page fault例外、ストアとAMO命令はStore/AMO page fault例外が発生します。</p>
+<p>アドレスの変換途中でPTEが不正な値だったり、ページが求める権限を持たずにページにアクセスにアクセスしようとした場合、アクセスする目的に応じたページフォルト(Page fault)例外が発生します。命令フェッチはInstruction page fault例外、ロード命令はLoad page fault例外、ストアとAMO命令はStore/AMO page fault例外が発生します。</p>
 
 <h3 class="none"><a id="h10-1-4"></a><span class="secno">10.1.4</span> 実装順序</h3>
 <p>図</p>
@@ -131,9 +132,11 @@
 <li>SFENCE.VMA命令、FENCEI命令を実装する</li>
 </ol>
 
-<h2 class="numbox"><a id="h10-2"></a><span class="secno">10.2</span> 例外のインターフェースの実装</h2>
+<h2 class="numbox"><a id="h10-2"></a><span class="secno">10.2</span> メモリインターフェースの例外の実装</h2>
+<p>PTWで発生した例外は、最終的にcsrunitモジュールで処理します。そのために、例外の情報をメモリのインターフェースを使って伝達します。</p>
 
-<h3 class="none"><a id="h10-2-1"></a><span class="secno">10.2.1</span> 例外情報を作成する</h3>
+<h3 class="none"><a id="h10-2-1"></a><span class="secno">10.2.1</span> 例外を伝達する</h3>
+<p><code class="inline-code"></code></p>
 
 <h3 class="none"><a id="h10-2-2"></a><span class="secno">10.2.2</span> 例外の発生アドレスを特定する</h3>
 
@@ -157,6 +160,8 @@
 <h3 class="none"><a id="h10-7-1"></a><span class="secno">10.7.1</span> SFENCE.VMA命令を実装する</h3>
 
 <h3 class="none"><a id="h10-7-2"></a><span class="secno">10.7.2</span> mstatus.TVMの実装</h3>
+
+<h2 class="numbox"><a id="h10-8"></a><span class="secno">10.8</span> FENCE.I命令の実装</h2>
         </main>
         <nav class="page-navi">
           <a href="23-smode-csr.html" class="page-prev">&#9664;</a>

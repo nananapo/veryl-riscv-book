@@ -400,7 +400,7 @@ module amounit (
 
     // 新しく要求を受け入れる
     function accept_request_ff () {
-        slave_saved.valid = slave.valid;
+        slave_saved.valid = slave.ready &amp;&amp; slave.valid;
         if slave.ready &amp;&amp; slave.valid {
             slave_saved.addr   = slave.addr;
             slave_saved.wen    = slave.wen;
@@ -613,7 +613,7 @@ module amounit (
 <div id="amounit.veryl.lr.accept_request_ff" class="caption-code">
 <span class="caption">リスト4.25: リスト4.25:  (amounit.veryl)</span>
 <pre class="list language-accept_request_ff">    function accept_request_ff () {
-        slave_saved.valid = slave.valid;
+        slave_saved.valid = slave.ready &amp;&amp; slave.valid;
         if slave.ready &amp;&amp; slave.valid {
             slave_saved.addr   = slave.addr;
             ...
