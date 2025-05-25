@@ -222,6 +222,7 @@ reset_all_device_masters関数にインターフェースをリセットする�
 module mmio_controller (
     clk          : input   clock         ,
     rst          : input   reset         ,
+    DBG_ADDR     : input   Addr          ,
     req_core     : modport Membus::slave ,
     ram_membus   : modport Membus::master,
     rom_membus   : modport Membus::master,
@@ -317,6 +318,7 @@ mmio_controllerモジュールと接続します
     inst mmioc: mmio_controller (
         clk                           ,
         rst                           ,
+        DBG_ADDR     : MMAP_DBG_ADDR  ,
         req_core     : mmio_membus    ,
         ram_membus   : mmio_ram_membus,
         rom_membus   : mmio_rom_membus,
@@ -622,7 +624,7 @@ mepcレジスタにストア命令のアドレスを書き込んでしまいま�
 それならば、単純に次の命令のアドレスをmepcレジスタに格納するようにすればいいと思うかもしれませんが、
 そもそも実行中のストア命令が本来は最終的に例外を発生させるものかもしれません。
 
-この問題に対処するために本章では、
+本章ではこの問題に対処するために、
 割り込みはMEM(CSR)ステージに新しく命令が供給されたクロックでしか起こせなくして、
 トラップが発生するときにMEMステージを無効化します。
 
@@ -657,6 +659,21 @@ csrunitモジュールからトラップが発生するかどうかの情報を�
         clk                                   ,
         rst                                   ,
         valid : mems_valid && !@<b>|csru_raise_trap|,
+#@end
+//}
+
+memunitモジュールが無効(@<code>{!valid})なとき、
+@<code>{state}を@<code>{State::Init}にリセットします
+()。
+
+//list[memunit.veryl.intr.reset][ (core.veryl)]{
+#@maprange(scripts/21/intr-range/core/src/memunit.veryl,reset)
+    } else {
+        if @<b>|!|valid {
+            @<b>|state = State::Init;|
+        @<b>|} else {|
+            case state {
+                State::Init: if is_new & inst_is_memop(ctrl) {
 #@end
 //}
 
@@ -1028,7 +1045,7 @@ WFI命令は、割り込みが発生するまでCPUをストールさせる命�
 また、それ以外の自由な理由で実行を再開させてもいいです。
 WFI命令で割り込みが発生するとき、WFI命令の次のアドレスの命令で割り込みが起こったことにします。
 
-本書ではWFI命令でCPUをストールさせるように実装します。
+本書ではWFI命令を何もしない命令として実装します。
 
 inst_decoderモジュールでWFI命令をデコードできるようにします
 ()。
@@ -1044,16 +1061,8 @@ inst_decoderモジュールでWFI命令をデコードできるようにしま�
 #@end
 //}
 
-csrunitモジュールに@<code>{stall}フラグを実装し、WFI命令の時にビットを立てるようにします
+WFI命令で割り込みが発生するとき、mepcレジスタに@<code>{pc + 4}を書き込むようにします
 ()。
-
-//list[csrunit.veryl.wfi.port][ (csrunit.veryl)]{
-#@maprange(scripts/21/wfi-range/core/src/csrunit.veryl,port)
-    minstret   : input   UInt64              ,
-    @<b>|stall      : output  logic               ,|
-    led        : output  UIntX               ,
-#@end
-//}
 
 //list[csrunit.veryl.wfi.is_wfi][ (csrunit.veryl)]{
 #@maprange(scripts/21/wfi-range/core/src/csrunit.veryl,is_wfi)
@@ -1061,51 +1070,12 @@ csrunitモジュールに@<code>{stall}フラグを実装し、WFI命令の時�
 #@end
 //}
 
-//list[csrunit.veryl.wfi.stall_logic][ (csrunit.veryl)]{
-#@maprange(scripts/21/wfi-range/core/src/csrunit.veryl,stall_logic)
-    // stall logic
-    let stall_wfi: logic = valid && is_wfi && ((mip & mie) != 0);
-    assign stall     = !raise_trap && stall_wfi;
-#@end
-//}
-
-WFI命令で割り込みが発生するとき、mepcレジスタに@<code>{pc + 4}を書き込むようにします
-()。
-
 //list[csrunit.veryl.wfi.expt][ (csrunit.veryl)]{
 #@maprange(scripts/21/wfi-range/core/src/csrunit.veryl,expt)
     if raise_expt || raise_interrupt {
         mepc = @<b>|if raise_expt ? pc : // exception|
          @<b>|if raise_interrupt && is_wfi ? pc + 4 : pc; // interrupt when wfi / interrupt|
         mcause = trap_cause;
-#@end
-//}
-
-coreモジュールでcsrunitモジュールの@<code>{stall}フラグによってMEM(CSR)ステージをストールさせます
-()。
-
-//list[core.veryl.wfi.reg][ (core.veryl)]{
-#@maprange(scripts/21/wfi-range/core/src/core.veryl,reg)
-    var csru_stall      : logic ;
-#@end
-//}
-
-//list[core.veryl.wfi.port][ (core.veryl)]{
-#@maprange(scripts/21/wfi-range/core/src/core.veryl,port)
-    minstret                          ,
-    @<b>|stall      : csru_stall           ,|
-    led                               ,
-#@end
-//}
-
-//list[core.veryl.wfi.comb][ (core.veryl)]{
-#@maprange(scripts/21/wfi-range/core/src/core.veryl,comb)
-    let mems_stall: logic = memu_stall @<b>{|| csru_stall};
-
-    always_comb {
-        // MEM -> WB
-        memq_rready          = wbq_wready && !@<b>{mems_stall};
-        wbq_wvalid           = memq_rvalid && !@<b>{mems_stall};
 #@end
 //}
 

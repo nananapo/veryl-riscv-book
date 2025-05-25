@@ -402,7 +402,7 @@ module amounit (
 
     // 新しく要求を受け入れる
     function accept_request_ff () {
-        slave_saved.valid = slave.valid;
+        slave_saved.valid = slave.ready && slave.valid;
         if slave.ready && slave.valid {
             slave_saved.addr   = slave.addr;
             slave_saved.wen    = slave.wen;
@@ -653,7 +653,7 @@ LR命令を実行するとき、予約セットにアドレスを登録してロ
 //list[amounit.veryl.lr.accept_request_ff][ (amounit.veryl)]{
 #@maprange(scripts/13/lr-range/core/src/amounit.veryl,accept_request_ff)
     function accept_request_ff () {
-        slave_saved.valid = slave.valid;
+        slave_saved.valid = slave.ready && slave.valid;
         if slave.ready && slave.valid {
             slave_saved.addr   = slave.addr;
             ...

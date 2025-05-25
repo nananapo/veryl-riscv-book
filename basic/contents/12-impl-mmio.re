@@ -23,7 +23,7 @@ RAMとROMもメモリデバイスであり、異なるアドレスにマップ�
 
 本章ではCPUのメモリ部分をRAM(Random Access Memory)@<fn>{about-ram}とROM(Read Only Memory)に分割し、
 アクセスするアドレスに応じてアクセスするデバイスを切り替える機能を実装します。
-また、デバッグ用の入出力デバイスも追加します。
+また、デバッグ用の入出力デバイス(64ビットのレジスタ)も追加します。
 デバイスとメモリ空間の対応はTODO図のように設定します。
 TODO図のようにメモリがどのように配置されているかを示す図のことを@<b>{メモリマップ}(Memory map)と呼びます。
 あるメモリ空間の先頭アドレスのことをベースアドレスと呼ぶことがあります。
@@ -33,8 +33,10 @@ TODO図のようにメモリがどのように配置されているかを示す�
 == 定数の定義
 
 eeiパッケージに定義しているメモリの定数をRAM用の定数に変更します。
-また、新しくRAMのベースアドレス、メモリバスのデータ幅、ROMとデバッグ入出力デバイスのメモリマップを示す定数を定義してください
+また、新しくRAMのベースアドレス、メモリバスのデータ幅、ROMのメモリマップを示す定数を定義してください
 ()。
+デバッグ入出力デバイス(レジスタ)の位置は、topモジュールのポートで定義します
+(@<list>{top.veryl.memtoram.port})。
 
 //list[eei.veryl.memtoram.const][ (eei.veryl)]{
 #@maprange(scripts/12/memtoram-range/core/src/eei.veryl,const)
@@ -53,10 +55,6 @@ eeiパッケージに定義しているメモリの定数をRAM用の定数に�
     const ROM_DATA_WIDTH: u32  = 64;
     const MMAP_ROM_BEGIN: Addr = 'h1000 as Addr;
     const MMAP_ROM_END  : Addr = MMAP_ROM_BEGIN + 'h3ff as Addr;
-
-    // DEBUG
-    const MMAP_DEBUG_BEGIN: Addr = 'h4000_0000 as Addr;
-    const MMAP_DEBUG_END  : Addr = MMAP_DEBUG_BEGIN + 'hfff as Addr;
 #@end
 //}
 
@@ -308,8 +306,8 @@ module mmio_controller (
 
     // 新しく要求を受け入れる
     function accept_request () {
-        req_saved.valid = req_core.valid;
-        if req_core.valid {
+        req_saved.valid = req_core.ready && req_core.valid;
+        if req_core.ready && req_core.valid {
             last_device  = get_device(req_core.addr);
             is_requested = get_device_ready(last_device);
             // reqを保存
@@ -409,8 +407,8 @@ always_ffブロックは、メモリアクセス要求の処理中ではない�
 #@maprange(scripts/12/emptymmio-range/core/src/mmio_controller.veryl,on_clock)
     // 新しく要求を受け入れる
     function accept_request () {
-        req_saved.valid = req_core.valid;
-        if req_core.valid {
+        req_saved.valid = req_core.ready && req_core.valid;
+        if req_core.ready && req_core.valid {
             last_device  = get_device(req_core.addr);
             is_requested = get_device_ready(last_device);
             // reqを保存
@@ -1108,7 +1106,7 @@ CPUが文字を送信したり受信するためのデバッグ用の入出力�
 今のところriscv-testsの結果を受け取るためのアドレスをRAMのベースアドレス + @<code>{0x1000}にしていますが、
 この処理もデバイスに実装します。
 
-本章では、デバッグ用の入出力デバイスのベースアドレスに次のような64ビットレジスタを実装します。
+本章では、デバッグ用の入出力デバイスに次のような64ビットレジスタを実装します。
 
  : 上位20ビットが@<code>{20'h01010}な値を書き込み
     下位8ビットを文字として解釈し@<code>{$write}システムタスクで出力します。
@@ -1118,11 +1116,31 @@ CPUが文字を送信したり受信するためのデバッグ用の入出力�
     C++プログラムの関数を利用して1文字入力を受け取ります。
     有効な入力の場合は上位20ビットが@<code>{20'h01010}、無効な入力の場合は@<code>{0}になります。
 
+=== デバイスのアドレスを設定する
+
+@<list>{top.veryl.memtoram.port}でデバイスのアドレスをポートで設定できるようにしたので、
+@<code>{tb_verilator.cpp}で環境変数の値をデバイスのアドレスに設定するようにします。
+
+環境変数@<code>{DBG_ADDR}を読み込み、@<code>{DBG_ADDR}ポートに設定します
+()。
+
+//list[tb_verilator.cpp.debugout.Device][ (tb_verilator.cpp)]{
+#@maprange(scripts/12/debugout-range/core/src/tb_verilator.cpp,set)
+    // デバッグ用の入出力デバイスのアドレスを取得する
+    @<b>|const char* dbg_addr_c = getenv("DBG_ADDR");|
+    @<b>|const unsigned long long DBG_ADDR = dbg_addr_c == nullptr ? 0 : std::strtoull(dbg_addr_c, nullptr, 0);|
+
+    // top
+    Vcore_top *dut = new Vcore_top();
+    @<b>|dut->MMAP_DBG_ADDR = DBG_ADDR;|
+#@end
+//}
+
 === mmio_controllerモジュールにデバイスを追加する
 
-mmio_controllerモジュールに@<code>{Device::DEBUG}を追加します。
-追加方法はROMの場合とまったく同じなので、mmio_controllerモジュールの変更点だけ列挙します
-()。
+mmio_controllerモジュールにデバイスを追加します。
+
+@<code>{Device}型に@<code>{Device::DEBUG}を追加します。
 
 //list[mmio_controller.veryl.debugout.Device][ (mmio_controller.veryl)]{
 #@maprange(scripts/12/debugout-range/core/src/mmio_controller.veryl,Device)
@@ -1135,11 +1153,15 @@ mmio_controllerモジュールに@<code>{Device::DEBUG}を追加します。
 #@end
 //}
 
+ポートにインターフェースとデバイスのアドレスを追加します
+()。
+
 //list[mmio_controller.veryl.debugout.port][ (mmio_controller.veryl)]{
 #@maprange(scripts/12/debugout-range/core/src/mmio_controller.veryl,port)
 module mmio_controller (
     clk       : input   clock         ,
     rst       : input   reset         ,
+    DBG_ADDR  : input   Addr          ,
     req_core  : modport Membus::slave ,
     ram_membus: modport Membus::master,
     rom_membus: modport Membus::master,
@@ -1158,17 +1180,21 @@ module mmio_controller (
 #@end
 //}
 
+デバイスの位置を設定します。
+最初にチェックすることで、他のデバイスとアドレスを被らせたとしてもデバッグ用の入出力デバイスを優先します
+()。
+
 //list[mmio_controller.veryl.debugout.get_device][ (mmio_controller.veryl)]{
 #@maprange(scripts/12/debugout-range/core/src/mmio_controller.veryl,get_device)
     function get_device (
         addr: input Addr,
     ) -> Device {
+        @<b>|if DBG_ADDR <= addr && addr <= DBG_ADDR + 7 {|
+        @<b>|    return Device::DEBUG;|
+        @<b>|}|
         if MMAP_ROM_BEGIN <= addr && addr <= MMAP_ROM_END {
             return Device::ROM;
         }
-        @<b>|if MMAP_DEBUG_BEGIN <= addr && addr <= MMAP_DEBUG_END {|
-        @<b>|    return Device::DEBUG;|
-        @<b>|}|
         if addr >= MMAP_RAM_BEGIN {
             return Device::RAM;
         }
@@ -1177,6 +1203,10 @@ module mmio_controller (
 #@end
 //}
 
+インターフェースを設定します
+()。
+この変更はROMを追加したときとほとんど同じです。
+
 //list[mmio_controller.veryl.debugout.assign_device_master][ (mmio_controller.veryl)]{
 #@maprange(scripts/12/debugout-range/core/src/mmio_controller.veryl,assign_device_master)
         case get_device(req.addr) {
@@ -1184,14 +1214,14 @@ module mmio_controller (
                 ram_membus      <> req;
                 ram_membus.addr -= MMAP_RAM_BEGIN;
             }
-            @<b>|Device::ROM: {|
-            @<b>|    rom_membus      <> req;|
-            @<b>|    rom_membus.addr -= MMAP_ROM_BEGIN;|
-            @<b>|}|
-            Device::DEBUG: {
-                dbg_membus      <> req;
-                dbg_membus.addr -= MMAP_DEBUG_BEGIN;
+            Device::ROM: {
+                rom_membus      <> req;
+                rom_membus.addr -= MMAP_ROM_BEGIN;
             }
+            @<b>|Device::DEBUG: {|
+            @<b>|    dbg_membus      <> req;|
+            @<b>|    dbg_membus.addr -= DBG_ADDR;|
+            @<b>|}|
             default: {}
         }
 #@end
@@ -1247,6 +1277,7 @@ mmio_controllerモジュールと接続します。
     inst mmioc: mmio_controller (
         clk                        ,
         rst                        ,
+        DBG_ADDR  : MMAP_DBG_ADDR  ,
         req_core  : mmio_membus    ,
         ram_membus: mmio_ram_membus,
         rom_membus: mmio_rom_membus,
@@ -1445,7 +1476,7 @@ SECTIONS
 これらのファイルを利用し、テストプログラムをコンパイルします
 ()。
 gccの@<code>{-march}フラグではC拡張を抜いたISAを指定しています。
-このフラグを記述しないと、実装していない命令が含まれたELFファイルにコンパイルされてしまいます。
+このフラグを記述しないと、まだ実装していない命令が含まれたELFファイルにコンパイルされてしまいます。
 
 //terminal[][]{
 $ @<userinput>{cd test}
@@ -1459,43 +1490,108 @@ $ @<userinput>{python3 bin2hex.py 8 test.bin > test.bin.hex} @<balloon>{HEXフ�
 
 //terminal[][]{
 $ @<userinput>{make build sim}
-$ @<userinput>{./obj_dir/sim bootrom.hex test/test.bin.hex}
+$ @<userinput>{DBG_ADDR=0x40000000 ./obj_dir/sim bootrom.hex test/test.bin.hex}
 Hello,world!
 - ~/core/src/top.sv:62: Verilog $finish
 //}
 
 @<code>{Hello,world!}と出力されたあと、プログラムが終了しました。
 
-=== riscv-testsのリビルド
+=== riscv-testsに対応する
 
-riscv-testsの終了判定用のレジスタの位置を@<code>{MMAP_DEBUG_BEGIN}に移動し、
-riscv-testsをビルドしなおします。
+riscv-testsを実行するとき、
+終了判定用のレジスタの位置を@<code>{DBG_ADDR}に設定するようにします。
 
-riscv-testsの@<code>{env/p/link.ld}の@<code>{.tohost}を次のように変更します
+@<code>{test/test.py}を、
+ELFファイルを探して自動で@<code>{DBG_ADDR}を設定してテストを実行するプログラムに変更します。
+
+elftoolsを使用し、ELFファイルの判定、セクションのアドレスを取得する関数を定義します
 ()。
-@<code>{.tohost}はメモリにマップされたレジスタであり、
-メモリとしての実体は無いので@<code>{NOLOAD}属性を指定しています。
-@<secref>{changepc}と同じようにリビルドして、HEXファイルを再生成してください。
 
-//list[][]{
-OUTPUT_ARCH( "riscv" )
-ENTRY(_start)
-
-SECTIONS
-{
-@<b>|.tohost 0x40000000 (NOLOAD) : { *(.tohost) }| @<balloon>{.tohostの位置をMMAP_DEBUG_BEGINにする}
-. = 0x80000000;
-.text.init : { *(.text.init) }
-. = ALIGN(0x1000);
-.text : { *(.text) }
-. = ALIGN(0x1000);
-.data : { *(.data) }
-.bss : { *(.bss) }
-_end = .;
-}
+//list[test.py.debugouttest.import][ (test/test.py)]{
+#@map_range(scripts/12/debugouttest-range/core/test/test.py,import)
+from elftools.elf.elffile import ELFFile
+#@end
 //}
 
-@<code>{VERILATOR_FLAGS="-DTEST_MODE"}をつけてシミュレータをコンパイルしなおし、
+//list[test.py.debugouttest.func][ (test/test.py)]{
+#@map_range(scripts/12/debugouttest-range/core/test/test.py,func)
+def is_elf(filepath):
+    try:
+        with open(filepath, 'rb') as f:
+            magic_number = f.read(4)
+            return magic_number == b'\x7fELF'
+    except:
+        return False
+
+def get_section_address(filepath, section_name):
+    try:
+        with open(filepath, 'rb') as f:
+            elffile = ELFFile(f)
+            for section in elffile.iter_sections():
+                if section.name == section_name:
+                    return section.header['sh_addr']
+            return 0
+    except:
+        return 0
+#@end
+//}
+
+デバッグ用の入出力デバイスのセクション名を指定するパラメータを作成します
+()。
+また、テストするファイルの拡張子を指定していたパラメータを、
+ELFファイルに付加することでHEXファイルのパスを得るためのパラメータに変更します。
+
+//list[test.py.debugouttest.args][ (test/test.py)]{
+#@map_range(scripts/12/debugouttest-range/core/test/test.py,args)
+parser.add_argument("-e", "--extension", default="@<b>|.bin.|hex", help="@<b>|hex| file extension")
+@<b>|parser.add_argument("-d", "--debug_label", default=".tohost", help="debug device label")|
+#@end
+//}
+
+dir_walk関数を、ELFファイルを探す関数に変更します
+()。
+
+//list[test.py.debugouttest.dir_walk][ (test/test.py)]{
+#@map_range(scripts/12/debugouttest-range/core/test/test.py,dir_walk)
+if entry.is_file():
+    if not @<b>|is_elf(entry.path)|:
+        continue
+    if len(args.files) == 0:
+        yield entry.path
+#@end
+//}
+
+シミュレータの実行で@<code>{DBG_ADDR}を指定するようにします。
+
+//list[test.py.debugouttest.for][ (test/test.py)]{
+#@map_range(scripts/12/debugouttest-range/core/test/test.py,for)
+for @<b>|elf|path in dir_walk(args.dir):
+    @<b>|hexpath = elfpath + args.extension|
+    @<b>|if not os.path.exists(hexpath):|
+    @<b>|    print("SKIP :", elfpath)|
+    @<b>|    continue|
+    @<b>|dbg_addr = get_section_address(elfpath, args.debug_label)|
+    f, s = test(@<b>|dbg_addr,| os.path.abspath(args.rom), os.path.abspath(hexpath))
+    res_strs.append(("PASS" if s else "FAIL") + " : " + f)
+    res_statuses.append(s)
+#@end
+//}
+
+//list[test.py.debugouttest.test][ (test/test.py)]{
+#@map_range(scripts/12/debugouttest-range/core/test/test.py,test)
+def test(@<b>|dbg_addr,| romhex, file_name):
+    result_file_path = os.path.join(args.output_dir, file_name.replace(os.sep, "_") + ".txt")
+    @<b>|env = f"DBG_ADDR={dbg_addr} "|
+    cmd = f"{args.sim_path} {romhex} {file_name} 0"
+    success = False
+    with open(result_file_path, "w") as f:
+        no = f.fileno()
+        p = subprocess.Popen(@<b>|" ".join([env, "exec", cmd])|, shell=True, stdout=no, stderr=no)
+#@end
+//}
+
+@<code>{VERILATOR_FLAGS="-DTEST_MODE"}をつけてシミュレータをビルドし、
 riscv-testsが正常終了することを確かめてください。
 
 === 入力を実装する
@@ -1590,7 +1686,6 @@ int main(int argc, char** argv) {
     @<b>|#ifdef ENABLE_DEBUG_INPUT|
         @<b>|set_nonblocking();|
     @<b>|#endif|
-=======
 #@end
 //}
 
