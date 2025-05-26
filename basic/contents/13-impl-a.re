@@ -41,9 +41,9 @@ LR、SC命令はそれぞれ次のように動作します。
    命令の実行後に必ず予約セットを空にします。
 
 LR、SC命令を使うことで、アトミックなロード、加算、ストアを次のように記述できます
-()。
+(@<list>{sample.asm.lrsc})。
 
-//list[][]{
+//list[sample.asm.lrsc][]{
 //}
 
 同時に他のコアが同じプログラムを実行するとき、間違った値の書き込みはSC命令で失敗します。
@@ -83,7 +83,8 @@ A拡張の命令はすべてR形式でのopcodeはOP-AMO(@<code>{7'b0101111})で
 
 TODO funct5と命令の対応のテーブル
 
-eeiパッケージにOP-AMOの定数を定義します。
+eeiパッケージにOP-AMOの定数を定義します
+(@<list>{eei.veryl.define.op})。
 
 //list[eei.veryl.define.op][ (eei.veryl)]{
 #@maprange(scripts/13/define-range/core/src/eei.veryl,op)
@@ -92,7 +93,7 @@ eeiパッケージにOP-AMOの定数を定義します。
 //}
 
 また、A拡張の命令を区別するための列挙型@<code>{AMOOp}を定義します
-()。
+(@<list>{eei.veryl.define.AMOOp})。
 それぞれ、命令のfunct5と対応していることを確認してください。
 
 //list[eei.veryl.define.AMOOp][ (eei.veryl)]{
@@ -117,7 +118,7 @@ eeiパッケージにOP-AMOの定数を定義します。
 
 @<code>{InstCtrl}構造体に、
 A拡張の命令であることを示す@<code>{is_amo}フラグを追加します 
-()。
+(@<list>{corectrl.veryl.define.is_amo})。
 
 //list[corectrl.veryl.define.is_amo][ (corectrl.veryl)]{
 #@maprange(scripts/13/define-range/core/src/corectrl.veryl,is_amo)
@@ -139,7 +140,7 @@ A拡張の命令であることを示す@<code>{is_amo}フラグを追加しま�
 //}
 
 命令がメモリにアクセスするかを判定するinst_is_memop関数を、@<code>{is_amo}フラグを利用するように変更します
-()。
+(@<list>{corectrl.veryl.define.inst_is_memop})。
 
 //list[corectrl.veryl.define.inst_is_memop][ (corectrl.veryl)]{
 #@maprange(scripts/13/define-range/core/src/corectrl.veryl,inst_is_memop)
@@ -153,7 +154,7 @@ A拡張の命令であることを示す@<code>{is_amo}フラグを追加しま�
 
 inst_decoderモジュールの@<code>{InstCtrl}を生成している部分を変更します。
 opcodeが@<code>{OP-AMO}のとき、@<code>{is_amo}を@<code>{T}に設定します
-()。
+(@<list>{inst_decoder.veryl.define.ctrl})。
 その他のopcodeの@<code>{is_amo}は@<code>{F}に設定してください。
 
 //list[inst_decoder.veryl.define.ctrl][is_amoフラグを追加する (inst_decoder.veryl)]{
@@ -171,7 +172,7 @@ opcodeが@<code>{OP-AMO}のとき、@<code>{is_amo}を@<code>{T}に設定しま�
 //}
 
 また、A拡張の命令が有効な命令として判断されるようにします
-()。
+(@<list>{inst_decoder.veryl.define.valid})。
 
 //list[inst_decoder.veryl.define.valid][A拡張の命令のとき、validフラグを立てる (inst_decoder.veryl)]{
 #@maprange(scripts/13/define-range/core/src/inst_decoder.veryl,valid)
@@ -186,7 +187,7 @@ opcodeが@<code>{OP-AMO}のとき、@<code>{is_amo}を@<code>{T}に設定しま�
 A拡張でアクセスするメモリのアドレスはrs1で指定されたレジスタの値です。
 これは基本整数命令セットのロードストア命令のアドレス指定方法(rs1と即値を足し合わせる)とは異なるため、
 memunitモジュールの@<code>{addr}ポートに割り当てる値を@<code>{is_amo}フラグによって切り替えます
-()。
+(@<list>{core.veryl.define.memu_addr})。
 
 //list[core.veryl.define.memu_addr][ (core.veryl)]{
 #@maprange(scripts/13/define-range/core/src/core.veryl,memu_addr)
@@ -215,7 +216,7 @@ Store/AMO address misaligned例外が発生します。
 この例外はストア命令の場合の例外と同じです。
 
 EXステージの例外判定でアドレスを使っている部分を変更します
-()。
+(@<list>{core.veryl.define.exception})。
 causeとtvalの割り当てがストア命令の場合と同じになっていることを確認してください。
 
 //list[core.veryl.define.exception][ (core.veryl)]{
@@ -234,7 +235,8 @@ causeとtvalの割り当てがストア命令の場合と同じになってい�
 === ライトバックする条件を変更する
 
 A拡張の命令を実行するとき、
-ロードした値をレジスタにライトバックするように変更します。
+ロードした値をレジスタにライトバックするように変更します
+(@<list>{core.veryl.define.wb_data})。
 
 //list[core.veryl.define.wb_data][ (core.veryl)]{
 #@maprange(scripts/13/define-range/core/src/core.veryl,wb_data)
@@ -263,7 +265,7 @@ amounitモジュールにA拡張の操作を指示するために、
 @<code>{is_amo}フラグ、@<code>{aq}ビット、@<code>{rl}ビット、@<code>{AMOOp}型をmembus_ifインターフェースに追加で定義したインターフェースを作成します。
 
 @<code>{src/core_data_if.veryl}を作成し、次のように記述します
-()。
+(@<list>{core_data_if.veryl.empty.all})。
 
 //list[core_data_if.veryl.empty.all][ (core_data_if.veryl)]{
 #@mapfile(scripts/13/empty-range/core/src/core_data_if.veryl)
@@ -316,7 +318,7 @@ interface core_data_if {
 
 メモリ操作をcoreモジュールからそのままmmio_controllerモジュールに受け渡しするだけのモジュールを作成します。
 @<code>{src/amounit.veryl}を作成し、次のように記述します
-()。
+(@<list>{amounit.veryl.empty.all})。
 
 //list[amounit.veryl.empty.all][ (amounit.veryl)]{
 #@mapfile(scripts/13/empty-range/core/src/amounit.veryl)
@@ -463,7 +465,9 @@ amounitモジュールは
 通常のロードストア命令を処理します。
 
 coreモジュールのロードストア用のインターフェースをmembus_ifからcore_data_ifに変更します
-()。
+(@<list>{core.veryl.empty.port}、
+@<list>{top.veryl.empty.port}、
+@<list>{top.veryl.empty.core})。
 
 //list[core.veryl.empty.port][ (core.veryl)]{
 #@maprange(scripts/13/empty-range/core/src/core.veryl,port)
@@ -493,7 +497,11 @@ coreモジュールのロードストア用のインターフェースをmembus_
 
 memunitモジュールのインターフェースも変更し、
 @<code>{is_amo}、@<code>{aq}、@<code>{rl}、@<code>{amoop}に値を割り当てます
-()。
+(@<list>{memunit.veryl.empty.port}、
+@<list>{memunit.veryl.empty.reg}、
+@<list>{memunit.veryl.empty.assign}、
+@<list>{memunit.veryl.empty.reset}、
+@<list>{memunit.veryl.empty.Init})。
 
 //list[memunit.veryl.empty.port][ (memunit.veryl)]{
 #@maprange(scripts/13/empty-range/core/src/memunit.veryl,port)
@@ -569,7 +577,7 @@ memunitモジュールのインターフェースも変更し、
 
 amounitモジュールをtopモジュールでインスタンス化し、
 coreモジュールとmmio_controllerモジュールのインターフェースを接続します
-()。
+(@<list>{top.veryl.empty.amou})。
 
 //list[top.veryl.empty.amou][ (top.veryl)]{
 #@maprange(scripts/13/empty-range/core/src/top.veryl,amou)
@@ -594,7 +602,8 @@ LR.W命令はmemunitモジュールで64ビットに符号拡張されるため�
 amounitモジュールでLR.W命令とLR.D命令を区別する必要はありません。
 
 amounitモジュールに予約セットを作成します
-()。
+(@<list>{amounit.veryl.lr.list}、
+@<list>{amounit.veryl.lr.reset})。
 @<code>{is_addr_reserved}で、予約セットに有効なアドレスが格納されているかを管理します。
 
 //list[amounit.veryl.lr.list][ (amounit.veryl)]{
@@ -613,7 +622,9 @@ amounitモジュールに予約セットを作成します
 //}
 
 LR命令を実行するとき、予約セットにアドレスを登録してロード結果を返すようにします
-()。
+(@<list>{amounit.veryl.lr.accept_request_comb}、
+@<list>{amounit.veryl.lr.master_comb}、
+@<list>{amounit.veryl.lr.accept_request_ff})。
 既に予約セットが使われている場合でもアドレスを上書きします。
 
 //list[amounit.veryl.lr.accept_request_comb][ (amounit.veryl)]{
@@ -681,7 +692,7 @@ SC.W命令はmemunitモジュールで書き込みマスクを設定している
 amounitモジュールでSC.W命令とSC.D命令を区別する必要はありません。
 
 SC命令が成功、失敗したときに結果を返すための状態をState型に追加します
-()。
+(@<list>{amounit.veryl.sc.State})。
 
 //list[amounit.veryl.sc.State][ (amounit.veryl)]{
 #@maprange(scripts/13/sc-range/core/src/amounit.veryl,State)
@@ -696,7 +707,7 @@ SC命令が成功、失敗したときに結果を返すための状態をState�
 //}
 
 それぞれの状態で結果を返し、新しく要求を受け入れるようにします
-()。
+(@<list>{amounit.veryl.sc.assign_slave})。
 @<code>{State::SCSuccess}はSC命令に成功してストアが終わったときに結果を返します。
 成功したら@<code>{0}、失敗したら@<code>{1}を返します。
 
@@ -716,7 +727,7 @@ SC命令が成功、失敗したときに結果を返すための状態をState�
 //}
 
 SC命令を受け入れるときに予約セットを確認し、アドレスが予約セットのアドレスと異なる場合は状態を@<code>{State::SCFail}に移動させます
-()。
+(@<list>{amounit.veryl.sc.accept_request_ff})。
 成功、失敗に関係なく、予約セットを空にします。
 
 //list[amounit.veryl.sc.accept_request_ff][ (amounit.veryl)]{
@@ -737,7 +748,7 @@ SC命令を受け入れるときに予約セットを確認し、アドレスが
 
 SC命令でメモリの@<code>{ready}が@<code>{1}になるのを待っているとき、
 @<code>{ready}が@<code>{1}になったら状態を@<code>{State::SCSuccess}に移動させます
-()。
+(@<list>{amounit.veryl.sc.on_clock})。
 
 //list[amounit.veryl.sc.on_clock][ (amounit.veryl)]{
 #@maprange(scripts/13/sc-range/core/src/amounit.veryl,on_clock)
@@ -765,7 +776,10 @@ SC命令でメモリの@<code>{ready}が@<code>{1}になるのを待っている
 //}
 
 SC命令によるメモリへの書き込みを実装します
-()。
+(
+@<list>{amounit.veryl.sc.accept_request_comb}、
+@<list>{amounit.veryl.sc.master_comb}
+)。
 
 //list[amounit.veryl.sc.accept_request_comb][ (amounit.veryl)]{
 #@maprange(scripts/13/sc-range/core/src/amounit.veryl,accept_request_comb)
@@ -809,7 +823,7 @@ SC命令によるメモリへの書き込みを実装します
 Zaamo拡張の命令はロード、演算、ストアを行います。
 本章では、Zaamo拡張の命令を図TODOのような状態遷移で処理するように実装します。
 @<code>{State}型に新しい状態を定義してください
-()。
+(@<list>{amounit.veryl.zaamo.State})。
 
 //list[amounit.veryl.zaamo.State][ (amounit.veryl)]{
 #@maprange(scripts/13/zaamo-range/core/src/amounit.veryl,State)
@@ -829,7 +843,10 @@ Zaamo拡張の命令はロード、演算、ストアを行います。
 
 簡単にZalrsc拡張と区別するために、
 Zaamo拡張による要求かどうかを判定する関数(@<code>{is_Zaamo})をcore_data_ifインターフェースに作成します
-()。
+(
+@<list>{core_data_if.veryl.zaamo.is_Zaamo}、
+@<list>{core_data_if.veryl.zaamo.master}
+)。
 modportにimport宣言を追加してください。
 
 //list[core_data_if.veryl.zaamo.is_Zaamo][ (core_data_if.veryl)]{
@@ -850,7 +867,7 @@ modportにimport宣言を追加してください。
 //}
 
 ロードしたデータと@<code>{wdata}、フラグを利用して、ストアする値を生成する関数を作成します
-()。
+(@<list>{amounit.veryl.zaamo.calc_amo})。
 32ビット演算のとき、下位32ビットと上位32ビットのどちらを使うかをアドレスによって判別しています。
 
 //list[amounit.veryl.zaamo.calc_amo][ (amounit.veryl)]{
@@ -899,7 +916,10 @@ modportにimport宣言を追加してください。
 //}
 
 ロードした値を保存しておくレジスタを作成します
-()。
+(
+@<list>{amounit.veryl.zaamo.reg}、
+@<list>{amounit.veryl.zaamo.reset}
+)。
 
 //list[amounit.veryl.zaamo.reg][ (amounit.veryl)]{
 #@maprange(scripts/13/zaamo-range/core/src/amounit.veryl,reg)
@@ -917,7 +937,7 @@ modportにimport宣言を追加してください。
 //}
 
 メモリアクセスが終了したら、ロードしておいた値を返します
-()。
+(@<list>{amounit.veryl.zaamo.assign_slave_comb})。
 
 //list[amounit.veryl.zaamo.assign_slave_comb][ (amounit.veryl)]{
 #@maprange(scripts/13/zaamo-range/core/src/amounit.veryl,assign_slave_comb)
@@ -930,7 +950,10 @@ modportにimport宣言を追加してください。
 //}
 
 状態に基づいて、メモリへのロード、ストア要求を割り当てます
-()。
+(
+@<list>{amounit.veryl.zaamo.accept_request_comb}、
+@<list>{amounit.veryl.zaamo.assign_master_comb}
+)。
 
 //list[amounit.veryl.zaamo.accept_request_comb][ (amounit.veryl)]{
 #@maprange(scripts/13/zaamo-range/core/src/amounit.veryl,accept_request_comb)
@@ -953,7 +976,7 @@ modportにimport宣言を追加してください。
 //}
 
 TODO図に基づいて状態を遷移させます
-()。
+(@<list>{amounit.veryl.zaamo.accept_request_ff})。
 
 //list[amounit.veryl.zaamo.accept_request_ff][ (amounit.veryl)]{
 #@maprange(scripts/13/zaamo-range/core/src/amounit.veryl,accept_request_ff)
