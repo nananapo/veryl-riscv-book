@@ -34,7 +34,7 @@ TODO図のようにメモリがどのように配置されているかを示す�
 
 eeiパッケージに定義しているメモリの定数をRAM用の定数に変更します。
 また、新しくRAMのベースアドレス、メモリバスのデータ幅、ROMのメモリマップを示す定数を定義してください
-()。
+(@<list>{eei.veryl.memtoram.const})。
 デバッグ入出力デバイス(レジスタ)の位置は、topモジュールのポートで定義します
 (@<list>{top.veryl.memtoram.port})。
 
@@ -60,7 +60,10 @@ eeiパッケージに定義しているメモリの定数をRAM用の定数に�
 
 @<code>{MEM_DATA_WIDTH}、@<code>{MEM_ADDR_WIDTH}を使っている部分を@<code>{MEMBUS_DATA_WIDTH}に置き換えます。
 @<code>{MEMBUS_DATA_WIDTH}と@<code>{XLEN}を使うmembus_ifインターフェースに別名@<code>{Membus}をつけて利用します
-()。
+(
+@<list>{membus_if.veryl.memtoram.Membus}
+@<list>{core.veryl.memtoram.port}
+)。
 
 //list[membus_if.veryl.memtoram.Membus][ (membus_if.veryl)]{
 #@maprange(scripts/12/memtoram-range/core/src/membus_if.veryl,Membus)
@@ -100,7 +103,7 @@ module core (
 //}
 
 topモジュールでインスタンス化しているmembus_ifインターフェースのジェネリックパラメータを変更します
-()。
+(@<list>{top.veryl.memtoram.membus})。
 
 //list[top.veryl.memtoram.membus][ (top.veryl)]{
 #@maprange(scripts/12/memtoram-range/core/src/top.veryl,membus)
@@ -111,7 +114,10 @@ topモジュールでインスタンス化しているmembus_ifインターフ�
 //}
 
 addr_to_memaddr関数をジェネリック関数にして、呼び出すときにRAMのパラメータを使用するように変更します
-()。
+(
+@<list>{top.veryl.memtoram.addr_to_memaddr}、
+@<list>{top.veryl.memtoram.arb}、
+)。
 
 //list[top.veryl.memtoram.addr_to_memaddr][ (top.veryl)]{
 #@maprange(scripts/12/memtoram-range/core/src/top.veryl,addr_to_memaddr)
@@ -142,8 +148,16 @@ addr_to_memaddr関数をジェネリック関数にして、呼び出すとき�
 //}
 
 メモリに読み込むHEXファイルを指定するパラメータの名前を変更します
-()。
-それにあわせてシミュレータ用のプログラムも変更します。
+(
+@<list>{top.veryl.memtoram.port}、
+@<list>{top.veryl.memtoram.inst}
+)。
+それにあわせてシミュレータ用のプログラムも変更します
+(
+@<list>{tb_verilator.cpp.memtoram.arg}、
+@<list>{tb_verilator.cpp.memtoram.env}、
+@<list>{tb_verilator.cpp.memtoram.save}
+)。
 
 //list[top.veryl.memtoram.port][ (top.veryl)]{
 #@maprange(scripts/12/memtoram-range/core/src/top.veryl,port)
@@ -194,7 +208,9 @@ module top #(
 アクセスするアドレスに応じてアクセス先のデバイスを切り替えるモジュールを実装します。
 
 @<code>{src/mmio_controller.veryl}を作成し、次のように記述します
-()。
+(
+@<list>{mmio_controller.veryl.emptymmio}
+)。
 
 //list[mmio_controller.veryl.emptymmio][ (mmio_controller.veryl)]{
 #@mapfile(scripts/12/emptymmio/core/src/mmio_controller.veryl)
@@ -351,7 +367,7 @@ module mmio_controller (
 
 mmio_controllerモジュールの関数の引数にmembus_ifインターフェースを使うために、
 新しくmodportを宣言します
-()。
+(@<list>{membus_if.veryl.emptymmio.modport})。
 
 //list[membus_if.veryl.emptymmio.modport][ (membus_if.veryl)]{
 #@maprange(scripts/12/emptymmio-range/core/src/membus_if.veryl,modport)
@@ -383,7 +399,7 @@ mmio_controllerモジュールは@<code>{req_core}からメモリアクセス要
 アクセス対象のモジュールからのレスポンスを返すモジュールです。
 
 @<code>{Device}型は実装しているデバイスを表現するための列挙型です
-()。
+(@<list>{mmio_controller.veryl.emptymmio.Device})。
 まだデバイスを接続していないので、不明なデバイス(@<code>{Device::UNKNOWN})だけ定義しています。
 
 //list[mmio_controller.veryl.emptymmio.Device][ (mmio_controller.veryl)]{
@@ -400,7 +416,7 @@ get_device関数はアドレスからデバイスを取得する関数です。
 
 always_comb、always_ffブロックはこれらの関数を利用してメモリアクセスを制御します。
 always_ffブロックは、メモリアクセス要求の処理中ではない場合とメモリアクセスが終わった場合にメモリアクセス要求を受け入れます
-()。
+(@<list>{mmio_controller.veryl.emptymmio.on_clock})。
 要求を受け入れるとき、@<code>{req_saved}に@<code>{req_core}の値を保存します。
 
 //list[mmio_controller.veryl.emptymmio.on_clock][ (mmio_controller.veryl)]{
@@ -436,34 +452,11 @@ always_ffブロックは、メモリアクセス要求の処理中ではない�
 //}
 
 always_combブロックはデバイスにアクセスし
-()、
-@<code>{req_core}に結果を返します
-()。
+@<code>{req_core}に結果を返します。
 @<code>{is_requested}は、メモリアクセス要求を処理している場合に既にデバイスが要求を受け入れたかを示すフラグです。
 新しく要求を受け入れるときと@<code>{is_requested}が@<code>{0}のときにデバイスに要求を割り当て、
 @<code>{is_requested}が@<code>{1}かつ@<code>{rvalid}が@<code>{1}ときに結果を返します。
 
-
-//list[mmio_controller.veryl.emptymmio.req_core][ (mmio_controller.veryl)]{
-#@maprange(scripts/12/emptymmio-range/core/src/mmio_controller.veryl,req_core)
-    // req_coreの割り当て
-    always_comb {
-        req_core.ready  = 0;
-        req_core.rvalid = 0;
-        req_core.rdata  = 0;
-
-        if req_saved.valid {
-            if is_requested {
-                // 結果を返す
-                assign_device_slave(last_device, req_core);
-                req_core.ready      = get_device_rvalid(last_device);
-            }
-        } else {
-            req_core.ready = 1;
-        }
-    }
-#@end
-//}
 
 まだアクセス対象のデバイスを実装していないため、
 常に@<code>{0}を読み込み、@<code>{ready}と@<code>{rvalid}は常に@<code>{1}にして、書き込みは無視します。
@@ -475,7 +468,10 @@ always_combブロックはデバイスにアクセスし
 mmio_controllerモジュールにRAMとのインターフェースを実装します。
 
 @<code>{Device}型にRAMを追加して、アドレスにRAMをマップします
-()。
+(@
+<list>{mmio_controller.veryl.ram.Device}、
+<list>{mmio_controller.veryl.ram.get_device}
+)。
 
 //list[mmio_controller.veryl.ram.Device][ (mmio_controller.veryl)]{
 #@maprange(scripts/12/ram-range/core/src/mmio_controller.veryl,Device)
@@ -501,7 +497,10 @@ mmio_controllerモジュールにRAMとのインターフェースを実装し�
 
 RAMとのインターフェースを追加し、
 reset_all_device_masters関数にインターフェースをリセットするコードを追加します
-()。
+(
+@<list>{mmio_controller.veryl.ram.port}、
+@<list>{mmio_controller.veryl.ram.reset_all}
+)。
 
 //list[mmio_controller.veryl.ram.port][ (mmio_controller.veryl)]{
 #@maprange(scripts/12/ram-range/core/src/mmio_controller.veryl,port)
@@ -523,7 +522,10 @@ module mmio_controller (
 //}
 
 @<code>{ready}、@<code>{rvalid}を取得する関数にRAMを登録します
-()。
+(
+@<list>{mmio_controller.veryl.ram.get_device_ready}、
+@<list>{mmio_controller.veryl.ram.get_device_rvalid}
+)。
 
 //list[mmio_controller.veryl.ram.get_device_ready][ (mmio_controller.veryl)]{
 #@maprange(scripts/12/ram-range/core/src/mmio_controller.veryl,get_device_ready)
@@ -554,7 +556,7 @@ module mmio_controller (
 //}
 
 RAMの@<code>{rvalid}、@<code>{rdata}を@<code>{req_core}に割り当てます
-()。
+(@<list>{mmio_controller.veryl.ram.assign_device_slave})。
 
 //list[mmio_controller.veryl.ram.assign_device_slave][ (mmio_controller.veryl)]{
 #@maprange(scripts/12/ram-range/core/src/mmio_controller.veryl,assign_device_slave)
@@ -573,7 +575,7 @@ RAMの@<code>{rvalid}、@<code>{rdata}を@<code>{req_core}に割り当てます
 //}
 
 RAMのインターフェースに要求を割り当てます
-()。
+(@<list>{mmio_controller.veryl.ram.assign_device_master})。
 ここでRAMのベースアドレスをオフセットとしたアドレスを割り当てることで、@<code>{MMAP_RAM_BEGIN}が@<code>{0}になるようにしています。
 
 //list[mmio_controller.veryl.ram.assign_device_master][ (mmio_controller.veryl)]{
@@ -599,7 +601,11 @@ RAMとmmio_controllerモジュール、mmio_controllerモジュールとcoreモ�
 
 RAMとmmio_controllerモジュールを接続するインターフェース(@<code>{mmio_ram_membus})、
 coreモジュールとmmio_controllerモジュールを接続するインターフェース(@<code>{mmio_membus})を定義し、
-@<code>{membus}を@<code>{ram_membus}に改名します。
+@<code>{membus}を@<code>{ram_membus}に改名します
+(
+@<list>{top.veryl.ram.interface}、
+@<list>{top.veryl.ram.ram}
+)。
 
 //list[top.veryl.ram.interface][ (top.veryl)]{
 #@maprange(scripts/12/ram-range/core/src/top.veryl,interface)
@@ -624,7 +630,7 @@ coreモジュールとmmio_controllerモジュールを接続するインター�
 
 coreモジュールからRAMへのメモリアクセスを調停する処理を、
 coreモジュールからmmio_controllerモジュールへのアクセスを調停する処理に変更します
-()。
+(@<list>{top.veryl.ram.arb})。
 
 //list[top.veryl.ram.arb][ (top.veryl)]{
 #@maprange(scripts/12/ram-range/core/src/top.veryl,arb)
@@ -667,8 +673,11 @@ coreモジュールからmmio_controllerモジュールへのアクセスを調�
 //}
 
 mmio_controllerをインスタンス化し、RAMと接続します。
-()。
-RAMのアドレスへの変換は調停処理からこの部分に移動しています。
+(
+@<list>{top.veryl.ram.inst}、
+@<list>{top.veryl.ram.connect}
+)。
+RAMのアドレスへの変換は調停処理から接続部分に移動しています。
 
 //list[top.veryl.ram.inst][ (top.veryl)]{
 #@maprange(scripts/12/ram-range/core/src/top.veryl,inst)
@@ -701,7 +710,10 @@ RAMのアドレスへの変換は調停処理からこの部分に移動して�
 
 プログラムカウンタの初期値を@<code>{MMAP_RAM_BEGIN}にすることで、RAMのベースアドレスからプログラムの実行を開始するように変更します。
 eeiパッケージに@<code>{INITIAL_PC}を定義し、coreモジュールでのリセット時に利用します
-()。
+(
+@<list>{eei.veryl.ram.pc}、
+@<list>{core.veryl.ram.pc}
+)。
 
 //list[eei.veryl.ram.pc][ (eei.veryl)]{
 #@maprange(scripts/12/ram-range/core/src/eei.veryl,pc)
@@ -726,7 +738,7 @@ eeiパッケージに@<code>{INITIAL_PC}を定義し、coreモジュールでの
 riscv-testsを実行してRAMにアクセスできているかテストします。
 今のところriscv-testsはアドレス@<code>{0}から配置されるようにリンクしているため、
 riscv-testsの@<code>{env/p/link.ld}を変更します
-()。
+(@<list>{link.ld.ram.riscv-tests})。
 
 //list[link.ld.ram.riscv-tests][(riscv-tests/env/p/link.ld)]{
 OUTPUT_ARCH( "riscv" )
@@ -739,16 +751,16 @@ SECTIONS
 
 riscv-testsをビルドしなおし、成果物をtestディレクトリに配置してください。
 ビルドしなおしたので、HEXファイルを再度生成します
-()。
+(@<list>{terminal.ram.recompile})。
 
-//terminal[][]{
+//terminal[terminal.ram.recompile][]{
 $ @<userinput>{cd test}
 $ @<userinput>{find share/ -type f -not -name "*.dump" -exec riscv64-unknown-elf-objcopy -O binary {} {}.bin \;}
-$ @<userinput>{find share/ -type f -name "*.bin" -exec sh -c "python3 bin2hex.py 4 {} > {}.hex" \;}
+$ @<userinput>{find share/ -type f -name "*.bin" -exec sh -c "python3 bin2hex.py 8 {} > {}.hex" \;}
 //}
 
 riscv-testsの終了判定用のアドレスを@<code>{MMAP_RAM_BEGIN}基準のアドレスに変更します
-()。
+(@<list>{top.veryl.ram.riscvtests})。
 
 //list[top.veryl.ram.riscvtests][ (top.veryl)]{
 #@maprange(scripts/12/ram-range/core/src/top.veryl,riscvtests)
@@ -778,7 +790,10 @@ riscv-testsを実行し、RAMにアクセスできることを確認してくだ
 mmio_controllerモジュールにROMとのインターフェースを実装します。
 
 @<code>{Device}型にROMを追加して、アドレスにROMをマップします
-()。
+(
+@<list>{mmio_controller.veryl.rom.Device}、
+@<list>{mmio_controller.veryl.rom.get_device}
+)。
 
 //list[mmio_controller.veryl.rom.Device][ (mmio_controller.veryl)]{
 #@maprange(scripts/12/rom-range/core/src/mmio_controller.veryl,Device)
@@ -807,7 +822,10 @@ mmio_controllerモジュールにROMとのインターフェースを実装し�
 //}
 
 ROMとのインターフェースを追加します
-()。
+(
+@<list>{mmio_controller.veryl.rom.port}、
+@<list>{mmio_controller.veryl.rom.reset_all}
+)。
 reset_all_device_masters関数でインターフェースをリセットします。
 
 //list[mmio_controller.veryl.rom.port][ (mmio_controller.veryl)]{
@@ -832,7 +850,10 @@ module mmio_controller (
 //}
 
 @<code>{ready}、@<code>{rvalid}を取得する関数にROMを登録します
-()。
+(
+@<list>{mmio_controller.veryl.rom.get_device_rvalid}、
+@<list>{mmio_controller.veryl.rom.get_device_ready}
+)。
 
 //list[mmio_controller.veryl.rom.get_device_rvalid][ (mmio_controller.veryl)]{
 #@maprange(scripts/12/rom-range/core/src/mmio_controller.veryl,get_device_rvalid)
@@ -855,7 +876,9 @@ module mmio_controller (
 //}
 
 ROMの@<code>{rvalid}、@<code>{rdata}を@<code>{req_core}に割り当てます
-()。
+(
+@<list>{mmio_controller.veryl.rom.assign_device_slave}
+)。
 
 //list[mmio_controller.veryl.rom.assign_device_slave][ (mmio_controller.veryl)]{
 #@maprange(scripts/12/rom-range/core/src/mmio_controller.veryl,assign_device_slave)
@@ -868,7 +891,9 @@ ROMの@<code>{rvalid}、@<code>{rdata}を@<code>{req_core}に割り当てます
 //}
 
 ROMのインターフェースに要求を割り当てます
-()。
+(
+@<list>{mmio_controller.veryl.rom.assign_device_master}
+)。
 RAMと同じようにメモリマップのベースアドレスをオフセットとしたアドレスを割り当てます。
 
 //list[mmio_controller.veryl.rom.assign_device_master][ (mmio_controller.veryl)]{
@@ -889,7 +914,10 @@ RAMと同じようにメモリマップのベースアドレスをオフセッ�
 
 === ROMの初期値のパラメータを作成する
 
-topモジュールにROMの初期値を指定するパラメータを定義します。
+topモジュールにROMの初期値を指定するパラメータを定義します
+(
+@<list>{top.veryl.rom.assign_device_master}
+)。
 
 //list[top.veryl.rom.assign_device_master][ (top.veryl)]{
 #@maprange(scripts/12/rom-range/core/src/top.veryl,port)
@@ -904,7 +932,13 @@ module top #(
 
 RAMと同じように、シミュレータ用のプログラムでROMのHEXファイルのパスを指定するようにします。
 1番目の引数をROM用のファイルパスに変更し、ROM_FILE_PATH環境変数をその値に設定します
-()。
+(
+@<list>{tb_verilator.cpp.rom.arg}、
+@<list>{tb_verilator.cpp.rom.path}、
+@<list>{tb_verilator.cpp.rom.cycles}、
+@<list>{tb_verilator.cpp.rom.setenv}、
+@<list>{tb_verilator.cpp.rom.back}
+)。
 
 //list[tb_verilator.cpp.rom.arg][ (tb_verilator.cpp)]{
 #@maprange(scripts/12/rom-range/core/src/tb_verilator.cpp,arg)
@@ -967,7 +1001,11 @@ RAMと同じように、シミュレータ用のプログラムでROMのHEXフ�
 //}
 
 テストを実行するためのPythonプログラムでROMのHEXファイルを指定できるようにします
-()。
+(
+@<list>{test.py.rom.arg}、
+@<list>{test.py.rom.test}、
+@<list>{test.py.rom.walk}
+)。
 デフォルト値はカレントディレクトリの@<code>{bootrom.hex}にしておきます。
 
 //list[test.py.rom.arg][ (test/test.py)]{
@@ -1000,7 +1038,7 @@ ROMをインスタンス化してmmio_controllerモジュールと接続しま�
 
 ROMとmmio_controllerモジュールを接続するインターフェース(@<code>{mmio_rom_membus})
 ROMのインターフェース(@<code>{rom_membus})を定義します
-()。
+(@<list>{top.veryl.rom.interface})。
 
 //list[top.veryl.rom.interface][ (top.veryl)]{
 #@maprange(scripts/12/rom-range/core/src/top.veryl,interface)
@@ -1013,7 +1051,9 @@ ROMのインターフェース(@<code>{rom_membus})を定義します
 //}
 
 ROMをインスタンス化します
-()。
+(
+@<list>{top.veryl.rom.inst}
+)。
 パラメータにはtopモジュールのパラメータを割り当てます。
 
 //list[top.veryl.rom.inst][ (top.veryl)]{
@@ -1029,7 +1069,10 @@ ROMをインスタンス化します
 #@end
 //}
 
-mmio_controllerモジュールに@<code>{rom_membus}を接続します。
+mmio_controllerモジュールに@<code>{rom_membus}を接続します
+(
+@<list>{top.veryl.rom.mmioc}
+)。
 
 //list[top.veryl.rom.mmioc][ (top.veryl)]{
 #@maprange(scripts/12/rom-range/core/src/top.veryl,mmioc)
@@ -1045,7 +1088,9 @@ mmio_controllerモジュールに@<code>{rom_membus}を接続します。
 
 mmio_controllerモジュールとROMを接続します。
 アドレスの変換のためにaddr_to_memaddr関数を使用しています
-()。
+(
+@<list>{top.veryl.rom.connect}
+)。
 
 //list[top.veryl.rom.connect][ (top.veryl)]{
 #@maprange(scripts/12/rom-range/core/src/top.veryl,connect)
@@ -1076,7 +1121,7 @@ RAMにソフトウェアを適切にコピー、配置して実行します。
 RAMのベースアドレスにジャンプするだけのプログラムをROMに設定します。
 
 ROMに設定するためのHEXファイルを作成します
-()。
+(@<list>{bootrom.hex.rom})。
 
 //list[bootrom.hex.rom][ (bootrom.hex)]{
 #@mapfile(scripts/12/rom-range/core/bootrom.hex)
@@ -1088,7 +1133,9 @@ ROMに設定するためのHEXファイルを作成します
 //}
 
 PCの初期値をROMのベースアドレスに変更します
-()。
+(
+@<list>{eei.veryl.rom.pc}
+)。
 
 //list[eei.veryl.rom.pc][ (eei.veryl)]{
 #@maprange(scripts/12/rom-range/core/src/eei.veryl,pc)
@@ -1122,7 +1169,9 @@ CPUが文字を送信したり受信するためのデバッグ用の入出力�
 @<code>{tb_verilator.cpp}で環境変数の値をデバイスのアドレスに設定するようにします。
 
 環境変数@<code>{DBG_ADDR}を読み込み、@<code>{DBG_ADDR}ポートに設定します
-()。
+(
+@<list>{tb_verilator.cpp.debugout.Device}
+)。
 
 //list[tb_verilator.cpp.debugout.Device][ (tb_verilator.cpp)]{
 #@maprange(scripts/12/debugout-range/core/src/tb_verilator.cpp,set)
@@ -1140,7 +1189,10 @@ CPUが文字を送信したり受信するためのデバッグ用の入出力�
 
 mmio_controllerモジュールにデバイスを追加します。
 
-@<code>{Device}型に@<code>{Device::DEBUG}を追加します。
+@<code>{Device}型に@<code>{Device::DEBUG}を追加します
+(
+@<list>{mmio_controller.veryl.debugout.Device}
+)。
 
 //list[mmio_controller.veryl.debugout.Device][ (mmio_controller.veryl)]{
 #@maprange(scripts/12/debugout-range/core/src/mmio_controller.veryl,Device)
@@ -1154,7 +1206,10 @@ mmio_controllerモジュールにデバイスを追加します。
 //}
 
 ポートにインターフェースとデバイスのアドレスを追加します
-()。
+(
+@<list>{mmio_controller.veryl.debugout.port}、
+@<list>{mmio_controller.veryl.debugout.reset_all}
+)。
 
 //list[mmio_controller.veryl.debugout.port][ (mmio_controller.veryl)]{
 #@maprange(scripts/12/debugout-range/core/src/mmio_controller.veryl,port)
@@ -1182,7 +1237,9 @@ module mmio_controller (
 
 デバイスの位置を設定します。
 最初にチェックすることで、他のデバイスとアドレスを被らせたとしてもデバッグ用の入出力デバイスを優先します
-()。
+(
+@<list>{mmio_controller.veryl.debugout.get_device}
+)。
 
 //list[mmio_controller.veryl.debugout.get_device][ (mmio_controller.veryl)]{
 #@maprange(scripts/12/debugout-range/core/src/mmio_controller.veryl,get_device)
@@ -1204,7 +1261,12 @@ module mmio_controller (
 //}
 
 インターフェースを設定します
-()。
+(
+@<list>{mmio_controller.veryl.debugout.assign_device_master}、
+@<list>{mmio_controller.veryl.debugout.assign_device_slave}、
+@<list>{mmio_controller.veryl.debugout.get_device_ready}、
+@<list>{mmio_controller.veryl.debugout.get_device_rvalid}
+)。
 この変更はROMを追加したときとほとんど同じです。
 
 //list[mmio_controller.veryl.debugout.assign_device_master][ (mmio_controller.veryl)]{
@@ -1261,8 +1323,11 @@ module mmio_controller (
 //}
 
 topモジュールにデバッグ用の入出力デバイスのインターフェース(@<code>{dbg_membus})を定義し、
-mmio_controllerモジュールと接続します。
-()。
+mmio_controllerモジュールと接続します
+(
+@<list>{top.veryl.debugout.interface}、
+@<list>{top.veryl.debugout.mmioc}
+)。
 
 //list[top.veryl.debugout.interface][ (top.veryl)]{
 #@maprange(scripts/12/debugout-range/core/src/top.veryl,interface)
@@ -1290,7 +1355,9 @@ mmio_controllerモジュールと接続します。
 
 @<code>{dbg_membus}を使い、デバッグ出力処理を実装します。
 既存のriscv-testsの終了検知処理を次のように書き換えます
-()。
+(
+@<list>{top.veryl.debugout.io}
+)。
 
 //list[top.veryl.debugout.io][ (top.veryl)]{
 #@maprange(scripts/12/debugout-range/core/src/top.veryl,io)
@@ -1330,7 +1397,10 @@ LSBが@<code>{1}ならテストの成功判定をして@<code>{$finish}システ
 実装した出力デバイスで文字を出力できることを確認します。
 
 デバッグ用に@<code>{$display}システムタスクで表示している情報が邪魔になるので、
-デバッグ情報の表示を環境変数@<code>{PRINT_DEBUG}で制御できるようにします。
+デバッグ情報の表示を環境変数@<code>{PRINT_DEBUG}で制御できるようにします
+(
+@<list>{core.veryl.debugout.debug}
+)。
 
 //list[core.veryl.debugout.debug][ (core.veryl)]{
 #@maprange(scripts/12/debugout-range/core/src/core.veryl,debug)
@@ -1351,7 +1421,9 @@ LSBが@<code>{1}ならテストの成功判定をして@<code>{$finish}システ
 //}
 
 @<code>{test/debug_output.c}を作成し、次のように記述します
-()。
+(
+@<list>{debug_output.c.debugouttest}
+)。
 これは@<code>{Hello,world!}と出力するプログラムです。
 
 //list[debug_output.c.debugouttest][ (test/debug_output.c)]{
@@ -1396,7 +1468,9 @@ RISC-Vの規約ではsp(x2)レジスタをスタックポインタとして利�
 
 そのため、レジスタの値を適切な値にリセットしてmain関数を呼び出す別のプログラムが必要です。
 @<code>{test/entry.S}を作成し、次のように記述します
-()。
+(
+@<list>{entry.S.debugouttest}
+)。
 
 //list[entry.S.debugouttest][ (test/entry.S)]{
 #@mapfile(scripts/12/debugouttest/core/test/entry.S)
@@ -1443,7 +1517,9 @@ _start:
 
 @<code>{_stack_bottom}は、リンカの設定ファイルに記述します。
 @<code>{test/link.ld}を作成し、次のように記述します
-()。
+(
+@<list>{link.ld.debugouttest}
+)。
 
 //list[link.ld.debugouttest][ (test/link.ld)]{
 #@mapfile(scripts/12/debugouttest/core/test/link.ld)
@@ -1487,7 +1563,6 @@ $ @<userinput>{python3 bin2hex.py 8 test.bin > test.bin.hex} @<balloon>{HEXフ�
 
 シミュレータをビルドし、テストプログラムを実行します。
 
-
 //terminal[][]{
 $ @<userinput>{make build sim}
 $ @<userinput>{DBG_ADDR=0x40000000 ./obj_dir/sim bootrom.hex test/test.bin.hex}
@@ -1506,7 +1581,10 @@ riscv-testsを実行するとき、
 ELFファイルを探して自動で@<code>{DBG_ADDR}を設定してテストを実行するプログラムに変更します。
 
 elftoolsを使用し、ELFファイルの判定、セクションのアドレスを取得する関数を定義します
-()。
+(
+@<list>{test.py.debugouttest.import}、
+@<list>{test.py.debugouttest.func}
+)。
 
 //list[test.py.debugouttest.import][ (test/test.py)]{
 #@map_range(scripts/12/debugouttest-range/core/test/test.py,import)
@@ -1538,7 +1616,9 @@ def get_section_address(filepath, section_name):
 //}
 
 デバッグ用の入出力デバイスのセクション名を指定するパラメータを作成します
-()。
+(
+@<list>{test.py.debugouttest.args}
+)。
 また、テストするファイルの拡張子を指定していたパラメータを、
 ELFファイルに付加することでHEXファイルのパスを得るためのパラメータに変更します。
 
@@ -1550,7 +1630,9 @@ parser.add_argument("-e", "--extension", default="@<b>|.bin.|hex", help="@<b>|he
 //}
 
 dir_walk関数を、ELFファイルを探す関数に変更します
-()。
+(
+@<list>{test.py.debugouttest.dir_walk}
+)。
 
 //list[test.py.debugouttest.dir_walk][ (test/test.py)]{
 #@map_range(scripts/12/debugouttest-range/core/test/test.py,dir_walk)
@@ -1562,7 +1644,11 @@ if entry.is_file():
 #@end
 //}
 
-シミュレータの実行で@<code>{DBG_ADDR}を指定するようにします。
+シミュレータの実行で@<code>{DBG_ADDR}を指定するようにします
+(
+@<list>{test.py.debugouttest.for}、
+@<list>{test.py.debugouttest.test}
+)。
 
 //list[test.py.debugouttest.for][ (test/test.py)]{
 #@map_range(scripts/12/debugouttest-range/core/test/test.py,for)
@@ -1599,7 +1685,9 @@ riscv-testsが正常終了することを確かめてください。
 @<code>{dbg_membus}を使い、デバッグ入力処理を実装します。
 
 まず、@<code>{src/tb_verilator.cpp}に、標準入力を受け取る関数を定義します
-()。
+(
+@<list>{tb_verilator.cpp.debuginput.get_input_dpic}
+)。
 入力がない場合は@<code>{0}、ある場合は上位20ビットを@<code>{0x01010}にした値を返します。
 
 //list[tb_verilator.cpp.debuginput.get_input_dpic][ (src/tb_verilator.cpp)]{
@@ -1618,7 +1706,11 @@ extern "C" const unsigned long long get_input_dpic() {
 
 ここで、read関数の呼び出しでシミュレータを止めず(@<code>{O_NONBLOCK})、
 シェルが入力をバッファリングしなくする(@<code>{~ICANON})ために設定を変えるコードを挿入します
-()。
+(
+@<list>{tb_verilator.cpp.debuginput.include}、
+@<list>{tb_verilator.cpp.debuginput.termios}、
+@<list>{tb_verilator.cpp.debuginput.set}
+)。
 また、シェルが文字列をローカルエコー(入力した文字列を表示)しないようにします(@<code>{~ECHO})。
 
 //list[tb_verilator.cpp.debuginput.include][ (src/tb_verilator.cpp)]{
@@ -1690,7 +1782,9 @@ int main(int argc, char** argv) {
 //}
 
 @<code>{src/util.veryl}にget_input_dpic関数を呼び出す関数を実装します
-()。
+(
+@<list>{util.veryl.debuginput}
+)。
 
 //list[util.veryl.debuginput][ (src/util.veryl)]{
 #@mapfile(scripts/12/debuginput-range/core/src/util.veryl)
@@ -1714,6 +1808,8 @@ package util {
 //}
 
 デバッグ用の入出力デバイスのロードで@<code>{util::get_input}の結果を返すようにします
+(
+@<list>{top.veryl.debuginput.io}
 )。
 このコードは合成できないので、有効化オプション@<code>{ENABLE_DEBUG_INPUT}をつけます。
 
@@ -1741,7 +1837,9 @@ package util {
 実装した入出力デバイスで文字を入出力できることを確認します。
 
 @<code>{test/debug_input.c}を作成し、次のように記述します
-()
+(
+@<list>{debug_input.c.debuginput}
+)。
 これは入力された文字に@<code>{1}を足した値を出力するプログラムです。
 
 //list[debug_input.c.debuginput][ (test/debug_input.c)]{
@@ -1769,3 +1867,4 @@ $ @<userinput>{./obj_dir/sim bootrom.hex test/test.bin.hex} @<balloon>{(事前�
 bcd@<balloon>{abcと入力して改行}
    efg@<balloon>{defと入力する}
 //}
+
