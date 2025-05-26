@@ -227,8 +227,13 @@
 </div>
 
 <h2 id="impl-mcounteren" class="numbox"><a id="h8-6"></a><span class="secno">8.6</span> mcounterenレジスタの実装</h2>
-<p>TODO 図</p>
-<p>mcounterenレジスタは、M-modeの次に低い特権レベルでハードウェアパフォーマンスモニタにアクセスできるようにするかを制御する32ビットのレジスタです(TODO 図)。CY、TM、IRビットはそれぞれcycle、time、instretにアクセスできるかどうかを制御します<sup><a id="fnb-hpmcounter" href="#fn-hpmcounter" class="noteref" epub:type="noteref">*1</a></sup>。</p>
+<div id="mcounteren" class="image">
+<img src="images/22-umode-csr/mcounteren.png" alt="mcounterenレジスタ" class="img" style="width:100%" />
+<p class="caption">
+図8.1: mcounterenレジスタ
+</p>
+</div>
+<p>mcounterenレジスタは、M-modeの次に低い特権レベルでハードウェアパフォーマンスモニタにアクセスできるようにするかを制御する32ビットのレジスタです(<span class="imgref"><a href="./22-umode-csr.html#mcounteren">図8.1</a></span>)。CY、TM、IRビットはそれぞれcycle、time、instretにアクセスできるかどうかを制御します<sup><a id="fnb-hpmcounter" href="#fn-hpmcounter" class="noteref" epub:type="noteref">*1</a></sup>。</p>
 <div class="footnote-list">
 <div class="footnote" id="fn-hpmcounter" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>hpmcounterレジスタを制御するHPMビットもありますが、hpmcounterレジスタを実装していないので実装しません</p></div>
 </div><!--/.footnote-list-->

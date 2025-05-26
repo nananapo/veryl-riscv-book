@@ -146,7 +146,12 @@
 <p>M-modeのCSRの多くは、特権レベルがM-modeのときのXLENであるMXLENをビット幅として定義されています。S-mode、U-modeのときのXLENはそれぞれSXLEN、UXLENと定義されており、MXLEN &gt;= SXLEN &gt;= UXLENを満たす必要があります。仕様上はmstatusレジスタを使用してSXLEN、UXLENを変更できるように実装できますが、本書ではMXLEN、SXLEN、UXLENが常に<code class="inline-code">64</code>(eeiパッケージに定義しているXLEN)になるように実装します。</p>
 
 <h2 class="numbox"><a id="h6-2"></a><span class="secno">6.2</span> misaレジスタ (Machine ISA)</h2>
-<p>TODO 図</p>
+<div id="misa" class="image">
+<img src="images/20-mmode-csr/misa.png" alt="misaレジスタ" class="img" style="width:100%" />
+<p class="caption">
+図6.1: misaレジスタ
+</p>
+</div>
 <p>misaレジスタは、ハードウェアスレッドがサポートするISAを表すMXLENビットのレジスタです。MXLフィールドにはMXLENを表す数値(table TODO)が格納されています。Extensionsフィールドは下位ビットからそれぞれアルファベットのA、B、 Cと対応していて、それぞれのビットはそのアルファベットが表す拡張(例えばA拡張ならAビット、C拡張ならC)が実装されているなら<code class="inline-code">1</code>に設定されています。仕様上はExtensionsフィールドを書き換えられるように実装できますが、本書では書き換えられないようにします。</p>
 <p>misaレジスタを作成し、読み込めるようにします(<span class="listref"><a href="./20-mmode-csr.html#csrunit.veryl.misa.misa">リスト6.4</a></span>、<span class="listref"><a href="./20-mmode-csr.html#csrunit.veryl.misa.rdata">リスト6.5</a></span>)。CPUは<code class="inline-code">RV64IMAC</code>なのでMXLフィールドに<code class="inline-code">64</code>を表す<code class="inline-code">2</code>を設定し、ExtensionsフィールドのM拡張(M)、基本整数命令セット(I)、C拡張(C)、A拡張(A)のビットを<code class="inline-code">1</code>にしています。</p>
 <div id="csrunit.veryl.misa.misa" class="caption-code">
@@ -163,7 +168,12 @@
 <p>これ以降、AというCSRのBフィールド、ビットのことをA.Bと表記することがあります。</p>
 
 <h2 class="numbox"><a id="h6-3"></a><span class="secno">6.3</span> mimpidレジスタ (Machine Implementation ID)</h2>
-<p>TODO 図</p>
+<div id="mimpid" class="image">
+<img src="images/20-mmode-csr/mimpid.png" alt="mimpidレジスタ" class="img" style="width:100%" />
+<p class="caption">
+図6.2: mimpidレジスタ
+</p>
+</div>
 <p>mimpidレジスタは、プロセッサ実装のバージョンを表す値を格納しているMXLENビットのレジスタです。値が<code class="inline-code">0</code>のときは、mimpidレジスタが実装されていないことを示します。</p>
 <p>他にもプロセッサの実装の情報を表すレジスタ(mvendorid<sup><a id="fnb-mvendorid" href="#fn-mvendorid" class="noteref" epub:type="noteref">*2</a></sup>、marchid<sup><a id="fnb-marchid" href="#fn-marchid" class="noteref" epub:type="noteref">*3</a></sup>)がありますが、本書では実装しません。</p>
 <div class="footnote-list">
@@ -186,7 +196,12 @@
 </div>
 
 <h2 class="numbox"><a id="h6-4"></a><span class="secno">6.4</span> mhartidレジスタ (Hart ID)</h2>
-<p>TODO 図</p>
+<div id="mhartid" class="image">
+<img src="images/20-mmode-csr/mhartid.png" alt="mhartidレジスタ" class="img" style="width:100%" />
+<p class="caption">
+図6.3: mhartidレジスタ
+</p>
+</div>
 <p>mhartidレジスタは、今実行しているハードウェアスレッド(hart)のIDを格納しているMXLENビットのレジスタです。複数のプロセッサ、ハードウェアスレッドが存在するときに、それぞれを区別するために使用できます。IDはどんな値でも良いですが、IDが<code class="inline-code">0</code>のハードウェアスレッドが1つ存在する必要があります。基本編で作るCPUは1コア1ハードウェアスレッドであるためmhartidレジスタに0を設定します。</p>
 <p>mhart変数を作成し、読み込めるようにします(<span class="listref"><a href="./20-mmode-csr.html#csrunit.veryl.mhartid.mhartid">リスト6.8</a></span>、<span class="listref"><a href="./20-mmode-csr.html#csrunit.veryl.mhartid.rdata">リスト6.9</a></span>)。</p>
 <div id="csrunit.veryl.mhartid.mhartid" class="caption-code">
@@ -204,8 +219,13 @@
 </div>
 
 <h2 class="numbox"><a id="h6-5"></a><span class="secno">6.5</span> mstatusレジスタ (Machine Status)</h2>
-<p>TODO 図</p>
-<p>mstatusレジスタは、拡張の設定やトラップ、状態などを管理するMXLENビットのレジスタです。基本編ではTODO 図に示しているフィールドを、そのフィールドが必要になったときに実装します。とりあえず今のところは読み込みだけできるようにしておきます(<span class="listref"><a href="./20-mmode-csr.html#csrunit.veryl.mstatus.wmaskdef">リスト6.10</a></span>、<span class="listref"><a href="./20-mmode-csr.html#csrunit.veryl.mstatus.wmask">リスト6.11</a></span>、<span class="listref"><a href="./20-mmode-csr.html#csrunit.veryl.mstatus.reg">リスト6.12</a></span>、<span class="listref"><a href="./20-mmode-csr.html#csrunit.veryl.mstatus.rdata">リスト6.13</a></span>、<span class="listref"><a href="./20-mmode-csr.html#csrunit.veryl.mstatus.reset">リスト6.14</a></span>、<span class="listref"><a href="./20-mmode-csr.html#csrunit.veryl.mstatus.write">リスト6.15</a></span>)。</p>
+<div id="mstatus" class="image">
+<img src="images/20-mmode-csr/mstatus.png" alt="mstatusレジスタ" class="img" style="width:100%" />
+<p class="caption">
+図6.4: mstatusレジスタ
+</p>
+</div>
+<p>mstatusレジスタは、拡張の設定やトラップ、状態などを管理するMXLENビットのレジスタです。基本編では<span class="imgref"><a href="./20-mmode-csr.html#mstatus">図6.4</a></span>に示しているフィールドを、そのフィールドが必要になったときに実装します。とりあえず今のところは読み込みだけできるようにしておきます(<span class="listref"><a href="./20-mmode-csr.html#csrunit.veryl.mstatus.wmaskdef">リスト6.10</a></span>、<span class="listref"><a href="./20-mmode-csr.html#csrunit.veryl.mstatus.wmask">リスト6.11</a></span>、<span class="listref"><a href="./20-mmode-csr.html#csrunit.veryl.mstatus.reg">リスト6.12</a></span>、<span class="listref"><a href="./20-mmode-csr.html#csrunit.veryl.mstatus.rdata">リスト6.13</a></span>、<span class="listref"><a href="./20-mmode-csr.html#csrunit.veryl.mstatus.reset">リスト6.14</a></span>、<span class="listref"><a href="./20-mmode-csr.html#csrunit.veryl.mstatus.write">リスト6.15</a></span>)。</p>
 <div id="csrunit.veryl.mstatus.wmaskdef" class="caption-code">
 <span class="caption">リスト6.10: リスト6.10:  (csrunit.veryl)</span>
 <pre class="list language-wmaskdef">    const MSTATUS_WMASK: UIntX = 'h0000_0000_0000_0000 as UIntX;

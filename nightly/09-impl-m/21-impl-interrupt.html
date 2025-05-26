@@ -108,8 +108,7 @@
 <li>mstatus.MIEに<code class="inline-code">0</code>を格納する</li>
 <li>mtvecレジスタの値にジャンプする</li>
 </ol>
-<p>TODO mipとmieの図</p>
-<p>mip(Machine Interrupt Pending)レジスタは割り込みの発生を待っている(待機)状態を示すMXLENビットのCSRです(TODO 図)。mie(Machine Interrupt Enable)レジスタは割り込みを許可するかを原因ごとに管理する制御するMXLENビットのCSRです(TODO 図)。mstatus.MIEはすべての割り込みを許可するかどうかを制御する1ビットのフィールドです。mieとmstatus.MIEのことを割り込みイネーブル(許可)レジスタと呼び、特にmstatus.MIEのようなすべての割り込みを制御するレジスタのことをグローバル割り込みイネーブルビットと呼びます</p>
+<p>mip(Machine Interrupt Pending)レジスタは割り込みの発生を待っている(待機)状態を示すMXLENビットのCSRです。mie(Machine Interrupt Enable)レジスタは割り込みを許可するかを原因ごとに管理する制御するMXLENビットのCSRです。mstatus.MIEはすべての割り込みを許可するかどうかを制御する1ビットのフィールドです。mieとmstatus.MIEのことを割り込みイネーブル(許可)レジスタと呼び、特にmstatus.MIEのようなすべての割り込みを制御するレジスタのことをグローバル割り込みイネーブルビットと呼びます</p>
 <p>割り込みの発生時にmstatus.MIEを0にすることで、割り込みの処理中に割り込みが発生することを防いでいます。また、トラップから戻る(MRET命令を実行する)とき、mstatus.MPIEの値をmstatus.MIEに書き戻すことで割り込みの許可状態を戻します。</p>
 
 <h3 class="none"><a id="h7-1-3"></a><span class="secno">7.1.3</span> 割り込みの優先順位</h3>
@@ -141,7 +140,13 @@
 <h3 class="none"><a id="h7-1-5"></a><span class="secno">7.1.5</span> ACLINT (Advanced Core Local Interruptor)</h3>
 <p>RISC-Vにはソフトウェア割り込みとタイマ割り込みを実現するデバイスの仕様であるACLINTが用意されています。ACLINTは、SiFive社が開発したCLINT(Core-Local Interruptor)デバイスが基になった仕様です。</p>
 <p>ACLINTにはMTIMER、MSWI、SSWIの3つのデバイスが定義されています。それぞれタイマ割り込み、ソフトウェア割り込み、ソフトウェア割り込み向けのデバイスで、mipレジスタのMTIP、MSIP、SSIPビットに状態を通知します。</p>
-<p>本書ではACLINTを図TODOのようなメモリマップで実装します。本章ではMTIMER、MSWIデバイスを実装し、「<a href="23-smode-csr.html#h9-5">9.5 ソフトウェア割り込みの実装 (SSWI)</a>」でSSWIデバイスを実装します。デバイスのの具体的な仕様については後で解説します。</p>
+<div id="aclint-mmio" class="image">
+<img src="images/21-impl-interrupt/aclint-mmio.png" alt="ACLINTのメモリマップ" class="img" style="width:100%" />
+<p class="caption">
+図7.1: ACLINTのメモリマップ
+</p>
+</div>
+<p>本書ではACLINTを図<span class="imgref"><a href="./21-impl-interrupt.html#aclint-mmio">図7.1</a></span>のようなメモリマップで実装します。本章ではMTIMER、MSWIデバイスを実装し、「<a href="23-smode-csr.html#h9-5">9.5 ソフトウェア割り込みの実装 (SSWI)</a>」でSSWIデバイスを実装します。デバイスのの具体的な仕様については後で解説します。</p>
 <p>メモリマップ用の定数をeeiパッケージに記述してください(<span class="listref"><a href="./21-impl-interrupt.html#eei.veryl.mmapcause.mmap">リスト7.2</a></span>)。</p>
 <div id="eei.veryl.mmapcause.mmap" class="caption-code">
 <span class="caption">リスト7.2: リスト7.2:  (eei.veryl)</span>
@@ -356,7 +361,13 @@ module aclint_memory (
 <p>仕様上はmhartidとACLINTのレジスタのhartIDが一致する必要はありませんが、本書ではmhartidとhartIDが同じになるように実装します。</p>
 
 <h3 class="none"><a id="h7-3-1"></a><span class="secno">7.3.1</span> MSIPレジスタを実装する</h3>
-<p>ACLINTモジュールにMSIPレジスタを実装します。今のところCPUにはmhartidが0のハードウェアスレッドしか存在しないため、MSIP0のみ実装します。</p>
+<div id="msip" class="image">
+<img src="images/21-impl-interrupt/msip.png" alt="MSIPレジスタ" class="img" style="width:100%" />
+<p class="caption">
+図7.2: MSIPレジスタ
+</p>
+</div>
+<p>ACLINTモジュールにMSIPレジスタを実装します(<span class="imgref"><a href="./21-impl-interrupt.html#msip">図7.2</a></span>)。今のところCPUにはmhartidが0のハードウェアスレッドしか存在しないため、MSIP0のみ実装します。</p>
 <p>aclint_ifインターフェースに<code class="inline-code">msip</code>を追加します(<span class="listref"><a href="./21-impl-interrupt.html#aclint_if.veryl.msip">リスト7.21</a></span>)。</p>
 <div id="aclint_if.veryl.msip" class="caption-code">
 <span class="caption">リスト7.21: リスト7.21:  (aclint_if.veryl)</span>
@@ -416,6 +427,18 @@ module aclint_memory (
 </div>
 
 <h3 class="none"><a id="h7-3-2"></a><span class="secno">7.3.2</span> mip、mieレジスタを実装する</h3>
+<div id="mip" class="image">
+<img src="images/21-impl-interrupt/mip.png" alt="mipレジスタ" class="img" style="width:100%" />
+<p class="caption">
+図7.3: mipレジスタ
+</p>
+</div>
+<div id="mie" class="image">
+<img src="images/21-impl-interrupt/mie.png" alt="mieレジスタ" class="img" style="width:100%" />
+<p class="caption">
+図7.4: mieレジスタ
+</p>
+</div>
 <p>mipレジスタのMSIPビット、MIEレジスタのMSIEビットを実装します。mie.MSIEはMSIPビットによる割り込み待機を許可するかを制御するビットです。mip.MSIPとmie.MSIEは同じ位置のビットに配置されています。mip.MSIPに書き込むことはできません。</p>
 <p>csrunitモジュールにmieレジスタを作成します(<span class="listref"><a href="./21-impl-interrupt.html#csrunit.veryl.miemip.regmie">リスト7.26</a></span>、<span class="listref"><a href="./21-impl-interrupt.html#csrunit.veryl.miemip.if_reset">リスト7.27</a></span>)。</p>
 <div id="csrunit.veryl.miemip.regmie" class="caption-code">
@@ -658,7 +681,13 @@ void interrupt_handler(void) {
 </div><!--/.footnote-list-->
 
 <h2 class="numbox"><a id="h7-4"></a><span class="secno">7.4</span> mtvecのVectoredモードの実装</h2>
-<p>mtvecレジスタにはMODEフィールドがあり、割り込みが発生するときのジャンプ先の決定方法を制御できます。</p>
+<div id="mtvec" class="image">
+<img src="images/21-impl-interrupt/mtvec.png" alt="mtvecレジスタ" class="img" style="width:100%" />
+<p class="caption">
+図7.5: mtvecレジスタ
+</p>
+</div>
+<p>mtvecレジスタにはMODEフィールドがあり、割り込みが発生するときのジャンプ先の決定方法を制御できます(<span class="imgref"><a href="./21-impl-interrupt.html#mtvec">図7.5</a></span>)。</p>
 <p>MODEがDirect(<code class="inline-code">2'b00</code>)のとき、<code class="inline-code">mtvec.BASE &lt;&lt; 2</code>のアドレスにトラップします。Vectored(<code class="inline-code">2'b01</code>)のとき、<code class="inline-code">(mtvec.BASE &lt;&lt; 2) + 4 * cause</code>のアドレスにトラップします。ここでcauseは割り込みのcauseのMSBを除いた値です。例えばmachine software interruptの場合、<code class="inline-code">(mtvec.BASE &lt;&lt; 2) + 4 * 3</code>がジャンプ先になります。</p>
 <p>例外のジャンプ先のアドレスは、常にMODEがDirectとして計算します。</p>
 <p>下位1ビットに書き込めるようにすることで、mtvec.MODEにVectoredを書き込めるようにします(<span class="listref"><a href="./21-impl-interrupt.html#csrunit.veryl.mtvectored.WMASK">リスト7.45</a></span>)。</p>

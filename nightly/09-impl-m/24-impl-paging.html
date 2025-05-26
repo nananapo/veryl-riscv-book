@@ -99,7 +99,12 @@
 <h3 class="none"><a id="h10-1-3"></a><span class="secno">10.1.3</span> satpレジスタ、アドレス変換プロセス</h3>
 
 <h4><a id="h10-1-3-1"></a>satpレジスタ</h4>
-<p>TODO satp</p>
+<div id="satp" class="image">
+<img src="images/24-impl-paging/satp.png" alt="satpレジスタ" class="img" style="width:100%" />
+<p class="caption">
+図10.1: satpレジスタ
+</p>
+</div>
 <p>RISC-Vの仮想記憶システムはsatpレジスタによって制御します。</p>
 <p>MODEは仮想アドレスの変換方式を指定するフィールドです。方式と値はTODOテーブルのように対応しています。MODEがBare(<code class="inline-code">0</code>)のときはアドレス変換を行いません(仮想アドレス=物理アドレス)。</p>
 <p>TODO テーブル</p>
@@ -134,7 +139,7 @@
 
 <h2 class="numbox"><a id="h10-2"></a><span class="secno">10.2</span> メモリインターフェースの例外の実装</h2>
 <p>PTWで発生した例外は、最終的にcsrunitモジュールで処理します。そのために、例外の情報をメモリのインターフェースを使って伝達します。</p>
-<p>ページングによって発生する例外のcauseを<code class="inline-code">CsrCause</code>型に追加してください()。</p>
+<p>ページングによって発生する例外のcauseを<code class="inline-code">CsrCause</code>型に追加してください(<span class="listref"><a href="./24-impl-paging.html#eei.veryl.CsrCause.def">リスト10.1</a></span>)。</p>
 <div id="eei.veryl.CsrCause.def" class="caption-code">
 <span class="caption">リスト10.1: リスト10.1:  (eei.veryl)</span>
 <pre class="list language-def">    INSTRUCTION_PAGE_FAULT = 12,
@@ -146,7 +151,7 @@
 <h3 class="none"><a id="h10-2-1"></a><span class="secno">10.2.1</span> 例外を伝達する</h3>
 
 <h4><a id="h10-2-1-1"></a>構造体の定義</h4>
-<p><code class="inline-code">MemException</code>構造体を定義します()。メモリアクセス中に発生する例外の情報はこの構造体で管理します。</p>
+<p><code class="inline-code">MemException</code>構造体を定義します(<span class="listref"><a href="./24-impl-paging.html#eei.veryl.newexpt.def">リスト10.2</a></span>)。メモリアクセス中に発生する例外の情報はこの構造体で管理します。</p>
 <div id="eei.veryl.newexpt.def" class="caption-code">
 <span class="caption">リスト10.2: リスト10.2:  (eei.veryl)</span>
 <pre class="list language-def">    struct MemException {
@@ -155,7 +160,7 @@
     }
 </pre>
 </div>
-<p><code class="inline-code">membus_if</code>、<code class="inline-code">core_data_if</code>、<code class="inline-code">core_inst_if</code>インターフェースに<code class="inline-code">MemException</code>構造体を追加します()。インターフェースの<code class="inline-code">rvalid</code>が<code class="inline-code">1</code>で、構造体の<code class="inline-code">valid</code>と<code class="inline-code">is_page_fault</code>が<code class="inline-code">1</code>ならページフォルト例外が発生したことを示します。</p>
+<p><code class="inline-code">membus_if</code>、<code class="inline-code">core_data_if</code>、<code class="inline-code">core_inst_if</code>インターフェースに<code class="inline-code">MemException</code>構造体を追加します(<span class="listref"><a href="./24-impl-paging.html#membus_if.veryl.newexpt.var">リスト10.3</a></span>、<span class="listref"><a href="./24-impl-paging.html#membus_if.veryl.newexpt.master">リスト10.4</a></span>、<span class="listref"><a href="./24-impl-paging.html#membus_if.veryl.newexpt.slave">リスト10.5</a></span>、<span class="listref"><a href="./24-impl-paging.html#membus_if.veryl.newexpt.response">リスト10.6</a></span>)。インターフェースの<code class="inline-code">rvalid</code>が<code class="inline-code">1</code>で、構造体の<code class="inline-code">valid</code>と<code class="inline-code">is_page_fault</code>が<code class="inline-code">1</code>ならページフォルト例外が発生したことを示します。</p>
 <div id="membus_if.veryl.newexpt.var" class="caption-code">
 <span class="caption">リスト10.3: リスト10.3:  (membus_if.veryl, core_data_if.veryl, core_inst_if.veryl)</span>
 <pre class="list language-var">    var expt  : eei::MemException                ;
@@ -190,7 +195,7 @@
 </div>
 
 <h4><a id="h10-2-1-2"></a>mmio_controllerモジュールの対応</h4>
-<p>mmio_controllerモジュールで構造体の値をすべて<code class="inline-code">0</code>に設定します()。いまのところ、デバイスは例外を発生させません。</p>
+<p>mmio_controllerモジュールで構造体の値をすべて<code class="inline-code">0</code>に設定します(<span class="listref"><a href="./24-impl-paging.html#mmio_controller.veryl.newexpt.comb">リスト10.7</a></span>、<span class="listref"><a href="./24-impl-paging.html#top.veryl.newexpt.comb">リスト10.8</a></span>)。いまのところ、デバイスは例外を発生させません。</p>
 <div id="mmio_controller.veryl.newexpt.comb" class="caption-code">
 <span class="caption">リスト10.7: リスト10.7:  (membus_if.veryl)</span>
 <pre class="list language-comb">    always_comb {
@@ -217,7 +222,7 @@
 </div>
 
 <h4><a id="h10-2-1-3"></a>inst_fetcherモジュールの対応</h4>
-<p>inst_fetcherモジュールからcoreモジュールに例外情報を伝達します。まず、FIFOの型に例外情報を追加します()。</p>
+<p>inst_fetcherモジュールからcoreモジュールに例外情報を伝達します。まず、FIFOの型に例外情報を追加します(<span class="listref"><a href="./24-impl-paging.html#inst_fetcher.veryl.newexpt.fft">リスト10.9</a></span>、<span class="listref"><a href="./24-impl-paging.html#inst_fetcher.veryl.newexpt.ift">リスト10.10</a></span>))。</p>
 <div id="inst_fetcher.veryl.newexpt.fft" class="caption-code">
 <span class="caption">リスト10.9: リスト10.9:  (inst_fetcher.veryl)</span>
 <pre class="list language-fft">    struct fetch_fifo_type {
@@ -237,7 +242,7 @@
     }
 </pre>
 </div>
-<p>メモリからの例外情報を<code class="inline-code">fetch_fifo</code>に保存します()。</p>
+<p>メモリからの例外情報を<code class="inline-code">fetch_fifo</code>に保存します(<span class="listref"><a href="./24-impl-paging.html#inst_fetcher.veryl.newexpt.fetch">リスト10.11</a></span>)。</p>
 <div id="inst_fetcher.veryl.newexpt.fetch" class="caption-code">
 <span class="caption">リスト10.11: リスト10.11:  (inst_fetcher.veryl)</span>
 <pre class="list language-fetch">    always_comb {
@@ -249,7 +254,7 @@
     }
 </pre>
 </div>
-<p><code class="inline-code">fetch_fifo</code>から<code class="inline-code">issue_fifo</code>に例外情報を伝達します()。offsetが<code class="inline-code">6</code>で例外が発生しているとき、32ビット幅の命令の上位16ビットを取得せずにすぐに<code class="inline-code">issue_fifo</code>に例外を書き込みます。</p>
+<p><code class="inline-code">fetch_fifo</code>から<code class="inline-code">issue_fifo</code>に例外情報を伝達します(<span class="listref"><a href="./24-impl-paging.html#inst_fetcher.veryl.newexpt.feif">リスト10.12</a></span>)、<span class="listref"><a href="./24-impl-paging.html#inst_fetcher.veryl.newexpt.offset_comb">リスト10.13</a></span>、<span class="listref"><a href="./24-impl-paging.html#inst_fetcher.veryl.newexpt.offset_ff">リスト10.14</a></span>)。offsetが<code class="inline-code">6</code>で例外が発生しているとき、32ビット幅の命令の上位16ビットを取得せずにすぐに<code class="inline-code">issue_fifo</code>に例外を書き込みます。</p>
 <div id="inst_fetcher.veryl.newexpt.feif" class="caption-code">
 <span class="caption">リスト10.12: リスト10.12:  (inst_fetcher.veryl)</span>
 <pre class="list language-feif">    always_comb {
@@ -281,7 +286,7 @@
             issue_is_rdata_saved = 1;
 </pre>
 </div>
-<p><code class="inline-code">issue_fifo</code>からcoreモジュールに例外情報を伝達します()。</p>
+<p><code class="inline-code">issue_fifo</code>からcoreモジュールに例外情報を伝達します(<span class="listref"><a href="./24-impl-paging.html#inst_fetcher.veryl.newexpt.issue">リスト10.15</a></span>)。</p>
 <div id="inst_fetcher.veryl.newexpt.issue" class="caption-code">
 <span class="caption">リスト10.15: リスト10.15:  (inst_fetcher.veryl)</span>
 <pre class="list language-issue">    always_comb {
@@ -297,7 +302,7 @@
 </div>
 
 <h4><a id="h10-2-1-4"></a>amounitモジュールの対応</h4>
-<p><code class="inline-code">state</code>が<code class="inline-code">State::Init</code>以外の時に例外が発生した場合、すぐに結果を返すようにします()。例外が発生したクロックでは要求を受け付けないようにします。</p>
+<p><code class="inline-code">state</code>が<code class="inline-code">State::Init</code>以外の時に例外が発生した場合、すぐに結果を返すようにします(<span class="listref"><a href="./24-impl-paging.html#amounit.veryl.newexpt.slave">リスト10.16</a></span>、<span class="listref"><a href="./24-impl-paging.html#amounit.veryl.newexpt.slave_end">リスト10.17</a></span>、<span class="listref"><a href="./24-impl-paging.html#amounit.veryl.newexpt.master_end">リスト10.18</a></span>、)。例外が発生したクロックでは要求を受け付けないようにします。</p>
 <div id="amounit.veryl.newexpt.slave" class="caption-code">
 <span class="caption">リスト10.16: リスト10.16:  (amounit.veryl)</span>
 <pre class="list language-slave">    always_comb {
@@ -331,7 +336,7 @@
     }
 </pre>
 </div>
-<p>例外が発生したら、<code class="inline-code">state</code>を<code class="inline-code">State::Init</code>にリセットするようにします()。</p>
+<p>例外が発生したら、<code class="inline-code">state</code>を<code class="inline-code">State::Init</code>にリセットするようにします(<span class="listref"><a href="./24-impl-paging.html#amounit.veryl.newexpt.on_clock">リスト10.19</a></span>)。</p>
 <div id="amounit.veryl.newexpt.on_clock" class="caption-code">
 <span class="caption">リスト10.19: リスト10.19:  (amounit.veryl)</span>
 <pre class="list language-on_clock">    function on_clock () {
@@ -344,7 +349,7 @@
 </div>
 
 <h4><a id="h10-2-1-5"></a>Instruction page fault例外の実装</h4>
-<p>命令フェッチ処理中にページフォルト例外が発生していたとき、Instruction page fault例外を発生させます。xtvalには例外が発生したアドレスを設定します()。</p>
+<p>命令フェッチ処理中にページフォルト例外が発生していたとき、Instruction page fault例外を発生させます。xtvalには例外が発生したアドレスを設定します(<span class="listref"><a href="./24-impl-paging.html#core.veryl.newexpt.inst">リスト10.20</a></span>)。</p>
 <div id="core.veryl.newexpt.inst" class="caption-code">
 <span class="caption">リスト10.20: リスト10.20:  (core.veryl)</span>
 <pre class="list language-inst">        <b>if i_membus.expt.valid {</b>
@@ -358,7 +363,7 @@
 
 <h4><a id="h10-2-1-6"></a>ロード、ストア命令のpage fault例外の実装</h4>
 <p>ロード命令、ストア命令、A拡張の命令のメモリアクセス中にページフォルト例外が発生していたとき、Load page fault例外、Store/AMO page fault例外を発生させます。</p>
-<p>csrunitモジュールに、メモリにアクセスする命令の例外情報を監視するためのポートを作成します()。</p>
+<p>csrunitモジュールに、メモリにアクセスする命令の例外情報を監視するためのポートを作成します(<span class="listref"><a href="./24-impl-paging.html#csrunit.veryl.newexpt.port">リスト10.21</a></span>、<span class="listref"><a href="./24-impl-paging.html#core.veryl.newexpt.csru">リスト10.22</a></span>、<span class="listref"><a href="./24-impl-paging.html#csrunit.veryl.newexpt.fault">リスト10.23</a></span>、<span class="listref"><a href="./24-impl-paging.html#csrunit.veryl.newexpt.raise">リスト10.24</a></span>、<span class="listref"><a href="./24-impl-paging.html#csrunit.veryl.newexpt.cause">リスト10.25</a></span>)。</p>
 <div id="csrunit.veryl.newexpt.port" class="caption-code">
 <span class="caption">リスト10.21: リスト10.21:  (csrunit.veryl)</span>
 <pre class="list language-port">module csrunit (
@@ -414,7 +419,7 @@
 <p>ページフォルト例外が発生したとき、xtvalにはページフォルトが発生した仮想アドレスを格納します。</p>
 <p>実は現状の実装では、メモリにアクセスする操作がページの境界をまたぐとき、ページフォルトが発生した正確な仮想アドレスをxtvalに格納できていません。</p>
 <p>例えば、inst_fetcherモジュールで32ビット幅の命令を2回のメモリ読み込みでフェッチするとき、1回目(下位16ビット)のロードは成功して、2回目(上位16ビット)のロードでページフォルトが発生したとします。このとき、ページフォルトが発生したアドレスは2回目のロードでアクセスしたアドレスなのに、xtvalには1回目のロードでアクセスしたアドレスが書き込まれます。</p>
-<p>これに対処するために、例外が発生したアドレスのオフセットを例外情報に追加します()。</p>
+<p>これに対処するために、例外が発生したアドレスのオフセットを例外情報に追加します(<span class="listref"><a href="./24-impl-paging.html#eei.veryl.exptoffset.def">リスト10.26</a></span>、<span class="listref"><a href="./24-impl-paging.html#inst_fetcher.veryl.exptoffset.offset">リスト10.27</a></span>、<span class="listref"><a href="./24-impl-paging.html#core.veryl.exptoffset.offset">リスト10.28</a></span>、<span class="listref"><a href="./24-impl-paging.html#csrunit.veryl.exptoffset.offset">リスト10.29</a></span>)。</p>
 <div id="eei.veryl.exptoffset.def" class="caption-code">
 <span class="caption">リスト10.26: リスト10.26:  (eei.veryl)</span>
 <pre class="list language-def">    struct MemException {
@@ -456,7 +461,7 @@
 </div>
 
 <h2 class="numbox"><a id="h10-3"></a><span class="secno">10.3</span> satpレジスタの作成</h2>
-<p>satpレジスタを実装します()。すべてのフィールドを読み書きできるように設定して、値を<code class="inline-code">0</code>でリセットします。</p>
+<p>satpレジスタを実装します(<span class="listref"><a href="./24-impl-paging.html#csrunit.veryl.satp.reg">リスト10.30</a></span>、<span class="listref"><a href="./24-impl-paging.html#csrunit.veryl.satp.reset">リスト10.31</a></span>、<span class="listref"><a href="./24-impl-paging.html#csrunit.veryl.satp.rdata">リスト10.32</a></span>、<span class="listref"><a href="./24-impl-paging.html#csrunit.veryl.satp.wmask">リスト10.33</a></span>、<span class="listref"><a href="./24-impl-paging.html#csrunit.veryl.satp.WMASK">リスト10.34</a></span>、<span class="listref"><a href="./24-impl-paging.html#csrunit.veryl.satp.validate">リスト10.35</a></span>、<span class="listref"><a href="./24-impl-paging.html#csrunit.veryl.satp.write">リスト10.36</a></span>)。すべてのフィールドを読み書きできるように設定して、値を<code class="inline-code">0</code>でリセットします。</p>
 <div id="csrunit.veryl.satp.reg" class="caption-code">
 <span class="caption">リスト10.30: リスト10.30:  (csrunit.veryl)</span>
 <pre class="list language-reg">    var satp      : UIntX ;
@@ -505,7 +510,7 @@
 </div>
 
 <h2 class="numbox"><a id="h10-4"></a><span class="secno">10.4</span> mstatusのMXR、SUM、MPRVビットの作成</h2>
-<p>mstatusレジスタのMXR、SUM、MPRVビットを変更できるようにします()。</p>
+<p>mstatusレジスタのMXR、SUM、MPRVビットを変更できるようにします(<span class="listref"><a href="./24-impl-paging.html#csrunit.veryl.mstatuses.WMASK_mstatus">リスト10.37</a></span>、<span class="listref"><a href="./24-impl-paging.html#csrunit.veryl.mstatuses.WMASK_sstatus">リスト10.38</a></span>)。</p>
 <div id="csrunit.veryl.mstatuses.WMASK_mstatus" class="caption-code">
 <span class="caption">リスト10.37: リスト10.37:  (csrunit.veryl)</span>
 <pre class="list language-WMASK_mstatus">    const MSTATUS_WMASK   : UIntX = 'h0000_0000_006<b>e</b>_19aa as UIntX;
@@ -516,7 +521,7 @@
 <pre class="list language-WMASK_sstatus">    const SSTATUS_WMASK   : UIntX = 'h0000_0000_000<b>c</b>_0122 as UIntX;
 </pre>
 </div>
-<p>それぞれのビットを示す変数を作成します()。</p>
+<p>それぞれのビットを示す変数を作成します(<span class="listref"><a href="./24-impl-paging.html#csrunit.veryl.mstatuses.reg">リスト10.39</a></span>、<span class="listref"><a href="./24-impl-paging.html#csrunit.veryl.mstatuses.mprv">リスト10.40</a></span>)。</p>
 <div id="csrunit.veryl.mstatuses.reg" class="caption-code">
 <span class="caption">リスト10.39: リスト10.39:  (csrunit.veryl)</span>
 <pre class="list language-reg">    let mstatus_mxr : logic    = mstatus[19];
@@ -541,7 +546,7 @@
 
 <h3 class="none"><a id="h10-5-1"></a><span class="secno">10.5.1</span> CSRのインターフェースを実装する</h3>
 <p>ptwで使用するCSRをcsrunitモジュールから渡すためのインターフェースを定義します。</p>
-<p><code class="inline-code">src/ptw_ctrl_if.veryl</code>を作成し、次のように記述します()。</p>
+<p><code class="inline-code">src/ptw_ctrl_if.veryl</code>を作成し、次のように記述します(<span class="listref"><a href="./24-impl-paging.html#ptw_ctrl_if.veryl.empty">リスト10.41</a></span>)。</p>
 <div id="ptw_ctrl_if.veryl.empty" class="caption-code">
 <span class="caption">リスト10.41: リスト10.41:  (ptw_ctrl_if.veryl)</span>
 <pre class="list language-empty">import eei::*;
@@ -586,7 +591,7 @@ interface ptw_ctrl_if {
 <p>is_enabledは、CSRとアクセス目的からページングがページングが有効かどうかを判定する関数です。Bareかどうかを判定した後に、命令フェッチかどうか(<code class="inline-code">is_inst</code>)によって分岐しています。命令フェッチのときはS-mode以下の特権レベルのときに有効になります。ロードストアのとき、mstatus.MPRVが<code class="inline-code">1</code>ならmstatus.mpp、<code class="inline-code">0</code>なら現在の特権レベルがS-mode以下なら有効になります。</p>
 
 <h3 class="none"><a id="h10-5-2"></a><span class="secno">10.5.2</span> Bareだけのptwモジュールを作成する</h3>
-<p><code class="inline-code">src/ptw.veryl</code>を作成し、次のようなポートを記述します()。</p>
+<p><code class="inline-code">src/ptw.veryl</code>を作成し、次のようなポートを記述します(<span class="listref"><a href="./24-impl-paging.html#ptw.veryl.empty.port">リスト10.42</a></span>)。</p>
 <div id="ptw.veryl.empty.port" class="caption-code">
 <span class="caption">リスト10.42: リスト10.42:  (ptw.veryl)</span>
 <pre class="list language-port">import eei::*;
@@ -602,13 +607,13 @@ module ptw (
 </pre>
 </div>
 <p><code class="inline-code">slave</code>はcoreモジュール側から仮想アドレスによる要求を受け付けるためのインターフェース、<code class="inline-code">master</code>はmmio_conterollerモジュール側に物理アドレスによるアクセスを行うためのインターフェースです。</p>
-<p><code class="inline-code">is_inst</code>を使い、ページングが有効かどうか判定します()。</p>
+<p><code class="inline-code">is_inst</code>を使い、ページングが有効かどうか判定します(<span class="listref"><a href="./24-impl-paging.html#ptw.veryl.empty.paging_enabled">リスト10.43</a></span>)。</p>
 <div id="ptw.veryl.empty.paging_enabled" class="caption-code">
 <span class="caption">リスト10.43: リスト10.43:  (ptw.veryl)</span>
 <pre class="list language-paging_enabled">    let paging_enabled: logic = ctrl.is_enabled(is_inst);
 </pre>
 </div>
-<p>状態の管理のために<code class="inline-code">State</code>型を定義します()。</p>
+<p>状態の管理のために<code class="inline-code">State</code>型を定義します(<span class="listref"><a href="./24-impl-paging.html#ptw.veryl.empty.state">リスト10.44</a></span>)。</p>
 <div id="ptw.veryl.empty.state" class="caption-code">
 <span class="caption">リスト10.44: リスト10.44:  (ptw.veryl)</span>
 <pre class="list language-state">    enum State {
@@ -640,13 +645,13 @@ module ptw (
     <code class="inline-code">slave</code>が何も要求していないなら、状態を<code class="inline-code">State::IDLE</code>に移動します。
 </dd>
 </dl>
-<p><code class="inline-code">slave</code>からの要求を保存しておくためのインターフェースをインスタンス化しておきます()。</p>
+<p><code class="inline-code">slave</code>からの要求を保存しておくためのインターフェースをインスタンス化しておきます(<span class="listref"><a href="./24-impl-paging.html#ptw.veryl.empty.save">リスト10.45</a></span>)。</p>
 <div id="ptw.veryl.empty.save" class="caption-code">
 <span class="caption">リスト10.45: リスト10.45:  (ptw.veryl)</span>
 <pre class="list language-save">    inst slave_saved: Membus;
 </pre>
 </div>
-<p>状態に基づいて、<code class="inline-code">master</code>に要求を割り当てます()。<code class="inline-code">master</code>に要求を割り当てるとき、アドレスだけ<code class="inline-code">physical_addr</code>レジスタの値を割り当てるようにしておきます。</p>
+<p>状態に基づいて、<code class="inline-code">master</code>に要求を割り当てます(<span class="listref"><a href="./24-impl-paging.html#ptw.veryl.empty.phy">リスト10.46</a></span>、<span class="listref"><a href="./24-impl-paging.html#ptw.veryl.empty.assign_master">リスト10.47</a></span>)。<code class="inline-code">master</code>に要求を割り当てるとき、アドレスだけ<code class="inline-code">physical_addr</code>レジスタの値を割り当てるようにしておきます。</p>
 <div id="ptw.veryl.empty.phy" class="caption-code">
 <span class="caption">リスト10.46: リスト10.46:  (ptw.veryl)</span>
 <pre class="list language-phy">    var physical_addr: Addr;
@@ -691,7 +696,7 @@ module ptw (
     }
 </pre>
 </div>
-<p>状態に基づいて、<code class="inline-code">slave</code>に<code class="inline-code">ready</code>と結果を割り当てます()。</p>
+<p>状態に基づいて、<code class="inline-code">slave</code>に<code class="inline-code">ready</code>と結果を割り当てます(<span class="listref"><a href="./24-impl-paging.html#ptw.veryl.empty.assign_slave">リスト10.48</a></span>)。</p>
 <div id="ptw.veryl.empty.assign_slave" class="caption-code">
 <span class="caption">リスト10.48: リスト10.48:  (ptw.veryl)</span>
 <pre class="list language-assign_slave">    always_comb {
@@ -713,7 +718,7 @@ module ptw (
     }
 </pre>
 </div>
-<p>状態を遷移する処理を記述します()。要求を受け入れるとき、<code class="inline-code">slave_saved</code>に要求を保存します。</p>
+<p>状態を遷移する処理を記述します(<span class="listref"><a href="./24-impl-paging.html#ptw.veryl.empty.ff">リスト10.49</a></span>)。要求を受け入れるとき、<code class="inline-code">slave_saved</code>に要求を保存します。</p>
 <div id="ptw.veryl.empty.ff" class="caption-code">
 <span class="caption">リスト10.49: リスト10.49:  (ptw.veryl)</span>
 <pre class="list language-ff">    function accept_request_ff () {
@@ -769,13 +774,13 @@ module ptw (
 
 <h3 class="none"><a id="h10-5-3"></a><span class="secno">10.5.3</span> ptwモジュールをインスタンス化する</h3>
 <p>topモジュールでptwモジュールをインスタンス化します。</p>
-<p>ptwモジュールはmmio_controllerモジュールの前で仮想アドレスを物理アドレスに変換するモジュールです。ptwモジュールとmmio_controllerモジュールの間のインターフェースを作成します()。</p>
+<p>ptwモジュールはmmio_controllerモジュールの前で仮想アドレスを物理アドレスに変換するモジュールです。ptwモジュールとmmio_controllerモジュールの間のインターフェースを作成します(<span class="listref"><a href="./24-impl-paging.html#top.veryl.empty.intr">リスト10.50</a></span>)。</p>
 <div id="top.veryl.empty.intr" class="caption-code">
 <span class="caption">リスト10.50: リスト10.50:  (top.veryl)</span>
 <pre class="list language-intr">    inst ptw_membus     : Membus;
 </pre>
 </div>
-<p>調停処理をptwモジュール向けのものに変更します()。</p>
+<p>調停処理をptwモジュール向けのものに変更します(<span class="listref"><a href="./24-impl-paging.html#top.veryl.empty.arb">リスト10.51</a></span>)。</p>
 <div id="top.veryl.empty.arb" class="caption-code">
 <span class="caption">リスト10.51: リスト10.51:  (top.veryl)</span>
 <pre class="list language-arb">    always_ff {
@@ -814,14 +819,14 @@ module ptw (
     }
 </pre>
 </div>
-<p>今処理している要求、または今のクロックから処理し始める要求が命令フェッチによるものか判定する変数を作成します()。</p>
+<p>今処理している要求、または今のクロックから処理し始める要求が命令フェッチによるものか判定する変数を作成します(<span class="listref"><a href="./24-impl-paging.html#top.veryl.empty.is_inst">リスト10.52</a></span>)。</p>
 <div id="top.veryl.empty.is_inst" class="caption-code">
 <span class="caption">リスト10.52: リスト10.52:  (top.veryl)</span>
 <pre class="list language-is_inst">    let ptw_is_inst  : logic = (i_membus.ready &amp;&amp; i_membus.valid) || // inst ack or
      !(d_membus.ready &amp;&amp; d_membus.valid) &amp;&amp; memarb_last_i; // data not ack &amp; last ack is inst
 </pre>
 </div>
-<p>ptwモジュールをインスタンス化します()</p>
+<p>ptwモジュールをインスタンス化します(<span class="listref"><a href="./24-impl-paging.html#top.veryl.empty.ptw">リスト10.53</a></span>)。</p>
 <div id="top.veryl.empty.ptw" class="caption-code">
 <span class="caption">リスト10.53: リスト10.53:  (top.veryl)</span>
 <pre class="list language-ptw">    inst ptw_ctrl: ptw_ctrl_if;
@@ -835,7 +840,7 @@ module ptw (
     );
 </pre>
 </div>
-<p>csrunitモジュールとptwモジュールを<code class="inline-code">ptw_ctrl_if</code>インターフェースで接続するために、coreモジュールにポートを追加します()。</p>
+<p>csrunitモジュールとptwモジュールを<code class="inline-code">ptw_ctrl_if</code>インターフェースで接続するために、coreモジュールにポートを追加します(<span class="listref"><a href="./24-impl-paging.html#core.veryl.empty.port">リスト10.54</a></span>、<span class="listref"><a href="./24-impl-paging.html#top.veryl.empty.core">リスト10.55</a></span>)。</p>
 <div id="core.veryl.empty.port" class="caption-code">
 <span class="caption">リスト10.54: リスト10.54:  (core.veryl)</span>
 <pre class="list language-port">module core (
@@ -862,7 +867,7 @@ module ptw (
     );
 </pre>
 </div>
-<p>csrunitモジュールにポートを追加し、CSRを割り当てます()。</p>
+<p>csrunitモジュールにポートを追加し、CSRを割り当てます(<span class="listref"><a href="./24-impl-paging.html#csrunit.veryl.empty.port">リスト10.56</a></span>、<span class="listref"><a href="./24-impl-paging.html#core.veryl.empty.csru">リスト10.57</a></span>、<span class="listref"><a href="./24-impl-paging.html#csrunit.veryl.empty.assign">リスト10.58</a></span>)。</p>
 <div id="csrunit.veryl.empty.port" class="caption-code">
 <span class="caption">リスト10.56: リスト10.56:  (csrunit.veryl)</span>
 <pre class="list language-port">    membus     : modport core_data_if::master    ,
@@ -895,7 +900,7 @@ module ptw (
 
 <h3 id="define_const" class="none"><a id="h10-6-1"></a><span class="secno">10.6.1</span> 定数の定義</h3>
 <p>ptwモジュールで使用する定数とユーティリティ関数を実装します。</p>
-<p><code class="inline-code">src/sv39util.veryl</code>を作成し、次のように記述します()。定数は「10.1.3 satpレジスタ、アドレス変換プロセス」内の「<a href="24-impl-paging.html#h10-1-3-2">アドレス変換プロセス (Sv39)</a>」で使用しているものと同じです。</p>
+<p><code class="inline-code">src/sv39util.veryl</code>を作成し、次のように記述します(<span class="listref"><a href="./24-impl-paging.html#sv39util.veryl.sv39">リスト10.59</a></span>)。定数は「10.1.3 satpレジスタ、アドレス変換プロセス」内の「<a href="24-impl-paging.html#h10-1-3-2">アドレス変換プロセス (Sv39)</a>」で使用しているものと同じです。</p>
 <div id="sv39util.veryl.sv39" class="caption-code">
 <span class="caption">リスト10.59: リスト10.59:  (sv39util.veryl)</span>
 <pre class="list language-sv39">import eei::*;
@@ -941,7 +946,7 @@ package sv39util {
 
 <h3 id="define_PTE" class="none"><a id="h10-6-2"></a><span class="secno">10.6.2</span> PTEの定義</h3>
 <p>Sv39のPTEのビットを分かりやすく取得するために、次のインターフェースを定義します。</p>
-<p><code class="inline-code">src/pte.veryl</code>を作成し、次のように記述します()。</p>
+<p><code class="inline-code">src/pte.veryl</code>を作成し、次のように記述します(<span class="listref"><a href="./24-impl-paging.html#pte.veryl.sv39.bits">リスト10.60</a></span>)。</p>
 <div id="pte.veryl.sv39.bits" class="caption-code">
 <span class="caption">リスト10.60: リスト10.60:  (pte.veryl)</span>
 <pre class="list language-bits">import eei::*;
@@ -967,7 +972,7 @@ interface PTE39 {
 }
 </pre>
 </div>
-<p>PTEを使ったユーティリティ関数を追加します()。</p>
+<p>PTEを使ったユーティリティ関数を追加します(<span class="listref"><a href="./24-impl-paging.html#pte.veryl.sv39.func">リスト10.61</a></span>)。</p>
 <div id="pte.veryl.sv39.func" class="caption-code">
 <span class="caption">リスト10.61: リスト10.61:  (pte.veryl)</span>
 <pre class="list language-func">    // leaf PTEか判定する
@@ -1050,13 +1055,13 @@ interface PTE39 {
 </div>
 
 <h3 class="none"><a id="h10-6-3"></a><span class="secno">10.6.3</span> ptwモジュールの実装</h3>
-<p>sv39utilパッケージをimportします()。</p>
+<p>sv39utilパッケージをimportします(<span class="listref"><a href="./24-impl-paging.html#ptw.veryl.sv39.import">リスト10.62</a></span>)。</p>
 <div id="ptw.veryl.sv39.import" class="caption-code">
 <span class="caption">リスト10.62: リスト10.62:  (ptw.veryl)</span>
 <pre class="list language-import">import sv39util::*;
 </pre>
 </div>
-<p>PTE39インターフェースをインスタンス化します()。<code class="inline-code">value</code>には<code class="inline-code">master</code>のロード結果を割り当てます。</p>
+<p>PTE39インターフェースをインスタンス化します(<span class="listref"><a href="./24-impl-paging.html#ptw.veryl.sv39.pte">リスト10.63</a></span>)。<code class="inline-code">value</code>には<code class="inline-code">master</code>のロード結果を割り当てます。</p>
 <div id="ptw.veryl.sv39.pte" class="caption-code">
 <span class="caption">リスト10.63: リスト10.63:  (ptw.veryl)</span>
 <pre class="list language-pte">    inst pte      : PTE39;
@@ -1064,7 +1069,7 @@ interface PTE39 {
 </pre>
 </div>
 <p>TODO 図</p>
-<p>仮想アドレスを変換するための状態を追加します()。本章ではページングが有効な時に、状態がTODO図のように遷移するようにします。</p>
+<p>仮想アドレスを変換するための状態を追加します(<span class="listref"><a href="./24-impl-paging.html#ptw.veryl.sv39.State">リスト10.64</a></span>)。本章ではページングが有効な時に、状態がTODO図のように遷移するようにします。</p>
 <div id="ptw.veryl.sv39.State" class="caption-code">
 <span class="caption">リスト10.64: リスト10.64:  (ptw.veryl)</span>
 <pre class="list language-State">    enum State {
@@ -1078,7 +1083,7 @@ interface PTE39 {
     }
 </pre>
 </div>
-<p>現在のPTEのlevel(<code class="inline-code">level</code>)、PTEのアドレス(<code class="inline-code">taddr</code>)、要求によって更新されるPTEの下位8ビットを格納するためのレジスタを定義します()。</p>
+<p>現在のPTEのlevel(<code class="inline-code">level</code>)、PTEのアドレス(<code class="inline-code">taddr</code>)、要求によって更新されるPTEの下位8ビットを格納するためのレジスタを定義します(<span class="listref"><a href="./24-impl-paging.html#ptw.veryl.sv39.reg">リスト10.65</a></span>、<span class="listref"><a href="./24-impl-paging.html#ptw.veryl.sv39.reset">リスト10.66</a></span>)。</p>
 <div id="ptw.veryl.sv39.reg" class="caption-code">
 <span class="caption">リスト10.65: リスト10.65:  (ptw.veryl)</span>
 <pre class="list language-reg">    var physical_addr: Addr    ;
@@ -1096,7 +1101,7 @@ interface PTE39 {
         <b>level             = 0;</b>
 </pre>
 </div>
-<p>PTEのフェッチとA、Dビットの更新のために<code class="inline-code">master</code>に要求を割り当てます()。PTEは<code class="inline-code">taddr</code>を使ってアクセスし、A、Dビットの更新では下位8ビットのみの書き込みマスクを設定しています。</p>
+<p>PTEのフェッチとA、Dビットの更新のために<code class="inline-code">master</code>に要求を割り当てます(<span class="listref"><a href="./24-impl-paging.html#ptw.veryl.sv39.assign_master">リスト10.67</a></span>)。PTEは<code class="inline-code">taddr</code>を使ってアクセスし、A、Dビットの更新では下位8ビットのみの書き込みマスクを設定しています。</p>
 <div id="ptw.veryl.sv39.assign_master" class="caption-code">
 <span class="caption">リスト10.67: リスト10.67:  (ptw.veryl)</span>
 <pre class="list language-assign_master">case state {
@@ -1114,7 +1119,7 @@ interface PTE39 {
 }
 </pre>
 </div>
-<p><code class="inline-code">slave</code>への結果の割り当てで、ページフォルトが発生していた場合の結果を割り当てます()。</p>
+<p><code class="inline-code">slave</code>への結果の割り当てで、ページフォルトが発生していた場合の結果を割り当てます(<span class="listref"><a href="./24-impl-paging.html#ptw.veryl.sv39.assign_slave">リスト10.68</a></span>)。</p>
 <div id="ptw.veryl.sv39.assign_slave" class="caption-code">
 <span class="caption">リスト10.68: リスト10.68:  (ptw.veryl)</span>
 <pre class="list language-assign_slave">State::PAGE_FAULT: {
@@ -1124,7 +1129,7 @@ interface PTE39 {
 }
 </pre>
 </div>
-<p>ページングが有効なときの要求を受け入れる動作を実装します()。仮想アドレスが有効かどうかでページフォルトを判定し、<code class="inline-code">taddr</code>レジスタには最初のPTEのアドレスを割り当てます。<code class="inline-code">level</code>の初期値はLEVELS - 1とします。</p>
+<p>ページングが有効なときの要求を受け入れる動作を実装します(<span class="listref"><a href="./24-impl-paging.html#ptw.veryl.sv39.accept">リスト10.69</a></span>)。仮想アドレスが有効かどうかでページフォルトを判定し、<code class="inline-code">taddr</code>レジスタには最初のPTEのアドレスを割り当てます。<code class="inline-code">level</code>の初期値はLEVELS - 1とします。</p>
 <div id="ptw.veryl.sv39.accept" class="caption-code">
 <span class="caption">リスト10.69: リスト10.69:  (ptw.veryl)</span>
 <pre class="list language-accept">if paging_enabled {
@@ -1137,13 +1142,13 @@ interface PTE39 {
 }
 </pre>
 </div>
-<p>ページフォルトが発生したとき、状態を<code class="inline-code">State::IDLE</code>に戻します()。</p>
+<p>ページフォルトが発生したとき、状態を<code class="inline-code">State::IDLE</code>に戻します(<span class="listref"><a href="./24-impl-paging.html#ptw.veryl.sv39.clockpf">リスト10.70</a></span>)。</p>
 <div id="ptw.veryl.sv39.clockpf" class="caption-code">
 <span class="caption">リスト10.70: リスト10.70:  (ptw.veryl)</span>
 <pre class="list language-clockpf">State::PAGE_FAULT: state = State::IDLE;
 </pre>
 </div>
-<p>A、Dビットを更新するとき、メモリが書き込み要求を受け入れたら状態を<code class="inline-code">State::EXECUTE_READY</code>に移動します()。</p>
+<p>A、Dビットを更新するとき、メモリが書き込み要求を受け入れたら状態を<code class="inline-code">State::EXECUTE_READY</code>に移動します(<span class="listref"><a href="./24-impl-paging.html#ptw.veryl.sv39.clockad">リスト10.71</a></span>)。</p>
 <div id="ptw.veryl.sv39.clockad" class="caption-code">
 <span class="caption">リスト10.71: リスト10.71:  (ptw.veryl)</span>
 <pre class="list language-clockad">State::SET_AD: if master.ready {
@@ -1151,7 +1156,7 @@ interface PTE39 {
 }
 </pre>
 </div>
-<p>PTEと要求から、ページにアクセスする権限があるかどうかを確認する関数を定義します()。条件の詳細は「10.1.3 satpレジスタ、アドレス変換プロセス」内の「<a href="24-impl-paging.html#h10-1-3-2">アドレス変換プロセス (Sv39)</a>」を確認してください。</p>
+<p>PTEと要求から、ページにアクセスする権限があるかどうかを確認する関数を定義します(<span class="listref"><a href="./24-impl-paging.html#ptw.veryl.sv39.check">リスト10.72</a></span>)。条件の詳細は「10.1.3 satpレジスタ、アドレス変換プロセス」内の「<a href="24-impl-paging.html#h10-1-3-2">アドレス変換プロセス (Sv39)</a>」を確認してください。</p>
 <div id="ptw.veryl.sv39.check" class="caption-code">
 <span class="caption">リスト10.72: リスト10.72:  (ptw.veryl)</span>
 <pre class="list language-check">    function check_permission (
@@ -1177,7 +1182,7 @@ interface PTE39 {
     }
 </pre>
 </div>
-<p>PTEをフェッチし、ページフォルトの判定、次のPTEのフェッチ、A、Dビットを更新する状態への遷移を実装します()。</p>
+<p>PTEをフェッチし、ページフォルトの判定、次のPTEのフェッチ、A、Dビットを更新する状態への遷移を実装します(<span class="listref"><a href="./24-impl-paging.html#ptw.veryl.sv39.walk">リスト10.73</a></span>)。</p>
 <div id="ptw.veryl.sv39.walk" class="caption-code">
 <span class="caption">リスト10.73: リスト10.73:  (ptw.veryl)</span>
 <pre class="list language-walk">State::WALK_READY: if master.ready {
@@ -1216,7 +1221,7 @@ State::WALK_VALID: if master.rvalid {
 <p>基本編ではすべてのメモリアクセスを直列に行うため、何もしない命令として定義します。</p>
 
 <h3 class="none"><a id="h10-7-1"></a><span class="secno">10.7.1</span> SFENCE.VMA命令をデコードする</h3>
-<p>SFENCE.VMA命令を有効な命令としてデコードします()。</p>
+<p>SFENCE.VMA命令を有効な命令としてデコードします(<span class="listref"><a href="./24-impl-paging.html#inst_decoder.veryl.sfence.system">リスト10.74</a></span>)。</p>
 <div id="inst_decoder.veryl.sfence.system" class="caption-code">
 <span class="caption">リスト10.74: リスト10.74:  (inst_decoder.veryl)</span>
 <pre class="list language-system"> bits == 32'h10200073 || //SRET
@@ -1228,7 +1233,7 @@ State::WALK_VALID: if master.rvalid {
 <h3 class="none"><a id="h10-7-2"></a><span class="secno">10.7.2</span> 特権レベルの確認、mstatus.TVMを実装する</h3>
 <p>S-mode未満の特権レベルで実行しようとしたとき、Illegal instruction例外が発生します。</p>
 <p>mstatus.TVMはS-modeのときにsatpレジスタにアクセスできるか、SFENCE.VMA命令を実行できるかを制御するビットです。mstatus.TVMが<code class="inline-code">1</code>にされているとき、Illegal instruction例外が発生します。</p>
-<p>mstatus.TVMを書き込めるようにします()。</p>
+<p>mstatus.TVMを書き込めるようにします(<span class="listref"><a href="./24-impl-paging.html#csrunit.veryl.sfence.WMASK">リスト10.75</a></span>)。</p>
 <div id="csrunit.veryl.sfence.WMASK" class="caption-code">
 <span class="caption">リスト10.75: リスト10.75:  (csrunit.veryl)</span>
 <pre class="list language-WMASK">    const MSTATUS_WMASK   : UIntX = 'h0000_0000_00<b>7</b>e_19aa as UIntX;
@@ -1239,7 +1244,7 @@ State::WALK_VALID: if master.rvalid {
 <pre class="list language-tvm">    let mstatus_tvm : logic    = mstatus[20];
 </pre>
 </div>
-<p>特権レベルを確認して、例外を発生させます()。</p>
+<p>特権レベルを確認して、例外を発生させます(<span class="listref"><a href="./24-impl-paging.html#csrunit.veryl.sfence.is">リスト10.77</a></span>、<span class="listref"><a href="./24-impl-paging.html#csrunit.veryl.sfence.expt">リスト10.78</a></span>、<span class="listref"><a href="./24-impl-paging.html#csrunit.veryl.sfence.raise">リスト10.79</a></span>)。</p>
 <div id="csrunit.veryl.sfence.is" class="caption-code">
 <span class="caption">リスト10.77: リスト10.77:  (csrunit.veryl)</span>
 <pre class="list language-is">    let is_sfence_vma: logic = ctrl.is_csr &amp;&amp; ctrl.funct7 == 7'b0001001 &amp;&amp; ctrl.funct3 == 0 &amp;&amp; rd_addr == 0;
@@ -1267,7 +1272,7 @@ State::WALK_VALID: if master.rvalid {
 <h3 class="none"><a id="h10-8-1"></a><span class="secno">10.8.1</span> CSRの変更</h3>
 <p>mstatusレジスタのMXR、SUM、TVMビット、satpレジスタを書き換えたとき、CSRを書き換える命令の後ろの命令は、変更が反映されていない状態でフェッチした命令になっている可能性があります。</p>
 <p>CSRの書き換えをページングに反映するために、特定のCSRを書き換えたらパイプラインをフラッシュするようにします。</p>
-<p>csrunitモジュールに、フラッシュするためのフラグを追加します()。</p>
+<p>csrunitモジュールに、フラッシュするためのフラグを追加します(<span class="listref"><a href="./24-impl-paging.html#csrunit.veryl.flushcsr.port">リスト10.80</a></span>、<span class="listref"><a href="./24-impl-paging.html#core.veryl.flushcsr.csru">リスト10.81</a></span>、<span class="listref"><a href="./24-impl-paging.html#core.veryl.flushcsr.reg">リスト10.82</a></span>)。</p>
 <div id="csrunit.veryl.flushcsr.port" class="caption-code">
 <span class="caption">リスト10.80: リスト10.80:  (csrunit.veryl)</span>
 <pre class="list language-port"><b>flush      : output  logic                   ,</b>
@@ -1287,14 +1292,14 @@ minstret                          ,
     var minstret        : UInt64  ;
 </pre>
 </div>
-<p><code class="inline-code">flush</code>はsatpレジスタ、mstatusレジスタが変更されるときに<code class="inline-code">1</code>になるようにします()。</p>
+<p><code class="inline-code">flush</code>はsatpレジスタ、mstatusレジスタが変更されるときに<code class="inline-code">1</code>になるようにします(<span class="listref"><a href="./24-impl-paging.html#csrunit.veryl.flushcsr.logic">リスト10.83</a></span>)。</p>
 <div id="csrunit.veryl.flushcsr.logic" class="caption-code">
 <span class="caption">リスト10.83: リスト10.83:  (csrunit.veryl)</span>
 <pre class="list language-logic">    let wsc_flush: logic = is_wsc &amp;&amp; (csr_addr == CsrAddr::SATP || csr_addr == CsrAddr::MSTATUS);
     assign flush     = valid &amp;&amp; wsc_flush;
 </pre>
 </div>
-<p>coreモジュールで、制御ハザードが発生したことにします()。</p>
+<p>coreモジュールで、制御ハザードが発生したことにします(<span class="listref"><a href="./24-impl-paging.html#core.veryl.flushcsr.hazard">リスト10.84</a></span>)。</p>
 <div id="core.veryl.flushcsr.hazard" class="caption-code">
 <span class="caption">リスト10.84: リスト10.84:  (core.veryl)</span>
 <pre class="list language-hazard">    assign control_hazard         = mems_valid &amp;&amp; (csru_raise_trap || mems_ctrl.is_jump || memq_rdata.br_taken <b>|| csru_flush</b>);
@@ -1307,7 +1312,7 @@ minstret                          ,
 <p>あるアドレスにデータを書き込むとき、データを書き込んだ後の命令が書き換えられたアドレスの命令だった場合、命令のビット列はデータが書き換えられる前のものになる可能性があります。</p>
 <p>FENCE.I命令は、FENCE.I命令の後の命令のフェッチ処理がストア命令の完了後に行われることを保証する命令です。</p>
 <p>ユーザーのアプリケーションのプログラムをページに書き込んで実行するとき、ページへの書き込みを反映させるために使用します。</p>
-<p>FENCE.I命令を判定し、パイプラインをフラッシュする条件に設定します()。</p>
+<p>FENCE.I命令を判定し、パイプラインをフラッシュする条件に設定します(<span class="listref"><a href="./24-impl-paging.html#csrunit.veryl.fence.is">リスト10.85</a></span>、<span class="listref"><a href="./24-impl-paging.html#csrunit.veryl.fence.flush">リスト10.86</a></span>)。</p>
 <div id="csrunit.veryl.fence.is" class="caption-code">
 <span class="caption">リスト10.85: リスト10.85:  (csrunit.veryl)</span>
 <pre class="list language-is">    let is_fence_i: logic = inst_bits[6:0] == OP_MISC_MEM &amp;&amp; ctrl.funct3 == 3'b001;
