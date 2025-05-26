@@ -110,7 +110,7 @@
 <p>TODO 図 (Sv39)</p>
 <p>PPN(Physical Page Number)はroot PTEの物理アドレスの一部を格納するフィールドです。root PTEのアドレスは仮想アドレスのVPNビットと組み合わせて作られます(TODO 図)。</p>
 
-<h4><a id="h10-1-3-2"></a>アドレス変換プロセス (Sv39)</h4>
+<h4 id="sv39process"><a id="h10-1-3-2"></a>アドレス変換プロセス (Sv39)</h4>
 <p>Sv39の仮想アドレスは次の方法によって物理アドレスに変換されます<sup><a id="fnb-access-fault" href="#fn-access-fault" class="noteref" epub:type="noteref">*3</a></sup>。</p>
 <div class="footnote-list">
 <div class="footnote" id="fn-access-fault" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*3] </span>RISC-VのMMUはPMP、PMAという仕組みで物理アドレス空間へのアクセスを制限することができ、それに違反した場合にアクセスフォルト例外を発生させます。本章ではPMP、PMAを実装していないのでアクセスフォルト例外に関する機能について説明せず、実装もしません。これらの機能は応用編で実装します。</p></div>
@@ -537,20 +537,787 @@
 </div>
 
 <h2 class="numbox"><a id="h10-5"></a><span class="secno">10.5</span> アドレス変換モジュール(PTW)の作成</h2>
+<p>ページテーブルエントリをフェッチしてアドレス変換を行うモジュール(ptw)を作成します。まず、MODEがBareのとき(仮想アドレス = 物理アドレス)の動作を実装し、Sv39を「<a href="24-impl-paging.html#h10-6">10.6 Sv39の実装</a>」で実装します。</p>
 
-<h2 class="numbox"><a id="h10-6"></a><span class="secno">10.6</span> Sv39の実装</h2>
+<h3 class="none"><a id="h10-5-1"></a><span class="secno">10.5.1</span> CSRのインターフェースを実装する</h3>
+<p>ptwで使用するCSRをcsrunitモジュールから渡すためのインターフェースを定義します。</p>
+<p><code class="inline-code">src/ptw_ctrl_if.veryl</code>を作成し、次のように記述します()。</p>
+<div id="ptw_ctrl_if.veryl.empty" class="caption-code">
+<span class="caption">リスト10.41: リスト10.41:  (ptw_ctrl_if.veryl)</span>
+<pre class="list language-empty">import eei::*;
 
-<h3 class="none"><a id="h10-6-1"></a><span class="secno">10.6.1</span> pte</h3>
+interface ptw_ctrl_if {
+    var priv: PrivMode;
+    var satp: UIntX   ;
+    var mxr : logic   ;
+    var sum : logic   ;
+    var mprv: logic   ;
+    var mpp : PrivMode;
 
-<h3 class="none"><a id="h10-6-2"></a><span class="secno">10.6.2</span> ptw</h3>
+    modport master {
+        priv: output,
+        satp: output,
+        mxr : output,
+        sum : output,
+        mprv: output,
+        mpp : output,
+    }
+
+    modport slave {
+        is_enabled: import,
+        ..converse(master)
+    }
+
+    function is_enabled (
+        is_inst: input logic,
+    ) -&gt; logic {
+        if satp[msb-:4] == 0 {
+            return 0;
+        }
+        if is_inst {
+            return priv &lt;= PrivMode::S;
+        } else {
+            return (if mprv ? mpp : priv) &lt;= PrivMode::S;
+        }
+    }
+}
+</pre>
+</div>
+<p>is_enabledは、CSRとアクセス目的からページングがページングが有効かどうかを判定する関数です。Bareかどうかを判定した後に、命令フェッチかどうか(<code class="inline-code">is_inst</code>)によって分岐しています。命令フェッチのときはS-mode以下の特権レベルのときに有効になります。ロードストアのとき、mstatus.MPRVが<code class="inline-code">1</code>ならmstatus.mpp、<code class="inline-code">0</code>なら現在の特権レベルがS-mode以下なら有効になります。</p>
+
+<h3 class="none"><a id="h10-5-2"></a><span class="secno">10.5.2</span> Bareだけのptwモジュールを作成する</h3>
+<p><code class="inline-code">src/ptw.veryl</code>を作成し、次のようなポートを記述します()。</p>
+<div id="ptw.veryl.empty.port" class="caption-code">
+<span class="caption">リスト10.42: リスト10.42:  (ptw.veryl)</span>
+<pre class="list language-port">import eei::*;
+
+module ptw (
+    clk    : input   clock             ,
+    rst    : input   reset             ,
+    is_inst: input   logic             ,
+    slave  : modport Membus::slave     ,
+    master : modport Membus::master    ,
+    ctrl   : modport ptw_ctrl_if::slave,
+) {
+</pre>
+</div>
+<p><code class="inline-code">slave</code>はcoreモジュール側から仮想アドレスによる要求を受け付けるためのインターフェース、<code class="inline-code">master</code>はmmio_conterollerモジュール側に物理アドレスによるアクセスを行うためのインターフェースです。</p>
+<p><code class="inline-code">is_inst</code>を使い、ページングが有効かどうか判定します()。</p>
+<div id="ptw.veryl.empty.paging_enabled" class="caption-code">
+<span class="caption">リスト10.43: リスト10.43:  (ptw.veryl)</span>
+<pre class="list language-paging_enabled">    let paging_enabled: logic = ctrl.is_enabled(is_inst);
+</pre>
+</div>
+<p>状態の管理のために<code class="inline-code">State</code>型を定義します()。</p>
+<div id="ptw.veryl.empty.state" class="caption-code">
+<span class="caption">リスト10.44: リスト10.44:  (ptw.veryl)</span>
+<pre class="list language-state">    enum State {
+        IDLE,
+        EXECUTE_READY,
+        EXECUTE_VALID,
+    }
+
+    var state: State;
+</pre>
+</div>
+<dl>
+<dt><code class="inline-code">State::IDLE</code></dt>
+<dd>
+    <code class="inline-code">slave</code>から要求を受け付け、<code class="inline-code">master</code>に物理アドレスでアクセスします。
+    <code class="inline-code">master</code>の<code class="inline-code">ready</code>が<code class="inline-code">1</code>なら<code class="inline-code">State::EXECUTE_VALID</code>、
+    <code class="inline-code">0</code>なら<code class="inline-code">EXECUTE_READY</code>に状態を移動します。
+</dd>
+<dt><code class="inline-code">State::EXECUTE_READY</code></dt>
+<dd>
+    <code class="inline-code">master</code>に物理アドレスでメモリアクセスを要求し続けます。
+    <code class="inline-code">master</code>の<code class="inline-code">ready</code>が<code class="inline-code">1</code>なら状態を<code class="inline-code">State::EXECUTE_VALID</code>に移動します。
+</dd>
+<dt><code class="inline-code">State::EXECUTE_VALID</code></dt>
+<dd>
+    <code class="inline-code">master</code>からのレスポンスを待ちます。
+    <code class="inline-code">master</code>の<code class="inline-code">rvalid</code>が<code class="inline-code">1</code>のとき、
+    <code class="inline-code">State::IDLE</code>と同じように<code class="inline-code">slave</code>からの要求を受け付けます。
+    <code class="inline-code">slave</code>が何も要求していないなら、状態を<code class="inline-code">State::IDLE</code>に移動します。
+</dd>
+</dl>
+<p><code class="inline-code">slave</code>からの要求を保存しておくためのインターフェースをインスタンス化しておきます()。</p>
+<div id="ptw.veryl.empty.save" class="caption-code">
+<span class="caption">リスト10.45: リスト10.45:  (ptw.veryl)</span>
+<pre class="list language-save">    inst slave_saved: Membus;
+</pre>
+</div>
+<p>状態に基づいて、<code class="inline-code">master</code>に要求を割り当てます()。<code class="inline-code">master</code>に要求を割り当てるとき、アドレスだけ<code class="inline-code">physical_addr</code>レジスタの値を割り当てるようにしておきます。</p>
+<div id="ptw.veryl.empty.phy" class="caption-code">
+<span class="caption">リスト10.46: リスト10.46:  (ptw.veryl)</span>
+<pre class="list language-phy">    var physical_addr: Addr;
+</pre>
+</div>
+<div id="ptw.veryl.empty.assign_master" class="caption-code">
+<span class="caption">リスト10.47: リスト10.47:  (ptw.veryl)</span>
+<pre class="list language-assign_master">    function assign_master (
+        addr : input Addr                        ,
+        wen  : input logic                       ,
+        wdata: input logic&lt;MEMBUS_DATA_WIDTH&gt;    ,
+        wmask: input logic&lt;MEMBUS_DATA_WIDTH / 8&gt;,
+    ) {
+        master.valid = 1;
+        master.addr  = addr;
+        master.wen   = wen;
+        master.wdata = wdata;
+        master.wmask = wmask;
+    }
+
+    function accept_request_comb () {
+        if slave.ready &amp;&amp; slave.valid &amp;&amp; !paging_enabled {
+            assign_master(slave.addr, slave.wen, slave.wdata, slave.wmask);
+        }
+    }
+
+    always_comb {
+        master.valid = 0;
+        master.addr  = 0;
+        master.wen   = 0;
+        master.wdata = 0;
+        master.wmask = 0;
+
+        case state {
+            State::IDLE         : accept_request_comb();
+            State::EXECUTE_READY: assign_master      (physical_addr, slave_saved.wen, slave_saved.wdata, slave_saved.wmask);
+            State::EXECUTE_VALID: if master.rvalid {
+                accept_request_comb();
+            }
+            default: {}
+        }
+    }
+</pre>
+</div>
+<p>状態に基づいて、<code class="inline-code">slave</code>に<code class="inline-code">ready</code>と結果を割り当てます()。</p>
+<div id="ptw.veryl.empty.assign_slave" class="caption-code">
+<span class="caption">リスト10.48: リスト10.48:  (ptw.veryl)</span>
+<pre class="list language-assign_slave">    always_comb {
+        slave.ready  = 0;
+        slave.rvalid = 0;
+        slave.rdata  = 0;
+        slave.expt   = 0;
+
+        case state {
+            State::IDLE         : slave.ready = 1;
+            State::EXECUTE_VALID: {
+                slave.ready  = master.rvalid;
+                slave.rvalid = master.rvalid;
+                slave.rdata  = master.rdata;
+                slave.expt   = master.expt;
+            }
+            default: {}
+        }
+    }
+</pre>
+</div>
+<p>状態を遷移する処理を記述します()。要求を受け入れるとき、<code class="inline-code">slave_saved</code>に要求を保存します。</p>
+<div id="ptw.veryl.empty.ff" class="caption-code">
+<span class="caption">リスト10.49: リスト10.49:  (ptw.veryl)</span>
+<pre class="list language-ff">    function accept_request_ff () {
+        slave_saved.valid = slave.ready &amp;&amp; slave.valid;
+        if slave.ready &amp;&amp; slave.valid {
+            slave_saved.addr  = slave.addr;
+            slave_saved.wen   = slave.wen;
+            slave_saved.wdata = slave.wdata;
+            slave_saved.wmask = slave.wmask;
+            if paging_enabled {
+                // TODO
+            } else {
+                state         = if master.ready ? State::EXECUTE_VALID : State::EXECUTE_READY;
+                physical_addr = slave.addr;
+            }
+        } else {
+            state = State::IDLE;
+        }
+    }
+
+    function on_clock () {
+        case state {
+            State::IDLE         : accept_request_ff();
+            State::EXECUTE_READY: if master.ready {
+                state = State::EXECUTE_VALID;
+            }
+            State::EXECUTE_VALID: if master.rvalid {
+                accept_request_ff();
+            }
+            default: {}
+        }
+    }
+
+    function on_reset () {
+        state             = State::IDLE;
+        physical_addr     = 0;
+        slave_saved.valid = 0;
+        slave_saved.addr  = 0;
+        slave_saved.wen   = 0;
+        slave_saved.wdata = 0;
+        slave_saved.wmask = 0;
+    }
+
+    always_ff {
+        if_reset {
+            on_reset();
+        } else {
+            on_clock();
+        }
+    }
+</pre>
+</div>
+
+<h3 class="none"><a id="h10-5-3"></a><span class="secno">10.5.3</span> ptwモジュールをインスタンス化する</h3>
+<p>topモジュールでptwモジュールをインスタンス化します。</p>
+<p>ptwモジュールはmmio_controllerモジュールの前で仮想アドレスを物理アドレスに変換するモジュールです。ptwモジュールとmmio_controllerモジュールの間のインターフェースを作成します()。</p>
+<div id="top.veryl.empty.intr" class="caption-code">
+<span class="caption">リスト10.50: リスト10.50:  (top.veryl)</span>
+<pre class="list language-intr">    inst ptw_membus     : Membus;
+</pre>
+</div>
+<p>調停処理をptwモジュール向けのものに変更します()。</p>
+<div id="top.veryl.empty.arb" class="caption-code">
+<span class="caption">リスト10.51: リスト10.51:  (top.veryl)</span>
+<pre class="list language-arb">    always_ff {
+        if_reset {
+            memarb_last_i = 0;
+        } else {
+            if <b>ptw</b>_membus.ready {
+                memarb_last_i = !d_membus.valid;
+            }
+        }
+    }
+
+    always_comb {
+        i_membus.ready  = <b>ptw</b>_membus.ready &amp;&amp; !d_membus.valid;
+        i_membus.rvalid = <b>ptw</b>_membus.rvalid &amp;&amp; memarb_last_i;
+        i_membus.rdata  = <b>ptw</b>_membus.rdata;
+        i_membus.expt   = <b>ptw</b>_membus.expt;
+
+        d_membus.ready  = <b>ptw</b>_membus.ready;
+        d_membus.rvalid = <b>ptw</b>_membus.rvalid &amp;&amp; !memarb_last_i;
+        d_membus.rdata  = <b>ptw</b>_membus.rdata;
+        d_membus.expt   = <b>ptw</b>_membus.expt;
+
+        <b>ptw</b>_membus.valid = i_membus.valid | d_membus.valid;
+        if d_membus.valid {
+            <b>ptw</b>_membus.addr  = d_membus.addr;
+            <b>ptw</b>_membus.wen   = d_membus.wen;
+            <b>ptw</b>_membus.wdata = d_membus.wdata;
+            <b>ptw</b>_membus.wmask = d_membus.wmask;
+        } else {
+            <b>ptw</b>_membus.addr  = i_membus.addr;
+            <b>ptw</b>_membus.wen   = 0; // 命令フェッチは常に読み込み
+            <b>ptw</b>_membus.wdata = 'x;
+            <b>ptw</b>_membus.wmask = 'x;
+        }
+    }
+</pre>
+</div>
+<p>今処理している要求、または今のクロックから処理し始める要求が命令フェッチによるものか判定する変数を作成します()。</p>
+<div id="top.veryl.empty.is_inst" class="caption-code">
+<span class="caption">リスト10.52: リスト10.52:  (top.veryl)</span>
+<pre class="list language-is_inst">    let ptw_is_inst  : logic = (i_membus.ready &amp;&amp; i_membus.valid) || // inst ack or
+     !(d_membus.ready &amp;&amp; d_membus.valid) &amp;&amp; memarb_last_i; // data not ack &amp; last ack is inst
+</pre>
+</div>
+<p>ptwモジュールをインスタンス化します()</p>
+<div id="top.veryl.empty.ptw" class="caption-code">
+<span class="caption">リスト10.53: リスト10.53:  (top.veryl)</span>
+<pre class="list language-ptw">    inst ptw_ctrl: ptw_ctrl_if;
+    inst paging_unit: ptw (
+        clk                 ,
+        rst                 ,
+        is_inst: ptw_is_inst,
+        slave  : ptw_membus ,
+        master : mmio_membus,
+        ctrl   : ptw_ctrl   ,
+    );
+</pre>
+</div>
+<p>csrunitモジュールとptwモジュールを<code class="inline-code">ptw_ctrl_if</code>インターフェースで接続するために、coreモジュールにポートを追加します()。</p>
+<div id="core.veryl.empty.port" class="caption-code">
+<span class="caption">リスト10.54: リスト10.54:  (core.veryl)</span>
+<pre class="list language-port">module core (
+    clk     : input   clock               ,
+    rst     : input   reset               ,
+    i_membus: modport core_inst_if::master,
+    d_membus: modport core_data_if::master,
+    led     : output  UIntX               ,
+    aclint  : modport aclint_if::slave    ,
+    <b>ptw_ctrl: modport ptw_ctrl_if::master ,</b>
+) {
+</pre>
+</div>
+<div id="top.veryl.empty.core" class="caption-code">
+<span class="caption">リスト10.55: リスト10.55:  (top.veryl)</span>
+<pre class="list language-core">    inst c: core (
+        clk                      ,
+        rst                      ,
+        i_membus: i_membus_core  ,
+        d_membus: d_membus_core  ,
+        led                      ,
+        aclint  : aclint_core_bus,
+        <b>ptw_ctrl                 ,</b>
+    );
+</pre>
+</div>
+<p>csrunitモジュールにポートを追加し、CSRを割り当てます()。</p>
+<div id="csrunit.veryl.empty.port" class="caption-code">
+<span class="caption">リスト10.56: リスト10.56:  (csrunit.veryl)</span>
+<pre class="list language-port">    membus     : modport core_data_if::master    ,
+    <b>ptw_ctrl   : modport ptw_ctrl_if::master     ,</b>
+) {
+</pre>
+</div>
+<div id="core.veryl.empty.csru" class="caption-code">
+<span class="caption">リスト10.57: リスト10.57:  (core.veryl)</span>
+<pre class="list language-csru">        membus     : d_membus             ,
+        <b>ptw_ctrl                          ,</b>
+    );
+</pre>
+</div>
+<div id="csrunit.veryl.empty.assign" class="caption-code">
+<span class="caption">リスト10.58: リスト10.58:  (csrunit.veryl)</span>
+<pre class="list language-assign">    always_comb {
+        ptw_ctrl.priv = mode;
+        ptw_ctrl.satp = satp;
+        ptw_ctrl.mxr  = mstatus_mxr;
+        ptw_ctrl.sum  = mstatus_sum;
+        ptw_ctrl.mprv = mstatus_mprv;
+        ptw_ctrl.mpp  = mstatus_mpp;
+    }
+</pre>
+</div>
+
+<h2 id="impl-sv39" class="numbox"><a id="h10-6"></a><span class="secno">10.6</span> Sv39の実装</h2>
+<p>ptwモジュールに、Sv39を実装します。ここで定義する関数は、コメントと「10.1.3 satpレジスタ、アドレス変換プロセス」内の「<a href="24-impl-paging.html#h10-1-3-2">アドレス変換プロセス (Sv39)</a>」を参考に動作を確認してください。</p>
+
+<h3 id="define_const" class="none"><a id="h10-6-1"></a><span class="secno">10.6.1</span> 定数の定義</h3>
+<p>ptwモジュールで使用する定数とユーティリティ関数を実装します。</p>
+<p><code class="inline-code">src/sv39util.veryl</code>を作成し、次のように記述します()。定数は「10.1.3 satpレジスタ、アドレス変換プロセス」内の「<a href="24-impl-paging.html#h10-1-3-2">アドレス変換プロセス (Sv39)</a>」で使用しているものと同じです。</p>
+<div id="sv39util.veryl.sv39" class="caption-code">
+<span class="caption">リスト10.59: リスト10.59:  (sv39util.veryl)</span>
+<pre class="list language-sv39">import eei::*;
+package sv39util {
+    const PAGESIZE: u32      = 12;
+    const PTESIZE : u32      = 8;
+    const LEVELS  : logic&lt;2&gt; = 3;
+
+    type Level = logic&lt;2&gt;;
+
+    // 有効な仮想アドレスか判定する
+    function is_valid_vaddr (
+        va: input Addr,
+    ) -&gt; logic {
+        let hiaddr: logic&lt;26&gt; = va[msb:38];
+        return &amp;hiaddr || &amp;~hiaddr;
+    }
+
+    // 仮想アドレスのVPN[level]フィールドを取得する
+    function vpn (
+        va   : input Addr ,
+        level: input Level,
+    ) -&gt; logic&lt;9&gt; {
+        return case level {
+            0      : va[20:12],
+            1      : va[29:21],
+            2      : va[38:30],
+            default: 0,
+        };
+    }
+
+    // 最初にフェッチするPTEのアドレスを取得する
+    function get_first_pte_address (
+        satp: input UIntX,
+        va  : input Addr ,
+    ) -&gt; Addr {
+        return {1'b0 repeat XLEN - 44 - PAGESIZE, satp[43:0], 1'b0 repeat PAGESIZE} // a
+         + {1'b0 repeat XLEN - 9 - $clog2(PTESIZE), va[38:30], 1'b0 repeat $clog2(PTESIZE)}; // vpn[2]
+    }
+}
+</pre>
+</div>
+
+<h3 id="define_PTE" class="none"><a id="h10-6-2"></a><span class="secno">10.6.2</span> PTEの定義</h3>
+<p>Sv39のPTEのビットを分かりやすく取得するために、次のインターフェースを定義します。</p>
+<p><code class="inline-code">src/pte.veryl</code>を作成し、次のように記述します()。</p>
+<div id="pte.veryl.sv39.bits" class="caption-code">
+<span class="caption">リスト10.60: リスト10.60:  (pte.veryl)</span>
+<pre class="list language-bits">import eei::*;
+import sv39util::*;
+
+interface PTE39 {
+    var value: UIntX;
+
+    function v () -&gt; logic { return value[0]; }
+    function r () -&gt; logic { return value[1]; }
+    function w () -&gt; logic { return value[2]; }
+    function x () -&gt; logic { return value[3]; }
+    function u () -&gt; logic { return value[4]; }
+    function a () -&gt; logic { return value[6]; }
+    function d () -&gt; logic { return value[7]; }
+
+    function reserved -&gt; logic&lt;10&gt; { return value[63:54]; }
+
+    function ppn2 () -&gt; logic&lt;26&gt; { return value[53:28]; }
+    function ppn1 () -&gt; logic&lt;9&gt; { return value[27:19]; }
+    function ppn0 () -&gt; logic&lt;9&gt; { return value[18:10]; }
+    function ppn  () -&gt; logic&lt;44&gt; { return value[53:10]; }
+}
+</pre>
+</div>
+<p>PTEを使ったユーティリティ関数を追加します()。</p>
+<div id="pte.veryl.sv39.func" class="caption-code">
+<span class="caption">リスト10.61: リスト10.61:  (pte.veryl)</span>
+<pre class="list language-func">    // leaf PTEか判定する
+    function is_leaf () -&gt; logic { return r() || x(); }
+
+    // leaf PTEのとき、PPNがページサイズに整列されているかどうかを判定する
+    function is_ppn_aligned (
+        level: input Level,
+    ) -&gt; logic {
+        return case level {
+            0      : 1,
+            1      : ppn0() == 0,
+            2      : ppn1() == 0 &amp;&amp; ppn0() == 0,
+            default: 1,
+        };
+    }
+
+    // 有効なPTEか判定する
+    function is_valid (
+        level: input Level,
+    ) -&gt; logic {
+        if !v() || reserved() != 0 || !r() &amp;&amp; w() {
+            return 0;
+        }
+        if is_leaf() &amp;&amp; !is_ppn_aligned(level) {
+            return 0;
+        }
+        if !is_leaf() &amp;&amp; level == 0 {
+            return 0;
+        }
+        return 1;
+    }
+
+    // 次のlevelのPTEのアドレスを得る
+    function get_next_pte_addr (
+        level: input Level,
+        va   : input Addr ,
+    ) -&gt; Addr {
+        return {1'b0 repeat XLEN - 44 - PAGESIZE, ppn(), 1'b0 repeat PAGESIZE} + // a
+         {1'b0 repeat XLEN - 9 - $clog2(PTESIZE), vpn(va, level - 1), 1'b0 repeat $clog2(PTESIZE)};
+    }
+
+    // PTEと仮想アドレスから物理アドレスを生成する
+    function get_physical_address (
+        level: input Level,
+        va   : input Addr ,
+    ) -&gt; Addr {
+        return {
+            8'b0, ppn2(), case level {
+                0: {
+                    ppn1(), ppn0()
+                },
+                1: {
+                    ppn1(), vpn(va, 0)
+                },
+                2: {
+                    vpn(va, 1), vpn(va, 0)
+                },
+                default: 18'b0,
+            }, va[11:0]
+        };
+    }
+
+    // A、Dビットを更新する必要があるかを判定する
+    function need_update_ad (
+        wen: input logic,
+    ) -&gt; logic {
+        return !a() || wen &amp;&amp; !d();
+    }
+
+    // A, Dビットを更新したPTEの下位8ビットを生成する
+    function get_updated_ad (
+        wen: input logic,
+    ) -&gt; logic&lt;8&gt; {
+        let a: logic&lt;8&gt; = 1 &lt;&lt; 6;
+        let d: logic&lt;8&gt; = wen as u8 &lt;&lt; 7;
+        return value[7:0] | a | d;
+    }
+</pre>
+</div>
+
+<h3 class="none"><a id="h10-6-3"></a><span class="secno">10.6.3</span> ptwモジュールの実装</h3>
+<p>sv39utilパッケージをimportします()。</p>
+<div id="ptw.veryl.sv39.import" class="caption-code">
+<span class="caption">リスト10.62: リスト10.62:  (ptw.veryl)</span>
+<pre class="list language-import">import sv39util::*;
+</pre>
+</div>
+<p>PTE39インターフェースをインスタンス化します()。<code class="inline-code">value</code>には<code class="inline-code">master</code>のロード結果を割り当てます。</p>
+<div id="ptw.veryl.sv39.pte" class="caption-code">
+<span class="caption">リスト10.63: リスト10.63:  (ptw.veryl)</span>
+<pre class="list language-pte">    inst pte      : PTE39;
+    assign pte.value = master.rdata;
+</pre>
+</div>
+<p>TODO 図</p>
+<p>仮想アドレスを変換するための状態を追加します()。本章ではページングが有効な時に、状態がTODO図のように遷移するようにします。</p>
+<div id="ptw.veryl.sv39.State" class="caption-code">
+<span class="caption">リスト10.64: リスト10.64:  (ptw.veryl)</span>
+<pre class="list language-State">    enum State {
+        IDLE,
+        <b>WALK_READY,</b>
+        <b>WALK_VALID,</b>
+        <b>SET_AD,</b>
+        EXECUTE_READY,
+        EXECUTE_VALID,
+        <b>PAGE_FAULT,</b>
+    }
+</pre>
+</div>
+<p>現在のPTEのlevel(<code class="inline-code">level</code>)、PTEのアドレス(<code class="inline-code">taddr</code>)、要求によって更新されるPTEの下位8ビットを格納するためのレジスタを定義します()。</p>
+<div id="ptw.veryl.sv39.reg" class="caption-code">
+<span class="caption">リスト10.65: リスト10.65:  (ptw.veryl)</span>
+<pre class="list language-reg">    var physical_addr: Addr    ;
+    <b>var taddr        : Addr    ;</b>
+    <b>var level        : Level   ;</b>
+    <b>var wdata_ad     : logic&lt;8&gt;;</b>
+</pre>
+</div>
+<div id="ptw.veryl.sv39.reset" class="caption-code">
+<span class="caption">リスト10.66: リスト10.66:  (ptw.veryl)</span>
+<pre class="list language-reset">    function on_reset () {
+        state             = State::IDLE;
+        physical_addr     = 0;
+        <b>taddr             = 0;</b>
+        <b>level             = 0;</b>
+</pre>
+</div>
+<p>PTEのフェッチとA、Dビットの更新のために<code class="inline-code">master</code>に要求を割り当てます()。PTEは<code class="inline-code">taddr</code>を使ってアクセスし、A、Dビットの更新では下位8ビットのみの書き込みマスクを設定しています。</p>
+<div id="ptw.veryl.sv39.assign_master" class="caption-code">
+<span class="caption">リスト10.67: リスト10.67:  (ptw.veryl)</span>
+<pre class="list language-assign_master">case state {
+    State::IDLE      : accept_request_comb();
+    <b>State::WALK_READY: assign_master      (taddr, 0, 0, 0);</b>
+    <b>State::SET_AD    : assign_master      (taddr, 1, // wen = 1</b>
+    <b> {1'b0 repeat MEMBUS_DATA_WIDTH - 8, wdata_ad}, // wdata</b>
+    <b> {1'b0 repeat XLEN / 8 - 1, 1'b1} // wmask</b>
+    <b>);</b>
+    State::EXECUTE_READY: assign_master(physical_addr, slave_saved.wen, slave_saved.wdata, slave_saved.wmask);
+    State::EXECUTE_VALID: if master.rvalid {
+        accept_request_comb();
+    }
+    default: {}
+}
+</pre>
+</div>
+<p><code class="inline-code">slave</code>への結果の割り当てで、ページフォルトが発生していた場合の結果を割り当てます()。</p>
+<div id="ptw.veryl.sv39.assign_slave" class="caption-code">
+<span class="caption">リスト10.68: リスト10.68:  (ptw.veryl)</span>
+<pre class="list language-assign_slave">State::PAGE_FAULT: {
+    slave.rvalid          = 1;
+    slave.expt.valid      = 1;
+    slave.expt.page_fault = 1;
+}
+</pre>
+</div>
+<p>ページングが有効なときの要求を受け入れる動作を実装します()。仮想アドレスが有効かどうかでページフォルトを判定し、<code class="inline-code">taddr</code>レジスタには最初のPTEのアドレスを割り当てます。<code class="inline-code">level</code>の初期値はLEVELS - 1とします。</p>
+<div id="ptw.veryl.sv39.accept" class="caption-code">
+<span class="caption">リスト10.69: リスト10.69:  (ptw.veryl)</span>
+<pre class="list language-accept">if paging_enabled {
+    <b>state = if is_valid_vaddr(slave.addr) ? State::WALK_READY : State::PAGE_FAULT;</b>
+    <b>taddr = get_first_pte_address(ctrl.satp, slave.addr);</b>
+    <b>level = LEVELS - 1;</b>
+} else {
+    state         = if master.ready ? State::EXECUTE_VALID : State::EXECUTE_READY;
+    physical_addr = slave.addr;
+}
+</pre>
+</div>
+<p>ページフォルトが発生したとき、状態を<code class="inline-code">State::IDLE</code>に戻します()。</p>
+<div id="ptw.veryl.sv39.clockpf" class="caption-code">
+<span class="caption">リスト10.70: リスト10.70:  (ptw.veryl)</span>
+<pre class="list language-clockpf">State::PAGE_FAULT: state = State::IDLE;
+</pre>
+</div>
+<p>A、Dビットを更新するとき、メモリが書き込み要求を受け入れたら状態を<code class="inline-code">State::EXECUTE_READY</code>に移動します()。</p>
+<div id="ptw.veryl.sv39.clockad" class="caption-code">
+<span class="caption">リスト10.71: リスト10.71:  (ptw.veryl)</span>
+<pre class="list language-clockad">State::SET_AD: if master.ready {
+    state = State::EXECUTE_READY;
+}
+</pre>
+</div>
+<p>PTEと要求から、ページにアクセスする権限があるかどうかを確認する関数を定義します()。条件の詳細は「10.1.3 satpレジスタ、アドレス変換プロセス」内の「<a href="24-impl-paging.html#h10-1-3-2">アドレス変換プロセス (Sv39)</a>」を確認してください。</p>
+<div id="ptw.veryl.sv39.check" class="caption-code">
+<span class="caption">リスト10.72: リスト10.72:  (ptw.veryl)</span>
+<pre class="list language-check">    function check_permission (
+        req: modport Membus::all_input,
+    ) -&gt; logic {
+        let priv: PrivMode = if is_inst || !ctrl.mprv ? ctrl.priv : ctrl.mpp;
+
+        // U-mode access with PTE.U=0
+        let u_u0: logic = priv == PrivMode::U &amp;&amp; !pte.u();
+        // S-mode load/store with PTE.U=1 &amp; sum=0
+        let sd_u1: logic = !is_inst &amp;&amp; priv == PrivMode::S &amp;&amp; pte.u() &amp;&amp; !ctrl.sum;
+        // S-mode execute with PTE.U=1
+        let si_u1: logic = is_inst &amp;&amp; priv == PrivMode::S &amp;&amp; pte.u();
+
+        // execute without PTE.X
+        let x: logic = is_inst &amp;&amp; !pte.x();
+        // write without PTE.W
+        let w: logic = !is_inst &amp;&amp; req.wen &amp;&amp; !pte.w();
+        // read without PTE.R (MXR)
+        let r: logic = !is_inst &amp;&amp; !req.wen &amp;&amp; !pte.r() &amp;&amp; !(pte.x() &amp;&amp; ctrl.mxr);
+
+        return !(u_u0 | sd_u1 | si_u1 | x | w | r);
+    }
+</pre>
+</div>
+<p>PTEをフェッチし、ページフォルトの判定、次のPTEのフェッチ、A、Dビットを更新する状態への遷移を実装します()。</p>
+<div id="ptw.veryl.sv39.walk" class="caption-code">
+<span class="caption">リスト10.73: リスト10.73:  (ptw.veryl)</span>
+<pre class="list language-walk">State::WALK_READY: if master.ready {
+    state = State::WALK_VALID;
+}
+State::WALK_VALID: if master.rvalid {
+    if !pte.is_valid(level) {
+        state = State::PAGE_FAULT;
+    } else {
+        if pte.is_leaf() {
+            if check_permission(slave_saved) {
+                physical_addr = pte.get_physical_address(level, slave_saved.addr);
+                if pte.need_update_ad(slave_saved.wen) {
+                    state    = State::SET_AD;
+                    wdata_ad = pte.get_updated_ad(slave_saved.wen);
+                } else {
+                    state = State::EXECUTE_READY;
+                }
+            } else {
+                state = State::PAGE_FAULT;
+            }
+        } else {
+            // read next pte
+            state = State::WALK_READY;
+            taddr = pte.get_next_pte_addr(level, slave_saved.addr);
+            level = level - 1;
+        }
+    }
+}
+</pre>
+</div>
+<p>これでSv39をptwモジュールに実装できました。</p>
 
 <h2 class="numbox"><a id="h10-7"></a><span class="secno">10.7</span> SFENCE.VMA命令の実装</h2>
+<p>SFENCE.VMA命令は、SFENCE.VMA命令を実行する以前のストア命令が反映されたことを保証する命令です。S-mode以上の特権レベルのときに実行できます。</p>
+<p>基本編ではすべてのメモリアクセスを直列に行うため、何もしない命令として定義します。</p>
+
+<h3 class="none"><a id="h10-7-1"></a><span class="secno">10.7.1</span> SFENCE.VMA命令をデコードする</h3>
+<p>SFENCE.VMA命令を有効な命令としてデコードします()。</p>
+<div id="inst_decoder.veryl.sfence.system" class="caption-code">
+<span class="caption">リスト10.74: リスト10.74:  (inst_decoder.veryl)</span>
+<pre class="list language-system"> bits == 32'h10200073 || //SRET
+ bits == 32'h10500073 || // WFI
+ f7 == 7'b0001001 &amp;&amp; bits[11:7] == 0, // SFENCE.VMA
+</pre>
+</div>
+
+<h3 class="none"><a id="h10-7-2"></a><span class="secno">10.7.2</span> 特権レベルの確認、mstatus.TVMを実装する</h3>
+<p>S-mode未満の特権レベルで実行しようとしたとき、Illegal instruction例外が発生します。</p>
+<p>mstatus.TVMはS-modeのときにsatpレジスタにアクセスできるか、SFENCE.VMA命令を実行できるかを制御するビットです。mstatus.TVMが<code class="inline-code">1</code>にされているとき、Illegal instruction例外が発生します。</p>
+<p>mstatus.TVMを書き込めるようにします()。</p>
+<div id="csrunit.veryl.sfence.WMASK" class="caption-code">
+<span class="caption">リスト10.75: リスト10.75:  (csrunit.veryl)</span>
+<pre class="list language-WMASK">    const MSTATUS_WMASK   : UIntX = 'h0000_0000_00<b>7</b>e_19aa as UIntX;
+</pre>
+</div>
+<div id="csrunit.veryl.sfence.tvm" class="caption-code">
+<span class="caption">リスト10.76: リスト10.76:  (csrunit.veryl)</span>
+<pre class="list language-tvm">    let mstatus_tvm : logic    = mstatus[20];
+</pre>
+</div>
+<p>特権レベルを確認して、例外を発生させます()。</p>
+<div id="csrunit.veryl.sfence.is" class="caption-code">
+<span class="caption">リスト10.77: リスト10.77:  (csrunit.veryl)</span>
+<pre class="list language-is">    let is_sfence_vma: logic = ctrl.is_csr &amp;&amp; ctrl.funct7 == 7'b0001001 &amp;&amp; ctrl.funct3 == 0 &amp;&amp; rd_addr == 0;
+</pre>
+</div>
+<div id="csrunit.veryl.sfence.expt" class="caption-code">
+<span class="caption">リスト10.78: リスト10.78:  (csrunit.veryl)</span>
+<pre class="list language-expt">    let expt_tvm: logic = (is_sfence_vma &amp;&amp; mode &lt;: PrivMode::S) || (mstatus_tvm &amp;&amp; mode == PrivMode::S &amp;&amp; (is_wsc &amp;&amp; csr_addr == CsrAddr::SATP || is_sfence_vma));
+</pre>
+</div>
+<div id="csrunit.veryl.sfence.raise" class="caption-code">
+<span class="caption">リスト10.79: リスト10.79:  (csrunit.veryl)</span>
+<pre class="list language-raise">    let raise_expt: logic = valid &amp;&amp; (expt_info.valid || expt_write_readonly_csr || expt_csr_priv_violation || expt_zicntr_priv || expt_trap_return_priv || expt_memory_fault <b>|| expt_tvm</b>);
+    let expt_cause: UIntX = switch {
+        ...
+        <b>expt_tvm               : CsrCause::ILLEGAL_INSTRUCTION,</b>
+        default                : 0,
+    };
+</pre>
+</div>
 
 <h2 class="numbox"><a id="h10-8"></a><span class="secno">10.8</span> パイプラインをフラッシュする</h2>
+<p>本書はパイプライン化したCPUを実装しているため、命令フェッチは前の命令を待たずに次々に行われます。</p>
 
 <h3 class="none"><a id="h10-8-1"></a><span class="secno">10.8.1</span> CSRの変更</h3>
+<p>mstatusレジスタのMXR、SUM、TVMビット、satpレジスタを書き換えたとき、CSRを書き換える命令の後ろの命令は、変更が反映されていない状態でフェッチした命令になっている可能性があります。</p>
+<p>CSRの書き換えをページングに反映するために、特定のCSRを書き換えたらパイプラインをフラッシュするようにします。</p>
+<p>csrunitモジュールに、フラッシュするためのフラグを追加します()。</p>
+<div id="csrunit.veryl.flushcsr.port" class="caption-code">
+<span class="caption">リスト10.80: リスト10.80:  (csrunit.veryl)</span>
+<pre class="list language-port"><b>flush      : output  logic                   ,</b>
+minstret   : input   UInt64                  ,
+</pre>
+</div>
+<div id="core.veryl.flushcsr.csru" class="caption-code">
+<span class="caption">リスト10.81: リスト10.81:  (core.veryl)</span>
+<pre class="list language-csru"><b>flush      : csru_flush           ,</b>
+minstret                          ,
+</pre>
+</div>
+<div id="core.veryl.flushcsr.reg" class="caption-code">
+<span class="caption">リスト10.82: リスト10.82:  (core.veryl)</span>
+<pre class="list language-reg">    var csru_trap_return: logic   ;
+    <b>var csru_flush      : logic   ;</b>
+    var minstret        : UInt64  ;
+</pre>
+</div>
+<p><code class="inline-code">flush</code>はsatpレジスタ、mstatusレジスタが変更されるときに<code class="inline-code">1</code>になるようにします()。</p>
+<div id="csrunit.veryl.flushcsr.logic" class="caption-code">
+<span class="caption">リスト10.83: リスト10.83:  (csrunit.veryl)</span>
+<pre class="list language-logic">    let wsc_flush: logic = is_wsc &amp;&amp; (csr_addr == CsrAddr::SATP || csr_addr == CsrAddr::MSTATUS);
+    assign flush     = valid &amp;&amp; wsc_flush;
+</pre>
+</div>
+<p>coreモジュールで、制御ハザードが発生したことにします()。</p>
+<div id="core.veryl.flushcsr.hazard" class="caption-code">
+<span class="caption">リスト10.84: リスト10.84:  (core.veryl)</span>
+<pre class="list language-hazard">    assign control_hazard         = mems_valid &amp;&amp; (csru_raise_trap || mems_ctrl.is_jump || memq_rdata.br_taken <b>|| csru_flush</b>);
+    assign control_hazard_pc_next = if csru_raise_trap ? csru_trap_vector : // trap
+     <b>if csru_flush ? mems_pc + 4 :</b> memq_rdata.jump_addr; // <b>flush or</b> jump
+</pre>
+</div>
 
 <h3 class="none"><a id="h10-8-2"></a><span class="secno">10.8.2</span> FENCE.I命令の実装</h3>
+<p>あるアドレスにデータを書き込むとき、データを書き込んだ後の命令が書き換えられたアドレスの命令だった場合、命令のビット列はデータが書き換えられる前のものになる可能性があります。</p>
+<p>FENCE.I命令は、FENCE.I命令の後の命令のフェッチ処理がストア命令の完了後に行われることを保証する命令です。</p>
+<p>ユーザーのアプリケーションのプログラムをページに書き込んで実行するとき、ページへの書き込みを反映させるために使用します。</p>
+<p>FENCE.I命令を判定し、パイプラインをフラッシュする条件に設定します()。</p>
+<div id="csrunit.veryl.fence.is" class="caption-code">
+<span class="caption">リスト10.85: リスト10.85:  (csrunit.veryl)</span>
+<pre class="list language-is">    let is_fence_i: logic = inst_bits[6:0] == OP_MISC_MEM &amp;&amp; ctrl.funct3 == 3'b001;
+</pre>
+</div>
+<div id="csrunit.veryl.fence.flush" class="caption-code">
+<span class="caption">リスト10.86: リスト10.86:  (csrunit.veryl)</span>
+<pre class="list language-flush">    assign flush     = valid &amp;&amp; (wsc_flush <b>|| is_fence_i</b>);
+</pre>
+</div>
         </main>
         <nav class="page-navi">
           <a href="23-smode-csr.html" class="page-prev">&#9664;</a>
