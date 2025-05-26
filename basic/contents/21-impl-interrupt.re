@@ -56,10 +56,8 @@ RISC-Vでは割り込み機能がCSRによって提供されます。
  1. mstatus.MIEに@<code>{0}を格納する
  1. mtvecレジスタの値にジャンプする
 
-TODO mipとmieの図
-
-mip(Machine Interrupt Pending)レジスタは割り込みの発生を待っている(待機)状態を示すMXLENビットのCSRです(TODO 図)。
-mie(Machine Interrupt Enable)レジスタは割り込みを許可するかを原因ごとに管理する制御するMXLENビットのCSRです(TODO 図)。
+mip(Machine Interrupt Pending)レジスタは割り込みの発生を待っている(待機)状態を示すMXLENビットのCSRです。
+mie(Machine Interrupt Enable)レジスタは割り込みを許可するかを原因ごとに管理する制御するMXLENビットのCSRです。
 mstatus.MIEはすべての割り込みを許可するかどうかを制御する1ビットのフィールドです。
 mieとmstatus.MIEのことを割り込みイネーブル(許可)レジスタと呼び、
 特にmstatus.MIEのようなすべての割り込みを制御するレジスタのことをグローバル割り込みイネーブルビットと呼びます
@@ -111,7 +109,9 @@ ACLINTにはMTIMER、MSWI、SSWIの3つのデバイスが定義されていま�
 それぞれタイマ割り込み、ソフトウェア割り込み、ソフトウェア割り込み向けのデバイスで、
 mipレジスタのMTIP、MSIP、SSIPビットに状態を通知します。
 
-本書ではACLINTを図TODOのようなメモリマップで実装します。
+//image[aclint-mmio][ACLINTのメモリマップ][width=100%]
+
+本書ではACLINTを図@<img>{aclint-mmio}のようなメモリマップで実装します。
 本章ではMTIMER、MSWIデバイスを実装し、@<secref>{23-smode-csr|impl-sswi}でSSWIデバイスを実装します。
 デバイスのの具体的な仕様については後で解説します。
 
@@ -414,7 +414,9 @@ TODOテーブル (最大4095個)
 
 === MSIPレジスタを実装する
 
-ACLINTモジュールにMSIPレジスタを実装します。
+//image[msip][MSIPレジスタ][width=100%]
+
+ACLINTモジュールにMSIPレジスタを実装します(@<img>{msip})。
 今のところCPUにはmhartidが0のハードウェアスレッドしか存在しないため、MSIP0のみ実装します。
 
 aclint_ifインターフェースに@<code>{msip}を追加します
@@ -492,6 +494,9 @@ always_comb {
 //}
 
 === mip、mieレジスタを実装する
+
+//image[mip][mipレジスタ][width=100%]
+//image[mie][mieレジスタ][width=100%]
 
 mipレジスタのMSIPビット、MIEレジスタのMSIEビットを実装します。
 mie.MSIEはMSIPビットによる割り込み待機を許可するかを制御するビットです。
@@ -842,8 +847,10 @@ MSIP0レジスタに1を書き込んでいます。
 
 == mtvecのVectoredモードの実装
 
+//image[mtvec][mtvecレジスタ][width=100%]
+
 mtvecレジスタにはMODEフィールドがあり、
-割り込みが発生するときのジャンプ先の決定方法を制御できます。
+割り込みが発生するときのジャンプ先の決定方法を制御できます(@<img>{mtvec})。
 
 MODEがDirect(@<code>{2'b00})のとき、@<code>{mtvec.BASE << 2}のアドレスにトラップします。
 Vectored(@<code>{2'b01})のとき、@<code>{(mtvec.BASE << 2) + 4 * cause}のアドレスにトラップします。

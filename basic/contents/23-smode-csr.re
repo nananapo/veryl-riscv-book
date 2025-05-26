@@ -188,7 +188,7 @@ U-modeでアクセスするときはmcounterenレジスタとscounterenレジス
 
 == sstatusレジスタの実装
 
-TODO 図
+//image[sstatus][sstatusレジスタ][width=100%]
 
 sstatusレジスタはmstatusレジスタの一部をS-modeで読み込み、書き込みできるようにしたSXLENビットのレジスタです。
 本章ではmstatusレジスタに読み込み、書き込みマスクを適用することでsstatusレジスタを実装します。
@@ -715,6 +715,9 @@ S-modeの割り込みのcauseを設定します
 
 ==== medeleg、mideleg、sip、sieレジスタの実装
 
+//image[sip][sipレジスタ][width=100%]
+//image[sie][sieレジスタ][width=100%]
+
 medeleg、mideleg、sip、sieレジスタを実装します。
 
 medeleg、midelegレジスタはそれぞれ委譲できる例外、割り込みに対応するビットだけ書き換えられるようにします。
@@ -897,6 +900,8 @@ SETSSIPレジスタを読み込むと常に@<code>{0}を返しますが、
 最下位ビットに@<code>{1}を書き込むとそれに対応するハードウェアスレッドのmip.SSIPビットが@<code>{1}になります。
 
 TODOテーブル4095個
+
+//image[setssip][setssipレジスタ][width=100%]
 
 今のところmhartidが@<code>{0}のハードウェアスレッドしか存在しないため、SETSSIP0のみ実装します。
 aclint_ifインターフェースに、

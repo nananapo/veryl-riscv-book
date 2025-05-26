@@ -239,10 +239,10 @@ CSRのアドレスと特権レベルを確認して例外を起こすように�
 
 =={impl-mcounteren} mcounterenレジスタの実装
 
-TODO 図
+//image[mcounteren][mcounterenレジスタ][width=100%]
 
 mcounterenレジスタは、M-modeの次に低い特権レベルで
-ハードウェアパフォーマンスモニタにアクセスできるようにするかを制御する32ビットのレジスタです(TODO 図)。
+ハードウェアパフォーマンスモニタにアクセスできるようにするかを制御する32ビットのレジスタです(@<img>{mcounteren})。
 CY、TM、IRビットはそれぞれcycle、time、instretにアクセスできるかどうかを制御します@<fn>{hpmcounter}。
 
 //footnote[hpmcounter][hpmcounterレジスタを制御するHPMビットもありますが、hpmcounterレジスタを実装していないので実装しません]
