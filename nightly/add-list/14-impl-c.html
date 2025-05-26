@@ -85,19 +85,19 @@
 <h2 class="numbox"><a id="h5-2"></a><span class="secno">5.2</span> IALIGNの変更</h2>
 <p>TODO 図</p>
 <p>「<a href="11-impl-exception.html#h2-5">2.5 命令アドレスのミスアライン例外</a>」で解説したように、命令はIALIGNビットに整列したアドレスに配置されます。C拡張はIALIGNによる制限を16ビットに緩め、全ての命令が16ビットに整列されたアドレスに配置されるように変更します。これにより、RVC命令と32ビット幅の命令の組み合わせがあったとしても効果的にコードサイズを削減できます(TODO 図)。</p>
-<p>eeiパッケージに定数<code class="inline-code">IALIGN</code>を定義します()。</p>
+<p>eeiパッケージに定数<code class="inline-code">IALIGN</code>を定義します(<span class="listref"><a href="./14-impl-c.html#eei.veryl.ialign.IALIGN">リスト5.1</a></span>)。</p>
 <div id="eei.veryl.ialign.IALIGN" class="caption-code">
 <span class="caption">リスト5.1: リスト5.1:  (eei.veryl)</span>
 <pre class="list language-IALIGN">    const IALIGN: u32 = 16;
 </pre>
 </div>
-<p>mepcレジスタの書き込みマスクを変更して、トラップ時のジャンプ先アドレスに16ビットに整列されたアドレスを指定できるようにします()。mtvecレジスタの下位2ビットはアドレスではない情報を指定するために使用されているため、変更の必要はありません。</p>
+<p>mepcレジスタの書き込みマスクを変更して、トラップ時のジャンプ先アドレスに16ビットに整列されたアドレスを指定できるようにします(<span class="listref"><a href="./14-impl-c.html#csrunit.veryl.ialign.mepc">リスト5.2</a></span>)。</p>
 <div id="csrunit.veryl.ialign.mepc" class="caption-code">
 <span class="caption">リスト5.2: リスト5.2:  (eei.veryl)</span>
 <pre class="list language-mepc">    const MEPC_WMASK  : UIntX = 'hffff_ffff_ffff_fff<b>e</b>;
 </pre>
 </div>
-<p>命令アドレスのミスアライン例外の判定を変更します。IALIGNが16の場合は例外が発生しないようにします()。ジャンプ、分岐命令は2バイト単位のアドレスしか指定できないため、C拡張が実装されている場合には例外が発生しません。</p>
+<p>命令アドレスのミスアライン例外の判定を変更します。IALIGNが16の場合は例外が発生しないようにします(<span class="listref"><a href="./14-impl-c.html#core.veryl.ialign.exception">リスト5.3</a></span>)。ジャンプ、分岐命令は2バイト単位のアドレスしか指定できないため、C拡張が実装されている場合には例外が発生しません。</p>
 <div id="core.veryl.ialign.exception" class="caption-code">
 <span class="caption">リスト5.3: リスト5.3:  (core.veryl)</span>
 <pre class="list language-exception">        let instruction_address_misaligned: logic = <b>IALIGN == 32 &amp;&amp;</b> memq_wdata.br_taken &amp;&amp; memq_wdata.jump_addr[1:0] != 2'b00;
@@ -119,7 +119,7 @@
 
 <h3 class="none"><a id="h5-4-1"></a><span class="secno">5.4.1</span> インターフェースを作成する</h3>
 <p>まず、命令フェッチを行うモジュールとcoreモジュールのインターフェースを定義します。</p>
-<p><code class="inline-code">src/core_inst_if.veryl</code>を作成し、次のように記述します()。</p>
+<p><code class="inline-code">src/core_inst_if.veryl</code>を作成し、次のように記述します(<span class="listref"><a href="./14-impl-c.html#core_inst_if.veryl.if">リスト5.4</a></span>)。</p>
 <div id="core_inst_if.veryl.if" class="caption-code">
 <span class="caption">リスト5.4: リスト5.4:  (core_inst_if.veryl)</span>
 <pre class="list language-if">import eei::*;
@@ -154,13 +154,13 @@ interface core_inst_if {
 <div class="footnote-list">
 <div class="footnote" id="fn-no-del" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*2] </span>ここで削除するコードは次の「<a href="14-impl-c.html#h5-4-3">5.4.3 inst_fetcherモジュールを作成する</a>」で実装するコードと似通っているため、削除せずにコメントアウトしておくと少し楽に実装できます。</p></div>
 </div><!--/.footnote-list-->
-<p>coreモジュールの<code class="inline-code">i_membus</code>の型を<code class="inline-code">core_inst_if::master</code>に変更します()。</p>
+<p>coreモジュールの<code class="inline-code">i_membus</code>の型を<code class="inline-code">core_inst_if::master</code>に変更します(<span class="listref"><a href="./14-impl-c.html#core.veryl.if.port">リスト5.5</a></span>)。</p>
 <div id="core.veryl.if.port" class="caption-code">
 <span class="caption">リスト5.5: リスト5.5:  (core.veryl)</span>
 <pre class="list language-port">    i_membus: modport <b>core_inst_if</b>::master,
 </pre>
 </div>
-<p>IFステージ部分のコードを次のように変更します()。</p>
+<p>IFステージ部分のコードを次のように変更します(<span class="listref"><a href="./14-impl-c.html#core.veryl.if.if">リスト5.6</a></span>)。</p>
 <div id="core.veryl.if.if" class="caption-code">
 <span class="caption">リスト5.6: リスト5.6:  (core.veryl)</span>
 <pre class="list language-if">    ///////////////////////////////// IF Stage /////////////////////////////////
@@ -174,8 +174,8 @@ interface core_inst_if {
     }
 </pre>
 </div>
-<p>coreモジュールの新しいIFステージ部分は、制御ハザードの情報をインターフェースに割り当てるだけの簡単なコードになっています。<code class="inline-code">if_fifo_type</code>型、<code class="inline-code">if_fifo_</code>から始まる変数は使わないため削除してください。</p>
-<p>IDステージとcore_inst_ifインターフェースを接続します()。もともと<code class="inline-code">if_fifo</code>の<code class="inline-code">rvalid</code>、<code class="inline-code">rready</code>、<code class="inline-code">rdata</code>だった部分をインターフェースに変更しています。</p>
+<p>coreモジュールの新しいIFステージ部分は、制御ハザードの情報をインターフェースに割り当てるだけの簡単なコードになっています。<code class="inline-code">if_fifo_type</code>型、<code class="inline-code">if_fifo_</code>から始まる変数は使わなくなるため削除してください。</p>
+<p>IDステージとcore_inst_ifインターフェースを接続します(<span class="listref"><a href="./14-impl-c.html#core.veryl.if.idvar">リスト5.7</a></span>、<span class="listref"><a href="./14-impl-c.html#core.veryl.if.idex">リスト5.8</a></span>)。もともと<code class="inline-code">if_fifo</code>の<code class="inline-code">rvalid</code>、<code class="inline-code">rready</code>、<code class="inline-code">rdata</code>だった部分をインターフェースに変更しています。</p>
 <div id="core.veryl.if.idvar" class="caption-code">
 <span class="caption">リスト5.7: リスト5.7:  (core.veryl)</span>
 <pre class="list language-idvar">    let ids_valid     : logic    = <b>i_membus.rvalid</b>;
@@ -211,7 +211,7 @@ interface core_inst_if {
 </dd>
 </dl>
 <p>fetchとissueは並列に独立して動かします。</p>
-<p>inst_fetcherモジュールのポートを定義します。<code class="inline-code">src/inst_fetcher.veryl</code>を作成し、次のように記述します()。</p>
+<p>inst_fetcherモジュールのポートを定義します。<code class="inline-code">src/inst_fetcher.veryl</code>を作成し、次のように記述します(<span class="listref"><a href="./14-impl-c.html#inst_fetcher.veryl.if.port">リスト5.9</a></span>)。</p>
 <div id="inst_fetcher.veryl.if.port" class="caption-code">
 <span class="caption">リスト5.9: リスト5.9:  (inst_fetcher.veryl)</span>
 <pre class="list language-port">module inst_fetcher (
@@ -223,7 +223,7 @@ interface core_inst_if {
 </pre>
 </div>
 <p><code class="inline-code">core_if</code>はcoreモジュールとのインターフェース、<code class="inline-code">mem_if</code>はメモリとのインターフェースです。</p>
-<p>fetchとissue、issueとcore_ifとの間のFIFOを作成します()。</p>
+<p>fetchとissue、issueとcore_ifとの間のFIFOを作成します(<span class="listref"><a href="./14-impl-c.html#inst_fetcher.veryl.if.fetch_fifo">リスト5.10</a></span>、<span class="listref"><a href="./14-impl-c.html#inst_fetcher.veryl.if.issue_fifo">リスト5.11</a></span>)。</p>
 <div id="inst_fetcher.veryl.if.fetch_fifo" class="caption-code">
 <span class="caption">リスト5.10: リスト5.10:  (inst_fetcher.veryl)</span>
 <pre class="list language-fetch_fifo">    struct fetch_fifo_type {
@@ -287,7 +287,7 @@ interface core_inst_if {
     );
 </pre>
 </div>
-<p>メモリへのアクセス処理(fetch)を実装します。FIFOに空きがあるとき、64ビットの値を読み込んでPCを8進めます()。この処理はcoreモジュールの元のIFステージとほとんど同じです。</p>
+<p>メモリへのアクセス処理(fetch)を実装します。FIFOに空きがあるとき、64ビットの値を読み込んでPCを8進めます(<span class="listref"><a href="./14-impl-c.html#inst_fetcher.veryl.if.fetch_var">リスト5.12</a></span>、<span class="listref"><a href="./14-impl-c.html#inst_fetcher.veryl.if.memory_assign">リスト5.13</a></span>、<span class="listref"><a href="./14-impl-c.html#inst_fetcher.veryl.if.fetch_pc">リスト5.14</a></span>)。この処理はcoreモジュールの元のIFステージとほとんど同じです。</p>
 <div id="inst_fetcher.veryl.if.fetch_var" class="caption-code">
 <span class="caption">リスト5.12: リスト5.12:  (inst_fetcher.veryl)</span>
 <pre class="list language-fetch_var">    var fetch_pc          : Addr ;
@@ -346,7 +346,7 @@ interface core_inst_if {
     }
 </pre>
 </div>
-<p>メモリから読み込んだ値をissueとの間のFIFOに格納します()。</p>
+<p>メモリから読み込んだ値をissueとの間のFIFOに格納します(<span class="listref"><a href="./14-impl-c.html#inst_fetcher.veryl.if.memory_fetch">リスト5.15</a></span>)。</p>
 <div id="inst_fetcher.veryl.if.memory_fetch" class="caption-code">
 <span class="caption">リスト5.15: リスト5.15:  (inst_fetcher.veryl)</span>
 <pre class="list language-memory_fetch">    // memory -&gt; fetch_fifo
@@ -358,7 +358,7 @@ interface core_inst_if {
     }
 </pre>
 </div>
-<p>coreモジュールに命令を供給する処理(issue)を実装します。FIFOにデータが入っているとき、32ビットずつcoreモジュールとの間のFIFOに格納します。2つの32ビットの命令をFIFOに格納出来たら、fetchとの間のFIFOを読み進めます()。</p>
+<p>coreモジュールに命令を供給する処理(issue)を実装します。FIFOにデータが入っているとき、32ビットずつcoreモジュールとの間のFIFOに格納します。2つの32ビットの命令をFIFOに格納出来たら、fetchとの間のFIFOを読み進めます(<span class="listref"><a href="./14-impl-c.html#inst_fetcher.veryl.if.issue_offset">リスト5.16</a></span>、<span class="listref"><a href="./14-impl-c.html#inst_fetcher.veryl.if.fetch_issue">リスト5.17</a></span>)。</p>
 <div id="inst_fetcher.veryl.if.issue_offset" class="caption-code">
 <span class="caption">リスト5.16: リスト5.16:  (inst_fetcher.veryl)</span>
 <pre class="list language-issue_offset">    var issue_pc_offset: logic&lt;3&gt;;
@@ -405,7 +405,7 @@ interface core_inst_if {
     }
 </pre>
 </div>
-<p><code class="inline-code">core_if</code>とFIFOを接続します()。</p>
+<p><code class="inline-code">core_if</code>とFIFOを接続します(<span class="listref"><a href="./14-impl-c.html#inst_fetcher.veryl.if.issue_core">リスト5.18</a></span>)。</p>
 <div id="inst_fetcher.veryl.if.issue_core" class="caption-code">
 <span class="caption">リスト5.18: リスト5.18:  (inst_fetcher.veryl)</span>
 <pre class="list language-issue_core">    // issue_fifo &lt;-&gt; core
@@ -420,13 +420,13 @@ interface core_inst_if {
 </div>
 
 <h3 class="none"><a id="h5-4-4"></a><span class="secno">5.4.4</span> inst_fetcherモジュールとcoreモジュールを接続する</h3>
-<p>core_inst_ifをインスタンス化します。()。</p>
+<p>core_inst_ifをインスタンス化します。(<span class="listref"><a href="./14-impl-c.html#top.veryl.if.i_membus_core">リスト5.19</a></span>)。</p>
 <div id="top.veryl.if.i_membus_core" class="caption-code">
 <span class="caption">リスト5.19: リスト5.19:  (top.veryl)</span>
 <pre class="list language-i_membus_core">    inst i_membus_core: core_inst_if;
 </pre>
 </div>
-<p>inst_fetcherモジュールをインスタンス化し、coreモジュールと接続します。</p>
+<p>inst_fetcherモジュールをインスタンス化し、coreモジュールと接続します(<span class="listref"><a href="./14-impl-c.html#top.veryl.if.inst">リスト5.20</a></span>、<span class="listref"><a href="./14-impl-c.html#top.veryl.if.core">リスト5.21</a></span>)。</p>
 <div id="top.veryl.if.inst" class="caption-code">
 <span class="caption">リスト5.20: リスト5.20:  (top.veryl)</span>
 <pre class="list language-inst">    inst fetcher: inst_fetcher (
@@ -448,7 +448,7 @@ interface core_inst_if {
     );
 </pre>
 </div>
-<p>inst_fetcherモジュールが64ビットのデータを32ビットの命令の列に変換してくれるようになったので、<code class="inline-code">d_membus</code>との調停のところでアドレスを読んで32ビットずつ選択する処理が必要なくなりました。そのため、<code class="inline-code">memarb_last_iaddr</code>変数とビット選択処理をを削除します()。</p>
+<p>inst_fetcherモジュールが64ビットのデータを32ビットの命令の列に変換してくれるようになったので、<code class="inline-code">d_membus</code>との調停のところでアドレスを読んで32ビットずつ選択する処理が必要なくなりました。そのため、<code class="inline-code">memarb_last_iaddr</code>変数とビット選択処理をを削除します(<span class="listref"><a href="./14-impl-c.html#top.veryl.if.memarb_last_i_def">リスト5.22</a></span>、<span class="listref"><a href="./14-impl-c.html#top.veryl.if.memarb_last_i_update">リスト5.23</a></span>、<span class="listref"><a href="./14-impl-c.html#top.veryl.if.memarb">リスト5.24</a></span>)。</p>
 <div id="top.veryl.if.memarb_last_i_def" class="caption-code">
 <span class="caption">リスト5.22: リスト5.22:  (top.veryl)</span>
 <pre class="list language-memarb_last_i_def">    var memarb_last_i: logic;
@@ -482,7 +482,7 @@ interface core_inst_if {
 <h2 class="numbox"><a id="h5-5"></a><span class="secno">5.5</span> 16ビット境界に配置された32ビット幅の命令のサポート</h2>
 <p>inst_fetcherモジュールで、アドレスが2バイトの倍数な32ビット幅の命令をcoreモジュールに供給できるようにします。</p>
 <p>アドレスの下位3ビット(<code class="inline-code">issue_pc_offset</code>)が<code class="inline-code">6</code>の場合、issueとcoreの間に供給する命令のビット列は<code class="inline-code">fetch_fifo_rdata</code>の上位16ビットと<code class="inline-code">fetch_fifo</code>に格納されている次のデータの下位16ビットを結合したものになります。このとき、<code class="inline-code">fetch_fifo_rdata</code>のデータの下位16ビットとアドレスを保存して、次のデータを読み出します。<code class="inline-code">fetch_fifo</code>から次のデータを読み出せたら、保存していたデータと結合し、アドレスとともに<code class="inline-code">issue_fifo</code>に書き込みます。<code class="inline-code">issue_pc_offset</code>が<code class="inline-code">0</code>、<code class="inline-code">2</code>、<code class="inline-code">4</code>の場合、既存の処理との変更点はありません。</p>
-<p><code class="inline-code">fetch_fifo_rdata</code>のデータの下位16ビットとアドレスを保存するための変数を作成します()。</p>
+<p><code class="inline-code">fetch_fifo_rdata</code>のデータの下位16ビットとアドレスを保存するための変数を作成します(<span class="listref"><a href="./14-impl-c.html#inst_fetcher.veryl.232.var">リスト5.25</a></span>)。</p>
 <div id="inst_fetcher.veryl.232.var" class="caption-code">
 <span class="caption">リスト5.25: リスト5.25:  (inst_fetcher.veryl)</span>
 <pre class="list language-var">    var issue_is_rdata_saved: logic    ;
@@ -490,7 +490,7 @@ interface core_inst_if {
     var issue_saved_bits    : logic&lt;16&gt;; // rdata[63:48]
 </pre>
 </div>
-<p><code class="inline-code">issue_pc_offset</code>が<code class="inline-code">6</code>のとき、変数にデータを保存します()。</p>
+<p><code class="inline-code">issue_pc_offset</code>が<code class="inline-code">6</code>のとき、変数にデータを保存します(<span class="listref"><a href="./14-impl-c.html#inst_fetcher.veryl.232.issue_ff">リスト5.26</a></span>)。</p>
 <div id="inst_fetcher.veryl.232.issue_ff" class="caption-code">
 <span class="caption">リスト5.26: リスト5.26:  (inst_fetcher.veryl)</span>
 <pre class="list language-issue_ff">    always_ff {
@@ -523,7 +523,7 @@ interface core_inst_if {
     }
 </pre>
 </div>
-<p><code class="inline-code">issue_pc_offset</code>が<code class="inline-code">2</code>、<code class="inline-code">6</code>の場合の<code class="inline-code">issue_fifo</code>の書き込み処理を実装します()。<code class="inline-code">6</code>の場合、保存していた16ビットと新しく読みだした16ビットを結合した値、保存していたアドレスを書き込みます。</p>
+<p><code class="inline-code">issue_pc_offset</code>が<code class="inline-code">2</code>、<code class="inline-code">6</code>の場合の<code class="inline-code">issue_fifo</code>の書き込み処理を実装します(<span class="listref"><a href="./14-impl-c.html#inst_fetcher.veryl.232.issue_comb">リスト5.27</a></span>)。<code class="inline-code">6</code>の場合、保存していた16ビットと新しく読みだした16ビットを結合した値、保存していたアドレスを書き込みます。</p>
 <div id="inst_fetcher.veryl.232.issue_comb" class="caption-code">
 <span class="caption">リスト5.27: リスト5.27:  (inst_fetcher.veryl)</span>
 <pre class="list language-issue_comb">        if !core_if.is_hazard &amp;&amp; fetch_fifo_rvalid {
@@ -560,7 +560,7 @@ interface core_inst_if {
 
 <h3 class="none"><a id="h5-6-1"></a><span class="secno">5.6.1</span> RVC命令フラグの実装</h3>
 <p>RVC命令を32ビット幅の命令に変換するモジュールを作る前に、RVC命令かどうかを示すフラグを作成します。</p>
-<p>まず、<code class="inline-code">core_inst_if</code>インターフェースと<code class="inline-code">InstCtrl</code>構造体に<code class="inline-code">is_rvc</code>フラグを追加します()。</p>
+<p>まず、<code class="inline-code">core_inst_if</code>インターフェースと<code class="inline-code">InstCtrl</code>構造体に<code class="inline-code">is_rvc</code>フラグを追加します(<span class="listref"><a href="./14-impl-c.html#core_inst_if.veryl.is_rvc.var">リスト5.28</a></span>、<span class="listref"><a href="./14-impl-c.html#core_inst_if.veryl.is_rvc.master">リスト5.29</a></span>、<span class="listref"><a href="./14-impl-c.html#corectrl.veryl.is_rvc.InstCtrl">リスト5.30</a></span>)。</p>
 <div id="core_inst_if.veryl.is_rvc.var" class="caption-code">
 <span class="caption">リスト5.28: リスト5.28:  (core_inst_if.veryl)</span>
 <pre class="list language-var">    var rdata    : Inst ;
@@ -588,7 +588,7 @@ interface core_inst_if {
         funct3   : logic   &lt;3&gt;, // 命令のfunct3フィールド
 </pre>
 </div>
-<p>inst_fetcherモジュールで、<code class="inline-code">is_rvc</code>を<code class="inline-code">0</code>に設定してcoreモジュールに供給するようにします()。</p>
+<p>inst_fetcherモジュールで、<code class="inline-code">is_rvc</code>を<code class="inline-code">0</code>に設定してcoreモジュールに供給するようにします(<span class="listref"><a href="./14-impl-c.html#inst_fetcher.veryl.is_rvc.issue_fifo_type">リスト5.31</a></span>、<span class="listref"><a href="./14-impl-c.html#inst_fetcher.veryl.is_rvc.issue_comb">リスト5.32</a></span>、<span class="listref"><a href="./14-impl-c.html#inst_fetcher.veryl.is_rvc.issue_core">リスト5.33</a></span>)。</p>
 <div id="inst_fetcher.veryl.is_rvc.issue_fifo_type" class="caption-code">
 <span class="caption">リスト5.31: リスト5.31:  (inst_fetcher.veryl)</span>
 <pre class="list language-issue_fifo_type">    struct issue_fifo_type {
@@ -638,7 +638,7 @@ interface core_inst_if {
     }
 </pre>
 </div>
-<p>inst_decoderモジュールで、<code class="inline-code">InstCtrl</code>構造体の<code class="inline-code">is_rvc</code>フラグを設定します()。また、C拡張が無効なのにRVC命令が供給されたら@&lt;code&gt;<code class="inline-code">valid</code>フラグを<code class="inline-code">0</code>に設定するようにします。</p>
+<p>inst_decoderモジュールで、<code class="inline-code">InstCtrl</code>構造体の<code class="inline-code">is_rvc</code>フラグを設定します(<span class="listref"><a href="./14-impl-c.html#inst_decoder.veryl.is_rvc.port">リスト5.34</a></span>、<span class="listref"><a href="./14-impl-c.html#inst_decoder.veryl.is_rvc.ctrl">リスト5.35</a></span>、<span class="listref"><a href="./14-impl-c.html#inst_decoder.veryl.is_rvc.valid">リスト5.36</a></span>)。また、C拡張が無効なのにRVC命令が供給されたら@&lt;code&gt;<code class="inline-code">valid</code>フラグを<code class="inline-code">0</code>に設定するようにします。</p>
 <div id="inst_decoder.veryl.is_rvc.port" class="caption-code">
 <span class="caption">リスト5.34: リスト5.34:  (inst_decoder.veryl)</span>
 <pre class="list language-port">module inst_decoder (
@@ -666,7 +666,7 @@ interface core_inst_if {
         } <b>&amp;&amp; (IALIGN == 16 || !is_rvc)</b>; <b>// IALIGN == 32のとき、C拡張は無効</b>
 </pre>
 </div>
-<p>coreモジュールで、inst_decoderモジュールに<code class="inline-code">is_rvc</code>フラグを設定します()。</p>
+<p>coreモジュールで、inst_decoderモジュールに<code class="inline-code">is_rvc</code>フラグを設定します(<span class="listref"><a href="./14-impl-c.html#core.veryl.is_rvc.inst_decoder">リスト5.37</a></span>)。</p>
 <div id="core.veryl.is_rvc.inst_decoder" class="caption-code">
 <span class="caption">リスト5.37: リスト5.37:  (core.veryl)</span>
 <pre class="list language-inst_decoder">    inst decoder: inst_decoder (
@@ -678,7 +678,7 @@ interface core_inst_if {
     );
 </pre>
 </div>
-<p>ジャンプ命令でライトバックする値は次の命令のアドレスであるため、RVC命令の場合はPCに<code class="inline-code">2</code>を足した値を設定します()。</p>
+<p>ジャンプ命令でライトバックする値は次の命令のアドレスであるため、RVC命令の場合はPCに<code class="inline-code">2</code>を足した値を設定します(<span class="listref"><a href="./14-impl-c.html#core.veryl.is_rvc.wb_data">リスト5.38</a></span>)。</p>
 <div id="core.veryl.is_rvc.wb_data" class="caption-code">
 <span class="caption">リスト5.38: リスト5.38:  (core.veryl)</span>
 <pre class="list language-wb_data">    let wbs_wb_data: UIntX    = if wbs_ctrl.is_lui ?
@@ -691,7 +691,7 @@ interface core_inst_if {
 
 <h3 id="impl-converter-all" class="none"><a id="h5-6-2"></a><span class="secno">5.6.2</span> 32ビット幅の命令に変換する</h3>
 <p>RVC命令のopcode、functなどのフィールドを読んで、32ビット幅の命令を生成するrvc_converterモジュールを実装します。</p>
-<p>その前に、命令のフィールドを引数に32ビット幅の命令を生成する関数群を実装します。<code class="inline-code">src/inst_gen_pkg.veryl</code>を作成し、次のように記述します()。</p>
+<p>その前に、命令のフィールドを引数に32ビット幅の命令を生成する関数を実装します。<code class="inline-code">src/inst_gen_pkg.veryl</code>を作成し、次のように記述します(<span class="listref"><a href="./14-impl-c.html#inst_gen_pkg.veryl.rvcc">リスト5.39</a></span>)。</p>
 <div id="inst_gen_pkg.veryl.rvcc" class="caption-code">
 <span class="caption">リスト5.39: リスト5.39:  (inst_gen_pkg.veryl)</span>
 <pre class="list language-rvcc">import eei::*;
@@ -783,7 +783,7 @@ package inst_gen_pkg {
 }
 </pre>
 </div>
-<p>rvc_conveterモジュールのポートを定義します。<code class="inline-code">src/rvc_converter.veryl</code>を作成し、次のように記述します()。</p>
+<p>rvc_conveterモジュールのポートを定義します。<code class="inline-code">src/rvc_converter.veryl</code>を作成し、次のように記述します(<span class="listref"><a href="./14-impl-c.html#rvc_converter.veryl.rvcc.port">リスト5.40</a></span>)。</p>
 <div id="rvc_converter.veryl.rvcc.port" class="caption-code">
 <span class="caption">リスト5.40: リスト5.40:  (rvc_converter.veryl)</span>
 <pre class="list language-port">import eei::*;
@@ -797,7 +797,7 @@ module rvc_converter (
 </pre>
 </div>
 <p>rvc_converterモジュールは、<code class="inline-code">inst16</code>で16ビットの値を受け取り、それがRVC命令なら<code class="inline-code">is_rvc</code>を<code class="inline-code">1</code>にして、<code class="inline-code">inst32</code>に同じ意味の32ビット幅の命令を出力する組み合わせ回路です。</p>
-<p><code class="inline-code">inst16</code>からソースレジスタ番号を生成します()。<code class="inline-code">rs1d</code>、<code class="inline-code">rs2d</code>の番号の範囲は<code class="inline-code">x8</code>から<code class="inline-code">x15</code>です。</p>
+<p><code class="inline-code">inst16</code>からソースレジスタ番号を生成します(<span class="listref"><a href="./14-impl-c.html#rvc_converter.veryl.rvcc.rs">リスト5.41</a></span>)。<code class="inline-code">rs1d</code>、<code class="inline-code">rs2d</code>の番号の範囲は<code class="inline-code">x8</code>から<code class="inline-code">x15</code>です。</p>
 <div id="rvc_converter.veryl.rvcc.rs" class="caption-code">
 <span class="caption">リスト5.41: リスト5.41:  (rvc_converter.veryl)</span>
 <pre class="list language-rs">    let rs1 : logic&lt;5&gt; = inst16[11:7];
@@ -806,7 +806,7 @@ module rvc_converter (
     let rs2d: logic&lt;5&gt; = {2'b01, inst16[4:2]};
 </pre>
 </div>
-<p><code class="inline-code">inst16</code>から即値を生成します()。</p>
+<p><code class="inline-code">inst16</code>から即値を生成します(<span class="listref"><a href="./14-impl-c.html#rvc_converter.veryl.rvcc.imm">リスト5.42</a></span>)。</p>
 <div id="rvc_converter.veryl.rvcc.imm" class="caption-code">
 <span class="caption">リスト5.42: リスト5.42:  (rvc_converter.veryl)</span>
 <pre class="list language-imm">    let imm_i    : logic&lt;12&gt; = {inst16[12] repeat 7, inst16[6:2]};
@@ -817,7 +817,7 @@ module rvc_converter (
     let c0_mem_d : logic&lt;12&gt; = {4'b0, inst16[6:5], inst16[12:10], 3'b0}; // C.LD, C.SD
 </pre>
 </div>
-<p><code class="inline-code">inst16</code>から32ビット幅の命令を生成します()。opcode(<code class="inline-code">inst16[1:0]</code>)が<code class="inline-code">2'b11</code>以外なら16ビット幅の命令なので、<code class="inline-code">is_rvc</code>に<code class="inline-code">1</code>を割り当てます。<code class="inline-code">inst32</code>には、初期値として右に<code class="inline-code">inst16</code>を詰めてゼロで拡張した値を割り当てます。</p>
+<p><code class="inline-code">inst16</code>から32ビット幅の命令を生成します(<span class="listref"><a href="./14-impl-c.html#rvc_converter.veryl.rvcc.always_comb">リスト5.43</a></span>)。opcode(<code class="inline-code">inst16[1:0]</code>)が<code class="inline-code">2'b11</code>以外なら16ビット幅の命令なので、<code class="inline-code">is_rvc</code>に<code class="inline-code">1</code>を割り当てます。<code class="inline-code">inst32</code>には、初期値として右に<code class="inline-code">inst16</code>を詰めてゼロで拡張した値を割り当てます。</p>
 <p>32ビット幅の命令への変換はopcode、funct、ソースレジスタで分岐して地道に実装します。32ビット幅の命令に変換できないとき<code class="inline-code">inst32</code>の値を更新しません。</p>
 <p>これにより、<code class="inline-code">inst16</code>が不正なRVC命令のとき、inst_decoderモジュールでデコードできない命令をcoreモジュールに供給してIllegal instruction例外を発生させ、tvalに16ビット幅の不正な命令が設定されます。</p>
 <div id="rvc_converter.veryl.rvcc.always_comb" class="caption-code">
@@ -924,7 +924,7 @@ module rvc_converter (
 
 <h3 class="none"><a id="h5-6-3"></a><span class="secno">5.6.3</span> RVC命令を発行する</h3>
 <p>inst_fetcherモジュールでrvc_converterモジュールをインスタンス化し、RVC命令をcoreモジュールに供給します。</p>
-<p>まず、rvc_converterモジュールをインスタンス化します()。</p>
+<p>まず、rvc_converterモジュールをインスタンス化します(<span class="listref"><a href="./14-impl-c.html#inst_fetcher.veryl.rvcc.inst">リスト5.44</a></span>)。</p>
 <div id="inst_fetcher.veryl.rvcc.inst" class="caption-code">
 <span class="caption">リスト5.44: リスト5.44:  (inst_fetcher.veryl)</span>
 <pre class="list language-inst">    // instruction converter
@@ -945,7 +945,7 @@ module rvc_converter (
     );
 </pre>
 </div>
-<p>RVC命令のとき、変換された32ビット幅の命令を<code class="inline-code">issue_fifo</code>に書き込み、<code class="inline-code">issue_pc_offset</code>を<code class="inline-code">4</code>ではなく<code class="inline-code">2</code>増やすようにします()。</p>
+<p>RVC命令のとき、変換された32ビット幅の命令を<code class="inline-code">issue_fifo</code>に書き込み、<code class="inline-code">issue_pc_offset</code>を<code class="inline-code">4</code>ではなく<code class="inline-code">2</code>増やすようにします(<span class="listref"><a href="./14-impl-c.html#inst_fetcher.veryl.rvcc.issue_ff">リスト5.45</a></span>、<span class="listref"><a href="./14-impl-c.html#inst_fetcher.veryl.rvcc.issue_comb">リスト5.46</a></span>)。</p>
 <div id="inst_fetcher.veryl.rvcc.issue_ff" class="caption-code">
 <span class="caption">リスト5.45: リスト5.45:  (inst_fetcher.veryl)</span>
 <pre class="list language-issue_ff">// offsetが6な32ビット命令の場合、
