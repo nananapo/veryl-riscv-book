@@ -80,7 +80,7 @@
 
 <h2 class="numbox"><a id="h8-1"></a><span class="secno">8.1</span> misa.Extensionsの変更</h2>
 <p>U-modeを実装しているかどうかはmisa.ExtensionsのUビットで確認できます。</p>
-<p>misa.Extensionsの値を変更します()。</p>
+<p>misa.Extensionsの値を変更します(<span class="listref"><a href="./22-umode-csr.html#csrunit.veryl.misa.misa">リスト8.1</a></span>)。</p>
 <div id="csrunit.veryl.misa.misa" class="caption-code">
 <span class="caption">リスト8.1: リスト8.1:  (csrunit.veryl)</span>
 <pre class="list language-misa">    let misa    : UIntX  = {2'd2, 1'b0 repeat XLEN - 28, 26'b00000<b>1</b>00000001000100000101}; // U, M, I, C, A

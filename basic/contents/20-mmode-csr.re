@@ -35,7 +35,7 @@ TODO table 高い低い
 高い特権レベルには低い特権レベルの機能を制限する機能があったり、高い特権レベルでしか利用できない機能が定義されています。
 
 特権レベルを表す@<code>{PrivMode}型をeeiパッケージに定義してください
-()。
+(@<list>{eei.veryl.define.PrivMode})。
 
 //list[eei.veryl.define.PrivMode][ (eei.veryl)]{
 #@maprange(scripts/20/define-range/core/src/eei.veryl,PrivMode)
@@ -56,7 +56,7 @@ TODO M, MU, MSUテーブルと章
 
 CPUがリセット(起動)したときの特権レベルはM-modeです。
 現在の特権レベルを保持するレジスタをcsrunitモジュールに作成します
-()。
+(@<list>{csrunit.veryl.define.mode})。
 
 //list[csrunit.veryl.define.mode][ (csrunit.veryl)]{
 #@maprange(scripts/20/define-range/core/src/csrunit.veryl,mode)
@@ -70,7 +70,7 @@ CPUがリセット(起動)したときの特権レベルはM-modeです。
 table 実装する機能とレジスタと章の対応
 
 本書で実装するM-modeのCSRのアドレスをすべて定義します
-()。
+(@<list>{eei.veryl.define.CsrAddr})。
 
 //list[eei.veryl.define.CsrAddr][ (eei.veryl)]{
 #@maprange(scripts/20/define-range/core/src/eei.veryl,CsrAddr)
@@ -119,7 +119,10 @@ Extensionsフィールドは下位ビットからそれぞれアルファベッ�
 仕様上はExtensionsフィールドを書き換えられるように実装できますが、本書では書き換えられないようにします。
 
 misaレジスタを作成し、読み込めるようにします
-()。
+(
+@<list>{csrunit.veryl.misa.misa}、
+@<list>{csrunit.veryl.misa.rdata}
+)。
 CPUは@<code>{RV64IMAC}なのでMXLフィールドに@<code>{64}を表す@<code>{2}を設定し、
 ExtensionsフィールドのM拡張(M)、基本整数命令セット(I)、C拡張(C)、A拡張(A)のビットを@<code>{1}にしています。
 
@@ -152,7 +155,10 @@ mimpidレジスタは、プロセッサ実装のバージョンを表す値を�
 
 せっかくなので、適当な値を設定しましょう。
 eeiパッケージにIDを定義して、読み込めるようにします
-()。
+(
+@<list>{eei.veryl.mimpid.mimpid}、
+@<list>{csrunit.veryl.mimpid.rdata}
+)。
 
 //list[eei.veryl.mimpid.mimpid][ (eei.veryl)]{
 #@maprange(scripts/20/mimpid-range/core/src/eei.veryl,mimpid)
@@ -179,7 +185,10 @@ IDはどんな値でも良いですが、IDが@<code>{0}のハードウェアス
 基本編で作るCPUは1コア1ハードウェアスレッドであるためmhartidレジスタに0を設定します。
 
 mhart変数を作成し、読み込めるようにします
-()。
+(
+@<list>{csrunit.veryl.mhartid.mhartid}、
+@<list>{csrunit.veryl.mhartid.rdata}
+)。
 
 
 //list[csrunit.veryl.mhartid.mhartid][ (csrunit.veryl)]{
@@ -204,7 +213,14 @@ TODO 図
 mstatusレジスタは、拡張の設定やトラップ、状態などを管理するMXLENビットのレジスタです。
 基本編ではTODO 図に示しているフィールドを、そのフィールドが必要になったときに実装します。
 とりあえず今のところは読み込みだけできるようにしておきます
-()。
+(
+@<list>{csrunit.veryl.mstatus.wmaskdef}、
+@<list>{csrunit.veryl.mstatus.wmask}、
+@<list>{csrunit.veryl.mstatus.reg}、
+@<list>{csrunit.veryl.mstatus.rdata}、
+@<list>{csrunit.veryl.mstatus.reset}、
+@<list>{csrunit.veryl.mstatus.write}
+)。
 
 //list[csrunit.veryl.mstatus.wmaskdef][ (csrunit.veryl)]{
 #@maprange(scripts/20/mstatus-range/core/src/csrunit.veryl,wmaskdef)
@@ -271,7 +287,10 @@ mhpmcounter、mhpmeventレジスタは表示するような指標がないため
 === mcycleレジスタ
 
 mcycleレジスタを定義して読み込めるようにします。
-()。
+(
+@<list>{csrunit.veryl.mcycle.reg}、
+@<list>{csrunit.veryl.mcycle.rdata}
+)。
 
 //list[csrunit.veryl.mcycle.reg][ (csrunit.veryl)]{
 #@maprange(scripts/20/mcycle-range/core/src/csrunit.veryl,reg)
@@ -286,7 +305,9 @@ mcycleレジスタを定義して読み込めるようにします。
 //}
 
 always_ffブロックで、クロックごとに値を更新します
-()。
+(
+@<list>{csrunit.veryl.mcycle.always_ff}
+)。
 
 //list[csrunit.veryl.mcycle.always_ff][ (csrunit.veryl)]{
 #@maprange(scripts/20/mcycle-range/core/src/csrunit.veryl,always_ff)
@@ -309,7 +330,10 @@ always_ffブロックで、クロックごとに値を更新します
 
 coreモジュールでinstretレジスタを作成し、
 トラップが発生していない命令がWBステージに到達した場合にインクリメントします
-()。
+(
+@<list>{core.veryl.minstret.minstret}、
+@<list>{core.veryl.minstret.inc}
+)。
 
 //list[core.veryl.minstret.minstret][ (core.veryl)]{
 #@maprange(scripts/20/minstret-range/core/src/core.veryl,minstret)
@@ -332,7 +356,11 @@ coreモジュールでinstretレジスタを作成し、
 //}
 
 @<code>{minstret}の値をcsrunitモジュールに渡し、読み込めるようにします
-()。
+(
+@<list>{core.veryl.minstret.port2}、
+@<list>{csrunit.veryl.minstret.port2}、
+@<list>{csrunit.veryl.minstret.rdata}
+)。
 
 //list[core.veryl.minstret.port2][ (core.veryl)]{
 #@maprange(scripts/20/minstret-range/core/src/core.veryl,port2)
@@ -357,7 +385,12 @@ coreモジュールでinstretレジスタを作成し、
 csrunitモジュールはMRET命令でも@<code>{raise_trap}フラグを立てているため、
 このままではMRET命令で@<code>{minstret}がインクリメントされません。
 そのため、トラップから戻る命令であることを示すフラグを作成し、正しくインクリメントされるようにします
-()。
+(
+@<list>{csrunit.veryl.minstret.port1}、
+@<list>{csrunit.veryl.minstret.trap_return}、
+@<list>{core.veryl.minstret.port1}、
+@<list>{core.veryl.minstret.raise_trap}
+)。
 
 //list[csrunit.veryl.minstret.port1][ (csrunit.veryl)]{
 #@maprange(scripts/20/minstret-range/core/src/csrunit.veryl,port1)
@@ -410,7 +443,14 @@ Aの実行途中の状態(レジスタの値)を保存しないとAを実行再�
 CSRRW命令でmscratchレジスタの値とレジスタの値を交換することで任意の場所にレジスタの値を保存できます。
 
 mscratchレジスタを定義し、自由に読み書きできるようにします
-()。
+(
+@<list>{csrunit.veryl.mscratch.reg}、
+@<list>{csrunit.veryl.mscratch.rdata}、
+@<list>{csrunit.veryl.mscratch.WMASK}、
+@<list>{csrunit.veryl.mscratch.wmask}、
+@<list>{csrunit.veryl.mscratch.reset}、
+@<list>{csrunit.veryl.mscratch.write}
+)。
 
 //list[csrunit.veryl.mscratch.reg][ (csrunit.veryl)]{
 #@maprange(scripts/20/mscratch-range/core/src/csrunit.veryl,reg)

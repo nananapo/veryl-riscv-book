@@ -17,7 +17,7 @@ M-modeで利用できていたほとんどのCSR、機能が制限されます�
 U-modeを実装しているかどうかはmisa.ExtensionsのUビットで確認できます。
 
 misa.Extensionsの値を変更します
-()。
+(@<list>{csrunit.veryl.misa.misa})。
 
 //list[csrunit.veryl.misa.misa][ (csrunit.veryl)]{
 #@maprange(scripts/22/misa-range/core/src/csrunit.veryl,misa)
