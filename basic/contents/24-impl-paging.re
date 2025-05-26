@@ -58,7 +58,7 @@ Sv39の場合、何段階で物理アドレスに変換できるかによって�
 
 ==== satpレジスタ
 
-TODO satp
+//image[satp][satpレジスタ][width=100%]
 
 RISC-Vの仮想記憶システムはsatpレジスタによって制御します。
 
