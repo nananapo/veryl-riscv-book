@@ -118,7 +118,7 @@
 
 <h3 class="none"><a id="h7-1-4"></a><span class="secno">7.1.4</span> 割り込みの原因(cause)</h3>
 <p>それぞれの割り込みには原因を区別するための値(cause)が割り当てられています。割り込みのcauseのMSBは1です。</p>
-<p><code class="inline-code">CsrCause</code>型に割り込みのcauseを追加します()。</p>
+<p><code class="inline-code">CsrCause</code>型に割り込みのcauseを追加します(<span class="listref"><a href="./21-impl-interrupt.html#eei.veryl.mmapcause.CsrCause">リスト7.1</a></span>)。</p>
 <div id="eei.veryl.mmapcause.CsrCause" class="caption-code">
 <span class="caption">リスト7.1: リスト7.1:  (eei.veryl)</span>
 <pre class="list language-CsrCause">    enum CsrCause: UIntX {
@@ -142,7 +142,7 @@
 <p>RISC-Vにはソフトウェア割り込みとタイマ割り込みを実現するデバイスの仕様であるACLINTが用意されています。ACLINTは、SiFive社が開発したCLINT(Core-Local Interruptor)デバイスが基になった仕様です。</p>
 <p>ACLINTにはMTIMER、MSWI、SSWIの3つのデバイスが定義されています。それぞれタイマ割り込み、ソフトウェア割り込み、ソフトウェア割り込み向けのデバイスで、mipレジスタのMTIP、MSIP、SSIPビットに状態を通知します。</p>
 <p>本書ではACLINTを図TODOのようなメモリマップで実装します。本章ではMTIMER、MSWIデバイスを実装し、「<a href="23-smode-csr.html#h9-5">9.5 ソフトウェア割り込みの実装 (SSWI)</a>」でSSWIデバイスを実装します。デバイスのの具体的な仕様については後で解説します。</p>
-<p>メモリマップ用の定数をeeiパッケージに記述してください()。</p>
+<p>メモリマップ用の定数をeeiパッケージに記述してください(<span class="listref"><a href="./21-impl-interrupt.html#eei.veryl.mmapcause.mmap">リスト7.2</a></span>)。</p>
 <div id="eei.veryl.mmapcause.mmap" class="caption-code">
 <span class="caption">リスト7.2: リスト7.2:  (eei.veryl)</span>
 <pre class="list language-mmap">    // ACLINT
@@ -159,7 +159,7 @@
 <p>本章では、ACLINTのデバイスを1つのaclint_memoryモジュールに実装します。aclint_memoryモジュールは割り込みを起こすためにcsrunitモジュールと接続します。</p>
 
 <h3 class="none"><a id="h7-2-1"></a><span class="secno">7.2.1</span> インターフェースを作成する</h3>
-<p>まず、ACLINTのデバイスとcsrunitモジュールを接続するためのインターフェースを作成します。<code class="inline-code">src/aclint_if.veryl</code>を作成し、次のように記述します()。インターフェースの中身は各デバイスの実装時に実装します。</p>
+<p>まず、ACLINTのデバイスとcsrunitモジュールを接続するためのインターフェースを作成します。<code class="inline-code">src/aclint_if.veryl</code>を作成し、次のように記述します(<span class="listref"><a href="./21-impl-interrupt.html#aclint_if.veryl.createaclint.mmap">リスト7.3</a></span>)。インターフェースの中身は各デバイスの実装時に実装します。</p>
 <div id="aclint_if.veryl.createaclint.mmap" class="caption-code">
 <span class="caption">リスト7.3: リスト7.3:  (aclint_if.veryl)</span>
 <pre class="list language-mmap">interface aclint_if {
@@ -174,7 +174,7 @@
 </div>
 
 <h3 class="none"><a id="h7-2-2"></a><span class="secno">7.2.2</span> aclint_memoryモジュールを作成する</h3>
-<p>ACLINTのデバイスを実装するモジュールを作成します。<code class="inline-code">src/aclint_memory.veryl</code>を作成し、次のように記述します()。まだどのレジスタも実装していません。</p>
+<p>ACLINTのデバイスを実装するモジュールを作成します。<code class="inline-code">src/aclint_memory.veryl</code>を作成し、次のように記述します(<span class="listref"><a href="./21-impl-interrupt.html#aclint_memory.veryl.createaclint.mmap">リスト7.4</a></span>)。まだどのレジスタも実装していません。</p>
 <div id="aclint_memory.veryl.createaclint.mmap" class="caption-code">
 <span class="caption">リスト7.4: リスト7.4:  (aclint_memory.veryl)</span>
 <pre class="list language-mmap">import eei::*;
@@ -200,7 +200,7 @@ module aclint_memory (
 
 <h3 class="none"><a id="h7-2-3"></a><span class="secno">7.2.3</span> mmio_controllerモジュールにACLINTを追加する</h3>
 <p>mmio_controllerモジュールにACLINTデバイスを追加して、aclint_memoryモジュールにアクセスできるようにします。</p>
-<p><code class="inline-code">Device</code>型にACLINTを追加して、アドレスにACLINTをマップします()。</p>
+<p><code class="inline-code">Device</code>型にACLINTを追加して、アドレスにACLINTをマップします(<span class="listref"><a href="./21-impl-interrupt.html#mmio_controller.veryl.createaclint.Device">リスト7.5</a></span>、<span class="listref"><a href="./21-impl-interrupt.html#mmio_controller.veryl.createaclint.get_device">リスト7.6</a></span>)。</p>
 <div id="mmio_controller.veryl.createaclint.Device" class="caption-code">
 <span class="caption">リスト7.5: リスト7.5:  (mmio_controller.veryl)</span>
 <pre class="list language-Device">    enum Device {
@@ -219,7 +219,7 @@ module aclint_memory (
     }
 </pre>
 </div>
-<p>ACLINTとのインターフェースを追加し、reset_all_device_masters関数にインターフェースをリセットするコードを追加します()。</p>
+<p>ACLINTとのインターフェースを追加し、reset_all_device_masters関数にインターフェースをリセットするコードを追加します(<span class="listref"><a href="./21-impl-interrupt.html#mmio_controller.veryl.createaclint.port">リスト7.7</a></span>、<span class="listref"><a href="./21-impl-interrupt.html#mmio_controller.veryl.createaclint.reset_all">リスト7.8</a></span>)。</p>
 <div id="mmio_controller.veryl.createaclint.port" class="caption-code">
 <span class="caption">リスト7.7: リスト7.7:  (mmio_controller.veryl)</span>
 <pre class="list language-port">module mmio_controller (
@@ -244,7 +244,7 @@ module aclint_memory (
     }
 </pre>
 </div>
-<p><code class="inline-code">ready</code>、<code class="inline-code">rvalid</code>を取得する関数にACLINTを登録します()。</p>
+<p><code class="inline-code">ready</code>、<code class="inline-code">rvalid</code>を取得する関数にACLINTを登録します(<span class="listref"><a href="./21-impl-interrupt.html#mmio_controller.veryl.createaclint.get_device_ready">リスト7.9</a></span>、<span class="listref"><a href="./21-impl-interrupt.html#mmio_controller.veryl.createaclint.get_device_rvalid">リスト7.10</a></span>)。</p>
 <div id="mmio_controller.veryl.createaclint.get_device_ready" class="caption-code">
 <span class="caption">リスト7.9: リスト7.9:  (mmio_controller.veryl)</span>
 <pre class="list language-get_device_ready">    Device::ACLINT: return aclint_membus.ready;
@@ -255,13 +255,13 @@ module aclint_memory (
 <pre class="list language-get_device_rvalid">    Device::ACLINT: return aclint_membus.rvalid;
 </pre>
 </div>
-<p>ACLINTの<code class="inline-code">rvalid</code>、<code class="inline-code">rdata</code>を<code class="inline-code">req_core</code>に割り当てます()。</p>
+<p>ACLINTの<code class="inline-code">rvalid</code>、<code class="inline-code">rdata</code>を<code class="inline-code">req_core</code>に割り当てます(<span class="listref"><a href="./21-impl-interrupt.html#mmio_controller.veryl.createaclint.assign_device_slave">リスト7.11</a></span>)。</p>
 <div id="mmio_controller.veryl.createaclint.assign_device_slave" class="caption-code">
 <span class="caption">リスト7.11: リスト7.11:  (mmio_controller.veryl)</span>
 <pre class="list language-assign_device_slave">    Device::ACLINT: req &lt;&gt; aclint_membus;
 </pre>
 </div>
-<p>ACLINTのインターフェースに要求を割り当てます()。</p>
+<p>ACLINTのインターフェースに要求を割り当てます(<span class="listref"><a href="./21-impl-interrupt.html#mmio_controller.veryl.createaclint.assign_device_master">リスト7.12</a></span>)。</p>
 <div id="mmio_controller.veryl.createaclint.assign_device_master" class="caption-code">
 <span class="caption">リスト7.12: リスト7.12:  (mmio_controller.veryl)</span>
 <pre class="list language-assign_device_master">    Device::ACLINT: {
@@ -272,7 +272,7 @@ module aclint_memory (
 </div>
 
 <h3 class="none"><a id="h7-2-4"></a><span class="secno">7.2.4</span> ACLINTとmmio_controller、csrunitモジュールを接続する</h3>
-<p>aclint_ifインターフェース、aclint_memoryモジュールとmmio_controllerモジュールを接続するインターフェースをインスタンス化します()。</p>
+<p>aclint_ifインターフェース、aclint_memoryモジュールとmmio_controllerモジュールを接続するインターフェースをインスタンス化します(<span class="listref"><a href="./21-impl-interrupt.html#top.veryl.createaclint.aclint_membus">リスト7.13</a></span>、<span class="listref"><a href="./21-impl-interrupt.html#top.veryl.createaclint.aclint_core_bus">リスト7.14</a></span>)。</p>
 <div id="top.veryl.createaclint.aclint_membus" class="caption-code">
 <span class="caption">リスト7.13: リスト7.13:  (top.veryl)</span>
 <pre class="list language-aclint_membus">    inst aclint_membus  : Membus;
@@ -283,7 +283,7 @@ module aclint_memory (
 <pre class="list language-aclint_core_bus">    inst aclint_core_bus: aclint_if;
 </pre>
 </div>
-<p>aclint_memoryモジュールをインスタンス化し、mmio_controllerモジュールと接続します()。</p>
+<p>aclint_memoryモジュールをインスタンス化し、mmio_controllerモジュールと接続します(<span class="listref"><a href="./21-impl-interrupt.html#top.veryl.createaclint.inst">リスト7.15</a></span>、<span class="listref"><a href="./21-impl-interrupt.html#top.veryl.createaclint.mmioc">リスト7.16</a></span>)。</p>
 <div id="top.veryl.createaclint.inst" class="caption-code">
 <span class="caption">リスト7.15: リスト7.15:  (top.veryl)</span>
 <pre class="list language-inst">    inst aclintm: aclint_memory (
@@ -308,7 +308,7 @@ module aclint_memory (
     );
 </pre>
 </div>
-<p>core、csrunitモジュールにaclint_ifポートを追加し、csrunitモジュールとaclint_memoryモジュールを接続します()。</p>
+<p>core、csrunitモジュールにaclint_ifポートを追加し、csrunitモジュールとaclint_memoryモジュールを接続します(<span class="listref"><a href="./21-impl-interrupt.html#core.veryl.createaclint.port">リスト7.17</a></span>、<span class="listref"><a href="./21-impl-interrupt.html#top.veryl.createaclint.core">リスト7.18</a></span>、<span class="listref"><a href="./21-impl-interrupt.html#csrunit.veryl.createaclint.port">リスト7.19</a></span>、<span class="listref"><a href="./21-impl-interrupt.html#core.veryl.createaclint.csru">リスト7.20</a></span>)。</p>
 <div id="core.veryl.createaclint.port" class="caption-code">
 <span class="caption">リスト7.17: リスト7.17:  (core.veryl)</span>
 <pre class="list language-port">module core (
@@ -357,7 +357,7 @@ module aclint_memory (
 
 <h3 class="none"><a id="h7-3-1"></a><span class="secno">7.3.1</span> MSIPレジスタを実装する</h3>
 <p>ACLINTモジュールにMSIPレジスタを実装します。今のところCPUにはmhartidが0のハードウェアスレッドしか存在しないため、MSIP0のみ実装します。</p>
-<p>aclint_ifインターフェースに<code class="inline-code">msip</code>を追加します()。</p>
+<p>aclint_ifインターフェースに<code class="inline-code">msip</code>を追加します(<span class="listref"><a href="./21-impl-interrupt.html#aclint_if.veryl.msip">リスト7.21</a></span>)。</p>
 <div id="aclint_if.veryl.msip" class="caption-code">
 <span class="caption">リスト7.21: リスト7.21:  (aclint_if.veryl)</span>
 <pre class="list language-msip">interface aclint_if {
@@ -371,7 +371,7 @@ module aclint_memory (
 }
 </pre>
 </div>
-<p>aclint_memoryモジュールに<code class="inline-code">msip0</code>レジスタを作成し、読み書きできるようにします()。</p>
+<p>aclint_memoryモジュールに<code class="inline-code">msip0</code>レジスタを作成し、読み書きできるようにします(<span class="listref"><a href="./21-impl-interrupt.html#aclint_memory.veryl.msip.reg">リスト7.22</a></span>、<span class="listref"><a href="./21-impl-interrupt.html#aclint_memory.veryl.msip.if_reset">リスト7.23</a></span>、<span class="listref"><a href="./21-impl-interrupt.html#aclint_memory.veryl.msip.rw">リスト7.24</a></span>)。</p>
 <div id="aclint_memory.veryl.msip.reg" class="caption-code">
 <span class="caption">リスト7.22: リスト7.22:  (aclint_memory.veryl)</span>
 <pre class="list language-reg">var msip0: logic;
@@ -406,7 +406,7 @@ module aclint_memory (
 }
 </pre>
 </div>
-<p><code class="inline-code">msip0</code>レジスタとインターフェースの<code class="inline-code">msip</code>を接続します()。</p>
+<p><code class="inline-code">msip0</code>レジスタとインターフェースの<code class="inline-code">msip</code>を接続します(<span class="listref"><a href="./21-impl-interrupt.html#aclint_memory.veryl.msip.aclint_msip">リスト7.25</a></span>)。</p>
 <div id="aclint_memory.veryl.msip.aclint_msip" class="caption-code">
 <span class="caption">リスト7.25: リスト7.25:  (aclint_memory.veryl)</span>
 <pre class="list language-aclint_msip">always_comb {
@@ -417,7 +417,7 @@ module aclint_memory (
 
 <h3 class="none"><a id="h7-3-2"></a><span class="secno">7.3.2</span> mip、mieレジスタを実装する</h3>
 <p>mipレジスタのMSIPビット、MIEレジスタのMSIEビットを実装します。mie.MSIEはMSIPビットによる割り込み待機を許可するかを制御するビットです。mip.MSIPとmie.MSIEは同じ位置のビットに配置されています。mip.MSIPに書き込むことはできません。</p>
-<p>csrunitモジュールにmieレジスタを作成します()。</p>
+<p>csrunitモジュールにmieレジスタを作成します(<span class="listref"><a href="./21-impl-interrupt.html#csrunit.veryl.miemip.regmie">リスト7.26</a></span>、<span class="listref"><a href="./21-impl-interrupt.html#csrunit.veryl.miemip.if_reset">リスト7.27</a></span>)。</p>
 <div id="csrunit.veryl.miemip.regmie" class="caption-code">
 <span class="caption">リスト7.26: リスト7.26:  (csrunit.veryl)</span>
 <pre class="list language-regmie">    var mie     : UIntX ;
@@ -433,7 +433,7 @@ module aclint_memory (
     mscratch = 0;
 </pre>
 </div>
-<p>mipレジスタを作成します。MSIPビットをMSWIデバイスのMSIP0レジスタと接続し、それ以外のビットは<code class="inline-code">0</code>に設定します()。</p>
+<p>mipレジスタを作成します。MSIPビットをMSWIデバイスのMSIP0レジスタと接続し、それ以外のビットは<code class="inline-code">0</code>に設定します(<span class="listref"><a href="./21-impl-interrupt.html#csrunit.veryl.miemip.mip">リスト7.28</a></span>)。</p>
 <div id="csrunit.veryl.miemip.mip" class="caption-code">
 <span class="caption">リスト7.28: リスト7.28:  (csrunit.veryl)</span>
 <pre class="list language-mip">    let mip: UIntX = {
@@ -453,7 +453,7 @@ module aclint_memory (
     };
 </pre>
 </div>
-<p>mie、mipレジスタの値を読み込めるようにします()。</p>
+<p>mie、mipレジスタの値を読み込めるようにします(<span class="listref"><a href="./21-impl-interrupt.html#csrunit.veryl.miemip.rdata">リスト7.29</a></span>)。</p>
 <div id="csrunit.veryl.miemip.rdata" class="caption-code">
 <span class="caption">リスト7.29: リスト7.29:  (csrunit.veryl)</span>
 <pre class="list language-rdata">CsrAddr::MTVEC   : mtvec,
@@ -462,7 +462,7 @@ module aclint_memory (
 CsrAddr::MCYCLE  : mcycle,
 </pre>
 </div>
-<p>mieレジスタの書き込みマスクを設定して、MSIEビットを書き込めるようにします()。あとでMTIMEデバイスを実装するときにMTIEビットを使うため、ここでMTIEビットも書き込めるようにしておきます。</p>
+<p>mieレジスタの書き込みマスクを設定して、MSIEビットを書き込めるようにします(<span class="listref"><a href="./21-impl-interrupt.html#csrunit.veryl.miemip.WMASK">リスト7.30</a></span>、<span class="listref"><a href="./21-impl-interrupt.html#csrunit.veryl.miemip.wmask">リスト7.31</a></span>、<span class="listref"><a href="./21-impl-interrupt.html#csrunit.veryl.miemip.write">リスト7.32</a></span>)。あとでMTIMEデバイスを実装するときにMTIEビットを使うため、ここでMTIEビットも書き込めるようにしておきます。</p>
 <div id="csrunit.veryl.miemip.WMASK" class="caption-code">
 <span class="caption">リスト7.30: リスト7.30:  (csrunit.veryl)</span>
 <pre class="list language-WMASK">    const MIE_WMASK     : UIntX = 'h0000_0000_0000_0088 as UIntX;
@@ -487,7 +487,7 @@ CsrAddr::MSCRATCH: MSCRATCH_WMASK,
 </div>
 
 <h3 class="none"><a id="h7-3-3"></a><span class="secno">7.3.3</span> mstatusのMIE、MPIEビットを実装する</h3>
-<p>mstatus.MIE、MPIEを変更できるようにします()。</p>
+<p>mstatus.MIE、MPIEを変更できるようにします(<span class="listref"><a href="./21-impl-interrupt.html#csrunit.veryl.mstatuswmask.WMASK">リスト7.33</a></span>、<span class="listref"><a href="./21-impl-interrupt.html#csrunit.veryl.mstatuswmask.mstatus">リスト7.34</a></span>)。</p>
 <div id="csrunit.veryl.mstatuswmask.WMASK" class="caption-code">
 <span class="caption">リスト7.33: リスト7.33:  (csrunit.veryl)</span>
 <pre class="list language-WMASK">    const MSTATUS_WMASK : UIntX = 'h0000_0000_0000_0088 as UIntX;
@@ -500,7 +500,7 @@ CsrAddr::MSCRATCH: MSCRATCH_WMASK,
     let mstatus_mie : logic = mstatus[3];
 </pre>
 </div>
-<p>トラップが発生するとき、mstatus.MPIEにmstatus.MIE、mstatus.MIEに<code class="inline-code">0</code>を設定します()。また、MRET命令でmmstatus.MIEにmstatus.MPIE、mstatus.MPIEに<code class="inline-code">0</code>を設定します。</p>
+<p>トラップが発生するとき、mstatus.MPIEにmstatus.MIE、mstatus.MIEに<code class="inline-code">0</code>を設定します(<span class="listref"><a href="./21-impl-interrupt.html#csrunit.veryl.mstatuswmask.change">リスト7.35</a></span>)。また、MRET命令でmmstatus.MIEにmstatus.MPIE、mstatus.MPIEに<code class="inline-code">0</code>を設定します。</p>
 <div id="csrunit.veryl.mstatuswmask.change" class="caption-code">
 <span class="caption">リスト7.35: リスト7.35:  (csrunit.veryl)</span>
 <pre class="list language-change">if raise_trap {
@@ -531,7 +531,7 @@ CsrAddr::MSCRATCH: MSCRATCH_WMASK,
 <p>今のところ、CSRの処理はMEMステージと同時に行っているため、例えばストア命令をmemunitモジュールで実行している途中に割り込みを発生させてしまうと、ストア命令の結果がメモリに反映されるにもかかわらず、mepcレジスタにストア命令のアドレスを書き込んでしまいます。</p>
 <p>それならば、単純に次の命令のアドレスをmepcレジスタに格納するようにすればいいと思うかもしれませんが、そもそも実行中のストア命令が本来は最終的に例外を発生させるものかもしれません。</p>
 <p>本章ではこの問題に対処するために、割り込みはMEM(CSR)ステージに新しく命令が供給されたクロックでしか起こせなくして、トラップが発生するときにMEMステージを無効化します。</p>
-<p>割り込みを発生させられるかを示すフラグをcsrunitモジュールに定義し、<code class="inline-code">mems_is_new</code>フラグを割り当てます()。</p>
+<p>割り込みを発生させられるかを示すフラグをcsrunitモジュールに定義し、<code class="inline-code">mems_is_new</code>フラグを割り当てます(<span class="listref"><a href="./21-impl-interrupt.html#csrunit.veryl.intr.port">リスト7.36</a></span>、<span class="listref"><a href="./21-impl-interrupt.html#core.veryl.intr.csru">リスト7.37</a></span>)。</p>
 <div id="csrunit.veryl.intr.port" class="caption-code">
 <span class="caption">リスト7.36: リスト7.36:  (csrunit.veryl)</span>
 <pre class="list language-port">    rs1_data   : input   UIntX               ,
@@ -546,7 +546,7 @@ CsrAddr::MSCRATCH: MSCRATCH_WMASK,
     rdata      : csru_rdata           ,
 </pre>
 </div>
-<p>トラップが発生するときにmemunitモジュールを無効にします()。今まではEXステージまでに例外が発生することが分かっていたら無効にしていましたが、csrunitモジュールからトラップが発生するかどうかの情報を直接得るようにします。</p>
+<p>トラップが発生するときにmemunitモジュールを無効にします(<span class="listref"><a href="./21-impl-interrupt.html#core.veryl.intr.memu">リスト7.38</a></span>)。今まではEXステージまでに例外が発生することが分かっていたら無効にしていましたが、csrunitモジュールからトラップが発生するかどうかの情報を直接得るようにします。</p>
 <div id="core.veryl.intr.memu" class="caption-code">
 <span class="caption">リスト7.38: リスト7.38:  (core.veryl)</span>
 <pre class="list language-memu">    inst memu: memunit (
@@ -555,7 +555,7 @@ CsrAddr::MSCRATCH: MSCRATCH_WMASK,
         valid : mems_valid &amp;&amp; !<b>csru_raise_trap</b>,
 </pre>
 </div>
-<p>memunitモジュールが無効(<code class="inline-code">!valid</code>)なとき、<code class="inline-code">state</code>を<code class="inline-code">State::Init</code>にリセットします()。</p>
+<p>memunitモジュールが無効(<code class="inline-code">!valid</code>)なとき、<code class="inline-code">state</code>を<code class="inline-code">State::Init</code>にリセットします(<span class="listref"><a href="./21-impl-interrupt.html#memunit.veryl.intr.reset">リスト7.39</a></span>)。</p>
 <div id="memunit.veryl.intr.reset" class="caption-code">
 <span class="caption">リスト7.39: リスト7.39:  (core.veryl)</span>
 <pre class="list language-reset">    } else {
@@ -568,7 +568,7 @@ CsrAddr::MSCRATCH: MSCRATCH_WMASK,
 </div>
 
 <h4><a id="h7-3-4-2"></a>割り込みの判定</h4>
-<p>割り込みを起こせるかどうか、cause、ジャンプ先を示す変数を作成します()。</p>
+<p>割り込みを起こせるかどうか、cause、ジャンプ先を示す変数を作成します(<span class="listref"><a href="./21-impl-interrupt.html#csrunit.veryl.intr.intr">リスト7.40</a></span>)。</p>
 <div id="csrunit.veryl.intr.intr" class="caption-code">
 <span class="caption">リスト7.40: リスト7.40:  (csrunit.veryl)</span>
 <pre class="list language-intr">    // Interrupt
@@ -577,7 +577,7 @@ CsrAddr::MSCRATCH: MSCRATCH_WMASK,
     let interrupt_vector: Addr  = mtvec;
 </pre>
 </div>
-<p>トラップ情報の変数に、割り込みの情報を割り当てます()。本書では例外を優先します。</p>
+<p>トラップ情報の変数に、割り込みの情報を割り当てます(<span class="listref"><a href="./21-impl-interrupt.html#csrunit.veryl.intr.trap">リスト7.41</a></span>)。本書では例外を優先します。</p>
 <div id="csrunit.veryl.intr.trap" class="caption-code">
 <span class="caption">リスト7.41: リスト7.41:  (csrunit.veryl)</span>
 <pre class="list language-trap">    assign raise_trap = raise_expt || <b>raise_interrupt ||</b> trap_return;
@@ -594,14 +594,14 @@ CsrAddr::MSCRATCH: MSCRATCH_WMASK,
     <b>};</b>
 </pre>
 </div>
-<p>割り込みの時にMRET命令の判定が<code class="inline-code">0</code>になるようにしておきます()。</p>
+<p>割り込みの時にMRET命令の判定が<code class="inline-code">0</code>になるようにしておきます(<span class="listref"><a href="./21-impl-interrupt.html#csrunit.veryl.intr.ret">リスト7.42</a></span>)。</p>
 <div id="csrunit.veryl.intr.ret" class="caption-code">
 <span class="caption">リスト7.42: リスト7.42:  (csrunit.veryl)</span>
 <pre class="list language-ret">    // Trap Return
     assign trap_return = valid &amp;&amp; is_mret &amp;&amp; !raise_expt <b>&amp;&amp; !raise_interrupt</b>;
 </pre>
 </div>
-<p>トラップが発生するとき、例外の場合にのみmtvalレジスタに例外の情報が書き込まれます。本書では例外を優先するので、<code class="inline-code">raise_expt</code>が<code class="inline-code">1</code>ならmtvalレジスタに書き込むようにします()。</p>
+<p>トラップが発生するとき、例外の場合にのみmtvalレジスタに例外の情報が書き込まれます。本書では例外を優先するので、<code class="inline-code">raise_expt</code>が<code class="inline-code">1</code>ならmtvalレジスタに書き込むようにします(<span class="listref"><a href="./21-impl-interrupt.html#csrunit.veryl.intr.ff">リスト7.43</a></span>)。</p>
 <div id="csrunit.veryl.intr.ff" class="caption-code">
 <span class="caption">リスト7.43: リスト7.43:  (csrunit.veryl)</span>
 <pre class="list language-ff">    if raise_trap {
@@ -616,7 +616,7 @@ CsrAddr::MSCRATCH: MSCRATCH_WMASK,
 
 <h3 class="none"><a id="h7-3-5"></a><span class="secno">7.3.5</span> ソフトウェア割り込みをテストする</h3>
 <p>ソフトウェア割り込みが正しく動くことを確認します。</p>
-<p><code class="inline-code">test/mswi.c</code>を作成し、次のように記述します()。</p>
+<p><code class="inline-code">test/mswi.c</code>を作成し、次のように記述します(<span class="listref"><a href="./21-impl-interrupt.html#mswi.c.mswitest">リスト7.44</a></span>)。</p>
 <div id="mswi.c.mswitest" class="caption-code">
 <span class="caption">リスト7.44: リスト7.44:  (test/mswi.c)</span>
 <pre class="list language-mswitest">#define MSIP0 ((volatile unsigned int *)0x2000000)
@@ -661,20 +661,20 @@ void interrupt_handler(void) {
 <p>mtvecレジスタにはMODEフィールドがあり、割り込みが発生するときのジャンプ先の決定方法を制御できます。</p>
 <p>MODEがDirect(<code class="inline-code">2'b00</code>)のとき、<code class="inline-code">mtvec.BASE &lt;&lt; 2</code>のアドレスにトラップします。Vectored(<code class="inline-code">2'b01</code>)のとき、<code class="inline-code">(mtvec.BASE &lt;&lt; 2) + 4 * cause</code>のアドレスにトラップします。ここでcauseは割り込みのcauseのMSBを除いた値です。例えばmachine software interruptの場合、<code class="inline-code">(mtvec.BASE &lt;&lt; 2) + 4 * 3</code>がジャンプ先になります。</p>
 <p>例外のジャンプ先のアドレスは、常にMODEがDirectとして計算します。</p>
-<p>下位1ビットに書き込めるようにすることで、mtvec.MODEにVectoredを書き込めるようにします()。</p>
+<p>下位1ビットに書き込めるようにすることで、mtvec.MODEにVectoredを書き込めるようにします(<span class="listref"><a href="./21-impl-interrupt.html#csrunit.veryl.mtvectored.WMASK">リスト7.45</a></span>)。</p>
 <div id="csrunit.veryl.mtvectored.WMASK" class="caption-code">
 <span class="caption">リスト7.45: リスト7.45:  (csrunit.veryl)</span>
 <pre class="list language-WMASK">    const MTVEC_WMASK   : UIntX = 'hffff_ffff_ffff_fff<b>d</b>;
 </pre>
 </div>
-<p>割り込みのジャンプ先をMODEとcauseに応じて変更します()。</p>
+<p>割り込みのジャンプ先をMODEとcauseに応じて変更します(<span class="listref"><a href="./21-impl-interrupt.html#csrunit.veryl.mtvectored.interrupt_vector">リスト7.46</a></span>)。</p>
 <div id="csrunit.veryl.mtvectored.interrupt_vector" class="caption-code">
 <span class="caption">リスト7.46: リスト7.46:  (csrunit.veryl)</span>
 <pre class="list language-interrupt_vector">    let interrupt_vector: Addr  = if mtvec[0] == 0 ? {mtvec[msb:2], 2'b0} : // Direct
      {mtvec[msb:2] + interrupt_cause[msb - 2:0], 2'b0}; // Vectored
 </pre>
 </div>
-<p>例外のジャンプ先を、mtvecレジスタの下位2ビットを<code class="inline-code">0</code>にしたアドレス(Direct)に変更します()。新しく<code class="inline-code">expt_vector</code>を定義し、<code class="inline-code">trap_vector</code>に割り当てます。</p>
+<p>例外のジャンプ先を、mtvecレジスタの下位2ビットを<code class="inline-code">0</code>にしたアドレス(Direct)に変更します(<span class="listref"><a href="./21-impl-interrupt.html#csrunit.veryl.mtvectored.expt_vector">リスト7.47</a></span>、<span class="listref"><a href="./21-impl-interrupt.html#csrunit.veryl.mtvectored.trap_vector">リスト7.48</a></span>)。新しく<code class="inline-code">expt_vector</code>を定義し、<code class="inline-code">trap_vector</code>に割り当てます。</p>
 <div id="csrunit.veryl.mtvectored.expt_vector" class="caption-code">
 <span class="caption">リスト7.47: リスト7.47:  (csrunit.veryl)</span>
 <pre class="list language-expt_vector">    let expt_vector: Addr = {mtvec[msb:2], 2'b0};
@@ -701,7 +701,7 @@ void interrupt_handler(void) {
 
 <h3 class="none"><a id="h7-5-2"></a><span class="secno">7.5.2</span> MTIME、MTIMECMPレジスタを実装する</h3>
 <p>ACLINTモジュールにMTIME、MTIMECMPレジスタを実装します。今のところmhartidが<code class="inline-code">0</code>のハードウェアスレッドしか存在しないため、MTIMECMP0のみ実装します。</p>
-<p><code class="inline-code">mtime</code>、<code class="inline-code">mtimecmp0</code>レジスタを作成し、読み書きできるようにします()。<code class="inline-code">mtime</code>レジスタはクロック毎にインクリメントします。</p>
+<p><code class="inline-code">mtime</code>、<code class="inline-code">mtimecmp0</code>レジスタを作成し、読み書きできるようにします(<span class="listref"><a href="./21-impl-interrupt.html#aclint_memory.veryl.mtime.reg">リスト7.49</a></span>、<span class="listref"><a href="./21-impl-interrupt.html#aclint_memory.veryl.mtime.reset">リスト7.50</a></span>、<span class="listref"><a href="./21-impl-interrupt.html#aclint_memory.veryl.mtime.rw">リスト7.51</a></span>)。<code class="inline-code">mtime</code>レジスタはクロック毎にインクリメントします。</p>
 <div id="aclint_memory.veryl.mtime.reg" class="caption-code">
 <span class="caption">リスト7.49: リスト7.49:  (aclint_memory.veryl)</span>
 <pre class="list language-reg">    var msip0    : logic ;
@@ -741,7 +741,7 @@ void interrupt_handler(void) {
     }
 </pre>
 </div>
-<p>aclint_ifインターフェースに<code class="inline-code">mtip</code>を作成し、タイマ割り込みが発生する条件を設定します()。</p>
+<p>aclint_ifインターフェースに<code class="inline-code">mtip</code>を作成し、タイマ割り込みが発生する条件を設定します(<span class="listref"><a href="./21-impl-interrupt.html#aclint_if.veryl.mtime.mtip">リスト7.52</a></span>、<span class="listref"><a href="./21-impl-interrupt.html#aclint_memory.veryl.mtime.comb">リスト7.53</a></span>)。</p>
 <div id="aclint_if.veryl.mtime.mtip" class="caption-code">
 <span class="caption">リスト7.52: リスト7.52:  (aclint_if.veryl)</span>
 <pre class="list language-mtip">    var msip: logic;
@@ -762,7 +762,7 @@ void interrupt_handler(void) {
 </div>
 
 <h3 class="none"><a id="h7-5-3"></a><span class="secno">7.5.3</span> mip.MTIP、割り込み原因を設定する</h3>
-<p>mipレジスタのMTIPビットにaclint_ifインターフェースの<code class="inline-code">mtip</code>を接続します。</p>
+<p>mipレジスタのMTIPビットにaclint_ifインターフェースの<code class="inline-code">mtip</code>を接続します(<span class="listref"><a href="./21-impl-interrupt.html#csrunit.veryl.mtime.mip">リスト7.54</a></span>)。</p>
 <div id="csrunit.veryl.mtime.mip" class="caption-code">
 <span class="caption">リスト7.54: リスト7.54:  (csrunit.veryl)</span>
 <pre class="list language-mip">    let mip: UIntX = {
@@ -782,7 +782,7 @@ void interrupt_handler(void) {
     };
 </pre>
 </div>
-<p>割り込み原因を優先順位に応じて設定します。タイマ割り込みはソフトウェア割り込みよりも優先順位が低いため、ソフトウェア割り込みの下で原因を設定します()。</p>
+<p>割り込み原因を優先順位に応じて設定します。タイマ割り込みはソフトウェア割り込みよりも優先順位が低いため、ソフトウェア割り込みの下で原因を設定します(<span class="listref"><a href="./21-impl-interrupt.html#csrunit.veryl.mtime.intr">リスト7.55</a></span>)。</p>
 <div id="csrunit.veryl.mtime.intr" class="caption-code">
 <span class="caption">リスト7.55: リスト7.55:  (csrunit.veryl)</span>
 <pre class="list language-intr">    <b>let interrupt_pending: UIntX = mip &amp; mie;</b>
@@ -799,7 +799,7 @@ void interrupt_handler(void) {
 
 <h3 class="none"><a id="h7-5-4"></a><span class="secno">7.5.4</span> タイマ割り込みをテストする</h3>
 <p>タイマ割り込みが正しく動くことを確認します。</p>
-<p><code class="inline-code">test/mtime.c</code>を作成し、次のように記述します()。</p>
+<p><code class="inline-code">test/mtime.c</code>を作成し、次のように記述します(<span class="listref"><a href="./21-impl-interrupt.html#mtime.c.mtime">リスト7.56</a></span>)。</p>
 <div id="mtime.c.mtime" class="caption-code">
 <span class="caption">リスト7.56: リスト7.56:  (mtime.c)</span>
 <pre class="list language-mtime">#define MTIMECMP0 ((volatile unsigned int *)0x2004000)
@@ -842,7 +842,7 @@ void interrupt_handler(void) {
 <h2 class="numbox"><a id="h7-6"></a><span class="secno">7.6</span> WFI命令の実装</h2>
 <p>WFI命令は、割り込みが発生するまでCPUをストールさせる命令です。ただし、グローバル割り込みイネーブルビットは考慮せず、ある割り込みの待機(pending)ビットと許可(enable)ビットの両方が立っているときに実行を再開します。また、それ以外の自由な理由で実行を再開させてもいいです。WFI命令で割り込みが発生するとき、WFI命令の次のアドレスの命令で割り込みが起こったことにします。</p>
 <p>本書ではWFI命令を何もしない命令として実装します。</p>
-<p>inst_decoderモジュールでWFI命令をデコードできるようにします()。</p>
+<p>inst_decoderモジュールでWFI命令をデコードできるようにします(<span class="listref"><a href="./21-impl-interrupt.html#inst_decoder.veryl.wfi.wfi">リスト7.57</a></span>)。</p>
 <div id="inst_decoder.veryl.wfi.wfi" class="caption-code">
 <span class="caption">リスト7.57: リスト7.57:  (inst_decoder.veryl)</span>
 <pre class="list language-wfi">    OP_SYSTEM: f3 != 3'b000 &amp;&amp; f3 != 3'b100 || // CSRR(W|S|C)[I]
@@ -853,7 +853,7 @@ void interrupt_handler(void) {
     OP_MISC_MEM: T, // FENCE
 </pre>
 </div>
-<p>WFI命令で割り込みが発生するとき、mepcレジスタに<code class="inline-code">pc + 4</code>を書き込むようにします()。</p>
+<p>WFI命令で割り込みが発生するとき、mepcレジスタに<code class="inline-code">pc + 4</code>を書き込むようにします(<span class="listref"><a href="./21-impl-interrupt.html#csrunit.veryl.wfi.is_wfi">リスト7.58</a></span>、<span class="listref"><a href="./21-impl-interrupt.html#csrunit.veryl.wfi.expt">リスト7.59</a></span>)。</p>
 <div id="csrunit.veryl.wfi.is_wfi" class="caption-code">
 <span class="caption">リスト7.58: リスト7.58:  (csrunit.veryl)</span>
 <pre class="list language-is_wfi">    let is_wfi: logic = inst_bits == 32'h10500073;
@@ -873,7 +873,7 @@ void interrupt_handler(void) {
 <div class="footnote-list">
 <div class="footnote" id="fn-hpmcounter" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*2] </span>mhpmcounterレジスタと同じ値をとるhpmcounterレジスタもありますが、mhpmcounterレジスタを実装していないので実装しません。</p></div>
 </div><!--/.footnote-list-->
-<p><code class="inline-code">CsrAddr</code>型にレジスタのアドレスを追加します()。</p>
+<p><code class="inline-code">CsrAddr</code>型にレジスタのアドレスを追加します(<span class="listref"><a href="./21-impl-interrupt.html#eei.veryl.zicntr.CsrAddr">リスト7.60</a></span>)。</p>
 <div id="eei.veryl.zicntr.CsrAddr" class="caption-code">
 <span class="caption">リスト7.60: リスト7.60:  (eei.veryl)</span>
 <pre class="list language-CsrAddr">    // Unprivileged Counter/Timers
@@ -882,7 +882,7 @@ void interrupt_handler(void) {
     INSTRET = 12'hC02,
 </pre>
 </div>
-<p>mtimeレジスタの値をACLINTモジュールからcsrunitに渡します()。</p>
+<p>mtimeレジスタの値をACLINTモジュールからcsrunitに渡します(<span class="listref"><a href="./21-impl-interrupt.html#aclint_if.veryl.zicntr.mtime">リスト7.61</a></span>、<span class="listref"><a href="./21-impl-interrupt.html#aclint_memory.veryl.zicntr.comb">リスト7.62</a></span>)。</p>
 <div id="aclint_if.veryl.zicntr.mtime" class="caption-code">
 <span class="caption">リスト7.61: リスト7.61:  (aclint_if.veryl)</span>
 <pre class="list language-mtime"><b>import eei::*;</b>
@@ -907,7 +907,7 @@ interface aclint_if {
     }
 </pre>
 </div>
-<p>time、instret、cycleレジスタを読み込めるようにします()。</p>
+<p>time、instret、cycleレジスタを読み込めるようにします(<span class="listref"><a href="./21-impl-interrupt.html#csrunit.veryl.zicntr.rdata">リスト7.63</a></span>)。</p>
 <div id="csrunit.veryl.zicntr.rdata" class="caption-code">
 <span class="caption">リスト7.63: リスト7.63:  (csrunit.veryl)</span>
 <pre class="list language-rdata">    CsrAddr::CYCLE   : mcycle,

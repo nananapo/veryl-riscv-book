@@ -17,7 +17,7 @@ M-modeで利用できていたほとんどのCSR、機能が制限されます�
 U-modeを実装しているかどうかはmisa.ExtensionsのUビットで確認できます。
 
 misa.Extensionsの値を変更します
-()。
+(@<list>{csrunit.veryl.misa.misa})。
 
 //list[csrunit.veryl.misa.misa][ (csrunit.veryl)]{
 #@maprange(scripts/22/misa-range/core/src/csrunit.veryl,misa)
@@ -32,7 +32,10 @@ U-modeのときのXLENはUXLENと定義されておりmstatus.UXLで確認でき
 本書ではUXLENが常に@<code>{64}になるように実装します。
 
 mstatus.UXLを@<code>{64}を示す値である@<code>{2}に設定します
-()。
+(
+@<list>{eei.veryl.misa.def}、
+@<list>{csrunit.veryl.misa.reset}
+)。
 
 //list[eei.veryl.misa.def][ (eei.veryl)]{
 #@maprange(scripts/22/misa-range/core/src/eei.veryl,def)
@@ -60,7 +63,7 @@ mstatus.TWが@<code>{0}のとき時間制限はありません。
 
 本書ではmstatus.TWが@<code>{1}のときに無限時間待てることにし、例外の実装を省略します。
 mstatus.TWを書き換えられるようにします
-()。
+(@<list>{csrunit.veryl.tw.WMASK})。
 
 //list[csrunit.veryl.tw.WMASK][ (csrunit.veryl)]{
 #@maprange(scripts/22/tw-range/core/src/csrunit.veryl,WMASK)
@@ -87,14 +90,14 @@ MRET命令を実行するとmstatus.MPPは実装がサポートする最低の�
 
 M-modeからU-modeに遷移したいときは、mstatus.MPPをU-modeの値に変更し、
 U-modeで実行を開始したいアドレスをmepcレジスタに設定してMRET命令を実行します
-()。
+()
 
-//list[][]{
+//list[samplecode.to.mu][]{
     TODO M->Uのサンプルコード
 //}
 
 mstatus.MPPに値を書き込めるようにします
-()。
+(@<list>{csrunit.veryl.mpp.WMASK})。
 
 //list[csrunit.veryl.mpp.WMASK][ (csrunit.veryl)]{
 #@maprange(scripts/22/mpp-range/core/src/csrunit.veryl,WMASK)
@@ -104,7 +107,10 @@ mstatus.MPPに値を書き込めるようにします
 
 MPPには@<code>{2'b00}(U-mode)と@<code>{2'b11}(M-mode)のみ設定できるようにします。
 サポートしていない値を書き込もうとする場合は現在の値を維持します
-()。
+(
+@<list>{csrunit.veryl.mpp.write}、
+@<list>{csrunit.veryl.mpp.func}
+)。
 
 //list[csrunit.veryl.mpp.write][ (csrunit.veryl)]{
 #@maprange(scripts/22/mpp-range/core/src/csrunit.veryl,write)
@@ -130,7 +136,13 @@ MPPには@<code>{2'b00}(U-mode)と@<code>{2'b11}(M-mode)のみ設定できるよ
 //}
 
 トラップが発生する、トラップから戻るときの遷移先の特権レベルを求めます
-()。
+(
+@<list>{csrunit.veryl.mpp.mpp}、
+@<list>{csrunit.veryl.mpp.interrupt_mode}、
+@<list>{csrunit.veryl.mpp.expt_mode}、
+@<list>{csrunit.veryl.mpp.trap_return_mode}、
+@<list>{csrunit.veryl.mpp.trap_mode_next}
+)。
 
 //list[csrunit.veryl.mpp.mpp][ (csrunit.veryl)]{
 #@maprange(scripts/22/mpp-range/core/src/csrunit.veryl,mpp)
@@ -170,7 +182,7 @@ MPPには@<code>{2'b00}(U-mode)と@<code>{2'b11}(M-mode)のみ設定できるよ
 //}
 
 トラップが発生するとき、mstatus.MPPに現在の特権レベルを保存します
-()。
+(@<list>{csrunit.veryl.mpp.trap})。
 また、トラップから戻るとき、特権レベルをmstatus.MPPに設定し、
 mstatus.MPPに実装がサポートする最小の特権レベルである@<code>{PrivMode::U}を書き込みます。
 
@@ -199,7 +211,11 @@ CSRのアドレスを@<code>{csr_addr}とするとき、
 これを下回る特権レベルでCSRにアクセスしようとするとIllegal instruction例外が発生します。
 
 CSRのアドレスと特権レベルを確認して例外を起こすようにします
-()。
+(
+@<list>{csrunit.veryl.csrrwpriv.priv}、
+@<list>{csrunit.veryl.csrrwpriv.raise_expt}、
+@<list>{csrunit.veryl.csrrwpriv.cause}
+)。
 
 //list[csrunit.veryl.csrrwpriv.priv][ (csrunit.veryl)]{
 #@maprange(scripts/22/csrrwpriv-range/core/src/csrunit.veryl,priv)
@@ -237,7 +253,14 @@ mcounterenレジスタで許可されていないままU-modeでcycle、time、i
 Illelgal Instruction例外が発生します。
 
 mcounterenレジスタを作成し、CY、TM、IRビットに書き込みできるようにします
-()。
+(
+@<list>{csrunit.veryl.mcounteren.reg}、
+@<list>{csrunit.veryl.mcounteren.rdata}、
+@<list>{csrunit.veryl.mcounteren.WMASK}、
+@<list>{csrunit.veryl.mcounteren.wmask}、
+@<list>{csrunit.veryl.mcounteren.reset}、
+@<list>{csrunit.veryl.mcounteren.write}
+)。
 
 //list[csrunit.veryl.mcounteren.reg][ (csrunit.veryl)]{
 #@maprange(scripts/22/mcounteren-range/core/src/csrunit.veryl,reg)
@@ -285,7 +308,10 @@ mcounterenレジスタを作成し、CY、TM、IRビットに書き込みでき�
 
 U-modeでハードウェアパフォーマンスモニタにアクセスするとき、
 mcounterenレジスタのビットが@<code>{0}ならIllegal instruction例外を発生させます
-()。
+(
+@<list>{csrunit.veryl.mcounteren.priv}、
+@<list>{csrunit.veryl.mcounteren.cause}
+)。
 
 //list[csrunit.veryl.mcounteren.priv][ (csrunit.veryl)]{
 #@maprange(scripts/22/mcounteren-range/core/src/csrunit.veryl,priv)
@@ -313,7 +339,11 @@ MRET命令はM-mode以上の特権レベルのときにしか実行できませ�
 M-mode未満の特権レベルでMRET命令を実行しようとするとIllegal instruction例外が発生します。
 
 命令がMRET命令のとき、特権レベルを確認して例外を発生させます
-()。
+(
+@<list>{csrunit.veryl.umret.priv}、
+@<list>{csrunit.veryl.umret.raise_expt}、
+@<list>{csrunit.veryl.umret.cause}
+)。
 
 //list[csrunit.veryl.umret.priv][ (csrunit.veryl)]{
 #@maprange(scripts/22/umret-range/core/src/csrunit.veryl,priv)
@@ -346,7 +376,9 @@ M-modeでECALL命令を実行するとEnvironment call from M-mode例外が発�
 
 ここで各例外のcauseがU-modeのcauseに特権レベルの数値を足したものになっていることを利用します。
 @<code>{CsrCause}型にEnvironment call from U-mode例外のcauseを追加します
-()。
+(
+@<list>{eei.veryl.ecallm.CsrCause}
+)。
 
 //list[eei.veryl.ecallm.CsrCause][ (eei.veryl)]{
 #@maprange(scripts/22/ecallm-range/core/src/eei.veryl,CsrCause)
@@ -358,7 +390,12 @@ M-modeでECALL命令を実行するとEnvironment call from M-mode例外が発�
 
 csrunitモジュールの@<code>{mode}をポートとして宣言し、
 IDステージでECALL命令をデコードするときにcauseに@<code>{mode}を足します
-()。
+(
+@<list>{csrunit.veryl.ecallm.port}、
+@<list>{core.veryl.ecallm.reg}、
+@<list>{core.veryl.ecallm.port}、
+@<list>{core.veryl.ecallm.expt}
+)。
 
 //list[csrunit.veryl.ecallm.port][ (csrunit.veryl)]{
 #@maprange(scripts/22/ecallm-range/core/src/csrunit.veryl,port)
@@ -408,7 +445,7 @@ M-modeだけの場合と違い、
 
 現在の特権レベルによって割り込みが発生する条件を切り替えます。
 U-modeのときはmstatus.MIEを考慮しないようにします
-()。
+(@<list>{csrunit.veryl.intr.raise_interrupt})。
 
 //list[csrunit.veryl.intr.raise_interrupt][ (csrunit.veryl)]{
 #@maprange(scripts/22/intr-range/core/src/csrunit.veryl,raise_interrupt)
