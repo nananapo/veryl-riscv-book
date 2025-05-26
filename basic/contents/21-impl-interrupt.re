@@ -81,7 +81,7 @@ TODOテーブル
 割り込みのcauseのMSBは1です。
 
 @<code>{CsrCause}型に割り込みのcauseを追加します
-()。
+(@<list>{eei.veryl.mmapcause.CsrCause})。
 
 //list[eei.veryl.mmapcause.CsrCause][ (eei.veryl)]{
 #@maprange(scripts/21/mmapcause-range/core/src/eei.veryl,CsrCause)
@@ -116,7 +116,7 @@ mipレジスタのMTIP、MSIP、SSIPビットに状態を通知します。
 デバイスのの具体的な仕様については後で解説します。
 
 メモリマップ用の定数をeeiパッケージに記述してください
-()。
+(@<list>{eei.veryl.mmapcause.mmap})。
 
 //list[eei.veryl.mmapcause.mmap][ (eei.veryl)]{
 #@maprange(scripts/21/mmapcause-range/core/src/eei.veryl,mmap)
@@ -139,7 +139,7 @@ aclint_memoryモジュールは割り込みを起こすためにcsrunitモジュ
 
 まず、ACLINTのデバイスとcsrunitモジュールを接続するためのインターフェースを作成します。
 @<code>{src/aclint_if.veryl}を作成し、次のように記述します
-()。
+(@<list>{aclint_if.veryl.createaclint.mmap})。
 インターフェースの中身は各デバイスの実装時に実装します。
 
 //list[aclint_if.veryl.createaclint.mmap][ (aclint_if.veryl)]{
@@ -159,7 +159,7 @@ interface aclint_if {
 
 ACLINTのデバイスを実装するモジュールを作成します。
 @<code>{src/aclint_memory.veryl}を作成し、次のように記述します
-()。
+(@<list>{aclint_memory.veryl.createaclint.mmap})。
 まだどのレジスタも実装していません。
 
 //list[aclint_memory.veryl.createaclint.mmap][ (aclint_memory.veryl)]{
@@ -191,7 +191,10 @@ mmio_controllerモジュールにACLINTデバイスを追加して、
 aclint_memoryモジュールにアクセスできるようにします。
 
 @<code>{Device}型にACLINTを追加して、アドレスにACLINTをマップします
-()。
+(
+@<list>{mmio_controller.veryl.createaclint.Device}、
+@<list>{mmio_controller.veryl.createaclint.get_device}
+)。
 
 //list[mmio_controller.veryl.createaclint.Device][ (mmio_controller.veryl)]{
 #@maprange(scripts/21/createaclint-range/core/src/mmio_controller.veryl, Device)
@@ -215,7 +218,10 @@ aclint_memoryモジュールにアクセスできるようにします。
 
 ACLINTとのインターフェースを追加し、
 reset_all_device_masters関数にインターフェースをリセットするコードを追加します
-()。
+(
+@<list>{mmio_controller.veryl.createaclint.port}、
+@<list>{mmio_controller.veryl.createaclint.reset_all}
+)。
 
 //list[mmio_controller.veryl.createaclint.port][ (mmio_controller.veryl)]{
 #@maprange(scripts/21/createaclint-range/core/src/mmio_controller.veryl, port)
@@ -244,7 +250,10 @@ module mmio_controller (
 //}
 
 @<code>{ready}、@<code>{rvalid}を取得する関数にACLINTを登録します
-()。
+(
+@<list>{mmio_controller.veryl.createaclint.get_device_ready}、
+@<list>{mmio_controller.veryl.createaclint.get_device_rvalid}
+)。
 
 //list[mmio_controller.veryl.createaclint.get_device_ready][ (mmio_controller.veryl)]{
 #@maprange(scripts/21/createaclint-range/core/src/mmio_controller.veryl, get_device_ready)
@@ -259,7 +268,9 @@ module mmio_controller (
 //}
 
 ACLINTの@<code>{rvalid}、@<code>{rdata}を@<code>{req_core}に割り当てます
-()。
+(
+@<list>{mmio_controller.veryl.createaclint.assign_device_slave}
+)。
 
 //list[mmio_controller.veryl.createaclint.assign_device_slave][ (mmio_controller.veryl)]{
 #@maprange(scripts/21/createaclint-range/core/src/mmio_controller.veryl, assign_device_slave)
@@ -268,7 +279,9 @@ ACLINTの@<code>{rvalid}、@<code>{rdata}を@<code>{req_core}に割り当てま�
 //}
 
 ACLINTのインターフェースに要求を割り当てます
-()。
+(
+@<list>{mmio_controller.veryl.createaclint.assign_device_master}
+)。
 
 //list[mmio_controller.veryl.createaclint.assign_device_master][ (mmio_controller.veryl)]{
 #@maprange(scripts/21/createaclint-range/core/src/mmio_controller.veryl, assign_device_master)
@@ -283,7 +296,10 @@ ACLINTのインターフェースに要求を割り当てます
 
 aclint_ifインターフェース、
 aclint_memoryモジュールとmmio_controllerモジュールを接続するインターフェースをインスタンス化します
-()。
+(
+@<list>{top.veryl.createaclint.aclint_membus}、
+@<list>{top.veryl.createaclint.aclint_core_bus}
+)。
 
 
 //list[top.veryl.createaclint.aclint_membus][ (top.veryl)]{
@@ -300,7 +316,10 @@ aclint_memoryモジュールとmmio_controllerモジュールを接続するイ�
 
 aclint_memoryモジュールをインスタンス化し、
 mmio_controllerモジュールと接続します
-()。
+(
+@<list>{top.veryl.createaclint.inst}、
+@<list>{top.veryl.createaclint.mmioc}
+)。
 
 //list[top.veryl.createaclint.inst][ (top.veryl)]{
 #@maprange(scripts/21/createaclint-range/core/src/top.veryl,inst)
@@ -330,7 +349,12 @@ mmio_controllerモジュールと接続します
 
 core、csrunitモジュールにaclint_ifポートを追加し、
 csrunitモジュールとaclint_memoryモジュールを接続します
-()。
+(
+@<list>{core.veryl.createaclint.port}、
+@<list>{top.veryl.createaclint.core}、
+@<list>{csrunit.veryl.createaclint.port}、
+@<list>{core.veryl.createaclint.csru}
+)。
 
 //list[core.veryl.createaclint.port][ (core.veryl)]{
 #@maprange(scripts/21/createaclint-range/core/src/core.veryl,port)
@@ -394,7 +418,7 @@ ACLINTモジュールにMSIPレジスタを実装します。
 今のところCPUにはmhartidが0のハードウェアスレッドしか存在しないため、MSIP0のみ実装します。
 
 aclint_ifインターフェースに@<code>{msip}を追加します
-()。
+(@<list>{aclint_if.veryl.msip})。
 
 //list[aclint_if.veryl.msip][ (aclint_if.veryl)]{
 #@mapfile(scripts/21/msip-range/core/src/aclint_if.veryl)
@@ -411,7 +435,11 @@ interface aclint_if {
 //}
 
 aclint_memoryモジュールに@<code>{msip0}レジスタを作成し、読み書きできるようにします
-()。
+(
+@<list>{aclint_memory.veryl.msip.reg}、
+@<list>{aclint_memory.veryl.msip.if_reset}、
+@<list>{aclint_memory.veryl.msip.rw}
+)。
 
 //list[aclint_memory.veryl.msip.reg][ (aclint_memory.veryl)]{
 #@maprange(scripts/21/msip-range/core/src/aclint_memory.veryl,reg)
@@ -451,7 +479,9 @@ if membus.valid {
 //}
 
 @<code>{msip0}レジスタとインターフェースの@<code>{msip}を接続します
-()。
+(
+@<list>{aclint_memory.veryl.msip.aclint_msip}
+)。
 
 //list[aclint_memory.veryl.msip.aclint_msip][ (aclint_memory.veryl)]{
 #@maprange(scripts/21/msip-range/core/src/aclint_memory.veryl,aclint_msip)
@@ -469,7 +499,10 @@ mip.MSIPとmie.MSIEは同じ位置のビットに配置されています。
 mip.MSIPに書き込むことはできません。
 
 csrunitモジュールにmieレジスタを作成します
-()。
+(
+@<list>{csrunit.veryl.miemip.regmie}、
+@<list>{csrunit.veryl.miemip.if_reset}
+)。
 
 //list[csrunit.veryl.miemip.regmie][ (csrunit.veryl)]{
 #@maprange(scripts/21/miemip-range/core/src/csrunit.veryl,regmie)
@@ -491,7 +524,7 @@ if_reset {
 mipレジスタを作成します。
 MSIPビットをMSWIデバイスのMSIP0レジスタと接続し、
 それ以外のビットは@<code>{0}に設定します
-()。
+(@<list>{csrunit.veryl.miemip.mip})。
 
 //list[csrunit.veryl.miemip.mip][ (csrunit.veryl)]{
 #@maprange(scripts/21/miemip-range/core/src/csrunit.veryl,mip)
@@ -514,7 +547,7 @@ MSIPビットをMSWIデバイスのMSIP0レジスタと接続し、
 //}
 
 mie、mipレジスタの値を読み込めるようにします
-()。
+(@<list>{csrunit.veryl.miemip.rdata})。
 
 //list[csrunit.veryl.miemip.rdata][ (csrunit.veryl)]{
 #@maprange(scripts/21/miemip-range/core/src/csrunit.veryl,rdata)
@@ -526,7 +559,11 @@ CsrAddr::MCYCLE  : mcycle,
 //}
 
 mieレジスタの書き込みマスクを設定して、MSIEビットを書き込めるようにします
-()。
+(
+@<list>{csrunit.veryl.miemip.WMASK}、
+@<list>{csrunit.veryl.miemip.wmask}、
+@<list>{csrunit.veryl.miemip.write}
+)。
 あとでMTIMEデバイスを実装するときにMTIEビットを使うため、
 ここでMTIEビットも書き込めるようにしておきます。
 
@@ -560,7 +597,10 @@ if is_wsc {
 === mstatusのMIE、MPIEビットを実装する
 
 mstatus.MIE、MPIEを変更できるようにします
-()。
+(
+@<list>{csrunit.veryl.mstatuswmask.WMASK}、
+@<list>{csrunit.veryl.mstatuswmask.mstatus}
+)。
 
 //list[csrunit.veryl.mstatuswmask.WMASK][ (csrunit.veryl)]{
 #@maprange(scripts/21/mstatuswmask-range/core/src/csrunit.veryl,WMASK)
@@ -577,7 +617,9 @@ mstatus.MIE、MPIEを変更できるようにします
 //}
 
 トラップが発生するとき、mstatus.MPIEにmstatus.MIE、mstatus.MIEに@<code>{0}を設定します
-()。
+(
+@<list>{csrunit.veryl.mstatuswmask.change}
+)。
 また、MRET命令でmmstatus.MIEにmstatus.MPIE、mstatus.MPIEに@<code>{0}を設定します。
 
 //list[csrunit.veryl.mstatuswmask.change][ (csrunit.veryl)]{
@@ -630,7 +672,10 @@ mepcレジスタにストア命令のアドレスを書き込んでしまいま�
 
 割り込みを発生させられるかを示すフラグをcsrunitモジュールに定義し、
 @<code>{mems_is_new}フラグを割り当てます
-()。
+(
+@<list>{csrunit.veryl.intr.port}、
+@<list>{core.veryl.intr.csru}
+)。
 
 //list[csrunit.veryl.intr.port][ (csrunit.veryl)]{
 #@maprange(scripts/21/intr-range/core/src/csrunit.veryl,port)
@@ -649,7 +694,9 @@ mepcレジスタにストア命令のアドレスを書き込んでしまいま�
 //}
 
 トラップが発生するときにmemunitモジュールを無効にします
-()。
+(
+@<list>{core.veryl.intr.memu}
+)。
 今まではEXステージまでに例外が発生することが分かっていたら無効にしていましたが、
 csrunitモジュールからトラップが発生するかどうかの情報を直接得るようにします。
 
@@ -664,7 +711,7 @@ csrunitモジュールからトラップが発生するかどうかの情報を�
 
 memunitモジュールが無効(@<code>{!valid})なとき、
 @<code>{state}を@<code>{State::Init}にリセットします
-()。
+(@<list>{memunit.veryl.intr.reset})。
 
 //list[memunit.veryl.intr.reset][ (core.veryl)]{
 #@maprange(scripts/21/intr-range/core/src/memunit.veryl,reset)
@@ -680,7 +727,7 @@ memunitモジュールが無効(@<code>{!valid})なとき、
 ==== 割り込みの判定
 
 割り込みを起こせるかどうか、cause、ジャンプ先を示す変数を作成します
-()。
+(@<list>{csrunit.veryl.intr.intr})。
 
 //list[csrunit.veryl.intr.intr][ (csrunit.veryl)]{
 #@maprange(scripts/21/intr-range/core/src/csrunit.veryl,intr)
@@ -692,7 +739,7 @@ memunitモジュールが無効(@<code>{!valid})なとき、
 //}
 
 トラップ情報の変数に、割り込みの情報を割り当てます
-()。
+(@<list>{csrunit.veryl.intr.trap})。
 本書では例外を優先します。
 
 //list[csrunit.veryl.intr.trap][ (csrunit.veryl)]{
@@ -713,7 +760,7 @@ memunitモジュールが無効(@<code>{!valid})なとき、
 //}
 
 割り込みの時にMRET命令の判定が@<code>{0}になるようにしておきます
-()。
+(@<list>{csrunit.veryl.intr.ret})。
 
 //list[csrunit.veryl.intr.ret][ (csrunit.veryl)]{
 #@maprange(scripts/21/intr-range/core/src/csrunit.veryl,ret)
@@ -726,7 +773,7 @@ memunitモジュールが無効(@<code>{!valid})なとき、
 例外の場合にのみmtvalレジスタに例外の情報が書き込まれます。
 本書では例外を優先するので、
 @<code>{raise_expt}が@<code>{1}ならmtvalレジスタに書き込むようにします
-()。
+(@<list>{csrunit.veryl.intr.ff})。
 
 //list[csrunit.veryl.intr.ff][ (csrunit.veryl)]{
 #@maprange(scripts/21/intr-range/core/src/csrunit.veryl,ff)
@@ -745,7 +792,7 @@ memunitモジュールが無効(@<code>{!valid})なとき、
 ソフトウェア割り込みが正しく動くことを確認します。
 
 @<code>{test/mswi.c}を作成し、次のように記述します
-()。
+(@<list>{mswi.c.mswitest})。
 
 //list[mswi.c.mswitest][ (test/mswi.c)]{
 #@mapfile(scripts/21/mswitest/core/test/mswi.c)
@@ -807,7 +854,7 @@ Vectored(@<code>{2'b01})のとき、@<code>{(mtvec.BASE << 2) + 4 * cause}のア
 
 下位1ビットに書き込めるようにすることで、
 mtvec.MODEにVectoredを書き込めるようにします
-()。
+(@<list>{csrunit.veryl.mtvectored.WMASK})。
 
 //list[csrunit.veryl.mtvectored.WMASK][ (csrunit.veryl)]{
 #@maprange(scripts/21/mtvectored-range/core/src/csrunit.veryl,WMASK)
@@ -816,7 +863,7 @@ mtvec.MODEにVectoredを書き込めるようにします
 //}
 
 割り込みのジャンプ先をMODEとcauseに応じて変更します
-()。
+(@<list>{csrunit.veryl.mtvectored.interrupt_vector})。
 
 //list[csrunit.veryl.mtvectored.interrupt_vector][ (csrunit.veryl)]{
 #@maprange(scripts/21/mtvectored-range/core/src/csrunit.veryl,interrupt_vector)
@@ -826,7 +873,10 @@ mtvec.MODEにVectoredを書き込めるようにします
 //}
 
 例外のジャンプ先を、mtvecレジスタの下位2ビットを@<code>{0}にしたアドレス(Direct)に変更します
-()。
+(
+@<list>{csrunit.veryl.mtvectored.expt_vector}、
+@<list>{csrunit.veryl.mtvectored.trap_vector}
+)。
 新しく@<code>{expt_vector}を定義し、@<code>{trap_vector}に割り当てます。
 
 //list[csrunit.veryl.mtvectored.expt_vector][ (csrunit.veryl)]{
@@ -871,7 +921,11 @@ ACLINTモジュールにMTIME、MTIMECMPレジスタを実装します。
 今のところmhartidが@<code>{0}のハードウェアスレッドしか存在しないため、MTIMECMP0のみ実装します。
 
 @<code>{mtime}、@<code>{mtimecmp0}レジスタを作成し、読み書きできるようにします
-()。
+(
+@<list>{aclint_memory.veryl.mtime.reg}、
+@<list>{aclint_memory.veryl.mtime.reset}、
+@<list>{aclint_memory.veryl.mtime.rw}
+)。
 @<code>{mtime}レジスタはクロック毎にインクリメントします。
 
 //list[aclint_memory.veryl.mtime.reg][ (aclint_memory.veryl)]{
@@ -917,7 +971,10 @@ ACLINTモジュールにMTIME、MTIMECMPレジスタを実装します。
 //}
 
 aclint_ifインターフェースに@<code>{mtip}を作成し、タイマ割り込みが発生する条件を設定します
-()。
+(
+@<list>{aclint_if.veryl.mtime.mtip}、
+@<list>{aclint_memory.veryl.mtime.comb}
+)。
 
 //list[aclint_if.veryl.mtime.mtip][ (aclint_if.veryl)]{
 #@maprange(scripts/21/mtime-range/core/src/aclint_if.veryl,mtip)
@@ -941,7 +998,8 @@ aclint_ifインターフェースに@<code>{mtip}を作成し、タイマ割り�
 
 === mip.MTIP、割り込み原因を設定する
 
-mipレジスタのMTIPビットにaclint_ifインターフェースの@<code>{mtip}を接続します。
+mipレジスタのMTIPビットにaclint_ifインターフェースの@<code>{mtip}を接続します
+(@<list>{csrunit.veryl.mtime.mip})。
 
 //list[csrunit.veryl.mtime.mip][ (csrunit.veryl)]{
 #@maprange(scripts/21/mtime-range/core/src/csrunit.veryl,mip)
@@ -966,7 +1024,7 @@ mipレジスタのMTIPビットにaclint_ifインターフェースの@<code>{mt
 割り込み原因を優先順位に応じて設定します。
 タイマ割り込みはソフトウェア割り込みよりも優先順位が低いため、
 ソフトウェア割り込みの下で原因を設定します
-()。
+(@<list>{csrunit.veryl.mtime.intr})。
 
 //list[csrunit.veryl.mtime.intr][ (csrunit.veryl)]{
 #@maprange(scripts/21/mtime-range/core/src/csrunit.veryl,intr)
@@ -987,7 +1045,7 @@ mipレジスタのMTIPビットにaclint_ifインターフェースの@<code>{mt
 タイマ割り込みが正しく動くことを確認します。
 
 @<code>{test/mtime.c}を作成し、次のように記述します
-()。
+(@<list>{mtime.c.mtime})。
 
 //list[mtime.c.mtime][ (mtime.c)]{
 #@mapfile(scripts/21/mtime-range/core/test/mtime.c)
@@ -1048,7 +1106,7 @@ WFI命令で割り込みが発生するとき、WFI命令の次のアドレス�
 本書ではWFI命令を何もしない命令として実装します。
 
 inst_decoderモジュールでWFI命令をデコードできるようにします
-()。
+(@<list>{inst_decoder.veryl.wfi.wfi})。
 
 //list[inst_decoder.veryl.wfi.wfi][ (inst_decoder.veryl)]{
 #@maprange(scripts/21/wfi-range/core/src/inst_decoder.veryl,wfi)
@@ -1062,7 +1120,10 @@ inst_decoderモジュールでWFI命令をデコードできるようにしま�
 //}
 
 WFI命令で割り込みが発生するとき、mepcレジスタに@<code>{pc + 4}を書き込むようにします
-()。
+(
+@<list>{csrunit.veryl.wfi.is_wfi}、
+@<list>{csrunit.veryl.wfi.expt}
+)。
 
 //list[csrunit.veryl.wfi.is_wfi][ (csrunit.veryl)]{
 #@maprange(scripts/21/wfi-range/core/src/csrunit.veryl,is_wfi)
@@ -1087,7 +1148,7 @@ RISC-Vにはtime、instret、cycleという読み込み専用のCSRが定義さ�
 //footnote[hpmcounter][mhpmcounterレジスタと同じ値をとるhpmcounterレジスタもありますが、mhpmcounterレジスタを実装していないので実装しません。]
 
 @<code>{CsrAddr}型にレジスタのアドレスを追加します
-()。
+(@<list>{eei.veryl.zicntr.CsrAddr})。
 
 //list[eei.veryl.zicntr.CsrAddr][ (eei.veryl)]{
 #@maprange(scripts/21/zicntr-range/core/src/eei.veryl,CsrAddr)
@@ -1099,7 +1160,10 @@ RISC-Vにはtime、instret、cycleという読み込み専用のCSRが定義さ�
 //}
 
 mtimeレジスタの値をACLINTモジュールからcsrunitに渡します
-()。
+(
+@<list>{aclint_if.veryl.zicntr.mtime}、
+@<list>{aclint_memory.veryl.zicntr.comb}
+)。
 
 //list[aclint_if.veryl.zicntr.mtime][ (aclint_if.veryl)]{
 #@maprange(scripts/21/zicntr-range/core/src/aclint_if.veryl,mtime)
@@ -1128,7 +1192,7 @@ interface aclint_if {
 //}
 
 time、instret、cycleレジスタを読み込めるようにします
-()。
+(@<list>{csrunit.veryl.zicntr.rdata})。
 
 //list[csrunit.veryl.zicntr.rdata][ (csrunit.veryl)]{
 #@maprange(scripts/21/zicntr-range/core/src/csrunit.veryl,rdata)
