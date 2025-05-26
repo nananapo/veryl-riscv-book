@@ -110,7 +110,7 @@ S-mode、U-modeのときのXLENはそれぞれSXLEN、UXLENと定義されてお
 
 == misaレジスタ (Machine ISA)
 
-TODO 図
+//image[misa][misaレジスタ][width=100%]
 
 misaレジスタは、ハードウェアスレッドがサポートするISAを表すMXLENビットのレジスタです。
 MXLフィールドにはMXLENを表す数値(table TODO)が格納されています。
@@ -140,7 +140,7 @@ ExtensionsフィールドのM拡張(M)、基本整数命令セット(I)、C拡�
 
 == mimpidレジスタ (Machine Implementation ID)
 
-TODO 図
+//image[mimpid][mimpidレジスタ][width=100%]
 
 mimpidレジスタは、プロセッサ実装のバージョンを表す値を格納しているMXLENビットのレジスタです。
 値が@<code>{0}のときは、mimpidレジスタが実装されていないことを示します。
@@ -171,7 +171,7 @@ eeiパッケージにIDを定義して、読み込めるようにします
 
 == mhartidレジスタ (Hart ID)
 
-TODO 図
+//image[mhartid][mhartidレジスタ][width=100%]
 
 mhartidレジスタは、今実行しているハードウェアスレッド(hart)のIDを格納しているMXLENビットのレジスタです。
 複数のプロセッサ、ハードウェアスレッドが存在するときに、それぞれを区別するために使用できます。
@@ -199,10 +199,10 @@ mhart変数を作成し、読み込めるようにします
 
 == mstatusレジスタ (Machine Status)
 
-TODO 図
+//image[mstatus][mstatusレジスタ][width=100%]
 
 mstatusレジスタは、拡張の設定やトラップ、状態などを管理するMXLENビットのレジスタです。
-基本編ではTODO 図に示しているフィールドを、そのフィールドが必要になったときに実装します。
+基本編では@<img>{mstatus}に示しているフィールドを、そのフィールドが必要になったときに実装します。
 とりあえず今のところは読み込みだけできるようにしておきます
 ()。
 
