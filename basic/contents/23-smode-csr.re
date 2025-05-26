@@ -482,7 +482,7 @@ mstatus、sstatusレジスタのSIE、SPIE、SPPビットに書き込めるよ�
 sstatus.SPIEにsstatus.SIE、
 sstatus.SIEに@<code>{0}、
 sstatus.SPPにトラップ前の特権レベルを格納します
-(@<link>{csrunit.veryl.spp.ff})。
+(@<list>{csrunit.veryl.spp.ff})。
 
 //list[csrunit.veryl.spp.ff][ (csrunit.veryl)]{
 #@maprange(scripts/23/spp-range/core/src/csrunit.veryl,ff)
@@ -559,7 +559,7 @@ SRET命令を実行するとき、
 sstatus.SIEにsstatus.SPIE、
 sstatus.SPIEに@<code>{0}、
 sstatus.SPPに実装がサポートする最小の特権レベル(U-mode)を示す値を格納します
-(@<link>{csrunit.veryl.sret.ff})。
+(@<list>{csrunit.veryl.sret.ff})。
 
 //list[csrunit.veryl.sret.ff][ (csrunit.veryl)]{
 #@maprange(scripts/23/sret-range/core/src/csrunit.veryl,ff)
@@ -584,7 +584,7 @@ sstatus.SPPに実装がサポートする最小の特権レベル(U-mode)を示�
 //}
 
 SRET命令をS-mode未満の特権レベルで実行しようとしたら例外が発生するようにします
-(@<link>{csrunit.veryl.sret.priv})。
+(@<list>{csrunit.veryl.sret.priv})。
 
 //list[csrunit.veryl.sret.priv][ (csrunit.veryl)]{
 #@maprange(scripts/23/sret-range/core/src/csrunit.veryl,priv)
@@ -599,7 +599,7 @@ SRET命令をS-modeで実行したときに例外を発生させるかを制御�
 @<code>{1}のとき、Illegal instruction例外が発生するようになります。
 
 mstatus.TSRを変更できるようにします
-(@<link>{csrunit.veryl.tsr.WMASK})。
+(@<list>{csrunit.veryl.tsr.WMASK})。
 
 //list[csrunit.veryl.tsr.WMASK][ (csrunit.veryl)]{
 #@maprange(scripts/23/tsr-range/core/src/csrunit.veryl,WMASK)
@@ -609,8 +609,8 @@ mstatus.TSRを変更できるようにします
 
 例外を判定します
 (
-@<link>{csrunit.veryl.tsr.tw}、
-@<link>{csrunit.veryl.tsr.priv}
+@<list>{csrunit.veryl.tsr.tw}、
+@<list>{csrunit.veryl.tsr.priv}
 )。
 
 //list[csrunit.veryl.tsr.tw][ (csrunit.veryl)]{
@@ -698,7 +698,7 @@ mieレジスタのSEIE、SSIE、STIEビットを変更できるようにしま�
 ==== causeの設定
 
 S-modeの割り込みのcauseを設定します
-(@<link>{csrunit.veryl.mipreg.cause})。
+(@<list>{csrunit.veryl.mipreg.cause})。
 
 //list[csrunit.veryl.mipreg.cause][ (csrunit.veryl)]{
 #@maprange(scripts/23/mipreg-range/core/src/csrunit.veryl,cause)
@@ -723,12 +723,12 @@ sieレジスタはmidelegレジスタで委譲された割り込みに対応す�
 
 レジスタを作成し、読み込めるようにします
 (
-@<link>{csrunit.veryl.siesipdeleg.deleg}、
-@<link>{csrunit.veryl.siesipdeleg.sipsie}、
-@<link>{csrunit.veryl.siesipdeleg.deleg_reset}、
-@<link>{csrunit.veryl.siesipdeleg.si_reset}、
-@<link>{csrunit.veryl.siesipdeleg.deleg_rdata}、
-@<link>{csrunit.veryl.siesipdeleg.si_rdata}
+@<list>{csrunit.veryl.siesipdeleg.deleg}、
+@<list>{csrunit.veryl.siesipdeleg.sipsie}、
+@<list>{csrunit.veryl.siesipdeleg.deleg_reset}、
+@<list>{csrunit.veryl.siesipdeleg.si_reset}、
+@<list>{csrunit.veryl.siesipdeleg.deleg_rdata}、
+@<list>{csrunit.veryl.siesipdeleg.si_rdata}
 )。
 
 //list[csrunit.veryl.siesipdeleg.deleg][ (csrunit.veryl)]{
@@ -774,12 +774,12 @@ sieレジスタはmidelegレジスタで委譲された割り込みに対応す�
 
 書き込みマスクを設定し、書き込めるようにします
 (
-@<link>{csrunit.veryl.siesipdeleg.WMASK_deleg}、
-@<link>{csrunit.veryl.siesipdeleg.WMASK_sie}、
-@<link>{csrunit.veryl.siesipdeleg.deleg_wmask}、
-@<link>{csrunit.veryl.siesipdeleg.sie_wmask}、
-@<link>{csrunit.veryl.siesipdeleg.deleg_write}、
-@<link>{csrunit.veryl.siesipdeleg.sie_write}
+@<list>{csrunit.veryl.siesipdeleg.WMASK_deleg}、
+@<list>{csrunit.veryl.siesipdeleg.WMASK_sie}、
+@<list>{csrunit.veryl.siesipdeleg.deleg_wmask}、
+@<list>{csrunit.veryl.siesipdeleg.sie_wmask}、
+@<list>{csrunit.veryl.siesipdeleg.deleg_write}、
+@<list>{csrunit.veryl.siesipdeleg.sie_write}
 )。
 
 //list[csrunit.veryl.siesipdeleg.WMASK_deleg][ (csrunit.veryl)]{
@@ -827,7 +827,7 @@ sieレジスタはmidelegレジスタで委譲された割り込みに対応す�
 作成したCSRを利用して、割り込みが発生する条件、トラップが発生したときのCSRの操作を変更します。
 
 例外が発生するとき、遷移先の特権レベルをmedelegレジスタによって変更します
-(@<link>{csrunit.veryl.trapdeleg.expt}）。
+(@<list>{csrunit.veryl.trapdeleg.expt}）。
 
 //list[csrunit.veryl.trapdeleg.expt][ (csrunit.veryl)]{
 #@maprange(scripts/23/trapdeleg-range/core/src/csrunit.veryl,expt)
@@ -837,8 +837,8 @@ sieレジスタはmidelegレジスタで委譲された割り込みに対応す�
 
 割り込みの発生条件と参照するCSRを、遷移先の特権レベルごとに用意します
 (
-@<link>{csrunit.veryl.trapdeleg.mmode}、
-@<link>{csrunit.veryl.trapdeleg.smode}
+@<list>{csrunit.veryl.trapdeleg.mmode}、
+@<list>{csrunit.veryl.trapdeleg.smode}
 ）。
 
 //list[csrunit.veryl.trapdeleg.mmode][ (csrunit.veryl)]{
@@ -872,7 +872,7 @@ sieレジスタはmidelegレジスタで委譲された割り込みに対応す�
 //}
 
 M-mode向けの割り込みを優先して利用します
-(@<link>{csrunit.veryl.trapdeleg.intr}）。
+(@<list>{csrunit.veryl.trapdeleg.intr}）。
 
 //list[csrunit.veryl.trapdeleg.intr][ (csrunit.veryl)]{
 #@maprange(scripts/23/trapdeleg-range/core/src/csrunit.veryl,intr)
@@ -902,8 +902,8 @@ TODOテーブル4095個
 aclint_ifインターフェースに、
 mipレジスタのSSIPビットを@<code>{1}にする要求のための@<code>{setssip}を作成します
 (
-@<link>{aclint_if.veryl.sswi.setssip}、
-@<link>{aclint_memory.veryl.sswi.comb}
+@<list>{aclint_if.veryl.sswi.setssip}、
+@<list>{aclint_memory.veryl.sswi.comb}
 ）。
 
 //list[aclint_if.veryl.sswi.setssip][ (aclint_if.veryl)]{
@@ -937,9 +937,9 @@ aclintモジュールでSETSSIP0への書き込みを検知し、最下位ビッ
 
 csrunitモジュールで@<code>{setssip}を確認し、mip.SSIPを立てるようにします
 (
-@<link>{csrunit.veryl.sswi.reg}、
-@<link>{csrunit.veryl.sswi.update}、
-@<link>{csrunit.veryl.sswi.write}
+@<list>{csrunit.veryl.sswi.reg}、
+@<list>{csrunit.veryl.sswi.update}、
+@<list>{csrunit.veryl.sswi.write}
 )。
 
 //list[csrunit.veryl.sswi.reg][ (csrunit.veryl)]{

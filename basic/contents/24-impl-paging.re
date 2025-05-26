@@ -427,7 +427,7 @@ csrunitモジュールに、
 メモリにアクセスする命令の例外情報を監視するためのポートを作成します
 (
 @<list>{csrunit.veryl.newexpt.port}、
-@<list>{csrunit.veryl.newexpt.csru}、
+@<list>{core.veryl.newexpt.csru}、
 @<list>{csrunit.veryl.newexpt.fault}、
 @<list>{csrunit.veryl.newexpt.raise}、
 @<list>{csrunit.veryl.newexpt.cause}
@@ -1070,7 +1070,7 @@ module core (
 csrunitモジュールにポートを追加し、CSRを割り当てます
 (
 @<list>{csrunit.veryl.empty.port}、
-@<list>{csrunit.veryl.empty.csru}、
+@<list>{core.veryl.empty.csru}、
 @<list>{csrunit.veryl.empty.assign}
 )。
 
