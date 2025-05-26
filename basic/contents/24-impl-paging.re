@@ -79,7 +79,7 @@ TODO 図 (Sv39)
 PPN(Physical Page Number)はroot PTEの物理アドレスの一部を格納するフィールドです。
 root PTEのアドレスは仮想アドレスのVPNビットと組み合わせて作られます(TODO 図)。
 
-==== アドレス変換プロセス (Sv39)
+===={sv39process} アドレス変換プロセス (Sv39)
 
 Sv39の仮想アドレスは次の方法によって物理アドレスに変換されます@<fn>{access-fault}。
 
@@ -640,16 +640,953 @@ mstatus.MPRVは、M-mode以外のモードにトラップするときに@<code>{
 
 == アドレス変換モジュール(PTW)の作成
 
-== Sv39の実装
+ページテーブルエントリをフェッチしてアドレス変換を行うモジュール(ptw)を作成します。
+まず、MODEがBareのとき(仮想アドレス = 物理アドレス)の動作を実装し、
+Sv39を@<secref>{impl-sv39}で実装します。
 
-=== pte
+=== CSRのインターフェースを実装する
 
-=== ptw
+ptwで使用するCSRをcsrunitモジュールから渡すためのインターフェースを定義します。
+
+@<code>{src/ptw_ctrl_if.veryl}を作成し、次のように記述します
+()。
+
+//list[ptw_ctrl_if.veryl.empty][ (ptw_ctrl_if.veryl)]{
+#@mapfile(scripts/24/empty-range/core/src/ptw_ctrl_if.veryl)
+import eei::*;
+
+interface ptw_ctrl_if {
+    var priv: PrivMode;
+    var satp: UIntX   ;
+    var mxr : logic   ;
+    var sum : logic   ;
+    var mprv: logic   ;
+    var mpp : PrivMode;
+
+    modport master {
+        priv: output,
+        satp: output,
+        mxr : output,
+        sum : output,
+        mprv: output,
+        mpp : output,
+    }
+
+    modport slave {
+        is_enabled: import,
+        ..converse(master)
+    }
+
+    function is_enabled (
+        is_inst: input logic,
+    ) -> logic {
+        if satp[msb-:4] == 0 {
+            return 0;
+        }
+        if is_inst {
+            return priv <= PrivMode::S;
+        } else {
+            return (if mprv ? mpp : priv) <= PrivMode::S;
+        }
+    }
+}
+#@end
+//}
+
+is_enabledは、CSRとアクセス目的からページングがページングが有効かどうかを判定する関数です。
+Bareかどうかを判定した後に、命令フェッチかどうか(@<code>{is_inst})によって分岐しています。
+命令フェッチのときはS-mode以下の特権レベルのときに有効になります。
+ロードストアのとき、mstatus.MPRVが@<code>{1}ならmstatus.mpp、@<code>{0}なら現在の特権レベルがS-mode以下なら有効になります。
+
+=== Bareだけのptwモジュールを作成する
+
+@<code>{src/ptw.veryl}を作成し、次のようなポートを記述します
+()。
+
+//list[ptw.veryl.empty.port][ (ptw.veryl)]{
+#@maprange(scripts/24/empty-range/core/src/ptw.veryl,port)
+import eei::*;
+
+module ptw (
+    clk    : input   clock             ,
+    rst    : input   reset             ,
+    is_inst: input   logic             ,
+    slave  : modport Membus::slave     ,
+    master : modport Membus::master    ,
+    ctrl   : modport ptw_ctrl_if::slave,
+) {
+#@end
+//}
+
+@<code>{slave}はcoreモジュール側から仮想アドレスによる要求を受け付けるためのインターフェース、
+@<code>{master}はmmio_conterollerモジュール側に物理アドレスによるアクセスを行うためのインターフェースです。
+
+@<code>{is_inst}を使い、ページングが有効かどうか判定します
+()。
+
+//list[ptw.veryl.empty.paging_enabled][ (ptw.veryl)]{
+#@maprange(scripts/24/empty-range/core/src/ptw.veryl,paging_enabled)
+    let paging_enabled: logic = ctrl.is_enabled(is_inst);
+#@end
+//}
+
+状態の管理のために@<code>{State}型を定義します
+()。
+
+//list[ptw.veryl.empty.state][ (ptw.veryl)]{
+#@maprange(scripts/24/empty-range/core/src/ptw.veryl,state)
+    enum State {
+        IDLE,
+        EXECUTE_READY,
+        EXECUTE_VALID,
+    }
+
+    var state: State;
+#@end
+//}
+
+ : @<code>{State::IDLE}
+    @<code>{slave}から要求を受け付け、@<code>{master}に物理アドレスでアクセスします。
+    @<code>{master}の@<code>{ready}が@<code>{1}なら@<code>{State::EXECUTE_VALID}、
+    @<code>{0}なら@<code>{EXECUTE_READY}に状態を移動します。
+ : @<code>{State::EXECUTE_READY}
+    @<code>{master}に物理アドレスでメモリアクセスを要求し続けます。
+    @<code>{master}の@<code>{ready}が@<code>{1}なら状態を@<code>{State::EXECUTE_VALID}に移動します。
+ : @<code>{State::EXECUTE_VALID}
+    @<code>{master}からのレスポンスを待ちます。
+    @<code>{master}の@<code>{rvalid}が@<code>{1}のとき、
+    @<code>{State::IDLE}と同じように@<code>{slave}からの要求を受け付けます。
+    @<code>{slave}が何も要求していないなら、状態を@<code>{State::IDLE}に移動します。
+
+@<code>{slave}からの要求を保存しておくためのインターフェースをインスタンス化しておきます
+()。
+
+//list[ptw.veryl.empty.save][ (ptw.veryl)]{
+#@maprange(scripts/24/empty-range/core/src/ptw.veryl,save)
+    inst slave_saved: Membus;
+#@end
+//}
+
+状態に基づいて、@<code>{master}に要求を割り当てます
+()。
+@<code>{master}に要求を割り当てるとき、
+アドレスだけ@<code>{physical_addr}レジスタの値を割り当てるようにしておきます。
+
+//list[ptw.veryl.empty.phy][ (ptw.veryl)]{
+#@maprange(scripts/24/empty-range/core/src/ptw.veryl,phy)
+    var physical_addr: Addr;
+#@end
+//}
+
+//list[ptw.veryl.empty.assign_master][ (ptw.veryl)]{
+#@maprange(scripts/24/empty-range/core/src/ptw.veryl,assign_master)
+    function assign_master (
+        addr : input Addr                        ,
+        wen  : input logic                       ,
+        wdata: input logic<MEMBUS_DATA_WIDTH>    ,
+        wmask: input logic<MEMBUS_DATA_WIDTH / 8>,
+    ) {
+        master.valid = 1;
+        master.addr  = addr;
+        master.wen   = wen;
+        master.wdata = wdata;
+        master.wmask = wmask;
+    }
+
+    function accept_request_comb () {
+        if slave.ready && slave.valid && !paging_enabled {
+            assign_master(slave.addr, slave.wen, slave.wdata, slave.wmask);
+        }
+    }
+
+    always_comb {
+        master.valid = 0;
+        master.addr  = 0;
+        master.wen   = 0;
+        master.wdata = 0;
+        master.wmask = 0;
+
+        case state {
+            State::IDLE         : accept_request_comb();
+            State::EXECUTE_READY: assign_master      (physical_addr, slave_saved.wen, slave_saved.wdata, slave_saved.wmask);
+            State::EXECUTE_VALID: if master.rvalid {
+                accept_request_comb();
+            }
+            default: {}
+        }
+    }
+#@end
+//}
+
+状態に基づいて、@<code>{slave}に@<code>{ready}と結果を割り当てます
+()。
+
+//list[ptw.veryl.empty.assign_slave][ (ptw.veryl)]{
+#@maprange(scripts/24/empty-range/core/src/ptw.veryl,assign_slave)
+    always_comb {
+        slave.ready  = 0;
+        slave.rvalid = 0;
+        slave.rdata  = 0;
+        slave.expt   = 0;
+
+        case state {
+            State::IDLE         : slave.ready = 1;
+            State::EXECUTE_VALID: {
+                slave.ready  = master.rvalid;
+                slave.rvalid = master.rvalid;
+                slave.rdata  = master.rdata;
+                slave.expt   = master.expt;
+            }
+            default: {}
+        }
+    }
+#@end
+//}
+
+状態を遷移する処理を記述します
+()。
+要求を受け入れるとき、@<code>{slave_saved}に要求を保存します。
+
+//list[ptw.veryl.empty.ff][ (ptw.veryl)]{
+#@maprange(scripts/24/empty-range/core/src/ptw.veryl,ff)
+    function accept_request_ff () {
+        slave_saved.valid = slave.ready && slave.valid;
+        if slave.ready && slave.valid {
+            slave_saved.addr  = slave.addr;
+            slave_saved.wen   = slave.wen;
+            slave_saved.wdata = slave.wdata;
+            slave_saved.wmask = slave.wmask;
+            if paging_enabled {
+                // TODO
+            } else {
+                state         = if master.ready ? State::EXECUTE_VALID : State::EXECUTE_READY;
+                physical_addr = slave.addr;
+            }
+        } else {
+            state = State::IDLE;
+        }
+    }
+
+    function on_clock () {
+        case state {
+            State::IDLE         : accept_request_ff();
+            State::EXECUTE_READY: if master.ready {
+                state = State::EXECUTE_VALID;
+            }
+            State::EXECUTE_VALID: if master.rvalid {
+                accept_request_ff();
+            }
+            default: {}
+        }
+    }
+
+    function on_reset () {
+        state             = State::IDLE;
+        physical_addr     = 0;
+        slave_saved.valid = 0;
+        slave_saved.addr  = 0;
+        slave_saved.wen   = 0;
+        slave_saved.wdata = 0;
+        slave_saved.wmask = 0;
+    }
+
+    always_ff {
+        if_reset {
+            on_reset();
+        } else {
+            on_clock();
+        }
+    }
+#@end
+//}
+
+=== ptwモジュールをインスタンス化する
+
+topモジュールでptwモジュールをインスタンス化します。
+
+ptwモジュールはmmio_controllerモジュールの前で仮想アドレスを物理アドレスに変換するモジュールです。
+ptwモジュールとmmio_controllerモジュールの間のインターフェースを作成します
+()。
+
+//list[top.veryl.empty.intr][ (top.veryl)]{
+#@maprange(scripts/24/empty-range/core/src/top.veryl,intr)
+    inst ptw_membus     : Membus;
+#@end
+//}
+
+調停処理をptwモジュール向けのものに変更します
+()。
+
+//list[top.veryl.empty.arb][ (top.veryl)]{
+#@maprange(scripts/24/empty-range/core/src/top.veryl,arb)
+    always_ff {
+        if_reset {
+            memarb_last_i = 0;
+        } else {
+            if @<b>|ptw|_membus.ready {
+                memarb_last_i = !d_membus.valid;
+            }
+        }
+    }
+
+    always_comb {
+        i_membus.ready  = @<b>|ptw|_membus.ready && !d_membus.valid;
+        i_membus.rvalid = @<b>|ptw|_membus.rvalid && memarb_last_i;
+        i_membus.rdata  = @<b>|ptw|_membus.rdata;
+        i_membus.expt   = @<b>|ptw|_membus.expt;
+
+        d_membus.ready  = @<b>|ptw|_membus.ready;
+        d_membus.rvalid = @<b>|ptw|_membus.rvalid && !memarb_last_i;
+        d_membus.rdata  = @<b>|ptw|_membus.rdata;
+        d_membus.expt   = @<b>|ptw|_membus.expt;
+
+        @<b>|ptw|_membus.valid = i_membus.valid | d_membus.valid;
+        if d_membus.valid {
+            @<b>|ptw|_membus.addr  = d_membus.addr;
+            @<b>|ptw|_membus.wen   = d_membus.wen;
+            @<b>|ptw|_membus.wdata = d_membus.wdata;
+            @<b>|ptw|_membus.wmask = d_membus.wmask;
+        } else {
+            @<b>|ptw|_membus.addr  = i_membus.addr;
+            @<b>|ptw|_membus.wen   = 0; // 命令フェッチは常に読み込み
+            @<b>|ptw|_membus.wdata = 'x;
+            @<b>|ptw|_membus.wmask = 'x;
+        }
+    }
+#@end
+//}
+
+今処理している要求、
+または今のクロックから処理し始める要求が命令フェッチによるものか判定する変数を作成します
+()。
+
+//list[top.veryl.empty.is_inst][ (top.veryl)]{
+#@maprange(scripts/24/empty-range/core/src/top.veryl,is_inst)
+    let ptw_is_inst  : logic = (i_membus.ready && i_membus.valid) || // inst ack or
+     !(d_membus.ready && d_membus.valid) && memarb_last_i; // data not ack & last ack is inst
+#@end
+//}
+
+
+ptwモジュールをインスタンス化します
+()
+
+//list[top.veryl.empty.ptw][ (top.veryl)]{
+#@maprange(scripts/24/empty-range/core/src/top.veryl,ptw)
+    inst ptw_ctrl: ptw_ctrl_if;
+    inst paging_unit: ptw (
+        clk                 ,
+        rst                 ,
+        is_inst: ptw_is_inst,
+        slave  : ptw_membus ,
+        master : mmio_membus,
+        ctrl   : ptw_ctrl   ,
+    );
+#@end
+//}
+
+csrunitモジュールとptwモジュールを@<code>{ptw_ctrl_if}インターフェースで接続するために、
+coreモジュールにポートを追加します
+()。
+
+//list[core.veryl.empty.port][ (core.veryl)]{
+#@maprange(scripts/24/empty-range/core/src/core.veryl,port)
+module core (
+    clk     : input   clock               ,
+    rst     : input   reset               ,
+    i_membus: modport core_inst_if::master,
+    d_membus: modport core_data_if::master,
+    led     : output  UIntX               ,
+    aclint  : modport aclint_if::slave    ,
+    @<b>|ptw_ctrl: modport ptw_ctrl_if::master ,|
+) {
+#@end
+//}
+
+//list[top.veryl.empty.core][ (top.veryl)]{
+#@maprange(scripts/24/empty-range/core/src/top.veryl,core)
+    inst c: core (
+        clk                      ,
+        rst                      ,
+        i_membus: i_membus_core  ,
+        d_membus: d_membus_core  ,
+        led                      ,
+        aclint  : aclint_core_bus,
+        @<b>|ptw_ctrl                 ,|
+    );
+#@end
+//}
+
+csrunitモジュールにポートを追加し、CSRを割り当てます
+()。
+
+//list[csrunit.veryl.empty.port][ (csrunit.veryl)]{
+#@maprange(scripts/24/empty-range/core/src/csrunit.veryl,port)
+    membus     : modport core_data_if::master    ,
+    @<b>|ptw_ctrl   : modport ptw_ctrl_if::master     ,|
+) {
+#@end
+//}
+
+//list[core.veryl.empty.csru][ (core.veryl)]{
+#@maprange(scripts/24/empty-range/core/src/core.veryl,csru)
+        membus     : d_membus             ,
+        @<b>|ptw_ctrl                          ,|
+    );
+#@end
+//}
+
+//list[csrunit.veryl.empty.assign][ (csrunit.veryl)]{
+#@maprange(scripts/24/empty-range/core/src/csrunit.veryl,assign)
+    always_comb {
+        ptw_ctrl.priv = mode;
+        ptw_ctrl.satp = satp;
+        ptw_ctrl.mxr  = mstatus_mxr;
+        ptw_ctrl.sum  = mstatus_sum;
+        ptw_ctrl.mprv = mstatus_mprv;
+        ptw_ctrl.mpp  = mstatus_mpp;
+    }
+#@end
+//}
+
+=={impl-sv39} Sv39の実装
+
+ptwモジュールに、Sv39を実装します。
+ここで定義する関数は、コメントと@<secref>{sv39process}を参考に動作を確認してください。
+
+==={define_const} 定数の定義
+
+ptwモジュールで使用する定数とユーティリティ関数を実装します。
+
+@<code>{src/sv39util.veryl}を作成し、次のように記述します
+()。
+定数は@<secref>{sv39process}で使用しているものと同じです。
+
+//list[sv39util.veryl.sv39][ (sv39util.veryl)]{
+#@mapfile(scripts/24/sv39-range/core/src/sv39util.veryl)
+import eei::*;
+package sv39util {
+    const PAGESIZE: u32      = 12;
+    const PTESIZE : u32      = 8;
+    const LEVELS  : logic<2> = 3;
+
+    type Level = logic<2>;
+
+    // 有効な仮想アドレスか判定する
+    function is_valid_vaddr (
+        va: input Addr,
+    ) -> logic {
+        let hiaddr: logic<26> = va[msb:38];
+        return &hiaddr || &~hiaddr;
+    }
+
+    // 仮想アドレスのVPN[level]フィールドを取得する
+    function vpn (
+        va   : input Addr ,
+        level: input Level,
+    ) -> logic<9> {
+        return case level {
+            0      : va[20:12],
+            1      : va[29:21],
+            2      : va[38:30],
+            default: 0,
+        };
+    }
+
+    // 最初にフェッチするPTEのアドレスを取得する
+    function get_first_pte_address (
+        satp: input UIntX,
+        va  : input Addr ,
+    ) -> Addr {
+        return {1'b0 repeat XLEN - 44 - PAGESIZE, satp[43:0], 1'b0 repeat PAGESIZE} // a
+         + {1'b0 repeat XLEN - 9 - $clog2(PTESIZE), va[38:30], 1'b0 repeat $clog2(PTESIZE)}; // vpn[2]
+    }
+}
+#@end
+//}
+
+==={define_PTE} PTEの定義
+
+Sv39のPTEのビットを分かりやすく取得するために、
+次のインターフェースを定義します。
+
+@<code>{src/pte.veryl}を作成し、次のように記述します
+()。
+
+//list[pte.veryl.sv39.bits][ (pte.veryl)]{
+#@maprange(scripts/24/sv39-range/core/src/pte.veryl,bits)
+import eei::*;
+import sv39util::*;
+
+interface PTE39 {
+    var value: UIntX;
+
+    function v () -> logic { return value[0]; }
+    function r () -> logic { return value[1]; }
+    function w () -> logic { return value[2]; }
+    function x () -> logic { return value[3]; }
+    function u () -> logic { return value[4]; }
+    function a () -> logic { return value[6]; }
+    function d () -> logic { return value[7]; }
+
+    function reserved -> logic<10> { return value[63:54]; }
+
+    function ppn2 () -> logic<26> { return value[53:28]; }
+    function ppn1 () -> logic<9> { return value[27:19]; }
+    function ppn0 () -> logic<9> { return value[18:10]; }
+    function ppn  () -> logic<44> { return value[53:10]; }
+}
+#@end
+//}
+
+PTEを使ったユーティリティ関数を追加します
+()。
+
+//list[pte.veryl.sv39.func][ (pte.veryl)]{
+#@maprange(scripts/24/sv39-range/core/src/pte.veryl,func)
+    // leaf PTEか判定する
+    function is_leaf () -> logic { return r() || x(); }
+
+    // leaf PTEのとき、PPNがページサイズに整列されているかどうかを判定する
+    function is_ppn_aligned (
+        level: input Level,
+    ) -> logic {
+        return case level {
+            0      : 1,
+            1      : ppn0() == 0,
+            2      : ppn1() == 0 && ppn0() == 0,
+            default: 1,
+        };
+    }
+
+    // 有効なPTEか判定する
+    function is_valid (
+        level: input Level,
+    ) -> logic {
+        if !v() || reserved() != 0 || !r() && w() {
+            return 0;
+        }
+        if is_leaf() && !is_ppn_aligned(level) {
+            return 0;
+        }
+        if !is_leaf() && level == 0 {
+            return 0;
+        }
+        return 1;
+    }
+
+    // 次のlevelのPTEのアドレスを得る
+    function get_next_pte_addr (
+        level: input Level,
+        va   : input Addr ,
+    ) -> Addr {
+        return {1'b0 repeat XLEN - 44 - PAGESIZE, ppn(), 1'b0 repeat PAGESIZE} + // a
+         {1'b0 repeat XLEN - 9 - $clog2(PTESIZE), vpn(va, level - 1), 1'b0 repeat $clog2(PTESIZE)};
+    }
+
+    // PTEと仮想アドレスから物理アドレスを生成する
+    function get_physical_address (
+        level: input Level,
+        va   : input Addr ,
+    ) -> Addr {
+        return {
+            8'b0, ppn2(), case level {
+                0: {
+                    ppn1(), ppn0()
+                },
+                1: {
+                    ppn1(), vpn(va, 0)
+                },
+                2: {
+                    vpn(va, 1), vpn(va, 0)
+                },
+                default: 18'b0,
+            }, va[11:0]
+        };
+    }
+
+    // A、Dビットを更新する必要があるかを判定する
+    function need_update_ad (
+        wen: input logic,
+    ) -> logic {
+        return !a() || wen && !d();
+    }
+
+    // A, Dビットを更新したPTEの下位8ビットを生成する
+    function get_updated_ad (
+        wen: input logic,
+    ) -> logic<8> {
+        let a: logic<8> = 1 << 6;
+        let d: logic<8> = wen as u8 << 7;
+        return value[7:0] | a | d;
+    }
+#@end
+//}
+
+=== ptwモジュールの実装
+
+sv39utilパッケージをimportします
+()。
+
+//list[ptw.veryl.sv39.import][ (ptw.veryl)]{
+#@maprange(scripts/24/sv39-range/core/src/ptw.veryl,import)
+import sv39util::*;
+#@end
+//}
+
+PTE39インターフェースをインスタンス化します
+()。
+@<code>{value}には@<code>{master}のロード結果を割り当てます。
+
+//list[ptw.veryl.sv39.pte][ (ptw.veryl)]{
+#@maprange(scripts/24/sv39-range/core/src/ptw.veryl,pte)
+    inst pte      : PTE39;
+    assign pte.value = master.rdata;
+#@end
+//}
+
+TODO 図
+
+仮想アドレスを変換するための状態を追加します
+()。
+本章ではページングが有効な時に、
+状態がTODO図のように遷移するようにします。
+
+//list[ptw.veryl.sv39.State][ (ptw.veryl)]{
+#@maprange(scripts/24/sv39-range/core/src/ptw.veryl,State)
+    enum State {
+        IDLE,
+        @<b>|WALK_READY,|
+        @<b>|WALK_VALID,|
+        @<b>|SET_AD,|
+        EXECUTE_READY,
+        EXECUTE_VALID,
+        @<b>|PAGE_FAULT,|
+    }
+#@end
+//}
+
+現在のPTEのlevel(@<code>{level})、
+PTEのアドレス(@<code>{taddr})、
+要求によって更新されるPTEの下位8ビットを格納するためのレジスタを定義します
+()。
+
+//list[ptw.veryl.sv39.reg][ (ptw.veryl)]{
+#@maprange(scripts/24/sv39-range/core/src/ptw.veryl,reg)
+    var physical_addr: Addr    ;
+    @<b>|var taddr        : Addr    ;|
+    @<b>|var level        : Level   ;|
+    @<b>|var wdata_ad     : logic<8>;|
+#@end
+//}
+
+//list[ptw.veryl.sv39.reset][ (ptw.veryl)]{
+#@maprange(scripts/24/sv39-range/core/src/ptw.veryl,reset)
+    function on_reset () {
+        state             = State::IDLE;
+        physical_addr     = 0;
+        @<b>|taddr             = 0;|
+        @<b>|level             = 0;|
+#@end
+//}
+
+
+PTEのフェッチとA、Dビットの更新のために@<code>{master}に要求を割り当てます
+()。
+PTEは@<code>{taddr}を使ってアクセスし、
+A、Dビットの更新では下位8ビットのみの書き込みマスクを設定しています。
+
+//list[ptw.veryl.sv39.assign_master][ (ptw.veryl)]{
+#@maprange(scripts/24/sv39-range/core/src/ptw.veryl,assign_master)
+case state {
+    State::IDLE      : accept_request_comb();
+    @<b>|State::WALK_READY: assign_master      (taddr, 0, 0, 0);|
+    @<b>|State::SET_AD    : assign_master      (taddr, 1, // wen = 1|
+    @<b>| {1'b0 repeat MEMBUS_DATA_WIDTH - 8, wdata_ad}, // wdata|
+    @<b>| {1'b0 repeat XLEN / 8 - 1, 1'b1} // wmask|
+    @<b>|);|
+    State::EXECUTE_READY: assign_master(physical_addr, slave_saved.wen, slave_saved.wdata, slave_saved.wmask);
+    State::EXECUTE_VALID: if master.rvalid {
+        accept_request_comb();
+    }
+    default: {}
+}
+#@end
+//}
+
+@<code>{slave}への結果の割り当てで、ページフォルトが発生していた場合の結果を割り当てます
+()。
+
+//list[ptw.veryl.sv39.assign_slave][ (ptw.veryl)]{
+#@maprange(scripts/24/sv39-range/core/src/ptw.veryl,assign_slave)
+State::PAGE_FAULT: {
+    slave.rvalid          = 1;
+    slave.expt.valid      = 1;
+    slave.expt.page_fault = 1;
+}
+#@end
+//}
+
+ページングが有効なときの要求を受け入れる動作を実装します
+()。
+仮想アドレスが有効かどうかでページフォルトを判定し、@<code>{taddr}レジスタには最初のPTEのアドレスを割り当てます。
+@<code>{level}の初期値はLEVELS - 1とします。
+
+//list[ptw.veryl.sv39.accept][ (ptw.veryl)]{
+#@maprange(scripts/24/sv39-range/core/src/ptw.veryl,accept)
+if paging_enabled {
+    @<b>|state = if is_valid_vaddr(slave.addr) ? State::WALK_READY : State::PAGE_FAULT;|
+    @<b>|taddr = get_first_pte_address(ctrl.satp, slave.addr);|
+    @<b>|level = LEVELS - 1;|
+} else {
+    state         = if master.ready ? State::EXECUTE_VALID : State::EXECUTE_READY;
+    physical_addr = slave.addr;
+}
+#@end
+//}
+
+ページフォルトが発生したとき、状態を@<code>{State::IDLE}に戻します
+()。
+
+//list[ptw.veryl.sv39.clockpf][ (ptw.veryl)]{
+#@maprange(scripts/24/sv39-range/core/src/ptw.veryl,clockpf)
+State::PAGE_FAULT: state = State::IDLE;
+#@end
+//}
+
+A、Dビットを更新するとき、メモリが書き込み要求を受け入れたら状態を@<code>{State::EXECUTE_READY}に移動します
+()。
+
+//list[ptw.veryl.sv39.clockad][ (ptw.veryl)]{
+#@maprange(scripts/24/sv39-range/core/src/ptw.veryl,clockad)
+State::SET_AD: if master.ready {
+    state = State::EXECUTE_READY;
+}
+#@end
+//}
+
+PTEと要求から、ページにアクセスする権限があるかどうかを確認する関数を定義します
+()。
+条件の詳細は@<secref>{sv39process}を確認してください。
+
+//list[ptw.veryl.sv39.check][ (ptw.veryl)]{
+#@maprange(scripts/24/sv39-range/core/src/ptw.veryl,check)
+    function check_permission (
+        req: modport Membus::all_input,
+    ) -> logic {
+        let priv: PrivMode = if is_inst || !ctrl.mprv ? ctrl.priv : ctrl.mpp;
+
+        // U-mode access with PTE.U=0
+        let u_u0: logic = priv == PrivMode::U && !pte.u();
+        // S-mode load/store with PTE.U=1 & sum=0
+        let sd_u1: logic = !is_inst && priv == PrivMode::S && pte.u() && !ctrl.sum;
+        // S-mode execute with PTE.U=1
+        let si_u1: logic = is_inst && priv == PrivMode::S && pte.u();
+
+        // execute without PTE.X
+        let x: logic = is_inst && !pte.x();
+        // write without PTE.W
+        let w: logic = !is_inst && req.wen && !pte.w();
+        // read without PTE.R (MXR)
+        let r: logic = !is_inst && !req.wen && !pte.r() && !(pte.x() && ctrl.mxr);
+
+        return !(u_u0 | sd_u1 | si_u1 | x | w | r);
+    }
+#@end
+//}
+
+PTEをフェッチし、ページフォルトの判定、次のPTEのフェッチ、A、Dビットを更新する状態への遷移を実装します
+()。
+
+//list[ptw.veryl.sv39.walk][ (ptw.veryl)]{
+#@maprange(scripts/24/sv39-range/core/src/ptw.veryl,walk)
+State::WALK_READY: if master.ready {
+    state = State::WALK_VALID;
+}
+State::WALK_VALID: if master.rvalid {
+    if !pte.is_valid(level) {
+        state = State::PAGE_FAULT;
+    } else {
+        if pte.is_leaf() {
+            if check_permission(slave_saved) {
+                physical_addr = pte.get_physical_address(level, slave_saved.addr);
+                if pte.need_update_ad(slave_saved.wen) {
+                    state    = State::SET_AD;
+                    wdata_ad = pte.get_updated_ad(slave_saved.wen);
+                } else {
+                    state = State::EXECUTE_READY;
+                }
+            } else {
+                state = State::PAGE_FAULT;
+            }
+        } else {
+            // read next pte
+            state = State::WALK_READY;
+            taddr = pte.get_next_pte_addr(level, slave_saved.addr);
+            level = level - 1;
+        }
+    }
+}
+#@end
+//}
+
+これでSv39をptwモジュールに実装できました。
 
 == SFENCE.VMA命令の実装
 
+SFENCE.VMA命令は、
+SFENCE.VMA命令を実行する以前のストア命令が反映されたことを保証する命令です。
+S-mode以上の特権レベルのときに実行できます。
+
+基本編ではすべてのメモリアクセスを直列に行うため、何もしない命令として定義します。
+
+=== SFENCE.VMA命令をデコードする
+
+SFENCE.VMA命令を有効な命令としてデコードします
+()。
+
+//list[inst_decoder.veryl.sfence.system][ (inst_decoder.veryl)]{
+#@maprange(scripts/24/sfence-range/core/src/inst_decoder.veryl,system)
+ bits == 32'h10200073 || //SRET
+ bits == 32'h10500073 || // WFI
+ f7 == 7'b0001001 && bits[11:7] == 0, // SFENCE.VMA
+#@end
+//}
+
+=== 特権レベルの確認、mstatus.TVMを実装する
+
+S-mode未満の特権レベルで実行しようとしたとき、
+Illegal instruction例外が発生します。
+
+mstatus.TVMはS-modeのときにsatpレジスタにアクセスできるか、
+SFENCE.VMA命令を実行できるかを制御するビットです。
+mstatus.TVMが@<code>{1}にされているとき、Illegal instruction例外が発生します。
+
+mstatus.TVMを書き込めるようにします
+()。
+
+//list[csrunit.veryl.sfence.WMASK][ (csrunit.veryl)]{
+#@maprange(scripts/24/sfence-range/core/src/csrunit.veryl,WMASK)
+    const MSTATUS_WMASK   : UIntX = 'h0000_0000_00@<b>|7|e_19aa as UIntX;
+#@end
+//}
+
+//list[csrunit.veryl.sfence.tvm][ (csrunit.veryl)]{
+#@maprange(scripts/24/sfence-range/core/src/csrunit.veryl,tvm)
+    let mstatus_tvm : logic    = mstatus[20];
+#@end
+//}
+
+特権レベルを確認して、例外を発生させます
+()。
+
+//list[csrunit.veryl.sfence.is][ (csrunit.veryl)]{
+#@maprange(scripts/24/sfence-range/core/src/csrunit.veryl,is)
+    let is_sfence_vma: logic = ctrl.is_csr && ctrl.funct7 == 7'b0001001 && ctrl.funct3 == 0 && rd_addr == 0;
+#@end
+//}
+
+//list[csrunit.veryl.sfence.expt][ (csrunit.veryl)]{
+#@maprange(scripts/24/sfence-range/core/src/csrunit.veryl,expt)
+    let expt_tvm: logic = (is_sfence_vma && mode <: PrivMode::S) || (mstatus_tvm && mode == PrivMode::S && (is_wsc && csr_addr == CsrAddr::SATP || is_sfence_vma));
+#@end
+//}
+
+//list[csrunit.veryl.sfence.raise][ (csrunit.veryl)]{
+#@maprange(scripts/24/sfence-range/core/src/csrunit.veryl,raise)
+    let raise_expt: logic = valid && (expt_info.valid || expt_write_readonly_csr || expt_csr_priv_violation || expt_zicntr_priv || expt_trap_return_priv || expt_memory_fault @<b>{|| expt_tvm});
+    let expt_cause: UIntX = switch {
+        ...
+        @<b>|expt_tvm               : CsrCause::ILLEGAL_INSTRUCTION,|
+        default                : 0,
+    };
+#@end
+//}
+
 == パイプラインをフラッシュする
+
+本書はパイプライン化したCPUを実装しているため、
+命令フェッチは前の命令を待たずに次々に行われます。
 
 === CSRの変更
 
+mstatusレジスタのMXR、SUM、TVMビット、
+satpレジスタを書き換えたとき、
+CSRを書き換える命令の後ろの命令は、
+変更が反映されていない状態でフェッチした命令になっている可能性があります。
+
+CSRの書き換えをページングに反映するために、
+特定のCSRを書き換えたらパイプラインをフラッシュするようにします。
+
+csrunitモジュールに、フラッシュするためのフラグを追加します
+()。
+
+//list[csrunit.veryl.flushcsr.port][ (csrunit.veryl)]{
+#@maprange(scripts/24/flushcsr-range/core/src/csrunit.veryl,port)
+@<b>|flush      : output  logic                   ,|
+minstret   : input   UInt64                  ,
+#@end
+//}
+
+//list[core.veryl.flushcsr.csru][ (core.veryl)]{
+#@maprange(scripts/24/flushcsr-range/core/src/core.veryl,csru)
+@<b>|flush      : csru_flush           ,|
+minstret                          ,
+#@end
+//}
+
+//list[core.veryl.flushcsr.reg][ (core.veryl)]{
+#@maprange(scripts/24/flushcsr-range/core/src/core.veryl,reg)
+    var csru_trap_return: logic   ;
+    @<b>|var csru_flush      : logic   ;|
+    var minstret        : UInt64  ;
+#@end
+//}
+
+@<code>{flush}はsatpレジスタ、mstatusレジスタが変更されるときに@<code>{1}になるようにします
+()。
+
+
+//list[csrunit.veryl.flushcsr.logic][ (csrunit.veryl)]{
+#@maprange(scripts/24/flushcsr-range/core/src/csrunit.veryl,logic)
+    let wsc_flush: logic = is_wsc && (csr_addr == CsrAddr::SATP || csr_addr == CsrAddr::MSTATUS);
+    assign flush     = valid && wsc_flush;
+#@end
+//}
+
+coreモジュールで、制御ハザードが発生したことにします
+()。
+
+//list[core.veryl.flushcsr.hazard][ (core.veryl)]{
+#@maprange(scripts/24/flushcsr-range/core/src/core.veryl,hazard)
+    assign control_hazard         = mems_valid && (csru_raise_trap || mems_ctrl.is_jump || memq_rdata.br_taken @<b>{|| csru_flush});
+    assign control_hazard_pc_next = if csru_raise_trap ? csru_trap_vector : // trap
+     @<b>{if csru_flush ? mems_pc + 4 :} memq_rdata.jump_addr; // @<b>{flush or} jump
+#@end
+//}
+
 === FENCE.I命令の実装
+
+あるアドレスにデータを書き込むとき、
+データを書き込んだ後の命令が書き換えられたアドレスの命令だった場合、
+命令のビット列はデータが書き換えられる前のものになる可能性があります。
+
+FENCE.I命令は、FENCE.I命令の後の命令のフェッチ処理がストア命令の完了後に行われることを保証する命令です。
+
+ユーザーのアプリケーションのプログラムをページに書き込んで実行するとき、
+ページへの書き込みを反映させるために使用します。
+
+FENCE.I命令を判定し、パイプラインをフラッシュする条件に設定します
+()。
+
+//list[csrunit.veryl.fence.is][ (csrunit.veryl)]{
+#@maprange(scripts/24/fence-range/core/src/csrunit.veryl,is)
+    let is_fence_i: logic = inst_bits[6:0] == OP_MISC_MEM && ctrl.funct3 == 3'b001;
+#@end
+//}
+
+//list[csrunit.veryl.fence.flush][ (csrunit.veryl)]{
+#@maprange(scripts/24/fence-range/core/src/csrunit.veryl,flush)
+    assign flush     = valid && (wsc_flush @<b>{|| is_fence_i});
+#@end
+//}
