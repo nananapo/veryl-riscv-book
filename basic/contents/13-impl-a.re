@@ -9,6 +9,7 @@ A拡張の命令を利用すると、同じメモリ空間で複数のソフト�
 == アトミック操作
 
 === アトミック操作とは何か？
+
 アトミック操作(Atomic operation、不可分操作)とは、他のシステムからその操作を観測するとき、1つの操作として観測される操作のことです。
 つまり、他のシステムからは、アトミック操作を行う前、アトミック操作を行った後の状態しか観測できません。
 
@@ -43,7 +44,12 @@ LR、SC命令はそれぞれ次のように動作します。
 LR、SC命令を使うことで、アトミックなロード、加算、ストアを次のように記述できます
 (@<list>{sample.asm.lrsc})。
 
-//list[sample.asm.lrsc][]{
+//list[sample.asm.lrsc][LR、SC命令によるアトミックな加算]{
+atomic_add:
+    LR.W x2, (x3) @<balloon>{アドレスx3の値をx2にロード}
+    ADDI x2, x2, 1 @<balloon>{x2に1を足す}
+    SC.W x4, x2, (x3) @<balloon>{ストアを試行し、結果をx4に格納}
+    BNEZ x4, atomic_add @<balloon>{SC命令が失敗していたらやり直す}
 //}
 
 同時に他のコアが同じプログラムを実行するとき、間違った値の書き込みはSC命令で失敗します。
@@ -86,7 +92,7 @@ TODO funct5と命令の対応のテーブル
 eeiパッケージにOP-AMOの定数を定義します
 (@<list>{eei.veryl.define.op})。
 
-//list[eei.veryl.define.op][ (eei.veryl)]{
+//list[eei.veryl.define.op][OP-AMOの定義 (eei.veryl)]{
 #@maprange(scripts/13/define-range/core/src/eei.veryl,op)
     const OP_AMO      : logic<7> = 7'b0101111;
 #@end
@@ -96,7 +102,7 @@ eeiパッケージにOP-AMOの定数を定義します
 (@<list>{eei.veryl.define.AMOOp})。
 それぞれ、命令のfunct5と対応していることを確認してください。
 
-//list[eei.veryl.define.AMOOp][ (eei.veryl)]{
+//list[eei.veryl.define.AMOOp][AMOOp型の定義 (eei.veryl)]{
 #@maprange(scripts/13/define-range/core/src/eei.veryl,AMOOp)
     enum AMOOp: logic<5> {
         LR = 5'b00010,
@@ -120,7 +126,7 @@ eeiパッケージにOP-AMOの定数を定義します
 A拡張の命令であることを示す@<code>{is_amo}フラグを追加します 
 (@<list>{corectrl.veryl.define.is_amo})。
 
-//list[corectrl.veryl.define.is_amo][ (corectrl.veryl)]{
+//list[corectrl.veryl.define.is_amo][InstCtrlにis_amoを定義する (corectrl.veryl)]{
 #@maprange(scripts/13/define-range/core/src/corectrl.veryl,is_amo)
     struct InstCtrl {
         itype    : InstType   , // 命令の形式
@@ -142,7 +148,7 @@ A拡張の命令であることを示す@<code>{is_amo}フラグを追加しま�
 命令がメモリにアクセスするかを判定するinst_is_memop関数を、@<code>{is_amo}フラグを利用するように変更します
 (@<list>{corectrl.veryl.define.inst_is_memop})。
 
-//list[corectrl.veryl.define.inst_is_memop][ (corectrl.veryl)]{
+//list[corectrl.veryl.define.inst_is_memop][A拡張の命令がメモリにアクセスする命令と判定する (corectrl.veryl)]{
 #@maprange(scripts/13/define-range/core/src/corectrl.veryl,inst_is_memop)
     function inst_is_memop (
         ctrl: input InstCtrl,
@@ -189,7 +195,7 @@ A拡張でアクセスするメモリのアドレスはrs1で指定されたレ�
 memunitモジュールの@<code>{addr}ポートに割り当てる値を@<code>{is_amo}フラグによって切り替えます
 (@<list>{core.veryl.define.memu_addr})。
 
-//list[core.veryl.define.memu_addr][ (core.veryl)]{
+//list[core.veryl.define.memu_addr][メモリアドレスをrs1レジスタの値にする (core.veryl)]{
 #@maprange(scripts/13/define-range/core/src/core.veryl,memu_addr)
     var memu_rdata: UIntX;
     var memu_stall: logic;
@@ -219,7 +225,7 @@ EXステージの例外判定でアドレスを使っている部分を変更し
 (@<list>{core.veryl.define.exception})。
 causeとtvalの割り当てがストア命令の場合と同じになっていることを確認してください。
 
-//list[core.veryl.define.exception][ (core.veryl)]{
+//list[core.veryl.define.exception][例外を判定するアドレスを変更する (core.veryl)]{
 #@maprange(scripts/13/define-range/core/src/core.veryl,exception)
         @<b>|let memaddr                       : Addr  = if exs_ctrl.is_amo ? exs_rs1_data : exs_alu_result;|
         let loadstore_address_misaligned  : logic = inst_is_memop(exs_ctrl) && case exs_ctrl.funct3[1:0] {
@@ -238,7 +244,7 @@ A拡張の命令を実行するとき、
 ロードした値をレジスタにライトバックするように変更します
 (@<list>{core.veryl.define.wb_data})。
 
-//list[core.veryl.define.wb_data][ (core.veryl)]{
+//list[core.veryl.define.wb_data][メモリからロードした値をライトバックする (core.veryl)]{
 #@maprange(scripts/13/define-range/core/src/core.veryl,wb_data)
     let wbs_wb_data: UIntX    = if wbs_ctrl.is_lui ?
         wbs_imm
@@ -257,7 +263,7 @@ TODO 図
 A拡張は他のコア、ハードウェアスレッドと同期してメモリ操作を行うためのものであるため、
 A拡張の操作はcoreモジュールの外、メモリよりも前で行います。
 本書では、coreモジュールとmmio_controllerモジュールの間にA拡張の命令を処理するamounitモジュールを実装します
-(図)。
+(TODO 図)。
 
 === インターフェースを作成する
 
@@ -267,7 +273,7 @@ amounitモジュールにA拡張の操作を指示するために、
 @<code>{src/core_data_if.veryl}を作成し、次のように記述します
 (@<list>{core_data_if.veryl.empty.all})。
 
-//list[core_data_if.veryl.empty.all][ (core_data_if.veryl)]{
+//list[core_data_if.veryl.empty.all][core_data_if.veryl]{
 #@mapfile(scripts/13/empty-range/core/src/core_data_if.veryl)
 import eei::*;
 
@@ -320,7 +326,7 @@ interface core_data_if {
 @<code>{src/amounit.veryl}を作成し、次のように記述します
 (@<list>{amounit.veryl.empty.all})。
 
-//list[amounit.veryl.empty.all][ (amounit.veryl)]{
+//list[amounit.veryl.empty.all][amounit.veryl]{
 #@mapfile(scripts/13/empty-range/core/src/amounit.veryl)
 import eei::*;
 
@@ -469,7 +475,7 @@ coreモジュールのロードストア用のインターフェースをmembus_
 @<list>{top.veryl.empty.port}、
 @<list>{top.veryl.empty.core})。
 
-//list[core.veryl.empty.port][ (core.veryl)]{
+//list[core.veryl.empty.port][d_membusの型を変更する (core.veryl)]{
 #@maprange(scripts/13/empty-range/core/src/core.veryl,port)
     i_membus: modport membus_if::<ILEN, XLEN>::master,
     d_membus: modport @<b>|core_data_if|::master           ,
@@ -477,13 +483,13 @@ coreモジュールのロードストア用のインターフェースをmembus_
 #@end
 //}
 
-//list[top.veryl.empty.port][ (top.veryl)]{
+//list[top.veryl.empty.port][core_data_ifインターフェースのインスタンス化 (top.veryl)]{
 #@maprange(scripts/13/empty-range/core/src/top.veryl,d_membus_core)
     inst d_membus_core: core_data_if;
 #@end
 //}
 
-//list[top.veryl.empty.core][ (top.veryl)]{
+//list[top.veryl.empty.core][ポート名に割り当てるインターフェースを変更する (top.veryl)]{
 #@maprange(scripts/13/empty-range/core/src/top.veryl,core)
     inst c: core (
         clk                    ,
@@ -503,7 +509,7 @@ memunitモジュールのインターフェースも変更し、
 @<list>{memunit.veryl.empty.reset}、
 @<list>{memunit.veryl.empty.Init})。
 
-//list[memunit.veryl.empty.port][ (memunit.veryl)]{
+//list[memunit.veryl.empty.port][membusの型を変更する (memunit.veryl)]{
 #@maprange(scripts/13/empty-range/core/src/memunit.veryl,port)
     stall : output  logic               , // メモリアクセス命令が完了していない
     membus: modport @<b>|core_data_if|::master, // メモリとのinterface
@@ -511,7 +517,7 @@ memunitモジュールのインターフェースも変更し、
 #@end
 //}
 
-//list[memunit.veryl.empty.reg][ (memunit.veryl)]{
+//list[memunit.veryl.empty.reg][一時保存するレジスタの定義 (memunit.veryl)]{
 #@maprange(scripts/13/empty-range/core/src/memunit.veryl,reg)
     var req_wen   : logic                       ;
     var req_addr  : Addr                        ;
@@ -525,24 +531,7 @@ memunitモジュールのインターフェースも変更し、
 #@end
 //}
 
-//list[memunit.veryl.empty.assign][ (memunit.veryl)]{
-#@maprange(scripts/13/empty-range/core/src/memunit.veryl,assign)
-    always_comb {
-        // メモリアクセス
-        membus.valid  = state == State::WaitReady;
-        membus.addr   = req_addr;
-        membus.wen    = req_wen;
-        membus.wdata  = req_wdata;
-        membus.wmask  = req_wmask;
-        @<b>|membus.is_amo = req_is_amo;|
-        @<b>|membus.amoop  = req_amoop;|
-        @<b>|membus.aq     = req_aq;|
-        @<b>|membus.rl     = req_rl;|
-        @<b>|membus.funct3 = req_funct3;|
-#@end
-//}
-
-//list[memunit.veryl.empty.reset][ (memunit.veryl)]{
+//list[memunit.veryl.empty.reset][レジスタをリセットする (memunit.veryl)]{
 #@maprange(scripts/13/empty-range/core/src/memunit.veryl,reset)
     always_ff {
         if_reset {
@@ -560,7 +549,24 @@ memunitモジュールのインターフェースも変更し、
 #@end
 //}
 
-//list[memunit.veryl.empty.Init][ (memunit.veryl)]{
+//list[memunit.veryl.empty.assign][membusにレジスタの値を割り当てる (memunit.veryl)]{
+#@maprange(scripts/13/empty-range/core/src/memunit.veryl,assign)
+    always_comb {
+        // メモリアクセス
+        membus.valid  = state == State::WaitReady;
+        membus.addr   = req_addr;
+        membus.wen    = req_wen;
+        membus.wdata  = req_wdata;
+        membus.wmask  = req_wmask;
+        @<b>|membus.is_amo = req_is_amo;|
+        @<b>|membus.amoop  = req_amoop;|
+        @<b>|membus.aq     = req_aq;|
+        @<b>|membus.rl     = req_rl;|
+        @<b>|membus.funct3 = req_funct3;|
+#@end
+//}
+
+//list[memunit.veryl.empty.Init][メモリにアクセスする命令のとき、レジスタに情報を設定する (memunit.veryl)]{
 #@maprange(scripts/13/empty-range/core/src/memunit.veryl,Init)
                 case state {
                     State::Init: if is_new & inst_is_memop(ctrl) {
@@ -579,7 +585,7 @@ amounitモジュールをtopモジュールでインスタンス化し、
 coreモジュールとmmio_controllerモジュールのインターフェースを接続します
 (@<list>{top.veryl.empty.amou})。
 
-//list[top.veryl.empty.amou][ (top.veryl)]{
+//list[top.veryl.empty.amou][amounitモジュールをインスタンス化する (top.veryl)]{
 #@maprange(scripts/13/empty-range/core/src/top.veryl,amou)
     inst amou: amounit (
         clk                  ,
@@ -606,7 +612,7 @@ amounitモジュールに予約セットを作成します
 @<list>{amounit.veryl.lr.reset})。
 @<code>{is_addr_reserved}で、予約セットに有効なアドレスが格納されているかを管理します。
 
-//list[amounit.veryl.lr.list][ (amounit.veryl)]{
+//list[amounit.veryl.lr.list][予約セットの定義 (amounit.veryl)]{
 #@maprange(scripts/13/lr-range/core/src/amounit.veryl,list)
     // lr/sc
     var is_addr_reserved: logic;
@@ -614,7 +620,7 @@ amounitモジュールに予約セットを作成します
 #@end
 //}
 
-//list[amounit.veryl.lr.reset][ (amounit.veryl)]{
+//list[amounit.veryl.lr.reset][レジスタをリセットする (amounit.veryl)]{
 #@maprange(scripts/13/lr-range/core/src/amounit.veryl,reset)
         is_addr_reserved   = 0;
         reserved_addr      = 0;
@@ -627,7 +633,7 @@ LR命令を実行するとき、予約セットにアドレスを登録してロ
 @<list>{amounit.veryl.lr.accept_request_ff})。
 既に予約セットが使われている場合でもアドレスを上書きします。
 
-//list[amounit.veryl.lr.accept_request_comb][ (amounit.veryl)]{
+//list[amounit.veryl.lr.accept_request_comb][accept_request_comb関数の実装 (amounit.veryl)]{
 #@maprange(scripts/13/lr-range/core/src/amounit.veryl,accept_request_comb)
     function accept_request_comb () {
         if slave.ready && slave.valid {
@@ -644,7 +650,7 @@ LR命令を実行するとき、予約セットにアドレスを登録してロ
 #@end
 //}
 
-//list[amounit.veryl.lr.master_comb][ (amounit.veryl)]{
+//list[amounit.veryl.lr.master_comb][LR命令のときにmasterにロード要求を割り当てる (amounit.veryl)]{
 #@maprange(scripts/13/lr-range/core/src/amounit.veryl,master_comb)
     always_comb {
         reset_master();
@@ -661,7 +667,7 @@ LR命令を実行するとき、予約セットにアドレスを登録してロ
 #@end
 //}
 
-//list[amounit.veryl.lr.accept_request_ff][ (amounit.veryl)]{
+//list[amounit.veryl.lr.accept_request_ff][LR命令のときに予約セットを設定する (amounit.veryl)]{
 #@maprange(scripts/13/lr-range/core/src/amounit.veryl,accept_request_ff)
     function accept_request_ff () {
         slave_saved.valid = slave.ready && slave.valid;
@@ -694,7 +700,7 @@ amounitモジュールでSC.W命令とSC.D命令を区別する必要はあり�
 SC命令が成功、失敗したときに結果を返すための状態をState型に追加します
 (@<list>{amounit.veryl.sc.State})。
 
-//list[amounit.veryl.sc.State][ (amounit.veryl)]{
+//list[amounit.veryl.sc.State][SC命令用の状態の定義 (amounit.veryl)]{
 #@maprange(scripts/13/sc-range/core/src/amounit.veryl,State)
     enum State {
         Init,
@@ -711,7 +717,7 @@ SC命令が成功、失敗したときに結果を返すための状態をState�
 @<code>{State::SCSuccess}はSC命令に成功してストアが終わったときに結果を返します。
 成功したら@<code>{0}、失敗したら@<code>{1}を返します。
 
-//list[amounit.veryl.sc.assign_slave][ (amounit.veryl)]{
+//list[amounit.veryl.sc.assign_slave][slaveにSC命令の結果を割り当てる (amounit.veryl)]{
 #@maprange(scripts/13/sc-range/core/src/amounit.veryl,assign_slave)
     State::SCSuccess: {
         slave.ready  = master.rvalid;
@@ -730,7 +736,7 @@ SC命令を受け入れるときに予約セットを確認し、アドレスが
 (@<list>{amounit.veryl.sc.accept_request_ff})。
 成功、失敗に関係なく、予約セットを空にします。
 
-//list[amounit.veryl.sc.accept_request_ff][ (amounit.veryl)]{
+//list[amounit.veryl.sc.accept_request_ff][accept_request_ff関数で予約セットを確認する (amounit.veryl)]{
 #@maprange(scripts/13/sc-range/core/src/amounit.veryl,accept_request_ff)
     AMOOp::SC: {
         // reset reserved
@@ -750,7 +756,7 @@ SC命令でメモリの@<code>{ready}が@<code>{1}になるのを待っている
 @<code>{ready}が@<code>{1}になったら状態を@<code>{State::SCSuccess}に移動させます
 (@<list>{amounit.veryl.sc.on_clock})。
 
-//list[amounit.veryl.sc.on_clock][ (amounit.veryl)]{
+//list[amounit.veryl.sc.on_clock][SC命令の状態遷移 (amounit.veryl)]{
 #@maprange(scripts/13/sc-range/core/src/amounit.veryl,on_clock)
     function on_clock () {
         case state {
@@ -781,7 +787,7 @@ SC命令によるメモリへの書き込みを実装します
 @<list>{amounit.veryl.sc.master_comb}
 )。
 
-//list[amounit.veryl.sc.accept_request_comb][ (amounit.veryl)]{
+//list[amounit.veryl.sc.accept_request_comb][accept_request_comb関数で、予約セットをチェックしてからストアを要求する (amounit.veryl)]{
 #@maprange(scripts/13/sc-range/core/src/amounit.veryl,accept_request_comb)
     case slave.amoop {
         AMOOp::LR: assign_master(slave.addr, 0, 0, 0);
@@ -793,7 +799,7 @@ SC命令によるメモリへの書き込みを実装します
 #@end
 //}
 
-//list[amounit.veryl.sc.master_comb][ (amounit.veryl)]{
+//list[amounit.veryl.sc.master_comb][masterに値を割り当てる (amounit.veryl)]{
 #@maprange(scripts/13/sc-range/core/src/amounit.veryl,master_comb)
     always_comb {
         reset_master();
@@ -825,7 +831,7 @@ Zaamo拡張の命令はロード、演算、ストアを行います。
 @<code>{State}型に新しい状態を定義してください
 (@<list>{amounit.veryl.zaamo.State})。
 
-//list[amounit.veryl.zaamo.State][ (amounit.veryl)]{
+//list[amounit.veryl.zaamo.State][Zaamo拡張の命令用の状態の定義 (amounit.veryl)]{
 #@maprange(scripts/13/zaamo-range/core/src/amounit.veryl,State)
     enum State {
         Init,
@@ -849,7 +855,7 @@ Zaamo拡張による要求かどうかを判定する関数(@<code>{is_Zaamo})�
 )。
 modportにimport宣言を追加してください。
 
-//list[core_data_if.veryl.zaamo.is_Zaamo][ (core_data_if.veryl)]{
+//list[core_data_if.veryl.zaamo.is_Zaamo][is_Zaamo関数の定義 (core_data_if.veryl)]{
 #@maprange(scripts/13/zaamo-range/core/src/core_data_if.veryl,is_Zaamo)
     function is_Zaamo () -> logic {
         return is_amo && (amoop != AMOOp::LR && amoop != AMOOp::SC);
@@ -857,7 +863,7 @@ modportにimport宣言を追加してください。
 #@end
 //}
 
-//list[core_data_if.veryl.zaamo.master][ (core_data_if.veryl)]{
+//list[core_data_if.veryl.zaamo.master][masterにis_Zaamo関数をimportする (core_data_if.veryl)]{
 #@maprange(scripts/13/zaamo-range/core/src/core_data_if.veryl,master)
     amoop   : output,
     funct3  : output,
@@ -870,7 +876,7 @@ modportにimport宣言を追加してください。
 (@<list>{amounit.veryl.zaamo.calc_amo})。
 32ビット演算のとき、下位32ビットと上位32ビットのどちらを使うかをアドレスによって判別しています。
 
-//list[amounit.veryl.zaamo.calc_amo][ (amounit.veryl)]{
+//list[amounit.veryl.zaamo.calc_amo][Zaamo拡張の命令の計算を行う関数の定義 (amounit.veryl)]{
 #@maprange(scripts/13/zaamo-range/core/src/amounit.veryl,calc_amo)
     // AMO ALU
     function calc_amo::<W: u32> (
@@ -921,14 +927,14 @@ modportにimport宣言を追加してください。
 @<list>{amounit.veryl.zaamo.reset}
 )。
 
-//list[amounit.veryl.zaamo.reg][ (amounit.veryl)]{
+//list[amounit.veryl.zaamo.reg][ロードしたデータを格納するレジスタの定義 (amounit.veryl)]{
 #@maprange(scripts/13/zaamo-range/core/src/amounit.veryl,reg)
     // amo
     var zaamo_fetched_data: UIntX;
 #@end
 //}
 
-//list[amounit.veryl.zaamo.reset][ (amounit.veryl)]{
+//list[amounit.veryl.zaamo.reset][レジスタのリセット (amounit.veryl)]{
 #@maprange(scripts/13/zaamo-range/core/src/amounit.veryl,reset)
         reserved_addr      = 0;
         @<b>|zaamo_fetched_data = 0;|
@@ -939,7 +945,7 @@ modportにimport宣言を追加してください。
 メモリアクセスが終了したら、ロードしておいた値を返します
 (@<list>{amounit.veryl.zaamo.assign_slave_comb})。
 
-//list[amounit.veryl.zaamo.assign_slave_comb][ (amounit.veryl)]{
+//list[amounit.veryl.zaamo.assign_slave_comb][命令の結果を返す (amounit.veryl)]{
 #@maprange(scripts/13/zaamo-range/core/src/amounit.veryl,assign_slave_comb)
     State::AMOStoreValid: {
         slave.ready  = master.rvalid;
@@ -955,7 +961,7 @@ modportにimport宣言を追加してください。
 @<list>{amounit.veryl.zaamo.assign_master_comb}
 )。
 
-//list[amounit.veryl.zaamo.accept_request_comb][ (amounit.veryl)]{
+//list[amounit.veryl.zaamo.accept_request_comb][accept_request_comb関数で、まずロード要求を行う (amounit.veryl)]{
 #@maprange(scripts/13/zaamo-range/core/src/amounit.veryl,accept_request_comb)
     default: @<b>|if slave.is_Zaamo()| {
         @<b>|assign_master(slave.addr, 0, 0, 0);|
@@ -963,7 +969,7 @@ modportにimport宣言を追加してください。
 #@end
 //}
 
-//list[amounit.veryl.zaamo.assign_master_comb][ (amounit.veryl)]{
+//list[amounit.veryl.zaamo.assign_master_comb][状態に基づいてロード、ストア要求を行う (amounit.veryl)]{
 #@maprange(scripts/13/zaamo-range/core/src/amounit.veryl,assign_master_comb)
     State::AMOLoadReady                      : assign_master      (slave_saved.addr, 0, 0, 0);
     State::AMOLoadValid, State::AMOStoreReady: {
@@ -978,7 +984,7 @@ modportにimport宣言を追加してください。
 TODO図に基づいて状態を遷移させます
 (@<list>{amounit.veryl.zaamo.accept_request_ff})。
 
-//list[amounit.veryl.zaamo.accept_request_ff][ (amounit.veryl)]{
+//list[amounit.veryl.zaamo.accept_request_ff][accept_request_ff関数で、masterのreadyによって次のstateを決める (amounit.veryl)]{
 #@maprange(scripts/13/zaamo-range/core/src/amounit.veryl,accept_request_ff)
     default: @<b>|if slave.is_Zaamo()| {
         @<b>|state = if master.ready ? State::AMOLoadValid : State::AMOLoadReady;|
@@ -986,7 +992,7 @@ TODO図に基づいて状態を遷移させます
 #@end
 //}
 
-//list[amounit.veryl.zaamo.on_clock][ (amounit.veryl)]{
+//list[amounit.veryl.zaamo.on_clock][Zaamo拡張の命令の状態の遷移 (amounit.veryl)]{
 #@maprange(scripts/13/zaamo-range/core/src/amounit.veryl,on_clock)
     State::AMOLoadReady: if master.ready {
         state = State::AMOLoadValid;
