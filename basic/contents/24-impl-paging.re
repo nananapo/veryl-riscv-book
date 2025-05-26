@@ -123,7 +123,7 @@ PTWで発生した例外は、最終的にcsrunitモジュールで処理しま�
 そのために、例外の情報をメモリのインターフェースを使って伝達します。
 
 ページングによって発生する例外のcauseを@<code>{CsrCause}型に追加してください
-()。
+(@<list>{eei.veryl.CsrCause.def})。
 
 //list[eei.veryl.CsrCause.def][ (eei.veryl)]{
 #@maprange(scripts/24/newexpt-range/core/src/eei.veryl,CsrCause)
@@ -138,7 +138,7 @@ PTWで発生した例外は、最終的にcsrunitモジュールで処理しま�
 ==== 構造体の定義
 
 @<code>{MemException}構造体を定義します
-()。
+(@<list>{eei.veryl.newexpt.def})。
 メモリアクセス中に発生する例外の情報はこの構造体で管理します。
 
 //list[eei.veryl.newexpt.def][ (eei.veryl)]{
@@ -151,7 +151,12 @@ PTWで発生した例外は、最終的にcsrunitモジュールで処理しま�
 //}
 
 @<code>{membus_if}、@<code>{core_data_if}、@<code>{core_inst_if}インターフェースに@<code>{MemException}構造体を追加します
-()。
+(
+@<list>{membus_if.veryl.newexpt.var}、
+@<list>{membus_if.veryl.newexpt.master}、
+@<list>{membus_if.veryl.newexpt.slave}、
+@<list>{membus_if.veryl.newexpt.response}
+)。
 インターフェースの@<code>{rvalid}が@<code>{1}で、
 構造体の@<code>{valid}と@<code>{is_page_fault}が@<code>{1}なら
 ページフォルト例外が発生したことを示します。
@@ -195,7 +200,10 @@ PTWで発生した例外は、最終的にcsrunitモジュールで処理しま�
 ==== mmio_controllerモジュールの対応
 
 mmio_controllerモジュールで構造体の値をすべて@<code>{0}に設定します
-()。
+(
+@<list>{mmio_controller.veryl.newexpt.comb}、
+@<list>{top.veryl.newexpt.comb}
+)。
 いまのところ、デバイスは例外を発生させません。
 
 //list[mmio_controller.veryl.newexpt.comb][ (membus_if.veryl)]{
@@ -230,7 +238,10 @@ mmio_controllerモジュールからの例外情報を
 
 inst_fetcherモジュールからcoreモジュールに例外情報を伝達します。
 まず、FIFOの型に例外情報を追加します
-()。
+(
+@<list>{inst_fetcher.veryl.newexpt.fft}、
+@<list>{inst_fetcher.veryl.newexpt.ift})
+)。
 
 //list[inst_fetcher.veryl.newexpt.fft][ (inst_fetcher.veryl)]{
 #@maprange(scripts/24/newexpt-range/core/src/inst_fetcher.veryl,fft)
@@ -254,7 +265,7 @@ inst_fetcherモジュールからcoreモジュールに例外情報を伝達し�
 //}
 
 メモリからの例外情報を@<code>{fetch_fifo}に保存します
-()。
+(@<list>{inst_fetcher.veryl.newexpt.fetch})。
 
 //list[inst_fetcher.veryl.newexpt.fetch][ (inst_fetcher.veryl)]{
 #@maprange(scripts/24/newexpt-range/core/src/inst_fetcher.veryl,fetch)
@@ -269,7 +280,11 @@ inst_fetcherモジュールからcoreモジュールに例外情報を伝達し�
 //}
 
 @<code>{fetch_fifo}から@<code>{issue_fifo}に例外情報を伝達します
-()。
+(
+@<list>{inst_fetcher.veryl.newexpt.feif})、
+@<list>{inst_fetcher.veryl.newexpt.offset_comb}、
+@<list>{inst_fetcher.veryl.newexpt.offset_ff}
+)。
 offsetが@<code>{6}で例外が発生しているとき、
 32ビット幅の命令の上位16ビットを取得せずにすぐに@<code>{issue_fifo}に例外を書き込みます。
 
@@ -308,7 +323,7 @@ offsetが@<code>{6}で例外が発生しているとき、
 //}
 
 @<code>{issue_fifo}からcoreモジュールに例外情報を伝達します
-()。
+(@<list>{inst_fetcher.veryl.newexpt.issue})。
 
 //list[inst_fetcher.veryl.newexpt.issue][ (inst_fetcher.veryl)]{
 #@maprange(scripts/24/newexpt-range/core/src/inst_fetcher.veryl,issue)
@@ -328,7 +343,11 @@ offsetが@<code>{6}で例外が発生しているとき、
 
 @<code>{state}が@<code>{State::Init}以外の時に例外が発生した場合、
 すぐに結果を返すようにします
-()。
+(
+@<list>{amounit.veryl.newexpt.slave}、
+@<list>{amounit.veryl.newexpt.slave_end}、
+@<list>{amounit.veryl.newexpt.master_end}、
+)。
 例外が発生したクロックでは要求を受け付けないようにします。
 
 //list[amounit.veryl.newexpt.slave][ (amounit.veryl)]{
@@ -368,7 +387,7 @@ offsetが@<code>{6}で例外が発生しているとき、
 //}
 
 例外が発生したら、@<code>{state}を@<code>{State::Init}にリセットするようにします
-()。
+(@<list>{amounit.veryl.newexpt.on_clock})。
 
 //list[amounit.veryl.newexpt.on_clock][ (amounit.veryl)]{
 #@maprange(scripts/24/newexpt-range/core/src/amounit.veryl,on_clock)
@@ -386,7 +405,7 @@ offsetが@<code>{6}で例外が発生しているとき、
 命令フェッチ処理中にページフォルト例外が発生していたとき、
 Instruction page fault例外を発生させます。
 xtvalには例外が発生したアドレスを設定します
-()。
+(@<list>{core.veryl.newexpt.inst})。
 
 //list[core.veryl.newexpt.inst][ (core.veryl)]{
 #@maprange(scripts/24/newexpt-range/core/src/core.veryl,inst)
@@ -406,7 +425,13 @@ Load page fault例外、Store/AMO page fault例外を発生させます。
 
 csrunitモジュールに、
 メモリにアクセスする命令の例外情報を監視するためのポートを作成します
-()。
+(
+@<list>{csrunit.veryl.newexpt.port}、
+@<list>{core.veryl.newexpt.csru}、
+@<list>{csrunit.veryl.newexpt.fault}、
+@<list>{csrunit.veryl.newexpt.raise}、
+@<list>{csrunit.veryl.newexpt.cause}
+)。
 
 //list[csrunit.veryl.newexpt.port][ (csrunit.veryl)]{
 #@maprange(scripts/24/newexpt-range/core/src/csrunit.veryl,port)
@@ -480,7 +505,12 @@ xtvalにはページフォルトが発生した仮想アドレスを格納しま
 xtvalには1回目のロードでアクセスしたアドレスが書き込まれます。
 
 これに対処するために、例外が発生したアドレスのオフセットを例外情報に追加します
-()。
+(
+@<list>{eei.veryl.exptoffset.def}、
+@<list>{inst_fetcher.veryl.exptoffset.offset}、
+@<list>{core.veryl.exptoffset.offset}、
+@<list>{csrunit.veryl.exptoffset.offset}
+)。
 
 //list[eei.veryl.exptoffset.def][ (eei.veryl)]{
 #@maprange(scripts/24/exptoffset-range/core/src/eei.veryl,def)
@@ -533,7 +563,15 @@ tvalを生成するとき、オフセット足します。
 == satpレジスタの作成
 
 satpレジスタを実装します
-()。
+(
+@<list>{csrunit.veryl.satp.reg}、
+@<list>{csrunit.veryl.satp.reset}、
+@<list>{csrunit.veryl.satp.rdata}、
+@<list>{csrunit.veryl.satp.wmask}、
+@<list>{csrunit.veryl.satp.WMASK}、
+@<list>{csrunit.veryl.satp.validate}、
+@<list>{csrunit.veryl.satp.write}
+)。
 すべてのフィールドを読み書きできるように設定して、
 値を@<code>{0}でリセットします。
 
@@ -599,7 +637,10 @@ MODEには@<code>{0}と@<code>{8}のみ書き込めるようにして、
 == mstatusのMXR、SUM、MPRVビットの作成
 
 mstatusレジスタのMXR、SUM、MPRVビットを変更できるようにします
-()。
+(
+@<list>{csrunit.veryl.mstatuses.WMASK_mstatus}、
+@<list>{csrunit.veryl.mstatuses.WMASK_sstatus}
+)。
 
 //list[csrunit.veryl.mstatuses.WMASK_mstatus][ (csrunit.veryl)]{
 #@maprange(scripts/24/mstatuses-range/core/src/csrunit.veryl,WMASK_mstatus)
@@ -614,7 +655,10 @@ mstatusレジスタのMXR、SUM、MPRVビットを変更できるようにしま
 //}
 
 それぞれのビットを示す変数を作成します
-()。
+(
+@<list>{csrunit.veryl.mstatuses.reg}、
+@<list>{csrunit.veryl.mstatuses.mprv}
+)。
 
 //list[csrunit.veryl.mstatuses.reg][ (csrunit.veryl)]{
 #@maprange(scripts/24/mstatuses-range/core/src/csrunit.veryl,reg)
@@ -649,7 +693,7 @@ Sv39を@<secref>{impl-sv39}で実装します。
 ptwで使用するCSRをcsrunitモジュールから渡すためのインターフェースを定義します。
 
 @<code>{src/ptw_ctrl_if.veryl}を作成し、次のように記述します
-()。
+(@<list>{ptw_ctrl_if.veryl.empty})。
 
 //list[ptw_ctrl_if.veryl.empty][ (ptw_ctrl_if.veryl)]{
 #@mapfile(scripts/24/empty-range/core/src/ptw_ctrl_if.veryl)
@@ -701,7 +745,7 @@ Bareかどうかを判定した後に、命令フェッチかどうか(@<code>{i
 === Bareだけのptwモジュールを作成する
 
 @<code>{src/ptw.veryl}を作成し、次のようなポートを記述します
-()。
+(@<list>{ptw.veryl.empty.port})。
 
 //list[ptw.veryl.empty.port][ (ptw.veryl)]{
 #@maprange(scripts/24/empty-range/core/src/ptw.veryl,port)
@@ -722,7 +766,7 @@ module ptw (
 @<code>{master}はmmio_conterollerモジュール側に物理アドレスによるアクセスを行うためのインターフェースです。
 
 @<code>{is_inst}を使い、ページングが有効かどうか判定します
-()。
+(@<list>{ptw.veryl.empty.paging_enabled})。
 
 //list[ptw.veryl.empty.paging_enabled][ (ptw.veryl)]{
 #@maprange(scripts/24/empty-range/core/src/ptw.veryl,paging_enabled)
@@ -731,7 +775,7 @@ module ptw (
 //}
 
 状態の管理のために@<code>{State}型を定義します
-()。
+(@<list>{ptw.veryl.empty.state})。
 
 //list[ptw.veryl.empty.state][ (ptw.veryl)]{
 #@maprange(scripts/24/empty-range/core/src/ptw.veryl,state)
@@ -759,7 +803,7 @@ module ptw (
     @<code>{slave}が何も要求していないなら、状態を@<code>{State::IDLE}に移動します。
 
 @<code>{slave}からの要求を保存しておくためのインターフェースをインスタンス化しておきます
-()。
+(@<list>{ptw.veryl.empty.save})。
 
 //list[ptw.veryl.empty.save][ (ptw.veryl)]{
 #@maprange(scripts/24/empty-range/core/src/ptw.veryl,save)
@@ -768,7 +812,10 @@ module ptw (
 //}
 
 状態に基づいて、@<code>{master}に要求を割り当てます
-()。
+(
+@<list>{ptw.veryl.empty.phy}、
+@<list>{ptw.veryl.empty.assign_master}
+)。
 @<code>{master}に要求を割り当てるとき、
 アドレスだけ@<code>{physical_addr}レジスタの値を割り当てるようにしておきます。
 
@@ -819,7 +866,7 @@ module ptw (
 //}
 
 状態に基づいて、@<code>{slave}に@<code>{ready}と結果を割り当てます
-()。
+(@<list>{ptw.veryl.empty.assign_slave})。
 
 //list[ptw.veryl.empty.assign_slave][ (ptw.veryl)]{
 #@maprange(scripts/24/empty-range/core/src/ptw.veryl,assign_slave)
@@ -844,7 +891,7 @@ module ptw (
 //}
 
 状態を遷移する処理を記述します
-()。
+(@<list>{ptw.veryl.empty.ff})。
 要求を受け入れるとき、@<code>{slave_saved}に要求を保存します。
 
 //list[ptw.veryl.empty.ff][ (ptw.veryl)]{
@@ -906,7 +953,7 @@ topモジュールでptwモジュールをインスタンス化します。
 
 ptwモジュールはmmio_controllerモジュールの前で仮想アドレスを物理アドレスに変換するモジュールです。
 ptwモジュールとmmio_controllerモジュールの間のインターフェースを作成します
-()。
+(@<list>{top.veryl.empty.intr})。
 
 //list[top.veryl.empty.intr][ (top.veryl)]{
 #@maprange(scripts/24/empty-range/core/src/top.veryl,intr)
@@ -915,7 +962,7 @@ ptwモジュールとmmio_controllerモジュールの間のインターフェ�
 //}
 
 調停処理をptwモジュール向けのものに変更します
-()。
+(@<list>{top.veryl.empty.arb})。
 
 //list[top.veryl.empty.arb][ (top.veryl)]{
 #@maprange(scripts/24/empty-range/core/src/top.veryl,arb)
@@ -958,7 +1005,7 @@ ptwモジュールとmmio_controllerモジュールの間のインターフェ�
 
 今処理している要求、
 または今のクロックから処理し始める要求が命令フェッチによるものか判定する変数を作成します
-()。
+(@<list>{top.veryl.empty.is_inst})。
 
 //list[top.veryl.empty.is_inst][ (top.veryl)]{
 #@maprange(scripts/24/empty-range/core/src/top.veryl,is_inst)
@@ -969,7 +1016,7 @@ ptwモジュールとmmio_controllerモジュールの間のインターフェ�
 
 
 ptwモジュールをインスタンス化します
-()
+(@<list>{top.veryl.empty.ptw})。
 
 //list[top.veryl.empty.ptw][ (top.veryl)]{
 #@maprange(scripts/24/empty-range/core/src/top.veryl,ptw)
@@ -987,7 +1034,10 @@ ptwモジュールをインスタンス化します
 
 csrunitモジュールとptwモジュールを@<code>{ptw_ctrl_if}インターフェースで接続するために、
 coreモジュールにポートを追加します
-()。
+(
+@<list>{core.veryl.empty.port}、
+@<list>{top.veryl.empty.core}
+)。
 
 //list[core.veryl.empty.port][ (core.veryl)]{
 #@maprange(scripts/24/empty-range/core/src/core.veryl,port)
@@ -1018,7 +1068,11 @@ module core (
 //}
 
 csrunitモジュールにポートを追加し、CSRを割り当てます
-()。
+(
+@<list>{csrunit.veryl.empty.port}、
+@<list>{core.veryl.empty.csru}、
+@<list>{csrunit.veryl.empty.assign}
+)。
 
 //list[csrunit.veryl.empty.port][ (csrunit.veryl)]{
 #@maprange(scripts/24/empty-range/core/src/csrunit.veryl,port)
@@ -1059,7 +1113,7 @@ ptwモジュールに、Sv39を実装します。
 ptwモジュールで使用する定数とユーティリティ関数を実装します。
 
 @<code>{src/sv39util.veryl}を作成し、次のように記述します
-()。
+(@<list>{sv39util.veryl.sv39})。
 定数は@<secref>{sv39process}で使用しているものと同じです。
 
 //list[sv39util.veryl.sv39][ (sv39util.veryl)]{
@@ -1111,7 +1165,7 @@ Sv39のPTEのビットを分かりやすく取得するために、
 次のインターフェースを定義します。
 
 @<code>{src/pte.veryl}を作成し、次のように記述します
-()。
+(@<list>{pte.veryl.sv39.bits})。
 
 //list[pte.veryl.sv39.bits][ (pte.veryl)]{
 #@maprange(scripts/24/sv39-range/core/src/pte.veryl,bits)
@@ -1140,7 +1194,7 @@ interface PTE39 {
 //}
 
 PTEを使ったユーティリティ関数を追加します
-()。
+(@<list>{pte.veryl.sv39.func})。
 
 //list[pte.veryl.sv39.func][ (pte.veryl)]{
 #@maprange(scripts/24/sv39-range/core/src/pte.veryl,func)
@@ -1226,7 +1280,7 @@ PTEを使ったユーティリティ関数を追加します
 === ptwモジュールの実装
 
 sv39utilパッケージをimportします
-()。
+(@<list>{ptw.veryl.sv39.import})。
 
 //list[ptw.veryl.sv39.import][ (ptw.veryl)]{
 #@maprange(scripts/24/sv39-range/core/src/ptw.veryl,import)
@@ -1235,7 +1289,7 @@ import sv39util::*;
 //}
 
 PTE39インターフェースをインスタンス化します
-()。
+(@<list>{ptw.veryl.sv39.pte})。
 @<code>{value}には@<code>{master}のロード結果を割り当てます。
 
 //list[ptw.veryl.sv39.pte][ (ptw.veryl)]{
@@ -1248,7 +1302,7 @@ PTE39インターフェースをインスタンス化します
 TODO 図
 
 仮想アドレスを変換するための状態を追加します
-()。
+(@<list>{ptw.veryl.sv39.State})。
 本章ではページングが有効な時に、
 状態がTODO図のように遷移するようにします。
 
@@ -1269,7 +1323,10 @@ TODO 図
 現在のPTEのlevel(@<code>{level})、
 PTEのアドレス(@<code>{taddr})、
 要求によって更新されるPTEの下位8ビットを格納するためのレジスタを定義します
-()。
+(
+@<list>{ptw.veryl.sv39.reg}、
+@<list>{ptw.veryl.sv39.reset}
+)。
 
 //list[ptw.veryl.sv39.reg][ (ptw.veryl)]{
 #@maprange(scripts/24/sv39-range/core/src/ptw.veryl,reg)
@@ -1292,7 +1349,7 @@ PTEのアドレス(@<code>{taddr})、
 
 
 PTEのフェッチとA、Dビットの更新のために@<code>{master}に要求を割り当てます
-()。
+(@<list>{ptw.veryl.sv39.assign_master})。
 PTEは@<code>{taddr}を使ってアクセスし、
 A、Dビットの更新では下位8ビットのみの書き込みマスクを設定しています。
 
@@ -1315,7 +1372,7 @@ case state {
 //}
 
 @<code>{slave}への結果の割り当てで、ページフォルトが発生していた場合の結果を割り当てます
-()。
+(@<list>{ptw.veryl.sv39.assign_slave})。
 
 //list[ptw.veryl.sv39.assign_slave][ (ptw.veryl)]{
 #@maprange(scripts/24/sv39-range/core/src/ptw.veryl,assign_slave)
@@ -1328,7 +1385,7 @@ State::PAGE_FAULT: {
 //}
 
 ページングが有効なときの要求を受け入れる動作を実装します
-()。
+(@<list>{ptw.veryl.sv39.accept})。
 仮想アドレスが有効かどうかでページフォルトを判定し、@<code>{taddr}レジスタには最初のPTEのアドレスを割り当てます。
 @<code>{level}の初期値はLEVELS - 1とします。
 
@@ -1346,7 +1403,7 @@ if paging_enabled {
 //}
 
 ページフォルトが発生したとき、状態を@<code>{State::IDLE}に戻します
-()。
+(@<list>{ptw.veryl.sv39.clockpf})。
 
 //list[ptw.veryl.sv39.clockpf][ (ptw.veryl)]{
 #@maprange(scripts/24/sv39-range/core/src/ptw.veryl,clockpf)
@@ -1355,7 +1412,7 @@ State::PAGE_FAULT: state = State::IDLE;
 //}
 
 A、Dビットを更新するとき、メモリが書き込み要求を受け入れたら状態を@<code>{State::EXECUTE_READY}に移動します
-()。
+(@<list>{ptw.veryl.sv39.clockad})。
 
 //list[ptw.veryl.sv39.clockad][ (ptw.veryl)]{
 #@maprange(scripts/24/sv39-range/core/src/ptw.veryl,clockad)
@@ -1366,7 +1423,7 @@ State::SET_AD: if master.ready {
 //}
 
 PTEと要求から、ページにアクセスする権限があるかどうかを確認する関数を定義します
-()。
+(@<list>{ptw.veryl.sv39.check})。
 条件の詳細は@<secref>{sv39process}を確認してください。
 
 //list[ptw.veryl.sv39.check][ (ptw.veryl)]{
@@ -1396,7 +1453,7 @@ PTEと要求から、ページにアクセスする権限があるかどうか�
 //}
 
 PTEをフェッチし、ページフォルトの判定、次のPTEのフェッチ、A、Dビットを更新する状態への遷移を実装します
-()。
+(@<list>{ptw.veryl.sv39.walk})。
 
 //list[ptw.veryl.sv39.walk][ (ptw.veryl)]{
 #@maprange(scripts/24/sv39-range/core/src/ptw.veryl,walk)
@@ -1443,7 +1500,7 @@ S-mode以上の特権レベルのときに実行できます。
 === SFENCE.VMA命令をデコードする
 
 SFENCE.VMA命令を有効な命令としてデコードします
-()。
+(@<list>{inst_decoder.veryl.sfence.system})。
 
 //list[inst_decoder.veryl.sfence.system][ (inst_decoder.veryl)]{
 #@maprange(scripts/24/sfence-range/core/src/inst_decoder.veryl,system)
@@ -1463,7 +1520,7 @@ SFENCE.VMA命令を実行できるかを制御するビットです。
 mstatus.TVMが@<code>{1}にされているとき、Illegal instruction例外が発生します。
 
 mstatus.TVMを書き込めるようにします
-()。
+(@<list>{csrunit.veryl.sfence.WMASK})。
 
 //list[csrunit.veryl.sfence.WMASK][ (csrunit.veryl)]{
 #@maprange(scripts/24/sfence-range/core/src/csrunit.veryl,WMASK)
@@ -1478,7 +1535,11 @@ mstatus.TVMを書き込めるようにします
 //}
 
 特権レベルを確認して、例外を発生させます
-()。
+(
+@<list>{csrunit.veryl.sfence.is}、
+@<list>{csrunit.veryl.sfence.expt}、
+@<list>{csrunit.veryl.sfence.raise}
+)。
 
 //list[csrunit.veryl.sfence.is][ (csrunit.veryl)]{
 #@maprange(scripts/24/sfence-range/core/src/csrunit.veryl,is)
@@ -1519,7 +1580,11 @@ CSRの書き換えをページングに反映するために、
 特定のCSRを書き換えたらパイプラインをフラッシュするようにします。
 
 csrunitモジュールに、フラッシュするためのフラグを追加します
-()。
+(
+    @<list>{csrunit.veryl.flushcsr.port}、
+    @<list>{core.veryl.flushcsr.csru}、
+    @<list>{core.veryl.flushcsr.reg}
+)。
 
 //list[csrunit.veryl.flushcsr.port][ (csrunit.veryl)]{
 #@maprange(scripts/24/flushcsr-range/core/src/csrunit.veryl,port)
@@ -1544,7 +1609,7 @@ minstret                          ,
 //}
 
 @<code>{flush}はsatpレジスタ、mstatusレジスタが変更されるときに@<code>{1}になるようにします
-()。
+(@<list>{csrunit.veryl.flushcsr.logic})。
 
 
 //list[csrunit.veryl.flushcsr.logic][ (csrunit.veryl)]{
@@ -1555,7 +1620,7 @@ minstret                          ,
 //}
 
 coreモジュールで、制御ハザードが発生したことにします
-()。
+(@<list>{core.veryl.flushcsr.hazard})。
 
 //list[core.veryl.flushcsr.hazard][ (core.veryl)]{
 #@maprange(scripts/24/flushcsr-range/core/src/core.veryl,hazard)
@@ -1577,7 +1642,10 @@ FENCE.I命令は、FENCE.I命令の後の命令のフェッチ処理がストア
 ページへの書き込みを反映させるために使用します。
 
 FENCE.I命令を判定し、パイプラインをフラッシュする条件に設定します
-()。
+(
+@<list>{csrunit.veryl.fence.is}、
+@<list>{csrunit.veryl.fence.flush}
+)。
 
 //list[csrunit.veryl.fence.is][ (csrunit.veryl)]{
 #@maprange(scripts/24/fence-range/core/src/csrunit.veryl,is)
