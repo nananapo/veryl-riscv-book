@@ -78,7 +78,7 @@
 </div><!--/.footnote-list-->
 
 <h2 class="numbox"><a id="h3-2"></a><span class="secno">3.2</span> 定数の定義</h2>
-<p>eeiパッケージに定義しているメモリの定数をRAM用の定数に変更します。また、新しくRAMのベースアドレス、メモリバスのデータ幅、ROMのメモリマップを示す定数を定義してください()。デバッグ入出力デバイス(レジスタ)の位置は、topモジュールのポートで定義します(<span class="listref"><a href="./12-impl-mmio.html#top.veryl.memtoram.port">リスト3.9</a></span>)。</p>
+<p>eeiパッケージに定義しているメモリの定数をRAM用の定数に変更します。また、新しくRAMのベースアドレス、メモリバスのデータ幅、ROMのメモリマップを示す定数を定義してください(<span class="listref"><a href="./12-impl-mmio.html#eei.veryl.memtoram.const">リスト3.1</a></span>)。デバッグ入出力デバイス(レジスタ)の位置は、topモジュールのポートで定義します(<span class="listref"><a href="./12-impl-mmio.html#top.veryl.memtoram.port">リスト3.9</a></span>)。</p>
 <div id="eei.veryl.memtoram.const" class="caption-code">
 <span class="caption">リスト3.1: リスト3.1:  (eei.veryl)</span>
 <pre class="list language-const">    // メモリ<b>バス</b>のデータ幅
@@ -98,7 +98,7 @@
     const MMAP_ROM_END  : Addr = MMAP_ROM_BEGIN + 'h3ff as Addr;
 </pre>
 </div>
-<p><code class="inline-code">MEM_DATA_WIDTH</code>、<code class="inline-code">MEM_ADDR_WIDTH</code>を使っている部分を<code class="inline-code">MEMBUS_DATA_WIDTH</code>に置き換えます。<code class="inline-code">MEMBUS_DATA_WIDTH</code>と<code class="inline-code">XLEN</code>を使うmembus_ifインターフェースに別名<code class="inline-code">Membus</code>をつけて利用します()。</p>
+<p><code class="inline-code">MEM_DATA_WIDTH</code>、<code class="inline-code">MEM_ADDR_WIDTH</code>を使っている部分を<code class="inline-code">MEMBUS_DATA_WIDTH</code>に置き換えます。<code class="inline-code">MEMBUS_DATA_WIDTH</code>と<code class="inline-code">XLEN</code>を使うmembus_ifインターフェースに別名<code class="inline-code">Membus</code>をつけて利用します(<span class="listref"><a href="./12-impl-mmio.html#membus_if.veryl.memtoram.Membus">リスト3.2</a></span><span class="listref"><a href="./12-impl-mmio.html#core.veryl.memtoram.port">リスト3.3</a></span>)。</p>
 <div id="membus_if.veryl.memtoram.Membus" class="caption-code">
 <span class="caption">リスト3.2: リスト3.2:  (membus_if.veryl)</span>
 <pre class="list language-Membus">alias interface Membus = membus_if::&lt;eei::MEMBUS_DATA_WIDTH, eei::XLEN&gt;;
@@ -132,7 +132,7 @@
     let sext: logic                    = ctrl.funct3[2] == 1'b0;
 </pre>
 </div>
-<p>topモジュールでインスタンス化しているmembus_ifインターフェースのジェネリックパラメータを変更します()。</p>
+<p>topモジュールでインスタンス化しているmembus_ifインターフェースのジェネリックパラメータを変更します(<span class="listref"><a href="./12-impl-mmio.html#top.veryl.memtoram.membus">リスト3.6</a></span>)。</p>
 <div id="top.veryl.memtoram.membus" class="caption-code">
 <span class="caption">リスト3.6: リスト3.6:  (top.veryl)</span>
 <pre class="list language-membus">    inst membus  : membus_if::&lt;<b>RAM</b>_DATA_WIDTH, <b>RAM</b>_ADDR_WIDTH&gt;;
@@ -140,7 +140,7 @@
     inst d_membus: <b>Membus</b>; // ロードストア命令用
 </pre>
 </div>
-<p>addr_to_memaddr関数をジェネリック関数にして、呼び出すときにRAMのパラメータを使用するように変更します()。</p>
+<p>addr_to_memaddr関数をジェネリック関数にして、呼び出すときにRAMのパラメータを使用するように変更します(<span class="listref"><a href="./12-impl-mmio.html#top.veryl.memtoram.addr_to_memaddr">リスト3.7</a></span>、<span class="listref"><a href="./12-impl-mmio.html#top.veryl.memtoram.arb">リスト3.8</a></span>、)。</p>
 <div id="top.veryl.memtoram.addr_to_memaddr" class="caption-code">
 <span class="caption">リスト3.7: リスト3.7:  (top.veryl)</span>
 <pre class="list language-addr_to_memaddr">    // アドレスをデータ単位でのアドレスに変換する
@@ -167,7 +167,7 @@
         }
 </pre>
 </div>
-<p>メモリに読み込むHEXファイルを指定するパラメータの名前を変更します()。それにあわせてシミュレータ用のプログラムも変更します。</p>
+<p>メモリに読み込むHEXファイルを指定するパラメータの名前を変更します(<span class="listref"><a href="./12-impl-mmio.html#top.veryl.memtoram.port">リスト3.9</a></span>、<span class="listref"><a href="./12-impl-mmio.html#top.veryl.memtoram.inst">リスト3.10</a></span>)。それにあわせてシミュレータ用のプログラムも変更します(<span class="listref"><a href="./12-impl-mmio.html#tb_verilator.cpp.memtoram.arg">リスト3.11</a></span>、<span class="listref"><a href="./12-impl-mmio.html#tb_verilator.cpp.memtoram.env">リスト3.12</a></span>、<span class="listref"><a href="./12-impl-mmio.html#tb_verilator.cpp.memtoram.save">リスト3.13</a></span>)。</p>
 <div id="top.veryl.memtoram.port" class="caption-code">
 <span class="caption">リスト3.9: リスト3.9:  (top.veryl)</span>
 <pre class="list language-port">module top #(
@@ -210,7 +210,7 @@
 
 <h2 class="numbox"><a id="h3-3"></a><span class="secno">3.3</span> mmio_controllerモジュールの作成</h2>
 <p>アクセスするアドレスに応じてアクセス先のデバイスを切り替えるモジュールを実装します。</p>
-<p><code class="inline-code">src/mmio_controller.veryl</code>を作成し、次のように記述します()。</p>
+<p><code class="inline-code">src/mmio_controller.veryl</code>を作成し、次のように記述します(<span class="listref"><a href="./12-impl-mmio.html#mmio_controller.veryl.emptymmio">リスト3.14</a></span>)。</p>
 <div id="mmio_controller.veryl.emptymmio" class="caption-code">
 <span class="caption">リスト3.14: リスト3.14:  (mmio_controller.veryl)</span>
 <pre class="list language-emptymmio">import eei::*;
@@ -363,7 +363,7 @@ module mmio_controller (
 }
 </pre>
 </div>
-<p>mmio_controllerモジュールの関数の引数にmembus_ifインターフェースを使うために、新しくmodportを宣言します()。</p>
+<p>mmio_controllerモジュールの関数の引数にmembus_ifインターフェースを使うために、新しくmodportを宣言します(<span class="listref"><a href="./12-impl-mmio.html#membus_if.veryl.emptymmio.modport">リスト3.15</a></span>)。</p>
 <div id="membus_if.veryl.emptymmio.modport" class="caption-code">
 <span class="caption">リスト3.15: リスト3.15:  (membus_if.veryl)</span>
 <pre class="list language-modport">    modport all_input {
@@ -390,7 +390,7 @@ module mmio_controller (
 </pre>
 </div>
 <p>mmio_controllerモジュールは<code class="inline-code">req_core</code>からメモリアクセス要求を受け付け、アクセス対象のモジュールからのレスポンスを返すモジュールです。</p>
-<p><code class="inline-code">Device</code>型は実装しているデバイスを表現するための列挙型です()。まだデバイスを接続していないので、不明なデバイス(<code class="inline-code">Device::UNKNOWN</code>)だけ定義しています。</p>
+<p><code class="inline-code">Device</code>型は実装しているデバイスを表現するための列挙型です(<span class="listref"><a href="./12-impl-mmio.html#mmio_controller.veryl.emptymmio.Device">リスト3.16</a></span>)。まだデバイスを接続していないので、不明なデバイス(<code class="inline-code">Device::UNKNOWN</code>)だけ定義しています。</p>
 <div id="mmio_controller.veryl.emptymmio.Device" class="caption-code">
 <span class="caption">リスト3.16: リスト3.16:  (mmio_controller.veryl)</span>
 <pre class="list language-Device">    enum Device {
@@ -399,7 +399,7 @@ module mmio_controller (
 </pre>
 </div>
 <p>reset_membus_master、reset_all_device_masters関数はインターフェースの値の割り当てを<b>0</b>でリセットするためのユーティリティ関数です。名前がget_device_、assign_deviceから始まる関数は、デバイスの状態を取得したり、インターフェースに値を割り当てる関数です。get_device関数はアドレスからデバイスを取得する関数です。</p>
-<p>always_comb、always_ffブロックはこれらの関数を利用してメモリアクセスを制御します。always_ffブロックは、メモリアクセス要求の処理中ではない場合とメモリアクセスが終わった場合にメモリアクセス要求を受け入れます()。要求を受け入れるとき、<code class="inline-code">req_saved</code>に<code class="inline-code">req_core</code>の値を保存します。</p>
+<p>always_comb、always_ffブロックはこれらの関数を利用してメモリアクセスを制御します。always_ffブロックは、メモリアクセス要求の処理中ではない場合とメモリアクセスが終わった場合にメモリアクセス要求を受け入れます(<span class="listref"><a href="./12-impl-mmio.html#mmio_controller.veryl.emptymmio.on_clock">リスト3.17</a></span>)。要求を受け入れるとき、<code class="inline-code">req_saved</code>に<code class="inline-code">req_core</code>の値を保存します。</p>
 <div id="mmio_controller.veryl.emptymmio.on_clock" class="caption-code">
 <span class="caption">リスト3.17: リスト3.17:  (mmio_controller.veryl)</span>
 <pre class="list language-on_clock">    // 新しく要求を受け入れる
@@ -431,36 +431,16 @@ module mmio_controller (
     }
 </pre>
 </div>
-<p>always_combブロックはデバイスにアクセスし()、<code class="inline-code">req_core</code>に結果を返します()。<code class="inline-code">is_requested</code>は、メモリアクセス要求を処理している場合に既にデバイスが要求を受け入れたかを示すフラグです。新しく要求を受け入れるときと<code class="inline-code">is_requested</code>が<code class="inline-code">0</code>のときにデバイスに要求を割り当て、<code class="inline-code">is_requested</code>が<code class="inline-code">1</code>かつ<code class="inline-code">rvalid</code>が<code class="inline-code">1</code>ときに結果を返します。</p>
-<div id="mmio_controller.veryl.emptymmio.req_core" class="caption-code">
-<span class="caption">リスト3.18: リスト3.18:  (mmio_controller.veryl)</span>
-<pre class="list language-req_core">    // req_coreの割り当て
-    always_comb {
-        req_core.ready  = 0;
-        req_core.rvalid = 0;
-        req_core.rdata  = 0;
-
-        if req_saved.valid {
-            if is_requested {
-                // 結果を返す
-                assign_device_slave(last_device, req_core);
-                req_core.ready      = get_device_rvalid(last_device);
-            }
-        } else {
-            req_core.ready = 1;
-        }
-    }
-</pre>
-</div>
+<p>always_combブロックはデバイスにアクセスし<code class="inline-code">req_core</code>に結果を返します。<code class="inline-code">is_requested</code>は、メモリアクセス要求を処理している場合に既にデバイスが要求を受け入れたかを示すフラグです。新しく要求を受け入れるときと<code class="inline-code">is_requested</code>が<code class="inline-code">0</code>のときにデバイスに要求を割り当て、<code class="inline-code">is_requested</code>が<code class="inline-code">1</code>かつ<code class="inline-code">rvalid</code>が<code class="inline-code">1</code>ときに結果を返します。</p>
 <p>まだアクセス対象のデバイスを実装していないため、常に<code class="inline-code">0</code>を読み込み、<code class="inline-code">ready</code>と<code class="inline-code">rvalid</code>は常に<code class="inline-code">1</code>にして、書き込みは無視します。</p>
 
 <h2 class="numbox"><a id="h3-4"></a><span class="secno">3.4</span> RAMの接続</h2>
 
 <h3 class="none"><a id="h3-4-1"></a><span class="secno">3.4.1</span> mmio_controllerモジュールにRAMを追加する</h3>
 <p>mmio_controllerモジュールにRAMとのインターフェースを実装します。</p>
-<p><code class="inline-code">Device</code>型にRAMを追加して、アドレスにRAMをマップします()。</p>
+<p><code class="inline-code">Device</code>型にRAMを追加して、アドレスにRAMをマップします(@&lt;list&gt;{mmio_controller.veryl.ram.Device}、&lt;list&gt;{mmio_controller.veryl.ram.get_device})。</p>
 <div id="mmio_controller.veryl.ram.Device" class="caption-code">
-<span class="caption">リスト3.19: リスト3.19:  (mmio_controller.veryl)</span>
+<span class="caption">リスト3.18: リスト3.18:  (mmio_controller.veryl)</span>
 <pre class="list language-Device">    enum Device {
         UNKNOWN,
         RAM,
@@ -468,7 +448,7 @@ module mmio_controller (
 </pre>
 </div>
 <div id="mmio_controller.veryl.ram.get_device" class="caption-code">
-<span class="caption">リスト3.20: リスト3.20:  (mmio_controller.veryl)</span>
+<span class="caption">リスト3.19: リスト3.19:  (mmio_controller.veryl)</span>
 <pre class="list language-get_device">    function get_device (
         addr: input Addr,
     ) -&gt; Device {
@@ -479,9 +459,9 @@ module mmio_controller (
     }
 </pre>
 </div>
-<p>RAMとのインターフェースを追加し、reset_all_device_masters関数にインターフェースをリセットするコードを追加します()。</p>
+<p>RAMとのインターフェースを追加し、reset_all_device_masters関数にインターフェースをリセットするコードを追加します(<span class="listref"><a href="./12-impl-mmio.html#mmio_controller.veryl.ram.port">リスト3.20</a></span>、<span class="listref"><a href="./12-impl-mmio.html#mmio_controller.veryl.ram.reset_all">リスト3.21</a></span>)。</p>
 <div id="mmio_controller.veryl.ram.port" class="caption-code">
-<span class="caption">リスト3.21: リスト3.21:  (mmio_controller.veryl)</span>
+<span class="caption">リスト3.20: リスト3.20:  (mmio_controller.veryl)</span>
 <pre class="list language-port">module mmio_controller (
     clk       : input   clock         ,
     rst       : input   reset         ,
@@ -491,15 +471,15 @@ module mmio_controller (
 </pre>
 </div>
 <div id="mmio_controller.veryl.ram.reset_all" class="caption-code">
-<span class="caption">リスト3.22: リスト3.22:  (mmio_controller.veryl)</span>
+<span class="caption">リスト3.21: リスト3.21:  (mmio_controller.veryl)</span>
 <pre class="list language-reset_all">    function reset_all_device_masters () {
         <b>reset_membus_master(ram_membus);</b>
     }
 </pre>
 </div>
-<p><code class="inline-code">ready</code>、<code class="inline-code">rvalid</code>を取得する関数にRAMを登録します()。</p>
+<p><code class="inline-code">ready</code>、<code class="inline-code">rvalid</code>を取得する関数にRAMを登録します(<span class="listref"><a href="./12-impl-mmio.html#mmio_controller.veryl.ram.get_device_ready">リスト3.22</a></span>、<span class="listref"><a href="./12-impl-mmio.html#mmio_controller.veryl.ram.get_device_rvalid">リスト3.23</a></span>)。</p>
 <div id="mmio_controller.veryl.ram.get_device_ready" class="caption-code">
-<span class="caption">リスト3.23: リスト3.23:  (mmio_controller.veryl)</span>
+<span class="caption">リスト3.22: リスト3.22:  (mmio_controller.veryl)</span>
 <pre class="list language-get_device_ready">    function get_device_ready (
         device: input Device,
     ) -&gt; logic {
@@ -512,7 +492,7 @@ module mmio_controller (
 </pre>
 </div>
 <div id="mmio_controller.veryl.ram.get_device_rvalid" class="caption-code">
-<span class="caption">リスト3.24: リスト3.24:  (mmio_controller.veryl)</span>
+<span class="caption">リスト3.23: リスト3.23:  (mmio_controller.veryl)</span>
 <pre class="list language-get_device_rvalid">    function get_device_rvalid (
         device: input Device,
     ) -&gt; logic {
@@ -524,9 +504,9 @@ module mmio_controller (
     }
 </pre>
 </div>
-<p>RAMの<code class="inline-code">rvalid</code>、<code class="inline-code">rdata</code>を<code class="inline-code">req_core</code>に割り当てます()。</p>
+<p>RAMの<code class="inline-code">rvalid</code>、<code class="inline-code">rdata</code>を<code class="inline-code">req_core</code>に割り当てます(<span class="listref"><a href="./12-impl-mmio.html#mmio_controller.veryl.ram.assign_device_slave">リスト3.24</a></span>)。</p>
 <div id="mmio_controller.veryl.ram.assign_device_slave" class="caption-code">
-<span class="caption">リスト3.25: リスト3.25:  (mmio_controller.veryl)</span>
+<span class="caption">リスト3.24: リスト3.24:  (mmio_controller.veryl)</span>
 <pre class="list language-assign_device_slave">    function assign_device_slave (
         device: input   Device          ,
         req   : modport Membus::response,
@@ -540,9 +520,9 @@ module mmio_controller (
     }
 </pre>
 </div>
-<p>RAMのインターフェースに要求を割り当てます()。ここでRAMのベースアドレスをオフセットとしたアドレスを割り当てることで、<code class="inline-code">MMAP_RAM_BEGIN</code>が<code class="inline-code">0</code>になるようにしています。</p>
+<p>RAMのインターフェースに要求を割り当てます(<span class="listref"><a href="./12-impl-mmio.html#mmio_controller.veryl.ram.assign_device_master">リスト3.25</a></span>)。ここでRAMのベースアドレスをオフセットとしたアドレスを割り当てることで、<code class="inline-code">MMAP_RAM_BEGIN</code>が<code class="inline-code">0</code>になるようにしています。</p>
 <div id="mmio_controller.veryl.ram.assign_device_master" class="caption-code">
-<span class="caption">リスト3.26: リスト3.26:  (mmio_controller.veryl)</span>
+<span class="caption">リスト3.25: リスト3.25:  (mmio_controller.veryl)</span>
 <pre class="list language-assign_device_master">    function assign_device_master (
         req: modport Membus::all_input,
     ) {
@@ -559,16 +539,16 @@ module mmio_controller (
 
 <h3 class="none"><a id="h3-4-2"></a><span class="secno">3.4.2</span> RAMとmmio_controllerモジュールを接続する</h3>
 <p>topモジュールにmmio_controllerモジュールをインスタンス化し、RAMとmmio_controllerモジュール、mmio_controllerモジュールとcoreモジュールを接続します。</p>
-<p>RAMとmmio_controllerモジュールを接続するインターフェース(<code class="inline-code">mmio_ram_membus</code>)、coreモジュールとmmio_controllerモジュールを接続するインターフェース(<code class="inline-code">mmio_membus</code>)を定義し、<code class="inline-code">membus</code>を<code class="inline-code">ram_membus</code>に改名します。</p>
+<p>RAMとmmio_controllerモジュールを接続するインターフェース(<code class="inline-code">mmio_ram_membus</code>)、coreモジュールとmmio_controllerモジュールを接続するインターフェース(<code class="inline-code">mmio_membus</code>)を定義し、<code class="inline-code">membus</code>を<code class="inline-code">ram_membus</code>に改名します(<span class="listref"><a href="./12-impl-mmio.html#top.veryl.ram.interface">リスト3.26</a></span>、<span class="listref"><a href="./12-impl-mmio.html#top.veryl.ram.ram">リスト3.27</a></span>)。</p>
 <div id="top.veryl.ram.interface" class="caption-code">
-<span class="caption">リスト3.27: リスト3.27:  (top.veryl)</span>
+<span class="caption">リスト3.26: リスト3.26:  (top.veryl)</span>
 <pre class="list language-interface">    <b>inst mmio_membus    : Membus;</b>
     <b>inst mmio_ram_membus: Membus;</b>
     inst <b>ram_</b>membus     : membus_if::&lt;RAM_DATA_WIDTH, RAM_ADDR_WIDTH&gt;;
 </pre>
 </div>
 <div id="top.veryl.ram.ram" class="caption-code">
-<span class="caption">リスト3.28: リスト3.28:  (top.veryl)</span>
+<span class="caption">リスト3.27: リスト3.27:  (top.veryl)</span>
 <pre class="list language-ram">    inst ram: memory::&lt;RAM_DATA_WIDTH, RAM_ADDR_WIDTH&gt; #(
         FILEPATH_IS_ENV: RAM_FILEPATH_IS_ENV,
         FILEPATH       : RAM_FILEPATH       ,
@@ -579,9 +559,9 @@ module mmio_controller (
     );
 </pre>
 </div>
-<p>coreモジュールからRAMへのメモリアクセスを調停する処理を、coreモジュールからmmio_controllerモジュールへのアクセスを調停する処理に変更します()。</p>
+<p>coreモジュールからRAMへのメモリアクセスを調停する処理を、coreモジュールからmmio_controllerモジュールへのアクセスを調停する処理に変更します(<span class="listref"><a href="./12-impl-mmio.html#top.veryl.ram.arb">リスト3.28</a></span>)。</p>
 <div id="top.veryl.ram.arb" class="caption-code">
-<span class="caption">リスト3.29: リスト3.29:  (top.veryl)</span>
+<span class="caption">リスト3.28: リスト3.28:  (top.veryl)</span>
 <pre class="list language-arb">    // <b>mmio_controller</b>へのメモリアクセスを調停する
     always_ff {
         if_reset {
@@ -619,9 +599,9 @@ module mmio_controller (
     }
 </pre>
 </div>
-<p>mmio_controllerをインスタンス化し、RAMと接続します。()。RAMのアドレスへの変換は調停処理からこの部分に移動しています。</p>
+<p>mmio_controllerをインスタンス化し、RAMと接続します。(<span class="listref"><a href="./12-impl-mmio.html#top.veryl.ram.inst">リスト3.29</a></span>、<span class="listref"><a href="./12-impl-mmio.html#top.veryl.ram.connect">リスト3.30</a></span>)。RAMのアドレスへの変換は調停処理から接続部分に移動しています。</p>
 <div id="top.veryl.ram.inst" class="caption-code">
-<span class="caption">リスト3.30: リスト3.30:  (top.veryl)</span>
+<span class="caption">リスト3.29: リスト3.29:  (top.veryl)</span>
 <pre class="list language-inst">    inst mmioc: mmio_controller (
         clk                        ,
         rst                        ,
@@ -631,7 +611,7 @@ module mmio_controller (
 </pre>
 </div>
 <div id="top.veryl.ram.connect" class="caption-code">
-<span class="caption">リスト3.31: リスト3.31:  (top.veryl)</span>
+<span class="caption">リスト3.30: リスト3.30:  (top.veryl)</span>
 <pre class="list language-connect">    always_comb {
         // mmio &lt;&gt; RAM
         ram_membus.valid       = mmio_ram_membus.valid;
@@ -647,15 +627,15 @@ module mmio_controller (
 </div>
 
 <h3 id="changepc" class="none"><a id="h3-4-3"></a><span class="secno">3.4.3</span> PCの初期値の変更</h3>
-<p>プログラムカウンタの初期値を<code class="inline-code">MMAP_RAM_BEGIN</code>にすることで、RAMのベースアドレスからプログラムの実行を開始するように変更します。eeiパッケージに<code class="inline-code">INITIAL_PC</code>を定義し、coreモジュールでのリセット時に利用します()。</p>
+<p>プログラムカウンタの初期値を<code class="inline-code">MMAP_RAM_BEGIN</code>にすることで、RAMのベースアドレスからプログラムの実行を開始するように変更します。eeiパッケージに<code class="inline-code">INITIAL_PC</code>を定義し、coreモジュールでのリセット時に利用します(<span class="listref"><a href="./12-impl-mmio.html#eei.veryl.ram.pc">リスト3.31</a></span>、<span class="listref"><a href="./12-impl-mmio.html#core.veryl.ram.pc">リスト3.32</a></span>)。</p>
 <div id="eei.veryl.ram.pc" class="caption-code">
-<span class="caption">リスト3.32: リスト3.32:  (eei.veryl)</span>
+<span class="caption">リスト3.31: リスト3.31:  (eei.veryl)</span>
 <pre class="list language-pc">    // pc on reset
     const INITIAL_PC: Addr = MMAP_RAM_BEGIN;
 </pre>
 </div>
 <div id="core.veryl.ram.pc" class="caption-code">
-<span class="caption">リスト3.33: リスト3.33:  (core.veryl)</span>
+<span class="caption">リスト3.32: リスト3.32:  (core.veryl)</span>
 <pre class="list language-pc">    always_ff {
         if_reset {
             if_pc           = <b>INITIAL_PC</b>;
@@ -666,9 +646,9 @@ module mmio_controller (
         } else {
 </pre>
 </div>
-<p>riscv-testsを実行してRAMにアクセスできているかテストします。今のところriscv-testsはアドレス<code class="inline-code">0</code>から配置されるようにリンクしているため、riscv-testsの<code class="inline-code">env/p/link.ld</code>を変更します()。</p>
+<p>riscv-testsを実行してRAMにアクセスできているかテストします。今のところriscv-testsはアドレス<code class="inline-code">0</code>から配置されるようにリンクしているため、riscv-testsの<code class="inline-code">env/p/link.ld</code>を変更します(<span class="listref"><a href="./12-impl-mmio.html#link.ld.ram.riscv-tests">リスト3.33</a></span>)。</p>
 <div id="link.ld.ram.riscv-tests" class="caption-code">
-<span class="caption">リスト3.34: リスト3.34: (riscv-tests/env/p/link.ld)</span>
+<span class="caption">リスト3.33: リスト3.33: (riscv-tests/env/p/link.ld)</span>
 <pre class="list language-riscv-tests">OUTPUT_ARCH( &quot;riscv&quot; )
 ENTRY(_start)
 
@@ -677,14 +657,15 @@ SECTIONS
   . = <b>0x00000000</b>; <span class="balloon">← 先頭を0x80000000に変更する (戻す)</span>
 </pre>
 </div>
-<p>riscv-testsをビルドしなおし、成果物をtestディレクトリに配置してください。ビルドしなおしたので、HEXファイルを再度生成します()。</p>
-<div class="cmd-code">
-<pre class="emlist">$ <span class="userinput">cd test</span>
+<p>riscv-testsをビルドしなおし、成果物をtestディレクトリに配置してください。ビルドしなおしたので、HEXファイルを再度生成します(<span class="listref"><a href="./12-impl-mmio.html#terminal.ram.recompile">リスト3.34</a></span>)。</p>
+<div id="terminal.ram.recompile" class="cmd-code">
+<span class="caption">リスト3.34: リスト3.34: </span>
+<pre class="list language-recompile">$ <span class="userinput">cd test</span>
 $ <span class="userinput">find share/ -type f -not -name &quot;*.dump&quot; -exec riscv64-unknown-elf-objcopy -O binary {</span> {}.bin \;}
-$ <span class="userinput">find share/ -type f -name &quot;*.bin&quot; -exec sh -c &quot;python3 bin2hex.py 4 {</span> &gt; {}.hex&quot; \;}
+$ <span class="userinput">find share/ -type f -name &quot;*.bin&quot; -exec sh -c &quot;python3 bin2hex.py 8 {</span> &gt; {}.hex&quot; \;}
 </pre>
 </div>
-<p>riscv-testsの終了判定用のアドレスを<code class="inline-code">MMAP_RAM_BEGIN</code>基準のアドレスに変更します()。</p>
+<p>riscv-testsの終了判定用のアドレスを<code class="inline-code">MMAP_RAM_BEGIN</code>基準のアドレスに変更します(<span class="listref"><a href="./12-impl-mmio.html#top.veryl.ram.riscvtests">リスト3.35</a></span>)。</p>
 <div id="top.veryl.ram.riscvtests" class="caption-code">
 <span class="caption">リスト3.35: リスト3.35:  (top.veryl)</span>
 <pre class="list language-riscvtests">    #[ifdef(TEST_MODE)]
@@ -709,7 +690,7 @@ $ <span class="userinput">find share/ -type f -name &quot;*.bin&quot; -exec sh -
 
 <h3 class="none"><a id="h3-5-1"></a><span class="secno">3.5.1</span> mmio_controllerモジュールにROMを追加する</h3>
 <p>mmio_controllerモジュールにROMとのインターフェースを実装します。</p>
-<p><code class="inline-code">Device</code>型にROMを追加して、アドレスにROMをマップします()。</p>
+<p><code class="inline-code">Device</code>型にROMを追加して、アドレスにROMをマップします(<span class="listref"><a href="./12-impl-mmio.html#mmio_controller.veryl.rom.Device">リスト3.36</a></span>、<span class="listref"><a href="./12-impl-mmio.html#mmio_controller.veryl.rom.get_device">リスト3.37</a></span>)。</p>
 <div id="mmio_controller.veryl.rom.Device" class="caption-code">
 <span class="caption">リスト3.36: リスト3.36:  (mmio_controller.veryl)</span>
 <pre class="list language-Device">    enum Device {
@@ -734,7 +715,7 @@ $ <span class="userinput">find share/ -type f -name &quot;*.bin&quot; -exec sh -
     }
 </pre>
 </div>
-<p>ROMとのインターフェースを追加します()。reset_all_device_masters関数でインターフェースをリセットします。</p>
+<p>ROMとのインターフェースを追加します(<span class="listref"><a href="./12-impl-mmio.html#mmio_controller.veryl.rom.port">リスト3.38</a></span>、<span class="listref"><a href="./12-impl-mmio.html#mmio_controller.veryl.rom.reset_all">リスト3.39</a></span>)。reset_all_device_masters関数でインターフェースをリセットします。</p>
 <div id="mmio_controller.veryl.rom.port" class="caption-code">
 <span class="caption">リスト3.38: リスト3.38:  (mmio_controller.veryl)</span>
 <pre class="list language-port">module mmio_controller (
@@ -754,7 +735,7 @@ $ <span class="userinput">find share/ -type f -name &quot;*.bin&quot; -exec sh -
     }
 </pre>
 </div>
-<p><code class="inline-code">ready</code>、<code class="inline-code">rvalid</code>を取得する関数にROMを登録します()。</p>
+<p><code class="inline-code">ready</code>、<code class="inline-code">rvalid</code>を取得する関数にROMを登録します(<span class="listref"><a href="./12-impl-mmio.html#mmio_controller.veryl.rom.get_device_rvalid">リスト3.40</a></span>、<span class="listref"><a href="./12-impl-mmio.html#mmio_controller.veryl.rom.get_device_ready">リスト3.41</a></span>)。</p>
 <div id="mmio_controller.veryl.rom.get_device_rvalid" class="caption-code">
 <span class="caption">リスト3.40: リスト3.40:  (mmio_controller.veryl)</span>
 <pre class="list language-get_device_rvalid">        case device {
@@ -773,7 +754,7 @@ $ <span class="userinput">find share/ -type f -name &quot;*.bin&quot; -exec sh -
         }
 </pre>
 </div>
-<p>ROMの<code class="inline-code">rvalid</code>、<code class="inline-code">rdata</code>を<code class="inline-code">req_core</code>に割り当てます()。</p>
+<p>ROMの<code class="inline-code">rvalid</code>、<code class="inline-code">rdata</code>を<code class="inline-code">req_core</code>に割り当てます(<span class="listref"><a href="./12-impl-mmio.html#mmio_controller.veryl.rom.assign_device_slave">リスト3.42</a></span>)。</p>
 <div id="mmio_controller.veryl.rom.assign_device_slave" class="caption-code">
 <span class="caption">リスト3.42: リスト3.42:  (mmio_controller.veryl)</span>
 <pre class="list language-assign_device_slave">        case device {
@@ -783,7 +764,7 @@ $ <span class="userinput">find share/ -type f -name &quot;*.bin&quot; -exec sh -
         }
 </pre>
 </div>
-<p>ROMのインターフェースに要求を割り当てます()。RAMと同じようにメモリマップのベースアドレスをオフセットとしたアドレスを割り当てます。</p>
+<p>ROMのインターフェースに要求を割り当てます(<span class="listref"><a href="./12-impl-mmio.html#mmio_controller.veryl.rom.assign_device_master">リスト3.43</a></span>)。RAMと同じようにメモリマップのベースアドレスをオフセットとしたアドレスを割り当てます。</p>
 <div id="mmio_controller.veryl.rom.assign_device_master" class="caption-code">
 <span class="caption">リスト3.43: リスト3.43:  (mmio_controller.veryl)</span>
 <pre class="list language-assign_device_master">        case get_device(req.addr) {
@@ -801,7 +782,7 @@ $ <span class="userinput">find share/ -type f -name &quot;*.bin&quot; -exec sh -
 </div>
 
 <h3 class="none"><a id="h3-5-2"></a><span class="secno">3.5.2</span> ROMの初期値のパラメータを作成する</h3>
-<p>topモジュールにROMの初期値を指定するパラメータを定義します。</p>
+<p>topモジュールにROMの初期値を指定するパラメータを定義します(<span class="listref"><a href="./12-impl-mmio.html#top.veryl.rom.assign_device_master">リスト3.44</a></span>)。</p>
 <div id="top.veryl.rom.assign_device_master" class="caption-code">
 <span class="caption">リスト3.44: リスト3.44:  (top.veryl)</span>
 <pre class="list language-assign_device_master">module top #(
@@ -812,7 +793,7 @@ $ <span class="userinput">find share/ -type f -name &quot;*.bin&quot; -exec sh -
 ) (
 </pre>
 </div>
-<p>RAMと同じように、シミュレータ用のプログラムでROMのHEXファイルのパスを指定するようにします。1番目の引数をROM用のファイルパスに変更し、ROM_FILE_PATH環境変数をその値に設定します()。</p>
+<p>RAMと同じように、シミュレータ用のプログラムでROMのHEXファイルのパスを指定するようにします。1番目の引数をROM用のファイルパスに変更し、ROM_FILE_PATH環境変数をその値に設定します(<span class="listref"><a href="./12-impl-mmio.html#tb_verilator.cpp.rom.arg">リスト3.45</a></span>、<span class="listref"><a href="./12-impl-mmio.html#tb_verilator.cpp.rom.path">リスト3.46</a></span>、<span class="listref"><a href="./12-impl-mmio.html#tb_verilator.cpp.rom.cycles">リスト3.47</a></span>、<span class="listref"><a href="./12-impl-mmio.html#tb_verilator.cpp.rom.setenv">リスト3.48</a></span>、<span class="listref"><a href="./12-impl-mmio.html#tb_verilator.cpp.rom.back">リスト3.49</a></span>)。</p>
 <div id="tb_verilator.cpp.rom.arg" class="caption-code">
 <span class="caption">リスト3.45: リスト3.45:  (tb_verilator.cpp)</span>
 <pre class="list language-arg">    if (argc &lt; <b>3</b>) {
@@ -868,7 +849,7 @@ $ <span class="userinput">find share/ -type f -name &quot;*.bin&quot; -exec sh -
     }
 </pre>
 </div>
-<p>テストを実行するためのPythonプログラムでROMのHEXファイルを指定できるようにします()。デフォルト値はカレントディレクトリの<code class="inline-code">bootrom.hex</code>にしておきます。</p>
+<p>テストを実行するためのPythonプログラムでROMのHEXファイルを指定できるようにします(<span class="listref"><a href="./12-impl-mmio.html#test.py.rom.arg">リスト3.50</a></span>、<span class="listref"><a href="./12-impl-mmio.html#test.py.rom.test">リスト3.51</a></span>、<span class="listref"><a href="./12-impl-mmio.html#test.py.rom.walk">リスト3.52</a></span>)。デフォルト値はカレントディレクトリの<code class="inline-code">bootrom.hex</code>にしておきます。</p>
 <div id="test.py.rom.arg" class="caption-code">
 <span class="caption">リスト3.50: リスト3.50:  (test/test.py)</span>
 <pre class="list language-arg">parser.add_argument(&quot;--rom&quot;, default=&quot;bootrom.hex&quot;, help=&quot;hex file of rom&quot;)
@@ -893,7 +874,7 @@ $ <span class="userinput">find share/ -type f -name &quot;*.bin&quot; -exec sh -
 
 <h3 class="none"><a id="h3-5-3"></a><span class="secno">3.5.3</span> ROMとmmio_controllerモジュールを接続する</h3>
 <p>ROMをインスタンス化してmmio_controllerモジュールと接続します。</p>
-<p>ROMとmmio_controllerモジュールを接続するインターフェース(<code class="inline-code">mmio_rom_membus</code>)ROMのインターフェース(<code class="inline-code">rom_membus</code>)を定義します()。</p>
+<p>ROMとmmio_controllerモジュールを接続するインターフェース(<code class="inline-code">mmio_rom_membus</code>)ROMのインターフェース(<code class="inline-code">rom_membus</code>)を定義します(<span class="listref"><a href="./12-impl-mmio.html#top.veryl.rom.interface">リスト3.53</a></span>)。</p>
 <div id="top.veryl.rom.interface" class="caption-code">
 <span class="caption">リスト3.53: リスト3.53:  (top.veryl)</span>
 <pre class="list language-interface">    inst mmio_membus    : Membus;
@@ -903,7 +884,7 @@ $ <span class="userinput">find share/ -type f -name &quot;*.bin&quot; -exec sh -
     <b>inst rom_membus     : membus_if::&lt;ROM_DATA_WIDTH, ROM_ADDR_WIDTH&gt;;</b>
 </pre>
 </div>
-<p>ROMをインスタンス化します()。パラメータにはtopモジュールのパラメータを割り当てます。</p>
+<p>ROMをインスタンス化します(<span class="listref"><a href="./12-impl-mmio.html#top.veryl.rom.inst">リスト3.54</a></span>)。パラメータにはtopモジュールのパラメータを割り当てます。</p>
 <div id="top.veryl.rom.inst" class="caption-code">
 <span class="caption">リスト3.54: リスト3.54:  (top.veryl)</span>
 <pre class="list language-inst">    inst rom: memory::&lt;ROM_DATA_WIDTH, ROM_ADDR_WIDTH&gt; #(
@@ -916,7 +897,7 @@ $ <span class="userinput">find share/ -type f -name &quot;*.bin&quot; -exec sh -
     );
 </pre>
 </div>
-<p>mmio_controllerモジュールに<code class="inline-code">rom_membus</code>を接続します。</p>
+<p>mmio_controllerモジュールに<code class="inline-code">rom_membus</code>を接続します(<span class="listref"><a href="./12-impl-mmio.html#top.veryl.rom.mmioc">リスト3.55</a></span>)。</p>
 <div id="top.veryl.rom.mmioc" class="caption-code">
 <span class="caption">リスト3.55: リスト3.55:  (top.veryl)</span>
 <pre class="list language-mmioc">    inst mmioc: mmio_controller (
@@ -928,7 +909,7 @@ $ <span class="userinput">find share/ -type f -name &quot;*.bin&quot; -exec sh -
     );
 </pre>
 </div>
-<p>mmio_controllerモジュールとROMを接続します。アドレスの変換のためにaddr_to_memaddr関数を使用しています()。</p>
+<p>mmio_controllerモジュールとROMを接続します。アドレスの変換のためにaddr_to_memaddr関数を使用しています(<span class="listref"><a href="./12-impl-mmio.html#top.veryl.rom.connect">リスト3.56</a></span>)。</p>
 <div id="top.veryl.rom.connect" class="caption-code">
 <span class="caption">リスト3.56: リスト3.56:  (top.veryl)</span>
 <pre class="list language-connect">    always_comb {
@@ -949,7 +930,7 @@ $ <span class="userinput">find share/ -type f -name &quot;*.bin&quot; -exec sh -
 <p>プログラムカウンタの初期値をROMのベースアドレスに変更し、ROMからRAMにジャンプする仕組みを実現します。</p>
 <p>一般的にCPUの電源をつけると、CPUはROMのようなメモリデバイスに入ったソフトウェアから実行を開始します。そのソフトウェアは次に実行するソフトウェアを外部記憶装置から読み取り、RAMにソフトウェアを適切にコピー、配置して実行します。</p>
 <p>本章ではRAM、ROMともに<code class="inline-code">$readmemh</code>システムタスクで初期化するように実装しているので、RAMのベースアドレスにジャンプするだけのプログラムをROMに設定します。</p>
-<p>ROMに設定するためのHEXファイルを作成します()。</p>
+<p>ROMに設定するためのHEXファイルを作成します(<span class="listref"><a href="./12-impl-mmio.html#bootrom.hex.rom">リスト3.57</a></span>)。</p>
 <div id="bootrom.hex.rom" class="caption-code">
 <span class="caption">リスト3.57: リスト3.57:  (bootrom.hex)</span>
 <pre class="list language-rom">00409093080000b7 // 0: lui x1, 0x08000 4: slli x1, x1, 4
@@ -958,7 +939,7 @@ $ <span class="userinput">find share/ -type f -name &quot;*.bin&quot; -exec sh -
 
 </pre>
 </div>
-<p>PCの初期値をROMのベースアドレスに変更します()。</p>
+<p>PCの初期値をROMのベースアドレスに変更します(<span class="listref"><a href="./12-impl-mmio.html#eei.veryl.rom.pc">リスト3.58</a></span>)。</p>
 <div id="eei.veryl.rom.pc" class="caption-code">
 <span class="caption">リスト3.58: リスト3.58:  (eei.veryl)</span>
 <pre class="list language-pc">    const INITIAL_PC: Addr = <b>MMAP_ROM_BEGIN</b>;
@@ -987,7 +968,7 @@ $ <span class="userinput">find share/ -type f -name &quot;*.bin&quot; -exec sh -
 
 <h3 class="none"><a id="h3-6-1"></a><span class="secno">3.6.1</span> デバイスのアドレスを設定する</h3>
 <p><span class="listref"><a href="./12-impl-mmio.html#top.veryl.memtoram.port">リスト3.9</a></span>でデバイスのアドレスをポートで設定できるようにしたので、<code class="inline-code">tb_verilator.cpp</code>で環境変数の値をデバイスのアドレスに設定するようにします。</p>
-<p>環境変数<code class="inline-code">DBG_ADDR</code>を読み込み、<code class="inline-code">DBG_ADDR</code>ポートに設定します()。</p>
+<p>環境変数<code class="inline-code">DBG_ADDR</code>を読み込み、<code class="inline-code">DBG_ADDR</code>ポートに設定します(<span class="listref"><a href="./12-impl-mmio.html#tb_verilator.cpp.debugout.Device">リスト3.59</a></span>)。</p>
 <div id="tb_verilator.cpp.debugout.Device" class="caption-code">
 <span class="caption">リスト3.59: リスト3.59:  (tb_verilator.cpp)</span>
 <pre class="list language-Device">    // デバッグ用の入出力デバイスのアドレスを取得する
@@ -1002,7 +983,7 @@ $ <span class="userinput">find share/ -type f -name &quot;*.bin&quot; -exec sh -
 
 <h3 class="none"><a id="h3-6-2"></a><span class="secno">3.6.2</span> mmio_controllerモジュールにデバイスを追加する</h3>
 <p>mmio_controllerモジュールにデバイスを追加します。</p>
-<p><code class="inline-code">Device</code>型に<code class="inline-code">Device::DEBUG</code>を追加します。</p>
+<p><code class="inline-code">Device</code>型に<code class="inline-code">Device::DEBUG</code>を追加します(<span class="listref"><a href="./12-impl-mmio.html#mmio_controller.veryl.debugout.Device">リスト3.60</a></span>)。</p>
 <div id="mmio_controller.veryl.debugout.Device" class="caption-code">
 <span class="caption">リスト3.60: リスト3.60:  (mmio_controller.veryl)</span>
 <pre class="list language-Device">    enum Device {
@@ -1013,7 +994,7 @@ $ <span class="userinput">find share/ -type f -name &quot;*.bin&quot; -exec sh -
     }
 </pre>
 </div>
-<p>ポートにインターフェースとデバイスのアドレスを追加します()。</p>
+<p>ポートにインターフェースとデバイスのアドレスを追加します(<span class="listref"><a href="./12-impl-mmio.html#mmio_controller.veryl.debugout.port">リスト3.61</a></span>、<span class="listref"><a href="./12-impl-mmio.html#mmio_controller.veryl.debugout.reset_all">リスト3.62</a></span>)。</p>
 <div id="mmio_controller.veryl.debugout.port" class="caption-code">
 <span class="caption">リスト3.61: リスト3.61:  (mmio_controller.veryl)</span>
 <pre class="list language-port">module mmio_controller (
@@ -1036,7 +1017,7 @@ $ <span class="userinput">find share/ -type f -name &quot;*.bin&quot; -exec sh -
     }
 </pre>
 </div>
-<p>デバイスの位置を設定します。最初にチェックすることで、他のデバイスとアドレスを被らせたとしてもデバッグ用の入出力デバイスを優先します()。</p>
+<p>デバイスの位置を設定します。最初にチェックすることで、他のデバイスとアドレスを被らせたとしてもデバッグ用の入出力デバイスを優先します(<span class="listref"><a href="./12-impl-mmio.html#mmio_controller.veryl.debugout.get_device">リスト3.63</a></span>)。</p>
 <div id="mmio_controller.veryl.debugout.get_device" class="caption-code">
 <span class="caption">リスト3.63: リスト3.63:  (mmio_controller.veryl)</span>
 <pre class="list language-get_device">    function get_device (
@@ -1055,7 +1036,7 @@ $ <span class="userinput">find share/ -type f -name &quot;*.bin&quot; -exec sh -
     }
 </pre>
 </div>
-<p>インターフェースを設定します()。この変更はROMを追加したときとほとんど同じです。</p>
+<p>インターフェースを設定します(<span class="listref"><a href="./12-impl-mmio.html#mmio_controller.veryl.debugout.assign_device_master">リスト3.64</a></span>、<span class="listref"><a href="./12-impl-mmio.html#mmio_controller.veryl.debugout.assign_device_slave">リスト3.65</a></span>、<span class="listref"><a href="./12-impl-mmio.html#mmio_controller.veryl.debugout.get_device_ready">リスト3.66</a></span>、<span class="listref"><a href="./12-impl-mmio.html#mmio_controller.veryl.debugout.get_device_rvalid">リスト3.67</a></span>)。この変更はROMを追加したときとほとんど同じです。</p>
 <div id="mmio_controller.veryl.debugout.assign_device_master" class="caption-code">
 <span class="caption">リスト3.64: リスト3.64:  (mmio_controller.veryl)</span>
 <pre class="list language-assign_device_master">        case get_device(req.addr) {
@@ -1105,7 +1086,7 @@ $ <span class="userinput">find share/ -type f -name &quot;*.bin&quot; -exec sh -
         }
 </pre>
 </div>
-<p>topモジュールにデバッグ用の入出力デバイスのインターフェース(<code class="inline-code">dbg_membus</code>)を定義し、mmio_controllerモジュールと接続します。()。</p>
+<p>topモジュールにデバッグ用の入出力デバイスのインターフェース(<code class="inline-code">dbg_membus</code>)を定義し、mmio_controllerモジュールと接続します(<span class="listref"><a href="./12-impl-mmio.html#top.veryl.debugout.interface">リスト3.68</a></span>、<span class="listref"><a href="./12-impl-mmio.html#top.veryl.debugout.mmioc">リスト3.69</a></span>)。</p>
 <div id="top.veryl.debugout.interface" class="caption-code">
 <span class="caption">リスト3.68: リスト3.68:  (top.veryl)</span>
 <pre class="list language-interface">    inst ram_membus     : membus_if::&lt;RAM_DATA_WIDTH, RAM_ADDR_WIDTH&gt;;
@@ -1128,7 +1109,7 @@ $ <span class="userinput">find share/ -type f -name &quot;*.bin&quot; -exec sh -
 </div>
 
 <h3 class="none"><a id="h3-6-3"></a><span class="secno">3.6.3</span> 出力を実装する</h3>
-<p><code class="inline-code">dbg_membus</code>を使い、デバッグ出力処理を実装します。既存のriscv-testsの終了検知処理を次のように書き換えます()。</p>
+<p><code class="inline-code">dbg_membus</code>を使い、デバッグ出力処理を実装します。既存のriscv-testsの終了検知処理を次のように書き換えます(<span class="listref"><a href="./12-impl-mmio.html#top.veryl.debugout.io">リスト3.70</a></span>)。</p>
 <div id="top.veryl.debugout.io" class="caption-code">
 <span class="caption">リスト3.70: リスト3.70:  (top.veryl)</span>
 <pre class="list language-io">    // デバッグ用のIO
@@ -1161,7 +1142,7 @@ $ <span class="userinput">find share/ -type f -name &quot;*.bin&quot; -exec sh -
 
 <h3 id="debugout_howto" class="none"><a id="h3-6-4"></a><span class="secno">3.6.4</span> 出力をテストする</h3>
 <p>実装した出力デバイスで文字を出力できることを確認します。</p>
-<p>デバッグ用に<code class="inline-code">$display</code>システムタスクで表示している情報が邪魔になるので、デバッグ情報の表示を環境変数<code class="inline-code">PRINT_DEBUG</code>で制御できるようにします。</p>
+<p>デバッグ用に<code class="inline-code">$display</code>システムタスクで表示している情報が邪魔になるので、デバッグ情報の表示を環境変数<code class="inline-code">PRINT_DEBUG</code>で制御できるようにします(<span class="listref"><a href="./12-impl-mmio.html#core.veryl.debugout.debug">リスト3.71</a></span>)。</p>
 <div id="core.veryl.debugout.debug" class="caption-code">
 <span class="caption">リスト3.71: リスト3.71:  (core.veryl)</span>
 <pre class="list language-debug">    ///////////////////////////////// DEBUG /////////////////////////////////
@@ -1179,7 +1160,7 @@ $ <span class="userinput">find share/ -type f -name &quot;*.bin&quot; -exec sh -
                 $display(&quot;# %d&quot;, clock_count);
 </pre>
 </div>
-<p><code class="inline-code">test/debug_output.c</code>を作成し、次のように記述します()。これは<code class="inline-code">Hello,world!</code>と出力するプログラムです。</p>
+<p><code class="inline-code">test/debug_output.c</code>を作成し、次のように記述します(<span class="listref"><a href="./12-impl-mmio.html#debug_output.c.debugouttest">リスト3.72</a></span>)。これは<code class="inline-code">Hello,world!</code>と出力するプログラムです。</p>
 <div id="debug_output.c.debugouttest" class="caption-code">
 <span class="caption">リスト3.72: リスト3.72:  (test/debug_output.c)</span>
 <pre class="list language-debugouttest">#define DEBUG_REG ((volatile unsigned long long*)0x40000000)
@@ -1212,7 +1193,7 @@ void main(void) {
 </div>
 <p><code class="inline-code">DEBUG_OUTPUT</code>は出力デバイスのアドレスです。ここに<code class="inline-code">0x01010</code>を44ビット左シフトした値と文字をOR演算した値を書き込むことで文字を出力します。最後に<code class="inline-code">1</code>を書き込み、テストを終了しています。</p>
 <p>main関数をそのままコンパイルしてRAMに配置すると、スタックポインタ(stack pointer, sp)の値が適切に設定されていないのでうまく動きません。スタックポインタとは、プログラムが一時的に利用する値を格納しておくためのメモリ(スタック)のアドレスへのポインタのことです。RISC-Vの規約ではsp(x2)レジスタをスタックポインタとして利用することが定められています。</p>
-<p>そのため、レジスタの値を適切な値にリセットしてmain関数を呼び出す別のプログラムが必要です。<code class="inline-code">test/entry.S</code>を作成し、次のように記述します()。</p>
+<p>そのため、レジスタの値を適切な値にリセットしてmain関数を呼び出す別のプログラムが必要です。<code class="inline-code">test/entry.S</code>を作成し、次のように記述します(<span class="listref"><a href="./12-impl-mmio.html#entry.S.debugouttest">リスト3.73</a></span>)。</p>
 <div id="entry.S.debugouttest" class="caption-code">
 <span class="caption">リスト3.73: リスト3.73:  (test/entry.S)</span>
 <pre class="list language-debugouttest">.global _start
@@ -1253,7 +1234,7 @@ _start:
 </pre>
 </div>
 <p>このアセンブリはsp(x2)レジスタを<code class="inline-code">_stack_bottom</code>のアドレスに設定し、他のレジスタを<code class="inline-code">0</code>でリセットしたあとに<code class="inline-code">main</code>にジャンプします。</p>
-<p><code class="inline-code">_stack_bottom</code>は、リンカの設定ファイルに記述します。<code class="inline-code">test/link.ld</code>を作成し、次のように記述します()。</p>
+<p><code class="inline-code">_stack_bottom</code>は、リンカの設定ファイルに記述します。<code class="inline-code">test/link.ld</code>を作成し、次のように記述します(<span class="listref"><a href="./12-impl-mmio.html#link.ld.debugouttest">リスト3.74</a></span>)。</p>
 <div id="link.ld.debugouttest" class="caption-code">
 <span class="caption">リスト3.74: リスト3.74:  (test/link.ld)</span>
 <pre class="list language-debugouttest">OUTPUT_ARCH( &quot;riscv&quot; )
@@ -1298,7 +1279,7 @@ Hello,world!
 <h3 class="none"><a id="h3-6-5"></a><span class="secno">3.6.5</span> riscv-testsに対応する</h3>
 <p>riscv-testsを実行するとき、終了判定用のレジスタの位置を<code class="inline-code">DBG_ADDR</code>に設定するようにします。</p>
 <p><code class="inline-code">test/test.py</code>を、ELFファイルを探して自動で<code class="inline-code">DBG_ADDR</code>を設定してテストを実行するプログラムに変更します。</p>
-<p>elftoolsを使用し、ELFファイルの判定、セクションのアドレスを取得する関数を定義します()。</p>
+<p>elftoolsを使用し、ELFファイルの判定、セクションのアドレスを取得する関数を定義します(<span class="listref"><a href="./12-impl-mmio.html#test.py.debugouttest.import">リスト3.75</a></span>、<span class="listref"><a href="./12-impl-mmio.html#test.py.debugouttest.func">リスト3.76</a></span>)。</p>
 <div id="test.py.debugouttest.import" class="caption-code">
 <span class="caption">リスト3.75: リスト3.75:  (test/test.py)</span>
 <pre class="list language-import">from elftools.elf.elffile import ELFFile
@@ -1326,14 +1307,14 @@ def get_section_address(filepath, section_name):
         return 0
 </pre>
 </div>
-<p>デバッグ用の入出力デバイスのセクション名を指定するパラメータを作成します()。また、テストするファイルの拡張子を指定していたパラメータを、ELFファイルに付加することでHEXファイルのパスを得るためのパラメータに変更します。</p>
+<p>デバッグ用の入出力デバイスのセクション名を指定するパラメータを作成します(<span class="listref"><a href="./12-impl-mmio.html#test.py.debugouttest.args">リスト3.77</a></span>)。また、テストするファイルの拡張子を指定していたパラメータを、ELFファイルに付加することでHEXファイルのパスを得るためのパラメータに変更します。</p>
 <div id="test.py.debugouttest.args" class="caption-code">
 <span class="caption">リスト3.77: リスト3.77:  (test/test.py)</span>
 <pre class="list language-args">parser.add_argument(&quot;-e&quot;, &quot;--extension&quot;, default=&quot;<b>.bin.</b>hex&quot;, help=&quot;<b>hex</b> file extension&quot;)
 <b>parser.add_argument(&quot;-d&quot;, &quot;--debug_label&quot;, default=&quot;.tohost&quot;, help=&quot;debug device label&quot;)</b>
 </pre>
 </div>
-<p>dir_walk関数を、ELFファイルを探す関数に変更します()。</p>
+<p>dir_walk関数を、ELFファイルを探す関数に変更します(<span class="listref"><a href="./12-impl-mmio.html#test.py.debugouttest.dir_walk">リスト3.78</a></span>)。</p>
 <div id="test.py.debugouttest.dir_walk" class="caption-code">
 <span class="caption">リスト3.78: リスト3.78:  (test/test.py)</span>
 <pre class="list language-dir_walk">if entry.is_file():
@@ -1343,7 +1324,7 @@ def get_section_address(filepath, section_name):
         yield entry.path
 </pre>
 </div>
-<p>シミュレータの実行で<code class="inline-code">DBG_ADDR</code>を指定するようにします。</p>
+<p>シミュレータの実行で<code class="inline-code">DBG_ADDR</code>を指定するようにします(<span class="listref"><a href="./12-impl-mmio.html#test.py.debugouttest.for">リスト3.79</a></span>、<span class="listref"><a href="./12-impl-mmio.html#test.py.debugouttest.test">リスト3.80</a></span>)。</p>
 <div id="test.py.debugouttest.for" class="caption-code">
 <span class="caption">リスト3.79: リスト3.79:  (test/test.py)</span>
 <pre class="list language-for">for <b>elf</b>path in dir_walk(args.dir):
@@ -1373,7 +1354,7 @@ def get_section_address(filepath, section_name):
 
 <h3 class="none"><a id="h3-6-6"></a><span class="secno">3.6.6</span> 入力を実装する</h3>
 <p><code class="inline-code">dbg_membus</code>を使い、デバッグ入力処理を実装します。</p>
-<p>まず、<code class="inline-code">src/tb_verilator.cpp</code>に、標準入力を受け取る関数を定義します()。入力がない場合は<code class="inline-code">0</code>、ある場合は上位20ビットを<code class="inline-code">0x01010</code>にした値を返します。</p>
+<p>まず、<code class="inline-code">src/tb_verilator.cpp</code>に、標準入力を受け取る関数を定義します(<span class="listref"><a href="./12-impl-mmio.html#tb_verilator.cpp.debuginput.get_input_dpic">リスト3.81</a></span>)。入力がない場合は<code class="inline-code">0</code>、ある場合は上位20ビットを<code class="inline-code">0x01010</code>にした値を返します。</p>
 <div id="tb_verilator.cpp.debuginput.get_input_dpic" class="caption-code">
 <span class="caption">リスト3.81: リスト3.81:  (src/tb_verilator.cpp)</span>
 <pre class="list language-get_input_dpic">extern &quot;C&quot; const unsigned long long get_input_dpic() {
@@ -1387,7 +1368,7 @@ def get_section_address(filepath, section_name):
 }
 </pre>
 </div>
-<p>ここで、read関数の呼び出しでシミュレータを止めず(<code class="inline-code">O_NONBLOCK</code>)、シェルが入力をバッファリングしなくする(<code class="inline-code">~ICANON</code>)ために設定を変えるコードを挿入します()。また、シェルが文字列をローカルエコー(入力した文字列を表示)しないようにします(<code class="inline-code">~ECHO</code>)。</p>
+<p>ここで、read関数の呼び出しでシミュレータを止めず(<code class="inline-code">O_NONBLOCK</code>)、シェルが入力をバッファリングしなくする(<code class="inline-code">~ICANON</code>)ために設定を変えるコードを挿入します(<span class="listref"><a href="./12-impl-mmio.html#tb_verilator.cpp.debuginput.include">リスト3.82</a></span>、<span class="listref"><a href="./12-impl-mmio.html#tb_verilator.cpp.debuginput.termios">リスト3.83</a></span>、<span class="listref"><a href="./12-impl-mmio.html#tb_verilator.cpp.debuginput.set">リスト3.84</a></span>)。また、シェルが文字列をローカルエコー(入力した文字列を表示)しないようにします(<code class="inline-code">~ECHO</code>)。</p>
 <div id="tb_verilator.cpp.debuginput.include" class="caption-code">
 <span class="caption">リスト3.82: リスト3.82:  (src/tb_verilator.cpp)</span>
 <pre class="list language-include">#include &lt;fcntl.h&gt;
@@ -1453,7 +1434,7 @@ void set_nonblocking(void) {
     <b>#endif</b>
 </pre>
 </div>
-<p><code class="inline-code">src/util.veryl</code>にget_input_dpic関数を呼び出す関数を実装します()。</p>
+<p><code class="inline-code">src/util.veryl</code>にget_input_dpic関数を呼び出す関数を実装します(<span class="listref"><a href="./12-impl-mmio.html#util.veryl.debuginput">リスト3.85</a></span>)。</p>
 <div id="util.veryl.debuginput" class="caption-code">
 <span class="caption">リスト3.85: リスト3.85:  (src/util.veryl)</span>
 <pre class="list language-debuginput">embed (inline) sv{{{
@@ -1474,7 +1455,7 @@ package util {
 }
 </pre>
 </div>
-<p>デバッグ用の入出力デバイスのロードで<code class="inline-code">util::get_input</code>の結果を返すようにします)。このコードは合成できないので、有効化オプション<code class="inline-code">ENABLE_DEBUG_INPUT</code>をつけます。</p>
+<p>デバッグ用の入出力デバイスのロードで<code class="inline-code">util::get_input</code>の結果を返すようにします(<span class="listref"><a href="./12-impl-mmio.html#top.veryl.debuginput.io">リスト3.86</a></span>)。このコードは合成できないので、有効化オプション<code class="inline-code">ENABLE_DEBUG_INPUT</code>をつけます。</p>
 <div id="top.veryl.debuginput.io" class="caption-code">
 <span class="caption">リスト3.86: リスト3.86:  (src/top.veryl)</span>
 <pre class="list language-io">    always_ff {
@@ -1496,7 +1477,7 @@ package util {
 
 <h3 class="none"><a id="h3-6-7"></a><span class="secno">3.6.7</span> 入力をテストする</h3>
 <p>実装した入出力デバイスで文字を入出力できることを確認します。</p>
-<p><code class="inline-code">test/debug_input.c</code>を作成し、次のように記述します()これは入力された文字に<code class="inline-code">1</code>を足した値を出力するプログラムです。</p>
+<p><code class="inline-code">test/debug_input.c</code>を作成し、次のように記述します(<span class="listref"><a href="./12-impl-mmio.html#debug_input.c.debuginput">リスト3.87</a></span>)。これは入力された文字に<code class="inline-code">1</code>を足した値を出力するプログラムです。</p>
 <div id="debug_input.c.debuginput" class="caption-code">
 <span class="caption">リスト3.87: リスト3.87:  (test/debug_input.c)</span>
 <pre class="list language-debuginput">#define DEBUG_REG ((volatile unsigned long long*)0x40000000)
