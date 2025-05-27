@@ -47,7 +47,7 @@ C拡張はIALIGNによる制限を16ビットに緩め、全ての命令が16ビ
 eeiパッケージに定数@<code>{IALIGN}を定義します
 (@<list>{eei.veryl.ialign.IALIGN})。
 
-//list[eei.veryl.ialign.IALIGN][ (eei.veryl)]{
+//list[eei.veryl.ialign.IALIGN][IALIGNの定義 (eei.veryl)]{
 #@maprange(scripts/14/ialign-range/core/src/eei.veryl,IALIGN)
     const IALIGN: u32 = 16;
 #@end
@@ -57,7 +57,7 @@ mepcレジスタの書き込みマスクを変更して、
 トラップ時のジャンプ先アドレスに16ビットに整列されたアドレスを指定できるようにします
 (@<list>{csrunit.veryl.ialign.mepc})。
 
-//list[csrunit.veryl.ialign.mepc][ (eei.veryl)]{
+//list[csrunit.veryl.ialign.mepc][MEPCの書き込みマスクを変更する (eei.veryl)]{
 #@maprange(scripts/14/ialign-range/core/src/csrunit.veryl,mepc)
     const MEPC_WMASK  : UIntX = 'hffff_ffff_ffff_fff@<b>|e|;
 #@end
@@ -69,7 +69,7 @@ IALIGNが16の場合は例外が発生しないようにします
 ジャンプ、分岐命令は2バイト単位のアドレスしか指定できないため、
 C拡張が実装されている場合には例外が発生しません。
 
-//list[core.veryl.ialign.exception][ (core.veryl)]{
+//list[core.veryl.ialign.exception][IALIGNが16のときに例外が発生しないようにする (core.veryl)]{
 #@maprange(scripts/14/ialign-range/core/src/core.veryl,exception)
         let instruction_address_misaligned: logic = @<b>|IALIGN == 32 &&| memq_wdata.br_taken && memq_wdata.jump_addr[1:0] != 2'b00;
 #@end
@@ -97,7 +97,7 @@ TODO core <-> inst_fetcher <-> memの図
 @<code>{src/core_inst_if.veryl}を作成し、次のように記述します
 (@<list>{core_inst_if.veryl.if})。
 
-//list[core_inst_if.veryl.if][ (core_inst_if.veryl)]{
+//list[core_inst_if.veryl.if][core_inst_if.veryl]{
 #@mapfile(scripts/14/if-range/core/src/core_inst_if.veryl)
 import eei::*;
 
@@ -139,7 +139,7 @@ core_inst_ifインターフェースで代替します@<fn>{no-del}。
 coreモジュールの@<code>{i_membus}の型を@<code>{core_inst_if::master}に変更します
 (@<list>{core.veryl.if.port})。
 
-//list[core.veryl.if.port][ (core.veryl)]{
+//list[core.veryl.if.port][i_membusの型を変更する (core.veryl)]{
 #@maprange(scripts/14/if-range/core/src/core.veryl,port)
     i_membus: modport @<b>|core_inst_if|::master,
 #@end
@@ -148,7 +148,7 @@ coreモジュールの@<code>{i_membus}の型を@<code>{core_inst_if::master}に
 IFステージ部分のコードを次のように変更します
 (@<list>{core.veryl.if.if})。
 
-//list[core.veryl.if.if][ (core.veryl)]{
+//list[core.veryl.if.if][IFステージの変更 (core.veryl)]{
 #@maprange(scripts/14/if-range/core/src/core.veryl,if)
     ///////////////////////////////// IF Stage /////////////////////////////////
 
@@ -170,7 +170,7 @@ IDステージとcore_inst_ifインターフェースを接続します
 @<list>{core.veryl.if.idex})。
 もともと@<code>{if_fifo}の@<code>{rvalid}、@<code>{rready}、@<code>{rdata}だった部分をインターフェースに変更しています。
 
-//list[core.veryl.if.idvar][ (core.veryl)]{
+//list[core.veryl.if.idvar][IDステージとi_membusを接続する (core.veryl)]{
 #@maprange(scripts/14/if-range/core/src/core.veryl,idvar)
     let ids_valid     : logic    = @<b>|i_membus.rvalid|;
     let ids_pc        : Addr     = @<b>|i_membus.raddr|;
@@ -178,7 +178,7 @@ IDステージとcore_inst_ifインターフェースを接続します
 #@end
 //}
 
-//list[core.veryl.if.idex][ (core.veryl)]{
+//list[core.veryl.if.idex][EXステージに進められるときにrreadyを1にする (core.veryl)]{
 #@maprange(scripts/14/if-range/core/src/core.veryl,idex)
     always_comb {
         // ID -> EX
@@ -209,7 +209,7 @@ inst_fetcherモジュールのポートを定義します。
 @<code>{src/inst_fetcher.veryl}を作成し、次のように記述します
 (@<list>{inst_fetcher.veryl.if.port})。
 
-//list[inst_fetcher.veryl.if.port][ (inst_fetcher.veryl)]{
+//list[inst_fetcher.veryl.if.port][ポートの定義 (inst_fetcher.veryl)]{
 #@maprange(scripts/14/if-range/core/src/inst_fetcher.veryl,port)
 module inst_fetcher (
     clk    : input   clock              ,
@@ -227,7 +227,7 @@ fetchとissue、issueとcore_ifとの間のFIFOを作成します
 (@<list>{inst_fetcher.veryl.if.fetch_fifo}、
 @<list>{inst_fetcher.veryl.if.issue_fifo})。
 
-//list[inst_fetcher.veryl.if.fetch_fifo][ (inst_fetcher.veryl)]{
+//list[inst_fetcher.veryl.if.fetch_fifo][fetchとissueを繋ぐFIFOの作成 (inst_fetcher.veryl)]{
 #@maprange(scripts/14/if-range/core/src/inst_fetcher.veryl,fetch_fifo)
     struct fetch_fifo_type {
         addr: Addr                    ,
@@ -260,7 +260,7 @@ fetchとissue、issueとcore_ifとの間のFIFOを作成します
 #@end
 //}
 
-//list[inst_fetcher.veryl.if.issue_fifo][ (inst_fetcher.veryl)]{
+//list[inst_fetcher.veryl.if.issue_fifo][issueとcoreモジュールを繋ぐFIFOの作成 (inst_fetcher.veryl)]{
 #@maprange(scripts/14/if-range/core/src/inst_fetcher.veryl,issue_fifo)
     struct issue_fifo_type {
         addr: Addr,
@@ -299,7 +299,7 @@ FIFOに空きがあるとき、64ビットの値を読み込んでPCを8進め�
 @<list>{inst_fetcher.veryl.if.fetch_pc})。
 この処理はcoreモジュールの元のIFステージとほとんど同じです。
 
-//list[inst_fetcher.veryl.if.fetch_var][ (inst_fetcher.veryl)]{
+//list[inst_fetcher.veryl.if.fetch_var][PCと状態管理用の変数の定義 (inst_fetcher.veryl)]{
 #@maprange(scripts/14/if-range/core/src/inst_fetcher.veryl,fetch_var)
     var fetch_pc          : Addr ;
     var fetch_requested   : logic;
@@ -307,7 +307,7 @@ FIFOに空きがあるとき、64ビットの値を読み込んでPCを8進め�
 #@end
 //}
 
-//list[inst_fetcher.veryl.if.memory_assign][ (inst_fetcher.veryl)]{
+//list[inst_fetcher.veryl.if.memory_assign][メモリへの要求の割り当て (inst_fetcher.veryl)]{
 #@maprange(scripts/14/if-range/core/src/inst_fetcher.veryl,memory_assign)
     always_comb {
         mem_if.valid = 0;
@@ -326,7 +326,7 @@ FIFOに空きがあるとき、64ビットの値を読み込んでPCを8進め�
 #@end
 //}
 
-//list[inst_fetcher.veryl.if.fetch_pc][ (inst_fetcher.veryl)]{
+//list[inst_fetcher.veryl.if.fetch_pc][PC、状態の更新 (inst_fetcher.veryl)]{
 #@maprange(scripts/14/if-range/core/src/inst_fetcher.veryl,fetch_pc)
     always_ff {
         if_reset {
@@ -363,7 +363,7 @@ FIFOに空きがあるとき、64ビットの値を読み込んでPCを8進め�
 メモリから読み込んだ値をissueとの間のFIFOに格納します
 (@<list>{inst_fetcher.veryl.if.memory_fetch})。
 
-//list[inst_fetcher.veryl.if.memory_fetch][ (inst_fetcher.veryl)]{
+//list[inst_fetcher.veryl.if.memory_fetch][ロードした64ビットの値をFIFOに格納する (inst_fetcher.veryl)]{
 #@maprange(scripts/14/if-range/core/src/inst_fetcher.veryl,memory_fetch)
     // memory -> fetch_fifo
     always_comb {
@@ -381,7 +381,7 @@ FIFOにデータが入っているとき、32ビットずつcoreモジュール�
 (@<list>{inst_fetcher.veryl.if.issue_offset}、
 @<list>{inst_fetcher.veryl.if.fetch_issue})。
 
-//list[inst_fetcher.veryl.if.issue_offset][ (inst_fetcher.veryl)]{
+//list[inst_fetcher.veryl.if.issue_offset][オフセットの更新 (inst_fetcher.veryl)]{
 #@maprange(scripts/14/if-range/core/src/inst_fetcher.veryl,issue_offset)
     var issue_pc_offset: logic<3>;
 
@@ -401,7 +401,7 @@ FIFOにデータが入っているとき、32ビットずつcoreモジュール�
 #@end
 //}
 
-//list[inst_fetcher.veryl.if.fetch_issue][ (inst_fetcher.veryl)]{
+//list[inst_fetcher.veryl.if.fetch_issue][issue_fifoに32ビットずつ命令を格納する (inst_fetcher.veryl)]{
 #@maprange(scripts/14/if-range/core/src/inst_fetcher.veryl,fetch_issue)
     // fetch_fifo <-> issue_fifo
     always_comb {
@@ -432,7 +432,7 @@ FIFOにデータが入っているとき、32ビットずつcoreモジュール�
 @<code>{core_if}とFIFOを接続します
 (@<list>{inst_fetcher.veryl.if.issue_core})。
 
-//list[inst_fetcher.veryl.if.issue_core][ (inst_fetcher.veryl)]{
+//list[inst_fetcher.veryl.if.issue_core][issue_fifoとインターフェースを接続する (inst_fetcher.veryl)]{
 #@maprange(scripts/14/if-range/core/src/inst_fetcher.veryl,issue_core)
     // issue_fifo <-> core
     always_comb {
@@ -450,7 +450,7 @@ FIFOにデータが入っているとき、32ビットずつcoreモジュール�
 core_inst_ifをインスタンス化します。
 (@<list>{top.veryl.if.i_membus_core})。
 
-//list[top.veryl.if.i_membus_core][ (top.veryl)]{
+//list[top.veryl.if.i_membus_core][インターフェースの定義 (top.veryl)]{
 #@maprange(scripts/14/if-range/core/src/top.veryl,i_membus_core)
     inst i_membus_core: core_inst_if;
 #@end
@@ -462,7 +462,7 @@ inst_fetcherモジュールをインスタンス化し、coreモジュールと�
 @<list>{top.veryl.if.core}
 )。
 
-//list[top.veryl.if.inst][ (top.veryl)]{
+//list[top.veryl.if.inst][inst_fetcherモジュールのインスタンス化 (top.veryl)]{
 #@maprange(scripts/14/if-range/core/src/top.veryl,inst)
     inst fetcher: inst_fetcher (
         clk                   ,
@@ -473,7 +473,7 @@ inst_fetcherモジュールをインスタンス化し、coreモジュールと�
 #@end
 //}
 
-//list[top.veryl.if.core][ (top.veryl)]{
+//list[top.veryl.if.core][インターフェースを変更する (top.veryl)]{
 #@maprange(scripts/14/if-range/core/src/top.veryl,core)
     inst c: core (
         clk                    ,
@@ -487,19 +487,19 @@ inst_fetcherモジュールをインスタンス化し、coreモジュールと�
 
 inst_fetcherモジュールが64ビットのデータを32ビットの命令の列に変換してくれるようになったので、
 @<code>{d_membus}との調停のところでアドレスを読んで32ビットずつ選択する処理が必要なくなりました。
-そのため、@<code>{memarb_last_iaddr}変数とビット選択処理をを削除します
+そのため、@<code>{rdata}をそのまま割り当てて、@<code>{memarb_last_iaddr}変数とビット選択処理を削除します
 (@<list>{top.veryl.if.memarb_last_i_def}、
 @<list>{top.veryl.if.memarb_last_i_update}、
 @<list>{top.veryl.if.memarb})。
 
-//list[top.veryl.if.memarb_last_i_def][ (top.veryl)]{
+//list[top.veryl.if.memarb_last_i_def][使用しない変数を削除する (top.veryl)]{
 #@maprange(scripts/14/if-range/core/src/top.veryl,memarb_last_i_def)
     var memarb_last_i: logic;
     @<del>|var memarb_last_iaddr: Addr;|
 #@end
 //}
 
-//list[top.veryl.if.memarb_last_i_update][ (top.veryl)]{
+//list[top.veryl.if.memarb_last_i_update][使用しない変数を削除する (top.veryl)]{
 #@maprange(scripts/14/if-range/core/src/top.veryl,memarb_last_i_update)
     always_ff {
         if_reset {
@@ -515,7 +515,7 @@ inst_fetcherモジュールが64ビットのデータを32ビットの命令の�
 #@end
 //}
 
-//list[top.veryl.if.memarb][ (top.veryl)]{
+//list[top.veryl.if.memarb][ビットの選択処理を削除する (top.veryl)]{
 #@maprange(scripts/14/if-range/core/src/top.veryl,memarb)
     always_comb {
         i_membus.ready  = mmio_membus.ready && !d_membus.valid;
@@ -537,7 +537,7 @@ issueとcoreの間に供給する命令のビット列は@<code>{fetch_fifo_rdat
 @<code>{fetch_fifo_rdata}のデータの下位16ビットとアドレスを保存するための変数を作成します
 (@<list>{inst_fetcher.veryl.232.var})。
 
-//list[inst_fetcher.veryl.232.var][ (inst_fetcher.veryl)]{
+//list[inst_fetcher.veryl.232.var][データを一時保存するための変数の定義 (inst_fetcher.veryl)]{
 #@maprange(scripts/14/232-range/core/src/inst_fetcher.veryl,var)
     var issue_is_rdata_saved: logic    ;
     var issue_saved_addr    : Addr     ;
@@ -548,7 +548,7 @@ issueとcoreの間に供給する命令のビット列は@<code>{fetch_fifo_rdat
 @<code>{issue_pc_offset}が@<code>{6}のとき、変数にデータを保存します
 (@<list>{inst_fetcher.veryl.232.issue_ff})。
 
-//list[inst_fetcher.veryl.232.issue_ff][ (inst_fetcher.veryl)]{
+//list[inst_fetcher.veryl.232.issue_ff][offsetが6のとき、変数に命令の下位16ビットとアドレスを保存する (inst_fetcher.veryl)]{
 #@maprange(scripts/14/232-range/core/src/inst_fetcher.veryl,issue_ff)
     always_ff {
         if_reset {
@@ -585,7 +585,7 @@ issueとcoreの間に供給する命令のビット列は@<code>{fetch_fifo_rdat
 (@<list>{inst_fetcher.veryl.232.issue_comb})。
 @<code>{6}の場合、保存していた16ビットと新しく読みだした16ビットを結合した値、保存していたアドレスを書き込みます。
 
-//list[inst_fetcher.veryl.232.issue_comb][ (inst_fetcher.veryl)]{
+//list[inst_fetcher.veryl.232.issue_comb][issue_fifoにoffsetが2、6の命令を格納する (inst_fetcher.veryl)]{
 #@maprange(scripts/14/232-range/core/src/inst_fetcher.veryl,issue_comb)
         if !core_if.is_hazard && fetch_fifo_rvalid {
             if issue_fifo_wready {
@@ -633,7 +633,7 @@ RVC命令かどうかを示すフラグを作成します。
 @<list>{core_inst_if.veryl.is_rvc.master}、
 @<list>{corectrl.veryl.is_rvc.InstCtrl})。
 
-//list[core_inst_if.veryl.is_rvc.var][ (core_inst_if.veryl)]{
+//list[core_inst_if.veryl.is_rvc.var][is_rvcフラグの定義 (core_inst_if.veryl)]{
 #@maprange(scripts/14/is_rvc-range/core/src/core_inst_if.veryl,var)
     var rdata    : Inst ;
     @<b>|var is_rvc   : logic;|
@@ -641,7 +641,7 @@ RVC命令かどうかを示すフラグを作成します。
 #@end
 //}
 
-//list[core_inst_if.veryl.is_rvc.master][ (core_inst_if.veryl)]{
+//list[core_inst_if.veryl.is_rvc.master][modportにis_rvcを追加する (core_inst_if.veryl)]{
 #@maprange(scripts/14/is_rvc-range/core/src/core_inst_if.veryl,master)
     modport master {
         rvalid   : input ,
@@ -655,7 +655,7 @@ RVC命令かどうかを示すフラグを作成します。
 #@end
 //}
 
-//list[corectrl.veryl.is_rvc.InstCtrl][ (corectrl.veryl)]{
+//list[corectrl.veryl.is_rvc.InstCtrl][InstCtrl型にis_rvcフラグを追加する (corectrl.veryl)]{
 #@maprange(scripts/14/is_rvc-range/core/src/corectrl.veryl,InstCtrl)
         is_amo   : logic      , // AMO instruction
         @<b>|is_rvc   : logic      , // RVC instruction|
@@ -668,7 +668,7 @@ inst_fetcherモジュールで、@<code>{is_rvc}を@<code>{0}に設定してcore
 @<list>{inst_fetcher.veryl.is_rvc.issue_comb}、
 @<list>{inst_fetcher.veryl.is_rvc.issue_core})。
 
-//list[inst_fetcher.veryl.is_rvc.issue_fifo_type][ (inst_fetcher.veryl)]{
+//list[inst_fetcher.veryl.is_rvc.issue_fifo_type][issue_fifo_type型にis_rvcフラグを追加する (inst_fetcher.veryl)]{
 #@maprange(scripts/14/is_rvc-range/core/src/inst_fetcher.veryl,issue_fifo_type)
     struct issue_fifo_type {
         addr  : Addr ,
@@ -678,7 +678,7 @@ inst_fetcherモジュールで、@<code>{is_rvc}を@<code>{0}に設定してcore
 #@end
 //}
 
-//list[inst_fetcher.veryl.is_rvc.issue_comb][ (inst_fetcher.veryl)]{
+//list[inst_fetcher.veryl.is_rvc.issue_comb][is_rvcフラグを0に設定する (inst_fetcher.veryl)]{
 #@maprange(scripts/14/is_rvc-range/core/src/inst_fetcher.veryl,issue_comb)
     if offset == 6 {
         // offsetが6な32ビット命令の場合、
@@ -707,7 +707,7 @@ inst_fetcherモジュールで、@<code>{is_rvc}を@<code>{0}に設定してcore
 #@end
 //}
 
-//list[inst_fetcher.veryl.is_rvc.issue_core][ (inst_fetcher.veryl)]{
+//list[inst_fetcher.veryl.is_rvc.issue_core][is_rvcフラグを接続する (inst_fetcher.veryl)]{
 #@maprange(scripts/14/is_rvc-range/core/src/inst_fetcher.veryl,issue_core)
     always_comb {
         issue_fifo_flush  = core_if.is_hazard;
@@ -726,7 +726,7 @@ inst_decoderモジュールで、@<code>{InstCtrl}構造体の@<code>{is_rvc}フ
 @<list>{inst_decoder.veryl.is_rvc.valid})。
 また、C拡張が無効なのにRVC命令が供給されたら@<code>@<code>{valid}フラグを@<code>{0}に設定するようにします。
 
-//list[inst_decoder.veryl.is_rvc.port][ (inst_decoder.veryl)]{
+//list[inst_decoder.veryl.is_rvc.port][is_rvcフラグをポートに追加する (inst_decoder.veryl)]{
 #@maprange(scripts/14/is_rvc-range/core/src/inst_decoder.veryl,port)
 module inst_decoder (
     bits  : input  Inst    ,
@@ -738,7 +738,7 @@ module inst_decoder (
 #@end
 //}
 
-//list[inst_decoder.veryl.is_rvc.ctrl][ (inst_decoder.veryl)]{
+//list[inst_decoder.veryl.is_rvc.ctrl][InstCtrlにis_rvcフラグを設定する (inst_decoder.veryl)]{
 #@maprange(scripts/14/is_rvc-range/core/src/inst_decoder.veryl,ctrl)
                 default: {
                     InstType::X, F, F, F, F, F, F, F, F, F
@@ -748,7 +748,7 @@ module inst_decoder (
 #@end
 //}
 
-//list[inst_decoder.veryl.is_rvc.valid][ (inst_decoder.veryl)]{
+//list[inst_decoder.veryl.is_rvc.valid][IALIGNが32ではないとき、不正な命令にする (inst_decoder.veryl)]{
 #@maprange(scripts/14/is_rvc-range/core/src/inst_decoder.veryl,valid)
             OP_AMO     : f3 == 3'b010 || f3 == 3'b011, // AMO
             default    : F,
@@ -759,7 +759,7 @@ module inst_decoder (
 coreモジュールで、inst_decoderモジュールに@<code>{is_rvc}フラグを設定します
 (@<list>{core.veryl.is_rvc.inst_decoder})。
 
-//list[core.veryl.is_rvc.inst_decoder][ (core.veryl)]{
+//list[core.veryl.is_rvc.inst_decoder][is_rvcフラグをinst_decoderに渡す (core.veryl)]{
 #@maprange(scripts/14/is_rvc-range/core/src/core.veryl,inst_decoder)
     inst decoder: inst_decoder (
         bits  : ids_inst_bits  ,
@@ -775,7 +775,7 @@ coreモジュールで、inst_decoderモジュールに@<code>{is_rvc}フラグ�
 RVC命令の場合はPCに@<code>{2}を足した値を設定します
 (@<list>{core.veryl.is_rvc.wb_data})。
 
-//list[core.veryl.is_rvc.wb_data][ (core.veryl)]{
+//list[core.veryl.is_rvc.wb_data][次の命令のアドレスを変える (core.veryl)]{
 #@maprange(scripts/14/is_rvc-range/core/src/core.veryl,wb_data)
     let wbs_wb_data: UIntX    = if wbs_ctrl.is_lui ?
         wbs_imm
@@ -795,7 +795,7 @@ RVC命令のopcode、functなどのフィールドを読んで、
 (@<list>{inst_gen_pkg.veryl.rvcc})。
 
 #@# TODO フォーマット
-//list[inst_gen_pkg.veryl.rvcc][ (inst_gen_pkg.veryl)]{
+//list[inst_gen_pkg.veryl.rvcc][命令のビット列を生成する関数を定義する (inst_gen_pkg.veryl)]{
 import eei::*;
 
 package inst_gen_pkg {
@@ -889,7 +889,7 @@ rvc_conveterモジュールのポートを定義します。
 @<code>{src/rvc_converter.veryl}を作成し、次のように記述します
 (@<list>{rvc_converter.veryl.rvcc.port})。
 
-//list[rvc_converter.veryl.rvcc.port][ (rvc_converter.veryl)]{
+//list[rvc_converter.veryl.rvcc.port][ポートの定義 (rvc_converter.veryl)]{
 #@maprange(scripts/14/rvcc-range/core/src/rvc_converter.veryl,port)
 import eei::*;
 import inst_gen_pkg::*;
@@ -910,7 +910,7 @@ rvc_converterモジュールは、@<code>{inst16}で16ビットの値を受け�
 (@<list>{rvc_converter.veryl.rvcc.rs})。
 @<code>{rs1d}、@<code>{rs2d}の番号の範囲は@<code>{x8}から@<code>{x15}です。
 
-//list[rvc_converter.veryl.rvcc.rs][ (rvc_converter.veryl)]{
+//list[rvc_converter.veryl.rvcc.rs][レジスタ番号の生成 (rvc_converter.veryl)]{
 #@maprange(scripts/14/rvcc-range/core/src/rvc_converter.veryl,rs)
     let rs1 : logic<5> = inst16[11:7];
     let rs2 : logic<5> = inst16[6:2];
@@ -922,7 +922,7 @@ rvc_converterモジュールは、@<code>{inst16}で16ビットの値を受け�
 @<code>{inst16}から即値を生成します
 (@<list>{rvc_converter.veryl.rvcc.imm})。
 
-//list[rvc_converter.veryl.rvcc.imm][ (rvc_converter.veryl)]{
+//list[rvc_converter.veryl.rvcc.imm][即値の生成 (rvc_converter.veryl)]{
 #@maprange(scripts/14/rvcc-range/core/src/rvc_converter.veryl,imm)
     let imm_i    : logic<12> = {inst16[12] repeat 7, inst16[6:2]};
     let imm_shamt: logic<6>  = {inst16[12], inst16[6:2]};
@@ -946,7 +946,7 @@ opcode(@<code>{inst16[1:0]})が@<code>{2'b11}以外なら16ビット幅の命令
 inst_decoderモジュールでデコードできない命令をcoreモジュールに供給してIllegal instruction例外を発生させ、
 tvalに16ビット幅の不正な命令が設定されます。
 
-//list[rvc_converter.veryl.rvcc.always_comb][ (rvc_converter.veryl)]{
+//list[rvc_converter.veryl.rvcc.always_comb][RVC命令を32ビット幅の命令に変換する (rvc_converter.veryl)]{
 #@maprange(scripts/14/rvcc-range/core/src/rvc_converter.veryl,always_comb)
     always_comb {
         is_rvc = inst16[1:0] != 2'b11;
@@ -1056,7 +1056,7 @@ RVC命令をcoreモジュールに供給します。
 まず、rvc_converterモジュールをインスタンス化します
 (@<list>{inst_fetcher.veryl.rvcc.inst})。
 
-//list[inst_fetcher.veryl.rvcc.inst][ (inst_fetcher.veryl)]{
+//list[inst_fetcher.veryl.rvcc.inst][rvc_converterモジュールのインスタンス化 (inst_fetcher.veryl)]{
 #@maprange(scripts/14/rvcc-range/core/src/inst_fetcher.veryl,inst)
     // instruction converter
     var rvcc_inst16: logic<16>;
@@ -1082,7 +1082,7 @@ RVC命令のとき、変換された32ビット幅の命令を@<code>{issue_fifo
 (@<list>{inst_fetcher.veryl.rvcc.issue_ff}、
 @<list>{inst_fetcher.veryl.rvcc.issue_comb})。
 
-//list[inst_fetcher.veryl.rvcc.issue_ff][ (inst_fetcher.veryl)]{
+//list[inst_fetcher.veryl.rvcc.issue_ff][RVC命令のときのオフセットの更新 (inst_fetcher.veryl)]{
 #@maprange(scripts/14/rvcc-range/core/src/inst_fetcher.veryl,issue_ff)
 // offsetが6な32ビット命令の場合、
 // アドレスと上位16ビットを保存してFIFOを読み進める
@@ -1101,7 +1101,7 @@ if issue_pc_offset == 6 && @<b>|!rvcc_is_rvc &&| !issue_is_rdata_saved {
 #@end
 //}
 
-//list[inst_fetcher.veryl.rvcc.issue_comb][ (inst_fetcher.veryl)]{
+//list[inst_fetcher.veryl.rvcc.issue_comb][RVC命令のときのissue_fifoへの書き込み (inst_fetcher.veryl)]{
 #@maprange(scripts/14/rvcc-range/core/src/inst_fetcher.veryl,issue_comb)
 if !core_if.is_hazard && fetch_fifo_rvalid {
     if issue_fifo_wready {
