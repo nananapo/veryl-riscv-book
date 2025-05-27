@@ -12,11 +12,11 @@
  * Memory-mapped I/O
 
 本章では積、商、剰余を求める命令を実装します。
-RISC-Vの乗算、除算を行う命令はM拡張に定義されており、
-M拡張を実装したRV64IのISAのことを@<code>{RV64IM}と表現します。
+RISC-Vの乗算、除算、剰余演算を行う命令はM拡張に定義されており、
+M拡張を実装したRV64IのISAのことを@<code>{RV64IM}と表記します。
 
-M拡張には、XLENが32のときは@<table>{m.instructions.32}の命令が定義されています。
-XLENが64のときは@<table>{m.instructions.64}の命令が定義されています。
+M拡張には、XLENが@<code>{32}のときは@<table>{m.instructions.32}の命令が定義されています。
+XLENが@<code>{64}のときは@<table>{m.instructions.64}の命令が定義されています。
 
 //table[m.instructions.32][M拡張の命令 (XLEN=32)]{
 命令	動作
@@ -151,7 +151,7 @@ M拡張の命令がALUの結果ではなくモジュールの結果を利用す�
 
 @<code>{src/muldivunit.veryl}を作成し、次のように記述します(@<list>{muldivunit.veryl.create-mdu-range})。
 
-//list[muldivunit.veryl.create-mdu-range][muldivunitモジュール (muldivunit.veryl)]{
+//list[muldivunit.veryl.create-mdu-range][muldivunit.veryl]{
 #@mapfile(scripts/10/create-mdu-range/core/src/muldivunit.veryl)
 import eei::*;
 
@@ -208,12 +208,12 @@ muldivunitモジュールは@<code>{ready}が@<code>{1}のときに計算のリ�
 @<code>{valid}が@<code>{1}なら計算を開始し、
 計算が終了したら@<code>{rvalid}を@<code>{1}、計算結果を@<code>{result}に設定します。
 
-まだ計算処理を実装していないため@<code>{result}は常に@<code>{0}を返します。
-次の計算を開始するまで@<code>{result}の値は維持しておきます。
+まだ計算処理を実装しておらず、@<code>{result}は常に@<code>{0}を返します。
+次の計算を開始するまで@<code>{result}の値を維持します。
 
 === EXステージを変更する
 
-M拡張の命令がEXステージにあるとき、ALUの結果ではなくmuldivunitモジュールの結果を利用するように変更します。
+M拡張の命令がEXステージにあるとき、ALUの結果の代わりにmuldivunitモジュールの結果を利用するように変更します。
 
 まず、muldivunitモジュールをインスタンス化します(@<list>{core.veryl.create-mdu-range.muldivinst})。
 
@@ -242,11 +242,11 @@ muldivunitモジュールで計算を開始するのは、
 EXステージに命令が存在し(@<code>{exs_valid})、
 命令がM拡張の命令であり(@<code>{exs_ctrl.is_muldiv})、
 データハザードが発生しておらず(@<code>{!exs_data_hazard})、
-既に計算をリクエストしていない(@<code>{!exs_muldiv_is_requested})
+既に計算を要求していない(@<code>{!exs_muldiv_is_requested})
 場合です。
 
 @<code>{!exs_muldiv_is_requested}変数を定義し、
-ステージの遷移条件とmuldivunitへの計算リクエストの状態によって値が変わるようにします(@<list>{core.veryl.create-mdu-range.exs_muldiv_is_requested})。
+ステージの遷移条件とmuldivunitに計算を要求したかの状態によって値を更新します(@<list>{core.veryl.create-mdu-range.exs_muldiv_is_requested})。
 
 //list[core.veryl.create-mdu-range.exs_muldiv_is_requested][exs_muldiv_is_requested変数 (core.veryl)]{
 #@maprange(scripts/10/create-mdu-range/core/src/core.veryl,exs_muldiv_is_requested)
@@ -272,7 +272,7 @@ EXステージに命令が存在し(@<code>{exs_valid})、
 
 muldivunitモジュールはALUのように1クロックの間に入力から出力を生成しないため、
 計算中はEXステージをストールさせる必要があります。
-そのために@<code>{exs_muldiv_stall}変数を定義してストールの条件に追加します(@<list>{core.veryl.create-mdu-range.exs_muldiv_stall}、@<list>{core.veryl.create-mdu-range.exq_rready})。
+そのために@<code>{exs_muldiv_stall}変数を定義して、ストールの条件に追加します(@<list>{core.veryl.create-mdu-range.exs_muldiv_stall}、@<list>{core.veryl.create-mdu-range.exq_rready})。
 また、M拡張の命令の場合はMEMステージに渡す@<code>{alu_result}の値をmuldivunitモジュールの結果に設定します(@<list>{core.veryl.create-mdu-range.exq_rready})。
 
 //list[core.veryl.create-mdu-range.exs_muldiv_stall][EXステージのストール条件の変更 (core.veryl)]{
@@ -318,8 +318,8 @@ muldivunitモジュールはALUのように1クロックの間に入力から出
 #@end
 //}
 
-muldivunitモジュールは計算が完了したクロックの間だけしか@<code>{rvalid}を@<code>{1}に設定しないため、
-既に計算が完了していることを示す@<code>{exs_muldiv_rvalided}変数を作成しています。
+muldivunitモジュールは計算が完了したクロックでしか@<code>{rvalid}を@<code>{1}にしないため、
+既に計算が完了したことを示す@<code>{exs_muldiv_rvalided}変数で完了状態を管理します。
 これにより、M拡張の命令によってストールする条件は、
 命令がM拡張の命令であり(@<code>{exs_ctrl.is_muldiv})、
 現在のクロックで計算が完了しておらず(@<code>{!exs_muldiv_rvalid})、
@@ -334,7 +334,7 @@ muldivunitモジュールは計算が完了したクロックの間だけしか@
 
 @<code>{src/muldivunit.veryl}の中にmulunitモジュールを作成します(@<list>{muldivunit.veryl.impl-mulunit-range.mulunit})。
 
-//list[muldivunit.veryl.impl-mulunit-range.mulunit][符号なし乗算器の実装 (muldivunit.veryl)]{
+//list[muldivunit.veryl.impl-mulunit-range.mulunit][muldivunit.veryl]{
 #@maprange(scripts/10/impl-mulunit-range/core/src/muldivunit.veryl,mulunit)
 module mulunit #(
     param WIDTH: u32 = 0,
@@ -402,8 +402,8 @@ mulunitモジュールは@<code>{op1 * op2}を計算するモジュールです�
 @<code>{valid}が@<code>{1}になったら計算を開始し、
 計算が完了したら@<code>{rvalid}を@<code>{1}、@<code>{result}を@<code>{WIDTH * 2}ビットの計算結果に設定します。
 
-積は@<code>{WIDTH}回の足し算を@<code>{WIDTH}クロックかけて行うことによって求めています(@<img>{mul_process})。
-計算を開始すると入力を@<code>{0}で@<code>{WIDTH * 2}ビットに拡張し、
+積は@<code>{WIDTH}回の足し算を@<code>{WIDTH}クロックかけて行って求めています(@<img>{mul_process})。
+計算を開始すると入力をゼロで@<code>{WIDTH * 2}ビットに拡張し、
 @<code>{result}を@<code>{0}でリセットします。
 
 @<code>{State::AddLoop}では、次の操作を@<code>{WIDTH}回行います。
@@ -450,7 +450,7 @@ mulunitモジュールをmuldivunitモジュールでインスタンス化しま
 
 MULHU命令は、2つの符号無しのXLENビットの値の乗算を実行し、
 デスティネーションレジスタに結果(XLEN * 2ビット)の上位XLENビットを書き込む命令です。
-funct3の下位2ビットによってmulunitモジュールの結果を選択するように変更します
+funct3の下位2ビットによってmulunitモジュールの結果を選択するようにします
 (@<list>{muldivunit.veryl.mulhu-range.result})。
 
 //list[muldivunit.veryl.mulhu-range.result][MULHUモジュールの結果を取得する (muldivunit.veryl)]{
@@ -470,7 +470,7 @@ riscv-testsの@<code>{rv64um-p-mulhu}を実行し、成功することを確認�
 
 == MUL、MULH命令の実装
 
-=== 符号付き乗算を符号なし乗算器で実現する
+=== 符号付き乗算を符号無し乗算器で実現する
 
 MUL、MULH命令は、2つの符号付きのXLENビットの値の乗算を実行し、
 デスティネーションレジスタにそれぞれ結果の下位XLENビット、上位XLENビットを書き込む命令です。
@@ -486,7 +486,7 @@ MUL、MULH命令は、2つの符号付きのXLENビットの値の乗算を実�
 
 === 符号付き乗算を実装する
 
-@<code>{WIDTH}ビットの符号付きの値を@<code>{WIDTH}ビットの@<b>{符号無し}の絶対値に変換するabs関数を作成します
+@<code>{WIDTH}ビットの符号付きの値を@<code>{WIDTH}ビットの符号無しの絶対値に変換するabs関数を作成します
 (@<list>{muldivunit.veryl.mulmulh-range.abs})。
 abs関数は、値のMSBが@<code>{1}ならビットを反転して@<code>{1}を足すことで符号を反転しています。
 最小値@<code>{-2 ** (WIDTH - 1)}の絶対値も求められることを確認してください。
@@ -603,8 +603,7 @@ MULHSU命令は、符号付きのXLENビットのrs1と符号無しのXLENビッ
 デスティネーションレジスタに結果の上位XLENビットを書き込む命令です。
 計算結果は符号付きの値になります。
 
-MULHSU命令の結果はnビットの符号無し乗算器の結果の範囲に収まります。
-そのため、MUL、MULH命令と同様に符号無しの乗算器で計算を実現できます。
+MULHSU命令も、MUL、MULH命令と同様に符号無しの乗算器で実現します。
 
 @<code>{op1}を絶対値に変換し、@<code>{op2}はそのままに設定します
 (@<list>{muldivunit.veryl.mulhsu-range.op1op2})。
@@ -651,7 +650,7 @@ riscv-testsの@<code>{rv64um-p-mulhsu}を実行し、成功することを確認
 MULW命令は、2つの符号付きの32ビットの値の乗算を実行し、
 デスティネーションレジスタに結果の下位32ビットを符号拡張した値を書き込む命令です。
 
-32ビット演算の命令であることを知るために、
+32ビット演算の命令であることを判定するために、
 muldivunitモジュールに@<code>{is_op32}ポートを作成します
 (
 @<list>{muldivunit.veryl.mulw-range.port}、
@@ -782,16 +781,16 @@ mulunitモジュールの@<code>{op1}と@<code>{op2}に、64ビットの値の�
 //}
 riscv-testsの@<code>{rv64um-p-mulw}を実行し、成功することを確認してください。
 
-== 符号無し割り算の実装
+== 符号無し除算の実装
 
 === divunitモジュールを実装する
 
 @<code>{WIDTH}ビットの除算を計算する除算器を実装します。
 
 @<code>{src/muldivunit.veryl}の中にdivunitモジュールを作成します
-(@<code>{muldivunit.veryl.divuremu-range.divunit})。
+(@<list>{muldivunit.veryl.divuremu-range.divunit})。
 
-//list[muldivunit.veryl.divuremu-range.divunit][符号無し除算器の実装 (muldivunit.veryl)]{
+//list[muldivunit.veryl.divuremu-range.divunit][muldivunit.veryl]{
 #@maprange(scripts/10/divuremu-range/core/src/muldivunit.veryl,divunit)
 module divunit #(
     param WIDTH: u32 = 0,
@@ -872,7 +871,7 @@ divunitモジュールは被除数(@<code>{dividend})と除数(@<code>{divisor})
 @<code>{valid}が@<code>{1}になったら計算を開始し、
 計算が完了したら@<code>{rvalid}を@<code>{1}に設定します。
 
-商と剰余は@<code>{WIDTH}回の引き算を@<code>{WIDTH}クロックかけて行うことによって求めています。
+商と剰余は@<code>{WIDTH}回の引き算を@<code>{WIDTH}クロックかけて行って求めています。
 計算を開始すると被除数を@<code>{0}で@<code>{WIDTH * 2}ビットに拡張し、
 除数を@<code>{WIDTH-1}ビット左シフトします。
 また、商を@<code>{0}でリセットします。
@@ -884,7 +883,7 @@ divunitモジュールは被除数(@<code>{dividend})と除数(@<code>{divisor})
  3. 除数を1ビット右シフトする
  3. カウンタをインクリメントする
 
-RISC-Vでは、除数が0であったり結果がオーバーフローするようなLビットの除算の結果は@<table>{riscv.div.expt}のようになると定められています。
+RISC-Vでは、除数が@<code>{0}だったり結果がオーバーフローするようなLビットの除算の結果は@<table>{riscv.div.expt}のようになると定められています。
 このうちdivunitモジュールは符号無しの除算(DIVU、REMU命令)のゼロ除算だけを対処しています。
 
 //table[riscv.div.expt][除算の例外的な動作と結果]{
@@ -931,7 +930,7 @@ divunitモジュールをmuldivunitモジュールでインスタンス化しま
 DIVU、REMU命令は、符号無しのXLENビットのrs1(被除数)と符号無しのXLENビットのrs2(除数)の商、剰余を計算し、
 デスティネーションレジスタにそれぞれ結果を書き込む命令です。
 
-muldivunitモジュールで、divunitモジュールの処理が終わったら結果を@<code>{result}レジスタに割り当てるように記述します
+muldivunitモジュールで、divunitモジュールの処理が終わったら結果を@<code>{result}レジスタに割り当てるようにします
 (@<list>{muldivunit.veryl.divuremu-range.wait_valid})。
 
 //list[muldivunit.veryl.divuremu-range.wait_valid][divunitモジュールをインスタンス化する (muldivunit.veryl)]{
@@ -964,7 +963,7 @@ RISC-Vの符号付き除算の結果は0の方向に丸められた整数にな�
 
 === 符号付き除算を実装する
 
-abs関数を利用して、DIV、REM命令のときにdivunitに渡す値を絶対値に設定します
+abs関数を利用して、DIV、REM命令のときにdivunitモジュールに渡す値を絶対値に設定します
 (
 @<list>{muldivunit.veryl.divrem-range.op}
 @<list>{muldivunit.veryl.divrem-range.du}
@@ -1006,12 +1005,12 @@ abs関数を利用して、DIV、REM命令のときにdivunitに渡す値を絶�
 //}
 
 @<table>{riscv.div.expt}にあるように、符号付き演算は結果がオーバーフローする場合とゼロで割る場合の結果が定められています。
-その場合には、divunitで除算を実行せず、muldivunitで計算結果を直接生成するように変更します
+その場合には、divunitモジュールで除算を実行せず、muldivunitで計算結果を直接生成するようにします
 (
 @<list>{muldivunit.veryl.divrem-range.error}
 @<list>{muldivunit.veryl.divrem-range.idle}
 )。
-符号付き演算かどうかを@<code>{funct3}のLSBで確認し、例外的な処理ではない場合にのみdivunitで計算を開始するようにしています。
+符号付き演算かどうかを@<code>{funct3}のLSBで確認し、例外的な処理ではない場合にのみdivunitモジュールで計算を開始するようにしています。
 
 //list[muldivunit.veryl.divrem-range.error][符号付き除算がオーバーフローするか、ゼロ除算かどうかを判定する (muldivunit.veryl)]{
 #@maprange(scripts/10/divrem-range/core/src/muldivunit.veryl,error)
@@ -1084,7 +1083,7 @@ generate_div_op関数に@<code>{is_op32}フラグを追加して、
 @<code>{is_op32}が@<code>{1}なら値を@<code>{DIV_WIDTH}ビットに拡張したものに変更します
 (@<list>{muldivunit.veryl.divwremw-range.op})。
 
-//list[muldivunit.veryl.divwremw-range.op][ (muldivunit.veryl)]{
+//list[muldivunit.veryl.divwremw-range.op][除数、被除数を32ビットの値にする (muldivunit.veryl)]{
 #@maprange(scripts/10/divwremw-range/core/src/muldivunit.veryl,op)
     function generate_div_op (
         @<b>|is_op32: input logic      ,|
@@ -1106,7 +1105,7 @@ generate_div_op関数に@<code>{is_op32}フラグを追加して、
 符号付き除算のオーバーフローとゼロ除算の判定を@<code>{is_op32}で変更します
 (@<list>{muldivunit.veryl.divwremw-range.error})。
 
-//list[muldivunit.veryl.divwremw-range.error][ (muldivunit.veryl)]{
+//list[muldivunit.veryl.divwremw-range.error][32ビット演算のときの例外的な処理に対応する (muldivunit.veryl)]{
 #@maprange(scripts/10/divwremw-range/core/src/muldivunit.veryl,error)
     always_comb {
         @<b>|if is_op32 {|
@@ -1125,7 +1124,7 @@ generate_div_op関数に@<code>{is_op32}フラグを追加して、
 (@<list>{muldivunit.veryl.divwremw-range.wait_valid})。
 符号付き、符号無し演算のどちらも32ビットの結果を符号拡張したものが結果になります。
 
-//list[muldivunit.veryl.divwremw-range.wait_valid][ (muldivunit.veryl)]{
+//list[muldivunit.veryl.divwremw-range.wait_valid][32ビット演算のとき、結果を符号拡張する (muldivunit.veryl)]{
 #@maprange(scripts/10/divwremw-range/core/src/muldivunit.veryl,wait_valid)
     } else if !is_mul && du_rvalid {
         let quo_signed: logic<DIV_WIDTH> = if op1sign_saved != op2sign_saved ? ~du_quotient + 1 : du_quotient;
