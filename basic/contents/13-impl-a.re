@@ -107,9 +107,23 @@ A拡張の命令をAとするとき、それぞれのビットの状態に応じ
 #@# TODO 余裕があれば 命令の図
 
 A拡張の命令はすべてR形式で、opcodeはOP-AMO(@<code>{7'b0101111})です。
-それぞれの命令はfunct5とfunct3で区別できます(TODO テーブル)。
+それぞれの命令はfunct5とfunct3で区別できます(@<link>{a.instructions.funct5})。
 
-TODO funct5と命令の対応のテーブル
+//table{a.instructions.funct5}[A拡張の命令のfunct5]{
+funct5		命令
+-------------------------------------------------------------
+5'b00010	LR.W/D
+5'b00011	SC.W/D
+5'b00001	AMOSWAP.W/D
+5'b00000	AMOADD.W/D
+5'b00100	AMOXOR.W/D
+5'b01100	AMOAND.W/D
+5'b01000	AMOOR.W/D
+5'b10000	AMOMIN.W/D
+5'b10100	AMOMAX.W/D
+5'b11000	AMOMINU.W/D
+5'b11100	AMOMAXU.W/D
+//}
 
 eeiパッケージにOP-AMOの定数を定義します
 (@<list>{eei.veryl.define.op})。
