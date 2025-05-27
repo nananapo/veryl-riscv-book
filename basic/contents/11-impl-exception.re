@@ -43,7 +43,7 @@ IDステージから順に次のステージに例外の有無、causeを受け�
 まず、例外が発生するかどうか(@<code>{valid})、例外のcause(@<code>{cause})をまとめた@<code>{ExceptionInfo}構造体を定義します
 (@<list>{corectrl.veryl.exptinfo-range.ExceptionInfo})。
 
-//list[corectrl.veryl.exptinfo-range.ExceptionInfo][ExceptionInfo構造体を定義する (corectrl.veryl)]{
+//list[corectrl.veryl.exptinfo-range.ExceptionInfo][ExceptionInfo構造体を定義する (corectrl.veryl)][lineno=on]{
 #@maprange(scripts/11/exptinfo-range/core/src/corectrl.veryl,ExceptionInfo)
     // 例外の情報を保存するための型
     struct ExceptionInfo {
@@ -56,7 +56,7 @@ IDステージから順に次のステージに例外の有無、causeを受け�
 EXステージ、MEMステージのFIFOのデータ型に構造体を追加します
 (@<list>{core.veryl.exptinfo-range.exq_type}、@<list>{core.veryl.exptinfo-range.memq_type})。
 
-//list[core.veryl.exptinfo-range.exq_type][EXステージのFIFOにExceptionInfoを追加する (core.veryl)]{
+//list[core.veryl.exptinfo-range.exq_type][EXステージのFIFOにExceptionInfoを追加する (core.veryl)][lineno=on]{
 #@maprange(scripts/11/exptinfo-range/core/src/core.veryl,exq_type)
     struct exq_type {
         addr: Addr         ,
@@ -68,7 +68,7 @@ EXステージ、MEMステージのFIFOのデータ型に構造体を追加し�
 #@end
 //}
 
-//list[core.veryl.exptinfo-range.memq_type][MEMステージのFIFOにExceptionInfoを追加する (core.veryl)]{
+//list[core.veryl.exptinfo-range.memq_type][MEMステージのFIFOにExceptionInfoを追加する (core.veryl)][lineno=on]{
 #@maprange(scripts/11/exptinfo-range/core/src/core.veryl,memq_type)
     struct memq_type {
         addr      : Addr            ,
@@ -85,7 +85,7 @@ IDステージからEXステージに命令を渡すとき、
 命令がECALL命令なら例外が発生することを伝えます
 (@<list>{core.veryl.exptinfo-range.idex})。
 
-//list[core.veryl.exptinfo-range.idex][IDステージでECALL命令を判定する (core.veryl)]{
+//list[core.veryl.exptinfo-range.idex][IDステージでECALL命令を判定する (core.veryl)][lineno=on]{
 #@maprange(scripts/11/exptinfo-range/core/src/core.veryl,idex)
     always_comb {
         // ID -> EX
@@ -106,7 +106,7 @@ EXステージで例外は発生しないので、
 例外情報をそのままMEMステージに渡します
 (@<list>{core.veryl.exptinfo-range.exmem})。
 
-//list[core.veryl.exptinfo-range.exmem][EXステージからMEMステージに例外情報を渡す (core.veryl)]{
+//list[core.veryl.exptinfo-range.exmem][EXステージからMEMステージに例外情報を渡す (core.veryl)][lineno=on]{
 #@maprange(scripts/11/exptinfo-range/core/src/core.veryl,exmem)
     always_comb {
         // EX -> MEM
@@ -126,7 +126,7 @@ csrunitモジュールを変更します。
 @<list>{core.veryl.exptinfo-range.csru}
 )。
 
-//list[csrunit.veryl.exptinfo-range.port][csrunitモジュールに例外情報を受け取るためのポートを追加する (csrunit.veryl)]{
+//list[csrunit.veryl.exptinfo-range.port][csrunitモジュールに例外情報を受け取るためのポートを追加する (csrunit.veryl)][lineno=on]{
 #@maprange(scripts/11/exptinfo-range/core/src/csrunit.veryl,port)
 module csrunit (
     clk        : input  clock            ,
@@ -139,7 +139,7 @@ module csrunit (
 #@end
 //}
 
-//list[core.veryl.exptinfo-range.memreg][MEMステージの例外情報の変数を作成する (core.veryl)]{
+//list[core.veryl.exptinfo-range.memreg][MEMステージの例外情報の変数を作成する (core.veryl)][lineno=on]{
 #@maprange(scripts/11/exptinfo-range/core/src/core.veryl,memreg)
     ///////////////////////////////// MEM Stage /////////////////////////////////
     var mems_is_new   : logic           ;
@@ -152,7 +152,7 @@ module csrunit (
 #@end
 //}
 
-//list[core.veryl.exptinfo-range.csru][csrunitモジュールに例外情報を供給する (core.veryl)]{
+//list[core.veryl.exptinfo-range.csru][csrunitモジュールに例外情報を供給する (core.veryl)][lineno=on]{
 #@maprange(scripts/11/exptinfo-range/core/src/core.veryl,csru)
     inst csru: csrunit (
         clk                             ,
@@ -172,7 +172,7 @@ ECALL命令かどうかを判定する@<code>{is_ecall}変数を削除して、
 @<list>{csrunit.veryl.exptinfo-range.expt}
 )。
 
-//list[csrunit.veryl.exptinfo-range.remove_ecall][csrunitモジュールでのECALL命令の判定を削除する (csrunit.veryl)]{
+//list[csrunit.veryl.exptinfo-range.remove_ecall][csrunitモジュールでのECALL命令の判定を削除する (csrunit.veryl)][lineno=on]{
 #@maprange(scripts/11/exptinfo-range/core/src/csrunit.veryl,remove_ecall)
     // CSRR(W|S|C)[I]命令かどうか
     let is_wsc: logic = ctrl.is_csr && ctrl.funct3[1:0] != 0;
@@ -181,7 +181,7 @@ ECALL命令かどうかを判定する@<code>{is_ecall}変数を削除して、
 #@end
 //}
 
-//list[csrunit.veryl.exptinfo-range.expt][ExceptionInfoを使って例外を起こす (csrunit.veryl)]{
+//list[csrunit.veryl.exptinfo-range.expt][ExceptionInfoを使って例外を起こす (csrunit.veryl)][lineno=on]{
 #@maprange(scripts/11/exptinfo-range/core/src/csrunit.veryl,expt)
     // Exception
     let raise_expt: logic = valid && expt_info.valid;
@@ -205,7 +205,7 @@ MXLENビットのmtvalレジスタが定義されています(@<img>{mtval})。
 @<code>{ExceptionInfo}構造体に例外に固有の情報を示す@<code>{value}を追加します
 (@<list>{corectrl.veryl.mtval-range.ExceptionInfo})。
 
-//list[corectrl.veryl.mtval-range.ExceptionInfo][tvalをExceptionInfoに追加する (corectrl.veryl)]{
+//list[corectrl.veryl.mtval-range.ExceptionInfo][tvalをExceptionInfoに追加する (corectrl.veryl)][lineno=on]{
 #@maprange(scripts/11/mtval-range/core/src/corectrl.veryl,ExceptionInfo)
     struct ExceptionInfo {
         valid: logic   ,
@@ -218,7 +218,7 @@ MXLENビットのmtvalレジスタが定義されています(@<img>{mtval})。
 ECALL命令はmtvalに書き込むような情報がないので@<code>{0}に設定します
 (@<list>{core.veryl.mtval-range.idex})。
 
-//list[core.veryl.mtval-range.idex][ECALL命令のtvalを設定する (corectrl.veryl)]{
+//list[core.veryl.mtval-range.idex][ECALL命令のtvalを設定する (corectrl.veryl)][lineno=on]{
 #@maprange(scripts/11/mtval-range/core/src/core.veryl,idex)
         // exception
         exq_wdata.expt.valid = ids_inst_bits == 32'h00000073; // ECALL
@@ -230,7 +230,7 @@ ECALL命令はmtvalに書き込むような情報がないので@<code>{0}に設
 @<code>{CsrAddr}型にmtvalレジスタのアドレスを追加します
 (@<list>{eei.veryl.mtval-range.CsrAddr})。
 
-//list[eei.veryl.mtval-range.CsrAddr][mtvalのアドレスを定義する (eei.veryl)]{
+//list[eei.veryl.mtval-range.CsrAddr][mtvalのアドレスを定義する (eei.veryl)][lineno=on]{
 #@maprange(scripts/11/mtval-range/core/src/eei.veryl,CsrAddr)
     enum CsrAddr: logic<12> {
         MTVEC = 12'h305,
@@ -251,13 +251,13 @@ mtvalレジスタを実装して、書き込み、読み込みできるように
 @<list>{csrunit.veryl.mtval-range.write}
 )。
 
-//list[csrunit.veryl.mtval-range.wmask][mtvalの書き込みマスクを定義する (csrunit.veryl)]{
+//list[csrunit.veryl.mtval-range.wmask][mtvalの書き込みマスクを定義する (csrunit.veryl)][lineno=on]{
 #@maprange(scripts/11/mtval-range/core/src/csrunit.veryl,wmask)
     const MTVAL_WMASK : UIntX = 'hffff_ffff_ffff_ffff;
 #@end
 //}
 
-//list[csrunit.veryl.mtval-range.reg][mtval変数を作成する (csrunit.veryl)]{
+//list[csrunit.veryl.mtval-range.reg][mtval変数を作成する (csrunit.veryl)][lineno=on]{
 #@maprange(scripts/11/mtval-range/core/src/csrunit.veryl,reg)
     var mtvec : UIntX;
     var mepc  : UIntX;
@@ -266,7 +266,7 @@ mtvalレジスタを実装して、書き込み、読み込みできるように
 #@end
 //}
 
-//list[csrunit.veryl.mtval-range.rw][mtvalの読み込みデータ、書き込みマスクを設定する (csrunit.veryl)]{
+//list[csrunit.veryl.mtval-range.rw][mtvalの読み込みデータ、書き込みマスクを設定する (csrunit.veryl)][lineno=on]{
 #@maprange(scripts/11/mtval-range/core/src/csrunit.veryl,rw)
     always_comb {
         // read
@@ -284,7 +284,7 @@ mtvalレジスタを実装して、書き込み、読み込みできるように
 #@end
 //}
 
-//list[csrunit.veryl.mtval-range.reset][mtval変数をリセットする (csrunit.veryl)]{
+//list[csrunit.veryl.mtval-range.reset][mtval変数をリセットする (csrunit.veryl)][lineno=on]{
 #@maprange(scripts/11/mtval-range/core/src/csrunit.veryl,reset)
     always_ff {
         if_reset {
@@ -296,7 +296,7 @@ mtvalレジスタを実装して、書き込み、読み込みできるように
 #@end
 //}
 
-//list[csrunit.veryl.mtval-range.write][mtvalに書き込めるようにする (csrunit.veryl)]{
+//list[csrunit.veryl.mtval-range.write][mtvalに書き込めるようにする (csrunit.veryl)][lineno=on]{
 #@maprange(scripts/11/mtval-range/core/src/csrunit.veryl,write)
     } else {
         if is_wsc {
@@ -316,7 +316,7 @@ mtvalレジスタを実装して、書き込み、読み込みできるように
 @<list>{csrunit.veryl.mtval-range.update}
 )。
 
-//list[csrunit.veryl.mtval-range.info][tvalを変数に割り当てる (csrunit.veryl)]{
+//list[csrunit.veryl.mtval-range.info][tvalを変数に割り当てる (csrunit.veryl)][lineno=on]{
 #@maprange(scripts/11/mtval-range/core/src/csrunit.veryl,info)
     let raise_expt : logic = valid && expt_info.valid;
     let expt_cause : UIntX = expt_info.cause;
@@ -324,7 +324,7 @@ mtvalレジスタを実装して、書き込み、読み込みできるように
 #@end
 //}
 
-//list[csrunit.veryl.mtval-range.update][例外が発生するとき、mtvalにtvalを書き込む (csrunit.veryl)]{
+//list[csrunit.veryl.mtval-range.update][例外が発生するとき、mtvalにtvalを書き込む (csrunit.veryl)][lineno=on]{
 #@maprange(scripts/11/mtval-range/core/src/csrunit.veryl,update)
     if valid {
         if raise_trap {
@@ -346,7 +346,7 @@ causeは@<code>{3}で、tvalは例外が発生した命令のアドレスにな�
 @<code>{CsrCause}型にBreakpoint例外のcauseを追加します
 (@<list>{eei.veryl.breakpoint-range.CsrCause})。
 
-//list[eei.veryl.breakpoint-range.CsrCause][Breakpoint例外のcauseを定義する (eei.veryl)]{
+//list[eei.veryl.breakpoint-range.CsrCause][Breakpoint例外のcauseを定義する (eei.veryl)][lineno=on]{
 #@maprange(scripts/11/breakpoint-range/core/src/eei.veryl,CsrCause)
     enum CsrCause: UIntX {
         BREAKPOINT = 3,
@@ -358,7 +358,7 @@ causeは@<code>{3}で、tvalは例外が発生した命令のアドレスにな�
 IDステージでEBREAK命令を判定して、tvalにPCを設定します
 (@<list>{core.veryl.breakpoint-range.idex})。
 
-//list[core.veryl.breakpoint-range.idex][IDステージでEBREAK命令を判定する (core.veryl)]{
+//list[core.veryl.breakpoint-range.idex][IDステージでEBREAK命令を判定する (core.veryl)][lineno=on]{
 #@maprange(scripts/11/breakpoint-range/core/src/core.veryl,idex)
         exq_wdata.expt = 0;
         @<b>|if ids_inst_bits == 32'h00000073 {|
@@ -400,7 +400,7 @@ inst_decoderモジュールに、命令が有効かどうかを示す@<code>{val
 @<list>{core.veryl.instillegal-range.ids}
 )。
 
-//list[inst_decoder.veryl.instillegal-range.port][validポートを追加する (inst_decoder.veryl)]{
+//list[inst_decoder.veryl.instillegal-range.port][validポートを追加する (inst_decoder.veryl)][lineno=on]{
 #@maprange(scripts/11/instillegal-range/core/src/inst_decoder.veryl,port)
 module inst_decoder (
     bits : input  Inst    ,
@@ -411,7 +411,7 @@ module inst_decoder (
 #@end
 //}
 
-//list[core.veryl.instillegal-range.ids][inst_decoderモジュールのvalidポートと変数を接続する (core.veryl)]{
+//list[core.veryl.instillegal-range.ids][inst_decoderモジュールのvalidポートと変数を接続する (core.veryl)][lineno=on]{
 #@maprange(scripts/11/instillegal-range/core/src/core.veryl,ids)
     let ids_valid     : logic    = if_fifo_rvalid;
     let ids_pc        : Addr     = if_fifo_rdata.addr;
@@ -432,7 +432,7 @@ module inst_decoder (
 今のところ実装してある命令を有効な命令として判定する処理をalways_combブロックに記述します
 (@<list>{inst_decoder.veryl.instillegal-range.valid})。
 
-//list[inst_decoder.veryl.instillegal-range.valid][命令の有効判定を行う (inst_decoder.veryl)]{
+//list[inst_decoder.veryl.instillegal-range.valid][命令の有効判定を行う (inst_decoder.veryl)][lineno=on]{
 #@maprange(scripts/11/instillegal-range/core/src/inst_decoder.veryl,valid)
 valid = case op {
     OP_LUI, OP_AUIPC, OP_JAL, OP_JALR: T,
@@ -477,7 +477,7 @@ opcodeがOP-MISCである命令を合法な命令として取り扱っていま�
 OP-MISCのopcode(@<code>{7'b0001111})をeeiパッケージに定義してください
 (@<list>{eei.veryl.instillegal-range.op})。
 
-//list[eei.veryl.instillegal-range.op][OP-MISCのビット列を定義する (eei.veryl)]{
+//list[eei.veryl.instillegal-range.op][OP-MISCのビット列を定義する (eei.veryl)][lineno=on]{
 #@maprange(scripts/11/instillegal-range/core/src/eei.veryl,op)
     const OP_MISC_MEM : logic<7> = 7'b0001111;
 #@end
@@ -489,7 +489,7 @@ OP-MISCのopcode(@<code>{7'b0001111})をeeiパッケージに定義してくだ�
 (@<list>{eei.veryl.instillegal-range.CsrCause})。
 
 #@# mapにする
-//list[eei.veryl.instillegal-range.CsrCause][Illegal instruction例外のcauseを定義する (eei.veryl)]{
+//list[eei.veryl.instillegal-range.CsrCause][Illegal instruction例外のcauseを定義する (eei.veryl)][lineno=on]{
 #@# maprange(scripts/11/instillegal-range/core/src/eei.veryl,CsrCause)
     enum CsrCause: UIntX {
         @<b>|ILLEGAL_INSTRUCTION = 2,|
@@ -503,7 +503,7 @@ OP-MISCのopcode(@<code>{7'b0001111})をeeiパッケージに定義してくだ�
 (@<list>{core.veryl.instillegal-range.idex})。
 tvalには、命令を右に詰めてゼロで拡張した値を設定します。
 
-//list[core.veryl.instillegal-range.idex][不正な命令のとき、例外を発生させる (core.veryl)]{
+//list[core.veryl.instillegal-range.idex][不正な命令のとき、例外を発生させる (core.veryl)][lineno=on]{
 #@maprange(scripts/11/instillegal-range/core/src/core.veryl,idex)
         exq_wdata.expt = 0;
         @<b>|if !ids_inst_valid {|
@@ -541,7 +541,7 @@ csrunitモジュールの@<code>{rs1}ポートを@<code>{rs1_addr}と@<code>{rs1
 また、causeを設定するためにcsrunitモジュールに命令のビット列を供給します。
 
 
-//list[csrunit.veryl.csrro-range.port][csrunitモジュールのポート定義を変更する (csrunit.veryl)]{
+//list[csrunit.veryl.csrro-range.port][csrunitモジュールのポート定義を変更する (csrunit.veryl)][lineno=on]{
 #@maprange(scripts/11/csrro-range/core/src/csrunit.veryl,port)
 module csrunit (
     clk        : input  clock            ,
@@ -563,7 +563,7 @@ module csrunit (
 #@end
 //}
 
-//list[core.veryl.csrro-range.csru][csrunitモジュールのポート定義を変更する (core.veryl)]{
+//list[core.veryl.csrro-range.csru][csrunitモジュールのポート定義を変更する (core.veryl)][lineno=on]{
 #@maprange(scripts/11/csrro-range/core/src/core.veryl,csru)
     inst csru: csrunit (
         clk                               ,
@@ -585,7 +585,7 @@ module csrunit (
 #@end
 //}
 
-//list[csrunit.veryl.csrro-range.wdata][rs1の変更に対応する@<fn>{fix-wmask-bug} (csrunit.veryl)]{
+//list[csrunit.veryl.csrro-range.wdata][rs1の変更に対応する@<fn>{fix-wmask-bug} (csrunit.veryl)][lineno=on]{
 #@maprange(scripts/11/csrro-range/core/src/csrunit.veryl,wdata)
     @<b>|let wsource: UIntX = if ctrl.funct3[2] ? {1'b0 repeat XLEN - 5, rs1_addr} : rs1_data;|
     wdata   = case ctrl.funct3[1:0] {
@@ -603,7 +603,7 @@ module csrunit (
 (@<list>{csrunit.veryl.csrro-range.check})。
 また、命令のビット列を利用できるようになったので、MRET命令の判定を命令のビット列の比較に書き換えています。
 
-//list[csrunit.veryl.csrro-range.check][読み込み専用CSRへの書き込みが発生するか判定する (csrunit.veryl)]{
+//list[csrunit.veryl.csrro-range.check][読み込み専用CSRへの書き込みが発生するか判定する (csrunit.veryl)][lineno=on]{
 #@maprange(scripts/11/csrro-range/core/src/csrunit.veryl,check)
     // CSRR(W|S|C)[I]命令かどうか
     let is_wsc: logic = ctrl.is_csr && ctrl.funct3[1:0] != 0;
@@ -621,7 +621,7 @@ module csrunit (
 例外が発生するとき、causeとtvalを設定します
 (@<list>{csrunit.veryl.csrro-range.expt})。
 
-//list[csrunit.veryl.csrro-range.expt][読み込み専用CSRの書き込みで例外を発生させる (csrunit.veryl)]{
+//list[csrunit.veryl.csrro-range.expt][読み込み専用CSRの書き込みで例外を発生させる (csrunit.veryl)][lineno=on]{
 #@maprange(scripts/11/csrro-range/core/src/csrunit.veryl,expt)
     let raise_expt: logic = valid && (expt_info.valid || expt_write_readonly_csr);
     let expt_cause: UIntX = @<b>|switch {|
@@ -646,7 +646,7 @@ csrunitモジュールでトラップを起こすようになりました。
 @<list>{core.veryl.csrro-range.wb}
 )。
 
-//list[core.veryl.csrro-range.wbq_type][トラップが発生したかを示すlogicをwbq_typeに追加する (core.veryl)]{
+//list[core.veryl.csrro-range.wbq_type][トラップが発生したかを示すlogicをwbq_typeに追加する (core.veryl)][lineno=on]{
 #@maprange(scripts/11/csrro-range/core/src/core.veryl,wbq_type)
     struct wbq_type {
         ...
@@ -656,13 +656,13 @@ csrunitモジュールでトラップを起こすようになりました。
 #@end
 //}
 
-//list[core.veryl.csrro-range.memwb][トラップが発生したかをWBステージに伝える (core.veryl)]{
+//list[core.veryl.csrro-range.memwb][トラップが発生したかをWBステージに伝える (core.veryl)][lineno=on]{
 #@maprange(scripts/11/csrro-range/core/src/core.veryl,memwb)
     wbq_wdata.raise_trap = csru_raise_trap;
 #@end
 //}
 
-//list[core.veryl.csrro-range.wb][トラップが発生しているとき、レジスタにデータを書き込まないようにする (core.veryl)]{
+//list[core.veryl.csrro-range.wb][トラップが発生しているとき、レジスタにデータを書き込まないようにする (core.veryl)][lineno=on]{
 #@maprange(scripts/11/csrro-range/core/src/core.veryl,wb)
     always_ff {
         if wbs_valid && wbs_ctrl.rwb_en && !wbq_rdata.raise_trap {
@@ -691,7 +691,7 @@ PCの遷移先が整列されていない場合に例外が発生します。
 @<code>{CsrCause}型にInstruction address misaligned例外のcauseを追加します
 (@<list>{core.veryl.instmisalign-range.CsrCause})。
 
-//list[core.veryl.instmisalign-range.CsrCause][Instruction address misaligned例外のcauseを定義する (eei.veryl)]{
+//list[core.veryl.instmisalign-range.CsrCause][Instruction address misaligned例外のcauseを定義する (eei.veryl)][lineno=on]{
 #@maprange(scripts/11/instmisalign-range/core/src/eei.veryl,CsrCause)
     enum CsrCause: UIntX {
         @<b>|INSTRUCTION_ADDRESS_MISALIGNED = 0,|
@@ -706,7 +706,7 @@ EXステージでアドレスを確認して例外を判定します
 (@<list>{core.veryl.instmisalign-range.exmem})。
 tvalは遷移先のアドレスになることに注意してください。
 
-//list[core.veryl.instmisalign-range.exmem][EXステージでInstruction address misaligned例外の判定を行う (core.veryl)]{
+//list[core.veryl.instmisalign-range.exmem][EXステージでInstruction address misaligned例外の判定を行う (core.veryl)][lineno=on]{
 #@maprange(scripts/11/instmisalign-range/core/src/core.veryl,exmem)
         memq_wdata.jump_addr  = if inst_is_br(exs_ctrl) ? exs_pc + exs_imm : exs_alu_result & ~1;
         // exception
@@ -735,7 +735,7 @@ causeはそれぞれ@<code>{4}、@<code>{6}で、tvalはアクセスするメモ
 @<code>{CsrCause}型に例外のcauseを追加します
 (@<list>{eei.veryl.memmisalign-range.CsrCause})。
 
-//list[eei.veryl.memmisalign-range.CsrCause][例外のcauseを定義する (eei.veryl)]{
+//list[eei.veryl.memmisalign-range.CsrCause][例外のcauseを定義する (eei.veryl)][lineno=on]{
 #@maprange(scripts/11/memmisalign-range/core/src/eei.veryl,CsrCause)
     enum CsrCause: UIntX {
         INSTRUCTION_ADDRESS_MISALIGNED = 0,
@@ -751,7 +751,7 @@ causeはそれぞれ@<code>{4}、@<code>{6}で、tvalはアクセスするメモ
 EXステージでアドレスを確認して例外を判定します
 (@<list>{core.veryl.memmisalign-range.expt})。
 
-//list[core.veryl.memmisalign-range.expt][EXステージで例外の判定を行う (core.veryl)]{
+//list[core.veryl.memmisalign-range.expt][EXステージで例外の判定を行う (core.veryl)][lineno=on]{
 #@maprange(scripts/11/memmisalign-range/core/src/core.veryl,expt)
         let instruction_address_misaligned: logic = memq_wdata.br_taken && memq_wdata.jump_addr[1:0] != 2'b00;
         @<b>|let loadstore_address_misaligned  : logic = inst_is_memop(exs_ctrl) && case exs_ctrl.funct3[1:0] {|
@@ -779,7 +779,7 @@ EXステージでアドレスを確認して例外を判定します
 例外が発生するときにmemunitモジュールが動作しないようにします
 (@<list>{core.veryl.memmisalign-range.memu})。
 
-//list[core.veryl.memmisalign-range.memu][例外が発生するとき、memunitのvalidを0にする (core.veryl)]{
+//list[core.veryl.memmisalign-range.memu][例外が発生するとき、memunitのvalidを0にする (core.veryl)][lineno=on]{
 #@maprange(scripts/11/memmisalign-range/core/src/core.veryl,memu)
     inst memu: memunit (
         clk                                   ,

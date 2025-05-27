@@ -123,9 +123,9 @@
 <p>Verylには積、商、剰余を求める演算子<code class="inline-code">*</code>、<code class="inline-code">/</code>、<code class="inline-code">%</code>が定義されており、これを利用することで簡単に計算を実装できます(<span class="listref"><a href="./10-impl-m.html#example.by.operator">リスト1.1</a></span>)。</p>
 <div id="example.by.operator" class="caption-code">
 <span class="caption">リスト1.1: リスト1.1: 演算子による実装例</span>
-<pre class="list language-operator">assign mul = op1 * op2;
-assign div = op1 / op2;
-assign rem = op1 % op2;
+<pre class="list language-operator"><em class="lineno">1: </em>assign mul = op1 * op2;
+<em class="lineno">2: </em>assign div = op1 / op2;
+<em class="lineno">3: </em>assign rem = op1 % op2;
 </pre>
 </div>
 <p>例えば乗算回路をFPGA上に実装する場合、通常は合成系によってFPGAに搭載されている乗算器が自動的に利用されます<sup><a id="fnb-specify.multiplyer" href="#fn-specify.multiplyer" class="noteref" epub:type="noteref">*1</a></sup>。これにより、低遅延、低リソースコストで効率的な乗算回路を自動的に実現できます。しかし、32ビットや64ビットの乗算を実装する際、FPGA上の乗算器の数が不足すると、LUTを用いた大規模な乗算回路が構築されることがあります。このような大規模な回路はFPGAのリソースの使用量や遅延に大きな影響を与えるため好ましくありません。除算や剰余演算でも同じ問題<sup><a id="fnb-no.divider" href="#fn-no.divider" class="noteref" epub:type="noteref">*2</a></sup>が生じることがあります。</p>
@@ -159,34 +159,34 @@ assign rem = op1 % op2;
 <p><code class="inline-code">InstCtrl</code>構造体に、M拡張の命令であることを示す<code class="inline-code">is_muldiv</code>フラグを追加します (<span class="listref"><a href="./10-impl-m.html#corectrl.veryl.create-mdu-range.InstCtrl">リスト1.2</a></span>)。</p>
 <div id="corectrl.veryl.create-mdu-range.InstCtrl" class="caption-code">
 <span class="caption">リスト1.2: リスト1.2: is_muldivフラグを追加する (corectrl.veryl)</span>
-<pre class="list language-InstCtrl">    // 制御に使うフラグ用の構造体
-    struct InstCtrl {
-        itype    : InstType   , // 命令の形式
-        rwb_en   : logic      , // レジスタに書き込むかどうか
-        is_lui   : logic      , // LUI命令である
-        is_aluop : logic      , // ALUを利用する命令である
-        <b>is_muldiv: logic      , // M拡張の命令である</b>
-        is_op32  : logic      , // OP-32またはOP-IMM-32である
-        is_jump  : logic      , // ジャンプ命令である
-        is_load  : logic      , // ロード命令である
-        is_csr   : logic      , // CSR命令である
-        funct3   : logic   &lt;3&gt;, // 命令のfunct3フィールド
-        funct7   : logic   &lt;7&gt;, // 命令のfunct7フィールド
-    }
+<pre class="list language-InstCtrl"><em class="lineno">1: </em>    // 制御に使うフラグ用の構造体
+<em class="lineno">2: </em>    struct InstCtrl {
+<em class="lineno">3: </em>        itype    : InstType   , // 命令の形式
+<em class="lineno">4: </em>        rwb_en   : logic      , // レジスタに書き込むかどうか
+<em class="lineno">5: </em>        is_lui   : logic      , // LUI命令である
+<em class="lineno">6: </em>        is_aluop : logic      , // ALUを利用する命令である
+<em class="lineno">7: </em>        <b>is_muldiv: logic      , // M拡張の命令である</b>
+<em class="lineno">8: </em>        is_op32  : logic      , // OP-32またはOP-IMM-32である
+<em class="lineno">9: </em>        is_jump  : logic      , // ジャンプ命令である
+<em class="lineno">10: </em>        is_load  : logic      , // ロード命令である
+<em class="lineno">11: </em>        is_csr   : logic      , // CSR命令である
+<em class="lineno">12: </em>        funct3   : logic   &lt;3&gt;, // 命令のfunct3フィールド
+<em class="lineno">13: </em>        funct7   : logic   &lt;7&gt;, // 命令のfunct7フィールド
+<em class="lineno">14: </em>    }
 </pre>
 </div>
 <p>inst_decoderモジュールの<code class="inline-code">InstCtrl</code>を生成している部分を変更します。opcodeが<code class="inline-code">OP</code>か<code class="inline-code">OP-32</code>の場合はfunct7の値によって<code class="inline-code">is_muldiv</code>を設定します(<span class="listref"><a href="./10-impl-m.html#inst_decoder.veryl.create-mdu-range.ctrl">リスト1.3</a></span>)。その他のopcodeの<code class="inline-code">is_muldiv</code>は<code class="inline-code">F</code>に設定してください。</p>
 <div id="inst_decoder.veryl.create-mdu-range.ctrl" class="caption-code">
 <span class="caption">リスト1.3: リスト1.3: is_muldivを設定する (inst_decoder.veryl) (一部)</span>
-<pre class="list language-ctrl">    OP_OP: {
-        InstType::R, T, F, T, <b>f7 == 7'b0000001,</b> F, F, F, F
-    },
-    OP_OP_IMM: {
-        InstType::I, T, F, T, <b>F,</b> F, F, F, F
-    },
-    OP_OP_32: {
-        InstType::R, T, F, T, <b>f7 == 7'b0000001,</b> T, F, F, F
-    },
+<pre class="list language-ctrl"><em class="lineno">1: </em>    OP_OP: {
+<em class="lineno">2: </em>        InstType::R, T, F, T, <b>f7 == 7'b0000001,</b> F, F, F, F
+<em class="lineno">3: </em>    },
+<em class="lineno">4: </em>    OP_OP_IMM: {
+<em class="lineno">5: </em>        InstType::I, T, F, T, <b>F,</b> F, F, F, F
+<em class="lineno">6: </em>    },
+<em class="lineno">7: </em>    OP_OP_32: {
+<em class="lineno">8: </em>        InstType::R, T, F, T, <b>f7 == 7'b0000001,</b> T, F, F, F
+<em class="lineno">9: </em>    },
 </pre>
 </div>
 
@@ -197,54 +197,54 @@ assign rem = op1 % op2;
 <p><code class="inline-code">src/muldivunit.veryl</code>を作成し、次のように記述します(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.create-mdu-range">リスト1.4</a></span>)。</p>
 <div id="muldivunit.veryl.create-mdu-range" class="caption-code">
 <span class="caption">リスト1.4: リスト1.4: muldivunit.veryl</span>
-<pre class="list language-create-mdu-range">import eei::*;
-
-module muldivunit (
-    clk   : input  clock   ,
-    rst   : input  reset   ,
-    ready : output logic   ,
-    valid : input  logic   ,
-    funct3: input  logic&lt;3&gt;,
-    op1   : input  UIntX   ,
-    op2   : input  UIntX   ,
-    rvalid: output logic   ,
-    result: output UIntX   ,
-) {
-
-    enum State {
-        Idle,
-        WaitValid,
-        Finish,
-    }
-
-    var state: State;
-
-    // saved_data
-    var funct3_saved: logic&lt;3&gt;;
-
-    always_comb {
-        ready  = state == State::Idle;
-        rvalid = state == State::Finish;
-    }
-
-    always_ff {
-        if_reset {
-            state        = State::Idle;
-            result       = 0;
-            funct3_saved = 0;
-        } else {
-            case state {
-                State::Idle: if ready &amp;&amp; valid {
-                    state        = State::WaitValid;
-                    funct3_saved = funct3;
-                }
-                State::WaitValid: state = State::Finish;
-                State::Finish   : state = State::Idle;
-                default         : {}
-            }
-        }
-    }
-}
+<pre class="list language-create-mdu-range"><em class="lineno">1: </em>import eei::*;
+<em class="lineno">2: </em>
+<em class="lineno">3: </em>module muldivunit (
+<em class="lineno">4: </em>    clk   : input  clock   ,
+<em class="lineno">5: </em>    rst   : input  reset   ,
+<em class="lineno">6: </em>    ready : output logic   ,
+<em class="lineno">7: </em>    valid : input  logic   ,
+<em class="lineno">8: </em>    funct3: input  logic&lt;3&gt;,
+<em class="lineno">9: </em>    op1   : input  UIntX   ,
+<em class="lineno">10: </em>    op2   : input  UIntX   ,
+<em class="lineno">11: </em>    rvalid: output logic   ,
+<em class="lineno">12: </em>    result: output UIntX   ,
+<em class="lineno">13: </em>) {
+<em class="lineno">14: </em>
+<em class="lineno">15: </em>    enum State {
+<em class="lineno">16: </em>        Idle,
+<em class="lineno">17: </em>        WaitValid,
+<em class="lineno">18: </em>        Finish,
+<em class="lineno">19: </em>    }
+<em class="lineno">20: </em>
+<em class="lineno">21: </em>    var state: State;
+<em class="lineno">22: </em>
+<em class="lineno">23: </em>    // saved_data
+<em class="lineno">24: </em>    var funct3_saved: logic&lt;3&gt;;
+<em class="lineno">25: </em>
+<em class="lineno">26: </em>    always_comb {
+<em class="lineno">27: </em>        ready  = state == State::Idle;
+<em class="lineno">28: </em>        rvalid = state == State::Finish;
+<em class="lineno">29: </em>    }
+<em class="lineno">30: </em>
+<em class="lineno">31: </em>    always_ff {
+<em class="lineno">32: </em>        if_reset {
+<em class="lineno">33: </em>            state        = State::Idle;
+<em class="lineno">34: </em>            result       = 0;
+<em class="lineno">35: </em>            funct3_saved = 0;
+<em class="lineno">36: </em>        } else {
+<em class="lineno">37: </em>            case state {
+<em class="lineno">38: </em>                State::Idle: if ready &amp;&amp; valid {
+<em class="lineno">39: </em>                    state        = State::WaitValid;
+<em class="lineno">40: </em>                    funct3_saved = funct3;
+<em class="lineno">41: </em>                }
+<em class="lineno">42: </em>                State::WaitValid: state = State::Finish;
+<em class="lineno">43: </em>                State::Finish   : state = State::Idle;
+<em class="lineno">44: </em>                default         : {}
+<em class="lineno">45: </em>            }
+<em class="lineno">46: </em>        }
+<em class="lineno">47: </em>    }
+<em class="lineno">48: </em>}
 </pre>
 </div>
 <p>muldivunitモジュールは<code class="inline-code">ready</code>が<code class="inline-code">1</code>のときに計算のリクエストを受け付けます。<code class="inline-code">valid</code>が<code class="inline-code">1</code>なら計算を開始し、計算が終了したら<code class="inline-code">rvalid</code>を<code class="inline-code">1</code>、計算結果を<code class="inline-code">result</code>に設定します。</p>
@@ -255,87 +255,87 @@ module muldivunit (
 <p>まず、muldivunitモジュールをインスタンス化します(<span class="listref"><a href="./10-impl-m.html#core.veryl.create-mdu-range.muldivinst">リスト1.5</a></span>)。</p>
 <div id="core.veryl.create-mdu-range.muldivinst" class="caption-code">
 <span class="caption">リスト1.5: リスト1.5: muldivunitモジュールをインスタンス化する (core.veryl)</span>
-<pre class="list language-muldivinst">    let exs_muldiv_valid : logic = exs_valid &amp;&amp; exs_ctrl.is_muldiv &amp;&amp; !exs_data_hazard &amp;&amp; !exs_muldiv_is_requested;
-    var exs_muldiv_ready : logic;
-    var exs_muldiv_rvalid: logic;
-    var exs_muldiv_result: UIntX;
-
-    inst mdu: muldivunit (
-        clk                      ,
-        rst                      ,
-        valid : exs_muldiv_valid ,
-        ready : exs_muldiv_ready ,
-        funct3: exs_ctrl.funct3  ,
-        op1   : exs_op1          ,
-        op2   : exs_op2          ,
-        rvalid: exs_muldiv_rvalid,
-        result: exs_muldiv_result,
-    );
+<pre class="list language-muldivinst"><em class="lineno">1: </em>    let exs_muldiv_valid : logic = exs_valid &amp;&amp; exs_ctrl.is_muldiv &amp;&amp; !exs_data_hazard &amp;&amp; !exs_muldiv_is_requested;
+<em class="lineno">2: </em>    var exs_muldiv_ready : logic;
+<em class="lineno">3: </em>    var exs_muldiv_rvalid: logic;
+<em class="lineno">4: </em>    var exs_muldiv_result: UIntX;
+<em class="lineno">5: </em>
+<em class="lineno">6: </em>    inst mdu: muldivunit (
+<em class="lineno">7: </em>        clk                      ,
+<em class="lineno">8: </em>        rst                      ,
+<em class="lineno">9: </em>        valid : exs_muldiv_valid ,
+<em class="lineno">10: </em>        ready : exs_muldiv_ready ,
+<em class="lineno">11: </em>        funct3: exs_ctrl.funct3  ,
+<em class="lineno">12: </em>        op1   : exs_op1          ,
+<em class="lineno">13: </em>        op2   : exs_op2          ,
+<em class="lineno">14: </em>        rvalid: exs_muldiv_rvalid,
+<em class="lineno">15: </em>        result: exs_muldiv_result,
+<em class="lineno">16: </em>    );
 </pre>
 </div>
 <p>muldivunitモジュールで計算を開始するのは、EXステージに命令が存在し(<code class="inline-code">exs_valid</code>)、命令がM拡張の命令であり(<code class="inline-code">exs_ctrl.is_muldiv</code>)、データハザードが発生しておらず(<code class="inline-code">!exs_data_hazard</code>)、既に計算を要求していない(<code class="inline-code">!exs_muldiv_is_requested</code>)場合です。</p>
 <p><code class="inline-code">!exs_muldiv_is_requested</code>変数を定義し、ステージの遷移条件とmuldivunitに計算を要求したかの状態によって値を更新します(<span class="listref"><a href="./10-impl-m.html#core.veryl.create-mdu-range.exs_muldiv_is_requested">リスト1.6</a></span>)。</p>
 <div id="core.veryl.create-mdu-range.exs_muldiv_is_requested" class="caption-code">
 <span class="caption">リスト1.6: リスト1.6: exs_muldiv_is_requested変数 (core.veryl)</span>
-<pre class="list language-exs_muldiv_is_requested">    var exs_muldiv_is_requested: logic;
-
-    always_ff {
-        if_reset {
-            exs_muldiv_is_requested = 0;
-        } else {
-            // 次のステージに遷移
-            if exq_rvalid &amp;&amp; exq_rready {
-                exs_muldiv_is_requested = 0;
-            } else {
-                // muldivunitにリクエストしたか判定する
-                if exs_muldiv_valid &amp;&amp; exs_muldiv_ready {
-                    exs_muldiv_is_requested = 1;
-                }
-            }
-        }
-    }
+<pre class="list language-exs_muldiv_is_requested"><em class="lineno">1: </em>    var exs_muldiv_is_requested: logic;
+<em class="lineno">2: </em>
+<em class="lineno">3: </em>    always_ff {
+<em class="lineno">4: </em>        if_reset {
+<em class="lineno">5: </em>            exs_muldiv_is_requested = 0;
+<em class="lineno">6: </em>        } else {
+<em class="lineno">7: </em>            // 次のステージに遷移
+<em class="lineno">8: </em>            if exq_rvalid &amp;&amp; exq_rready {
+<em class="lineno">9: </em>                exs_muldiv_is_requested = 0;
+<em class="lineno">10: </em>            } else {
+<em class="lineno">11: </em>                // muldivunitにリクエストしたか判定する
+<em class="lineno">12: </em>                if exs_muldiv_valid &amp;&amp; exs_muldiv_ready {
+<em class="lineno">13: </em>                    exs_muldiv_is_requested = 1;
+<em class="lineno">14: </em>                }
+<em class="lineno">15: </em>            }
+<em class="lineno">16: </em>        }
+<em class="lineno">17: </em>    }
 </pre>
 </div>
 <p>muldivunitモジュールはALUのように1クロックの間に入力から出力を生成しないため、計算中はEXステージをストールさせる必要があります。そのために<code class="inline-code">exs_muldiv_stall</code>変数を定義して、ストールの条件に追加します(<span class="listref"><a href="./10-impl-m.html#core.veryl.create-mdu-range.exs_muldiv_stall">リスト1.7</a></span>、<span class="listref"><a href="./10-impl-m.html#core.veryl.create-mdu-range.exq_rready">リスト1.8</a></span>)。また、M拡張の命令の場合はMEMステージに渡す<code class="inline-code">alu_result</code>の値をmuldivunitモジュールの結果に設定します(<span class="listref"><a href="./10-impl-m.html#core.veryl.create-mdu-range.exq_rready">リスト1.8</a></span>)。</p>
 <div id="core.veryl.create-mdu-range.exs_muldiv_stall" class="caption-code">
 <span class="caption">リスト1.7: リスト1.7: EXステージのストール条件の変更 (core.veryl)</span>
-<pre class="list language-exs_muldiv_stall">    var exs_muldiv_rvalided: logic;
-    let exs_muldiv_stall   : logic = exs_ctrl.is_muldiv &amp;&amp; !exs_muldiv_rvalid &amp;&amp; !exs_muldiv_rvalided;
-
-    always_ff {
-        if_reset {
-            exs_muldiv_rvalided = 0;
-        } else {
-            // 次のステージに遷移
-            if exq_rvalid &amp;&amp; exq_rready {
-                exs_muldiv_rvalided = 0;
-            } else {
-                // muldivunitの処理が完了していたら1にする
-                exs_muldiv_rvalided |= exs_muldiv_rvalid;
-            }
-        }
-    }
+<pre class="list language-exs_muldiv_stall"><em class="lineno">1: </em>    var exs_muldiv_rvalided: logic;
+<em class="lineno">2: </em>    let exs_muldiv_stall   : logic = exs_ctrl.is_muldiv &amp;&amp; !exs_muldiv_rvalid &amp;&amp; !exs_muldiv_rvalided;
+<em class="lineno">3: </em>
+<em class="lineno">4: </em>    always_ff {
+<em class="lineno">5: </em>        if_reset {
+<em class="lineno">6: </em>            exs_muldiv_rvalided = 0;
+<em class="lineno">7: </em>        } else {
+<em class="lineno">8: </em>            // 次のステージに遷移
+<em class="lineno">9: </em>            if exq_rvalid &amp;&amp; exq_rready {
+<em class="lineno">10: </em>                exs_muldiv_rvalided = 0;
+<em class="lineno">11: </em>            } else {
+<em class="lineno">12: </em>                // muldivunitの処理が完了していたら1にする
+<em class="lineno">13: </em>                exs_muldiv_rvalided |= exs_muldiv_rvalid;
+<em class="lineno">14: </em>            }
+<em class="lineno">15: </em>        }
+<em class="lineno">16: </em>    }
 </pre>
 </div>
 <div id="core.veryl.create-mdu-range.exq_rready" class="caption-code">
 <span class="caption">リスト1.8: リスト1.8: EXステージのストール条件の変更とM拡張の命令の結果の設定 (core.veryl)</span>
-<pre class="list language-exq_rready">    <b>let exs_stall: logic = exs_data_hazard || exs_muldiv_stall;</b>
-
-    always_comb {
-        // EX -&gt; MEM
-        exq_rready            = memq_wready &amp;&amp; <b>!exs_stall</b>;
-        memq_wvalid           = exq_rvalid &amp;&amp; <b>!exs_stall</b>;
-        memq_wdata.addr       = exq_rdata.addr;
-        memq_wdata.bits       = exq_rdata.bits;
-        memq_wdata.ctrl       = exq_rdata.ctrl;
-        memq_wdata.imm        = exq_rdata.imm;
-        memq_wdata.rs1_addr   = exs_rs1_addr;
-        memq_wdata.rs1_data   = exs_rs1_data;
-        memq_wdata.rs2_data   = exs_rs2_data;
-        memq_wdata.alu_result = <b>if exs_ctrl.is_muldiv ? exs_muldiv_result : exs_alu_result</b>;
-        memq_wdata.br_taken   = exs_ctrl.is_jump || inst_is_br(exs_ctrl) &amp;&amp; exs_brunit_take;
-        memq_wdata.jump_addr  = if inst_is_br(exs_ctrl) ? exs_pc + exs_imm : exs_alu_result &amp; ~1;
-    }
+<pre class="list language-exq_rready"><em class="lineno">1: </em>    <b>let exs_stall: logic = exs_data_hazard || exs_muldiv_stall;</b>
+<em class="lineno">2: </em>
+<em class="lineno">3: </em>    always_comb {
+<em class="lineno">4: </em>        // EX -&gt; MEM
+<em class="lineno">5: </em>        exq_rready            = memq_wready &amp;&amp; <b>!exs_stall</b>;
+<em class="lineno">6: </em>        memq_wvalid           = exq_rvalid &amp;&amp; <b>!exs_stall</b>;
+<em class="lineno">7: </em>        memq_wdata.addr       = exq_rdata.addr;
+<em class="lineno">8: </em>        memq_wdata.bits       = exq_rdata.bits;
+<em class="lineno">9: </em>        memq_wdata.ctrl       = exq_rdata.ctrl;
+<em class="lineno">10: </em>        memq_wdata.imm        = exq_rdata.imm;
+<em class="lineno">11: </em>        memq_wdata.rs1_addr   = exs_rs1_addr;
+<em class="lineno">12: </em>        memq_wdata.rs1_data   = exs_rs1_data;
+<em class="lineno">13: </em>        memq_wdata.rs2_data   = exs_rs2_data;
+<em class="lineno">14: </em>        memq_wdata.alu_result = <b>if exs_ctrl.is_muldiv ? exs_muldiv_result : exs_alu_result</b>;
+<em class="lineno">15: </em>        memq_wdata.br_taken   = exs_ctrl.is_jump || inst_is_br(exs_ctrl) &amp;&amp; exs_brunit_take;
+<em class="lineno">16: </em>        memq_wdata.jump_addr  = if inst_is_br(exs_ctrl) ? exs_pc + exs_imm : exs_alu_result &amp; ~1;
+<em class="lineno">17: </em>    }
 </pre>
 </div>
 <p>muldivunitモジュールは計算が完了したクロックでしか<code class="inline-code">rvalid</code>を<code class="inline-code">1</code>にしないため、既に計算が完了したことを示す<code class="inline-code">exs_muldiv_rvalided</code>変数で完了状態を管理します。これにより、M拡張の命令によってストールする条件は、命令がM拡張の命令であり(<code class="inline-code">exs_ctrl.is_muldiv</code>)、現在のクロックで計算が完了しておらず(<code class="inline-code">!exs_muldiv_rvalid</code>)、以前のクロックでも計算が完了していない(<code class="inline-code">!exs_muldiv_rvalided</code>)場合になります。</p>
@@ -347,65 +347,65 @@ module muldivunit (
 <p><code class="inline-code">src/muldivunit.veryl</code>の中にmulunitモジュールを作成します(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.impl-mulunit-range.mulunit">リスト1.9</a></span>)。</p>
 <div id="muldivunit.veryl.impl-mulunit-range.mulunit" class="caption-code">
 <span class="caption">リスト1.9: リスト1.9: muldivunit.veryl</span>
-<pre class="list language-mulunit">module mulunit #(
-    param WIDTH: u32 = 0,
-) (
-    clk   : input  clock           ,
-    rst   : input  reset           ,
-    valid : input  logic           ,
-    op1   : input  logic&lt;WIDTH&gt;    ,
-    op2   : input  logic&lt;WIDTH&gt;    ,
-    rvalid: output logic           ,
-    result: output logic&lt;WIDTH * 2&gt;,
-) {
-    enum State {
-        Idle,
-        AddLoop,
-        Finish,
-    }
-
-    var state: State;
-
-    var op1zext: logic&lt;WIDTH * 2&gt;;
-    var op2zext: logic&lt;WIDTH * 2&gt;;
-
-    always_comb {
-        rvalid = state == State::Finish;
-    }
-
-    var add_count: u32;
-
-    always_ff {
-        if_reset {
-            state     = State::Idle;
-            result    = 0;
-            add_count = 0;
-            op1zext   = 0;
-            op2zext   = 0;
-        } else {
-            case state {
-                State::Idle: if valid {
-                    state     = State::AddLoop;
-                    result    = 0;
-                    add_count = 0;
-                    op1zext   = {1'b0 repeat WIDTH, op1};
-                    op2zext   = {1'b0 repeat WIDTH, op2};
-                }
-                State::AddLoop: if add_count == WIDTH {
-                    state = State::Finish;
-                } else {
-                    if op2zext[add_count] {
-                        result += op1zext;
-                    }
-                    op1zext   &lt;&lt;= 1;
-                    add_count +=  1;
-                }
-                State::Finish: state = State::Idle;
-                default      : {}
-            }
-        }
-    }
-}
+<pre class="list language-mulunit"><em class="lineno">1: </em>module mulunit #(
+<em class="lineno">2: </em>    param WIDTH: u32 = 0,
+<em class="lineno">3: </em>) (
+<em class="lineno">4: </em>    clk   : input  clock           ,
+<em class="lineno">5: </em>    rst   : input  reset           ,
+<em class="lineno">6: </em>    valid : input  logic           ,
+<em class="lineno">7: </em>    op1   : input  logic&lt;WIDTH&gt;    ,
+<em class="lineno">8: </em>    op2   : input  logic&lt;WIDTH&gt;    ,
+<em class="lineno">9: </em>    rvalid: output logic           ,
+<em class="lineno">10: </em>    result: output logic&lt;WIDTH * 2&gt;,
+<em class="lineno">11: </em>) {
+<em class="lineno">12: </em>    enum State {
+<em class="lineno">13: </em>        Idle,
+<em class="lineno">14: </em>        AddLoop,
+<em class="lineno">15: </em>        Finish,
+<em class="lineno">16: </em>    }
+<em class="lineno">17: </em>
+<em class="lineno">18: </em>    var state: State;
+<em class="lineno">19: </em>
+<em class="lineno">20: </em>    var op1zext: logic&lt;WIDTH * 2&gt;;
+<em class="lineno">21: </em>    var op2zext: logic&lt;WIDTH * 2&gt;;
+<em class="lineno">22: </em>
+<em class="lineno">23: </em>    always_comb {
+<em class="lineno">24: </em>        rvalid = state == State::Finish;
+<em class="lineno">25: </em>    }
+<em class="lineno">26: </em>
+<em class="lineno">27: </em>    var add_count: u32;
+<em class="lineno">28: </em>
+<em class="lineno">29: </em>    always_ff {
+<em class="lineno">30: </em>        if_reset {
+<em class="lineno">31: </em>            state     = State::Idle;
+<em class="lineno">32: </em>            result    = 0;
+<em class="lineno">33: </em>            add_count = 0;
+<em class="lineno">34: </em>            op1zext   = 0;
+<em class="lineno">35: </em>            op2zext   = 0;
+<em class="lineno">36: </em>        } else {
+<em class="lineno">37: </em>            case state {
+<em class="lineno">38: </em>                State::Idle: if valid {
+<em class="lineno">39: </em>                    state     = State::AddLoop;
+<em class="lineno">40: </em>                    result    = 0;
+<em class="lineno">41: </em>                    add_count = 0;
+<em class="lineno">42: </em>                    op1zext   = {1'b0 repeat WIDTH, op1};
+<em class="lineno">43: </em>                    op2zext   = {1'b0 repeat WIDTH, op2};
+<em class="lineno">44: </em>                }
+<em class="lineno">45: </em>                State::AddLoop: if add_count == WIDTH {
+<em class="lineno">46: </em>                    state = State::Finish;
+<em class="lineno">47: </em>                } else {
+<em class="lineno">48: </em>                    if op2zext[add_count] {
+<em class="lineno">49: </em>                        result += op1zext;
+<em class="lineno">50: </em>                    }
+<em class="lineno">51: </em>                    op1zext   &lt;&lt;= 1;
+<em class="lineno">52: </em>                    add_count +=  1;
+<em class="lineno">53: </em>                }
+<em class="lineno">54: </em>                State::Finish: state = State::Idle;
+<em class="lineno">55: </em>                default      : {}
+<em class="lineno">56: </em>            }
+<em class="lineno">57: </em>        }
+<em class="lineno">58: </em>    }
+<em class="lineno">59: </em>}
 </pre>
 </div>
 <p>mulunitモジュールは<code class="inline-code">op1 * op2</code>を計算するモジュールです。<code class="inline-code">valid</code>が<code class="inline-code">1</code>になったら計算を開始し、計算が完了したら<code class="inline-code">rvalid</code>を<code class="inline-code">1</code>、<code class="inline-code">result</code>を<code class="inline-code">WIDTH * 2</code>ビットの計算結果に設定します。</p>
@@ -427,25 +427,25 @@ module muldivunit (
 <p>mulunitモジュールをmuldivunitモジュールでインスタンス化します(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.impl-mulunit-range.inst_mu">リスト1.10</a></span>)。まだ結果は利用しません。</p>
 <div id="muldivunit.veryl.impl-mulunit-range.inst_mu" class="caption-code">
 <span class="caption">リスト1.10: リスト1.10: mulunitモジュールをインスタンス化する (muldivunit.veryl)</span>
-<pre class="list language-inst_mu">    // multiply unit
-    const MUL_OP_WIDTH : u32 = XLEN;
-    const MUL_RES_WIDTH: u32 = MUL_OP_WIDTH * 2;
-
-    let is_mul   : logic                = if state == State::Idle ? !funct3[2] : !funct3_saved[2];
-    var mu_rvalid: logic               ;
-    var mu_result: logic&lt;MUL_RES_WIDTH&gt;;
-
-    inst mu: mulunit #(
-        WIDTH: MUL_OP_WIDTH,
-    ) (
-        clk                             ,
-        rst                             ,
-        valid : ready &amp;&amp; valid &amp;&amp; is_mul,
-        op1   : op1                     ,
-        op2   : op2                     ,
-        rvalid: mu_rvalid               ,
-        result: mu_result               ,
-    );
+<pre class="list language-inst_mu"><em class="lineno">1: </em>    // multiply unit
+<em class="lineno">2: </em>    const MUL_OP_WIDTH : u32 = XLEN;
+<em class="lineno">3: </em>    const MUL_RES_WIDTH: u32 = MUL_OP_WIDTH * 2;
+<em class="lineno">4: </em>
+<em class="lineno">5: </em>    let is_mul   : logic                = if state == State::Idle ? !funct3[2] : !funct3_saved[2];
+<em class="lineno">6: </em>    var mu_rvalid: logic               ;
+<em class="lineno">7: </em>    var mu_result: logic&lt;MUL_RES_WIDTH&gt;;
+<em class="lineno">8: </em>
+<em class="lineno">9: </em>    inst mu: mulunit #(
+<em class="lineno">10: </em>        WIDTH: MUL_OP_WIDTH,
+<em class="lineno">11: </em>    ) (
+<em class="lineno">12: </em>        clk                             ,
+<em class="lineno">13: </em>        rst                             ,
+<em class="lineno">14: </em>        valid : ready &amp;&amp; valid &amp;&amp; is_mul,
+<em class="lineno">15: </em>        op1   : op1                     ,
+<em class="lineno">16: </em>        op2   : op2                     ,
+<em class="lineno">17: </em>        rvalid: mu_rvalid               ,
+<em class="lineno">18: </em>        result: mu_result               ,
+<em class="lineno">19: </em>    );
 </pre>
 </div>
 
@@ -453,13 +453,13 @@ module muldivunit (
 <p>MULHU命令は、2つの符号無しのXLENビットの値の乗算を実行し、デスティネーションレジスタに結果(XLEN * 2ビット)の上位XLENビットを書き込む命令です。funct3の下位2ビットによってmulunitモジュールの結果を選択するようにします(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.mulhu-range.result">リスト1.11</a></span>)。</p>
 <div id="muldivunit.veryl.mulhu-range.result" class="caption-code">
 <span class="caption">リスト1.11: リスト1.11: MULHUモジュールの結果を取得する (muldivunit.veryl)</span>
-<pre class="list language-result">    State::WaitValid: if is_mul &amp;&amp; mu_rvalid {
-        state  = State::Finish;
-        result = case funct3_saved[1:0] {
-            2'b11  : mu_result[XLEN+:XLEN], // MULHU
-            default: 0,
-        };
-    }
+<pre class="list language-result"><em class="lineno">1: </em>    State::WaitValid: if is_mul &amp;&amp; mu_rvalid {
+<em class="lineno">2: </em>        state  = State::Finish;
+<em class="lineno">3: </em>        result = case funct3_saved[1:0] {
+<em class="lineno">4: </em>            2'b11  : mu_result[XLEN+:XLEN], // MULHU
+<em class="lineno">5: </em>            default: 0,
+<em class="lineno">6: </em>        };
+<em class="lineno">7: </em>    }
 </pre>
 </div>
 <p>riscv-testsの<code class="inline-code">rv64um-p-mulhu</code>を実行し、成功することを確認してください。</p>
@@ -480,88 +480,88 @@ module muldivunit (
 <p><code class="inline-code">WIDTH</code>ビットの符号付きの値を<code class="inline-code">WIDTH</code>ビットの符号無しの絶対値に変換するabs関数を作成します(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.mulmulh-range.abs">リスト1.12</a></span>)。abs関数は、値のMSBが<code class="inline-code">1</code>ならビットを反転して<code class="inline-code">1</code>を足すことで符号を反転しています。最小値<code class="inline-code">-2 ** (WIDTH - 1)</code>の絶対値も求められることを確認してください。</p>
 <div id="muldivunit.veryl.mulmulh-range.abs" class="caption-code">
 <span class="caption">リスト1.12: リスト1.12: abs関数を実装する (muldivunit.veryl)</span>
-<pre class="list language-abs">    function abs::&lt;WIDTH: u32&gt; (
-        value: input logic&lt;WIDTH&gt;,
-    ) -&gt; logic&lt;WIDTH&gt; {
-        return if value[msb] ? ~value + 1 : value;
-    }
+<pre class="list language-abs"><em class="lineno">1: </em>    function abs::&lt;WIDTH: u32&gt; (
+<em class="lineno">2: </em>        value: input logic&lt;WIDTH&gt;,
+<em class="lineno">3: </em>    ) -&gt; logic&lt;WIDTH&gt; {
+<em class="lineno">4: </em>        return if value[msb] ? ~value + 1 : value;
+<em class="lineno">5: </em>    }
 </pre>
 </div>
 <p>abs関数を利用して、MUL、MULH命令のときにmulunitに渡す値を絶対値に設定します(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.mulmulh-range.op1op2">リスト1.13</a></span>、<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.mulmulh-range.mu">リスト1.14</a></span>)。</p>
 <div id="muldivunit.veryl.mulmulh-range.op1op2" class="caption-code">
 <span class="caption">リスト1.13: リスト1.13: op1とop2を生成する (muldivunit.veryl)</span>
-<pre class="list language-op1op2">    let mu_op1: logic&lt;MUL_OP_WIDTH&gt; = case funct3[1:0] {
-        2'b00, 2'b01: abs::&lt;XLEN&gt;(op1), // MUL, MULH
-        2'b11       : op1, // MULHU
-        default     : 0,
-    };
-    let mu_op2: logic&lt;MUL_OP_WIDTH&gt; = case funct3[1:0] {
-        2'b00, 2'b01: abs::&lt;XLEN&gt;(op2), // MUL, MULH
-        2'b11       : op2, // MULHU
-        default     : 0,
-    };
+<pre class="list language-op1op2"><em class="lineno">1: </em>    let mu_op1: logic&lt;MUL_OP_WIDTH&gt; = case funct3[1:0] {
+<em class="lineno">2: </em>        2'b00, 2'b01: abs::&lt;XLEN&gt;(op1), // MUL, MULH
+<em class="lineno">3: </em>        2'b11       : op1, // MULHU
+<em class="lineno">4: </em>        default     : 0,
+<em class="lineno">5: </em>    };
+<em class="lineno">6: </em>    let mu_op2: logic&lt;MUL_OP_WIDTH&gt; = case funct3[1:0] {
+<em class="lineno">7: </em>        2'b00, 2'b01: abs::&lt;XLEN&gt;(op2), // MUL, MULH
+<em class="lineno">8: </em>        2'b11       : op2, // MULHU
+<em class="lineno">9: </em>        default     : 0,
+<em class="lineno">10: </em>    };
 </pre>
 </div>
 <div id="muldivunit.veryl.mulmulh-range.mu" class="caption-code">
 <span class="caption">リスト1.14: リスト1.14: mulunitに渡す値を変更する (muldivunit.veryl)</span>
-<pre class="list language-mu">    inst mu: mulunit #(
-        WIDTH: MUL_OP_WIDTH,
-    ) (
-        clk                             ,
-        rst                             ,
-        valid : ready &amp;&amp; valid &amp;&amp; is_mul,
-        op1   : <b>mu_op1</b>                  ,
-        op2   : <b>mu_op2</b>                  ,
-        rvalid: mu_rvalid               ,
-        result: mu_result               ,
-    );
+<pre class="list language-mu"><em class="lineno">1: </em>    inst mu: mulunit #(
+<em class="lineno">2: </em>        WIDTH: MUL_OP_WIDTH,
+<em class="lineno">3: </em>    ) (
+<em class="lineno">4: </em>        clk                             ,
+<em class="lineno">5: </em>        rst                             ,
+<em class="lineno">6: </em>        valid : ready &amp;&amp; valid &amp;&amp; is_mul,
+<em class="lineno">7: </em>        op1   : <b>mu_op1</b>                  ,
+<em class="lineno">8: </em>        op2   : <b>mu_op2</b>                  ,
+<em class="lineno">9: </em>        rvalid: mu_rvalid               ,
+<em class="lineno">10: </em>        result: mu_result               ,
+<em class="lineno">11: </em>    );
 </pre>
 </div>
 <p>計算結果の符号は<code class="inline-code">op1</code>と<code class="inline-code">op2</code>の符号が異なる場合に負になります。後で符号の情報を利用するために、muldivunitモジュールが要求を受け入れる時に符号を保存します(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.mulmulh-range.opsign_save_reg">リスト1.15</a></span>、<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.mulmulh-range.always_reset">リスト1.16</a></span>、<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.mulmulh-range.idle">リスト1.17</a></span>)。</p>
 <div id="muldivunit.veryl.mulmulh-range.opsign_save_reg" class="caption-code">
 <span class="caption">リスト1.15: リスト1.15: 符号を保存する変数を作成する (muldivunit.veryl)</span>
-<pre class="list language-opsign_save_reg">    // saved_data
-    var funct3_saved : logic&lt;3&gt;;
-    <b>var op1sign_saved: logic   ;</b>
-    <b>var op2sign_saved: logic   ;</b>
+<pre class="list language-opsign_save_reg"><em class="lineno">1: </em>    // saved_data
+<em class="lineno">2: </em>    var funct3_saved : logic&lt;3&gt;;
+<em class="lineno">3: </em>    <b>var op1sign_saved: logic   ;</b>
+<em class="lineno">4: </em>    <b>var op2sign_saved: logic   ;</b>
 </pre>
 </div>
 <div id="muldivunit.veryl.mulmulh-range.always_reset" class="caption-code">
 <span class="caption">リスト1.16: リスト1.16: 変数のリセット (muldivunit.veryl)</span>
-<pre class="list language-always_reset">    always_ff {
-        if_reset {
-            state         = State::Idle;
-            result        = 0;
-            funct3_saved  = 0;
-            <b>op1sign_saved = 0;</b>
-            <b>op2sign_saved = 0;</b>
-        } else {
+<pre class="list language-always_reset"><em class="lineno">1: </em>    always_ff {
+<em class="lineno">2: </em>        if_reset {
+<em class="lineno">3: </em>            state         = State::Idle;
+<em class="lineno">4: </em>            result        = 0;
+<em class="lineno">5: </em>            funct3_saved  = 0;
+<em class="lineno">6: </em>            <b>op1sign_saved = 0;</b>
+<em class="lineno">7: </em>            <b>op2sign_saved = 0;</b>
+<em class="lineno">8: </em>        } else {
 </pre>
 </div>
 <div id="muldivunit.veryl.mulmulh-range.idle" class="caption-code">
 <span class="caption">リスト1.17: リスト1.17: 符号を変数に保存する (muldivunit.veryl)</span>
-<pre class="list language-idle">    case state {
-        State::Idle: if ready &amp;&amp; valid {
-            state         = State::WaitValid;
-            funct3_saved  = funct3;
-            <b>op1sign_saved = op1[msb];</b>
-            <b>op2sign_saved = op2[msb];</b>
-        }
+<pre class="list language-idle"><em class="lineno">1: </em>    case state {
+<em class="lineno">2: </em>        State::Idle: if ready &amp;&amp; valid {
+<em class="lineno">3: </em>            state         = State::WaitValid;
+<em class="lineno">4: </em>            funct3_saved  = funct3;
+<em class="lineno">5: </em>            <b>op1sign_saved = op1[msb];</b>
+<em class="lineno">6: </em>            <b>op2sign_saved = op2[msb];</b>
+<em class="lineno">7: </em>        }
 </pre>
 </div>
 <p>保存した符号を利用して計算結果の符号を復元します(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.mulmulh-range.wait_valid">リスト1.18</a></span>)。</p>
 <div id="muldivunit.veryl.mulmulh-range.wait_valid" class="caption-code">
 <span class="caption">リスト1.18: リスト1.18: 計算結果の符号を復元する (muldivunit.veryl)</span>
-<pre class="list language-wait_valid">    State::WaitValid: if is_mul &amp;&amp; mu_rvalid {
-        <b>let res_signed: logic&lt;MUL_RES_WIDTH&gt; = if op1sign_saved != op2sign_saved ? ~mu_result + 1 : mu_result;</b>
-        state      = State::Finish;
-        result     = case funct3_saved[1:0] {
-            <b>2'b00  : res_signed[XLEN - 1:0], // MUL</b>
-            <b>2'b01  : res_signed[XLEN+:XLEN], // MULH</b>
-            2'b11  : mu_result[XLEN+:XLEN], // MULHU
-            default: 0,
-        };
-    }
+<pre class="list language-wait_valid"><em class="lineno">1: </em>    State::WaitValid: if is_mul &amp;&amp; mu_rvalid {
+<em class="lineno">2: </em>        <b>let res_signed: logic&lt;MUL_RES_WIDTH&gt; = if op1sign_saved != op2sign_saved ? ~mu_result + 1 : mu_result;</b>
+<em class="lineno">3: </em>        state      = State::Finish;
+<em class="lineno">4: </em>        result     = case funct3_saved[1:0] {
+<em class="lineno">5: </em>            <b>2'b00  : res_signed[XLEN - 1:0], // MUL</b>
+<em class="lineno">6: </em>            <b>2'b01  : res_signed[XLEN+:XLEN], // MULH</b>
+<em class="lineno">7: </em>            2'b11  : mu_result[XLEN+:XLEN], // MULHU
+<em class="lineno">8: </em>            default: 0,
+<em class="lineno">9: </em>        };
+<em class="lineno">10: </em>    }
 </pre>
 </div>
 <p>riscv-testsの<code class="inline-code">rv64um-p-mul</code>と<code class="inline-code">rv64um-p-mulh</code>を実行し、成功することを確認してください。</p>
@@ -572,33 +572,33 @@ module muldivunit (
 <p><code class="inline-code">op1</code>を絶対値に変換し、<code class="inline-code">op2</code>はそのままに設定します(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.mulhsu-range.op1op2">リスト1.19</a></span>)。</p>
 <div id="muldivunit.veryl.mulhsu-range.op1op2" class="caption-code">
 <span class="caption">リスト1.19: リスト1.19: MULHSU命令用にop1、op2を設定する (muldivunit.veryl)</span>
-<pre class="list language-op1op2">    let mu_op1: logic&lt;MUL_OP_WIDTH&gt; = case funct3[1:0] {
-        2'b00, 2'b01<b>, 2'b10</b>: abs::&lt;XLEN&gt;(op1), // MUL, MULH<b>, MULHSU</b>
-        2'b11              : op1, // MULHU
-        default            : 0,
-    };
-    let mu_op2: logic&lt;MUL_OP_WIDTH&gt; = case funct3[1:0] {
-        2'b00, 2'b01: abs::&lt;XLEN&gt;(op2), // MUL, MULH
-        2'b11<b>, 2'b10</b>: op2, // MULHU<b>, MULHSU</b>
-        default     : 0,
-    };
+<pre class="list language-op1op2"><em class="lineno">1: </em>    let mu_op1: logic&lt;MUL_OP_WIDTH&gt; = case funct3[1:0] {
+<em class="lineno">2: </em>        2'b00, 2'b01<b>, 2'b10</b>: abs::&lt;XLEN&gt;(op1), // MUL, MULH<b>, MULHSU</b>
+<em class="lineno">3: </em>        2'b11              : op1, // MULHU
+<em class="lineno">4: </em>        default            : 0,
+<em class="lineno">5: </em>    };
+<em class="lineno">6: </em>    let mu_op2: logic&lt;MUL_OP_WIDTH&gt; = case funct3[1:0] {
+<em class="lineno">7: </em>        2'b00, 2'b01: abs::&lt;XLEN&gt;(op2), // MUL, MULH
+<em class="lineno">8: </em>        2'b11<b>, 2'b10</b>: op2, // MULHU<b>, MULHSU</b>
+<em class="lineno">9: </em>        default     : 0,
+<em class="lineno">10: </em>    };
 </pre>
 </div>
 <p>計算結果は<code class="inline-code">op1</code>の符号にします(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.mulhsu-range.result">リスト1.20</a></span>)。</p>
 <div id="muldivunit.veryl.mulhsu-range.result" class="caption-code">
 <span class="caption">リスト1.20: リスト1.20: 計算結果の符号を復元する (muldivunit.veryl)</span>
-<pre class="list language-result">    State::WaitValid: if is_mul &amp;&amp; mu_rvalid {
-        let res_signed: logic&lt;MUL_RES_WIDTH&gt; = if op1sign_saved != op2sign_saved ? ~mu_result + 1 : mu_result;
-        <b>let res_mulhsu: logic&lt;MUL_RES_WIDTH&gt; = if op1sign_saved == 1 ? ~mu_result + 1 : mu_result;</b>
-        state      = State::Finish;
-        result     = case funct3_saved[1:0] {
-            2'b00  : res_signed[XLEN - 1:0], // MUL
-            2'b01  : res_signed[XLEN+:XLEN], // MULH
-            <b>2'b10  : res_mulhsu[XLEN+:XLEN], // MULHSU</b>
-            2'b11  : mu_result[XLEN+:XLEN], // MULHU
-            default: 0,
-        };
-    }
+<pre class="list language-result"><em class="lineno">1: </em>    State::WaitValid: if is_mul &amp;&amp; mu_rvalid {
+<em class="lineno">2: </em>        let res_signed: logic&lt;MUL_RES_WIDTH&gt; = if op1sign_saved != op2sign_saved ? ~mu_result + 1 : mu_result;
+<em class="lineno">3: </em>        <b>let res_mulhsu: logic&lt;MUL_RES_WIDTH&gt; = if op1sign_saved == 1 ? ~mu_result + 1 : mu_result;</b>
+<em class="lineno">4: </em>        state      = State::Finish;
+<em class="lineno">5: </em>        result     = case funct3_saved[1:0] {
+<em class="lineno">6: </em>            2'b00  : res_signed[XLEN - 1:0], // MUL
+<em class="lineno">7: </em>            2'b01  : res_signed[XLEN+:XLEN], // MULH
+<em class="lineno">8: </em>            <b>2'b10  : res_mulhsu[XLEN+:XLEN], // MULHSU</b>
+<em class="lineno">9: </em>            2'b11  : mu_result[XLEN+:XLEN], // MULHU
+<em class="lineno">10: </em>            default: 0,
+<em class="lineno">11: </em>        };
+<em class="lineno">12: </em>    }
 </pre>
 </div>
 <p>riscv-testsの<code class="inline-code">rv64um-p-mulhsu</code>を実行し、成功することを確認してください。</p>
@@ -608,104 +608,104 @@ module muldivunit (
 <p>32ビット演算の命令であることを判定するために、muldivunitモジュールに<code class="inline-code">is_op32</code>ポートを作成します(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.mulw-range.port">リスト1.21</a></span>、<span class="listref"><a href="./10-impl-m.html#core.veryl.mulw-range.mdu">リスト1.22</a></span>)。</p>
 <div id="muldivunit.veryl.mulw-range.port" class="caption-code">
 <span class="caption">リスト1.21: リスト1.21: is_op32ポートを追加する (muldivunit.veryl)</span>
-<pre class="list language-port">module muldivunit (
-    clk    : input  clock   ,
-    rst    : input  reset   ,
-    ready  : output logic   ,
-    valid  : input  logic   ,
-    funct3 : input  logic&lt;3&gt;,
-    <b>is_op32: input  logic   ,</b>
-    op1    : input  UIntX   ,
-    op2    : input  UIntX   ,
-    rvalid : output logic   ,
-    result : output UIntX   ,
-) {
+<pre class="list language-port"><em class="lineno">1: </em>module muldivunit (
+<em class="lineno">2: </em>    clk    : input  clock   ,
+<em class="lineno">3: </em>    rst    : input  reset   ,
+<em class="lineno">4: </em>    ready  : output logic   ,
+<em class="lineno">5: </em>    valid  : input  logic   ,
+<em class="lineno">6: </em>    funct3 : input  logic&lt;3&gt;,
+<em class="lineno">7: </em>    <b>is_op32: input  logic   ,</b>
+<em class="lineno">8: </em>    op1    : input  UIntX   ,
+<em class="lineno">9: </em>    op2    : input  UIntX   ,
+<em class="lineno">10: </em>    rvalid : output logic   ,
+<em class="lineno">11: </em>    result : output UIntX   ,
+<em class="lineno">12: </em>) {
 </pre>
 </div>
 <div id="core.veryl.mulw-range.mdu" class="caption-code">
 <span class="caption">リスト1.22: リスト1.22: is_op32ポートに値を割り当てる (core.veryl)</span>
-<pre class="list language-mdu">    inst mdu: muldivunit (
-        clk                       ,
-        rst                       ,
-        valid  : exs_muldiv_valid ,
-        ready  : exs_muldiv_ready ,
-        funct3 : exs_ctrl.funct3  ,
-        <b>is_op32: exs_ctrl.is_op32 ,</b>
-        op1    : exs_op1          ,
-        op2    : exs_op2          ,
-        rvalid : exs_muldiv_rvalid,
-        result : exs_muldiv_result,
-    );
+<pre class="list language-mdu"><em class="lineno">1: </em>    inst mdu: muldivunit (
+<em class="lineno">2: </em>        clk                       ,
+<em class="lineno">3: </em>        rst                       ,
+<em class="lineno">4: </em>        valid  : exs_muldiv_valid ,
+<em class="lineno">5: </em>        ready  : exs_muldiv_ready ,
+<em class="lineno">6: </em>        funct3 : exs_ctrl.funct3  ,
+<em class="lineno">7: </em>        <b>is_op32: exs_ctrl.is_op32 ,</b>
+<em class="lineno">8: </em>        op1    : exs_op1          ,
+<em class="lineno">9: </em>        op2    : exs_op2          ,
+<em class="lineno">10: </em>        rvalid : exs_muldiv_rvalid,
+<em class="lineno">11: </em>        result : exs_muldiv_result,
+<em class="lineno">12: </em>    );
 </pre>
 </div>
 <p>muldivunitモジュールが要求を受け入れる時に<code class="inline-code">is_op32</code>を保存します(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.mulw-range.savereg">リスト1.23</a></span>、<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.mulw-range.always_reset">リスト1.24</a></span>、<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.mulw-range.idle">リスト1.25</a></span>)。</p>
 <div id="muldivunit.veryl.mulw-range.savereg" class="caption-code">
 <span class="caption">リスト1.23: リスト1.23: is_op32を保存する変数を作成する (muldivunit.veryl)</span>
-<pre class="list language-savereg">    // saved_data
-    var funct3_saved : logic&lt;3&gt;;
-    <b>var is_op32_saved: logic   ;</b>
-    var op1sign_saved: logic   ;
-    var op2sign_saved: logic   ;
+<pre class="list language-savereg"><em class="lineno">1: </em>    // saved_data
+<em class="lineno">2: </em>    var funct3_saved : logic&lt;3&gt;;
+<em class="lineno">3: </em>    <b>var is_op32_saved: logic   ;</b>
+<em class="lineno">4: </em>    var op1sign_saved: logic   ;
+<em class="lineno">5: </em>    var op2sign_saved: logic   ;
 </pre>
 </div>
 <div id="muldivunit.veryl.mulw-range.always_reset" class="caption-code">
 <span class="caption">リスト1.24: リスト1.24: 変数のリセット (muldivunit.veryl)</span>
-<pre class="list language-always_reset">    always_ff {
-        if_reset {
-            state         = State::Idle;
-            result        = 0;
-            funct3_saved  = 0;
-            <b>is_op32_saved = 0;</b>
-            op1sign_saved = 0;
-            op2sign_saved = 0;
-        } else {
+<pre class="list language-always_reset"><em class="lineno">1: </em>    always_ff {
+<em class="lineno">2: </em>        if_reset {
+<em class="lineno">3: </em>            state         = State::Idle;
+<em class="lineno">4: </em>            result        = 0;
+<em class="lineno">5: </em>            funct3_saved  = 0;
+<em class="lineno">6: </em>            <b>is_op32_saved = 0;</b>
+<em class="lineno">7: </em>            op1sign_saved = 0;
+<em class="lineno">8: </em>            op2sign_saved = 0;
+<em class="lineno">9: </em>        } else {
 </pre>
 </div>
 <div id="muldivunit.veryl.mulw-range.idle" class="caption-code">
 <span class="caption">リスト1.25: リスト1.25: is_op32を変数に保存する (muldivunit.veryl)</span>
-<pre class="list language-idle">    State::Idle: if ready &amp;&amp; valid {
-        state         = State::WaitValid;
-        funct3_saved  = funct3;
-        <b>is_op32_saved = is_op32;</b>
-        op1sign_saved = op1[msb];
-        op2sign_saved = op2[msb];
-    }
+<pre class="list language-idle"><em class="lineno">1: </em>    State::Idle: if ready &amp;&amp; valid {
+<em class="lineno">2: </em>        state         = State::WaitValid;
+<em class="lineno">3: </em>        funct3_saved  = funct3;
+<em class="lineno">4: </em>        <b>is_op32_saved = is_op32;</b>
+<em class="lineno">5: </em>        op1sign_saved = op1[msb];
+<em class="lineno">6: </em>        op2sign_saved = op2[msb];
+<em class="lineno">7: </em>    }
 </pre>
 </div>
 <p>mulunitモジュールの<code class="inline-code">op1</code>と<code class="inline-code">op2</code>に、64ビットの値の下位32ビットを符号拡張した値を割り当てます。符号拡張を行うsext関数を作成し、<code class="inline-code">mu_op1</code>、<code class="inline-code">mu_op2</code>の割り当てに利用します(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.mulw-range.sext">リスト1.26</a></span>、<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.mulw-range.op1op2">リスト1.27</a></span>)。</p>
 <div id="muldivunit.veryl.mulw-range.sext" class="caption-code">
 <span class="caption">リスト1.26: リスト1.26: 符号拡張する関数を作成する (muldivunit.veryl)</span>
-<pre class="list language-sext">    function sext::&lt;WIDTH_IN: u32, WIDTH_OUT: u32&gt; (
-        value: input logic&lt;WIDTH_IN&gt;,
-    ) -&gt; logic&lt;WIDTH_OUT&gt; {
-        return {value[msb] repeat WIDTH_OUT - WIDTH_IN, value};
-    }
+<pre class="list language-sext"><em class="lineno">1: </em>    function sext::&lt;WIDTH_IN: u32, WIDTH_OUT: u32&gt; (
+<em class="lineno">2: </em>        value: input logic&lt;WIDTH_IN&gt;,
+<em class="lineno">3: </em>    ) -&gt; logic&lt;WIDTH_OUT&gt; {
+<em class="lineno">4: </em>        return {value[msb] repeat WIDTH_OUT - WIDTH_IN, value};
+<em class="lineno">5: </em>    }
 </pre>
 </div>
 <div id="muldivunit.veryl.mulw-range.op1op2" class="caption-code">
 <span class="caption">リスト1.27: リスト1.27: MULW命令用にop1、op2を設定する (muldivunit.veryl)</span>
-<pre class="list language-op1op2">    let mu_op1: logic&lt;MUL_OP_WIDTH&gt; = case funct3[1:0] {
-        2'b00, 2'b01, 2'b10: abs::&lt;XLEN&gt;(<b>if is_op32 ? sext::&lt;32, XLEN&gt;(op1[31:0]) : </b>op1), // MUL, MULH, MULHSU<b>, MULW</b>
-        2'b11              : op1, // MULHU
-        default            : 0,
-    };
-    let mu_op2: logic&lt;MUL_OP_WIDTH&gt; = case funct3[1:0] {
-        2'b00, 2'b01: abs::&lt;XLEN&gt;(<b>if is_op32 ? sext::&lt;32, XLEN&gt;(op2[31:0]) : </b>op2), // MUL, MULH<b>, MULW</b>
-        2'b11, 2'b10: op2, // MULHU, MULHSU
-        default     : 0,
-    };
+<pre class="list language-op1op2"><em class="lineno">1: </em>    let mu_op1: logic&lt;MUL_OP_WIDTH&gt; = case funct3[1:0] {
+<em class="lineno">2: </em>        2'b00, 2'b01, 2'b10: abs::&lt;XLEN&gt;(<b>if is_op32 ? sext::&lt;32, XLEN&gt;(op1[31:0]) : </b>op1), // MUL, MULH, MULHSU<b>, MULW</b>
+<em class="lineno">3: </em>        2'b11              : op1, // MULHU
+<em class="lineno">4: </em>        default            : 0,
+<em class="lineno">5: </em>    };
+<em class="lineno">6: </em>    let mu_op2: logic&lt;MUL_OP_WIDTH&gt; = case funct3[1:0] {
+<em class="lineno">7: </em>        2'b00, 2'b01: abs::&lt;XLEN&gt;(<b>if is_op32 ? sext::&lt;32, XLEN&gt;(op2[31:0]) : </b>op2), // MUL, MULH<b>, MULW</b>
+<em class="lineno">8: </em>        2'b11, 2'b10: op2, // MULHU, MULHSU
+<em class="lineno">9: </em>        default     : 0,
+<em class="lineno">10: </em>    };
 </pre>
 </div>
 <p>最後に、計算結果を符号拡張した値に設定します(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.mulw-range.wait_valid">リスト1.28</a></span>)。</p>
 <div id="muldivunit.veryl.mulw-range.wait_valid" class="caption-code">
 <span class="caption">リスト1.28: リスト1.28: 計算結果を符号拡張する (muldivunit.veryl)</span>
-<pre class="list language-wait_valid">    State::WaitValid: if is_mul &amp;&amp; mu_rvalid {
-        let res_signed: logic&lt;MUL_RES_WIDTH&gt; = if op1sign_saved != op2sign_saved ? ~mu_result + 1 : mu_result;
-        let res_mulhsu: logic&lt;MUL_RES_WIDTH&gt; = if op1sign_saved == 1 ? ~mu_result + 1 : mu_result;
-        state      = State::Finish;
-        result     = case funct3_saved[1:0] {
-            2'b00  : <b>if is_op32_saved ? sext::&lt;32, 64&gt;(res_signed[31:0]) :</b> res_signed[XLEN - 1:0], // MUL<b>, MULW</b>
-            2'b01  : res_signed[XLEN+:XLEN], // MULH
+<pre class="list language-wait_valid"><em class="lineno">1: </em>    State::WaitValid: if is_mul &amp;&amp; mu_rvalid {
+<em class="lineno">2: </em>        let res_signed: logic&lt;MUL_RES_WIDTH&gt; = if op1sign_saved != op2sign_saved ? ~mu_result + 1 : mu_result;
+<em class="lineno">3: </em>        let res_mulhsu: logic&lt;MUL_RES_WIDTH&gt; = if op1sign_saved == 1 ? ~mu_result + 1 : mu_result;
+<em class="lineno">4: </em>        state      = State::Finish;
+<em class="lineno">5: </em>        result     = case funct3_saved[1:0] {
+<em class="lineno">6: </em>            2'b00  : <b>if is_op32_saved ? sext::&lt;32, 64&gt;(res_signed[31:0]) :</b> res_signed[XLEN - 1:0], // MUL<b>, MULW</b>
+<em class="lineno">7: </em>            2'b01  : res_signed[XLEN+:XLEN], // MULH
 </pre>
 </div>
 <p>riscv-testsの<code class="inline-code">rv64um-p-mulw</code>を実行し、成功することを確認してください。</p>
@@ -717,77 +717,77 @@ module muldivunit (
 <p><code class="inline-code">src/muldivunit.veryl</code>の中にdivunitモジュールを作成します(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.divuremu-range.divunit">リスト1.29</a></span>)。</p>
 <div id="muldivunit.veryl.divuremu-range.divunit" class="caption-code">
 <span class="caption">リスト1.29: リスト1.29: muldivunit.veryl</span>
-<pre class="list language-divunit">module divunit #(
-    param WIDTH: u32 = 0,
-) (
-    clk      : input  clock       ,
-    rst      : input  reset       ,
-    valid    : input  logic       ,
-    dividend : input  logic&lt;WIDTH&gt;,
-    divisor  : input  logic&lt;WIDTH&gt;,
-    rvalid   : output logic       ,
-    quotient : output logic&lt;WIDTH&gt;,
-    remainder: output logic&lt;WIDTH&gt;,
-) {
-    enum State {
-        Idle,
-        ZeroCheck,
-        SubLoop,
-        Finish,
-    }
-
-    var state: State;
-
-    var dividend_saved: logic&lt;WIDTH * 2&gt;;
-    var divisor_saved : logic&lt;WIDTH * 2&gt;;
-
-    always_comb {
-        rvalid    = state == State::Finish;
-        remainder = dividend_saved[WIDTH - 1:0];
-    }
-
-    var sub_count: u32;
-
-    always_ff {
-        if_reset {
-            state          = State::Idle;
-            quotient       = 0;
-            sub_count      = 0;
-            dividend_saved = 0;
-            divisor_saved  = 0;
-        } else {
-            case state {
-                State::Idle: if valid {
-                    state          = State::ZeroCheck;
-                    dividend_saved = {1'b0 repeat WIDTH, dividend};
-                    divisor_saved  = {1'b0, divisor, 1'b0 repeat WIDTH - 1};
-                    quotient       = 0;
-                    sub_count      = 0;
-                }
-                State::ZeroCheck: if divisor_saved == 0 {
-                    state    = State::Finish;
-                    quotient = '1;
-                } else {
-                    state = State::SubLoop;
-                }
-                State::SubLoop: if sub_count == WIDTH {
-                    state = State::Finish;
-                } else {
-                    if dividend_saved &gt;= divisor_saved {
-                        dividend_saved -= divisor_saved;
-                        quotient       =  (quotient &lt;&lt; 1) + 1;
-                    } else {
-                        quotient &lt;&lt;= 1;
-                    }
-                    divisor_saved &gt;&gt;= 1;
-                    sub_count     +=  1;
-                }
-                State::Finish: state = State::Idle;
-                default      : {}
-            }
-        }
-    }
-}
+<pre class="list language-divunit"><em class="lineno">1: </em>module divunit #(
+<em class="lineno">2: </em>    param WIDTH: u32 = 0,
+<em class="lineno">3: </em>) (
+<em class="lineno">4: </em>    clk      : input  clock       ,
+<em class="lineno">5: </em>    rst      : input  reset       ,
+<em class="lineno">6: </em>    valid    : input  logic       ,
+<em class="lineno">7: </em>    dividend : input  logic&lt;WIDTH&gt;,
+<em class="lineno">8: </em>    divisor  : input  logic&lt;WIDTH&gt;,
+<em class="lineno">9: </em>    rvalid   : output logic       ,
+<em class="lineno">10: </em>    quotient : output logic&lt;WIDTH&gt;,
+<em class="lineno">11: </em>    remainder: output logic&lt;WIDTH&gt;,
+<em class="lineno">12: </em>) {
+<em class="lineno">13: </em>    enum State {
+<em class="lineno">14: </em>        Idle,
+<em class="lineno">15: </em>        ZeroCheck,
+<em class="lineno">16: </em>        SubLoop,
+<em class="lineno">17: </em>        Finish,
+<em class="lineno">18: </em>    }
+<em class="lineno">19: </em>
+<em class="lineno">20: </em>    var state: State;
+<em class="lineno">21: </em>
+<em class="lineno">22: </em>    var dividend_saved: logic&lt;WIDTH * 2&gt;;
+<em class="lineno">23: </em>    var divisor_saved : logic&lt;WIDTH * 2&gt;;
+<em class="lineno">24: </em>
+<em class="lineno">25: </em>    always_comb {
+<em class="lineno">26: </em>        rvalid    = state == State::Finish;
+<em class="lineno">27: </em>        remainder = dividend_saved[WIDTH - 1:0];
+<em class="lineno">28: </em>    }
+<em class="lineno">29: </em>
+<em class="lineno">30: </em>    var sub_count: u32;
+<em class="lineno">31: </em>
+<em class="lineno">32: </em>    always_ff {
+<em class="lineno">33: </em>        if_reset {
+<em class="lineno">34: </em>            state          = State::Idle;
+<em class="lineno">35: </em>            quotient       = 0;
+<em class="lineno">36: </em>            sub_count      = 0;
+<em class="lineno">37: </em>            dividend_saved = 0;
+<em class="lineno">38: </em>            divisor_saved  = 0;
+<em class="lineno">39: </em>        } else {
+<em class="lineno">40: </em>            case state {
+<em class="lineno">41: </em>                State::Idle: if valid {
+<em class="lineno">42: </em>                    state          = State::ZeroCheck;
+<em class="lineno">43: </em>                    dividend_saved = {1'b0 repeat WIDTH, dividend};
+<em class="lineno">44: </em>                    divisor_saved  = {1'b0, divisor, 1'b0 repeat WIDTH - 1};
+<em class="lineno">45: </em>                    quotient       = 0;
+<em class="lineno">46: </em>                    sub_count      = 0;
+<em class="lineno">47: </em>                }
+<em class="lineno">48: </em>                State::ZeroCheck: if divisor_saved == 0 {
+<em class="lineno">49: </em>                    state    = State::Finish;
+<em class="lineno">50: </em>                    quotient = '1;
+<em class="lineno">51: </em>                } else {
+<em class="lineno">52: </em>                    state = State::SubLoop;
+<em class="lineno">53: </em>                }
+<em class="lineno">54: </em>                State::SubLoop: if sub_count == WIDTH {
+<em class="lineno">55: </em>                    state = State::Finish;
+<em class="lineno">56: </em>                } else {
+<em class="lineno">57: </em>                    if dividend_saved &gt;= divisor_saved {
+<em class="lineno">58: </em>                        dividend_saved -= divisor_saved;
+<em class="lineno">59: </em>                        quotient       =  (quotient &lt;&lt; 1) + 1;
+<em class="lineno">60: </em>                    } else {
+<em class="lineno">61: </em>                        quotient &lt;&lt;= 1;
+<em class="lineno">62: </em>                    }
+<em class="lineno">63: </em>                    divisor_saved &gt;&gt;= 1;
+<em class="lineno">64: </em>                    sub_count     +=  1;
+<em class="lineno">65: </em>                }
+<em class="lineno">66: </em>                State::Finish: state = State::Idle;
+<em class="lineno">67: </em>                default      : {}
+<em class="lineno">68: </em>            }
+<em class="lineno">69: </em>        }
+<em class="lineno">70: </em>    }
+<em class="lineno">71: </em>}
 </pre>
 </div>
 <p>divunitモジュールは被除数(<code class="inline-code">dividend</code>)と除数(<code class="inline-code">divisor</code>)の商(<code class="inline-code">quotient</code>)と剰余(<code class="inline-code">remainder</code>)を計算するモジュールです。<code class="inline-code">valid</code>が<code class="inline-code">1</code>になったら計算を開始し、計算が完了したら<code class="inline-code">rvalid</code>を<code class="inline-code">1</code>に設定します。</p>
@@ -815,25 +815,25 @@ module muldivunit (
 <p>divunitモジュールをmuldivunitモジュールでインスタンス化します(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.divuremu-range.du">リスト1.30</a></span>)。まだ結果は利用しません。</p>
 <div id="muldivunit.veryl.divuremu-range.du" class="caption-code">
 <span class="caption">リスト1.30: リスト1.30: divunitモジュールをインスタンス化する (muldivunit.veryl)</span>
-<pre class="list language-du">    // divider unit
-    const DIV_WIDTH: u32 = XLEN;
-
-    var du_rvalid   : logic           ;
-    var du_quotient : logic&lt;DIV_WIDTH&gt;;
-    var du_remainder: logic&lt;DIV_WIDTH&gt;;
-
-    inst du: divunit #(
-        WIDTH: DIV_WIDTH,
-    ) (
-        clk                                 ,
-        rst                                 ,
-        valid    : ready &amp;&amp; valid &amp;&amp; !is_mul,
-        dividend : op1                      ,
-        divisor  : op2                      ,
-        rvalid   : du_rvalid                ,
-        quotient : du_quotient              ,
-        remainder: du_remainder             ,
-    );
+<pre class="list language-du"><em class="lineno">1: </em>    // divider unit
+<em class="lineno">2: </em>    const DIV_WIDTH: u32 = XLEN;
+<em class="lineno">3: </em>
+<em class="lineno">4: </em>    var du_rvalid   : logic           ;
+<em class="lineno">5: </em>    var du_quotient : logic&lt;DIV_WIDTH&gt;;
+<em class="lineno">6: </em>    var du_remainder: logic&lt;DIV_WIDTH&gt;;
+<em class="lineno">7: </em>
+<em class="lineno">8: </em>    inst du: divunit #(
+<em class="lineno">9: </em>        WIDTH: DIV_WIDTH,
+<em class="lineno">10: </em>    ) (
+<em class="lineno">11: </em>        clk                                 ,
+<em class="lineno">12: </em>        rst                                 ,
+<em class="lineno">13: </em>        valid    : ready &amp;&amp; valid &amp;&amp; !is_mul,
+<em class="lineno">14: </em>        dividend : op1                      ,
+<em class="lineno">15: </em>        divisor  : op2                      ,
+<em class="lineno">16: </em>        rvalid   : du_rvalid                ,
+<em class="lineno">17: </em>        quotient : du_quotient              ,
+<em class="lineno">18: </em>        remainder: du_remainder             ,
+<em class="lineno">19: </em>    );
 </pre>
 </div>
 
@@ -842,16 +842,16 @@ module muldivunit (
 <p>muldivunitモジュールで、divunitモジュールの処理が終わったら結果を<code class="inline-code">result</code>レジスタに割り当てるようにします(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.divuremu-range.wait_valid">リスト1.31</a></span>)。</p>
 <div id="muldivunit.veryl.divuremu-range.wait_valid" class="caption-code">
 <span class="caption">リスト1.31: リスト1.31: divunitモジュールの結果をresultに割り当てる (muldivunit.veryl)</span>
-<pre class="list language-wait_valid">    State::WaitValid: if is_mul &amp;&amp; mu_rvalid {
-        ...
-    <b>} else if !is_mul &amp;&amp; du_rvalid {</b>
-        <b>result = case funct3_saved[1:0] {</b>
-        <b>    2'b01  : du_quotient, // DIVU</b>
-        <b>    2'b11  : du_remainder, // REMU</b>
-        <b>    default: 0,</b>
-        <b>};</b>
-        <b>state = State::Finish;</b>
-    }
+<pre class="list language-wait_valid"><em class="lineno">1: </em>    State::WaitValid: if is_mul &amp;&amp; mu_rvalid {
+<em class="lineno">2: </em>        ...
+<em class="lineno">3: </em>    <b>} else if !is_mul &amp;&amp; du_rvalid {</b>
+<em class="lineno">4: </em>        <b>result = case funct3_saved[1:0] {</b>
+<em class="lineno">5: </em>        <b>    2'b01  : du_quotient, // DIVU</b>
+<em class="lineno">6: </em>        <b>    2'b11  : du_remainder, // REMU</b>
+<em class="lineno">7: </em>        <b>    default: 0,</b>
+<em class="lineno">8: </em>        <b>};</b>
+<em class="lineno">9: </em>        <b>state = State::Finish;</b>
+<em class="lineno">10: </em>    }
 </pre>
 </div>
 <p>riscv-testsの<code class="inline-code">rv64um-p-divu</code>、<code class="inline-code">rv64um-p-remu</code>を実行し、成功することを確認してください。</p>
@@ -866,89 +866,89 @@ module muldivunit (
 <p>abs関数を利用して、DIV、REM命令のときにdivunitモジュールに渡す値を絶対値に設定します(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.divrem-range.op">リスト1.32</a></span><span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.divrem-range.du">リスト1.33</a></span>)。</p>
 <div id="muldivunit.veryl.divrem-range.op" class="caption-code">
 <span class="caption">リスト1.32: リスト1.32: 除数と被除数を生成する (muldivunit.veryl)</span>
-<pre class="list language-op">    function generate_div_op (
-        funct3: input logic&lt;3&gt;   ,
-        value : input logic&lt;XLEN&gt;,
-    ) -&gt; logic&lt;DIV_WIDTH&gt; {
-        return case funct3[1:0] {
-            2'b00, 2'b10: abs::&lt;DIV_WIDTH&gt;(value), // DIV, REM
-            2'b01, 2'b11: value, // DIVU, REMU
-            default     : 0,
-        };
-    }
-
-    let du_dividend: logic&lt;DIV_WIDTH&gt; = generate_div_op(funct3, op1);
-    let du_divisor : logic&lt;DIV_WIDTH&gt; = generate_div_op(funct3, op2);
+<pre class="list language-op"><em class="lineno">1: </em>    function generate_div_op (
+<em class="lineno">2: </em>        funct3: input logic&lt;3&gt;   ,
+<em class="lineno">3: </em>        value : input logic&lt;XLEN&gt;,
+<em class="lineno">4: </em>    ) -&gt; logic&lt;DIV_WIDTH&gt; {
+<em class="lineno">5: </em>        return case funct3[1:0] {
+<em class="lineno">6: </em>            2'b00, 2'b10: abs::&lt;DIV_WIDTH&gt;(value), // DIV, REM
+<em class="lineno">7: </em>            2'b01, 2'b11: value, // DIVU, REMU
+<em class="lineno">8: </em>            default     : 0,
+<em class="lineno">9: </em>        };
+<em class="lineno">10: </em>    }
+<em class="lineno">11: </em>
+<em class="lineno">12: </em>    let du_dividend: logic&lt;DIV_WIDTH&gt; = generate_div_op(funct3, op1);
+<em class="lineno">13: </em>    let du_divisor : logic&lt;DIV_WIDTH&gt; = generate_div_op(funct3, op2);
 </pre>
 </div>
 <div id="muldivunit.veryl.divrem-range.du" class="caption-code">
 <span class="caption">リスト1.33: リスト1.33: divunitに渡す値を変更する (muldivunit.veryl)</span>
-<pre class="list language-du">    inst du: divunit #(
-        WIDTH: DIV_WIDTH,
-    ) (
-        clk                                                     ,
-        rst                                                     ,
-        valid    : ready &amp;&amp; valid &amp;&amp; !is_mul <b>&amp;&amp; !du_signed_error</b>,
-        dividend : <b>du_dividend</b>                                  ,
-        divisor  : <b>du_divisor</b>                                   ,
-        rvalid   : du_rvalid                                    ,
-        quotient : du_quotient                                  ,
-        remainder: du_remainder                                 ,
-    );
+<pre class="list language-du"><em class="lineno">1: </em>    inst du: divunit #(
+<em class="lineno">2: </em>        WIDTH: DIV_WIDTH,
+<em class="lineno">3: </em>    ) (
+<em class="lineno">4: </em>        clk                                                     ,
+<em class="lineno">5: </em>        rst                                                     ,
+<em class="lineno">6: </em>        valid    : ready &amp;&amp; valid &amp;&amp; !is_mul <b>&amp;&amp; !du_signed_error</b>,
+<em class="lineno">7: </em>        dividend : <b>du_dividend</b>                                  ,
+<em class="lineno">8: </em>        divisor  : <b>du_divisor</b>                                   ,
+<em class="lineno">9: </em>        rvalid   : du_rvalid                                    ,
+<em class="lineno">10: </em>        quotient : du_quotient                                  ,
+<em class="lineno">11: </em>        remainder: du_remainder                                 ,
+<em class="lineno">12: </em>    );
 </pre>
 </div>
 <p><span class="tableref"><a href="./10-impl-m.html#riscv.div.expt">表1.4</a></span>にあるように、符号付き演算は結果がオーバーフローする場合とゼロで割る場合の結果が定められています。その場合には、divunitモジュールで除算を実行せず、muldivunitで計算結果を直接生成するようにします(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.divrem-range.error">リスト1.34</a></span><span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.divrem-range.idle">リスト1.35</a></span>)。符号付き演算かどうかを<code class="inline-code">funct3</code>のLSBで確認し、例外的な処理ではない場合にのみdivunitモジュールで計算を開始するようにしています。</p>
 <div id="muldivunit.veryl.divrem-range.error" class="caption-code">
 <span class="caption">リスト1.34: リスト1.34: 符号付き除算がオーバーフローするか、ゼロ除算かどうかを判定する (muldivunit.veryl)</span>
-<pre class="list language-error">    var du_signed_overflow: logic;
-    var du_signed_divzero : logic;
-    var du_signed_error   : logic;
-
-    always_comb {
-        du_signed_overflow = !funct3[0] &amp;&amp; op1[msb] == 1 &amp;&amp; op1[msb - 1:0] == 0 &amp;&amp; &amp;op2;
-        du_signed_divzero  = !funct3[0] &amp;&amp; op2 == 0;
-        du_signed_error    = du_signed_overflow || du_signed_divzero;
-    }
+<pre class="list language-error"><em class="lineno">1: </em>    var du_signed_overflow: logic;
+<em class="lineno">2: </em>    var du_signed_divzero : logic;
+<em class="lineno">3: </em>    var du_signed_error   : logic;
+<em class="lineno">4: </em>
+<em class="lineno">5: </em>    always_comb {
+<em class="lineno">6: </em>        du_signed_overflow = !funct3[0] &amp;&amp; op1[msb] == 1 &amp;&amp; op1[msb - 1:0] == 0 &amp;&amp; &amp;op2;
+<em class="lineno">7: </em>        du_signed_divzero  = !funct3[0] &amp;&amp; op2 == 0;
+<em class="lineno">8: </em>        du_signed_error    = du_signed_overflow || du_signed_divzero;
+<em class="lineno">9: </em>    }
 </pre>
 </div>
 <div id="muldivunit.veryl.divrem-range.idle" class="caption-code">
 <span class="caption">リスト1.35: リスト1.35: 符号付き除算の例外的な結果を処理する (muldivunit.veryl)</span>
-<pre class="list language-idle">    State::Idle: if ready &amp;&amp; valid {
-        funct3_saved  = funct3;
-        is_op32_saved = is_op32;
-        op1sign_saved = op1[msb];
-        op2sign_saved = op2[msb];
-        <b>if is_mul {</b>
-            state = State::WaitValid;
-        <b>} else {</b>
-        <b>    if du_signed_overflow {</b>
-        <b>        state  = State::Finish;</b>
-        <b>        result = if funct3[1] ? 0 : {1'b1, 1'b0 repeat XLEN - 1}; // REM : DIV</b>
-        <b>    } else if du_signed_divzero {</b>
-        <b>        state  = State::Finish;</b>
-        <b>        result = if funct3[1] ? op1 : '1; // REM : DIV</b>
-        <b>    } else {</b>
-        <b>        state = State::WaitValid;</b>
-        <b>    }</b>
-        <b>}</b>
-    }
+<pre class="list language-idle"><em class="lineno">1: </em>    State::Idle: if ready &amp;&amp; valid {
+<em class="lineno">2: </em>        funct3_saved  = funct3;
+<em class="lineno">3: </em>        is_op32_saved = is_op32;
+<em class="lineno">4: </em>        op1sign_saved = op1[msb];
+<em class="lineno">5: </em>        op2sign_saved = op2[msb];
+<em class="lineno">6: </em>        <b>if is_mul {</b>
+<em class="lineno">7: </em>            state = State::WaitValid;
+<em class="lineno">8: </em>        <b>} else {</b>
+<em class="lineno">9: </em>        <b>    if du_signed_overflow {</b>
+<em class="lineno">10: </em>        <b>        state  = State::Finish;</b>
+<em class="lineno">11: </em>        <b>        result = if funct3[1] ? 0 : {1'b1, 1'b0 repeat XLEN - 1}; // REM : DIV</b>
+<em class="lineno">12: </em>        <b>    } else if du_signed_divzero {</b>
+<em class="lineno">13: </em>        <b>        state  = State::Finish;</b>
+<em class="lineno">14: </em>        <b>        result = if funct3[1] ? op1 : '1; // REM : DIV</b>
+<em class="lineno">15: </em>        <b>    } else {</b>
+<em class="lineno">16: </em>        <b>        state = State::WaitValid;</b>
+<em class="lineno">17: </em>        <b>    }</b>
+<em class="lineno">18: </em>        <b>}</b>
+<em class="lineno">19: </em>    }
 </pre>
 </div>
 <p>計算が終了したら、商と剰余の符号を復元します。商の符号は除数と被除数の符号が異なる場合に負になります。剰余の符号は被除数の符号にします(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.divrem-range.wait_valid">リスト1.36</a></span>)。</p>
 <div id="muldivunit.veryl.divrem-range.wait_valid" class="caption-code">
 <span class="caption">リスト1.36: リスト1.36: 計算結果の符号を復元する (muldivunit.veryl)</span>
-<pre class="list language-wait_valid">    } else if !is_mul &amp;&amp; du_rvalid {
-        <b>let quo_signed: logic&lt;DIV_WIDTH&gt; = if op1sign_saved != op2sign_saved ? ~du_quotient + 1 : du_quotient;</b>
-        <b>let rem_signed: logic&lt;DIV_WIDTH&gt; = if op1sign_saved == 1 ? ~du_remainder + 1 : du_remainder;</b>
-        result     = case funct3_saved[1:0] {
-            <b>2'b00  : quo_signed[XLEN - 1:0], // DIV</b>
-            2'b01  : du_quotient[XLEN - 1:0], // DIVU
-            <b>2'b10  : rem_signed[XLEN - 1:0], // REM</b>
-            2'b11  : du_remainder[XLEN - 1:0], // REMU
-            default: 0,
-        };
-        state = State::Finish;
-    }
+<pre class="list language-wait_valid"><em class="lineno">1: </em>    } else if !is_mul &amp;&amp; du_rvalid {
+<em class="lineno">2: </em>        <b>let quo_signed: logic&lt;DIV_WIDTH&gt; = if op1sign_saved != op2sign_saved ? ~du_quotient + 1 : du_quotient;</b>
+<em class="lineno">3: </em>        <b>let rem_signed: logic&lt;DIV_WIDTH&gt; = if op1sign_saved == 1 ? ~du_remainder + 1 : du_remainder;</b>
+<em class="lineno">4: </em>        result     = case funct3_saved[1:0] {
+<em class="lineno">5: </em>            <b>2'b00  : quo_signed[XLEN - 1:0], // DIV</b>
+<em class="lineno">6: </em>            2'b01  : du_quotient[XLEN - 1:0], // DIVU
+<em class="lineno">7: </em>            <b>2'b10  : rem_signed[XLEN - 1:0], // REM</b>
+<em class="lineno">8: </em>            2'b11  : du_remainder[XLEN - 1:0], // REMU
+<em class="lineno">9: </em>            default: 0,
+<em class="lineno">10: </em>        };
+<em class="lineno">11: </em>        state = State::Finish;
+<em class="lineno">12: </em>    }
 </pre>
 </div>
 <p>riscv-testsの<code class="inline-code">rv64um-p-div</code>、<code class="inline-code">rv64um-p-rem</code>を実行し、成功することを確認してください。</p>
@@ -958,53 +958,53 @@ module muldivunit (
 <p>generate_div_op関数に<code class="inline-code">is_op32</code>フラグを追加して、<code class="inline-code">is_op32</code>が<code class="inline-code">1</code>なら値を<code class="inline-code">DIV_WIDTH</code>ビットに拡張したものに変更します(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.divwremw-range.op">リスト1.37</a></span>)。</p>
 <div id="muldivunit.veryl.divwremw-range.op" class="caption-code">
 <span class="caption">リスト1.37: リスト1.37: 除数、被除数を32ビットの値にする (muldivunit.veryl)</span>
-<pre class="list language-op">    function generate_div_op (
-        <b>is_op32: input logic      ,</b>
-        funct3 : input logic&lt;3&gt;   ,
-        value  : input logic&lt;XLEN&gt;,
-    ) -&gt; logic&lt;DIV_WIDTH&gt; {
-        return case funct3[1:0] {
-            2'b00, 2'b10: abs::&lt;DIV_WIDTH&gt;(<b>if is_op32 ? sext::&lt;32, DIV_WIDTH&gt;(value[31:0]) :</b> value), // DIV, REM
-            2'b01, 2'b11: <b>if is_op32 ? {1'b0 repeat DIV_WIDTH - 32, value[31:0]} :</b> value, // DIVU, REMU
-            default     : 0,
-        };
-    }
-
-    let du_dividend: logic&lt;DIV_WIDTH&gt; = generate_div_op(<b>is_op32,</b> funct3, op1);
-    let du_divisor : logic&lt;DIV_WIDTH&gt; = generate_div_op(<b>is_op32,</b> funct3, op2);
+<pre class="list language-op"><em class="lineno">1: </em>    function generate_div_op (
+<em class="lineno">2: </em>        <b>is_op32: input logic      ,</b>
+<em class="lineno">3: </em>        funct3 : input logic&lt;3&gt;   ,
+<em class="lineno">4: </em>        value  : input logic&lt;XLEN&gt;,
+<em class="lineno">5: </em>    ) -&gt; logic&lt;DIV_WIDTH&gt; {
+<em class="lineno">6: </em>        return case funct3[1:0] {
+<em class="lineno">7: </em>            2'b00, 2'b10: abs::&lt;DIV_WIDTH&gt;(<b>if is_op32 ? sext::&lt;32, DIV_WIDTH&gt;(value[31:0]) :</b> value), // DIV, REM
+<em class="lineno">8: </em>            2'b01, 2'b11: <b>if is_op32 ? {1'b0 repeat DIV_WIDTH - 32, value[31:0]} :</b> value, // DIVU, REMU
+<em class="lineno">9: </em>            default     : 0,
+<em class="lineno">10: </em>        };
+<em class="lineno">11: </em>    }
+<em class="lineno">12: </em>
+<em class="lineno">13: </em>    let du_dividend: logic&lt;DIV_WIDTH&gt; = generate_div_op(<b>is_op32,</b> funct3, op1);
+<em class="lineno">14: </em>    let du_divisor : logic&lt;DIV_WIDTH&gt; = generate_div_op(<b>is_op32,</b> funct3, op2);
 </pre>
 </div>
 <p>符号付き除算のオーバーフローとゼロ除算の判定を<code class="inline-code">is_op32</code>で変更します(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.divwremw-range.error">リスト1.38</a></span>)。</p>
 <div id="muldivunit.veryl.divwremw-range.error" class="caption-code">
 <span class="caption">リスト1.38: リスト1.38: 32ビット演算のときの例外的な処理に対応する (muldivunit.veryl)</span>
-<pre class="list language-error">    always_comb {
-        <b>if is_op32 {</b>
-        <b>    du_signed_overflow = !funct3[0] &amp;&amp; op1[31] == 1 &amp;&amp; op1[31:0] == 0 &amp;&amp; &amp;op2[31:0];</b>
-        <b>    du_signed_divzero  = !funct3[0] &amp;&amp; op2[31:0] == 0;</b>
-        <b>} else {</b>
-            du_signed_overflow = !funct3[0] &amp;&amp; op1[msb] == 1 &amp;&amp; op1[msb - 1:0] == 0 &amp;&amp; &amp;op2;
-            du_signed_divzero  = !funct3[0] &amp;&amp; op2 == 0;
-        <b>}</b>
-        du_signed_error = du_signed_overflow || du_signed_divzero;
-    }
+<pre class="list language-error"><em class="lineno">1: </em>    always_comb {
+<em class="lineno">2: </em>        <b>if is_op32 {</b>
+<em class="lineno">3: </em>        <b>    du_signed_overflow = !funct3[0] &amp;&amp; op1[31] == 1 &amp;&amp; op1[31:0] == 0 &amp;&amp; &amp;op2[31:0];</b>
+<em class="lineno">4: </em>        <b>    du_signed_divzero  = !funct3[0] &amp;&amp; op2[31:0] == 0;</b>
+<em class="lineno">5: </em>        <b>} else {</b>
+<em class="lineno">6: </em>            du_signed_overflow = !funct3[0] &amp;&amp; op1[msb] == 1 &amp;&amp; op1[msb - 1:0] == 0 &amp;&amp; &amp;op2;
+<em class="lineno">7: </em>            du_signed_divzero  = !funct3[0] &amp;&amp; op2 == 0;
+<em class="lineno">8: </em>        <b>}</b>
+<em class="lineno">9: </em>        du_signed_error = du_signed_overflow || du_signed_divzero;
+<em class="lineno">10: </em>    }
 </pre>
 </div>
 <p>最後に、32ビットの結果をXLENビットに符号拡張します(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.divwremw-range.wait_valid">リスト1.39</a></span>)。符号付き、符号無し演算のどちらも32ビットの結果を符号拡張したものが結果になります。</p>
 <div id="muldivunit.veryl.divwremw-range.wait_valid" class="caption-code">
 <span class="caption">リスト1.39: リスト1.39: 32ビット演算のとき、結果を符号拡張する (muldivunit.veryl)</span>
-<pre class="list language-wait_valid">    } else if !is_mul &amp;&amp; du_rvalid {
-        let quo_signed: logic&lt;DIV_WIDTH&gt; = if op1sign_saved != op2sign_saved ? ~du_quotient + 1 : du_quotient;
-        let rem_signed: logic&lt;DIV_WIDTH&gt; = if op1sign_saved == 1 ? ~du_remainder + 1 : du_remainder;
-        <b>let resultX   : UIntX</b>            = case funct3_saved[1:0] {
-            2'b00  : quo_signed[XLEN - 1:0], // DIV
-            2'b01  : du_quotient[XLEN - 1:0], // DIVU
-            2'b10  : rem_signed[XLEN - 1:0], // REM
-            2'b11  : du_remainder[XLEN - 1:0], // REMU
-            default: 0,
-        };
-        state  = State::Finish;
-        <b>result = if is_op32_saved ? sext::&lt;32, 64&gt;(resultX[31:0]) : resultX;</b>
-    }
+<pre class="list language-wait_valid"><em class="lineno">1: </em>    } else if !is_mul &amp;&amp; du_rvalid {
+<em class="lineno">2: </em>        let quo_signed: logic&lt;DIV_WIDTH&gt; = if op1sign_saved != op2sign_saved ? ~du_quotient + 1 : du_quotient;
+<em class="lineno">3: </em>        let rem_signed: logic&lt;DIV_WIDTH&gt; = if op1sign_saved == 1 ? ~du_remainder + 1 : du_remainder;
+<em class="lineno">4: </em>        <b>let resultX   : UIntX</b>            = case funct3_saved[1:0] {
+<em class="lineno">5: </em>            2'b00  : quo_signed[XLEN - 1:0], // DIV
+<em class="lineno">6: </em>            2'b01  : du_quotient[XLEN - 1:0], // DIVU
+<em class="lineno">7: </em>            2'b10  : rem_signed[XLEN - 1:0], // REM
+<em class="lineno">8: </em>            2'b11  : du_remainder[XLEN - 1:0], // REMU
+<em class="lineno">9: </em>            default: 0,
+<em class="lineno">10: </em>        };
+<em class="lineno">11: </em>        state  = State::Finish;
+<em class="lineno">12: </em>        <b>result = if is_op32_saved ? sext::&lt;32, 64&gt;(resultX[31:0]) : resultX;</b>
+<em class="lineno">13: </em>    }
 </pre>
 </div>
 <p>riscv-testsの<code class="inline-code">rv64um-p-</code>から始まるテストを実行し、成功することを確認してください。</p>

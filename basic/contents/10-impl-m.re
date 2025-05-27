@@ -52,7 +52,7 @@ REMUW	rs1[31:0](符号無し) % rs2[31:0](符号無し)を求める@<br>{}結果
 Verylには積、商、剰余を求める演算子@<code>{*}、@<code>{/}、@<code>{%}が定義されており、
 これを利用することで簡単に計算を実装できます(@<list>{example.by.operator})。
 
-//list[example.by.operator][演算子による実装例]{
+//list[example.by.operator][演算子による実装例][lineno=on]{
 assign mul = op1 * op2;
 assign div = op1 / op2;
 assign rem = op1 % op2;
@@ -105,7 +105,7 @@ REMU、REMUW	111
 @<code>{InstCtrl}構造体に、
 M拡張の命令であることを示す@<code>{is_muldiv}フラグを追加します (@<list>{corectrl.veryl.create-mdu-range.InstCtrl})。
 
-//list[corectrl.veryl.create-mdu-range.InstCtrl][is_muldivフラグを追加する (corectrl.veryl)]{
+//list[corectrl.veryl.create-mdu-range.InstCtrl][is_muldivフラグを追加する (corectrl.veryl)][lineno=on]{
 #@maprange(scripts/10/create-mdu-range/core/src/corectrl.veryl,InstCtrl)
     // 制御に使うフラグ用の構造体
     struct InstCtrl {
@@ -128,7 +128,7 @@ inst_decoderモジュールの@<code>{InstCtrl}を生成している部分を変
 opcodeが@<code>{OP}か@<code>{OP-32}の場合はfunct7の値によって@<code>{is_muldiv}を設定します(@<list>{inst_decoder.veryl.create-mdu-range.ctrl})。
 その他のopcodeの@<code>{is_muldiv}は@<code>{F}に設定してください。
 
-//list[inst_decoder.veryl.create-mdu-range.ctrl][is_muldivを設定する (inst_decoder.veryl) (一部)]{
+//list[inst_decoder.veryl.create-mdu-range.ctrl][is_muldivを設定する (inst_decoder.veryl) (一部)][lineno=on]{
 #@maprange(scripts/10/create-mdu-range/core/src/inst_decoder.veryl,ctrl)
     OP_OP: {
         InstType::R, T, F, T, @<b>|f7 == 7'b0000001,| F, F, F, F
@@ -151,7 +151,7 @@ M拡張の命令がALUの結果ではなくモジュールの結果を利用す�
 
 @<code>{src/muldivunit.veryl}を作成し、次のように記述します(@<list>{muldivunit.veryl.create-mdu-range})。
 
-//list[muldivunit.veryl.create-mdu-range][muldivunit.veryl]{
+//list[muldivunit.veryl.create-mdu-range][muldivunit.veryl][lineno=on]{
 #@mapfile(scripts/10/create-mdu-range/core/src/muldivunit.veryl)
 import eei::*;
 
@@ -217,7 +217,7 @@ M拡張の命令がEXステージにあるとき、ALUの結果の代わりにmu
 
 まず、muldivunitモジュールをインスタンス化します(@<list>{core.veryl.create-mdu-range.muldivinst})。
 
-//list[core.veryl.create-mdu-range.muldivinst][muldivunitモジュールをインスタンス化する (core.veryl)]{
+//list[core.veryl.create-mdu-range.muldivinst][muldivunitモジュールをインスタンス化する (core.veryl)][lineno=on]{
 #@maprange(scripts/10/create-mdu-range/core/src/core.veryl,muldivinst)
     let exs_muldiv_valid : logic = exs_valid && exs_ctrl.is_muldiv && !exs_data_hazard && !exs_muldiv_is_requested;
     var exs_muldiv_ready : logic;
@@ -248,7 +248,7 @@ EXステージに命令が存在し(@<code>{exs_valid})、
 @<code>{!exs_muldiv_is_requested}変数を定義し、
 ステージの遷移条件とmuldivunitに計算を要求したかの状態によって値を更新します(@<list>{core.veryl.create-mdu-range.exs_muldiv_is_requested})。
 
-//list[core.veryl.create-mdu-range.exs_muldiv_is_requested][exs_muldiv_is_requested変数 (core.veryl)]{
+//list[core.veryl.create-mdu-range.exs_muldiv_is_requested][exs_muldiv_is_requested変数 (core.veryl)][lineno=on]{
 #@maprange(scripts/10/create-mdu-range/core/src/core.veryl,exs_muldiv_is_requested)
     var exs_muldiv_is_requested: logic;
 
@@ -275,7 +275,7 @@ muldivunitモジュールはALUのように1クロックの間に入力から出
 そのために@<code>{exs_muldiv_stall}変数を定義して、ストールの条件に追加します(@<list>{core.veryl.create-mdu-range.exs_muldiv_stall}、@<list>{core.veryl.create-mdu-range.exq_rready})。
 また、M拡張の命令の場合はMEMステージに渡す@<code>{alu_result}の値をmuldivunitモジュールの結果に設定します(@<list>{core.veryl.create-mdu-range.exq_rready})。
 
-//list[core.veryl.create-mdu-range.exs_muldiv_stall][EXステージのストール条件の変更 (core.veryl)]{
+//list[core.veryl.create-mdu-range.exs_muldiv_stall][EXステージのストール条件の変更 (core.veryl)][lineno=on]{
 #@maprange(scripts/10/create-mdu-range/core/src/core.veryl,exs_muldiv_stall)
     var exs_muldiv_rvalided: logic;
     let exs_muldiv_stall   : logic = exs_ctrl.is_muldiv && !exs_muldiv_rvalid && !exs_muldiv_rvalided;
@@ -296,7 +296,7 @@ muldivunitモジュールはALUのように1クロックの間に入力から出
 #@end
 //}
 
-//list[core.veryl.create-mdu-range.exq_rready][EXステージのストール条件の変更とM拡張の命令の結果の設定 (core.veryl)]{
+//list[core.veryl.create-mdu-range.exq_rready][EXステージのストール条件の変更とM拡張の命令の結果の設定 (core.veryl)][lineno=on]{
 #@maprange(scripts/10/create-mdu-range/core/src/core.veryl,exq_rready)
     @<b>{let exs_stall: logic = exs_data_hazard || exs_muldiv_stall;}
 
@@ -334,7 +334,7 @@ muldivunitモジュールは計算が完了したクロックでしか@<code>{rv
 
 @<code>{src/muldivunit.veryl}の中にmulunitモジュールを作成します(@<list>{muldivunit.veryl.impl-mulunit-range.mulunit})。
 
-//list[muldivunit.veryl.impl-mulunit-range.mulunit][muldivunit.veryl]{
+//list[muldivunit.veryl.impl-mulunit-range.mulunit][muldivunit.veryl][lineno=on]{
 #@maprange(scripts/10/impl-mulunit-range/core/src/muldivunit.veryl,mulunit)
 module mulunit #(
     param WIDTH: u32 = 0,
@@ -421,7 +421,7 @@ mulunitモジュールをmuldivunitモジュールでインスタンス化しま
 (@<list>{muldivunit.veryl.impl-mulunit-range.inst_mu})。
 まだ結果は利用しません。
 
-//list[muldivunit.veryl.impl-mulunit-range.inst_mu][mulunitモジュールをインスタンス化する (muldivunit.veryl)]{
+//list[muldivunit.veryl.impl-mulunit-range.inst_mu][mulunitモジュールをインスタンス化する (muldivunit.veryl)][lineno=on]{
 #@maprange(scripts/10/impl-mulunit-range/core/src/muldivunit.veryl,inst_mu)
     // multiply unit
     const MUL_OP_WIDTH : u32 = XLEN;
@@ -453,7 +453,7 @@ MULHU命令は、2つの符号無しのXLENビットの値の乗算を実行し�
 funct3の下位2ビットによってmulunitモジュールの結果を選択するようにします
 (@<list>{muldivunit.veryl.mulhu-range.result})。
 
-//list[muldivunit.veryl.mulhu-range.result][MULHUモジュールの結果を取得する (muldivunit.veryl)]{
+//list[muldivunit.veryl.mulhu-range.result][MULHUモジュールの結果を取得する (muldivunit.veryl)][lineno=on]{
 #@maprange(scripts/10/mulhu-range/core/src/muldivunit.veryl,result)
     State::WaitValid: if is_mul && mu_rvalid {
         state  = State::Finish;
@@ -491,7 +491,7 @@ MUL、MULH命令は、2つの符号付きのXLENビットの値の乗算を実�
 abs関数は、値のMSBが@<code>{1}ならビットを反転して@<code>{1}を足すことで符号を反転しています。
 最小値@<code>{-2 ** (WIDTH - 1)}の絶対値も求められることを確認してください。
 
-//list[muldivunit.veryl.mulmulh-range.abs][abs関数を実装する (muldivunit.veryl)]{
+//list[muldivunit.veryl.mulmulh-range.abs][abs関数を実装する (muldivunit.veryl)][lineno=on]{
 #@maprange(scripts/10/mulmulh-range/core/src/muldivunit.veryl,abs)
     function abs::<WIDTH: u32> (
         value: input logic<WIDTH>,
@@ -504,7 +504,7 @@ abs関数は、値のMSBが@<code>{1}ならビットを反転して@<code>{1}を
 abs関数を利用して、MUL、MULH命令のときにmulunitに渡す値を絶対値に設定します
 (@<list>{muldivunit.veryl.mulmulh-range.op1op2}、@<list>{muldivunit.veryl.mulmulh-range.mu})。
 
-//list[muldivunit.veryl.mulmulh-range.op1op2][op1とop2を生成する (muldivunit.veryl)]{
+//list[muldivunit.veryl.mulmulh-range.op1op2][op1とop2を生成する (muldivunit.veryl)][lineno=on]{
 #@maprange(scripts/10/mulmulh-range/core/src/muldivunit.veryl,op1op2)
     let mu_op1: logic<MUL_OP_WIDTH> = case funct3[1:0] {
         2'b00, 2'b01: abs::<XLEN>(op1), // MUL, MULH
@@ -519,7 +519,7 @@ abs関数を利用して、MUL、MULH命令のときにmulunitに渡す値を絶
 #@end
 //}
 
-//list[muldivunit.veryl.mulmulh-range.mu][mulunitに渡す値を変更する (muldivunit.veryl)]{
+//list[muldivunit.veryl.mulmulh-range.mu][mulunitに渡す値を変更する (muldivunit.veryl)][lineno=on]{
 #@maprange(scripts/10/mulmulh-range/core/src/muldivunit.veryl,mu)
     inst mu: mulunit #(
         WIDTH: MUL_OP_WIDTH,
@@ -543,7 +543,7 @@ abs関数を利用して、MUL、MULH命令のときにmulunitに渡す値を絶
 @<list>{muldivunit.veryl.mulmulh-range.idle}
 )。
 
-//list[muldivunit.veryl.mulmulh-range.opsign_save_reg][符号を保存する変数を作成する (muldivunit.veryl)]{
+//list[muldivunit.veryl.mulmulh-range.opsign_save_reg][符号を保存する変数を作成する (muldivunit.veryl)][lineno=on]{
 #@maprange(scripts/10/mulmulh-range/core/src/muldivunit.veryl,opsign_save_reg)
     // saved_data
     var funct3_saved : logic<3>;
@@ -552,7 +552,7 @@ abs関数を利用して、MUL、MULH命令のときにmulunitに渡す値を絶
 #@end
 //}
 
-//list[muldivunit.veryl.mulmulh-range.always_reset][変数のリセット (muldivunit.veryl)]{
+//list[muldivunit.veryl.mulmulh-range.always_reset][変数のリセット (muldivunit.veryl)][lineno=on]{
 #@maprange(scripts/10/mulmulh-range/core/src/muldivunit.veryl,always_reset)
     always_ff {
         if_reset {
@@ -565,7 +565,7 @@ abs関数を利用して、MUL、MULH命令のときにmulunitに渡す値を絶
 #@end
 //}
 
-//list[muldivunit.veryl.mulmulh-range.idle][符号を変数に保存する (muldivunit.veryl)]{
+//list[muldivunit.veryl.mulmulh-range.idle][符号を変数に保存する (muldivunit.veryl)][lineno=on]{
 #@maprange(scripts/10/mulmulh-range/core/src/muldivunit.veryl,idle)
     case state {
         State::Idle: if ready && valid {
@@ -580,7 +580,7 @@ abs関数を利用して、MUL、MULH命令のときにmulunitに渡す値を絶
 保存した符号を利用して計算結果の符号を復元します
 (@<list>{muldivunit.veryl.mulmulh-range.wait_valid})。
 
-//list[muldivunit.veryl.mulmulh-range.wait_valid][計算結果の符号を復元する (muldivunit.veryl)]{
+//list[muldivunit.veryl.mulmulh-range.wait_valid][計算結果の符号を復元する (muldivunit.veryl)][lineno=on]{
 #@maprange(scripts/10/mulmulh-range/core/src/muldivunit.veryl,wait_valid)
     State::WaitValid: if is_mul && mu_rvalid {
         @<b>|let res_signed: logic<MUL_RES_WIDTH> = if op1sign_saved != op2sign_saved ? ~mu_result + 1 : mu_result;|
@@ -608,7 +608,7 @@ MULHSU命令も、MUL、MULH命令と同様に符号無しの乗算器で実現�
 @<code>{op1}を絶対値に変換し、@<code>{op2}はそのままに設定します
 (@<list>{muldivunit.veryl.mulhsu-range.op1op2})。
 
-//list[muldivunit.veryl.mulhsu-range.op1op2][MULHSU命令用にop1、op2を設定する (muldivunit.veryl)]{
+//list[muldivunit.veryl.mulhsu-range.op1op2][MULHSU命令用にop1、op2を設定する (muldivunit.veryl)][lineno=on]{
 #@maprange(scripts/10/mulhsu-range/core/src/muldivunit.veryl,op1op2)
     let mu_op1: logic<MUL_OP_WIDTH> = case funct3[1:0] {
         2'b00, 2'b01@<b>|, 2'b10|: abs::<XLEN>(op1), // MUL, MULH@<b>|, MULHSU|
@@ -626,7 +626,7 @@ MULHSU命令も、MUL、MULH命令と同様に符号無しの乗算器で実現�
 計算結果は@<code>{op1}の符号にします
 (@<list>{muldivunit.veryl.mulhsu-range.result})。
 
-//list[muldivunit.veryl.mulhsu-range.result][計算結果の符号を復元する (muldivunit.veryl)]{
+//list[muldivunit.veryl.mulhsu-range.result][計算結果の符号を復元する (muldivunit.veryl)][lineno=on]{
 #@maprange(scripts/10/mulhsu-range/core/src/muldivunit.veryl,result)
     State::WaitValid: if is_mul && mu_rvalid {
         let res_signed: logic<MUL_RES_WIDTH> = if op1sign_saved != op2sign_saved ? ~mu_result + 1 : mu_result;
@@ -657,7 +657,7 @@ muldivunitモジュールに@<code>{is_op32}ポートを作成します
 @<list>{core.veryl.mulw-range.mdu}
 )。
 
-//list[muldivunit.veryl.mulw-range.port][is_op32ポートを追加する (muldivunit.veryl)]{
+//list[muldivunit.veryl.mulw-range.port][is_op32ポートを追加する (muldivunit.veryl)][lineno=on]{
 #@maprange(scripts/10/mulw-range/core/src/muldivunit.veryl,port)
 module muldivunit (
     clk    : input  clock   ,
@@ -674,7 +674,7 @@ module muldivunit (
 #@end
 //}
 
-//list[core.veryl.mulw-range.mdu][is_op32ポートに値を割り当てる (core.veryl)]{
+//list[core.veryl.mulw-range.mdu][is_op32ポートに値を割り当てる (core.veryl)][lineno=on]{
 #@maprange(scripts/10/mulw-range/core/src/core.veryl,mdu)
     inst mdu: muldivunit (
         clk                       ,
@@ -698,7 +698,7 @@ muldivunitモジュールが要求を受け入れる時に@<code>{is_op32}を保
 @<list>{muldivunit.veryl.mulw-range.idle}
 )。
 
-//list[muldivunit.veryl.mulw-range.savereg][is_op32を保存する変数を作成する (muldivunit.veryl)]{
+//list[muldivunit.veryl.mulw-range.savereg][is_op32を保存する変数を作成する (muldivunit.veryl)][lineno=on]{
 #@maprange(scripts/10/mulw-range/core/src/muldivunit.veryl,savereg)
     // saved_data
     var funct3_saved : logic<3>;
@@ -708,7 +708,7 @@ muldivunitモジュールが要求を受け入れる時に@<code>{is_op32}を保
 #@end
 //}
 
-//list[muldivunit.veryl.mulw-range.always_reset][変数のリセット (muldivunit.veryl)]{
+//list[muldivunit.veryl.mulw-range.always_reset][変数のリセット (muldivunit.veryl)][lineno=on]{
 #@maprange(scripts/10/mulw-range/core/src/muldivunit.veryl,always_reset)
     always_ff {
         if_reset {
@@ -722,7 +722,7 @@ muldivunitモジュールが要求を受け入れる時に@<code>{is_op32}を保
 #@end
 //}
 
-//list[muldivunit.veryl.mulw-range.idle][is_op32を変数に保存する (muldivunit.veryl)]{
+//list[muldivunit.veryl.mulw-range.idle][is_op32を変数に保存する (muldivunit.veryl)][lineno=on]{
 #@maprange(scripts/10/mulw-range/core/src/muldivunit.veryl,idle)
     State::Idle: if ready && valid {
         state         = State::WaitValid;
@@ -741,7 +741,7 @@ mulunitモジュールの@<code>{op1}と@<code>{op2}に、64ビットの値の�
 @<list>{muldivunit.veryl.mulw-range.op1op2}
 )。
 
-//list[muldivunit.veryl.mulw-range.sext][符号拡張する関数を作成する (muldivunit.veryl)]{
+//list[muldivunit.veryl.mulw-range.sext][符号拡張する関数を作成する (muldivunit.veryl)][lineno=on]{
 #@maprange(scripts/10/mulw-range/core/src/muldivunit.veryl,sext)
     function sext::<WIDTH_IN: u32, WIDTH_OUT: u32> (
         value: input logic<WIDTH_IN>,
@@ -750,7 +750,7 @@ mulunitモジュールの@<code>{op1}と@<code>{op2}に、64ビットの値の�
     }
 #@end
 //}
-//list[muldivunit.veryl.mulw-range.op1op2][MULW命令用にop1、op2を設定する (muldivunit.veryl)]{
+//list[muldivunit.veryl.mulw-range.op1op2][MULW命令用にop1、op2を設定する (muldivunit.veryl)][lineno=on]{
 #@maprange(scripts/10/mulw-range/core/src/muldivunit.veryl,op1op2)
     let mu_op1: logic<MUL_OP_WIDTH> = case funct3[1:0] {
         2'b00, 2'b01, 2'b10: abs::<XLEN>(@<b>|if is_op32 ? sext::<32, XLEN>(op1[31:0]) : |op1), // MUL, MULH, MULHSU@<b>|, MULW|
@@ -768,7 +768,7 @@ mulunitモジュールの@<code>{op1}と@<code>{op2}に、64ビットの値の�
 最後に、計算結果を符号拡張した値に設定します
 (@<list>{muldivunit.veryl.mulw-range.wait_valid})。
 
-//list[muldivunit.veryl.mulw-range.wait_valid][計算結果を符号拡張する (muldivunit.veryl)]{
+//list[muldivunit.veryl.mulw-range.wait_valid][計算結果を符号拡張する (muldivunit.veryl)][lineno=on]{
 #@maprange(scripts/10/mulw-range/core/src/muldivunit.veryl,wait_valid)
     State::WaitValid: if is_mul && mu_rvalid {
         let res_signed: logic<MUL_RES_WIDTH> = if op1sign_saved != op2sign_saved ? ~mu_result + 1 : mu_result;
@@ -790,7 +790,7 @@ riscv-testsの@<code>{rv64um-p-mulw}を実行し、成功することを確認�
 @<code>{src/muldivunit.veryl}の中にdivunitモジュールを作成します
 (@<list>{muldivunit.veryl.divuremu-range.divunit})。
 
-//list[muldivunit.veryl.divuremu-range.divunit][muldivunit.veryl]{
+//list[muldivunit.veryl.divuremu-range.divunit][muldivunit.veryl][lineno=on]{
 #@maprange(scripts/10/divuremu-range/core/src/muldivunit.veryl,divunit)
 module divunit #(
     param WIDTH: u32 = 0,
@@ -901,7 +901,7 @@ divunitモジュールをmuldivunitモジュールでインスタンス化しま
 (@<list>{muldivunit.veryl.divuremu-range.du})。
 まだ結果は利用しません。
 
-//list[muldivunit.veryl.divuremu-range.du][divunitモジュールをインスタンス化する (muldivunit.veryl)]{
+//list[muldivunit.veryl.divuremu-range.du][divunitモジュールをインスタンス化する (muldivunit.veryl)][lineno=on]{
 #@maprange(scripts/10/divuremu-range/core/src/muldivunit.veryl,du)
     // divider unit
     const DIV_WIDTH: u32 = XLEN;
@@ -933,7 +933,7 @@ DIVU、REMU命令は、符号無しのXLENビットのrs1(被除数)と符号無
 muldivunitモジュールで、divunitモジュールの処理が終わったら結果を@<code>{result}レジスタに割り当てるようにします
 (@<list>{muldivunit.veryl.divuremu-range.wait_valid})。
 
-//list[muldivunit.veryl.divuremu-range.wait_valid][divunitモジュールの結果をresultに割り当てる (muldivunit.veryl)]{
+//list[muldivunit.veryl.divuremu-range.wait_valid][divunitモジュールの結果をresultに割り当てる (muldivunit.veryl)][lineno=on]{
 #@maprange(scripts/10/divuremu-range/core/src/muldivunit.veryl,wait_valid)
     State::WaitValid: if is_mul && mu_rvalid {
         ...
@@ -969,7 +969,7 @@ abs関数を利用して、DIV、REM命令のときにdivunitモジュールに�
 @<list>{muldivunit.veryl.divrem-range.du}
 )。
 
-//list[muldivunit.veryl.divrem-range.op][除数と被除数を生成する (muldivunit.veryl)]{
+//list[muldivunit.veryl.divrem-range.op][除数と被除数を生成する (muldivunit.veryl)][lineno=on]{
 #@maprange(scripts/10/divrem-range/core/src/muldivunit.veryl,op)
     function generate_div_op (
         funct3: input logic<3>   ,
@@ -987,7 +987,7 @@ abs関数を利用して、DIV、REM命令のときにdivunitモジュールに�
 #@end
 //}
 
-//list[muldivunit.veryl.divrem-range.du][divunitに渡す値を変更する (muldivunit.veryl)]{
+//list[muldivunit.veryl.divrem-range.du][divunitに渡す値を変更する (muldivunit.veryl)][lineno=on]{
 #@maprange(scripts/10/divrem-range/core/src/muldivunit.veryl,du)
     inst du: divunit #(
         WIDTH: DIV_WIDTH,
@@ -1012,7 +1012,7 @@ abs関数を利用して、DIV、REM命令のときにdivunitモジュールに�
 )。
 符号付き演算かどうかを@<code>{funct3}のLSBで確認し、例外的な処理ではない場合にのみdivunitモジュールで計算を開始するようにしています。
 
-//list[muldivunit.veryl.divrem-range.error][符号付き除算がオーバーフローするか、ゼロ除算かどうかを判定する (muldivunit.veryl)]{
+//list[muldivunit.veryl.divrem-range.error][符号付き除算がオーバーフローするか、ゼロ除算かどうかを判定する (muldivunit.veryl)][lineno=on]{
 #@maprange(scripts/10/divrem-range/core/src/muldivunit.veryl,error)
     var du_signed_overflow: logic;
     var du_signed_divzero : logic;
@@ -1026,7 +1026,7 @@ abs関数を利用して、DIV、REM命令のときにdivunitモジュールに�
 #@end
 //}
 
-//list[muldivunit.veryl.divrem-range.idle][符号付き除算の例外的な結果を処理する (muldivunit.veryl)]{
+//list[muldivunit.veryl.divrem-range.idle][符号付き除算の例外的な結果を処理する (muldivunit.veryl)][lineno=on]{
 #@maprange(scripts/10/divrem-range/core/src/muldivunit.veryl,idle)
     State::Idle: if ready && valid {
         funct3_saved  = funct3;
@@ -1055,7 +1055,7 @@ abs関数を利用して、DIV、REM命令のときにdivunitモジュールに�
 剰余の符号は被除数の符号にします
 (@<list>{muldivunit.veryl.divrem-range.wait_valid})。
 
-//list[muldivunit.veryl.divrem-range.wait_valid][計算結果の符号を復元する (muldivunit.veryl)]{
+//list[muldivunit.veryl.divrem-range.wait_valid][計算結果の符号を復元する (muldivunit.veryl)][lineno=on]{
 #@maprange(scripts/10/divrem-range/core/src/muldivunit.veryl,wait_valid)
     } else if !is_mul && du_rvalid {
         @<b>|let quo_signed: logic<DIV_WIDTH> = if op1sign_saved != op2sign_saved ? ~du_quotient + 1 : du_quotient;|
@@ -1083,7 +1083,7 @@ generate_div_op関数に@<code>{is_op32}フラグを追加して、
 @<code>{is_op32}が@<code>{1}なら値を@<code>{DIV_WIDTH}ビットに拡張したものに変更します
 (@<list>{muldivunit.veryl.divwremw-range.op})。
 
-//list[muldivunit.veryl.divwremw-range.op][除数、被除数を32ビットの値にする (muldivunit.veryl)]{
+//list[muldivunit.veryl.divwremw-range.op][除数、被除数を32ビットの値にする (muldivunit.veryl)][lineno=on]{
 #@maprange(scripts/10/divwremw-range/core/src/muldivunit.veryl,op)
     function generate_div_op (
         @<b>|is_op32: input logic      ,|
@@ -1105,7 +1105,7 @@ generate_div_op関数に@<code>{is_op32}フラグを追加して、
 符号付き除算のオーバーフローとゼロ除算の判定を@<code>{is_op32}で変更します
 (@<list>{muldivunit.veryl.divwremw-range.error})。
 
-//list[muldivunit.veryl.divwremw-range.error][32ビット演算のときの例外的な処理に対応する (muldivunit.veryl)]{
+//list[muldivunit.veryl.divwremw-range.error][32ビット演算のときの例外的な処理に対応する (muldivunit.veryl)][lineno=on]{
 #@maprange(scripts/10/divwremw-range/core/src/muldivunit.veryl,error)
     always_comb {
         @<b>|if is_op32 {|
@@ -1124,7 +1124,7 @@ generate_div_op関数に@<code>{is_op32}フラグを追加して、
 (@<list>{muldivunit.veryl.divwremw-range.wait_valid})。
 符号付き、符号無し演算のどちらも32ビットの結果を符号拡張したものが結果になります。
 
-//list[muldivunit.veryl.divwremw-range.wait_valid][32ビット演算のとき、結果を符号拡張する (muldivunit.veryl)]{
+//list[muldivunit.veryl.divwremw-range.wait_valid][32ビット演算のとき、結果を符号拡張する (muldivunit.veryl)][lineno=on]{
 #@maprange(scripts/10/divwremw-range/core/src/muldivunit.veryl,wait_valid)
     } else if !is_mul && du_rvalid {
         let quo_signed: logic<DIV_WIDTH> = if op1sign_saved != op2sign_saved ? ~du_quotient + 1 : du_quotient;

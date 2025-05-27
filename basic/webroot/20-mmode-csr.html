@@ -92,11 +92,11 @@
 <p>特権レベルを表す<code class="inline-code">PrivMode</code>型をeeiパッケージに定義してください(<span class="listref"><a href="./20-mmode-csr.html#eei.veryl.define.PrivMode">リスト6.1</a></span>)。</p>
 <div id="eei.veryl.define.PrivMode" class="caption-code">
 <span class="caption">リスト6.1: リスト6.1: PrivMode型の定義 (eei.veryl)</span>
-<pre class="list language-PrivMode">    enum PrivMode: logic&lt;2&gt; {
-        M = 2'b11,
-        S = 2'b01,
-        U = 2'b00,
-    }
+<pre class="list language-PrivMode"><em class="lineno">1: </em>    enum PrivMode: logic&lt;2&gt; {
+<em class="lineno">2: </em>        M = 2'b11,
+<em class="lineno">3: </em>        S = 2'b01,
+<em class="lineno">4: </em>        U = 2'b00,
+<em class="lineno">5: </em>    }
 </pre>
 </div>
 
@@ -114,43 +114,43 @@
 <p>CPUがリセット(起動)したときの特権レベルはM-modeです。現在の特権レベルを保持するレジスタをcsrunitモジュールに作成します(<span class="listref"><a href="./20-mmode-csr.html#csrunit.veryl.define.mode">リスト6.2</a></span>、<span class="listref"><a href="./20-mmode-csr.html#csrunit.veryl.define.resetmode">リスト6.3</a></span>)。</p>
 <div id="csrunit.veryl.define.mode" class="caption-code">
 <span class="caption">リスト6.2: リスト6.2: 現在の特権レベルを示すレジスタの定義 (csrunit.veryl)</span>
-<pre class="list language-mode">    var mode: PrivMode;
+<pre class="list language-mode"><em class="lineno">1: </em>    var mode: PrivMode;
 </pre>
 </div>
 <div id="csrunit.veryl.define.resetmode" class="caption-code">
 <span class="caption">リスト6.3: リスト6.3: レジスタをM-modeでリセットする (csrunit.veryl)</span>
-<pre class="list language-resetmode">    always_ff {
-        if_reset {
-             <b>mode    = PrivMode::M;</b>
+<pre class="list language-resetmode"><em class="lineno">1: </em>    always_ff {
+<em class="lineno">2: </em>        if_reset {
+<em class="lineno">3: </em>             <b>mode    = PrivMode::M;</b>
 </pre>
 </div>
 <p>本書で実装するM-modeのCSRのアドレスをすべて定義します(<span class="listref"><a href="./20-mmode-csr.html#eei.veryl.define.CsrAddr">リスト6.4</a></span>)。本章ではこの中の一部のCSRを実装し、新しく実装する機能で使うタイミングで他のCSRを解説、実装します</p>
 <div id="eei.veryl.define.CsrAddr" class="caption-code">
 <span class="caption">リスト6.4: リスト6.4: CSRのアドレスを定義する (eei.veryl)</span>
-<pre class="list language-CsrAddr">    enum CsrAddr: logic&lt;12&gt; {
-        <b>// Machine Information Registers</b>
-        <b>MIMPID = 12'hf13,</b>
-        <b>MHARTID = 12'hf14,</b>
-        <b>// Machine Trap Setup</b>
-        <b>MSTATUS = 12'h300,</b>
-        <b>MISA = 12'h301,</b>
-        <b>MEDELEG = 12'h302,</b>
-        <b>MIDELEG = 12'h303,</b>
-        <b>MIE = 12'h304,</b>
-        MTVEC = 12'h305,
-        <b>MCOUNTEREN = 12'h306,</b>
-        <b>// Machine Trap Handling</b>
-        <b>MSCRATCH = 12'h340,</b>
-        MEPC = 12'h341,
-        MCAUSE = 12'h342,
-        MTVAL = 12'h343,
-        MIP = 12'h344,
-        <b>// Machine Counter/Timers</b>
-        <b>MCYCLE = 12'hB00,</b>
-        <b>MINSTRET = 12'hB02,</b>
-        // Custom
-        LED = 12'h800,
-    }
+<pre class="list language-CsrAddr"><em class="lineno">1: </em>    enum CsrAddr: logic&lt;12&gt; {
+<em class="lineno">2: </em>        <b>// Machine Information Registers</b>
+<em class="lineno">3: </em>        <b>MIMPID = 12'hf13,</b>
+<em class="lineno">4: </em>        <b>MHARTID = 12'hf14,</b>
+<em class="lineno">5: </em>        <b>// Machine Trap Setup</b>
+<em class="lineno">6: </em>        <b>MSTATUS = 12'h300,</b>
+<em class="lineno">7: </em>        <b>MISA = 12'h301,</b>
+<em class="lineno">8: </em>        <b>MEDELEG = 12'h302,</b>
+<em class="lineno">9: </em>        <b>MIDELEG = 12'h303,</b>
+<em class="lineno">10: </em>        <b>MIE = 12'h304,</b>
+<em class="lineno">11: </em>        MTVEC = 12'h305,
+<em class="lineno">12: </em>        <b>MCOUNTEREN = 12'h306,</b>
+<em class="lineno">13: </em>        <b>// Machine Trap Handling</b>
+<em class="lineno">14: </em>        <b>MSCRATCH = 12'h340,</b>
+<em class="lineno">15: </em>        MEPC = 12'h341,
+<em class="lineno">16: </em>        MCAUSE = 12'h342,
+<em class="lineno">17: </em>        MTVAL = 12'h343,
+<em class="lineno">18: </em>        MIP = 12'h344,
+<em class="lineno">19: </em>        <b>// Machine Counter/Timers</b>
+<em class="lineno">20: </em>        <b>MCYCLE = 12'hB00,</b>
+<em class="lineno">21: </em>        <b>MINSTRET = 12'hB02,</b>
+<em class="lineno">22: </em>        // Custom
+<em class="lineno">23: </em>        LED = 12'h800,
+<em class="lineno">24: </em>    }
 </pre>
 </div>
 
@@ -177,13 +177,13 @@
 <p>misaレジスタを作成し、読み込めるようにします(<span class="listref"><a href="./20-mmode-csr.html#csrunit.veryl.misa.misa">リスト6.5</a></span>、<span class="listref"><a href="./20-mmode-csr.html#csrunit.veryl.misa.rdata">リスト6.6</a></span>)。CPUは<code class="inline-code">RV64IMAC</code>なのでMXLフィールドに<code class="inline-code">64</code>を表す<code class="inline-code">2</code>を設定し、ExtensionsフィールドのM拡張(M)、基本整数命令セット(I)、C拡張(C)、A拡張(A)のビットを<code class="inline-code">1</code>にしています。</p>
 <div id="csrunit.veryl.misa.misa" class="caption-code">
 <span class="caption">リスト6.5: リスト6.5: misaレジスタの定義 (csrunit.veryl)</span>
-<pre class="list language-misa">    let misa  : UIntX = {2'd2, 1'b0 repeat XLEN - 28, 26'b00000000000001000100000101}; // M, I, C, A
+<pre class="list language-misa"><em class="lineno">1: </em>    let misa  : UIntX = {2'd2, 1'b0 repeat XLEN - 28, 26'b00000000000001000100000101}; // M, I, C, A
 </pre>
 </div>
 <div id="csrunit.veryl.misa.rdata" class="caption-code">
 <span class="caption">リスト6.6: リスト6.6: misaレジスタを読めるようにする (csrunit.veryl)</span>
-<pre class="list language-rdata">        rdata = case csr_addr {
-            <b>CsrAddr::MISA  : misa,</b>
+<pre class="list language-rdata"><em class="lineno">1: </em>        rdata = case csr_addr {
+<em class="lineno">2: </em>            <b>CsrAddr::MISA  : misa,</b>
 </pre>
 </div>
 <p>これ以降、AというCSRのBフィールド、ビットのことをA.Bと表記することがあります。</p>
@@ -204,15 +204,15 @@
 <p>せっかくなので、適当な値を設定しましょう。eeiパッケージにIDを定義して、読み込めるようにします(<span class="listref"><a href="./20-mmode-csr.html#eei.veryl.mimpid.mimpid">リスト6.7</a></span>、<span class="listref"><a href="./20-mmode-csr.html#csrunit.veryl.mimpid.rdata">リスト6.8</a></span>)。</p>
 <div id="eei.veryl.mimpid.mimpid" class="caption-code">
 <span class="caption">リスト6.7: リスト6.7: IDを適当な値で定義する (eei.veryl)</span>
-<pre class="list language-mimpid">    // Machine Implementation ID
-    const MACHINE_IMPLEMENTATION_ID: UIntX = 1;
+<pre class="list language-mimpid"><em class="lineno">1: </em>    // Machine Implementation ID
+<em class="lineno">2: </em>    const MACHINE_IMPLEMENTATION_ID: UIntX = 1;
 </pre>
 </div>
 <div id="csrunit.veryl.mimpid.rdata" class="caption-code">
 <span class="caption">リスト6.8: リスト6.8: mipmidレジスタを読めるようにする (csrunit.veryl)</span>
-<pre class="list language-rdata">        rdata = case csr_addr {
-            CsrAddr::MISA  : misa,
-            <b>CsrAddr::MIMPID: MACHINE_IMPLEMENTATION_ID,</b>
+<pre class="list language-rdata"><em class="lineno">1: </em>        rdata = case csr_addr {
+<em class="lineno">2: </em>            CsrAddr::MISA  : misa,
+<em class="lineno">3: </em>            <b>CsrAddr::MIMPID: MACHINE_IMPLEMENTATION_ID,</b>
 </pre>
 </div>
 
@@ -227,15 +227,15 @@
 <p>mhartレジスタを作成し、読み込めるようにします(<span class="listref"><a href="./20-mmode-csr.html#csrunit.veryl.mhartid.mhartid">リスト6.9</a></span>、<span class="listref"><a href="./20-mmode-csr.html#csrunit.veryl.mhartid.rdata">リスト6.10</a></span>)。</p>
 <div id="csrunit.veryl.mhartid.mhartid" class="caption-code">
 <span class="caption">リスト6.9: リスト6.9: mhartidレジスタの定義 (csrunit.veryl)</span>
-<pre class="list language-mhartid">    let mhartid: UIntX = 0;
+<pre class="list language-mhartid"><em class="lineno">1: </em>    let mhartid: UIntX = 0;
 </pre>
 </div>
 <div id="csrunit.veryl.mhartid.rdata" class="caption-code">
 <span class="caption">リスト6.10: リスト6.10: mhartidレジスタを読めるようにする (csrunit.veryl)</span>
-<pre class="list language-rdata">        rdata = case csr_addr {
-            CsrAddr::MISA   : misa,
-            CsrAddr::MIMPID : MACHINE_IMPLEMENTATION_ID,
-            <b>CsrAddr::MHARTID: mhartid,</b>
+<pre class="list language-rdata"><em class="lineno">1: </em>        rdata = case csr_addr {
+<em class="lineno">2: </em>            CsrAddr::MISA   : misa,
+<em class="lineno">3: </em>            CsrAddr::MIMPID : MACHINE_IMPLEMENTATION_ID,
+<em class="lineno">4: </em>            <b>CsrAddr::MHARTID: mhartid,</b>
 </pre>
 </div>
 
@@ -249,43 +249,43 @@
 <p>mstatusレジスタは、拡張の設定やトラップ、状態などを管理するMXLENビットのレジスタです。基本編では<span class="imgref"><a href="./20-mmode-csr.html#mstatus">図6.4</a></span>に示しているフィールドを、そのフィールドが必要になったときに実装します。とりあえず今のところは読み込みだけできるようにします(<span class="listref"><a href="./20-mmode-csr.html#csrunit.veryl.mstatus.wmaskdef">リスト6.11</a></span>、<span class="listref"><a href="./20-mmode-csr.html#csrunit.veryl.mstatus.wmask">リスト6.12</a></span>、<span class="listref"><a href="./20-mmode-csr.html#csrunit.veryl.mstatus.reg">リスト6.13</a></span>、<span class="listref"><a href="./20-mmode-csr.html#csrunit.veryl.mstatus.rdata">リスト6.14</a></span>、<span class="listref"><a href="./20-mmode-csr.html#csrunit.veryl.mstatus.reset">リスト6.15</a></span>、<span class="listref"><a href="./20-mmode-csr.html#csrunit.veryl.mstatus.write">リスト6.16</a></span>)。</p>
 <div id="csrunit.veryl.mstatus.wmaskdef" class="caption-code">
 <span class="caption">リスト6.11: リスト6.11: 書き込みマスクの定義 (csrunit.veryl)</span>
-<pre class="list language-wmaskdef">    const MSTATUS_WMASK: UIntX = 'h0000_0000_0000_0000 as UIntX;
+<pre class="list language-wmaskdef"><em class="lineno">1: </em>    const MSTATUS_WMASK: UIntX = 'h0000_0000_0000_0000 as UIntX;
 </pre>
 </div>
 <div id="csrunit.veryl.mstatus.wmask" class="caption-code">
 <span class="caption">リスト6.12: リスト6.12: 書き込みマスクを設定する (csrunit.veryl)</span>
-<pre class="list language-wmask">        wmask = case csr_addr {
-            <b>CsrAddr::MSTATUS: MSTATUS_WMASK,</b>
+<pre class="list language-wmask"><em class="lineno">1: </em>        wmask = case csr_addr {
+<em class="lineno">2: </em>            <b>CsrAddr::MSTATUS: MSTATUS_WMASK,</b>
 </pre>
 </div>
 <div id="csrunit.veryl.mstatus.reg" class="caption-code">
 <span class="caption">リスト6.13: リスト6.13: mstatusレジスタの定義 (csrunit.veryl)</span>
-<pre class="list language-reg">    var mstatus: UIntX;
+<pre class="list language-reg"><em class="lineno">1: </em>    var mstatus: UIntX;
 </pre>
 </div>
 <div id="csrunit.veryl.mstatus.rdata" class="caption-code">
 <span class="caption">リスト6.14: リスト6.14: mstatusレジスタを読めるようにする (csrunit.veryl)</span>
-<pre class="list language-rdata">        rdata = case csr_addr {
-            CsrAddr::MISA   : misa,
-            CsrAddr::MIMPID : MACHINE_IMPLEMENTATION_ID,
-            CsrAddr::MHARTID: mhartid,
-            <b>CsrAddr::MSTATUS: mstatus,</b>
+<pre class="list language-rdata"><em class="lineno">1: </em>        rdata = case csr_addr {
+<em class="lineno">2: </em>            CsrAddr::MISA   : misa,
+<em class="lineno">3: </em>            CsrAddr::MIMPID : MACHINE_IMPLEMENTATION_ID,
+<em class="lineno">4: </em>            CsrAddr::MHARTID: mhartid,
+<em class="lineno">5: </em>            <b>CsrAddr::MSTATUS: mstatus,</b>
 </pre>
 </div>
 <div id="csrunit.veryl.mstatus.reset" class="caption-code">
 <span class="caption">リスト6.15: リスト6.15: mstatusレジスタのリセット (csrunit.veryl)</span>
-<pre class="list language-reset">    always_ff {
-        if_reset {
-            mode    = PrivMode::M;
-            <b>mstatus = 0;</b>
+<pre class="list language-reset"><em class="lineno">1: </em>    always_ff {
+<em class="lineno">2: </em>        if_reset {
+<em class="lineno">3: </em>            mode    = PrivMode::M;
+<em class="lineno">4: </em>            <b>mstatus = 0;</b>
 </pre>
 </div>
 <div id="csrunit.veryl.mstatus.write" class="caption-code">
 <span class="caption">リスト6.16: リスト6.16: mstatusレジスタの書き込み (csrunit.veryl)</span>
-<pre class="list language-write">    if is_wsc {
-        case csr_addr {
-            <b>CsrAddr::MSTATUS: mstatus = wdata;</b>
-            CsrAddr::MTVEC  : mtvec   = wdata;
+<pre class="list language-write"><em class="lineno">1: </em>    if is_wsc {
+<em class="lineno">2: </em>        case csr_addr {
+<em class="lineno">3: </em>            <b>CsrAddr::MSTATUS: mstatus = wdata;</b>
+<em class="lineno">4: </em>            CsrAddr::MTVEC  : mtvec   = wdata;
 </pre>
 </div>
 
@@ -311,29 +311,29 @@
 <p>mcycleレジスタを定義して読み込めるようにします。(<span class="listref"><a href="./20-mmode-csr.html#csrunit.veryl.mcycle.reg">リスト6.17</a></span>、<span class="listref"><a href="./20-mmode-csr.html#csrunit.veryl.mcycle.rdata">リスト6.18</a></span>)。</p>
 <div id="csrunit.veryl.mcycle.reg" class="caption-code">
 <span class="caption">リスト6.17: リスト6.17: mcycleレジスタの定義 (csrunit.veryl)</span>
-<pre class="list language-reg">    var mcycle : UInt64;
+<pre class="list language-reg"><em class="lineno">1: </em>    var mcycle : UInt64;
 </pre>
 </div>
 <div id="csrunit.veryl.mcycle.rdata" class="caption-code">
 <span class="caption">リスト6.18: リスト6.18: rdataの割り当てで、mcycleレジスタを読めるようにする (csrunit.veryl)</span>
-<pre class="list language-rdata">    CsrAddr::MCYCLE : mcycle,
+<pre class="list language-rdata"><em class="lineno">1: </em>    CsrAddr::MCYCLE : mcycle,
 </pre>
 </div>
 <p>always_ffブロックで、クロックごとに値を更新します(<span class="listref"><a href="./20-mmode-csr.html#csrunit.veryl.mcycle.always_ff">リスト6.19</a></span>)。</p>
 <div id="csrunit.veryl.mcycle.always_ff" class="caption-code">
 <span class="caption">リスト6.19: リスト6.19: mcycleレジスタのリセットとインクリメント (csrunit.veryl)</span>
-<pre class="list language-always_ff">    always_ff {
-        if_reset {
-            mode    = PrivMode::M;
-            mstatus = 0;
-            mtvec   = 0;
-            <b>mcycle  = 0;</b>
-            mepc    = 0;
-            mcause  = 0;
-            mtval   = 0;
-            led     = 0;
-        } else {
-            <b>mcycle += 1;</b>
+<pre class="list language-always_ff"><em class="lineno">1: </em>    always_ff {
+<em class="lineno">2: </em>        if_reset {
+<em class="lineno">3: </em>            mode    = PrivMode::M;
+<em class="lineno">4: </em>            mstatus = 0;
+<em class="lineno">5: </em>            mtvec   = 0;
+<em class="lineno">6: </em>            <b>mcycle  = 0;</b>
+<em class="lineno">7: </em>            mepc    = 0;
+<em class="lineno">8: </em>            mcause  = 0;
+<em class="lineno">9: </em>            mtval   = 0;
+<em class="lineno">10: </em>            led     = 0;
+<em class="lineno">11: </em>        } else {
+<em class="lineno">12: </em>            <b>mcycle += 1;</b>
 </pre>
 </div>
 
@@ -341,63 +341,63 @@
 <p>coreモジュールでinstretレジスタを作成し、トラップが発生していない命令がWBステージに到達した場合にインクリメントします(<span class="listref"><a href="./20-mmode-csr.html#core.veryl.minstret.minstret">リスト6.20</a></span>、<span class="listref"><a href="./20-mmode-csr.html#core.veryl.minstret.inc">リスト6.21</a></span>)。</p>
 <div id="core.veryl.minstret.minstret" class="caption-code">
 <span class="caption">リスト6.20: リスト6.20: minstretレジスタの定義 (core.veryl)</span>
-<pre class="list language-minstret">    var minstret        : UInt64;
+<pre class="list language-minstret"><em class="lineno">1: </em>    var minstret        : UInt64;
 </pre>
 </div>
 <div id="core.veryl.minstret.inc" class="caption-code">
 <span class="caption">リスト6.21: リスト6.21: minstretレジスタのインクリメント (core.veryl)</span>
-<pre class="list language-inc">    always_ff {
-        if_reset {
-            minstret = 0;
-        } else {
-            if wbq_rvalid &amp;&amp; wbq_rready &amp;&amp; !wbq_rdata.raise_trap {
-                minstret += 1;
-            }
-        }
-    }
+<pre class="list language-inc"><em class="lineno">1: </em>    always_ff {
+<em class="lineno">2: </em>        if_reset {
+<em class="lineno">3: </em>            minstret = 0;
+<em class="lineno">4: </em>        } else {
+<em class="lineno">5: </em>            if wbq_rvalid &amp;&amp; wbq_rready &amp;&amp; !wbq_rdata.raise_trap {
+<em class="lineno">6: </em>                minstret += 1;
+<em class="lineno">7: </em>            }
+<em class="lineno">8: </em>        }
+<em class="lineno">9: </em>    }
 </pre>
 </div>
 <p><code class="inline-code">minstret</code>の値をcsrunitモジュールに渡し、読み込めるようにします(<span class="listref"><a href="./20-mmode-csr.html#csrunit.veryl.minstret.port2">リスト6.22</a></span>、<span class="listref"><a href="./20-mmode-csr.html#core.veryl.minstret.port2">リスト6.23</a></span>、<span class="listref"><a href="./20-mmode-csr.html#csrunit.veryl.minstret.rdata">リスト6.24</a></span>)。</p>
 <div id="csrunit.veryl.minstret.port2" class="caption-code">
 <span class="caption">リスト6.22: リスト6.22: csrunitモジュールのポートにminstretを追加する (csrunit.veryl)</span>
-<pre class="list language-port2">    minstret   : input  UInt64           ,
+<pre class="list language-port2"><em class="lineno">1: </em>    minstret   : input  UInt64           ,
 </pre>
 </div>
 <div id="core.veryl.minstret.port2" class="caption-code">
 <span class="caption">リスト6.23: リスト6.23: csrunitモジュールのインスタンスにminstretレジスタを渡す (core.veryl)</span>
-<pre class="list language-port2">        minstret                          ,
+<pre class="list language-port2"><em class="lineno">1: </em>        minstret                          ,
 </pre>
 </div>
 <div id="csrunit.veryl.minstret.rdata" class="caption-code">
 <span class="caption">リスト6.24: リスト6.24: minstretレジスタを読めるようにする (csrunit.veryl)</span>
-<pre class="list language-rdata">    CsrAddr::MCYCLE  : mcycle,
-    <b>CsrAddr::MINSTRET: minstret,</b>
-    CsrAddr::MEPC    : mepc,
+<pre class="list language-rdata"><em class="lineno">1: </em>    CsrAddr::MCYCLE  : mcycle,
+<em class="lineno">2: </em>    <b>CsrAddr::MINSTRET: minstret,</b>
+<em class="lineno">3: </em>    CsrAddr::MEPC    : mepc,
 </pre>
 </div>
 <p>csrunitモジュールはMRET命令でも<code class="inline-code">raise_trap</code>フラグを立てるため、このままではMRET命令で<code class="inline-code">minstret</code>がインクリメントされません。そのため、トラップから戻る命令であることを示すフラグをcsrunitモジュールに作成し、正しくインクリメントされるようにします(<span class="listref"><a href="./20-mmode-csr.html#csrunit.veryl.minstret.port1">リスト6.25</a></span>、<span class="listref"><a href="./20-mmode-csr.html#csrunit.veryl.minstret.trap_return">リスト6.26</a></span>、<span class="listref"><a href="./20-mmode-csr.html#core.veryl.minstret.port1">リスト6.27</a></span>、<span class="listref"><a href="./20-mmode-csr.html#core.veryl.minstret.raise_trap">リスト6.28</a></span>)。</p>
 <div id="csrunit.veryl.minstret.port1" class="caption-code">
 <span class="caption">リスト6.25: リスト6.25: csrunitモジュールのポートにtrap_returnを追加する (csrunit.veryl)</span>
-<pre class="list language-port1">    trap_return: output logic            ,
+<pre class="list language-port1"><em class="lineno">1: </em>    trap_return: output logic            ,
 </pre>
 </div>
 <div id="csrunit.veryl.minstret.trap_return" class="caption-code">
 <span class="caption">リスト6.26: リスト6.26: MRET命令の時にtrap_returnを1にする (csrunit.veryl)</span>
-<pre class="list language-trap_return">    <b>// Trap Return</b>
-    <b>assign trap_return = valid &amp;&amp; is_mret &amp;&amp; !raise_expt;</b>
-
-    // Trap
-    assign raise_trap  = raise_expt || <b>trap_return</b>;
+<pre class="list language-trap_return"><em class="lineno">1: </em>    <b>// Trap Return</b>
+<em class="lineno">2: </em>    <b>assign trap_return = valid &amp;&amp; is_mret &amp;&amp; !raise_expt;</b>
+<em class="lineno">3: </em>
+<em class="lineno">4: </em>    // Trap
+<em class="lineno">5: </em>    assign raise_trap  = raise_expt || <b>trap_return</b>;
 </pre>
 </div>
 <div id="core.veryl.minstret.port1" class="caption-code">
 <span class="caption">リスト6.27: リスト6.27: csrunitモジュールのインスタンスからtrap_returnを受け取る (core.veryl)</span>
-<pre class="list language-port1">        trap_return: csru_trap_return     ,
+<pre class="list language-port1"><em class="lineno">1: </em>        trap_return: csru_trap_return     ,
 </pre>
 </div>
 <div id="core.veryl.minstret.raise_trap" class="caption-code">
 <span class="caption">リスト6.28: リスト6.28: MRET命令ならraise_trapフラグを立てないようにする (core.veryl)</span>
-<pre class="list language-raise_trap">        wbq_wdata.raise_trap = csru_raise_trap <b>&amp;&amp; !csru_trap_return;</b>
+<pre class="list language-raise_trap"><em class="lineno">1: </em>        wbq_wdata.raise_trap = csru_raise_trap <b>&amp;&amp; !csru_trap_return;</b>
 </pre>
 </div>
 
@@ -417,42 +417,42 @@
 <p>mscratchレジスタを定義し、自由に読み書きできるようにします(<span class="listref"><a href="./20-mmode-csr.html#csrunit.veryl.mscratch.reg">リスト6.29</a></span>、<span class="listref"><a href="./20-mmode-csr.html#csrunit.veryl.mscratch.reset">リスト6.30</a></span>、<span class="listref"><a href="./20-mmode-csr.html#csrunit.veryl.mscratch.rdata">リスト6.31</a></span>、<span class="listref"><a href="./20-mmode-csr.html#csrunit.veryl.mscratch.WMASK">リスト6.32</a></span>、<span class="listref"><a href="./20-mmode-csr.html#csrunit.veryl.mscratch.wmask">リスト6.33</a></span>、<span class="listref"><a href="./20-mmode-csr.html#csrunit.veryl.mscratch.write">リスト6.34</a></span>)。</p>
 <div id="csrunit.veryl.mscratch.reg" class="caption-code">
 <span class="caption">リスト6.29: リスト6.29: mscratchレジスタの定義 (csrunit.veryl)</span>
-<pre class="list language-reg">    var mcycle  : UInt64;
-    <b>var mscratch: UIntX ;</b>
-    var mepc    : UIntX ;
-
-//list[csrunit.veryl.mscratch.reset][mscratchレジスタを0でリセットする (csrunit.veryl)]{
-    mtvec    = 0;
-    <b>mscratch = 0;</b>
-    mcycle   = 0;
+<pre class="list language-reg"><em class="lineno">1: </em>    var mcycle  : UInt64;
+<em class="lineno">2: </em>    <b>var mscratch: UIntX ;</b>
+<em class="lineno">3: </em>    var mepc    : UIntX ;
+<em class="lineno">4: </em>
+<em class="lineno">5: </em>//list[csrunit.veryl.mscratch.reset][mscratchレジスタを0でリセットする (csrunit.veryl)][lineno=on]{
+<em class="lineno">6: </em>    mtvec    = 0;
+<em class="lineno">7: </em>    <b>mscratch = 0;</b>
+<em class="lineno">8: </em>    mcycle   = 0;
 </pre>
 </div>
 <div id="csrunit.veryl.mscratch.rdata" class="caption-code">
 <span class="caption">リスト6.31: リスト6.31: mscratchレジスタを読めるようにする (csrunit.veryl)</span>
-<pre class="list language-rdata">    CsrAddr::MINSTRET: minstret,
-    <b>CsrAddr::MSCRATCH: mscratch,</b>
-    CsrAddr::MEPC    : mepc,
+<pre class="list language-rdata"><em class="lineno">1: </em>    CsrAddr::MINSTRET: minstret,
+<em class="lineno">2: </em>    <b>CsrAddr::MSCRATCH: mscratch,</b>
+<em class="lineno">3: </em>    CsrAddr::MEPC    : mepc,
 </pre>
 </div>
 <div id="csrunit.veryl.mscratch.WMASK" class="caption-code">
 <span class="caption">リスト6.32: リスト6.32: 書き込みマスクの定義 (csrunit.veryl)</span>
-<pre class="list language-WMASK">    const MTVEC_WMASK   : UIntX = 'hffff_ffff_ffff_fffc;
-    <b>const MSCRATCH_WMASK: UIntX = 'hffff_ffff_ffff_ffff;</b>
-    const MEPC_WMASK    : UIntX = 'hffff_ffff_ffff_fffe;
+<pre class="list language-WMASK"><em class="lineno">1: </em>    const MTVEC_WMASK   : UIntX = 'hffff_ffff_ffff_fffc;
+<em class="lineno">2: </em>    <b>const MSCRATCH_WMASK: UIntX = 'hffff_ffff_ffff_ffff;</b>
+<em class="lineno">3: </em>    const MEPC_WMASK    : UIntX = 'hffff_ffff_ffff_fffe;
 </pre>
 </div>
 <div id="csrunit.veryl.mscratch.wmask" class="caption-code">
 <span class="caption">リスト6.33: リスト6.33: 書き込みマスクをwmaskに割り当てる (csrunit.veryl)</span>
-<pre class="list language-wmask">    CsrAddr::MTVEC   : MTVEC_WMASK,
-    <b>CsrAddr::MSCRATCH: MSCRATCH_WMASK,</b>
-    CsrAddr::MEPC    : MEPC_WMASK,
+<pre class="list language-wmask"><em class="lineno">1: </em>    CsrAddr::MTVEC   : MTVEC_WMASK,
+<em class="lineno">2: </em>    <b>CsrAddr::MSCRATCH: MSCRATCH_WMASK,</b>
+<em class="lineno">3: </em>    CsrAddr::MEPC    : MEPC_WMASK,
 </pre>
 </div>
 <div id="csrunit.veryl.mscratch.write" class="caption-code">
 <span class="caption">リスト6.34: リスト6.34: mscratchレジスタの書き込み (csrunit.veryl)</span>
-<pre class="list language-write">    CsrAddr::MTVEC   : mtvec    = wdata;
-    <b>CsrAddr::MSCRATCH: mscratch = wdata;</b>
-    CsrAddr::MEPC    : mepc     = wdata;
+<pre class="list language-write"><em class="lineno">1: </em>    CsrAddr::MTVEC   : mtvec    = wdata;
+<em class="lineno">2: </em>    <b>CsrAddr::MSCRATCH: mscratch = wdata;</b>
+<em class="lineno">3: </em>    CsrAddr::MEPC    : mepc     = wdata;
 </pre>
 </div>
         </main>

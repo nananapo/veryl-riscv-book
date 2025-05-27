@@ -93,117 +93,117 @@
 <p>まず、例外が発生するかどうか(<code class="inline-code">valid</code>)、例外のcause(<code class="inline-code">cause</code>)をまとめた<code class="inline-code">ExceptionInfo</code>構造体を定義します(<span class="listref"><a href="./11-impl-exception.html#corectrl.veryl.exptinfo-range.ExceptionInfo">リスト2.1</a></span>)。</p>
 <div id="corectrl.veryl.exptinfo-range.ExceptionInfo" class="caption-code">
 <span class="caption">リスト2.1: リスト2.1: ExceptionInfo構造体を定義する (corectrl.veryl)</span>
-<pre class="list language-ExceptionInfo">    // 例外の情報を保存するための型
-    struct ExceptionInfo {
-        valid: logic   ,
-        cause: CsrCause,
-    }
+<pre class="list language-ExceptionInfo"><em class="lineno">1: </em>    // 例外の情報を保存するための型
+<em class="lineno">2: </em>    struct ExceptionInfo {
+<em class="lineno">3: </em>        valid: logic   ,
+<em class="lineno">4: </em>        cause: CsrCause,
+<em class="lineno">5: </em>    }
 </pre>
 </div>
 <p>EXステージ、MEMステージのFIFOのデータ型に構造体を追加します(<span class="listref"><a href="./11-impl-exception.html#core.veryl.exptinfo-range.exq_type">リスト2.2</a></span>、<span class="listref"><a href="./11-impl-exception.html#core.veryl.exptinfo-range.memq_type">リスト2.3</a></span>)。</p>
 <div id="core.veryl.exptinfo-range.exq_type" class="caption-code">
 <span class="caption">リスト2.2: リスト2.2: EXステージのFIFOにExceptionInfoを追加する (core.veryl)</span>
-<pre class="list language-exq_type">    struct exq_type {
-        addr: Addr         ,
-        bits: Inst         ,
-        ctrl: InstCtrl     ,
-        imm : UIntX        ,
-        <b>expt: ExceptionInfo,</b>
-    }
+<pre class="list language-exq_type"><em class="lineno">1: </em>    struct exq_type {
+<em class="lineno">2: </em>        addr: Addr         ,
+<em class="lineno">3: </em>        bits: Inst         ,
+<em class="lineno">4: </em>        ctrl: InstCtrl     ,
+<em class="lineno">5: </em>        imm : UIntX        ,
+<em class="lineno">6: </em>        <b>expt: ExceptionInfo,</b>
+<em class="lineno">7: </em>    }
 </pre>
 </div>
 <div id="core.veryl.exptinfo-range.memq_type" class="caption-code">
 <span class="caption">リスト2.3: リスト2.3: MEMステージのFIFOにExceptionInfoを追加する (core.veryl)</span>
-<pre class="list language-memq_type">    struct memq_type {
-        addr      : Addr            ,
-        bits      : Inst            ,
-        ctrl      : InstCtrl        ,
-        imm       : UIntX           ,
-        <b>expt      : ExceptionInfo   ,</b>
-        alu_result: UIntX           ,
-        rs1_addr  : logic        &lt;5&gt;,
+<pre class="list language-memq_type"><em class="lineno">1: </em>    struct memq_type {
+<em class="lineno">2: </em>        addr      : Addr            ,
+<em class="lineno">3: </em>        bits      : Inst            ,
+<em class="lineno">4: </em>        ctrl      : InstCtrl        ,
+<em class="lineno">5: </em>        imm       : UIntX           ,
+<em class="lineno">6: </em>        <b>expt      : ExceptionInfo   ,</b>
+<em class="lineno">7: </em>        alu_result: UIntX           ,
+<em class="lineno">8: </em>        rs1_addr  : logic        &lt;5&gt;,
 </pre>
 </div>
 <p>IDステージからEXステージに命令を渡すとき、命令がECALL命令なら例外が発生することを伝えます(<span class="listref"><a href="./11-impl-exception.html#core.veryl.exptinfo-range.idex">リスト2.4</a></span>)。</p>
 <div id="core.veryl.exptinfo-range.idex" class="caption-code">
 <span class="caption">リスト2.4: リスト2.4: IDステージでECALL命令を判定する (core.veryl)</span>
-<pre class="list language-idex">    always_comb {
-        // ID -&gt; EX
-        if_fifo_rready = exq_wready;
-        exq_wvalid     = if_fifo_rvalid;
-        exq_wdata.addr = if_fifo_rdata.addr;
-        exq_wdata.bits = if_fifo_rdata.bits;
-        exq_wdata.ctrl = ids_ctrl;
-        exq_wdata.imm  = ids_imm;
-        <b>// exception</b>
-        <b>exq_wdata.expt.valid = ids_inst_bits == 32'h00000073; // ECALL</b>
-        <b>exq_wdata.expt.cause = CsrCause::ENVIRONMENT_CALL_FROM_M_MODE;</b>
-    }
+<pre class="list language-idex"><em class="lineno">1: </em>    always_comb {
+<em class="lineno">2: </em>        // ID -&gt; EX
+<em class="lineno">3: </em>        if_fifo_rready = exq_wready;
+<em class="lineno">4: </em>        exq_wvalid     = if_fifo_rvalid;
+<em class="lineno">5: </em>        exq_wdata.addr = if_fifo_rdata.addr;
+<em class="lineno">6: </em>        exq_wdata.bits = if_fifo_rdata.bits;
+<em class="lineno">7: </em>        exq_wdata.ctrl = ids_ctrl;
+<em class="lineno">8: </em>        exq_wdata.imm  = ids_imm;
+<em class="lineno">9: </em>        <b>// exception</b>
+<em class="lineno">10: </em>        <b>exq_wdata.expt.valid = ids_inst_bits == 32'h00000073; // ECALL</b>
+<em class="lineno">11: </em>        <b>exq_wdata.expt.cause = CsrCause::ENVIRONMENT_CALL_FROM_M_MODE;</b>
+<em class="lineno">12: </em>    }
 </pre>
 </div>
 <p>EXステージで例外は発生しないので、例外情報をそのままMEMステージに渡します(<span class="listref"><a href="./11-impl-exception.html#core.veryl.exptinfo-range.exmem">リスト2.5</a></span>)。</p>
 <div id="core.veryl.exptinfo-range.exmem" class="caption-code">
 <span class="caption">リスト2.5: リスト2.5: EXステージからMEMステージに例外情報を渡す (core.veryl)</span>
-<pre class="list language-exmem">    always_comb {
-        // EX -&gt; MEM
-        exq_rready            = memq_wready &amp;&amp; !exs_stall;
-        ...
-        memq_wdata.jump_addr  = if inst_is_br(exs_ctrl) ? exs_pc + exs_imm : exs_alu_result &amp; ~1;
-        <b>memq_wdata.expt       = exq_rdata.expt;</b>
-    }
+<pre class="list language-exmem"><em class="lineno">1: </em>    always_comb {
+<em class="lineno">2: </em>        // EX -&gt; MEM
+<em class="lineno">3: </em>        exq_rready            = memq_wready &amp;&amp; !exs_stall;
+<em class="lineno">4: </em>        ...
+<em class="lineno">5: </em>        memq_wdata.jump_addr  = if inst_is_br(exs_ctrl) ? exs_pc + exs_imm : exs_alu_result &amp; ~1;
+<em class="lineno">6: </em>        <b>memq_wdata.expt       = exq_rdata.expt;</b>
+<em class="lineno">7: </em>    }
 </pre>
 </div>
 <p>csrunitモジュールを変更します。<code class="inline-code">expt_info</code>ポートを追加して、MEMステージ以前の例外情報を受け取ります(<span class="listref"><a href="./11-impl-exception.html#csrunit.veryl.exptinfo-range.port">リスト2.6</a></span>、<span class="listref"><a href="./11-impl-exception.html#core.veryl.exptinfo-range.memreg">リスト2.7</a></span>、<span class="listref"><a href="./11-impl-exception.html#core.veryl.exptinfo-range.csru">リスト2.8</a></span>)。</p>
 <div id="csrunit.veryl.exptinfo-range.port" class="caption-code">
 <span class="caption">リスト2.6: リスト2.6: csrunitモジュールに例外情報を受け取るためのポートを追加する (csrunit.veryl)</span>
-<pre class="list language-port">module csrunit (
-    clk        : input  clock            ,
-    rst        : input  reset            ,
-    valid      : input  logic            ,
-    pc         : input  Addr             ,
-    ctrl       : input  InstCtrl         ,
-    <b>expt_info  : input  ExceptionInfo    ,</b>
-    rd_addr    : input  logic        &lt;5&gt; ,
+<pre class="list language-port"><em class="lineno">1: </em>module csrunit (
+<em class="lineno">2: </em>    clk        : input  clock            ,
+<em class="lineno">3: </em>    rst        : input  reset            ,
+<em class="lineno">4: </em>    valid      : input  logic            ,
+<em class="lineno">5: </em>    pc         : input  Addr             ,
+<em class="lineno">6: </em>    ctrl       : input  InstCtrl         ,
+<em class="lineno">7: </em>    <b>expt_info  : input  ExceptionInfo    ,</b>
+<em class="lineno">8: </em>    rd_addr    : input  logic        &lt;5&gt; ,
 </pre>
 </div>
 <div id="core.veryl.exptinfo-range.memreg" class="caption-code">
 <span class="caption">リスト2.7: リスト2.7: MEMステージの例外情報の変数を作成する (core.veryl)</span>
-<pre class="list language-memreg">    ///////////////////////////////// MEM Stage /////////////////////////////////
-    var mems_is_new   : logic           ;
-    let mems_valid    : logic            = memq_rvalid;
-    let mems_pc       : Addr             = memq_rdata.addr;
-    let mems_inst_bits: Inst             = memq_rdata.bits;
-    let mems_ctrl     : InstCtrl         = memq_rdata.ctrl;
-    <b>let mems_expt     : ExceptionInfo    = memq_rdata.expt;</b>
-    let mems_rd_addr  : logic        &lt;5&gt; = mems_inst_bits[11:7];
+<pre class="list language-memreg"><em class="lineno">1: </em>    ///////////////////////////////// MEM Stage /////////////////////////////////
+<em class="lineno">2: </em>    var mems_is_new   : logic           ;
+<em class="lineno">3: </em>    let mems_valid    : logic            = memq_rvalid;
+<em class="lineno">4: </em>    let mems_pc       : Addr             = memq_rdata.addr;
+<em class="lineno">5: </em>    let mems_inst_bits: Inst             = memq_rdata.bits;
+<em class="lineno">6: </em>    let mems_ctrl     : InstCtrl         = memq_rdata.ctrl;
+<em class="lineno">7: </em>    <b>let mems_expt     : ExceptionInfo    = memq_rdata.expt;</b>
+<em class="lineno">8: </em>    let mems_rd_addr  : logic        &lt;5&gt; = mems_inst_bits[11:7];
 </pre>
 </div>
 <div id="core.veryl.exptinfo-range.csru" class="caption-code">
 <span class="caption">リスト2.8: リスト2.8: csrunitモジュールに例外情報を供給する (core.veryl)</span>
-<pre class="list language-csru">    inst csru: csrunit (
-        clk                             ,
-        rst                             ,
-        valid    : mems_valid           ,
-        pc       : mems_pc              ,
-        ctrl     : mems_ctrl            ,
-        <b>expt_info: mems_expt            ,</b>
-        rd_addr  : mems_rd_addr         ,
+<pre class="list language-csru"><em class="lineno">1: </em>    inst csru: csrunit (
+<em class="lineno">2: </em>        clk                             ,
+<em class="lineno">3: </em>        rst                             ,
+<em class="lineno">4: </em>        valid    : mems_valid           ,
+<em class="lineno">5: </em>        pc       : mems_pc              ,
+<em class="lineno">6: </em>        ctrl     : mems_ctrl            ,
+<em class="lineno">7: </em>        <b>expt_info: mems_expt            ,</b>
+<em class="lineno">8: </em>        rd_addr  : mems_rd_addr         ,
 </pre>
 </div>
 <p>ECALL命令かどうかを判定する<code class="inline-code">is_ecall</code>変数を削除して、例外の発生条件、例外の種類を示す値を変更します(<span class="listref"><a href="./11-impl-exception.html#csrunit.veryl.exptinfo-range.remove_ecall">リスト2.9</a></span>、<span class="listref"><a href="./11-impl-exception.html#csrunit.veryl.exptinfo-range.expt">リスト2.10</a></span>)。</p>
 <div id="csrunit.veryl.exptinfo-range.remove_ecall" class="caption-code">
 <span class="caption">リスト2.9: リスト2.9: csrunitモジュールでのECALL命令の判定を削除する (csrunit.veryl)</span>
-<pre class="list language-remove_ecall">    // CSRR(W|S|C)[I]命令かどうか
-    let is_wsc: logic = ctrl.is_csr &amp;&amp; ctrl.funct3[1:0] != 0;
-    <del>// ECALL命令かどうか</del>
-    <del>let is_ecall: logic = ctrl.is_csr &amp;&amp; csr_addr == 0 &amp;&amp; rs1[4:0] == 0 &amp;&amp; ctrl.funct3 == 0 &amp;&amp; rd_addr == 0;</del>
+<pre class="list language-remove_ecall"><em class="lineno">1: </em>    // CSRR(W|S|C)[I]命令かどうか
+<em class="lineno">2: </em>    let is_wsc: logic = ctrl.is_csr &amp;&amp; ctrl.funct3[1:0] != 0;
+<em class="lineno">3: </em>    <del>// ECALL命令かどうか</del>
+<em class="lineno">4: </em>    <del>let is_ecall: logic = ctrl.is_csr &amp;&amp; csr_addr == 0 &amp;&amp; rs1[4:0] == 0 &amp;&amp; ctrl.funct3 == 0 &amp;&amp; rd_addr == 0;</del>
 </pre>
 </div>
 <div id="csrunit.veryl.exptinfo-range.expt" class="caption-code">
 <span class="caption">リスト2.10: リスト2.10: ExceptionInfoを使って例外を起こす (csrunit.veryl)</span>
-<pre class="list language-expt">    // Exception
-    let raise_expt: logic = valid &amp;&amp; expt_info.valid;
-    let expt_cause: UIntX = expt_info.cause;
+<pre class="list language-expt"><em class="lineno">1: </em>    // Exception
+<em class="lineno">2: </em>    let raise_expt: logic = valid &amp;&amp; expt_info.valid;
+<em class="lineno">3: </em>    let expt_cause: UIntX = expt_info.cause;
 </pre>
 </div>
 
@@ -219,106 +219,106 @@
 <p><code class="inline-code">ExceptionInfo</code>構造体に例外に固有の情報を示す<code class="inline-code">value</code>を追加します(<span class="listref"><a href="./11-impl-exception.html#corectrl.veryl.mtval-range.ExceptionInfo">リスト2.11</a></span>)。</p>
 <div id="corectrl.veryl.mtval-range.ExceptionInfo" class="caption-code">
 <span class="caption">リスト2.11: リスト2.11: tvalをExceptionInfoに追加する (corectrl.veryl)</span>
-<pre class="list language-ExceptionInfo">    struct ExceptionInfo {
-        valid: logic   ,
-        cause: CsrCause,
-        <b>value: UIntX   ,</b>
-    }
+<pre class="list language-ExceptionInfo"><em class="lineno">1: </em>    struct ExceptionInfo {
+<em class="lineno">2: </em>        valid: logic   ,
+<em class="lineno">3: </em>        cause: CsrCause,
+<em class="lineno">4: </em>        <b>value: UIntX   ,</b>
+<em class="lineno">5: </em>    }
 </pre>
 </div>
 <p>ECALL命令はmtvalに書き込むような情報がないので<code class="inline-code">0</code>に設定します(<span class="listref"><a href="./11-impl-exception.html#core.veryl.mtval-range.idex">リスト2.12</a></span>)。</p>
 <div id="core.veryl.mtval-range.idex" class="caption-code">
 <span class="caption">リスト2.12: リスト2.12: ECALL命令のtvalを設定する (corectrl.veryl)</span>
-<pre class="list language-idex">        // exception
-        exq_wdata.expt.valid = ids_inst_bits == 32'h00000073; // ECALL
-        exq_wdata.expt.cause = CsrCause::ENVIRONMENT_CALL_FROM_M_MODE;
-        <b>exq_wdata.expt.value = 0;</b>
+<pre class="list language-idex"><em class="lineno">1: </em>        // exception
+<em class="lineno">2: </em>        exq_wdata.expt.valid = ids_inst_bits == 32'h00000073; // ECALL
+<em class="lineno">3: </em>        exq_wdata.expt.cause = CsrCause::ENVIRONMENT_CALL_FROM_M_MODE;
+<em class="lineno">4: </em>        <b>exq_wdata.expt.value = 0;</b>
 </pre>
 </div>
 <p><code class="inline-code">CsrAddr</code>型にmtvalレジスタのアドレスを追加します(<span class="listref"><a href="./11-impl-exception.html#eei.veryl.mtval-range.CsrAddr">リスト2.13</a></span>)。</p>
 <div id="eei.veryl.mtval-range.CsrAddr" class="caption-code">
 <span class="caption">リスト2.13: リスト2.13: mtvalのアドレスを定義する (eei.veryl)</span>
-<pre class="list language-CsrAddr">    enum CsrAddr: logic&lt;12&gt; {
-        MTVEC = 12'h305,
-        MEPC = 12'h341,
-        MCAUSE = 12'h342,
-        <b>MTVAL = 12'h343,</b>
-        LED = 12'h800,
-    }
+<pre class="list language-CsrAddr"><em class="lineno">1: </em>    enum CsrAddr: logic&lt;12&gt; {
+<em class="lineno">2: </em>        MTVEC = 12'h305,
+<em class="lineno">3: </em>        MEPC = 12'h341,
+<em class="lineno">4: </em>        MCAUSE = 12'h342,
+<em class="lineno">5: </em>        <b>MTVAL = 12'h343,</b>
+<em class="lineno">6: </em>        LED = 12'h800,
+<em class="lineno">7: </em>    }
 </pre>
 </div>
 <p>mtvalレジスタを実装して、書き込み、読み込みできるようにします(<span class="listref"><a href="./11-impl-exception.html#csrunit.veryl.mtval-range.wmask">リスト2.14</a></span>、<span class="listref"><a href="./11-impl-exception.html#csrunit.veryl.mtval-range.reg">リスト2.15</a></span>、<span class="listref"><a href="./11-impl-exception.html#csrunit.veryl.mtval-range.rw">リスト2.16</a></span>、<span class="listref"><a href="./11-impl-exception.html#csrunit.veryl.mtval-range.reset">リスト2.17</a></span>、<span class="listref"><a href="./11-impl-exception.html#csrunit.veryl.mtval-range.write">リスト2.18</a></span>)。</p>
 <div id="csrunit.veryl.mtval-range.wmask" class="caption-code">
 <span class="caption">リスト2.14: リスト2.14: mtvalの書き込みマスクを定義する (csrunit.veryl)</span>
-<pre class="list language-wmask">    const MTVAL_WMASK : UIntX = 'hffff_ffff_ffff_ffff;
+<pre class="list language-wmask"><em class="lineno">1: </em>    const MTVAL_WMASK : UIntX = 'hffff_ffff_ffff_ffff;
 </pre>
 </div>
 <div id="csrunit.veryl.mtval-range.reg" class="caption-code">
 <span class="caption">リスト2.15: リスト2.15: mtval変数を作成する (csrunit.veryl)</span>
-<pre class="list language-reg">    var mtvec : UIntX;
-    var mepc  : UIntX;
-    var mcause: UIntX;
-    <b>var mtval : UIntX;</b>
+<pre class="list language-reg"><em class="lineno">1: </em>    var mtvec : UIntX;
+<em class="lineno">2: </em>    var mepc  : UIntX;
+<em class="lineno">3: </em>    var mcause: UIntX;
+<em class="lineno">4: </em>    <b>var mtval : UIntX;</b>
 </pre>
 </div>
 <div id="csrunit.veryl.mtval-range.rw" class="caption-code">
 <span class="caption">リスト2.16: リスト2.16: mtvalの読み込みデータ、書き込みマスクを設定する (csrunit.veryl)</span>
-<pre class="list language-rw">    always_comb {
-        // read
-        rdata = case csr_addr {
-            ...
-            <b>CsrAddr::MTVAL : mtval,</b>
-            ...
-        };
-        // write
-        wmask = case csr_addr {
-            ...
-            <b>CsrAddr::MTVAL : MTVAL_WMASK,</b>
-            ...
-        };
+<pre class="list language-rw"><em class="lineno">1: </em>    always_comb {
+<em class="lineno">2: </em>        // read
+<em class="lineno">3: </em>        rdata = case csr_addr {
+<em class="lineno">4: </em>            ...
+<em class="lineno">5: </em>            <b>CsrAddr::MTVAL : mtval,</b>
+<em class="lineno">6: </em>            ...
+<em class="lineno">7: </em>        };
+<em class="lineno">8: </em>        // write
+<em class="lineno">9: </em>        wmask = case csr_addr {
+<em class="lineno">10: </em>            ...
+<em class="lineno">11: </em>            <b>CsrAddr::MTVAL : MTVAL_WMASK,</b>
+<em class="lineno">12: </em>            ...
+<em class="lineno">13: </em>        };
 </pre>
 </div>
 <div id="csrunit.veryl.mtval-range.reset" class="caption-code">
 <span class="caption">リスト2.17: リスト2.17: mtval変数をリセットする (csrunit.veryl)</span>
-<pre class="list language-reset">    always_ff {
-        if_reset {
-            mtvec  = 0;
-            mepc   = 0;
-            mcause = 0;
-            <b>mtval  = 0;</b>
-            led    = 0;
+<pre class="list language-reset"><em class="lineno">1: </em>    always_ff {
+<em class="lineno">2: </em>        if_reset {
+<em class="lineno">3: </em>            mtvec  = 0;
+<em class="lineno">4: </em>            mepc   = 0;
+<em class="lineno">5: </em>            mcause = 0;
+<em class="lineno">6: </em>            <b>mtval  = 0;</b>
+<em class="lineno">7: </em>            led    = 0;
 </pre>
 </div>
 <div id="csrunit.veryl.mtval-range.write" class="caption-code">
 <span class="caption">リスト2.18: リスト2.18: mtvalに書き込めるようにする (csrunit.veryl)</span>
-<pre class="list language-write">    } else {
-        if is_wsc {
-            case csr_addr {
-                ...
-                <b>CsrAddr::MTVAL : mtval  = wdata;</b>
-                ...
-            }
-        }
-    }
+<pre class="list language-write"><em class="lineno">1: </em>    } else {
+<em class="lineno">2: </em>        if is_wsc {
+<em class="lineno">3: </em>            case csr_addr {
+<em class="lineno">4: </em>                ...
+<em class="lineno">5: </em>                <b>CsrAddr::MTVAL : mtval  = wdata;</b>
+<em class="lineno">6: </em>                ...
+<em class="lineno">7: </em>            }
+<em class="lineno">8: </em>        }
+<em class="lineno">9: </em>    }
 </pre>
 </div>
 <p>例外が発生するとき、mtvalレジスタに<code class="inline-code">expt_info.value</code>を書き込むようにします(<span class="listref"><a href="./11-impl-exception.html#csrunit.veryl.mtval-range.info">リスト2.19</a></span>、<span class="listref"><a href="./11-impl-exception.html#csrunit.veryl.mtval-range.update">リスト2.20</a></span>)。</p>
 <div id="csrunit.veryl.mtval-range.info" class="caption-code">
 <span class="caption">リスト2.19: リスト2.19: tvalを変数に割り当てる (csrunit.veryl)</span>
-<pre class="list language-info">    let raise_expt : logic = valid &amp;&amp; expt_info.valid;
-    let expt_cause : UIntX = expt_info.cause;
-    <b>let expt_value : UIntX = expt_info.value;</b>
+<pre class="list language-info"><em class="lineno">1: </em>    let raise_expt : logic = valid &amp;&amp; expt_info.valid;
+<em class="lineno">2: </em>    let expt_cause : UIntX = expt_info.cause;
+<em class="lineno">3: </em>    <b>let expt_value : UIntX = expt_info.value;</b>
 </pre>
 </div>
 <div id="csrunit.veryl.mtval-range.update" class="caption-code">
 <span class="caption">リスト2.20: リスト2.20: 例外が発生するとき、mtvalにtvalを書き込む (csrunit.veryl)</span>
-<pre class="list language-update">    if valid {
-        if raise_trap {
-            if raise_expt {
-                mepc   = pc;
-                mcause = trap_cause;
-                <b>mtval  = expt_value;</b>
-            }
+<pre class="list language-update"><em class="lineno">1: </em>    if valid {
+<em class="lineno">2: </em>        if raise_trap {
+<em class="lineno">3: </em>            if raise_expt {
+<em class="lineno">4: </em>                mepc   = pc;
+<em class="lineno">5: </em>                mcause = trap_cause;
+<em class="lineno">6: </em>                <b>mtval  = expt_value;</b>
+<em class="lineno">7: </em>            }
 </pre>
 </div>
 
@@ -327,27 +327,27 @@
 <p><code class="inline-code">CsrCause</code>型にBreakpoint例外のcauseを追加します(<span class="listref"><a href="./11-impl-exception.html#eei.veryl.breakpoint-range.CsrCause">リスト2.21</a></span>)。</p>
 <div id="eei.veryl.breakpoint-range.CsrCause" class="caption-code">
 <span class="caption">リスト2.21: リスト2.21: Breakpoint例外のcauseを定義する (eei.veryl)</span>
-<pre class="list language-CsrCause">    enum CsrCause: UIntX {
-        BREAKPOINT = 3,
-        ENVIRONMENT_CALL_FROM_M_MODE = 11,
-    }
+<pre class="list language-CsrCause"><em class="lineno">1: </em>    enum CsrCause: UIntX {
+<em class="lineno">2: </em>        BREAKPOINT = 3,
+<em class="lineno">3: </em>        ENVIRONMENT_CALL_FROM_M_MODE = 11,
+<em class="lineno">4: </em>    }
 </pre>
 </div>
 <p>IDステージでEBREAK命令を判定して、tvalにPCを設定します(<span class="listref"><a href="./11-impl-exception.html#core.veryl.breakpoint-range.idex">リスト2.22</a></span>)。</p>
 <div id="core.veryl.breakpoint-range.idex" class="caption-code">
 <span class="caption">リスト2.22: リスト2.22: IDステージでEBREAK命令を判定する (core.veryl)</span>
-<pre class="list language-idex">        exq_wdata.expt = 0;
-        <b>if ids_inst_bits == 32'h00000073 {</b>
-            // ECALL
-            exq_wdata.expt.valid = <b>1;</b>
-            exq_wdata.expt.cause = CsrCause::ENVIRONMENT_CALL_FROM_M_MODE;
-            exq_wdata.expt.value = 0;
-        <b>} else if ids_inst_bits == 32'h00100073 {</b>
-            <b>// EBREAK</b>
-            <b>exq_wdata.expt.valid = 1;</b>
-            <b>exq_wdata.expt.cause = CsrCause::BREAKPOINT;</b>
-            <b>exq_wdata.expt.value = ids_pc;</b>
-        <b>}</b>
+<pre class="list language-idex"><em class="lineno">1: </em>        exq_wdata.expt = 0;
+<em class="lineno">2: </em>        <b>if ids_inst_bits == 32'h00000073 {</b>
+<em class="lineno">3: </em>            // ECALL
+<em class="lineno">4: </em>            exq_wdata.expt.valid = <b>1;</b>
+<em class="lineno">5: </em>            exq_wdata.expt.cause = CsrCause::ENVIRONMENT_CALL_FROM_M_MODE;
+<em class="lineno">6: </em>            exq_wdata.expt.value = 0;
+<em class="lineno">7: </em>        <b>} else if ids_inst_bits == 32'h00100073 {</b>
+<em class="lineno">8: </em>            <b>// EBREAK</b>
+<em class="lineno">9: </em>            <b>exq_wdata.expt.valid = 1;</b>
+<em class="lineno">10: </em>            <b>exq_wdata.expt.cause = CsrCause::BREAKPOINT;</b>
+<em class="lineno">11: </em>            <b>exq_wdata.expt.value = ids_pc;</b>
+<em class="lineno">12: </em>        <b>}</b>
 </pre>
 </div>
 
@@ -361,75 +361,75 @@
 <p>inst_decoderモジュールに、命令が有効かどうかを示す<code class="inline-code">valid</code>ポートを追加します(<span class="listref"><a href="./11-impl-exception.html#inst_decoder.veryl.instillegal-range.port">リスト2.23</a></span>、<span class="listref"><a href="./11-impl-exception.html#core.veryl.instillegal-range.ids">リスト2.24</a></span>)。</p>
 <div id="inst_decoder.veryl.instillegal-range.port" class="caption-code">
 <span class="caption">リスト2.23: リスト2.23: validポートを追加する (inst_decoder.veryl)</span>
-<pre class="list language-port">module inst_decoder (
-    bits : input  Inst    ,
-    <b>valid: output logic   ,</b>
-    ctrl : output InstCtrl,
-    imm  : output UIntX   ,
-) {
+<pre class="list language-port"><em class="lineno">1: </em>module inst_decoder (
+<em class="lineno">2: </em>    bits : input  Inst    ,
+<em class="lineno">3: </em>    <b>valid: output logic   ,</b>
+<em class="lineno">4: </em>    ctrl : output InstCtrl,
+<em class="lineno">5: </em>    imm  : output UIntX   ,
+<em class="lineno">6: </em>) {
 </pre>
 </div>
 <div id="core.veryl.instillegal-range.ids" class="caption-code">
 <span class="caption">リスト2.24: リスト2.24: inst_decoderモジュールのvalidポートと変数を接続する (core.veryl)</span>
-<pre class="list language-ids">    let ids_valid     : logic    = if_fifo_rvalid;
-    let ids_pc        : Addr     = if_fifo_rdata.addr;
-    let ids_inst_bits : Inst     = if_fifo_rdata.bits;
-    <b>var ids_inst_valid: logic   ;</b>
-    var ids_ctrl      : InstCtrl;
-    var ids_imm       : UIntX   ;
-
-    inst decoder: inst_decoder (
-        bits : ids_inst_bits ,
-        <b>valid: ids_inst_valid,</b>
-        ctrl : ids_ctrl      ,
-        imm  : ids_imm       ,
-    );
+<pre class="list language-ids"><em class="lineno">1: </em>    let ids_valid     : logic    = if_fifo_rvalid;
+<em class="lineno">2: </em>    let ids_pc        : Addr     = if_fifo_rdata.addr;
+<em class="lineno">3: </em>    let ids_inst_bits : Inst     = if_fifo_rdata.bits;
+<em class="lineno">4: </em>    <b>var ids_inst_valid: logic   ;</b>
+<em class="lineno">5: </em>    var ids_ctrl      : InstCtrl;
+<em class="lineno">6: </em>    var ids_imm       : UIntX   ;
+<em class="lineno">7: </em>
+<em class="lineno">8: </em>    inst decoder: inst_decoder (
+<em class="lineno">9: </em>        bits : ids_inst_bits ,
+<em class="lineno">10: </em>        <b>valid: ids_inst_valid,</b>
+<em class="lineno">11: </em>        ctrl : ids_ctrl      ,
+<em class="lineno">12: </em>        imm  : ids_imm       ,
+<em class="lineno">13: </em>    );
 </pre>
 </div>
 <p>今のところ実装してある命令を有効な命令として判定する処理をalways_combブロックに記述します(<span class="listref"><a href="./11-impl-exception.html#inst_decoder.veryl.instillegal-range.valid">リスト2.25</a></span>)。</p>
 <div id="inst_decoder.veryl.instillegal-range.valid" class="caption-code">
 <span class="caption">リスト2.25: リスト2.25: 命令の有効判定を行う (inst_decoder.veryl)</span>
-<pre class="list language-valid">valid = case op {
-    OP_LUI, OP_AUIPC, OP_JAL, OP_JALR: T,
-    OP_BRANCH                        : f3 != 3'b010 &amp;&amp; f3 != 3'b011,
-    OP_LOAD                          : f3 != 3'b111,
-    OP_STORE                         : f3[2] == 1'b0,
-    OP_OP                            : case f7 {
-        7'b0000000                       : T, // RV32I
-        7'b0100000                       : f3 == 3'b000 || f3 == 3'b101, // SUB, SRA
-        7'b0000001                       : T, // RV32M
-        default                          : F,
-    },
-    OP_OP_IMM: case f3 {
-        3'b001   : f7[6:1] == 6'b000000, // SLLI (RV64I)
-        3'b101   : f7[6:1] == 6'b000000 || f7[6:1] == 6'b010000, // SRLI, SRAI (RV64I)
-        default  : T,
-    },
-    OP_OP_32  : case f7 {
-        7'b0000001: f3 == 3'b000 || f3[2] == 1'b1, // RV64M
-        7'b0000000: f3 == 3'b000 || f3 == 3'b001 || f3 == 3'b101, // ADDW, SLLW, SRLW
-        7'b0100000: f3 == 3'b000 || f3 == 3'b101, // SUBW, SRAW
-        default   : F,
-    },
-    OP_OP_IMM_32: case f3 {
-        3'b000      : T, // ADDIW
-        3'b001      : f7 == 7'b0000000, // SLLIW
-        3'b101      : f7 == 7'b0000000 || f7 == 7'b0100000, // SRLIW, SRAIW
-        default     : F,
-    },
-    OP_SYSTEM: f3 != 3'b000 &amp;&amp; f3 != 3'b100 || // CSRR(W|S|C)[I]
-     bits == 32'h00000073 || // ECALL
-     bits == 32'h00100073 || // EBREAK
-     bits == 32'h30200073, //MRET
-    OP_MISC_MEM: T, // FENCE
-    default    : F,
-};
+<pre class="list language-valid"><em class="lineno">1: </em>valid = case op {
+<em class="lineno">2: </em>    OP_LUI, OP_AUIPC, OP_JAL, OP_JALR: T,
+<em class="lineno">3: </em>    OP_BRANCH                        : f3 != 3'b010 &amp;&amp; f3 != 3'b011,
+<em class="lineno">4: </em>    OP_LOAD                          : f3 != 3'b111,
+<em class="lineno">5: </em>    OP_STORE                         : f3[2] == 1'b0,
+<em class="lineno">6: </em>    OP_OP                            : case f7 {
+<em class="lineno">7: </em>        7'b0000000                       : T, // RV32I
+<em class="lineno">8: </em>        7'b0100000                       : f3 == 3'b000 || f3 == 3'b101, // SUB, SRA
+<em class="lineno">9: </em>        7'b0000001                       : T, // RV32M
+<em class="lineno">10: </em>        default                          : F,
+<em class="lineno">11: </em>    },
+<em class="lineno">12: </em>    OP_OP_IMM: case f3 {
+<em class="lineno">13: </em>        3'b001   : f7[6:1] == 6'b000000, // SLLI (RV64I)
+<em class="lineno">14: </em>        3'b101   : f7[6:1] == 6'b000000 || f7[6:1] == 6'b010000, // SRLI, SRAI (RV64I)
+<em class="lineno">15: </em>        default  : T,
+<em class="lineno">16: </em>    },
+<em class="lineno">17: </em>    OP_OP_32  : case f7 {
+<em class="lineno">18: </em>        7'b0000001: f3 == 3'b000 || f3[2] == 1'b1, // RV64M
+<em class="lineno">19: </em>        7'b0000000: f3 == 3'b000 || f3 == 3'b001 || f3 == 3'b101, // ADDW, SLLW, SRLW
+<em class="lineno">20: </em>        7'b0100000: f3 == 3'b000 || f3 == 3'b101, // SUBW, SRAW
+<em class="lineno">21: </em>        default   : F,
+<em class="lineno">22: </em>    },
+<em class="lineno">23: </em>    OP_OP_IMM_32: case f3 {
+<em class="lineno">24: </em>        3'b000      : T, // ADDIW
+<em class="lineno">25: </em>        3'b001      : f7 == 7'b0000000, // SLLIW
+<em class="lineno">26: </em>        3'b101      : f7 == 7'b0000000 || f7 == 7'b0100000, // SRLIW, SRAIW
+<em class="lineno">27: </em>        default     : F,
+<em class="lineno">28: </em>    },
+<em class="lineno">29: </em>    OP_SYSTEM: f3 != 3'b000 &amp;&amp; f3 != 3'b100 || // CSRR(W|S|C)[I]
+<em class="lineno">30: </em>     bits == 32'h00000073 || // ECALL
+<em class="lineno">31: </em>     bits == 32'h00100073 || // EBREAK
+<em class="lineno">32: </em>     bits == 32'h30200073, //MRET
+<em class="lineno">33: </em>    OP_MISC_MEM: T, // FENCE
+<em class="lineno">34: </em>    default    : F,
+<em class="lineno">35: </em>};
 </pre>
 </div>
 <p>riscv-testsでメモリ読み書きの順序を保証するFENCE命令<sup><a id="fnb-memory.order" href="#fn-memory.order" class="noteref" epub:type="noteref">*4</a></sup>を使用しているため、opcodeがOP-MISCである命令を合法な命令として取り扱っています。OP-MISCのopcode(<code class="inline-code">7'b0001111</code>)をeeiパッケージに定義してください(<span class="listref"><a href="./11-impl-exception.html#eei.veryl.instillegal-range.op">リスト2.26</a></span>)。</p>
 <div id="eei.veryl.instillegal-range.op" class="caption-code">
 <span class="caption">リスト2.26: リスト2.26: OP-MISCのビット列を定義する (eei.veryl)</span>
-<pre class="list language-op">    const OP_MISC_MEM : logic&lt;7&gt; = 7'b0001111;
+<pre class="list language-op"><em class="lineno">1: </em>    const OP_MISC_MEM : logic&lt;7&gt; = 7'b0001111;
 </pre>
 </div>
 <div class="footnote-list">
@@ -438,23 +438,23 @@
 <p><code class="inline-code">CsrCause</code>型にIllegal instruction例外のcauseを追加します(<span class="listref"><a href="./11-impl-exception.html#eei.veryl.instillegal-range.CsrCause">リスト2.27</a></span>)。</p>
 <div id="eei.veryl.instillegal-range.CsrCause" class="caption-code">
 <span class="caption">リスト2.27: リスト2.27: Illegal instruction例外のcauseを定義する (eei.veryl)</span>
-<pre class="list language-CsrCause">    enum CsrCause: UIntX {
-        <b>ILLEGAL_INSTRUCTION = 2,</b>
-        BREAKPOINT = 3,
-        ENVIRONMENT_CALL_FROM_M_MODE = 11,
-    }
+<pre class="list language-CsrCause"><em class="lineno">1: </em>    enum CsrCause: UIntX {
+<em class="lineno">2: </em>        <b>ILLEGAL_INSTRUCTION = 2,</b>
+<em class="lineno">3: </em>        BREAKPOINT = 3,
+<em class="lineno">4: </em>        ENVIRONMENT_CALL_FROM_M_MODE = 11,
+<em class="lineno">5: </em>    }
 </pre>
 </div>
 <p><code class="inline-code">valid</code>フラグを利用して、IDステージでIllegal instruction例外を発生させます(<span class="listref"><a href="./11-impl-exception.html#core.veryl.instillegal-range.idex">リスト2.28</a></span>)。tvalには、命令を右に詰めてゼロで拡張した値を設定します。</p>
 <div id="core.veryl.instillegal-range.idex" class="caption-code">
 <span class="caption">リスト2.28: リスト2.28: 不正な命令のとき、例外を発生させる (core.veryl)</span>
-<pre class="list language-idex">        exq_wdata.expt = 0;
-        <b>if !ids_inst_valid {</b>
-            <b>// illegal instruction</b>
-            <b>exq_wdata.expt.valid = 1;</b>
-            <b>exq_wdata.expt.cause = CsrCause::ILLEGAL_INSTRUCTION;</b>
-            <b>exq_wdata.expt.value = {1'b0 repeat XLEN - ILEN, ids_inst_bits};</b>
-        <b>} else</b> if ids_inst_bits == 32'h00000073 {
+<pre class="list language-idex"><em class="lineno">1: </em>        exq_wdata.expt = 0;
+<em class="lineno">2: </em>        <b>if !ids_inst_valid {</b>
+<em class="lineno">3: </em>            <b>// illegal instruction</b>
+<em class="lineno">4: </em>            <b>exq_wdata.expt.valid = 1;</b>
+<em class="lineno">5: </em>            <b>exq_wdata.expt.cause = CsrCause::ILLEGAL_INSTRUCTION;</b>
+<em class="lineno">6: </em>            <b>exq_wdata.expt.value = {1'b0 repeat XLEN - ILEN, ids_inst_bits};</b>
+<em class="lineno">7: </em>        <b>} else</b> if ids_inst_bits == 32'h00000073 {
 </pre>
 </div>
 
@@ -471,55 +471,55 @@
 <p>ソースレジスタの値が<b>0</b>だとしても、0番目のレジスタではない場合にはCSRに書き込むと判断します。CSRに書き込むかどうかを正しく判定するために、csrunitモジュールの<code class="inline-code">rs1</code>ポートを<code class="inline-code">rs1_addr</code>と<code class="inline-code">rs1_data</code>に分解します(<span class="listref"><a href="./11-impl-exception.html#core.veryl.csrro-range.csru">リスト2.30</a></span>、<span class="listref"><a href="./11-impl-exception.html#csrunit.veryl.csrro-range.port">リスト2.29</a></span>、<span class="listref"><a href="./11-impl-exception.html#csrunit.veryl.csrro-range.wdata">リスト2.31</a></span>)。また、causeを設定するためにcsrunitモジュールに命令のビット列を供給します。</p>
 <div id="csrunit.veryl.csrro-range.port" class="caption-code">
 <span class="caption">リスト2.29: リスト2.29: csrunitモジュールのポート定義を変更する (csrunit.veryl)</span>
-<pre class="list language-port">module csrunit (
-    clk        : input  clock            ,
-    rst        : input  reset            ,
-    valid      : input  logic            ,
-    pc         : input  Addr             ,
-    <b>inst_bits  : input  Inst             ,</b>
-    ctrl       : input  InstCtrl         ,
-    expt_info  : input  ExceptionInfo    ,
-    rd_addr    : input  logic        &lt;5&gt; ,
-    csr_addr   : input  logic        &lt;12&gt;,
-    <b>rs1_addr   : input  logic        &lt;5&gt; ,</b>
-    <b>rs1_data   : input  UIntX            ,</b>
-    rdata      : output UIntX            ,
-    raise_trap : output logic            ,
-    trap_vector: output Addr             ,
-    led        : output UIntX            ,
-) {
+<pre class="list language-port"><em class="lineno">1: </em>module csrunit (
+<em class="lineno">2: </em>    clk        : input  clock            ,
+<em class="lineno">3: </em>    rst        : input  reset            ,
+<em class="lineno">4: </em>    valid      : input  logic            ,
+<em class="lineno">5: </em>    pc         : input  Addr             ,
+<em class="lineno">6: </em>    <b>inst_bits  : input  Inst             ,</b>
+<em class="lineno">7: </em>    ctrl       : input  InstCtrl         ,
+<em class="lineno">8: </em>    expt_info  : input  ExceptionInfo    ,
+<em class="lineno">9: </em>    rd_addr    : input  logic        &lt;5&gt; ,
+<em class="lineno">10: </em>    csr_addr   : input  logic        &lt;12&gt;,
+<em class="lineno">11: </em>    <b>rs1_addr   : input  logic        &lt;5&gt; ,</b>
+<em class="lineno">12: </em>    <b>rs1_data   : input  UIntX            ,</b>
+<em class="lineno">13: </em>    rdata      : output UIntX            ,
+<em class="lineno">14: </em>    raise_trap : output logic            ,
+<em class="lineno">15: </em>    trap_vector: output Addr             ,
+<em class="lineno">16: </em>    led        : output UIntX            ,
+<em class="lineno">17: </em>) {
 </pre>
 </div>
 <div id="core.veryl.csrro-range.csru" class="caption-code">
 <span class="caption">リスト2.30: リスト2.30: csrunitモジュールのポート定義を変更する (core.veryl)</span>
-<pre class="list language-csru">    inst csru: csrunit (
-        clk                               ,
-        rst                               ,
-        valid      : mems_valid           ,
-        pc         : mems_pc              ,
-        <b>inst_bits  : mems_inst_bits       ,</b>
-        ctrl       : mems_ctrl            ,
-        expt_info  : mems_expt            ,
-        rd_addr    : mems_rd_addr         ,
-        csr_addr   : <b>mems_inst_bits[31:20],</b>
-        <b>rs1_addr   : memq_rdata.rs1_addr  ,</b>
-        <b>rs1_data   : memq_rdata.rs1_data  ,</b>
-        rdata      : csru_rdata           ,
-        raise_trap : csru_raise_trap      ,
-        trap_vector: csru_trap_vector     ,
-        led                               ,
-    );
+<pre class="list language-csru"><em class="lineno">1: </em>    inst csru: csrunit (
+<em class="lineno">2: </em>        clk                               ,
+<em class="lineno">3: </em>        rst                               ,
+<em class="lineno">4: </em>        valid      : mems_valid           ,
+<em class="lineno">5: </em>        pc         : mems_pc              ,
+<em class="lineno">6: </em>        <b>inst_bits  : mems_inst_bits       ,</b>
+<em class="lineno">7: </em>        ctrl       : mems_ctrl            ,
+<em class="lineno">8: </em>        expt_info  : mems_expt            ,
+<em class="lineno">9: </em>        rd_addr    : mems_rd_addr         ,
+<em class="lineno">10: </em>        csr_addr   : <b>mems_inst_bits[31:20],</b>
+<em class="lineno">11: </em>        <b>rs1_addr   : memq_rdata.rs1_addr  ,</b>
+<em class="lineno">12: </em>        <b>rs1_data   : memq_rdata.rs1_data  ,</b>
+<em class="lineno">13: </em>        rdata      : csru_rdata           ,
+<em class="lineno">14: </em>        raise_trap : csru_raise_trap      ,
+<em class="lineno">15: </em>        trap_vector: csru_trap_vector     ,
+<em class="lineno">16: </em>        led                               ,
+<em class="lineno">17: </em>    );
 </pre>
 </div>
 <div id="csrunit.veryl.csrro-range.wdata" class="caption-code">
 <span class="caption">リスト2.31: リスト2.31: rs1の変更に対応する&lt;sup&gt;&lt;a id=&quot;fnb-fix-wmask-bug&quot; href=&quot;#fn-fix-wmask-bug&quot; class=&quot;noteref&quot; epub:type=&quot;noteref&quot;&gt;*5&lt;/a&gt;&lt;/sup&gt; (csrunit.veryl)</span>
-<pre class="list language-wdata">    <b>let wsource: UIntX = if ctrl.funct3[2] ? {1'b0 repeat XLEN - 5, rs1_addr} : rs1_data;</b>
-    wdata   = case ctrl.funct3[1:0] {
-        2'b01  : <b>wsource</b>,
-        2'b10  : rdata | <b>wsource</b>,
-        2'b11  : rdata &amp; ~<b>wsource</b>,
-        default: 'x,
-    } &amp; wmask | (rdata &amp; ~wmask);
+<pre class="list language-wdata"><em class="lineno">1: </em>    <b>let wsource: UIntX = if ctrl.funct3[2] ? {1'b0 repeat XLEN - 5, rs1_addr} : rs1_data;</b>
+<em class="lineno">2: </em>    wdata   = case ctrl.funct3[1:0] {
+<em class="lineno">3: </em>        2'b01  : <b>wsource</b>,
+<em class="lineno">4: </em>        2'b10  : rdata | <b>wsource</b>,
+<em class="lineno">5: </em>        2'b11  : rdata &amp; ~<b>wsource</b>,
+<em class="lineno">6: </em>        default: 'x,
+<em class="lineno">7: </em>    } &amp; wmask | (rdata &amp; ~wmask);
 </pre>
 </div>
 <div class="footnote-list">
@@ -528,14 +528,14 @@
 <p>命令のfunct3とrs1のアドレスを利用して、書き込み先が読み込み専用レジスタかどうかを判定します<sup><a id="fnb-it-can-be-id" href="#fn-it-can-be-id" class="noteref" epub:type="noteref">*6</a></sup>(<span class="listref"><a href="./11-impl-exception.html#csrunit.veryl.csrro-range.check">リスト2.32</a></span>)。また、命令のビット列を利用できるようになったので、MRET命令の判定を命令のビット列の比較に書き換えています。</p>
 <div id="csrunit.veryl.csrro-range.check" class="caption-code">
 <span class="caption">リスト2.32: リスト2.32: 読み込み専用CSRへの書き込みが発生するか判定する (csrunit.veryl)</span>
-<pre class="list language-check">    // CSRR(W|S|C)[I]命令かどうか
-    let is_wsc: logic = ctrl.is_csr &amp;&amp; ctrl.funct3[1:0] != 0;
-    // MRET命令かどうか
-    let is_mret: logic = inst_bits == 32'h30200073;
-
-    // Check CSR access
-    let will_not_write_csr     : logic = (ctrl.funct3[1:0] == 2 || ctrl.funct3[1:0] == 3) &amp;&amp; rs1_addr == 0; // set/clear with source = 0
-    let expt_write_readonly_csr: logic = is_wsc &amp;&amp; !will_not_write_csr &amp;&amp; csr_addr[11:10] == 2'b11; // attempt to write read-only CSR
+<pre class="list language-check"><em class="lineno">1: </em>    // CSRR(W|S|C)[I]命令かどうか
+<em class="lineno">2: </em>    let is_wsc: logic = ctrl.is_csr &amp;&amp; ctrl.funct3[1:0] != 0;
+<em class="lineno">3: </em>    // MRET命令かどうか
+<em class="lineno">4: </em>    let is_mret: logic = inst_bits == 32'h30200073;
+<em class="lineno">5: </em>
+<em class="lineno">6: </em>    // Check CSR access
+<em class="lineno">7: </em>    let will_not_write_csr     : logic = (ctrl.funct3[1:0] == 2 || ctrl.funct3[1:0] == 3) &amp;&amp; rs1_addr == 0; // set/clear with source = 0
+<em class="lineno">8: </em>    let expt_write_readonly_csr: logic = is_wsc &amp;&amp; !will_not_write_csr &amp;&amp; csr_addr[11:10] == 2'b11; // attempt to write read-only CSR
 </pre>
 </div>
 <div class="footnote-list">
@@ -544,41 +544,41 @@
 <p>例外が発生するとき、causeとtvalを設定します(<span class="listref"><a href="./11-impl-exception.html#csrunit.veryl.csrro-range.expt">リスト2.33</a></span>)。</p>
 <div id="csrunit.veryl.csrro-range.expt" class="caption-code">
 <span class="caption">リスト2.33: リスト2.33: 読み込み専用CSRの書き込みで例外を発生させる (csrunit.veryl)</span>
-<pre class="list language-expt">    let raise_expt: logic = valid &amp;&amp; (expt_info.valid || expt_write_readonly_csr);
-    let expt_cause: UIntX = <b>switch {</b>
-        <b>expt_info.valid        :</b> expt_info.cause<b>,</b>
-        <b>expt_write_readonly_csr: CsrCause::ILLEGAL_INSTRUCTION,</b>
-        <b>default                : 0,</b>
-    <b>}</b>;
-    let expt_value: UIntX = <b>switch {</b>
-        <b>expt_info.valid                            :</b> expt_info.value<b>,</b>
-        <b>expt_cause == CsrCause::ILLEGAL_INSTRUCTION: {1'b0 repeat XLEN - $bits(Inst), inst_bits},</b>
-        <b>default                                    : 0</b>
-    <b>}</b>;
+<pre class="list language-expt"><em class="lineno">1: </em>    let raise_expt: logic = valid &amp;&amp; (expt_info.valid || expt_write_readonly_csr);
+<em class="lineno">2: </em>    let expt_cause: UIntX = <b>switch {</b>
+<em class="lineno">3: </em>        <b>expt_info.valid        :</b> expt_info.cause<b>,</b>
+<em class="lineno">4: </em>        <b>expt_write_readonly_csr: CsrCause::ILLEGAL_INSTRUCTION,</b>
+<em class="lineno">5: </em>        <b>default                : 0,</b>
+<em class="lineno">6: </em>    <b>}</b>;
+<em class="lineno">7: </em>    let expt_value: UIntX = <b>switch {</b>
+<em class="lineno">8: </em>        <b>expt_info.valid                            :</b> expt_info.value<b>,</b>
+<em class="lineno">9: </em>        <b>expt_cause == CsrCause::ILLEGAL_INSTRUCTION: {1'b0 repeat XLEN - $bits(Inst), inst_bits},</b>
+<em class="lineno">10: </em>        <b>default                                    : 0</b>
+<em class="lineno">11: </em>    <b>}</b>;
 </pre>
 </div>
 <p>この変更により、レジスタにライトバックするようにデコードされた命令がcsrunitモジュールでトラップを起こすようになりました。トラップが発生するときにWBステージでライトバックしないように変更します(<span class="listref"><a href="./11-impl-exception.html#core.veryl.csrro-range.wbq_type">リスト2.34</a></span>、<span class="listref"><a href="./11-impl-exception.html#core.veryl.csrro-range.memwb">リスト2.35</a></span>、<span class="listref"><a href="./11-impl-exception.html#core.veryl.csrro-range.wb">リスト2.36</a></span>)。</p>
 <div id="core.veryl.csrro-range.wbq_type" class="caption-code">
 <span class="caption">リスト2.34: リスト2.34: トラップが発生したかを示すlogicをwbq_typeに追加する (core.veryl)</span>
-<pre class="list language-wbq_type">    struct wbq_type {
-        ...
-        csr_rdata : UIntX   ,
-        <b>raise_trap: logic   ,</b>
-    }
+<pre class="list language-wbq_type"><em class="lineno">1: </em>    struct wbq_type {
+<em class="lineno">2: </em>        ...
+<em class="lineno">3: </em>        csr_rdata : UIntX   ,
+<em class="lineno">4: </em>        <b>raise_trap: logic   ,</b>
+<em class="lineno">5: </em>    }
 </pre>
 </div>
 <div id="core.veryl.csrro-range.memwb" class="caption-code">
 <span class="caption">リスト2.35: リスト2.35: トラップが発生したかをWBステージに伝える (core.veryl)</span>
-<pre class="list language-memwb">    wbq_wdata.raise_trap = csru_raise_trap;
+<pre class="list language-memwb"><em class="lineno">1: </em>    wbq_wdata.raise_trap = csru_raise_trap;
 </pre>
 </div>
 <div id="core.veryl.csrro-range.wb" class="caption-code">
 <span class="caption">リスト2.36: リスト2.36: トラップが発生しているとき、レジスタにデータを書き込まないようにする (core.veryl)</span>
-<pre class="list language-wb">    always_ff {
-        if wbs_valid &amp;&amp; wbs_ctrl.rwb_en &amp;&amp; !wbq_rdata.raise_trap {
-            regfile[wbs_rd_addr] = wbs_wb_data;
-        }
-    }
+<pre class="list language-wb"><em class="lineno">1: </em>    always_ff {
+<em class="lineno">2: </em>        if wbs_valid &amp;&amp; wbs_ctrl.rwb_en &amp;&amp; !wbq_rdata.raise_trap {
+<em class="lineno">3: </em>            regfile[wbs_rd_addr] = wbs_wb_data;
+<em class="lineno">4: </em>        }
+<em class="lineno">5: </em>    }
 </pre>
 </div>
 
@@ -592,28 +592,28 @@
 <p><code class="inline-code">CsrCause</code>型にInstruction address misaligned例外のcauseを追加します(<span class="listref"><a href="./11-impl-exception.html#core.veryl.instmisalign-range.CsrCause">リスト2.37</a></span>)。</p>
 <div id="core.veryl.instmisalign-range.CsrCause" class="caption-code">
 <span class="caption">リスト2.37: リスト2.37: Instruction address misaligned例外のcauseを定義する (eei.veryl)</span>
-<pre class="list language-CsrCause">    enum CsrCause: UIntX {
-        <b>INSTRUCTION_ADDRESS_MISALIGNED = 0,</b>
-        ILLEGAL_INSTRUCTION = 2,
-        BREAKPOINT = 3,
-        ENVIRONMENT_CALL_FROM_M_MODE = 11,
-    }
+<pre class="list language-CsrCause"><em class="lineno">1: </em>    enum CsrCause: UIntX {
+<em class="lineno">2: </em>        <b>INSTRUCTION_ADDRESS_MISALIGNED = 0,</b>
+<em class="lineno">3: </em>        ILLEGAL_INSTRUCTION = 2,
+<em class="lineno">4: </em>        BREAKPOINT = 3,
+<em class="lineno">5: </em>        ENVIRONMENT_CALL_FROM_M_MODE = 11,
+<em class="lineno">6: </em>    }
 </pre>
 </div>
 <p>EXステージでアドレスを確認して例外を判定します(<span class="listref"><a href="./11-impl-exception.html#core.veryl.instmisalign-range.exmem">リスト2.38</a></span>)。tvalは遷移先のアドレスになることに注意してください。</p>
 <div id="core.veryl.instmisalign-range.exmem" class="caption-code">
 <span class="caption">リスト2.38: リスト2.38: EXステージでInstruction address misaligned例外の判定を行う (core.veryl)</span>
-<pre class="list language-exmem">        memq_wdata.jump_addr  = if inst_is_br(exs_ctrl) ? exs_pc + exs_imm : exs_alu_result &amp; ~1;
-        // exception
-        <b>let instruction_address_misaligned: logic = memq_wdata.br_taken &amp;&amp; memq_wdata.jump_addr[1:0] != 2'b00;</b>
-        memq_wdata.expt                = exq_rdata.expt;
-        <b>if !memq_rdata.expt.valid {</b>
-        <b>    if instruction_address_misaligned {</b>
-        <b>        memq_wdata.expt.valid = 1;</b>
-        <b>        memq_wdata.expt.cause = CsrCause::INSTRUCTION_ADDRESS_MISALIGNED;</b>
-        <b>        memq_wdata.expt.value = memq_wdata.jump_addr;</b>
-        <b>    }</b>
-        <b>}</b>
+<pre class="list language-exmem"><em class="lineno">1: </em>        memq_wdata.jump_addr  = if inst_is_br(exs_ctrl) ? exs_pc + exs_imm : exs_alu_result &amp; ~1;
+<em class="lineno">2: </em>        // exception
+<em class="lineno">3: </em>        <b>let instruction_address_misaligned: logic = memq_wdata.br_taken &amp;&amp; memq_wdata.jump_addr[1:0] != 2'b00;</b>
+<em class="lineno">4: </em>        memq_wdata.expt                = exq_rdata.expt;
+<em class="lineno">5: </em>        <b>if !memq_rdata.expt.valid {</b>
+<em class="lineno">6: </em>        <b>    if instruction_address_misaligned {</b>
+<em class="lineno">7: </em>        <b>        memq_wdata.expt.valid = 1;</b>
+<em class="lineno">8: </em>        <b>        memq_wdata.expt.cause = CsrCause::INSTRUCTION_ADDRESS_MISALIGNED;</b>
+<em class="lineno">9: </em>        <b>        memq_wdata.expt.value = memq_wdata.jump_addr;</b>
+<em class="lineno">10: </em>        <b>    }</b>
+<em class="lineno">11: </em>        <b>}</b>
 </pre>
 </div>
 
@@ -625,56 +625,56 @@
 <p><code class="inline-code">CsrCause</code>型に例外のcauseを追加します(<span class="listref"><a href="./11-impl-exception.html#eei.veryl.memmisalign-range.CsrCause">リスト2.39</a></span>)。</p>
 <div id="eei.veryl.memmisalign-range.CsrCause" class="caption-code">
 <span class="caption">リスト2.39: リスト2.39: 例外のcauseを定義する (eei.veryl)</span>
-<pre class="list language-CsrCause">    enum CsrCause: UIntX {
-        INSTRUCTION_ADDRESS_MISALIGNED = 0,
-        ILLEGAL_INSTRUCTION = 2,
-        BREAKPOINT = 3,
-        <b>LOAD_ADDRESS_MISALIGNED = 4,</b>
-        <b>STORE_AMO_ADDRESS_MISALIGNED = 6,</b>
-        ENVIRONMENT_CALL_FROM_M_MODE = 11,
-    }
+<pre class="list language-CsrCause"><em class="lineno">1: </em>    enum CsrCause: UIntX {
+<em class="lineno">2: </em>        INSTRUCTION_ADDRESS_MISALIGNED = 0,
+<em class="lineno">3: </em>        ILLEGAL_INSTRUCTION = 2,
+<em class="lineno">4: </em>        BREAKPOINT = 3,
+<em class="lineno">5: </em>        <b>LOAD_ADDRESS_MISALIGNED = 4,</b>
+<em class="lineno">6: </em>        <b>STORE_AMO_ADDRESS_MISALIGNED = 6,</b>
+<em class="lineno">7: </em>        ENVIRONMENT_CALL_FROM_M_MODE = 11,
+<em class="lineno">8: </em>    }
 </pre>
 </div>
 <p>EXステージでアドレスを確認して例外を判定します(<span class="listref"><a href="./11-impl-exception.html#core.veryl.memmisalign-range.expt">リスト2.40</a></span>)。</p>
 <div id="core.veryl.memmisalign-range.expt" class="caption-code">
 <span class="caption">リスト2.40: リスト2.40: EXステージで例外の判定を行う (core.veryl)</span>
-<pre class="list language-expt">        let instruction_address_misaligned: logic = memq_wdata.br_taken &amp;&amp; memq_wdata.jump_addr[1:0] != 2'b00;
-        <b>let loadstore_address_misaligned  : logic = inst_is_memop(exs_ctrl) &amp;&amp; case exs_ctrl.funct3[1:0] {</b>
-        <b>    2'b00  : 0, // B</b>
-        <b>    2'b01  : exs_alu_result[0] != 1'b0, // H</b>
-        <b>    2'b10  : exs_alu_result[1:0] != 2'b0, // W</b>
-        <b>    2'b11  : exs_alu_result[2:0] != 3'b0, // D</b>
-        <b>    default: 0,</b>
-        <b>};</b>
-        memq_wdata.expt = exq_rdata.expt;
-        if !memq_rdata.expt.valid {
-            if instruction_address_misaligned {
-                memq_wdata.expt.valid = 1;
-                memq_wdata.expt.cause = CsrCause::INSTRUCTION_ADDRESS_MISALIGNED;
-                memq_wdata.expt.value = memq_wdata.jump_addr;
-            <b>} else if loadstore_address_misaligned {</b>
-            <b>    memq_wdata.expt.valid = 1;</b>
-            <b>    memq_wdata.expt.cause = if exs_ctrl.is_load ? CsrCause::LOAD_ADDRESS_MISALIGNED : CsrCause::STORE_AMO_ADDRESS_MISALIGNED;</b>
-            <b>    memq_wdata.expt.value = exs_alu_result;</b>
-            }
-        }
+<pre class="list language-expt"><em class="lineno">1: </em>        let instruction_address_misaligned: logic = memq_wdata.br_taken &amp;&amp; memq_wdata.jump_addr[1:0] != 2'b00;
+<em class="lineno">2: </em>        <b>let loadstore_address_misaligned  : logic = inst_is_memop(exs_ctrl) &amp;&amp; case exs_ctrl.funct3[1:0] {</b>
+<em class="lineno">3: </em>        <b>    2'b00  : 0, // B</b>
+<em class="lineno">4: </em>        <b>    2'b01  : exs_alu_result[0] != 1'b0, // H</b>
+<em class="lineno">5: </em>        <b>    2'b10  : exs_alu_result[1:0] != 2'b0, // W</b>
+<em class="lineno">6: </em>        <b>    2'b11  : exs_alu_result[2:0] != 3'b0, // D</b>
+<em class="lineno">7: </em>        <b>    default: 0,</b>
+<em class="lineno">8: </em>        <b>};</b>
+<em class="lineno">9: </em>        memq_wdata.expt = exq_rdata.expt;
+<em class="lineno">10: </em>        if !memq_rdata.expt.valid {
+<em class="lineno">11: </em>            if instruction_address_misaligned {
+<em class="lineno">12: </em>                memq_wdata.expt.valid = 1;
+<em class="lineno">13: </em>                memq_wdata.expt.cause = CsrCause::INSTRUCTION_ADDRESS_MISALIGNED;
+<em class="lineno">14: </em>                memq_wdata.expt.value = memq_wdata.jump_addr;
+<em class="lineno">15: </em>            <b>} else if loadstore_address_misaligned {</b>
+<em class="lineno">16: </em>            <b>    memq_wdata.expt.valid = 1;</b>
+<em class="lineno">17: </em>            <b>    memq_wdata.expt.cause = if exs_ctrl.is_load ? CsrCause::LOAD_ADDRESS_MISALIGNED : CsrCause::STORE_AMO_ADDRESS_MISALIGNED;</b>
+<em class="lineno">18: </em>            <b>    memq_wdata.expt.value = exs_alu_result;</b>
+<em class="lineno">19: </em>            }
+<em class="lineno">20: </em>        }
 </pre>
 </div>
 <p>例外が発生するときにmemunitモジュールが動作しないようにします(<span class="listref"><a href="./11-impl-exception.html#core.veryl.memmisalign-range.memu">リスト2.41</a></span>)。</p>
 <div id="core.veryl.memmisalign-range.memu" class="caption-code">
 <span class="caption">リスト2.41: リスト2.41: 例外が発生するとき、memunitのvalidを0にする (core.veryl)</span>
-<pre class="list language-memu">    inst memu: memunit (
-        clk                                   ,
-        rst                                   ,
-        valid : mems_valid <b>&amp;&amp; !mems_expt.valid</b>,
-        is_new: mems_is_new                   ,
-        ctrl  : mems_ctrl                     ,
-        addr  : memq_rdata.alu_result         ,
-        rs2   : memq_rdata.rs2_data           ,
-        rdata : memu_rdata                    ,
-        stall : memu_stall                    ,
-        membus: d_membus                      ,
-    );
+<pre class="list language-memu"><em class="lineno">1: </em>    inst memu: memunit (
+<em class="lineno">2: </em>        clk                                   ,
+<em class="lineno">3: </em>        rst                                   ,
+<em class="lineno">4: </em>        valid : mems_valid <b>&amp;&amp; !mems_expt.valid</b>,
+<em class="lineno">5: </em>        is_new: mems_is_new                   ,
+<em class="lineno">6: </em>        ctrl  : mems_ctrl                     ,
+<em class="lineno">7: </em>        addr  : memq_rdata.alu_result         ,
+<em class="lineno">8: </em>        rs2   : memq_rdata.rs2_data           ,
+<em class="lineno">9: </em>        rdata : memu_rdata                    ,
+<em class="lineno">10: </em>        stall : memu_stall                    ,
+<em class="lineno">11: </em>        membus: d_membus                      ,
+<em class="lineno">12: </em>    );
 </pre>
 </div>
         </main>
