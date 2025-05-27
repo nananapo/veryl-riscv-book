@@ -439,9 +439,8 @@ always_combブロックはデバイスにアクセスし
 mmio_controllerモジュールにRAMとのインターフェースを実装します。
 
 @<code>{Device}型にRAMを追加して、アドレスにRAMをマップします
-(@
-<list>{mmio_controller.veryl.ram.Device}、
-<list>{mmio_controller.veryl.ram.get_device}
+(@<list>{mmio_controller.veryl.ram.Device}、
+@<list>{mmio_controller.veryl.ram.get_device}
 )。
 
 //list[mmio_controller.veryl.ram.Device][Device型にRAMを追加する (mmio_controller.veryl)]{
@@ -603,7 +602,7 @@ coreモジュールからRAMへのメモリアクセスを調停する処理を�
 coreモジュールからmmio_controllerモジュールへのアクセスを調停する処理に変更します
 (@<list>{top.veryl.ram.arb})。
 
-//list[top.veryl.ram.arb][調停する対称をmmio_membusに変更する (top.veryl)]{
+//list[top.veryl.ram.arb][調停する対象をmmio_membusに変更する (top.veryl)]{
 #@maprange(scripts/12/ram-range/core/src/top.veryl,arb)
     // @<b>|mmio_controller|へのメモリアクセスを調停する
     always_ff {
@@ -1429,7 +1428,7 @@ void main(void) {
 #@end
 //}
 
-@<code>{DEBUG_OUTPUT}は出力デバイスのアドレスです。
+@<code>{DEBUG_REG}は出力デバイスのアドレスです。
 ここに@<code>{0x01010}を44ビット左シフトした値と文字をOR演算した値を書き込むことで文字を出力します。
 最後に@<code>{1}を書き込み、テストを終了しています。
 
@@ -1835,7 +1834,7 @@ void main(void) {
 //}
 
 プログラムをコンパイルしてシミュレータを実行し、入力した文字が1文字ずれて表示されることを確認してください
-(@<code>{term-run-change-input})。
+(@<list>{term-run-change-input})。
 
 //terminal[term-run-change-input][テストプログラムを実行する]{
 $ @<userinput>{make build sim VERILATOR_FLAGS="-DENABLE_DEBUG_INPUT"} @<balloon>{入力を有効にしてシミュレータをビルド}

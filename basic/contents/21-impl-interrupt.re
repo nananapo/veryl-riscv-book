@@ -67,20 +67,19 @@ mieとmstatus.MIEのことを割り込みイネーブル(許可)レジスタと�
 
 === 割り込みの優先順位
 
-TODO 書き換え
 RISC-Vには外部割り込み、ソフトウェア割り込み、タイマ割り込みがそれぞれM-mode、S-mode向けに用意されています。
 それぞれの割り込みには@<table>{riscv.interrupt-priority}のような優先順位が定義されていて、
 複数の割り込みを発生させられるときは優先順位が高い割り込みを発生させます。
 
 //table[riscv.interrupt-priority][RISC-Vの割り込みの優先順位]{
-cause	説明
+cause	説明								優先順位
 -------------------------------------------------------------
-11		Machine external interrupt
-3		Machine software interrupt
-7		Machine timer interrupt
-9		Supervisor external interrupt
-1		Supervisor software interrupt
-5		Supervisor timer interrupt
+11		Machine external interrupt			高い
+3		Machine software Interrupt			
+7		Machine timer interrupt				
+9		Supervisor external interrupt		
+1		Supervisor software interrupt		
+5		Supervisor timer interrupt			低い
 //}
 
 === 割り込みの原因(cause)
@@ -563,7 +562,7 @@ MSIPビットをMSWIデバイスのMSIP0レジスタと接続し、
 mie、mipレジスタの値を読み込めるようにします
 (@<list>{csrunit.veryl.miemip.rdata})。
 
-//list[csrunit.veryl.miemip.rdata][rdataにmip、mieレジスタを割り当てる (csrunit.veryl)]{
+//list[csrunit.veryl.miemip.rdata][rdataにmip、mieレジスタの値を割り当てる (csrunit.veryl)]{
 #@maprange(scripts/21/miemip-range/core/src/csrunit.veryl,rdata)
 CsrAddr::MTVEC   : mtvec,
 @<b>|CsrAddr::MIP     : mip,|
@@ -947,7 +946,7 @@ ACLINTモジュールにMTIME、MTIMECMPレジスタを実装します。
 )。
 @<code>{mtime}レジスタはクロック毎にインクリメントします。
 
-#@# TODO mapに戻す
+#@# TODO mapに戻す　できれば
 //list[aclint_memory.veryl.mtime.reg][mtime、mtimecmpレジスタの定義 (aclint_memory.veryl)]{
 #@# maprange(scripts/21/mtime-range/core/src/aclint_memory.veryl,reg)
     var msip0    : logic ;

@@ -84,13 +84,13 @@
 </div><!--/.footnote-list-->
 <p>RVC命令は表<span class="imgref"><a href="./14-impl-c.html#rvc-instruction-formats">図5.1</a></span>の9つのフォーマットが定義されています。</p>
 <div id="rvc-instruction-formats" class="image">
-<img src="images/14-impl-c/rvc-instruction-formats.png" alt="RVC命令のフォーマット" class="img" style="width:100%" />
+<img src="images/14-impl-c/rvc-instruction-formats.png" alt="RVC命令のフォーマット" class="img" style="width:90%" />
 <p class="caption">
 図5.1: RVC命令のフォーマット
 </p>
 </div>
 <p><code class="inline-code">rs1'</code>、<code class="inline-code">rs2'</code>、<code class="inline-code">rd'</code>は3ビットのフィールドで、よく使われる8番(x8)から15番(x15)のレジスタを指定します。即値の並び方やそれぞれの命令の具体的なフォーマットについては、仕様書か「<a href="14-impl-c.html#h5-6-2">5.6.2 32ビット幅の命令に変換する</a>」のコードを参照してください。</p>
-<p>TODO 書き換えるRV32IのCPUに実装されるC拡張には表<span class="imgref"><a href="./14-impl-c.html#rvc-instruction-formats">図5.1</a></span>のRVC命令が定義されています。RV64IのCPUに実装されるC拡張には表<span class="imgref"><a href="./14-impl-c.html#rvc-instruction-formats">図5.1</a></span>に加えて表<span class="tableref"><a href="./14-impl-c.html#impl-c.instructions">表5.2</a></span>のRVC命令が定義されています。一部のRV32IのRVC命令はRV64Iで別の命令に置き換わっていることに注意してください。</p>
+<p>RV64IのCPUに実装されるC拡張には<span class="imgref"><a href="./14-impl-c.html#rvc-instruction-formats">図5.1</a></span>のRVC命令が定義されています。</p>
 <div id="impl-c.instructions" class="table">
 <p class="caption">表5.2: C拡張の命令</p>
 <table>
@@ -104,7 +104,6 @@
 <tr class="hline"><td>C.SW</td><td>sw rs2, offset(rs1)</td><td>CS</td></tr>
 <tr class="hline"><td>C.SD</td><td>sd rs2, offset(rs1)</td><td>CS</td></tr>
 <tr class="hline"><td>C.J</td><td>jal x0, offset</td><td>CJ</td></tr>
-<tr class="hline"><td>C.JAL</td><td>jal x1, offset</td><td>CJ</td></tr>
 <tr class="hline"><td>C.JR</td><td>jalr x0, 0(rs1)</td><td>CR</td></tr>
 <tr class="hline"><td>C.JALR</td><td>jalr x1, 0(rs1)</td><td>CR</td></tr>
 <tr class="hline"><td>C.BEQZ</td><td>beq rs1, x0, offset</td><td>CB</td></tr>
@@ -128,6 +127,7 @@
 <tr class="hline"><td>C.EBREAK</td><td>ebreak</td><td>CR</td></tr>
 </table>
 </div>
+<p>C.ADDIW命令はRV32IのC拡張に定義されているC.JAL命令とエンコーディングが同じです。本書で実装するモジュールはRV32IのC拡張にも対応したものになっています。RV32IのC拡張については、仕様書か「<a href="14-impl-c.html#h5-6-2">5.6.2 32ビット幅の命令に変換する</a>」のコードを参照してください。</p>
 <p>C拡張は浮動小数点命令をサポートするF、D拡張が実装されている場合に他の命令を定義しますが、基本編ではF、D拡張を実装しないため実装、解説しません。</p>
 
 <h2 class="numbox"><a id="h5-2"></a><span class="secno">5.2</span> IALIGNの変更</h2>
@@ -161,7 +161,7 @@
 </ol>
 <p>最終的な命令フェッチ処理の構成は図<span class="imgref"><a href="./14-impl-c.html#inst-fetch-structure">図5.2</a></span>のようになります。</p>
 <div id="inst-fetch-structure" class="image">
-<img src="images/14-impl-c/inst-fetch-structure.png" alt="命令フェッチ処理の構成" class="img" style="width:100%" />
+<img src="images/14-impl-c/inst-fetch-structure.png" alt="命令フェッチ処理の構成" class="img" style="width:90%" />
 <p class="caption">
 図5.2: 命令フェッチ処理の構成
 </p>

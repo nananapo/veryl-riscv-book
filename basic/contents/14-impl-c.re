@@ -23,17 +23,14 @@ C拡張は16ビット幅の命令を定義する拡張です。
 
 RVC命令は表@<img>{rvc-instruction-formats}の9つのフォーマットが定義されています。
 
-//image[rvc-instruction-formats][RVC命令のフォーマット][width=100%]
+//image[rvc-instruction-formats][RVC命令のフォーマット][width=90%]
 
 @<code>{rs1'}、@<code>{rs2'}、@<code>{rd'}は3ビットのフィールドで、
 よく使われる8番(x8)から15番(x15)のレジスタを指定します。
 即値の並び方やそれぞれの命令の具体的なフォーマットについては、
 仕様書か@<secref>{impl-converter-all}のコードを参照してください。
 
-TODO 書き換える
-RV32IのCPUに実装されるC拡張には表@<img>{rvc-instruction-formats}のRVC命令が定義されています。
-RV64IのCPUに実装されるC拡張には表@<img>{rvc-instruction-formats}に加えて表@<table>{impl-c.instructions}のRVC命令が定義されています。
-一部のRV32IのRVC命令はRV64Iで別の命令に置き換わっていることに注意してください。
+RV64IのCPUに実装されるC拡張には@<img>{rvc-instruction-formats}のRVC命令が定義されています。
 
 //table[impl-c.instructions][C拡張の命令]{
 命令		32ビット幅での命令	形式
@@ -47,7 +44,6 @@ C.LD		ld rd, offset(rs)	CL
 C.SW		sw rs2, offset(rs1)	CS
 C.SD		sd rs2, offset(rs1)	CS
 C.J			jal x0, offset		CJ
-C.JAL		jal x1, offset		CJ
 C.JR		jalr x0, 0(rs1)		CR
 C.JALR		jalr x1, 0(rs1)		CR
 C.BEQZ		beq rs1, x0, offset	CB
@@ -70,6 +66,10 @@ C.XOR		xor rd, rd, rs2		CA
 C.SUB		sub rd, rd, rs2		CA
 C.EBREAK	ebreak				CR
 //}
+
+C.ADDIW命令はRV32IのC拡張に定義されているC.JAL命令とエンコーディングが同じです。
+本書で実装するモジュールはRV32IのC拡張にも対応したものになっています。
+RV32IのC拡張については、仕様書か@<secref>{impl-converter-all}のコードを参照してください。
 
 C拡張は浮動小数点命令をサポートするF、D拡張が実装されている場合に他の命令を定義しますが、
 基本編ではF、D拡張を実装しないため実装、解説しません。
@@ -125,7 +125,7 @@ C拡張が実装されている場合には例外が発生しません。
 
 最終的な命令フェッチ処理の構成は図@<img>{inst-fetch-structure}のようになります。
 
-//image[inst-fetch-structure][命令フェッチ処理の構成][width=100%]
+//image[inst-fetch-structure][命令フェッチ処理の構成][width=90%]
 
 == 命令フェッチモジュールの実装
 
@@ -835,7 +835,7 @@ RVC命令のopcode、functなどのフィールドを読んで、
 関数の名前は基本的に命令名と同じにしていますが、
 Verylのキーワードと被るものは@<code>{inst_}をprefixにしています。
 
-#@# TODO フォーマット
+#@# TODO mapに戻す。フォーマットしたい　できれば
 //list[inst_gen_pkg.veryl.rvcc][命令のビット列を生成する関数を定義する (inst_gen_pkg.veryl)]{
 import eei::*;
 

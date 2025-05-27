@@ -124,11 +124,9 @@
              <b>mode    = PrivMode::M;</b>
 </pre>
 </div>
-<p>本章ではM-mode向けのCSRの一部を実装します。実装する機能、レジスタと章の対応は表TODOの通りです</p>
-<p>TODO table 実装する機能とレジスタと章の対応</p>
-<p>本書で実装するM-modeのCSRのアドレスをすべて定義します(<span class="listref"><a href="./20-mmode-csr.html#eei.veryl.define.CsrAddr">リスト6.4</a></span>)。</p>
+<p>本書で実装するM-modeのCSRのアドレスをすべて定義します(<span class="listref"><a href="./20-mmode-csr.html#eei.veryl.define.CsrAddr">リスト6.4</a></span>)。本章ではこの中の一部のCSRを実装し、新しく実装する機能で使うタイミングで他のCSRを解説、実装します</p>
 <div id="eei.veryl.define.CsrAddr" class="caption-code">
-<span class="caption">リスト6.4: リスト6.4:  (eei.veryl)</span>
+<span class="caption">リスト6.4: リスト6.4: CSRのアドレスを定義する (eei.veryl)</span>
 <pre class="list language-CsrAddr">    enum CsrAddr: logic&lt;12&gt; {
         <b>// Machine Information Registers</b>
         <b>MIMPID = 12'hf13,</b>
@@ -143,7 +141,7 @@
         <b>MCOUNTEREN = 12'h306,</b>
         <b>// Machine Trap Handling</b>
         <b>MSCRATCH = 12'h340,</b>
-        <b>MEPC = 12'h341,</b>
+        MEPC = 12'h341,
         MCAUSE = 12'h342,
         MTVAL = 12'h343,
         MIP = 12'h344,
@@ -161,7 +159,7 @@
 
 <h2 class="numbox"><a id="h6-2"></a><span class="secno">6.2</span> misaレジスタ (Machine ISA)</h2>
 <div id="misa" class="image">
-<img src="images/20-mmode-csr/misa.png" alt="misaレジスタ" class="img" style="width:100%" />
+<img src="images/20-mmode-csr/misa.png" alt="misaレジスタ" class="img" style="width:90%" />
 <p class="caption">
 図6.1: misaレジスタ
 </p>
@@ -170,7 +168,7 @@
 <div id="numtolen" class="table">
 <p class="caption">表6.2: XLENと数値の対応</p>
 <table>
-<tr class="hline"><th>XLEM</th><th>数値</th></tr>
+<tr class="hline"><th>XLEN</th><th>数値</th></tr>
 <tr class="hline"><td>32</td><td>1</td></tr>
 <tr class="hline"><td>64</td><td>2</td></tr>
 <tr class="hline"><td>128</td><td>3</td></tr>
@@ -192,7 +190,7 @@
 
 <h2 class="numbox"><a id="h6-3"></a><span class="secno">6.3</span> mimpidレジスタ (Machine Implementation ID)</h2>
 <div id="mimpid" class="image">
-<img src="images/20-mmode-csr/mimpid.png" alt="mimpidレジスタ" class="img" style="width:100%" />
+<img src="images/20-mmode-csr/mimpid.png" alt="mimpidレジスタ" class="img" style="width:90%" />
 <p class="caption">
 図6.2: mimpidレジスタ
 </p>
@@ -220,7 +218,7 @@
 
 <h2 class="numbox"><a id="h6-4"></a><span class="secno">6.4</span> mhartidレジスタ (Hart ID)</h2>
 <div id="mhartid" class="image">
-<img src="images/20-mmode-csr/mhartid.png" alt="mhartidレジスタ" class="img" style="width:100%" />
+<img src="images/20-mmode-csr/mhartid.png" alt="mhartidレジスタ" class="img" style="width:90%" />
 <p class="caption">
 図6.3: mhartidレジスタ
 </p>
@@ -243,7 +241,7 @@
 
 <h2 class="numbox"><a id="h6-5"></a><span class="secno">6.5</span> mstatusレジスタ (Machine Status)</h2>
 <div id="mstatus" class="image">
-<img src="images/20-mmode-csr/mstatus.png" alt="mstatusレジスタ" class="img" style="width:100%" />
+<img src="images/20-mmode-csr/mstatus.png" alt="mstatusレジスタ" class="img" style="width:90%" />
 <p class="caption">
 図6.4: mstatusレジスタ
 </p>
@@ -405,7 +403,7 @@
 
 <h2 class="numbox"><a id="h6-7"></a><span class="secno">6.7</span> mscratchレジスタ (Machine Scratch)</h2>
 <div id="mscratch" class="image">
-<img src="images/20-mmode-csr/mscratch.png" alt="mscratchレジスタ" class="img" style="width:100%" />
+<img src="images/20-mmode-csr/mscratch.png" alt="mscratchレジスタ" class="img" style="width:90%" />
 <p class="caption">
 図6.5: mscratchレジスタ
 </p>

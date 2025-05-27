@@ -110,17 +110,17 @@
 <p>割り込みの発生時にmstatus.MIEを<code class="inline-code">0</code>にすることで、割り込みの処理中に割り込みが発生することを防いでいます。また、トラップから戻る(MRET命令を実行する)ときは、mstatus.MPIEの値をmstatus.MIEに書き戻すことで割り込みの許可状態を戻します。</p>
 
 <h3 class="none"><a id="h7-1-3"></a><span class="secno">7.1.3</span> 割り込みの優先順位</h3>
-<p>TODO 書き換えRISC-Vには外部割り込み、ソフトウェア割り込み、タイマ割り込みがそれぞれM-mode、S-mode向けに用意されています。それぞれの割り込みには<span class="tableref"><a href="./21-impl-interrupt.html#riscv.interrupt-priority">表7.1</a></span>のような優先順位が定義されていて、複数の割り込みを発生させられるときは優先順位が高い割り込みを発生させます。</p>
+<p>RISC-Vには外部割り込み、ソフトウェア割り込み、タイマ割り込みがそれぞれM-mode、S-mode向けに用意されています。それぞれの割り込みには<span class="tableref"><a href="./21-impl-interrupt.html#riscv.interrupt-priority">表7.1</a></span>のような優先順位が定義されていて、複数の割り込みを発生させられるときは優先順位が高い割り込みを発生させます。</p>
 <div id="riscv.interrupt-priority" class="table">
 <p class="caption">表7.1: RISC-Vの割り込みの優先順位</p>
 <table>
-<tr class="hline"><th>cause</th><th>説明</th></tr>
-<tr class="hline"><td>11</td><td>Machine external interrupt</td></tr>
-<tr class="hline"><td>3</td><td>Machine software interrupt</td></tr>
-<tr class="hline"><td>7</td><td>Machine timer interrupt</td></tr>
-<tr class="hline"><td>9</td><td>Supervisor external interrupt</td></tr>
-<tr class="hline"><td>1</td><td>Supervisor software interrupt</td></tr>
-<tr class="hline"><td>5</td><td>Supervisor timer interrupt</td></tr>
+<tr class="hline"><th>cause</th><th>説明</th><th>優先順位</th></tr>
+<tr class="hline"><td>11</td><td>Machine external interrupt</td><td>高い</td></tr>
+<tr class="hline"><td>3</td><td>Machine software Interrupt</td><td></td></tr>
+<tr class="hline"><td>7</td><td>Machine timer interrupt</td><td></td></tr>
+<tr class="hline"><td>9</td><td>Supervisor external interrupt</td><td></td></tr>
+<tr class="hline"><td>1</td><td>Supervisor software interrupt</td><td></td></tr>
+<tr class="hline"><td>5</td><td>Supervisor timer interrupt</td><td>低い</td></tr>
 </table>
 </div>
 
@@ -487,7 +487,7 @@ module aclint_memory (
 </div>
 <p>mie、mipレジスタの値を読み込めるようにします(<span class="listref"><a href="./21-impl-interrupt.html#csrunit.veryl.miemip.rdata">リスト7.29</a></span>)。</p>
 <div id="csrunit.veryl.miemip.rdata" class="caption-code">
-<span class="caption">リスト7.29: リスト7.29: rdataにmip、mieレジスタを割り当てる (csrunit.veryl)</span>
+<span class="caption">リスト7.29: リスト7.29: rdataにmip、mieレジスタの値を割り当てる (csrunit.veryl)</span>
 <pre class="list language-rdata">CsrAddr::MTVEC   : mtvec,
 <b>CsrAddr::MIP     : mip,</b>
 <b>CsrAddr::MIE     : mie,</b>

@@ -7,8 +7,9 @@
 TODO 図
 
 仮想記憶(Virtual Memory)とは、メモリを管理する手法の一種です。
-論理的なアドレス(logical address、論理アドレス)を物理的なアドレス(physical address、物理アドレス)に変換することにより、
-実際のアドレス(real address、実アドレス)空間とは異なる仮想的なアドレス(virtual address、仮想アドレス)空間を提供することができます。
+仮想的なアドレス(virtual address、仮想アドレス)を実際のアドレス(real address、実アドレス)に変換することにより、
+実際のアドレス空間とは異なるアドレス空間を提供することができます。
+実アドレスのことを物理アドレス(physical address)と呼ぶことがあります。
 
 仮想記憶を利用すると、次のような動作を実現できます。
 
@@ -25,30 +26,30 @@ TODO 図
 
 仮想記憶システムを実現する方式の1つにページング方式(Paging)があります。
 ページング方式は、物理アドレス空間の一部をページ(Page)という単位に割り当て、
-ページテーブル(Page Table)にページを参照するための情報を格納します。
-ページテーブルに格納する情報の単位のことをページテーブルエントリ(Page Table Entry)と呼びます。
-論理アドレスから物理アドレスへの変換はページテーブルにあるページテーブルエントリを参照して行います。
-これ以降、ページテーブルエントリのことをPTEと呼びます。
+ページを参照するための情報をページテーブル(Page Table)に格納します。
+ページテーブルに格納する情報の単位のことをページテーブルエントリ(Page Table Entry、PTE)と呼びます。
+仮想アドレスから物理アドレスへの変換はページテーブルにあるPTEを参照して行います。
+
+=== RISC-Vの仮想記憶システム
 
 RISC-Vの仮想記憶システムはページング方式を採用しており、
 RV32I向けにはSv32、RV64I向けにはSv39、Sv48、Sv57が定義されています。
 
-TODO 図
+RISC-Vの仮想アドレスの変換を簡単に説明します。
+仮想アドレスの変換は次のプロセスで行います。
 
-本章で実装するSv39のアドレス変換を簡単に説明します。
-
-(a) satpレジスタのPPNフィールドと論理アドレスのフィールドからPTEの物理アドレスを作る。
+(a) satpレジスタのPPNフィールドと仮想アドレスのフィールドからPTEの物理アドレスを作る。
 (b) PTEを読み込む。PTEが有効なものか確認する。
-(c) PTEがページを指しているとき、PTEに書かれている権限を確認してから最終的な物理アドレスを作る。
-(d) PTEが次のPTEを指しているとき、PTEのフィールドと論理アドレスのフィールドから次のPTEの物理アドレスを作る。(b)に戻る。
+(c) PTEがページを指しているとき、PTEに書かれている権限を確認してから物理アドレスを作り、アドレス変換終了。
+(d) PTEが次のPTEを指しているとき、PTEのフィールドと仮想アドレスのフィールドから次のPTEの物理アドレスを作り、bに戻る。
 
 satpレジスタは仮想記憶システムを制御するためのCSRです。
 一番最初に参照するPTEのことをroot PTEと呼びます。
 また、PTEがページを指しているとき、そのPTEのことをleaf PTEと呼びます。
 
-TODO 図
-
-このようにsatpレジスタと論理アドレス、PTEを使って多段階のメモリアクセスを行って論理アドレスを物理アドレスに変換します。
+RISC-Vのページングでは、
+satpレジスタと仮想アドレス、PTEを使って多段階のPTEの参照を行い、
+仮想アドレスを物理アドレスに変換します。
 Sv39の場合、何段階で物理アドレスに変換できるかによってページサイズは4KiB、2MiB、1GiBと異なります。
 これ以降、MMU内のページング方式を実現する部品のことをPTW(Page Table Walker)と呼びます@<fn>{ptw}。
 
@@ -58,19 +59,26 @@ Sv39の場合、何段階で物理アドレスに変換できるかによって�
 
 ==== satpレジスタ
 
-//image[satp][satpレジスタ][width=100%]
+//image[satp][satpレジスタ][width=90%]
 
 RISC-Vの仮想記憶システムはsatpレジスタによって制御します。
 
 MODEは仮想アドレスの変換方式を指定するフィールドです。
-方式と値はTODOテーブルのように対応しています。
-MODEがBare(@<code>{0})のときはアドレス変換を行いません(仮想アドレス=物理アドレス)。
+方式と値は@<table>{satp.numtomode}のように対応しています。
+方式がBare(@<code>{0})のときはアドレス変換を行いません(仮想アドレス=物理アドレス)。
 
-TODO テーブル
+//table[satp.numtomode][方式とMODEの値の対応]{
+方式	MODE
+-------------------------------------------------------------
+Bare	0
+Sv39	8
+Sv48	9
+Sv57	10
+//}
 
 ASID(Address Space IDentifier)は仮想アドレスが属するアドレス空間のIDです。
-動かすアプリケーションによってIDを変えることでMMUにアドレス変換の高速化のヒントを与えることができます
-本章ではASIDを無視したアドレス変換を実装します@<fn>{tlb}。
+動かすアプリケーションによってIDを変えることでMMUにアドレス変換の高速化のヒントを与えることができます。
+本章ではキャッシュ機構を持たない単純なモジュールを実装するため、ASIDを無視したアドレス変換を実装します@<fn>{tlb}。
 
 //footnote[tlb][PTWはページエントリをキャッシュすることで高速化できます。ASIDが異なるときのキャッシュは利用することができません。キャッシュ機構(TLB)は応用編で実装します。]
 
@@ -88,41 +96,38 @@ Sv39の仮想アドレスは次の方法によって物理アドレスに変換�
 TODO プロセス
 
 基本的にアドレス変換はS-mode、U-modeで有効になります。
-TODO ここで説明
-mstatusレジスタのMXR、SUM、MPRVビットを利用すると、プロセスTODOの特権レベル、PTEの権限について挙動を少し変更できます。
-これらのビットについては実装するときに解説します。
+mstatusレジスタのMXR、SUM、MPRVビットを利用すると、TODOプロセスの特権レベル、PTEの権限についての挙動を少し変更できます。
 
-アドレスの変換途中でPTEが不正な値だったり、ページが求める権限を持たずにページにアクセスにアクセスしようとした場合、
+アドレスの変換途中でPTEが不正な値だったり、ページが求める権限を持たずにページにアクセスしようとした場合、
 アクセスする目的に応じたページフォルト(Page fault)例外が発生します。
 命令フェッチはInstruction page fault例外、ロード命令はLoad page fault例外、ストアとAMO命令はStore/AMO page fault例外が発生します。
 
 === 実装順序
 
-図
+//image[ptw-mmio-structure][PTWと他のモジュールの接続][width=90%]
 
 RISC-Vでは命令フェッチ、データのロードストアの両方でページングを利用できます。
 命令フェッチ、データのロードストアのそれぞれのために2つのPTWを用意してもいいですが、
 シンプルなアーキテクチャにするために本章では1つのPTWを共有することにします。
+
 inst_fetcherモジュール、amounitモジュールは仮想アドレスを扱うことがありますが、
 mmio_controllerモジュールは常に物理アドレス空間を扱います。
-そのため、inst_fetcherモジュール、amounitモジュールとmmio_controllerモジュールの間にPTWを配置します(図TODO)。
-
-TODO 図
+そのため、inst_fetcherモジュール、amounitモジュールとmmio_controllerモジュールの間にPTWを配置します(@<img>{ptw-mmio-structure})。
 
 本章では、仮想記憶システムを次の順序で実装します。
 
- 1. 例外を伝達するインターフェースを実装する
- 1. Bareにだけ対応したアドレス変換モジュールを実装する
- 1. satpレジスタ、mstatusのMXR、SUM、MPRVビットを作成する
+ 1. PTWで発生する例外をcsrunitモジュールに伝達する
+ 1. Bareにだけ対応したアドレス変換モジュール(ptw)を実装する
+ 1. satpレジスタ、mstatusのMXR、SUM、MPRVビットを実装する
  1. Sv39を実装する
  1. SFENCE.VMA命令、FENCEI命令を実装する
 
-== メモリインターフェースの例外の実装
+== メモリで発生する例外の実装
 
 PTWで発生した例外は、最終的にcsrunitモジュールで処理します。
 そのために、例外の情報をメモリのインターフェースを使って伝達します。
 
-ページングによって発生する例外のcauseを@<code>{CsrCause}型に追加してください
+ページングによって発生する例外のcauseを@<code>{CsrCause}型に追加します
 (@<list>{eei.veryl.CsrCause.def})。
 
 //list[eei.veryl.CsrCause.def][ (eei.veryl)]{
@@ -206,14 +211,15 @@ mmio_controllerモジュールで構造体の値をすべて@<code>{0}に設定�
 )。
 いまのところ、デバイスは例外を発生させません。
 
+#@# mapに戻す できれば
 //list[mmio_controller.veryl.newexpt.comb][ (membus_if.veryl)]{
-#@maprange(scripts/24/newexpt-range/core/src/mmio_controller.veryl,comb)
+#@# maprange(scripts/24/newexpt-range/core/src/mmio_controller.veryl,comb)
     always_comb {
         req_core.ready  = 0;
         req_core.rvalid = 0;
         req_core.rdata  = 0;
-        req_core.expt   = 0;
-#@end
+        @<b>|req_core.expt   = 0;|
+#@# end
 //}
 
 mmio_controllerモジュールからの例外情報を
@@ -386,7 +392,7 @@ offsetが@<code>{6}で例外が発生しているとき、
 #@end
 //}
 
-例外が発生したら、@<code>{state}を@<code>{State::Init}にリセットするようにします
+例外が発生したら、@<code>{state}を@<code>{State::Init}にリセットします
 (@<list>{amounit.veryl.newexpt.on_clock})。
 
 //list[amounit.veryl.newexpt.on_clock][ (amounit.veryl)]{
@@ -538,7 +544,7 @@ inst_fetcherモジュールで、
 #@end
 //}
 
-tvalを生成するとき、オフセット足します。
+xtvalを生成するとき、オフセット足します。
 
 //list[core.veryl.exptoffset.offset][ (core.veryl)]{
 #@maprange(scripts/24/exptoffset-range/core/src/core.veryl,offset)
@@ -567,10 +573,8 @@ satpレジスタを実装します
 @<list>{csrunit.veryl.satp.reg}、
 @<list>{csrunit.veryl.satp.reset}、
 @<list>{csrunit.veryl.satp.rdata}、
-@<list>{csrunit.veryl.satp.wmask}、
 @<list>{csrunit.veryl.satp.WMASK}、
-@<list>{csrunit.veryl.satp.validate}、
-@<list>{csrunit.veryl.satp.write}
+@<list>{csrunit.veryl.satp.wmask}
 )。
 すべてのフィールドを読み書きできるように設定して、
 値を@<code>{0}でリセットします。
@@ -593,25 +597,29 @@ satpレジスタを実装します
 #@end
 //}
 
-//list[csrunit.veryl.satp.wmask][ (csrunit.veryl)]{
-#@maprange(scripts/24/satp-range/core/src/csrunit.veryl,wmask)
-    CsrAddr::SATP      : SATP_WMASK,
-#@end
-//}
-
 //list[csrunit.veryl.satp.WMASK][ (csrunit.veryl)]{
 #@maprange(scripts/24/satp-range/core/src/csrunit.veryl,WMASK)
     const SATP_WMASK      : UIntX = 'hffff_ffff_ffff_ffff;
 #@end
 //}
 
+//list[csrunit.veryl.satp.wmask][ (csrunit.veryl)]{
+#@maprange(scripts/24/satp-range/core/src/csrunit.veryl,wmask)
+    CsrAddr::SATP      : SATP_WMASK,
+#@end
+//}
+
 satpレジスタは、
-MODEフィールド変更するときに書き込もうとしている値がサポートしないMODEなら、
-satpレジスタの変更を全ビット無視すると定められています。
+MODEフィールドに書き込もうとしている値がサポートしないMODEなら、
+satpレジスタの変更を全ビットについて無視すると定められています。
 
 本章ではBareとSv39だけをサポートするため、
 MODEには@<code>{0}と@<code>{8}のみ書き込めるようにして、
-それ以外の値を書き込もうとしたらsatpレジスタへの書き込みを無視します。
+それ以外の値を書き込もうとしたらsatpレジスタへの書き込みを無視します
+(
+@<list>{csrunit.veryl.satp.validate}、
+@<list>{csrunit.veryl.satp.write}
+)。
 
 //list[csrunit.veryl.satp.validate][ (csrunit.veryl)]{
 #@maprange(scripts/24/satp-range/core/src/csrunit.veryl,validate)
@@ -634,7 +642,7 @@ MODEには@<code>{0}と@<code>{8}のみ書き込めるようにして、
 #@end
 //}
 
-== mstatusのMXR、SUM、MPRVビットの作成
+== mstatusのMXR、SUM、MPRVビットの実装
 
 mstatusレジスタのMXR、SUM、MPRVビットを変更できるようにします
 (
@@ -682,15 +690,15 @@ mstatus.MPRVは、M-mode以外のモードにトラップするときに@<code>{
 #@end
 //}
 
-== アドレス変換モジュール(PTW)の作成
+== アドレス変換モジュール(PTW)の実装
 
-ページテーブルエントリをフェッチしてアドレス変換を行うモジュール(ptw)を作成します。
+ページテーブルエントリをフェッチしてアドレス変換を行うptwモジュールを作成します。
 まず、MODEがBareのとき(仮想アドレス = 物理アドレス)の動作を実装し、
 Sv39を@<secref>{impl-sv39}で実装します。
 
 === CSRのインターフェースを実装する
 
-ptwで使用するCSRをcsrunitモジュールから渡すためのインターフェースを定義します。
+ページングで使用するCSRを、csrunitモジュールからptwモジュールに渡すためのインターフェースを定義します。
 
 @<code>{src/ptw_ctrl_if.veryl}を作成し、次のように記述します
 (@<list>{ptw_ctrl_if.veryl.empty})。
@@ -739,10 +747,10 @@ interface ptw_ctrl_if {
 
 is_enabledは、CSRとアクセス目的からページングがページングが有効かどうかを判定する関数です。
 Bareかどうかを判定した後に、命令フェッチかどうか(@<code>{is_inst})によって分岐しています。
-命令フェッチのときはS-mode以下の特権レベルのときに有効になります。
-ロードストアのとき、mstatus.MPRVが@<code>{1}ならmstatus.mpp、@<code>{0}なら現在の特権レベルがS-mode以下なら有効になります。
+命令フェッチのときはS-mode以下の特権レベルのときにページングが有効になります。
+ロードストアのとき、mstatus.MPRVが@<code>{1}ならmstatus.MPP、@<code>{0}なら現在の特権レベルがS-mode以下ならページングが有効になります。
 
-=== Bareだけのptwモジュールを作成する
+=== Bareだけに対応するアドレス変換モジュールを実装する
 
 @<code>{src/ptw.veryl}を作成し、次のようなポートを記述します
 (@<list>{ptw.veryl.empty.port})。
@@ -762,7 +770,7 @@ module ptw (
 #@end
 //}
 
-@<code>{slave}はcoreモジュール側から仮想アドレスによる要求を受け付けるためのインターフェース、
+@<code>{slave}はcoreモジュール側からの仮想アドレスによる要求を受け付けるためのインターフェースです。
 @<code>{master}はmmio_conterollerモジュール側に物理アドレスによるアクセスを行うためのインターフェースです。
 
 @<code>{is_inst}を使い、ページングが有効かどうか判定します
@@ -797,12 +805,12 @@ module ptw (
     @<code>{master}に物理アドレスでメモリアクセスを要求し続けます。
     @<code>{master}の@<code>{ready}が@<code>{1}なら状態を@<code>{State::EXECUTE_VALID}に移動します。
  : @<code>{State::EXECUTE_VALID}
-    @<code>{master}からのレスポンスを待ちます。
+    @<code>{master}からの結果を待ちます。
     @<code>{master}の@<code>{rvalid}が@<code>{1}のとき、
     @<code>{State::IDLE}と同じように@<code>{slave}からの要求を受け付けます。
     @<code>{slave}が何も要求していないなら、状態を@<code>{State::IDLE}に移動します。
 
-@<code>{slave}からの要求を保存しておくためのインターフェースをインスタンス化しておきます
+@<code>{slave}からの要求を保存しておくためのインターフェースをインスタンス化します
 (@<list>{ptw.veryl.empty.save})。
 
 //list[ptw.veryl.empty.save][ (ptw.veryl)]{
@@ -816,8 +824,8 @@ module ptw (
 @<list>{ptw.veryl.empty.phy}、
 @<list>{ptw.veryl.empty.assign_master}
 )。
-@<code>{master}に要求を割り当てるとき、
-アドレスだけ@<code>{physical_addr}レジスタの値を割り当てるようにしておきます。
+@<code>{State::EXECUTE_READY}で@<code>{master}に要求を割り当てるとき、
+@<code>{physical_addr}レジスタの値をアドレスに割り当てるようにします。
 
 //list[ptw.veryl.empty.phy][ (ptw.veryl)]{
 #@maprange(scripts/24/empty-range/core/src/ptw.veryl,phy)
@@ -865,7 +873,7 @@ module ptw (
 #@end
 //}
 
-状態に基づいて、@<code>{slave}に@<code>{ready}と結果を割り当てます
+状態に基づいて、@<code>{ready}と結果を@<code>{slave}に割り当てます
 (@<list>{ptw.veryl.empty.assign_slave})。
 
 //list[ptw.veryl.empty.assign_slave][ (ptw.veryl)]{
@@ -949,7 +957,7 @@ module ptw (
 
 === ptwモジュールをインスタンス化する
 
-topモジュールでptwモジュールをインスタンス化します。
+topモジュールで、ptwモジュールをインスタンス化します。
 
 ptwモジュールはmmio_controllerモジュールの前で仮想アドレスを物理アドレスに変換するモジュールです。
 ptwモジュールとmmio_controllerモジュールの間のインターフェースを作成します
@@ -1110,14 +1118,15 @@ ptwモジュールに、Sv39を実装します。
 
 ==={define_const} 定数の定義
 
-ptwモジュールで使用する定数とユーティリティ関数を実装します。
+ptwモジュールで使用する定数と関数を実装します。
 
 @<code>{src/sv39util.veryl}を作成し、次のように記述します
 (@<list>{sv39util.veryl.sv39})。
 定数は@<secref>{sv39process}で使用しているものと同じです。
 
+#@# mapに戻す できれば
 //list[sv39util.veryl.sv39][ (sv39util.veryl)]{
-#@mapfile(scripts/24/sv39-range/core/src/sv39util.veryl)
+#@# mapfile(scripts/24/sv39-range/core/src/sv39util.veryl)
 import eei::*;
 package sv39util {
     const PAGESIZE: u32      = 12;
@@ -1152,11 +1161,15 @@ package sv39util {
         satp: input UIntX,
         va  : input Addr ,
     ) -> Addr {
-        return {1'b0 repeat XLEN - 44 - PAGESIZE, satp[43:0], 1'b0 repeat PAGESIZE} // a
-         + {1'b0 repeat XLEN - 9 - $clog2(PTESIZE), va[38:30], 1'b0 repeat $clog2(PTESIZE)}; // vpn[2]
+        return {
+            1'b0 repeat XLEN - 44 - PAGESIZE,
+            satp[43:0],
+            vpn(va, 2),
+            1'b0 repeat $clog2(PTESIZE)
+        };
     }
 }
-#@end
+#@# end
 //}
 
 ==={define_PTE} PTEの定義
@@ -1193,11 +1206,12 @@ interface PTE39 {
 #@end
 //}
 
-PTEを使ったユーティリティ関数を追加します
+PTEの値を使った関数を定義します
 (@<list>{pte.veryl.sv39.func})。
 
+#@# mapに戻す できれば
 //list[pte.veryl.sv39.func][ (pte.veryl)]{
-#@maprange(scripts/24/sv39-range/core/src/pte.veryl,func)
+#@# maprange(scripts/24/sv39-range/core/src/pte.veryl,func)
     // leaf PTEか判定する
     function is_leaf () -> logic { return r() || x(); }
 
@@ -1234,8 +1248,12 @@ PTEを使ったユーティリティ関数を追加します
         level: input Level,
         va   : input Addr ,
     ) -> Addr {
-        return {1'b0 repeat XLEN - 44 - PAGESIZE, ppn(), 1'b0 repeat PAGESIZE} + // a
-         {1'b0 repeat XLEN - 9 - $clog2(PTESIZE), vpn(va, level - 1), 1'b0 repeat $clog2(PTESIZE)};
+        return {
+            1'b0 repeat XLEN - 44 - PAGESIZE,
+            ppn(),
+            vpn(va, level - 1),
+            1'b0 repeat $clog2(PTESIZE)
+        };
     }
 
     // PTEと仮想アドレスから物理アドレスを生成する
@@ -1274,7 +1292,7 @@ PTEを使ったユーティリティ関数を追加します
         let d: logic<8> = wen as u8 << 7;
         return value[7:0] | a | d;
     }
-#@end
+#@# end
 //}
 
 === ptwモジュールの実装
@@ -1299,12 +1317,12 @@ PTE39インターフェースをインスタンス化します
 #@end
 //}
 
-TODO 図
+//image[statezu][状態の遷移図 (点線の状態で新しく要求を受け付け、二重丸の状態で結果を返す)][width=80%]
 
 仮想アドレスを変換するための状態を追加します
 (@<list>{ptw.veryl.sv39.State})。
 本章ではページングが有効な時に、
-状態がTODO図のように遷移するようにします。
+@<code>{state}が@<img>{statezu}のように遷移するようにします。
 
 //list[ptw.veryl.sv39.State][ (ptw.veryl)]{
 #@maprange(scripts/24/sv39-range/core/src/ptw.veryl,State)
@@ -1322,7 +1340,7 @@ TODO 図
 
 現在のPTEのlevel(@<code>{level})、
 PTEのアドレス(@<code>{taddr})、
-要求によって更新されるPTEの下位8ビットを格納するためのレジスタを定義します
+要求によって更新されるPTEの下位8ビット(@<code>{wdata_ad})を格納するためのレジスタを定義します
 (
 @<list>{ptw.veryl.sv39.reg}、
 @<list>{ptw.veryl.sv39.reset}
@@ -1351,7 +1369,7 @@ PTEのアドレス(@<code>{taddr})、
 PTEのフェッチとA、Dビットの更新のために@<code>{master}に要求を割り当てます
 (@<list>{ptw.veryl.sv39.assign_master})。
 PTEは@<code>{taddr}を使ってアクセスし、
-A、Dビットの更新では下位8ビットのみの書き込みマスクを設定しています。
+A、Dビットの更新では下位8ビットのみの書き込みマスクを設定します。
 
 //list[ptw.veryl.sv39.assign_master][ (ptw.veryl)]{
 #@maprange(scripts/24/sv39-range/core/src/ptw.veryl,assign_master)
@@ -1371,7 +1389,7 @@ case state {
 #@end
 //}
 
-@<code>{slave}への結果の割り当てで、ページフォルトが発生していた場合の結果を割り当てます
+@<code>{slave}への結果の割り当てで、ページフォルト例外が発生していた場合の結果を割り当てます
 (@<list>{ptw.veryl.sv39.assign_slave})。
 
 //list[ptw.veryl.sv39.assign_slave][ (ptw.veryl)]{
@@ -1384,10 +1402,10 @@ State::PAGE_FAULT: {
 #@end
 //}
 
-ページングが有効なときの要求を受け入れる動作を実装します
+ページングが有効なときに要求を受け入れる動作を実装します
 (@<list>{ptw.veryl.sv39.accept})。
-仮想アドレスが有効かどうかでページフォルトを判定し、@<code>{taddr}レジスタには最初のPTEのアドレスを割り当てます。
-@<code>{level}の初期値はLEVELS - 1とします。
+仮想アドレスが有効かどうかでページフォルト例外を判定し、@<code>{taddr}レジスタに最初のPTEのアドレスを割り当てます。
+@<code>{level}の初期値は@<code>{LEVELS - 1}とします。
 
 //list[ptw.veryl.sv39.accept][ (ptw.veryl)]{
 #@maprange(scripts/24/sv39-range/core/src/ptw.veryl,accept)
@@ -1402,7 +1420,7 @@ if paging_enabled {
 #@end
 //}
 
-ページフォルトが発生したとき、状態を@<code>{State::IDLE}に戻します
+ページフォルト例外が発生したとき、状態を@<code>{State::IDLE}に戻します
 (@<list>{ptw.veryl.sv39.clockpf})。
 
 //list[ptw.veryl.sv39.clockpf][ (ptw.veryl)]{
@@ -1411,7 +1429,7 @@ State::PAGE_FAULT: state = State::IDLE;
 #@end
 //}
 
-A、Dビットを更新するとき、メモリが書き込み要求を受け入れたら状態を@<code>{State::EXECUTE_READY}に移動します
+A、Dビットを更新するとき、メモリが書き込み要求を受け入れたら、状態を@<code>{State::EXECUTE_READY}に移動します
 (@<list>{ptw.veryl.sv39.clockad})。
 
 //list[ptw.veryl.sv39.clockad][ (ptw.veryl)]{
@@ -1422,7 +1440,7 @@ State::SET_AD: if master.ready {
 #@end
 //}
 
-PTEと要求から、ページにアクセスする権限があるかどうかを確認する関数を定義します
+ページにアクセスする権限があるかをPTEと要求から判定する関数を定義します
 (@<list>{ptw.veryl.sv39.check})。
 条件の詳細は@<secref>{sv39process}を確認してください。
 
@@ -1452,7 +1470,7 @@ PTEと要求から、ページにアクセスする権限があるかどうか�
 #@end
 //}
 
-PTEをフェッチし、ページフォルトの判定、次のPTEのフェッチ、A、Dビットを更新する状態への遷移を実装します
+PTEをフェッチしてページフォルト例外を判定し、次のPTEのフェッチ、A、Dビットを更新する状態への遷移を実装します
 (@<list>{ptw.veryl.sv39.walk})。
 
 //list[ptw.veryl.sv39.walk][ (ptw.veryl)]{
@@ -1492,10 +1510,11 @@ State::WALK_VALID: if master.rvalid {
 == SFENCE.VMA命令の実装
 
 SFENCE.VMA命令は、
-SFENCE.VMA命令を実行する以前のストア命令が反映されたことを保証する命令です。
+SFENCE.VMA命令を実行する以前のストア命令がMMUに反映されたことを保証する命令です。
 S-mode以上の特権レベルのときに実行できます。
 
-基本編ではすべてのメモリアクセスを直列に行うため、何もしない命令として定義します。
+基本編ではすべてのメモリアクセスを直列に行い、
+仮想アドレスを変換するために毎回PTEをフェッチしなおすため、何もしない命令として定義します。
 
 === SFENCE.VMA命令をデコードする
 
@@ -1512,7 +1531,7 @@ SFENCE.VMA命令を有効な命令としてデコードします
 
 === 特権レベルの確認、mstatus.TVMを実装する
 
-S-mode未満の特権レベルで実行しようとしたとき、
+S-mode未満の特権レベルでSFENCE.VMA命令を実行しようとしたとき、
 Illegal instruction例外が発生します。
 
 mstatus.TVMはS-modeのときにsatpレジスタにアクセスできるか、
@@ -1574,7 +1593,7 @@ mstatus.TVMを書き込めるようにします
 mstatusレジスタのMXR、SUM、TVMビット、
 satpレジスタを書き換えたとき、
 CSRを書き換える命令の後ろの命令は、
-変更が反映されていない状態でフェッチした命令になっている可能性があります。
+CSRの変更が反映されていない状態でアドレス変換してフェッチした命令になっている可能性があります。
 
 CSRの書き換えをページングに反映するために、
 特定のCSRを書き換えたらパイプラインをフラッシュするようにします。
@@ -1608,18 +1627,19 @@ minstret                          ,
 #@end
 //}
 
-@<code>{flush}はsatpレジスタ、mstatusレジスタが変更されるときに@<code>{1}になるようにします
+satp、mstatus、sstatusレジスタが変更されるときに@<code>{flush}を@<code>{1}にします
 (@<list>{csrunit.veryl.flushcsr.logic})。
 
 
+#@# mapに戻す　できれば　sstatusを追加してる
 //list[csrunit.veryl.flushcsr.logic][ (csrunit.veryl)]{
-#@maprange(scripts/24/flushcsr-range/core/src/csrunit.veryl,logic)
-    let wsc_flush: logic = is_wsc && (csr_addr == CsrAddr::SATP || csr_addr == CsrAddr::MSTATUS);
+#@#maprange(scripts/24/flushcsr-range/core/src/csrunit.veryl,logic)
+    let wsc_flush: logic = is_wsc && (csr_addr == CsrAddr::SATP || csr_addr == CsrAddr::MSTATUS || csr_addr == CsrAddr::SSTATUS);
     assign flush     = valid && wsc_flush;
-#@end
+#@#end
 //}
 
-coreモジュールで、制御ハザードが発生したことにします
+@<code>{flush}が@<code>{1}のとき、制御ハザードが発生したことにしてパイプラインをフラッシュします
 (@<list>{core.veryl.flushcsr.hazard})。
 
 //list[core.veryl.flushcsr.hazard][ (core.veryl)]{
@@ -1633,12 +1653,12 @@ coreモジュールで、制御ハザードが発生したことにします
 === FENCE.I命令の実装
 
 あるアドレスにデータを書き込むとき、
-データを書き込んだ後の命令が書き換えられたアドレスの命令だった場合、
-命令のビット列はデータが書き換えられる前のものになる可能性があります。
+データを書き込んだ後の命令が、
+書き換えられたアドレスにある命令だった場合、
+命令のビット列がデータが書き換えられる前のものになっている可能性があります。
 
 FENCE.I命令は、FENCE.I命令の後の命令のフェッチ処理がストア命令の完了後に行われることを保証する命令です。
-
-ユーザーのアプリケーションのプログラムをページに書き込んで実行するとき、
+例えばユーザーのアプリケーションのプログラムをページに書き込んで実行するとき、
 ページへの書き込みを反映させるために使用します。
 
 FENCE.I命令を判定し、パイプラインをフラッシュする条件に設定します

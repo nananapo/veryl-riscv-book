@@ -195,7 +195,7 @@ ECALL命令かどうかを判定する@<code>{is_ecall}変数を削除して、
 mcauseレジスタを読むことでどの例外が発生したかを判別できますが、
 その例外の詳しい情報を知りたいことがあります。
 
-//image[mtval][mtvalレジスタ][width=100%]
+//image[mtval][mtvalレジスタ][width=90%]
 
 RISC-Vには、例外が発生したときのソフトウェアによるハンドリングを補助するために、
 MXLENビットのmtvalレジスタが定義されています(@<img>{mtval})。
@@ -499,7 +499,7 @@ OP-MISCのopcode(@<code>{7'b0001111})をeeiパッケージに定義してくだ�
 #@# end
 //}
 
-@<code>{valid}フラグを利用して、IDステージでIllegal Instruction例外を発生させます
+@<code>{valid}フラグを利用して、IDステージでIllegal instruction例外を発生させます
 (@<list>{core.veryl.instillegal-range.idex})。
 tvalには、命令を右に詰めてゼロで拡張した値を設定します。
 

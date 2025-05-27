@@ -210,7 +210,7 @@
 <h3 class="none"><a id="h2-2-2"></a><span class="secno">2.2.2</span> mtvalレジスタを実装する</h3>
 <p>例外が発生すると、CPUはトラップベクタにジャンプして例外を処理します。mcauseレジスタを読むことでどの例外が発生したかを判別できますが、その例外の詳しい情報を知りたいことがあります。</p>
 <div id="mtval" class="image">
-<img src="images/11-impl-exception/mtval.png" alt="mtvalレジスタ" class="img" style="width:100%" />
+<img src="images/11-impl-exception/mtval.png" alt="mtvalレジスタ" class="img" style="width:90%" />
 <p class="caption">
 図2.1: mtvalレジスタ
 </p>
@@ -445,7 +445,7 @@
     }
 </pre>
 </div>
-<p><code class="inline-code">valid</code>フラグを利用して、IDステージでIllegal Instruction例外を発生させます(<span class="listref"><a href="./11-impl-exception.html#core.veryl.instillegal-range.idex">リスト2.28</a></span>)。tvalには、命令を右に詰めてゼロで拡張した値を設定します。</p>
+<p><code class="inline-code">valid</code>フラグを利用して、IDステージでIllegal instruction例外を発生させます(<span class="listref"><a href="./11-impl-exception.html#core.veryl.instillegal-range.idex">リスト2.28</a></span>)。tvalには、命令を右に詰めてゼロで拡張した値を設定します。</p>
 <div id="core.veryl.instillegal-range.idex" class="caption-code">
 <span class="caption">リスト2.28: リスト2.28: 不正な命令のとき、例外を発生させる (core.veryl)</span>
 <pre class="list language-idex">        exq_wdata.expt = 0;

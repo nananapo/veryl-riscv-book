@@ -417,7 +417,7 @@ module mmio_controller (
 
 <h3 class="none"><a id="h3-4-1"></a><span class="secno">3.4.1</span> mmio_controllerモジュールにRAMを追加する</h3>
 <p>mmio_controllerモジュールにRAMとのインターフェースを実装します。</p>
-<p><code class="inline-code">Device</code>型にRAMを追加して、アドレスにRAMをマップします(@&lt;list&gt;{mmio_controller.veryl.ram.Device}、&lt;list&gt;{mmio_controller.veryl.ram.get_device})。</p>
+<p><code class="inline-code">Device</code>型にRAMを追加して、アドレスにRAMをマップします(<span class="listref"><a href="./12-impl-mmio.html#mmio_controller.veryl.ram.Device">リスト3.17</a></span>、<span class="listref"><a href="./12-impl-mmio.html#mmio_controller.veryl.ram.get_device">リスト3.18</a></span>)。</p>
 <div id="mmio_controller.veryl.ram.Device" class="caption-code">
 <span class="caption">リスト3.17: リスト3.17: Device型にRAMを追加する (mmio_controller.veryl)</span>
 <pre class="list language-Device">    enum Device {
@@ -540,7 +540,7 @@ module mmio_controller (
 </div>
 <p>coreモジュールからRAMへのメモリアクセスを調停する処理を、coreモジュールからmmio_controllerモジュールへのアクセスを調停する処理に変更します(<span class="listref"><a href="./12-impl-mmio.html#top.veryl.ram.arb">リスト3.27</a></span>)。</p>
 <div id="top.veryl.ram.arb" class="caption-code">
-<span class="caption">リスト3.27: リスト3.27: 調停する対称をmmio_membusに変更する (top.veryl)</span>
+<span class="caption">リスト3.27: リスト3.27: 調停する対象をmmio_membusに変更する (top.veryl)</span>
 <pre class="list language-arb">    // <b>mmio_controller</b>へのメモリアクセスを調停する
     always_ff {
         if_reset {
@@ -1170,7 +1170,7 @@ void main(void) {
 }
 </pre>
 </div>
-<p><code class="inline-code">DEBUG_OUTPUT</code>は出力デバイスのアドレスです。ここに<code class="inline-code">0x01010</code>を44ビット左シフトした値と文字をOR演算した値を書き込むことで文字を出力します。最後に<code class="inline-code">1</code>を書き込み、テストを終了しています。</p>
+<p><code class="inline-code">DEBUG_REG</code>は出力デバイスのアドレスです。ここに<code class="inline-code">0x01010</code>を44ビット左シフトした値と文字をOR演算した値を書き込むことで文字を出力します。最後に<code class="inline-code">1</code>を書き込み、テストを終了しています。</p>
 <p>main関数をそのままコンパイルしてRAMに配置すると、スタックポインタ(stack pointer, sp)の値が適切に設定されていないのでうまく動きません。スタックポインタとは、プログラムが一時的に利用する値を格納しておくためのメモリ(スタック)のアドレスへのポインタのことです。RISC-Vの規約ではsp(x2)レジスタをスタックポインタとして利用することが定められています。</p>
 <p>そのため、レジスタの値を適切な値にリセットしてmain関数を呼び出す別のプログラムが必要です。<code class="inline-code">test/entry.S</code>を作成し、次のように記述します(<span class="listref"><a href="./12-impl-mmio.html#entry.S.debugouttest">リスト3.72</a></span>)。</p>
 <div id="entry.S.debugouttest" class="caption-code">
@@ -1478,7 +1478,7 @@ void main(void) {
 }
 </pre>
 </div>
-<p>プログラムをコンパイルしてシミュレータを実行し、入力した文字が1文字ずれて表示されることを確認してください(<code class="inline-code">term-run-change-input</code>)。</p>
+<p>プログラムをコンパイルしてシミュレータを実行し、入力した文字が1文字ずれて表示されることを確認してください(<span class="listref"><a href="./12-impl-mmio.html#term-run-change-input">リスト3.89</a></span>)。</p>
 <div id="term-run-change-input" class="cmd-code">
 <span class="caption">リスト3.89: リスト3.89: テストプログラムを実行する</span>
 <pre class="list">$ <span class="userinput">make build sim VERILATOR_FLAGS=&quot;-DENABLE_DEBUG_INPUT&quot;</span> <span class="balloon">← 入力を有効にしてシミュレータをビルド</span>

@@ -318,7 +318,7 @@ module muldivunit (
 </pre>
 </div>
 <div id="core.veryl.create-mdu-range.exq_rready" class="caption-code">
-<span class="caption">リスト1.8: リスト1.8: EXステージのストール条件の変更 (core.veryl)</span>
+<span class="caption">リスト1.8: リスト1.8: EXステージのストール条件の変更とM拡張の命令の結果の設定 (core.veryl)</span>
 <pre class="list language-exq_rready">    <b>let exs_stall: logic = exs_data_hazard || exs_muldiv_stall;</b>
 
     always_comb {
@@ -841,7 +841,7 @@ module muldivunit (
 <p>DIVU、REMU命令は、符号無しのXLENビットのrs1(被除数)と符号無しのXLENビットのrs2(除数)の商、剰余を計算し、デスティネーションレジスタにそれぞれ結果を書き込む命令です。</p>
 <p>muldivunitモジュールで、divunitモジュールの処理が終わったら結果を<code class="inline-code">result</code>レジスタに割り当てるようにします(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.divuremu-range.wait_valid">リスト1.31</a></span>)。</p>
 <div id="muldivunit.veryl.divuremu-range.wait_valid" class="caption-code">
-<span class="caption">リスト1.31: リスト1.31: divunitモジュールをインスタンス化する (muldivunit.veryl)</span>
+<span class="caption">リスト1.31: リスト1.31: divunitモジュールの結果をresultに割り当てる (muldivunit.veryl)</span>
 <pre class="list language-wait_valid">    State::WaitValid: if is_mul &amp;&amp; mu_rvalid {
         ...
     <b>} else if !is_mul &amp;&amp; du_rvalid {</b>
@@ -865,7 +865,7 @@ module muldivunit (
 <h3 class="none"><a id="h1-9-2"></a><span class="secno">1.9.2</span> 符号付き除算を実装する</h3>
 <p>abs関数を利用して、DIV、REM命令のときにdivunitモジュールに渡す値を絶対値に設定します(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.divrem-range.op">リスト1.32</a></span><span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.divrem-range.du">リスト1.33</a></span>)。</p>
 <div id="muldivunit.veryl.divrem-range.op" class="caption-code">
-<span class="caption">リスト1.32: リスト1.32: op1とop2を生成する (muldivunit.veryl)</span>
+<span class="caption">リスト1.32: リスト1.32: 除数と被除数を生成する (muldivunit.veryl)</span>
 <pre class="list language-op">    function generate_div_op (
         funct3: input logic&lt;3&gt;   ,
         value : input logic&lt;XLEN&gt;,

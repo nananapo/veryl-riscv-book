@@ -79,16 +79,14 @@ CPUがリセット(起動)したときの特権レベルはM-modeです。
              @<b>|mode    = PrivMode::M;|
 //}
 
-本章ではM-mode向けのCSRの一部を実装します。
-実装する機能、レジスタと章の対応は表TODOの通りです
-
-TODO table 実装する機能とレジスタと章の対応
-
 本書で実装するM-modeのCSRのアドレスをすべて定義します
 (@<list>{eei.veryl.define.CsrAddr})。
+本章ではこの中の一部のCSRを実装し、
+新しく実装する機能で使うタイミングで他のCSRを解説、実装します
 
-//list[eei.veryl.define.CsrAddr][ (eei.veryl)]{
-#@maprange(scripts/20/define-range/core/src/eei.veryl,CsrAddr)
+#@# mapに戻す	できれば mepcを外した
+//list[eei.veryl.define.CsrAddr][CSRのアドレスを定義する (eei.veryl)]{
+#@# maprange(scripts/20/define-range/core/src/eei.veryl,CsrAddr)
     enum CsrAddr: logic<12> {
         @<b>|// Machine Information Registers|
         @<b>|MIMPID = 12'hf13,|
@@ -103,7 +101,7 @@ TODO table 実装する機能とレジスタと章の対応
         @<b>|MCOUNTEREN = 12'h306,|
         @<b>|// Machine Trap Handling|
         @<b>|MSCRATCH = 12'h340,|
-        @<b>|MEPC = 12'h341,|
+        MEPC = 12'h341,
         MCAUSE = 12'h342,
         MTVAL = 12'h343,
         MIP = 12'h344,
@@ -113,7 +111,7 @@ TODO table 実装する機能とレジスタと章の対応
         // Custom
         LED = 12'h800,
     }
-#@end
+#@# end
 //}
 
 === XLENの定義
@@ -125,7 +123,7 @@ S-mode、U-modeのときのXLENはそれぞれSXLEN、UXLENと定義されてお
 
 == misaレジスタ (Machine ISA)
 
-//image[misa][misaレジスタ][width=100%]
+//image[misa][misaレジスタ][width=90%]
 
 misaレジスタは、ハードウェアスレッドがサポートするISAを表すMXLENビットのレジスタです。
 MXLフィールドにはMXLENを表す数値(@<table>{numtolen})が格納されています。
@@ -134,7 +132,7 @@ Extensionsフィールドは下位ビットからそれぞれアルファベッ�
 仕様上はExtensionsフィールドを書き換えられるように実装できますが、本書では書き換えられないようにします。
 
 //table[numtolen][XLENと数値の対応]{
-XLEM	数値
+XLEN	数値
 -------------------------------------------------------------
 32	1
 64	2
@@ -166,7 +164,7 @@ ExtensionsフィールドのM拡張(M)、基本整数命令セット(I)、C拡�
 
 == mimpidレジスタ (Machine Implementation ID)
 
-//image[mimpid][mimpidレジスタ][width=100%]
+//image[mimpid][mimpidレジスタ][width=90%]
 
 mimpidレジスタは、プロセッサ実装のバージョンを表す値を格納しているMXLENビットのレジスタです。
 値が@<code>{0}のときは、mimpidレジスタが実装されていないことを示します。
@@ -200,7 +198,7 @@ eeiパッケージにIDを定義して、読み込めるようにします
 
 == mhartidレジスタ (Hart ID)
 
-//image[mhartid][mhartidレジスタ][width=100%]
+//image[mhartid][mhartidレジスタ][width=90%]
 
 mhartidレジスタは、今実行しているハードウェアスレッド(hart)のIDを格納しているMXLENビットのレジスタです。
 複数のプロセッサ、ハードウェアスレッドが存在するときに、それぞれを区別するために使用します。
@@ -231,7 +229,7 @@ mhartレジスタを作成し、読み込めるようにします
 
 == mstatusレジスタ (Machine Status)
 
-//image[mstatus][mstatusレジスタ][width=100%]
+//image[mstatus][mstatusレジスタ][width=90%]
 
 mstatusレジスタは、拡張の設定やトラップ、状態などを管理するMXLENビットのレジスタです。
 基本編では@<img>{mstatus}に示しているフィールドを、そのフィールドが必要になったときに実装します。
@@ -448,7 +446,7 @@ csrunitモジュールはMRET命令でも@<code>{raise_trap}フラグを立て�
 
 == mscratchレジスタ (Machine Scratch)
 
-//image[mscratch][mscratchレジスタ][width=100%]
+//image[mscratch][mscratchレジスタ][width=90%]
 
 mscratchレジスタは、M-modeのときに自由に読み書きできるMXLENビットのレジスタです。
 

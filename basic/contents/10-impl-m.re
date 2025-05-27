@@ -296,7 +296,7 @@ muldivunitモジュールはALUのように1クロックの間に入力から出
 #@end
 //}
 
-//list[core.veryl.create-mdu-range.exq_rready][EXステージのストール条件の変更 (core.veryl)]{
+//list[core.veryl.create-mdu-range.exq_rready][EXステージのストール条件の変更とM拡張の命令の結果の設定 (core.veryl)]{
 #@maprange(scripts/10/create-mdu-range/core/src/core.veryl,exq_rready)
     @<b>{let exs_stall: logic = exs_data_hazard || exs_muldiv_stall;}
 
@@ -933,7 +933,7 @@ DIVU、REMU命令は、符号無しのXLENビットのrs1(被除数)と符号無
 muldivunitモジュールで、divunitモジュールの処理が終わったら結果を@<code>{result}レジスタに割り当てるようにします
 (@<list>{muldivunit.veryl.divuremu-range.wait_valid})。
 
-//list[muldivunit.veryl.divuremu-range.wait_valid][divunitモジュールをインスタンス化する (muldivunit.veryl)]{
+//list[muldivunit.veryl.divuremu-range.wait_valid][divunitモジュールの結果をresultに割り当てる (muldivunit.veryl)]{
 #@maprange(scripts/10/divuremu-range/core/src/muldivunit.veryl,wait_valid)
     State::WaitValid: if is_mul && mu_rvalid {
         ...
@@ -969,7 +969,7 @@ abs関数を利用して、DIV、REM命令のときにdivunitモジュールに�
 @<list>{muldivunit.veryl.divrem-range.du}
 )。
 
-//list[muldivunit.veryl.divrem-range.op][op1とop2を生成する (muldivunit.veryl)]{
+//list[muldivunit.veryl.divrem-range.op][除数と被除数を生成する (muldivunit.veryl)]{
 #@maprange(scripts/10/divrem-range/core/src/muldivunit.veryl,op)
     function generate_div_op (
         funct3: input logic<3>   ,
