@@ -39,7 +39,7 @@
         <li class="toc-section"><a href="./10-impl-m.html#h1-4">1.4 符号無しの乗算器の実装</a></li>
         <li class="toc-section"><a href="./10-impl-m.html#h1-5">1.5 MULHU命令の実装</a></li>
         <li class="toc-section"><a href="./10-impl-m.html#h1-6">1.6 MUL、MULH命令の実装</a></li>
-        <li class="toc-section"><a href="./10-impl-m.html#h1-7">1.7 符号無し割り算の実装</a></li>
+        <li class="toc-section"><a href="./10-impl-m.html#h1-7">1.7 符号無し除算の実装</a></li>
         <li class="toc-section"><a href="./10-impl-m.html#h1-8">1.8 DIVU、REMU命令の実装</a></li>
         <li class="toc-section"><a href="./10-impl-m.html#h1-9">1.9 DIV、REM命令の実装</a></li>
         <li class="toc-section"><a href="./10-impl-m.html#h1-10">1.10 DIVW、DIVUW、REMW、REMUW命令の実装</a></li>
@@ -85,8 +85,8 @@
 <li>Memory-mapped I/O
 </li>
 </ul>
-<p>本章では積、商、剰余を求める命令を実装します。RISC-Vの乗算、除算を行う命令はM拡張に定義されており、M拡張を実装したRV64IのISAのことを<code class="inline-code">RV64IM</code>と表現します。</p>
-<p>M拡張には、XLENが32のときは<span class="tableref"><a href="./10-impl-m.html#m.instructions.32">表1.1</a></span>の命令が定義されています。XLENが64のときは<span class="tableref"><a href="./10-impl-m.html#m.instructions.64">表1.2</a></span>の命令が定義されています。</p>
+<p>本章では積、商、剰余を求める命令を実装します。RISC-Vの乗算、除算、剰余演算を行う命令はM拡張に定義されており、M拡張を実装したRV64IのISAのことを<code class="inline-code">RV64IM</code>と表記します。</p>
+<p>M拡張には、XLENが<code class="inline-code">32</code>のときは<span class="tableref"><a href="./10-impl-m.html#m.instructions.32">表1.1</a></span>の命令が定義されています。XLENが<code class="inline-code">64</code>のときは<span class="tableref"><a href="./10-impl-m.html#m.instructions.64">表1.2</a></span>の命令が定義されています。</p>
 <div id="m.instructions.32" class="table">
 <p class="caption">表1.1: M拡張の命令 (XLEN=32)</p>
 <table>
@@ -196,7 +196,7 @@ assign rem = op1 % op2;
 <p>M拡張の計算を処理するモジュールを作成し、M拡張の命令がALUの結果ではなくモジュールの結果を利用するように変更します。</p>
 <p><code class="inline-code">src/muldivunit.veryl</code>を作成し、次のように記述します(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.create-mdu-range">リスト1.4</a></span>)。</p>
 <div id="muldivunit.veryl.create-mdu-range" class="caption-code">
-<span class="caption">リスト1.4: リスト1.4: muldivunitモジュール (muldivunit.veryl)</span>
+<span class="caption">リスト1.4: リスト1.4: muldivunit.veryl</span>
 <pre class="list language-create-mdu-range">import eei::*;
 
 module muldivunit (
@@ -248,10 +248,10 @@ module muldivunit (
 </pre>
 </div>
 <p>muldivunitモジュールは<code class="inline-code">ready</code>が<code class="inline-code">1</code>のときに計算のリクエストを受け付けます。<code class="inline-code">valid</code>が<code class="inline-code">1</code>なら計算を開始し、計算が終了したら<code class="inline-code">rvalid</code>を<code class="inline-code">1</code>、計算結果を<code class="inline-code">result</code>に設定します。</p>
-<p>まだ計算処理を実装していないため<code class="inline-code">result</code>は常に<code class="inline-code">0</code>を返します。次の計算を開始するまで<code class="inline-code">result</code>の値は維持しておきます。</p>
+<p>まだ計算処理を実装しておらず、<code class="inline-code">result</code>は常に<code class="inline-code">0</code>を返します。次の計算を開始するまで<code class="inline-code">result</code>の値を維持します。</p>
 
 <h3 class="none"><a id="h1-3-2"></a><span class="secno">1.3.2</span> EXステージを変更する</h3>
-<p>M拡張の命令がEXステージにあるとき、ALUの結果ではなくmuldivunitモジュールの結果を利用するように変更します。</p>
+<p>M拡張の命令がEXステージにあるとき、ALUの結果の代わりにmuldivunitモジュールの結果を利用するように変更します。</p>
 <p>まず、muldivunitモジュールをインスタンス化します(<span class="listref"><a href="./10-impl-m.html#core.veryl.create-mdu-range.muldivinst">リスト1.5</a></span>)。</p>
 <div id="core.veryl.create-mdu-range.muldivinst" class="caption-code">
 <span class="caption">リスト1.5: リスト1.5: muldivunitモジュールをインスタンス化する (core.veryl)</span>
@@ -273,8 +273,8 @@ module muldivunit (
     );
 </pre>
 </div>
-<p>muldivunitモジュールで計算を開始するのは、EXステージに命令が存在し(<code class="inline-code">exs_valid</code>)、命令がM拡張の命令であり(<code class="inline-code">exs_ctrl.is_muldiv</code>)、データハザードが発生しておらず(<code class="inline-code">!exs_data_hazard</code>)、既に計算をリクエストしていない(<code class="inline-code">!exs_muldiv_is_requested</code>)場合です。</p>
-<p><code class="inline-code">!exs_muldiv_is_requested</code>変数を定義し、ステージの遷移条件とmuldivunitへの計算リクエストの状態によって値が変わるようにします(<span class="listref"><a href="./10-impl-m.html#core.veryl.create-mdu-range.exs_muldiv_is_requested">リスト1.6</a></span>)。</p>
+<p>muldivunitモジュールで計算を開始するのは、EXステージに命令が存在し(<code class="inline-code">exs_valid</code>)、命令がM拡張の命令であり(<code class="inline-code">exs_ctrl.is_muldiv</code>)、データハザードが発生しておらず(<code class="inline-code">!exs_data_hazard</code>)、既に計算を要求していない(<code class="inline-code">!exs_muldiv_is_requested</code>)場合です。</p>
+<p><code class="inline-code">!exs_muldiv_is_requested</code>変数を定義し、ステージの遷移条件とmuldivunitに計算を要求したかの状態によって値を更新します(<span class="listref"><a href="./10-impl-m.html#core.veryl.create-mdu-range.exs_muldiv_is_requested">リスト1.6</a></span>)。</p>
 <div id="core.veryl.create-mdu-range.exs_muldiv_is_requested" class="caption-code">
 <span class="caption">リスト1.6: リスト1.6: exs_muldiv_is_requested変数 (core.veryl)</span>
 <pre class="list language-exs_muldiv_is_requested">    var exs_muldiv_is_requested: logic;
@@ -296,7 +296,7 @@ module muldivunit (
     }
 </pre>
 </div>
-<p>muldivunitモジュールはALUのように1クロックの間に入力から出力を生成しないため、計算中はEXステージをストールさせる必要があります。そのために<code class="inline-code">exs_muldiv_stall</code>変数を定義してストールの条件に追加します(<span class="listref"><a href="./10-impl-m.html#core.veryl.create-mdu-range.exs_muldiv_stall">リスト1.7</a></span>、<span class="listref"><a href="./10-impl-m.html#core.veryl.create-mdu-range.exq_rready">リスト1.8</a></span>)。また、M拡張の命令の場合はMEMステージに渡す<code class="inline-code">alu_result</code>の値をmuldivunitモジュールの結果に設定します(<span class="listref"><a href="./10-impl-m.html#core.veryl.create-mdu-range.exq_rready">リスト1.8</a></span>)。</p>
+<p>muldivunitモジュールはALUのように1クロックの間に入力から出力を生成しないため、計算中はEXステージをストールさせる必要があります。そのために<code class="inline-code">exs_muldiv_stall</code>変数を定義して、ストールの条件に追加します(<span class="listref"><a href="./10-impl-m.html#core.veryl.create-mdu-range.exs_muldiv_stall">リスト1.7</a></span>、<span class="listref"><a href="./10-impl-m.html#core.veryl.create-mdu-range.exq_rready">リスト1.8</a></span>)。また、M拡張の命令の場合はMEMステージに渡す<code class="inline-code">alu_result</code>の値をmuldivunitモジュールの結果に設定します(<span class="listref"><a href="./10-impl-m.html#core.veryl.create-mdu-range.exq_rready">リスト1.8</a></span>)。</p>
 <div id="core.veryl.create-mdu-range.exs_muldiv_stall" class="caption-code">
 <span class="caption">リスト1.7: リスト1.7: EXステージのストール条件の変更 (core.veryl)</span>
 <pre class="list language-exs_muldiv_stall">    var exs_muldiv_rvalided: logic;
@@ -338,7 +338,7 @@ module muldivunit (
     }
 </pre>
 </div>
-<p>muldivunitモジュールは計算が完了したクロックの間だけしか<code class="inline-code">rvalid</code>を<code class="inline-code">1</code>に設定しないため、既に計算が完了していることを示す<code class="inline-code">exs_muldiv_rvalided</code>変数を作成しています。これにより、M拡張の命令によってストールする条件は、命令がM拡張の命令であり(<code class="inline-code">exs_ctrl.is_muldiv</code>)、現在のクロックで計算が完了しておらず(<code class="inline-code">!exs_muldiv_rvalid</code>)、以前のクロックでも計算が完了していない(<code class="inline-code">!exs_muldiv_rvalided</code>)場合になります。</p>
+<p>muldivunitモジュールは計算が完了したクロックでしか<code class="inline-code">rvalid</code>を<code class="inline-code">1</code>にしないため、既に計算が完了したことを示す<code class="inline-code">exs_muldiv_rvalided</code>変数で完了状態を管理します。これにより、M拡張の命令によってストールする条件は、命令がM拡張の命令であり(<code class="inline-code">exs_ctrl.is_muldiv</code>)、現在のクロックで計算が完了しておらず(<code class="inline-code">!exs_muldiv_rvalid</code>)、以前のクロックでも計算が完了していない(<code class="inline-code">!exs_muldiv_rvalided</code>)場合になります。</p>
 
 <h2 class="numbox"><a id="h1-4"></a><span class="secno">1.4</span> 符号無しの乗算器の実装</h2>
 
@@ -346,7 +346,7 @@ module muldivunit (
 <p><code class="inline-code">WIDTH</code>ビットの符号無しの値同士の積を計算する乗算器を実装します。</p>
 <p><code class="inline-code">src/muldivunit.veryl</code>の中にmulunitモジュールを作成します(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.impl-mulunit-range.mulunit">リスト1.9</a></span>)。</p>
 <div id="muldivunit.veryl.impl-mulunit-range.mulunit" class="caption-code">
-<span class="caption">リスト1.9: リスト1.9: 符号なし乗算器の実装 (muldivunit.veryl)</span>
+<span class="caption">リスト1.9: リスト1.9: muldivunit.veryl</span>
 <pre class="list language-mulunit">module mulunit #(
     param WIDTH: u32 = 0,
 ) (
@@ -409,7 +409,7 @@ module muldivunit (
 </pre>
 </div>
 <p>mulunitモジュールは<code class="inline-code">op1 * op2</code>を計算するモジュールです。<code class="inline-code">valid</code>が<code class="inline-code">1</code>になったら計算を開始し、計算が完了したら<code class="inline-code">rvalid</code>を<code class="inline-code">1</code>、<code class="inline-code">result</code>を<code class="inline-code">WIDTH * 2</code>ビットの計算結果に設定します。</p>
-<p>積は<code class="inline-code">WIDTH</code>回の足し算を<code class="inline-code">WIDTH</code>クロックかけて行うことによって求めています(<span class="imgref"><a href="./10-impl-m.html#mul_process">図1.1</a></span>)。計算を開始すると入力を<code class="inline-code">0</code>で<code class="inline-code">WIDTH * 2</code>ビットに拡張し、<code class="inline-code">result</code>を<code class="inline-code">0</code>でリセットします。</p>
+<p>積は<code class="inline-code">WIDTH</code>回の足し算を<code class="inline-code">WIDTH</code>クロックかけて行って求めています(<span class="imgref"><a href="./10-impl-m.html#mul_process">図1.1</a></span>)。計算を開始すると入力をゼロで<code class="inline-code">WIDTH * 2</code>ビットに拡張し、<code class="inline-code">result</code>を<code class="inline-code">0</code>でリセットします。</p>
 <p><code class="inline-code">State::AddLoop</code>では、次の操作を<code class="inline-code">WIDTH</code>回行います。<code class="inline-code">i</code>回目では次の操作を行います。</p>
 <ol start="1" type="1">
 <li><code class="inline-code">op2[i-1]</code>が<code class="inline-code">1</code>なら<code class="inline-code">result</code>に<code class="inline-code">op1</code>を足す</li>
@@ -450,7 +450,7 @@ module muldivunit (
 </div>
 
 <h2 class="numbox"><a id="h1-5"></a><span class="secno">1.5</span> MULHU命令の実装</h2>
-<p>MULHU命令は、2つの符号無しのXLENビットの値の乗算を実行し、デスティネーションレジスタに結果(XLEN * 2ビット)の上位XLENビットを書き込む命令です。funct3の下位2ビットによってmulunitモジュールの結果を選択するように変更します(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.mulhu-range.result">リスト1.11</a></span>)。</p>
+<p>MULHU命令は、2つの符号無しのXLENビットの値の乗算を実行し、デスティネーションレジスタに結果(XLEN * 2ビット)の上位XLENビットを書き込む命令です。funct3の下位2ビットによってmulunitモジュールの結果を選択するようにします(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.mulhu-range.result">リスト1.11</a></span>)。</p>
 <div id="muldivunit.veryl.mulhu-range.result" class="caption-code">
 <span class="caption">リスト1.11: リスト1.11: MULHUモジュールの結果を取得する (muldivunit.veryl)</span>
 <pre class="list language-result">    State::WaitValid: if is_mul &amp;&amp; mu_rvalid {
@@ -466,7 +466,7 @@ module muldivunit (
 
 <h2 class="numbox"><a id="h1-6"></a><span class="secno">1.6</span> MUL、MULH命令の実装</h2>
 
-<h3 class="none"><a id="h1-6-1"></a><span class="secno">1.6.1</span> 符号付き乗算を符号なし乗算器で実現する</h3>
+<h3 class="none"><a id="h1-6-1"></a><span class="secno">1.6.1</span> 符号付き乗算を符号無し乗算器で実現する</h3>
 <p>MUL、MULH命令は、2つの符号付きのXLENビットの値の乗算を実行し、デスティネーションレジスタにそれぞれ結果の下位XLENビット、上位XLENビットを書き込む命令です。</p>
 <p>本章ではmulunitモジュールを使って、次のように符号付き乗算を実現します。</p>
 <ol start="1" type="1">
@@ -477,7 +477,7 @@ module muldivunit (
 <p>絶対値で計算することで符号ビットを考慮する必要がなくなり、既に実装してある符号無しの乗算器を変更せずに符号付きの乗算を実現できます。</p>
 
 <h3 class="none"><a id="h1-6-2"></a><span class="secno">1.6.2</span> 符号付き乗算を実装する</h3>
-<p><code class="inline-code">WIDTH</code>ビットの符号付きの値を<code class="inline-code">WIDTH</code>ビットの<b>符号無し</b>の絶対値に変換するabs関数を作成します(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.mulmulh-range.abs">リスト1.12</a></span>)。abs関数は、値のMSBが<code class="inline-code">1</code>ならビットを反転して<code class="inline-code">1</code>を足すことで符号を反転しています。最小値<code class="inline-code">-2 ** (WIDTH - 1)</code>の絶対値も求められることを確認してください。</p>
+<p><code class="inline-code">WIDTH</code>ビットの符号付きの値を<code class="inline-code">WIDTH</code>ビットの符号無しの絶対値に変換するabs関数を作成します(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.mulmulh-range.abs">リスト1.12</a></span>)。abs関数は、値のMSBが<code class="inline-code">1</code>ならビットを反転して<code class="inline-code">1</code>を足すことで符号を反転しています。最小値<code class="inline-code">-2 ** (WIDTH - 1)</code>の絶対値も求められることを確認してください。</p>
 <div id="muldivunit.veryl.mulmulh-range.abs" class="caption-code">
 <span class="caption">リスト1.12: リスト1.12: abs関数を実装する (muldivunit.veryl)</span>
 <pre class="list language-abs">    function abs::&lt;WIDTH: u32&gt; (
@@ -568,7 +568,7 @@ module muldivunit (
 
 <h3 class="none"><a id="h1-6-3"></a><span class="secno">1.6.3</span> MULHSU命令の実装</h3>
 <p>MULHSU命令は、符号付きのXLENビットのrs1と符号無しのXLENビットのrs2の乗算を実行し、デスティネーションレジスタに結果の上位XLENビットを書き込む命令です。計算結果は符号付きの値になります。</p>
-<p>MULHSU命令の結果はnビットの符号無し乗算器の結果の範囲に収まります。そのため、MUL、MULH命令と同様に符号無しの乗算器で計算を実現できます。</p>
+<p>MULHSU命令も、MUL、MULH命令と同様に符号無しの乗算器で実現します。</p>
 <p><code class="inline-code">op1</code>を絶対値に変換し、<code class="inline-code">op2</code>はそのままに設定します(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.mulhsu-range.op1op2">リスト1.19</a></span>)。</p>
 <div id="muldivunit.veryl.mulhsu-range.op1op2" class="caption-code">
 <span class="caption">リスト1.19: リスト1.19: MULHSU命令用にop1、op2を設定する (muldivunit.veryl)</span>
@@ -605,7 +605,7 @@ module muldivunit (
 
 <h3 class="none"><a id="h1-6-4"></a><span class="secno">1.6.4</span> MULW命令の実装</h3>
 <p>MULW命令は、2つの符号付きの32ビットの値の乗算を実行し、デスティネーションレジスタに結果の下位32ビットを符号拡張した値を書き込む命令です。</p>
-<p>32ビット演算の命令であることを知るために、muldivunitモジュールに<code class="inline-code">is_op32</code>ポートを作成します(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.mulw-range.port">リスト1.21</a></span>、<span class="listref"><a href="./10-impl-m.html#core.veryl.mulw-range.mdu">リスト1.22</a></span>)。</p>
+<p>32ビット演算の命令であることを判定するために、muldivunitモジュールに<code class="inline-code">is_op32</code>ポートを作成します(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.mulw-range.port">リスト1.21</a></span>、<span class="listref"><a href="./10-impl-m.html#core.veryl.mulw-range.mdu">リスト1.22</a></span>)。</p>
 <div id="muldivunit.veryl.mulw-range.port" class="caption-code">
 <span class="caption">リスト1.21: リスト1.21: is_op32ポートを追加する (muldivunit.veryl)</span>
 <pre class="list language-port">module muldivunit (
@@ -710,13 +710,13 @@ module muldivunit (
 </div>
 <p>riscv-testsの<code class="inline-code">rv64um-p-mulw</code>を実行し、成功することを確認してください。</p>
 
-<h2 class="numbox"><a id="h1-7"></a><span class="secno">1.7</span> 符号無し割り算の実装</h2>
+<h2 class="numbox"><a id="h1-7"></a><span class="secno">1.7</span> 符号無し除算の実装</h2>
 
 <h3 class="none"><a id="h1-7-1"></a><span class="secno">1.7.1</span> divunitモジュールを実装する</h3>
 <p><code class="inline-code">WIDTH</code>ビットの除算を計算する除算器を実装します。</p>
-<p><code class="inline-code">src/muldivunit.veryl</code>の中にdivunitモジュールを作成します(<code class="inline-code">muldivunit.veryl.divuremu-range.divunit</code>)。</p>
+<p><code class="inline-code">src/muldivunit.veryl</code>の中にdivunitモジュールを作成します(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.divuremu-range.divunit">リスト1.29</a></span>)。</p>
 <div id="muldivunit.veryl.divuremu-range.divunit" class="caption-code">
-<span class="caption">リスト1.29: リスト1.29: 符号無し除算器の実装 (muldivunit.veryl)</span>
+<span class="caption">リスト1.29: リスト1.29: muldivunit.veryl</span>
 <pre class="list language-divunit">module divunit #(
     param WIDTH: u32 = 0,
 ) (
@@ -791,7 +791,7 @@ module muldivunit (
 </pre>
 </div>
 <p>divunitモジュールは被除数(<code class="inline-code">dividend</code>)と除数(<code class="inline-code">divisor</code>)の商(<code class="inline-code">quotient</code>)と剰余(<code class="inline-code">remainder</code>)を計算するモジュールです。<code class="inline-code">valid</code>が<code class="inline-code">1</code>になったら計算を開始し、計算が完了したら<code class="inline-code">rvalid</code>を<code class="inline-code">1</code>に設定します。</p>
-<p>商と剰余は<code class="inline-code">WIDTH</code>回の引き算を<code class="inline-code">WIDTH</code>クロックかけて行うことによって求めています。計算を開始すると被除数を<code class="inline-code">0</code>で<code class="inline-code">WIDTH * 2</code>ビットに拡張し、除数を<code class="inline-code">WIDTH-1</code>ビット左シフトします。また、商を<code class="inline-code">0</code>でリセットします。</p>
+<p>商と剰余は<code class="inline-code">WIDTH</code>回の引き算を<code class="inline-code">WIDTH</code>クロックかけて行って求めています。計算を開始すると被除数を<code class="inline-code">0</code>で<code class="inline-code">WIDTH * 2</code>ビットに拡張し、除数を<code class="inline-code">WIDTH-1</code>ビット左シフトします。また、商を<code class="inline-code">0</code>でリセットします。</p>
 <p><code class="inline-code">State::SubLoop</code>では、次の操作を<code class="inline-code">WIDTH</code>回行います。</p>
 <ol start="1" type="1">
 <li>被除数が除数よりも大きいなら、被除数から除数を引き、商のLSBを1にする</li>
@@ -799,7 +799,7 @@ module muldivunit (
 <li>除数を1ビット右シフトする</li>
 <li>カウンタをインクリメントする</li>
 </ol>
-<p>RISC-Vでは、除数が0であったり結果がオーバーフローするようなLビットの除算の結果は<span class="tableref"><a href="./10-impl-m.html#riscv.div.expt">表1.4</a></span>のようになると定められています。このうちdivunitモジュールは符号無しの除算(DIVU、REMU命令)のゼロ除算だけを対処しています。</p>
+<p>RISC-Vでは、除数が<code class="inline-code">0</code>だったり結果がオーバーフローするようなLビットの除算の結果は<span class="tableref"><a href="./10-impl-m.html#riscv.div.expt">表1.4</a></span>のようになると定められています。このうちdivunitモジュールは符号無しの除算(DIVU、REMU命令)のゼロ除算だけを対処しています。</p>
 <div id="riscv.div.expt" class="table">
 <p class="caption">表1.4: 除算の例外的な動作と結果</p>
 <table>
@@ -839,7 +839,7 @@ module muldivunit (
 
 <h2 class="numbox"><a id="h1-8"></a><span class="secno">1.8</span> DIVU、REMU命令の実装</h2>
 <p>DIVU、REMU命令は、符号無しのXLENビットのrs1(被除数)と符号無しのXLENビットのrs2(除数)の商、剰余を計算し、デスティネーションレジスタにそれぞれ結果を書き込む命令です。</p>
-<p>muldivunitモジュールで、divunitモジュールの処理が終わったら結果を<code class="inline-code">result</code>レジスタに割り当てるように記述します(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.divuremu-range.wait_valid">リスト1.31</a></span>)。</p>
+<p>muldivunitモジュールで、divunitモジュールの処理が終わったら結果を<code class="inline-code">result</code>レジスタに割り当てるようにします(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.divuremu-range.wait_valid">リスト1.31</a></span>)。</p>
 <div id="muldivunit.veryl.divuremu-range.wait_valid" class="caption-code">
 <span class="caption">リスト1.31: リスト1.31: divunitモジュールをインスタンス化する (muldivunit.veryl)</span>
 <pre class="list language-wait_valid">    State::WaitValid: if is_mul &amp;&amp; mu_rvalid {
@@ -863,7 +863,7 @@ module muldivunit (
 <p>RISC-Vの符号付き除算の結果は0の方向に丸められた整数になり、剰余演算の結果は被除数と同じ符号になります。符号付き剰余の絶対値は符号無し剰余の結果と一致するため、絶対値で計算してから符号を戻すことで、符号無し除算器だけで符号付きの剰余演算を実現できます。</p>
 
 <h3 class="none"><a id="h1-9-2"></a><span class="secno">1.9.2</span> 符号付き除算を実装する</h3>
-<p>abs関数を利用して、DIV、REM命令のときにdivunitに渡す値を絶対値に設定します(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.divrem-range.op">リスト1.32</a></span><span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.divrem-range.du">リスト1.33</a></span>)。</p>
+<p>abs関数を利用して、DIV、REM命令のときにdivunitモジュールに渡す値を絶対値に設定します(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.divrem-range.op">リスト1.32</a></span><span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.divrem-range.du">リスト1.33</a></span>)。</p>
 <div id="muldivunit.veryl.divrem-range.op" class="caption-code">
 <span class="caption">リスト1.32: リスト1.32: op1とop2を生成する (muldivunit.veryl)</span>
 <pre class="list language-op">    function generate_div_op (
@@ -897,7 +897,7 @@ module muldivunit (
     );
 </pre>
 </div>
-<p><span class="tableref"><a href="./10-impl-m.html#riscv.div.expt">表1.4</a></span>にあるように、符号付き演算は結果がオーバーフローする場合とゼロで割る場合の結果が定められています。その場合には、divunitで除算を実行せず、muldivunitで計算結果を直接生成するように変更します(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.divrem-range.error">リスト1.34</a></span><span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.divrem-range.idle">リスト1.35</a></span>)。符号付き演算かどうかを<code class="inline-code">funct3</code>のLSBで確認し、例外的な処理ではない場合にのみdivunitで計算を開始するようにしています。</p>
+<p><span class="tableref"><a href="./10-impl-m.html#riscv.div.expt">表1.4</a></span>にあるように、符号付き演算は結果がオーバーフローする場合とゼロで割る場合の結果が定められています。その場合には、divunitモジュールで除算を実行せず、muldivunitで計算結果を直接生成するようにします(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.divrem-range.error">リスト1.34</a></span><span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.divrem-range.idle">リスト1.35</a></span>)。符号付き演算かどうかを<code class="inline-code">funct3</code>のLSBで確認し、例外的な処理ではない場合にのみdivunitモジュールで計算を開始するようにしています。</p>
 <div id="muldivunit.veryl.divrem-range.error" class="caption-code">
 <span class="caption">リスト1.34: リスト1.34: 符号付き除算がオーバーフローするか、ゼロ除算かどうかを判定する (muldivunit.veryl)</span>
 <pre class="list language-error">    var du_signed_overflow: logic;
@@ -957,7 +957,7 @@ module muldivunit (
 <p>DIVW、DIVUW、REMW、REMUW命令は、それぞれDIV、DIVU、REM、REMU命令の動作を32ビット同士の演算に変えた命令です。32ビットの結果をXLENビットに符号拡張した値をデスティネーションレジスタに書き込みます。</p>
 <p>generate_div_op関数に<code class="inline-code">is_op32</code>フラグを追加して、<code class="inline-code">is_op32</code>が<code class="inline-code">1</code>なら値を<code class="inline-code">DIV_WIDTH</code>ビットに拡張したものに変更します(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.divwremw-range.op">リスト1.37</a></span>)。</p>
 <div id="muldivunit.veryl.divwremw-range.op" class="caption-code">
-<span class="caption">リスト1.37: リスト1.37:  (muldivunit.veryl)</span>
+<span class="caption">リスト1.37: リスト1.37: 除数、被除数を32ビットの値にする (muldivunit.veryl)</span>
 <pre class="list language-op">    function generate_div_op (
         <b>is_op32: input logic      ,</b>
         funct3 : input logic&lt;3&gt;   ,
@@ -976,7 +976,7 @@ module muldivunit (
 </div>
 <p>符号付き除算のオーバーフローとゼロ除算の判定を<code class="inline-code">is_op32</code>で変更します(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.divwremw-range.error">リスト1.38</a></span>)。</p>
 <div id="muldivunit.veryl.divwremw-range.error" class="caption-code">
-<span class="caption">リスト1.38: リスト1.38:  (muldivunit.veryl)</span>
+<span class="caption">リスト1.38: リスト1.38: 32ビット演算のときの例外的な処理に対応する (muldivunit.veryl)</span>
 <pre class="list language-error">    always_comb {
         <b>if is_op32 {</b>
         <b>    du_signed_overflow = !funct3[0] &amp;&amp; op1[31] == 1 &amp;&amp; op1[31:0] == 0 &amp;&amp; &amp;op2[31:0];</b>
@@ -991,7 +991,7 @@ module muldivunit (
 </div>
 <p>最後に、32ビットの結果をXLENビットに符号拡張します(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.divwremw-range.wait_valid">リスト1.39</a></span>)。符号付き、符号無し演算のどちらも32ビットの結果を符号拡張したものが結果になります。</p>
 <div id="muldivunit.veryl.divwremw-range.wait_valid" class="caption-code">
-<span class="caption">リスト1.39: リスト1.39:  (muldivunit.veryl)</span>
+<span class="caption">リスト1.39: リスト1.39: 32ビット演算のとき、結果を符号拡張する (muldivunit.veryl)</span>
 <pre class="list language-wait_valid">    } else if !is_mul &amp;&amp; du_rvalid {
         let quo_signed: logic&lt;DIV_WIDTH&gt; = if op1sign_saved != op2sign_saved ? ~du_quotient + 1 : du_quotient;
         let rem_signed: logic&lt;DIV_WIDTH&gt; = if op1sign_saved == 1 ? ~du_remainder + 1 : du_remainder;
