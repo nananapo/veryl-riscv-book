@@ -1,19 +1,19 @@
 = A拡張の実装
 
 本章では、メモリの不可分操作を実現するA拡張を実装します。
-A拡張にはLoad-Reserved、Store Conditionalを実現するZalrsc拡張(@<link>{a.instructions.zalrsc})、
-ロードした値を加工した値をメモリにストアする操作を単一の命令で実装するZaamo拡張(@<link>{a.instructions.zaamo})が含まれています。
+A拡張にはLoad-Reserved、Store Conditionalを実現するZalrsc拡張(@<table>{a.instructions.zalrsc})、
+ロードした値を加工した値をメモリにストアする操作を単一の命令で実装するZaamo拡張(@<table>{a.instructions.zaamo})が含まれています。
 A拡張の命令を利用すると、同じメモリ空間で複数のソフトウェアを並列、並行して実行するとき、
 ソフトウェア間で同期をとりながら実行できます。
 
-//table{a.instructions.zalrsc}[Zalrsc拡張の命令]{
+//table[a.instructions.zalrsc][Zalrsc拡張の命令]{
 命令	動作
 -------------------------------------------------------------
 LR.W/D		メモリから32/64ビット読み込み、予約セットにアドレスを登録する
 SC.W/D		予約セットにrs1の値が登録されている場合、メモリにrs2の値を書き込み、0をレジスタにライトバックする@<br>{}予約セットにアドレスが登録されていない場合、メモリに書き込まず、0以外の値をレジスタにライトバックする@<br>{}命令の実行後に予約セットを空にする
 //}
 
-//table{a.instructions.zaamo}[Zaamo拡張の命令]{
+//table[a.instructions.zaamo][Zaamo拡張の命令]{
 命令	動作
 -------------------------------------------------------------
 AMOSWAP.W/D		メモリから32/64ビット読み込み、rs2の値を書き込む
@@ -49,9 +49,9 @@ Zaamo拡張は他の簡単な操作を行う命令も提供しています。
 
 === Zalrsc拡張
 
-Zalrsc
-LR命令とSC命令はそれぞれLoad-Reserved、Store Conditional操作を実現する命令です。
-LR、SC命令はそれぞれ次のように動作します。
+Zalrsc拡張は、LR命令とSC命令を定義しています。
+LR、SC命令は、それぞれLoad-Reserved、Store Conditional操作を実現する命令です。
+それぞれ次のように動作します。
 
  : LR命令
    指定されたアドレスのデータを読み込み、指定されたアドレスを予約セット(Reservation set)に登録します。
@@ -107,9 +107,9 @@ A拡張の命令をAとするとき、それぞれのビットの状態に応じ
 #@# TODO 余裕があれば 命令の図
 
 A拡張の命令はすべてR形式で、opcodeはOP-AMO(@<code>{7'b0101111})です。
-それぞれの命令はfunct5とfunct3で区別できます(@<link>{a.instructions.funct5})。
+それぞれの命令はfunct5とfunct3で区別できます(@<table>{a.instructions.funct5})。
 
-//table{a.instructions.funct5}[A拡張の命令のfunct5]{
+//table[a.instructions.funct5][A拡張の命令のfunct5]{
 funct5		命令
 -------------------------------------------------------------
 5'b00010	LR.W/D
