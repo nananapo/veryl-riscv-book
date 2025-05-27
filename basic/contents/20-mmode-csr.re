@@ -3,32 +3,32 @@
 == 概要
 
 「第II部 RV64IMACの実装」では、RV64IMACと例外、メモリマップドI/Oを実装しました。
-「第III部 特権/割り込みの実装」では、次のような機能を実装します。
+「第III部 特権/割り込みの実装」では、次の機能を実装します。
 
  * 特権レベル (M-mode、S-mode、U-mode)
  * 仮想記憶システム(ページング)
  * 割り込み(CLINT、PLIC)
 
-これらの機能を実装したCPUはOSを動かすための十分な機能を持っています。
-第III部の最後ではLinuxを動作させます。
+これらの機能を実装したCPUはOSを動かせる十分な機能を持っています。
+第III部の最後ではLinuxを動かします。
 
 === 特権レベルとは何か？
 
 CPUで動くアプリケーションは様々ですが、
-多くのアプリケーションはOS(Operating System、オペレーティングシステム)の上で動くように作成されています。
-「OSの上で動く」とは、アプリケーションはOSの機能を使い、OSに管理されながら実行されるということです。
+多くのアプリケーションはOS(Operating System、オペレーティングシステム)の上で動かすことを前提に作成されています。
+「OSの上で動かす」とは、アプリケーションはOSの機能を使い、OSに管理されながら実行されるということです。
 
 多くのOSはデバイスやメモリなどのリソースの管理を行い、簡単にそれを扱うためのインターフェースをアプリケーションに提供します。
-また、アプリケーションのデータを別のアプリケーションから保護したり、OSが提供する方法でしかデバイスにアクセスできなくするセキュリティ機能も備えています。
+また、アプリケーションのデータを別のアプリケーションから保護したり、
+OSが提供する方法でしかデバイスにアクセスできなくするなどのセキュリティ機能も備えています。
 
 セキュリティ機能を実現するためには、OSがアプリケーションを実行するときにCPUが提供する一部の機能を制限する機能が必要です。
 RISC-Vでは、この機能を特権レベル(privilege level)という機能、枠組みによって提供しています。
 ほとんどの特権レベルの機能はCSRを通じて提供されます。
 
-特権レベルは次の3種類@<fn>{virtualization}が用意されています(TODO table)。
-それぞれの特権レベルは2ビットの数値で表すことができます。
-
-TODO table 高い低い
+特権レベルはM-mode、S-mode、U-modeの3種類@<fn>{virtualization}が用意されています。
+それぞれの特権レベルは2ビットの数値で表すことができます(@<list>{eei.veryl.define.PrivMode})。
+数値が大きい方が高い特権レベルです。
 
 //footnote[virtualization][V拡張が実装されている場合、さらに仮想化のための特権レベルが定義されます。]
 
@@ -37,7 +37,7 @@ TODO table 高い低い
 特権レベルを表す@<code>{PrivMode}型をeeiパッケージに定義してください
 (@<list>{eei.veryl.define.PrivMode})。
 
-//list[eei.veryl.define.PrivMode][ (eei.veryl)]{
+//list[eei.veryl.define.PrivMode][PrivMode型の定義 (eei.veryl)]{
 #@maprange(scripts/20/define-range/core/src/eei.veryl,PrivMode)
     enum PrivMode: logic<2> {
         M = 2'b11,
@@ -49,25 +49,40 @@ TODO table 高い低い
 
 === 特権レベルの実装順序
 
-RISC-VのCPUに特権レベルを実装するとき、TODOテーブルのいずれかの構成にする必要があります。
+RISC-VのCPUに特権レベルを実装するとき、@<table>{privmode.kousei}のいずれかの構成にする必要があります。
 特権レベルを実装していないときはM-modeだけが実装されているように扱います。
 
-TODO M, MU, MSUテーブルと章
+//table[privmode.kousei][RISC-VのCPUがとれる構成]{
+存在する特権レベル	実装する章
+-------------------------------------------------------------
+M-mode	@<chapref>{20-mmode-csr}
+M-mode、U-mode	@<chapref>{22-umode-csr}
+M-mode、S-mode、U-mode	@<chapref>{23-smode-csr}
+//}
 
 CPUがリセット(起動)したときの特権レベルはM-modeです。
 現在の特権レベルを保持するレジスタをcsrunitモジュールに作成します
-(@<list>{csrunit.veryl.define.mode})。
+(
+@<list>{csrunit.veryl.define.mode}、
+@<list>{csrunit.veryl.define.resetmode}
+)。
 
-//list[csrunit.veryl.define.mode][ (csrunit.veryl)]{
+//list[csrunit.veryl.define.mode][現在の特権レベルを示すレジスタの定義 (csrunit.veryl)]{
 #@maprange(scripts/20/define-range/core/src/csrunit.veryl,mode)
     var mode: PrivMode;
 #@end
 //}
 
+//list[csrunit.veryl.define.resetmode][レジスタをM-modeでリセットする (csrunit.veryl)]{
+    always_ff {
+        if_reset {
+             @<b>|mode    = PrivMode::M;|
+//}
+
 本章ではM-mode向けのCSRの一部を実装します。
 実装する機能、レジスタと章の対応は表TODOの通りです
 
-table 実装する機能とレジスタと章の対応
+TODO table 実装する機能とレジスタと章の対応
 
 本書で実装するM-modeのCSRのアドレスをすべて定義します
 (@<list>{eei.veryl.define.CsrAddr})。
@@ -104,7 +119,7 @@ table 実装する機能とレジスタと章の対応
 === XLENの定義
 
 M-modeのCSRの多くは、特権レベルがM-modeのときのXLENであるMXLENをビット幅として定義されています。
-S-mode、U-modeのときのXLENはそれぞれSXLEN、UXLENと定義されており、MXLEN >= SXLEN >= UXLENを満たす必要があります。
+S-mode、U-modeのときのXLENはそれぞれSXLEN、UXLENと定義されており、@<code>{MXLEN >= SXLEN >= UXLEN}を満たします。
 仕様上はmstatusレジスタを使用してSXLEN、UXLENを変更できるように実装できますが、
 本書ではMXLEN、SXLEN、UXLENが常に@<code>{64}(eeiパッケージに定義しているXLEN)になるように実装します。
 
@@ -113,10 +128,18 @@ S-mode、U-modeのときのXLENはそれぞれSXLEN、UXLENと定義されてお
 //image[misa][misaレジスタ][width=100%]
 
 misaレジスタは、ハードウェアスレッドがサポートするISAを表すMXLENビットのレジスタです。
-MXLフィールドにはMXLENを表す数値(table TODO)が格納されています。
+MXLフィールドにはMXLENを表す数値(@<table>{numtolen})が格納されています。
 Extensionsフィールドは下位ビットからそれぞれアルファベットのA、B、 Cと対応していて、
 それぞれのビットはそのアルファベットが表す拡張(例えばA拡張ならAビット、C拡張ならC)が実装されているなら@<code>{1}に設定されています。
 仕様上はExtensionsフィールドを書き換えられるように実装できますが、本書では書き換えられないようにします。
+
+//table[numtolen][XLENと数値の対応]{
+XLEM	数値
+-------------------------------------------------------------
+32	1
+64	2
+128	3
+//}
 
 misaレジスタを作成し、読み込めるようにします
 (
@@ -126,13 +149,13 @@ misaレジスタを作成し、読み込めるようにします
 CPUは@<code>{RV64IMAC}なのでMXLフィールドに@<code>{64}を表す@<code>{2}を設定し、
 ExtensionsフィールドのM拡張(M)、基本整数命令セット(I)、C拡張(C)、A拡張(A)のビットを@<code>{1}にしています。
 
-//list[csrunit.veryl.misa.misa][ (csrunit.veryl)]{
+//list[csrunit.veryl.misa.misa][misaレジスタの定義 (csrunit.veryl)]{
 #@maprange(scripts/20/misa-range/core/src/csrunit.veryl,misa)
     let misa  : UIntX = {2'd2, 1'b0 repeat XLEN - 28, 26'b00000000000001000100000101}; // M, I, C, A
 #@end
 //}
 
-//list[csrunit.veryl.misa.rdata][ (csrunit.veryl)]{
+//list[csrunit.veryl.misa.rdata][misaレジスタを読めるようにする (csrunit.veryl)]{
 #@maprange(scripts/20/misa-range/core/src/csrunit.veryl,rdata)
         rdata = case csr_addr {
             @<b>|CsrAddr::MISA  : misa,|
@@ -160,14 +183,14 @@ eeiパッケージにIDを定義して、読み込めるようにします
 @<list>{csrunit.veryl.mimpid.rdata}
 )。
 
-//list[eei.veryl.mimpid.mimpid][ (eei.veryl)]{
+//list[eei.veryl.mimpid.mimpid][IDを適当な値で定義する (eei.veryl)]{
 #@maprange(scripts/20/mimpid-range/core/src/eei.veryl,mimpid)
     // Machine Implementation ID
     const MACHINE_IMPLEMENTATION_ID: UIntX = 1;
 #@end
 //}
 
-//list[csrunit.veryl.mimpid.rdata][ (csrunit.veryl)]{
+//list[csrunit.veryl.mimpid.rdata][mipmidレジスタを読めるようにする (csrunit.veryl)]{
 #@maprange(scripts/20/mimpid-range/core/src/csrunit.veryl,rdata)
         rdata = case csr_addr {
             CsrAddr::MISA  : misa,
@@ -180,24 +203,24 @@ eeiパッケージにIDを定義して、読み込めるようにします
 //image[mhartid][mhartidレジスタ][width=100%]
 
 mhartidレジスタは、今実行しているハードウェアスレッド(hart)のIDを格納しているMXLENビットのレジスタです。
-複数のプロセッサ、ハードウェアスレッドが存在するときに、それぞれを区別するために使用できます。
-IDはどんな値でも良いですが、IDが@<code>{0}のハードウェアスレッドが1つ存在する必要があります。
-基本編で作るCPUは1コア1ハードウェアスレッドであるためmhartidレジスタに0を設定します。
+複数のプロセッサ、ハードウェアスレッドが存在するときに、それぞれを区別するために使用します。
+IDはどんな値でも良いですが、環境内にIDが@<code>{0}のハードウェアスレッドが1つ存在する必要があります。
+基本編で作るCPUは1コア1ハードウェアスレッドであるためmhartidレジスタに@<code>{0}を設定します。
 
-mhart変数を作成し、読み込めるようにします
+mhartレジスタを作成し、読み込めるようにします
 (
 @<list>{csrunit.veryl.mhartid.mhartid}、
 @<list>{csrunit.veryl.mhartid.rdata}
 )。
 
 
-//list[csrunit.veryl.mhartid.mhartid][ (csrunit.veryl)]{
+//list[csrunit.veryl.mhartid.mhartid][mhartidレジスタの定義 (csrunit.veryl)]{
 #@maprange(scripts/20/mhartid-range/core/src/csrunit.veryl,mhartid)
     let mhartid: UIntX = 0;
 #@end
 //}
 
-//list[csrunit.veryl.mhartid.rdata][ (csrunit.veryl)]{
+//list[csrunit.veryl.mhartid.rdata][mhartidレジスタを読めるようにする (csrunit.veryl)]{
 #@maprange(scripts/20/mhartid-range/core/src/csrunit.veryl,rdata)
         rdata = case csr_addr {
             CsrAddr::MISA   : misa,
@@ -212,7 +235,7 @@ mhart変数を作成し、読み込めるようにします
 
 mstatusレジスタは、拡張の設定やトラップ、状態などを管理するMXLENビットのレジスタです。
 基本編では@<img>{mstatus}に示しているフィールドを、そのフィールドが必要になったときに実装します。
-とりあえず今のところは読み込みだけできるようにしておきます
+とりあえず今のところは読み込みだけできるようにします
 (
 @<list>{csrunit.veryl.mstatus.wmaskdef}、
 @<list>{csrunit.veryl.mstatus.wmask}、
@@ -222,26 +245,26 @@ mstatusレジスタは、拡張の設定やトラップ、状態などを管理�
 @<list>{csrunit.veryl.mstatus.write}
 )。
 
-//list[csrunit.veryl.mstatus.wmaskdef][ (csrunit.veryl)]{
+//list[csrunit.veryl.mstatus.wmaskdef][書き込みマスクの定義 (csrunit.veryl)]{
 #@maprange(scripts/20/mstatus-range/core/src/csrunit.veryl,wmaskdef)
     const MSTATUS_WMASK: UIntX = 'h0000_0000_0000_0000 as UIntX;
 #@end
 //}
 
-//list[csrunit.veryl.mstatus.wmask][ (csrunit.veryl)]{
+//list[csrunit.veryl.mstatus.wmask][書き込みマスクを設定する (csrunit.veryl)]{
 #@maprange(scripts/20/mstatus-range/core/src/csrunit.veryl,wmask)
         wmask = case csr_addr {
             @<b>|CsrAddr::MSTATUS: MSTATUS_WMASK,|
 #@end
 //}
 
-//list[csrunit.veryl.mstatus.reg][ (csrunit.veryl)]{
+//list[csrunit.veryl.mstatus.reg][mstatusレジスタの定義 (csrunit.veryl)]{
 #@maprange(scripts/20/mstatus-range/core/src/csrunit.veryl,reg)
     var mstatus: UIntX;
 #@end
 //}
 
-//list[csrunit.veryl.mstatus.rdata][ (csrunit.veryl)]{
+//list[csrunit.veryl.mstatus.rdata][mstatusレジスタを読めるようにする (csrunit.veryl)]{
 #@maprange(scripts/20/mstatus-range/core/src/csrunit.veryl,rdata)
         rdata = case csr_addr {
             CsrAddr::MISA   : misa,
@@ -250,7 +273,8 @@ mstatusレジスタは、拡張の設定やトラップ、状態などを管理�
             @<b>|CsrAddr::MSTATUS: mstatus,|
 #@end
 //}
-//list[csrunit.veryl.mstatus.reset][ (csrunit.veryl)]{
+
+//list[csrunit.veryl.mstatus.reset][mstatusレジスタのリセット (csrunit.veryl)]{
 #@maprange(scripts/20/mstatus-range/core/src/csrunit.veryl,reset)
     always_ff {
         if_reset {
@@ -259,7 +283,7 @@ mstatusレジスタは、拡張の設定やトラップ、状態などを管理�
 #@end
 //}
 
-//list[csrunit.veryl.mstatus.write][ (csrunit.veryl)]{
+//list[csrunit.veryl.mstatus.write][mstatusレジスタの書き込み (csrunit.veryl)]{
 #@maprange(scripts/20/mstatus-range/core/src/csrunit.veryl,write)
     if is_wsc {
         case csr_addr {
@@ -292,15 +316,15 @@ mcycleレジスタを定義して読み込めるようにします。
 @<list>{csrunit.veryl.mcycle.rdata}
 )。
 
-//list[csrunit.veryl.mcycle.reg][ (csrunit.veryl)]{
+//list[csrunit.veryl.mcycle.reg][mcycleレジスタの定義 (csrunit.veryl)]{
 #@maprange(scripts/20/mcycle-range/core/src/csrunit.veryl,reg)
     var mcycle : UInt64;
 #@end
 //}
 
-//list[csrunit.veryl.mcycle.rdata][ (csrunit.veryl)]{
-#@maprange(scripts/20/mcycle-range/core/src/csrunit.veryl,reg)
-    var mcycle : UInt64;
+//list[csrunit.veryl.mcycle.rdata][rdataの割り当てで、mcycleレジスタを読めるようにする (csrunit.veryl)]{
+#@maprange(scripts/20/mcycle-range/core/src/csrunit.veryl,rdata)
+    CsrAddr::MCYCLE : mcycle,
 #@end
 //}
 
@@ -309,7 +333,7 @@ always_ffブロックで、クロックごとに値を更新します
 @<list>{csrunit.veryl.mcycle.always_ff}
 )。
 
-//list[csrunit.veryl.mcycle.always_ff][ (csrunit.veryl)]{
+//list[csrunit.veryl.mcycle.always_ff][mcycleレジスタのリセットとインクリメント (csrunit.veryl)]{
 #@maprange(scripts/20/mcycle-range/core/src/csrunit.veryl,always_ff)
     always_ff {
         if_reset {
@@ -335,13 +359,13 @@ coreモジュールでinstretレジスタを作成し、
 @<list>{core.veryl.minstret.inc}
 )。
 
-//list[core.veryl.minstret.minstret][ (core.veryl)]{
+//list[core.veryl.minstret.minstret][minstretレジスタの定義 (core.veryl)]{
 #@maprange(scripts/20/minstret-range/core/src/core.veryl,minstret)
     var minstret        : UInt64;
 #@end
 //}
 
-//list[core.veryl.minstret.inc][ (core.veryl)]{
+//list[core.veryl.minstret.inc][minstretレジスタのインクリメント (core.veryl)]{
 #@maprange(scripts/20/minstret-range/core/src/core.veryl,inc)
     always_ff {
         if_reset {
@@ -357,24 +381,25 @@ coreモジュールでinstretレジスタを作成し、
 
 @<code>{minstret}の値をcsrunitモジュールに渡し、読み込めるようにします
 (
-@<list>{core.veryl.minstret.port2}、
 @<list>{csrunit.veryl.minstret.port2}、
+@<list>{core.veryl.minstret.port2}、
 @<list>{csrunit.veryl.minstret.rdata}
 )。
 
-//list[core.veryl.minstret.port2][ (core.veryl)]{
-#@maprange(scripts/20/minstret-range/core/src/core.veryl,port2)
-        minstret                          ,
-#@end
-//}
 
-//list[csrunit.veryl.minstret.port2][ (csrunit.veryl)]{
+//list[csrunit.veryl.minstret.port2][csrunitモジュールのポートにminstretを追加する (csrunit.veryl)]{
 #@maprange(scripts/20/minstret-range/core/src/csrunit.veryl,port2)
     minstret   : input  UInt64           ,
 #@end
 //}
 
-//list[csrunit.veryl.minstret.rdata][ (csrunit.veryl)]{
+//list[core.veryl.minstret.port2][csrunitモジュールのインスタンスにminstretレジスタを渡す (core.veryl)]{
+#@maprange(scripts/20/minstret-range/core/src/core.veryl,port2)
+        minstret                          ,
+#@end
+//}
+
+//list[csrunit.veryl.minstret.rdata][minstretレジスタを読めるようにする (csrunit.veryl)]{
 #@maprange(scripts/20/minstret-range/core/src/csrunit.veryl,rdata)
     CsrAddr::MCYCLE  : mcycle,
     @<b>|CsrAddr::MINSTRET: minstret,|
@@ -382,9 +407,10 @@ coreモジュールでinstretレジスタを作成し、
 #@end
 //}
 
-csrunitモジュールはMRET命令でも@<code>{raise_trap}フラグを立てているため、
+csrunitモジュールはMRET命令でも@<code>{raise_trap}フラグを立てるため、
 このままではMRET命令で@<code>{minstret}がインクリメントされません。
-そのため、トラップから戻る命令であることを示すフラグを作成し、正しくインクリメントされるようにします
+そのため、トラップから戻る命令であることを示すフラグをcsrunitモジュールに作成し、
+正しくインクリメントされるようにします
 (
 @<list>{csrunit.veryl.minstret.port1}、
 @<list>{csrunit.veryl.minstret.trap_return}、
@@ -392,13 +418,13 @@ csrunitモジュールはMRET命令でも@<code>{raise_trap}フラグを立て�
 @<list>{core.veryl.minstret.raise_trap}
 )。
 
-//list[csrunit.veryl.minstret.port1][ (csrunit.veryl)]{
+//list[csrunit.veryl.minstret.port1][csrunitモジュールのポートにtrap_returnを追加する (csrunit.veryl)]{
 #@maprange(scripts/20/minstret-range/core/src/csrunit.veryl,port1)
     trap_return: output logic            ,
 #@end
 //}
 
-//list[csrunit.veryl.minstret.trap_return][ (csrunit.veryl)]{
+//list[csrunit.veryl.minstret.trap_return][MRET命令の時にtrap_returnを1にする (csrunit.veryl)]{
 #@maprange(scripts/20/minstret-range/core/src/csrunit.veryl,trap_return)
     @<b>|// Trap Return|
     @<b>|assign trap_return = valid && is_mret && !raise_expt;|
@@ -408,19 +434,21 @@ csrunitモジュールはMRET命令でも@<code>{raise_trap}フラグを立て�
 #@end
 //}
 
-//list[core.veryl.minstret.port1][ (core.veryl)]{
+//list[core.veryl.minstret.port1][csrunitモジュールのインスタンスからtrap_returnを受け取る (core.veryl)]{
 #@maprange(scripts/20/minstret-range/core/src/core.veryl,port1)
         trap_return: csru_trap_return     ,
 #@end
 //}
 
-//list[core.veryl.minstret.raise_trap][ (core.veryl)]{
+//list[core.veryl.minstret.raise_trap][MRET命令ならraise_trapフラグを立てないようにする (core.veryl)]{
 #@maprange(scripts/20/minstret-range/core/src/core.veryl,raise_trap)
         wbq_wdata.raise_trap = csru_raise_trap @<b>|&& !csru_trap_return;|
 #@end
 //}
 
 == mscratchレジスタ (Machine Scratch)
+
+//image[mscratch][mscratchレジスタ][width=100%]
 
 mscratchレジスタは、M-modeのときに自由に読み書きできるMXLENビットのレジスタです。
 
@@ -429,61 +457,34 @@ mscratchレジスタの典型的な用途はコンテキストスイッチです
 多くの場合、コンテキストスイッチはトラップによって開始しますが、
 Aの実行途中の状態(レジスタの値)を保存しないとAを実行再開できなくなります。
 そのため、コンテキストスイッチが始まったとき、つまりトラップが発生したときにレジスタの値をメモリに保存する必要があります。
-しかし、ストア命令はアドレスの指定にレジスタの値を使うため、アドレスの指定のために少なくとも1つのレジスタの値を犠牲にしなければならず、すべてのレジスタの値を完全に保存できません@<fn>{save-near-zero}
-()。
-
-//list[][]{
-//}
+しかし、ストア命令はアドレスの指定にレジスタの値を使うため、
+アドレスの指定のために少なくとも1つのレジスタの値を犠牲にしなければならず、
+すべてのレジスタの値を完全に保存できません@<fn>{save-near-zero}。
 
 //footnote[save-near-zero][x0と即値を使うとアドレス0付近にすべてのレジスタの値を保存できますが、一般的な方法ではありません]
 
-この問題を回避するために、一時的な値の保存場所としてmscratchレジスタが使用されます
-()。
+この問題を回避するために、一時的な値の保存場所としてmscratchレジスタが使用されます。
 事前にmscratchレジスタにメモリアドレス(やメモリアドレスを得るための情報)を格納しておき、
 CSRRW命令でmscratchレジスタの値とレジスタの値を交換することで任意の場所にレジスタの値を保存できます。
 
 mscratchレジスタを定義し、自由に読み書きできるようにします
 (
 @<list>{csrunit.veryl.mscratch.reg}、
+@<list>{csrunit.veryl.mscratch.reset}、
 @<list>{csrunit.veryl.mscratch.rdata}、
 @<list>{csrunit.veryl.mscratch.WMASK}、
 @<list>{csrunit.veryl.mscratch.wmask}、
-@<list>{csrunit.veryl.mscratch.reset}、
 @<list>{csrunit.veryl.mscratch.write}
 )。
 
-//list[csrunit.veryl.mscratch.reg][ (csrunit.veryl)]{
+//list[csrunit.veryl.mscratch.reg][mscratchレジスタの定義 (csrunit.veryl)]{
 #@maprange(scripts/20/mscratch-range/core/src/csrunit.veryl,reg)
     var mcycle  : UInt64;
     @<b>|var mscratch: UIntX ;|
     var mepc    : UIntX ;
 #@end
 
-//list[csrunit.veryl.mscratch.rdata][ (csrunit.veryl)]{
-#@maprange(scripts/20/mscratch-range/core/src/csrunit.veryl,rdata)
-    CsrAddr::MINSTRET: minstret,
-    @<b>|CsrAddr::MSCRATCH: mscratch,|
-    CsrAddr::MEPC    : mepc,
-#@end
-//}
-
-//list[csrunit.veryl.mscratch.WMASK][ (csrunit.veryl)]{
-#@maprange(scripts/20/mscratch-range/core/src/csrunit.veryl,WMASK)
-    const MTVEC_WMASK   : UIntX = 'hffff_ffff_ffff_fffc;
-    @<b>|const MSCRATCH_WMASK: UIntX = 'hffff_ffff_ffff_ffff;|
-    const MEPC_WMASK    : UIntX = 'hffff_ffff_ffff_fffe;
-#@end
-//}
-
-//list[csrunit.veryl.mscratch.wmask][ (csrunit.veryl)]{
-#@maprange(scripts/20/mscratch-range/core/src/csrunit.veryl,wmask)
-    CsrAddr::MTVEC   : MTVEC_WMASK,
-    @<b>|CsrAddr::MSCRATCH: MSCRATCH_WMASK,|
-    CsrAddr::MEPC    : MEPC_WMASK,
-#@end
-//}
-
-//list[csrunit.veryl.mscratch.reset][ (csrunit.veryl)]{
+//list[csrunit.veryl.mscratch.reset][mscratchレジスタを0でリセットする (csrunit.veryl)]{
 #@maprange(scripts/20/mscratch-range/core/src/csrunit.veryl,reset)
     mtvec    = 0;
     @<b>|mscratch = 0;|
@@ -491,7 +492,31 @@ mscratchレジスタを定義し、自由に読み書きできるようにしま
 #@end
 //}
 
-//list[csrunit.veryl.mscratch.write][ (csrunit.veryl)]{
+//list[csrunit.veryl.mscratch.rdata][mscratchレジスタを読めるようにする (csrunit.veryl)]{
+#@maprange(scripts/20/mscratch-range/core/src/csrunit.veryl,rdata)
+    CsrAddr::MINSTRET: minstret,
+    @<b>|CsrAddr::MSCRATCH: mscratch,|
+    CsrAddr::MEPC    : mepc,
+#@end
+//}
+
+//list[csrunit.veryl.mscratch.WMASK][書き込みマスクの定義 (csrunit.veryl)]{
+#@maprange(scripts/20/mscratch-range/core/src/csrunit.veryl,WMASK)
+    const MTVEC_WMASK   : UIntX = 'hffff_ffff_ffff_fffc;
+    @<b>|const MSCRATCH_WMASK: UIntX = 'hffff_ffff_ffff_ffff;|
+    const MEPC_WMASK    : UIntX = 'hffff_ffff_ffff_fffe;
+#@end
+//}
+
+//list[csrunit.veryl.mscratch.wmask][書き込みマスクをwmaskに割り当てる (csrunit.veryl)]{
+#@maprange(scripts/20/mscratch-range/core/src/csrunit.veryl,wmask)
+    CsrAddr::MTVEC   : MTVEC_WMASK,
+    @<b>|CsrAddr::MSCRATCH: MSCRATCH_WMASK,|
+    CsrAddr::MEPC    : MEPC_WMASK,
+#@end
+//}
+
+//list[csrunit.veryl.mscratch.write][mscratchレジスタの書き込み (csrunit.veryl)]{
 #@maprange(scripts/20/mscratch-range/core/src/csrunit.veryl,write)
     CsrAddr::MTVEC   : mtvec    = wdata;
     @<b>|CsrAddr::MSCRATCH: mscratch = wdata;|
