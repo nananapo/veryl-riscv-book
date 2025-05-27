@@ -248,7 +248,16 @@
 <p>Environment call from M-mode例外のように委譲することができない命令のmedelegレジスタのビットは<code class="inline-code">1</code>に変更できません。</p>
 
 <h4><a id="h9-4-1-2"></a>割り込みの委譲</h4>
-<p>図TODO</p>
+<p>表TODO</p>
+<div id="riscv.supervisor-interrupt-priority" class="table">
+<p class="caption">表9.1: RISC-Vの割り込みの優先順位</p>
+<table>
+<tr class="hline"><th>cause</th><th>説明</th></tr>
+<tr class="hline"><td>9</td><td>Supervisor external interrupt</td></tr>
+<tr class="hline"><td>1</td><td>Supervisor software interrupt</td></tr>
+<tr class="hline"><td>5</td><td>Supervisor timer interrupt</td></tr>
+</table>
+</div>
 <p>midelegレジスタは、どの割り込みを委譲するかを制御するMXLENビットのレジスタです(図TODO)。各割り込みはmie、mipレジスタと同じ場所のmidelegレジスタのビットによって委譲されるかどうかが制御されます。</p>
 <p>M-mode、S-mode、U-modeが実装されたCPUで、割り込みでM-modeに遷移する条件は次の通りです。</p>
 <ol start="1" type="1">

@@ -119,7 +119,7 @@ ACLINTにはMTIMER、MSWI、SSWIの3つのデバイスが定義されていま�
 それぞれタイマ割り込み、ソフトウェア割り込み、ソフトウェア割り込み向けのデバイスで、
 mipレジスタのMTIP、MSIP、SSIPビットに状態を通知します。
 
-//image[aclint-mmio][ACLINTのメモリマップ][width=100%]
+//image[aclint-mmio][ACLINTのメモリマップ][width=40%]
 
 本書ではACLINTを図@<img>{aclint-mmio}のようなメモリマップで実装します。
 本章ではMTIMER、MSWIデバイスを実装し、@<secref>{23-smode-csr|impl-sswi}でSSWIデバイスを実装します。
@@ -423,7 +423,7 @@ TODOテーブル (最大4095個) ここにhartIDについてもちょっと書�
 
 === MSIPレジスタを実装する
 
-//image[msip][MSIPレジスタ][width=100%]
+//image[msip][MSIPレジスタ][width=90%]
 
 ACLINTモジュールにMSIPレジスタを実装します(@<img>{msip})。
 今のところCPUにはmhartidが@<code>{0}のハードウェアスレッドしか存在しないため、MSIP0のみ実装します。
@@ -504,8 +504,8 @@ always_comb {
 
 === mip、mieレジスタを実装する
 
-//image[mip][mipレジスタ][width=100%]
-//image[mie][mieレジスタ][width=100%]
+//image[mip][mipレジスタ][width=90%]
+//image[mie][mieレジスタ][width=90%]
 
 mipレジスタのMSIPビット、mieレジスタのMSIEビットを実装します。
 mie.MSIEはMSIPビットによる割り込み待機を許可するかを制御するビットです。
@@ -859,7 +859,7 @@ MSIP0レジスタに1を書き込んでいます。
 
 == mtvecのVectoredモードの実装
 
-//image[mtvec][mtvecレジスタ][width=100%]
+//image[mtvec][mtvecレジスタ][width=90%]
 
 mtvecレジスタにはMODEフィールドがあり、
 割り込みが発生するときのジャンプ先の決定方法を制御できます(@<img>{mtvec})。
