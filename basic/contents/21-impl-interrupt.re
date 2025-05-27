@@ -67,11 +67,21 @@ mieとmstatus.MIEのことを割り込みイネーブル(許可)レジスタと�
 
 === 割り込みの優先順位
 
+TODO 書き換え
 RISC-Vには外部割り込み、ソフトウェア割り込み、タイマ割り込みがそれぞれM-mode、S-mode向けに用意されています。
-それぞれの割り込みにはテーブルTODOのような優先順位が定義されていて、
+それぞれの割り込みには@<table>{riscv.interrupt-priority}のような優先順位が定義されていて、
 複数の割り込みを発生させられるときは優先順位が高い割り込みを発生させます。
 
-TODOテーブル
+//table[riscv.interrupt-priority][RISC-Vの割り込みの優先順位]{
+cause	説明
+-------------------------------------------------------------
+11		Machine external interrupt
+3		Machine software interrupt
+7		Machine timer interrupt
+9		Supervisor external interrupt
+1		Supervisor software interrupt
+5		Supervisor timer interrupt
+//}
 
 === 割り込みの原因(cause)
 
