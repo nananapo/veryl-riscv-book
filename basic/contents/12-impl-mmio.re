@@ -7,26 +7,26 @@ CPUに内蔵された1つの大きなメモリ空間、
 1つのメモリデバイス(memoryモジュール)に命令データを格納、実行し、
 データのロードストア命令も同じメモリに対して実行してきました。
 
-一般に流通するコンピュータはTODO図のように複数のデバイスに接続されています。
-CPUが起動すると読み込み専用の小さなメモリ(ROM)に格納されたブートローダから命令の実行を開始します。
-ブートローダは周辺デバイスの初期化などを行ったあと、
+一般に流通するコンピュータは複数のデバイスに接続されています。
+CPUが起動すると、読み込み専用の小さなメモリ(ROM)に格納されたプログラムから命令の実行を開始します。
+プログラムは周辺デバイスの初期化などを行ったあと、
 動かしたいアプリケーションの命令やデータをRAMに展開して、
 制御をアプリケーションに移します。
 
 CPUがデバイスにアクセスする方法にはCSRやメモリ空間を経由する方法があります。
 一般的な方法はメモリ空間を通じてデバイスにアクセスする方法であり、
-この方式のことを@<b>{メモリマップドIO}(Memory-mapped I/O, @<code>{MMIO})と呼びます。
-メモリ空間の一部をデバイスにアクセスするための空間として扱うことを、メモリに@<b>{マップ}すると呼びます。
+この方式のことを@<b>{メモリマップドIO}(Memory-mapped I/O, @<b>{MMIO})と呼びます。
+メモリ空間の一部を、デバイスにアクセスするための空間として扱うことを、メモリ(またはアドレス)に@<b>{マップ}すると呼びます。
 RAMとROMもメモリデバイスであり、異なるアドレスにマップされています。
 
-図
+TODO 図
 
 本章ではCPUのメモリ部分をRAM(Random Access Memory)@<fn>{about-ram}とROM(Read Only Memory)に分割し、
 アクセスするアドレスに応じてアクセスするデバイスを切り替える機能を実装します。
 また、デバッグ用の入出力デバイス(64ビットのレジスタ)も追加します。
 デバイスとメモリ空間の対応はTODO図のように設定します。
 TODO図のようにメモリがどのように配置されているかを示す図のことを@<b>{メモリマップ}(Memory map)と呼びます。
-あるメモリ空間の先頭アドレスのことをベースアドレスと呼ぶことがあります。
+あるメモリ空間の先頭アドレスのことをベースアドレス(base address)と呼ぶことがあります。
 
 //footnote[about-ram][本章では実際のRAMデバイスへのアクセスを実装せずmemoryモジュールで代用します。FPGAに合成するときに実際のデバイスへのアクセスに置き換えます。]
 
@@ -58,7 +58,7 @@ eeiパッケージに定義しているメモリの定数をRAM用の定数に�
 #@end
 //}
 
-@<code>{MEM_DATA_WIDTH}、@<code>{MEM_ADDR_WIDTH}を使っている部分を@<code>{MEMBUS_DATA_WIDTH}に置き換えます。
+@<code>{MEM_DATA_WIDTH}、@<code>{MEM_ADDR_WIDTH}を使っている部分を@<code>{MEMBUS_DATA_WIDTH}、@<code>{XLEN}に置き換えます。
 @<code>{MEMBUS_DATA_WIDTH}と@<code>{XLEN}を使うmembus_ifインターフェースに別名@<code>{Membus}をつけて利用します
 (
 @<list>{membus_if.veryl.memtoram.Membus}
@@ -400,7 +400,7 @@ mmio_controllerモジュールの関数の引数にmembus_ifインターフェ�
 //}
 
 mmio_controllerモジュールは@<code>{req_core}からメモリアクセス要求を受け付け、
-アクセス対象のモジュールからのレスポンスを返すモジュールです。
+アクセス対象のモジュールからの結果を返すモジュールです。
 
 @<code>{Device}型は実装しているデバイスを表現するための列挙型です
 (@<list>{mmio_controller.veryl.emptymmio.Device})。
@@ -414,46 +414,14 @@ mmio_controllerモジュールは@<code>{req_core}からメモリアクセス要
 #@end
 //}
 
-reset_membus_master、reset_all_device_masters関数はインターフェースの値の割り当てを@<b>{0}でリセットするためのユーティリティ関数です。
+reset_membus_master、reset_all_device_masters関数はインターフェースの値の割り当てを@<code>{0}でリセットするためのユーティリティ関数です。
 名前がget_device_、assign_deviceから始まる関数は、デバイスの状態を取得したり、インターフェースに値を割り当てる関数です。
-get_device関数はアドレスからデバイスを取得する関数です。
+get_device関数はアドレスに対応する@<code>{Device}を取得する関数です。
 
 always_comb、always_ffブロックはこれらの関数を利用してメモリアクセスを制御します。
-always_ffブロックは、メモリアクセス要求の処理中ではない場合とメモリアクセスが終わった場合にメモリアクセス要求を受け入れます
-(@<list>{mmio_controller.veryl.emptymmio.on_clock})。
+
+always_ffブロックは、メモリアクセス要求の処理中ではない場合とメモリアクセスが終わった場合にメモリアクセス要求を受け入れます。
 要求を受け入れるとき、@<code>{req_core}の値を@<code>{req_saved}に保存します。
-
-//list[mmio_controller.veryl.emptymmio.on_clock][レジスタの値の更新 (mmio_controller.veryl)]{
-#@maprange(scripts/12/emptymmio-range/core/src/mmio_controller.veryl,on_clock)
-    // 新しく要求を受け入れる
-    function accept_request () {
-        req_saved.valid = req_core.ready && req_core.valid;
-        if req_core.ready && req_core.valid {
-            last_device  = get_device(req_core.addr);
-            is_requested = get_device_ready(last_device);
-            // reqを保存
-            req_saved.addr  = req_core.addr;
-            req_saved.wen   = req_core.wen;
-            req_saved.wdata = req_core.wdata;
-            req_saved.wmask = req_core.wmask;
-        }
-    }
-
-    function on_clock () {
-        if req_saved.valid {
-            if is_requested {
-                if get_device_rvalid(last_device) {
-                    accept_request();
-                }
-            } else {
-                is_requested = get_device_ready(last_device);
-            }
-        } else {
-            accept_request();
-        }
-    }
-#@end
-//}
 
 always_combブロックはデバイスにアクセスし
 @<code>{req_core}に結果を返します。
@@ -461,7 +429,7 @@ always_combブロックはデバイスにアクセスし
 新しく要求を受け入れるときと@<code>{is_requested}が@<code>{0}のときにデバイスに要求を割り当て、
 @<code>{is_requested}が@<code>{1}かつ@<code>{rvalid}が@<code>{1}のときに結果を返します。
 
-まだアクセス対象のデバイスを実装していないため、
+まだアクセス先のデバイスを実装していないため、
 常に@<code>{0}を読み込み、@<code>{ready}と@<code>{rvalid}は常に@<code>{1}にして、書き込みは無視します。
 
 == RAMの接続
@@ -579,7 +547,7 @@ RAMの@<code>{rvalid}、@<code>{rdata}を@<code>{req_core}に割り当てます
 
 RAMのインターフェースに要求を割り当てます
 (@<list>{mmio_controller.veryl.ram.assign_device_master})。
-ここでRAMのベースアドレスをオフセットとしたアドレスを割り当てることで、@<code>{MMAP_RAM_BEGIN}が@<code>{0}になるようにしています。
+ここでRAMのベースアドレスを引いたアドレスを割り当てることで、@<code>{MMAP_RAM_BEGIN}が@<code>{0}になるようにしています。
 
 //list[mmio_controller.veryl.ram.assign_device_master][RAMにreqを割り当ててアクセス要求する (mmio_controller.veryl)]{
 #@maprange(scripts/12/ram-range/core/src/mmio_controller.veryl,assign_device_master)
@@ -711,8 +679,8 @@ RAMのアドレスへの変換は調停処理から接続部分に移動して�
 
 ==={changepc} PCの初期値の変更
 
-プログラムカウンタの初期値を@<code>{MMAP_RAM_BEGIN}にすることで、RAMのベースアドレスからプログラムの実行を開始するように変更します。
-eeiパッケージに@<code>{INITIAL_PC}を定義し、coreモジュールでのリセット時に利用します
+PCの初期値を@<code>{MMAP_RAM_BEGIN}にすることで、RAMのベースアドレスからプログラムの実行を開始するように変更します。
+eeiパッケージに@<code>{INITIAL_PC}を定義し、PCのリセット時に利用します
 (
 @<list>{eei.veryl.ram.pc}、
 @<list>{core.veryl.ram.pc}
@@ -738,7 +706,7 @@ eeiパッケージに@<code>{INITIAL_PC}を定義し、coreモジュールでの
 #@end
 //}
 
-riscv-testsを実行してRAMにアクセスできているかテストします。
+riscv-testsを実行してRAMにアクセスできているか確認します。
 今のところriscv-testsはアドレス@<code>{0}から配置されるようにリンクしているため、
 riscv-testsの@<code>{env/p/link.ld}を変更します
 (@<list>{link.ld.ram.riscv-tests})。
@@ -784,7 +752,7 @@ riscv-testsの終了判定用のアドレスを@<code>{MMAP_RAM_BEGIN}基準の�
 #@end
 //}
 
-riscv-testsを実行し、RAMにアクセスできることを確認してください。
+riscv-testsを実行し、RAMにアクセスできてテストに成功することを確認してください。
 
 == ROMの実装
 
@@ -897,7 +865,7 @@ ROMのインターフェースに要求を割り当てます
 (
 @<list>{mmio_controller.veryl.rom.assign_device_master}
 )。
-RAMと同じようにメモリマップのベースアドレスをオフセットとしたアドレスを割り当てます。
+RAMと同じようにメモリマップのベースアドレスを引いたアドレスを割り当てます。
 
 //list[mmio_controller.veryl.rom.assign_device_master][get_device関数でROMにreqを割り当ててアクセス要求する (mmio_controller.veryl)]{
 #@maprange(scripts/12/rom-range/core/src/mmio_controller.veryl,assign_device_master)
@@ -934,7 +902,7 @@ module top #(
 //}
 
 RAMと同じように、シミュレータ用のプログラムでROMのHEXファイルのパスを指定するようにします。
-1番目の引数をROM用のファイルパスに変更し、ROM_FILE_PATH環境変数をその値に設定します
+1番目の引数をROM用のHEXファイルのパスに変更し、環境変数@<code>{ROM_FILE_PATH}をその値に設定します
 (
 @<list>{tb_verilator.cpp.rom.arg}、
 @<list>{tb_verilator.cpp.rom.path}、
@@ -1039,7 +1007,7 @@ def test(@<b>|romhex, |file_name):
 
 ROMをインスタンス化してmmio_controllerモジュールと接続します。
 
-ROMとmmio_controllerモジュールを接続するインターフェース(@<code>{mmio_rom_membus})
+ROMとmmio_controllerモジュールを接続するインターフェース(@<code>{mmio_rom_membus})、
 ROMのインターフェース(@<code>{rom_membus})を定義します
 (@<list>{top.veryl.rom.interface})。
 
@@ -1113,7 +1081,7 @@ mmio_controllerモジュールとROMを接続します。
 
 === ROMからRAMにジャンプする
 
-プログラムカウンタの初期値をROMのベースアドレスに変更し、
+PCの初期値をROMのベースアドレスに変更し、
 ROMからRAMにジャンプする仕組みを実現します。
 
 一般的にCPUの電源をつけると、CPUはROMのようなメモリデバイスに入ったソフトウェアから実行を開始します。
@@ -1214,18 +1182,19 @@ mmio_controllerモジュールにデバイスを追加します。
 @<list>{mmio_controller.veryl.debugout.reset_all}
 )。
 
+#@# mapにする
 //list[mmio_controller.veryl.debugout.port][DBG_ADDR、インターフェースを追加する (mmio_controller.veryl)]{
-#@maprange(scripts/12/debugout-range/core/src/mmio_controller.veryl,port)
+#@# maprange(scripts/12/debugout-range/core/src/mmio_controller.veryl,port)
 module mmio_controller (
     clk       : input   clock         ,
     rst       : input   reset         ,
-    DBG_ADDR  : input   Addr          ,
+    @<b>|DBG_ADDR  : input   Addr          ,|
     req_core  : modport Membus::slave ,
     ram_membus: modport Membus::master,
     rom_membus: modport Membus::master,
     @<b>|dbg_membus: modport Membus::master,|
 ) {
-#@end
+#@# end
 //}
 
 //list[mmio_controller.veryl.debugout.reset_all][インターフェースの要求部分をリセットする (mmio_controller.veryl)]{
@@ -1406,10 +1375,10 @@ LSBが@<code>{1}ならテストの成功判定をして@<code>{$finish}システ
 )。
 
 //list[core.veryl.debugout.debug][デバッグ出力をdefineで囲う (core.veryl)]{
-#@maprange(scripts/12/debugout-range/core/src/core.veryl,debug)
+#@# maprange(scripts/12/debugout-range/core/src/core.veryl,debug)
     ///////////////////////////////// DEBUG /////////////////////////////////
-    #[ifdef(PRINT_DEBUG)]
-    {
+    @<b>|#[ifdef(PRINT_DEBUG)]|
+    @<b>|{|
         var clock_count: u64;
 
         always_ff {
@@ -1420,7 +1389,7 @@ LSBが@<code>{1}ならテストの成功判定をして@<code>{$finish}システ
 
                 $display("");
                 $display("# %d", clock_count);
-#@end
+#@# end
 //}
 
 @<code>{test/debug_output.c}を作成し、次のように記述します
@@ -1548,7 +1517,7 @@ SECTIONS
 //}
 
 @<code>{_stack_bottom}と@<code>{_stack_top}の間は4KBあるので、スタックのサイズは4KBになります。
-@<code>{_start}を@<code>{.text.init}に配置し(TODO)、
+@<code>{_start}を@<code>{.text.init}に配置し(@<list>{entry.S.debugouttest})、
 @<code>{SECTIONS}の先頭に@<code>{.text.init}を配置しているため、
 アドレス@<code>{0x80000000}に@<code>{_start}が配置されます。
 
@@ -1621,12 +1590,12 @@ def get_section_address(filepath, section_name):
 #@end
 //}
 
-デバッグ用の入出力デバイスのセクション名を指定するパラメータを作成します
+デバッグ用の入出力デバイスのセクション名を指定する引数を作成します
 (
 @<list>{test.py.debugouttest.args}
 )。
-また、テストするファイルの拡張子を指定していたパラメータを、
-ELFファイルに付加することでHEXファイルのパスを得るためのパラメータに変更します。
+また、テストするファイルの拡張子を指定していた引数を、
+ELFファイルに付加することでHEXファイルのパスを得るための引数に変更します。
 
 //list[test.py.debugouttest.args][オプションを追加する (test/test.py)]{
 #@map_range(scripts/12/debugouttest-range/core/test/test.py,args)
@@ -1711,13 +1680,13 @@ extern "C" const unsigned long long get_input_dpic() {
 //}
 
 ここで、read関数の呼び出しでシミュレータを止めず(@<code>{O_NONBLOCK})、
-シェルが入力をバッファリングしなくする(@<code>{~ICANON})ために設定を変えるコードを挿入します
+シェルが入力をバッファリングしなくする(@<code>{~ICANON})ために設定を変えるコードを挿入します。
+また、シェルが文字列をローカルエコー(入力した文字列を表示)しないようにします(@<code>{~ECHO})
 (
 @<list>{tb_verilator.cpp.debuginput.include}、
 @<list>{tb_verilator.cpp.debuginput.termios}、
 @<list>{tb_verilator.cpp.debuginput.set}
 )。
-また、シェルが文字列をローカルエコー(入力した文字列を表示)しないようにします(@<code>{~ECHO})。
 
 //list[tb_verilator.cpp.debuginput.include][includeを追加する (src/tb_verilator.cpp)]{
 #@maprange(scripts/12/debuginput-range/core/src/tb_verilator.cpp,include)

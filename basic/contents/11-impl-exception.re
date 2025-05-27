@@ -5,10 +5,12 @@
 CPUがソフトウェアを実行するとき、
 処理を中断したり終了しなければならないような異常な状態@<fn>{unusual-condition}が発生することがあります。
 例えば、実行環境(EEI)がサポートしていない、
-または実行を禁止しているような不正な命令を実行しようとする場合です。
+または実行を禁止しているような違法(illegal)@<fn>{illegal}な命令を実行しようとする場合です。
 このとき、CPUはどのような動作をすればいいのでしょうか？
 
 //footnote[unusual-condition][異常な状態(unusual condition)。予期しない(unexpected)事象と呼ぶ場合もあります。]
+
+//footnote[illegal][不正と呼ぶこともあります。逆に実行できる命令のことを合法(legal)な命令と呼びます]
 
 RISC-Vでは、命令によって引き起こされる異常な状態のことを@<b>{例外(Exception)}と呼び、
 例外が発生した場合には@<b>{トラップ(Trap)}を引き起こします。
@@ -20,25 +22,25 @@ RISC-Vでは、命令によって引き起こされる異常な状態のこと�
 本書では既にECALL命令の実行によって発生するEnvironment call from M-mode例外を実装しており、
 例外が発生したら次のように動作します。
 
- 1. mcauseレジスタにトラップの発生原因を示す値(11)を書き込む
- 2. mepcレジスタにプログラムカウンタの値を書き込む
- 3. プログラムカウンタをmtvecレジスタの値に設定する
+ 1. mcauseレジスタにトラップの発生原因を示す値(@<code>{11})を書き込む
+ 2. mepcレジスタにPCの値を書き込む
+ 3. PCをmtvecレジスタの値に設定する
 
 本章では、例外発生時に例外に固有の情報を書き込むmtvalレジスタと、現在の実装で発生する可能性がある例外を実装します。
-これ以降、トラップの発生原因を示す値のことをcauseと呼びます。
+本書ではこれ以降、トラップの発生原因を示す値のことをcauseと呼びます。
 
 == 例外情報の伝達
 
 === Environment call from M-mode例外をIFステージで処理する
 
 今のところ、ECALL命令による例外はMEM(CSR)ステージのcsrunitモジュールで例外判定、処理されています。
-ECALL命令によって例外が発生するかどうかは命令がECALLであるかどうかを判定すれば分かるため、
+ECALL命令によって例外が発生するかは命令がECALLであるかどうかだけを判定すれば分かるため、
 命令をデコードする時点、つまりIDステージで判定できます。
 
 本章で実装する例外にはMEMステージよりも前で発生する例外があるため、
-IDステージから順に次のステージに例外の有無、causeを受け渡していく仕組みを作っておきます。
+IDステージから順に次のステージに例外の有無、causeを受け渡していく仕組みを実装します。
 
-まず、例外が発生するかどうか、例外の種類を示す値をまとめた@<code>{ExceptionInfo}構造体を定義します
+まず、例外が発生するかどうか(@<code>{valid})、例外のcause(@<code>{cause})をまとめた@<code>{ExceptionInfo}構造体を定義します
 (@<list>{corectrl.veryl.exptinfo-range.ExceptionInfo})。
 
 //list[corectrl.veryl.exptinfo-range.ExceptionInfo][ExceptionInfo構造体を定義する (corectrl.veryl)]{
@@ -189,7 +191,7 @@ ECALL命令かどうかを判定する@<code>{is_ecall}変数を削除して、
 
 === mtvalレジスタを実装する
 
-例外が発生すると、CPUはトラップベクタにジャンプして例外処理を実行します。
+例外が発生すると、CPUはトラップベクタにジャンプして例外を処理します。
 mcauseレジスタを読むことでどの例外が発生したかを判別できますが、
 その例外の詳しい情報を知りたいことがあります。
 
@@ -213,7 +215,7 @@ MXLENビットのmtvalレジスタが定義されています(@<img>{mtval})。
 #@end
 //}
 
-ECALL命令はmtvalに書き込むような情報がないので@<code>{0}に設定しておきます
+ECALL命令はmtvalに書き込むような情報がないので@<code>{0}に設定します
 (@<list>{core.veryl.mtval-range.idex})。
 
 //list[core.veryl.mtval-range.idex][ECALL命令のtvalを設定する (corectrl.veryl)]{
@@ -353,7 +355,7 @@ causeは@<code>{3}で、tvalは例外が発生した命令のアドレスにな�
 #@end
 //}
 
-IDステージでEBREAK命令の判定と例外情報の設定を行います
+IDステージでEBREAK命令を判定して、tvalにPCを設定します
 (@<list>{core.veryl.breakpoint-range.idex})。
 
 //list[core.veryl.breakpoint-range.idex][IDステージでEBREAK命令を判定する (core.veryl)]{
@@ -380,7 +382,7 @@ Illegal instruction例外は、
 causeは@<code>{2}で、tvalは例外が発生した命令のビット列になります。
 
 本章では、
-EEIが認識できない不正な命令ビット列を実行しようとした場合、
+EEIが認識できない不正な命令ビット列を実行しようとした場合と、
 読み込み専用のCSRに書き込もうとした場合の2つの状況で例外を発生させます。
 
 === 不正な命令ビット列で例外を起こす
@@ -390,7 +392,7 @@ Illegal instruction例外が発生します。
 
 今のところopcodeが未知の命令は何もしない命令として実行し、
 それ以外の命令については何も対処していません。
-inst_decoderモジュールを、実装していない命令で例外が発生するように変更します。
+ここで、inst_decoderモジュールを、未知の命令であることを報告するように変更します。
 
 inst_decoderモジュールに、命令が有効かどうかを示す@<code>{valid}ポートを追加します
 (
@@ -486,14 +488,15 @@ OP-MISCのopcode(@<code>{7'b0001111})をeeiパッケージに定義してくだ�
 @<code>{CsrCause}型にIllegal instruction例外のcauseを追加します
 (@<list>{eei.veryl.instillegal-range.CsrCause})。
 
+#@# mapにする
 //list[eei.veryl.instillegal-range.CsrCause][Illegal instruction例外のcauseを定義する (eei.veryl)]{
-#@maprange(scripts/11/instillegal-range/core/src/eei.veryl,CsrCause)
+#@# maprange(scripts/11/instillegal-range/core/src/eei.veryl,CsrCause)
     enum CsrCause: UIntX {
-        ILLEGAL_INSTRUCTION = 2,
+        @<b>|ILLEGAL_INSTRUCTION = 2,|
         BREAKPOINT = 3,
         ENVIRONMENT_CALL_FROM_M_MODE = 11,
     }
-#@end
+#@# end
 //}
 
 @<code>{valid}フラグを利用して、IDステージでIllegal Instruction例外を発生させます
@@ -523,11 +526,11 @@ CSRに値が書き込まれるのは次のいずれかの場合です。
 
  1. CSRRW、CSRRWI命令である
  2. CSRRS命令でrs1が0番目のレジスタ以外である
- 3. CSRRSI命令で即値が0以外である
+ 3. CSRRSI命令で即値が@<b>{0}以外である
  4. CSRRC命令でrs1が0番目のレジスタ以外である
- 5. CSRRCI命令で即値が0以外である
+ 5. CSRRCI命令で即値が@<b>{0}以外である
 
-ソースレジスタの値が0だとしても、0番目のレジスタではない場合にはCSRに書き込むと判断します。
+ソースレジスタの値が@<b>{0}だとしても、0番目のレジスタではない場合にはCSRに書き込むと判断します。
 CSRに書き込むかどうかを正しく判定するために、
 csrunitモジュールの@<code>{rs1}ポートを@<code>{rs1_addr}と@<code>{rs1_data}に分解します
 (
@@ -680,10 +683,10 @@ IALIGNは@<code>{32}と定義されています。
 C拡張が定義されている場合は@<code>{16}になります。
 
 IALIGNビット境界に整列されていない命令アドレスになるのはジャンプ命令、分岐命令を実行する場合です@<fn>{epc-tvec-mask}。
-プログラムカウンタの遷移先が整列されていない場合、ジャンプ命令、または分岐命令で例外が発生します。
-分岐命令の場合、分岐が成立する場合にしか例外が発生しません。
+PCの遷移先が整列されていない場合に例外が発生します。
+分岐命令の場合、分岐が成立する場合にしか例外は発生しません。
 
-//footnote[epc-tvec-mask][mepc、mtvecはIALIGNビットに整列されたアドレスしか書き込めないため、トラップ後のアドレスは常に整列されています。]
+//footnote[epc-tvec-mask][mepc、mtvecはIALIGNビットに整列されたアドレスしか書き込めないため、遷移先のアドレスは常に整列されています。]
 
 @<code>{CsrCause}型にInstruction address misaligned例外のcauseを追加します
 (@<list>{core.veryl.instmisalign-range.CsrCause})。
@@ -701,7 +704,7 @@ IALIGNビット境界に整列されていない命令アドレスになるの�
 
 EXステージでアドレスを確認して例外を判定します
 (@<list>{core.veryl.instmisalign-range.exmem})。
-tvalは遷移しようとしたアドレスになることに注意してください。
+tvalは遷移先のアドレスになることに注意してください。
 
 //list[core.veryl.instmisalign-range.exmem][EXステージでInstruction address misaligned例外の判定を行う (core.veryl)]{
 #@maprange(scripts/11/instmisalign-range/core/src/core.veryl,exmem)
@@ -727,7 +730,7 @@ RISC-Vでは、ロード、ストア命令でアクセスするメモリのア�
 例えばLW命令は4バイトに整列されたアドレス、LD命令は8バイトに整列されたアドレスにしかアクセスできません。
 causeはそれぞれ@<code>{4}、@<code>{6}で、tvalはアクセスするメモリのアドレスになります。
 
-//footnote[enable-misalign][例外を発生させず、そのようなロードストアをサポートすることもできます。本書ではCPUを単純に実装するために例外とします。]
+//footnote[enable-misalign][例外を発生させず、そのようなメモリアクセスをサポートすることもできます。本書ではCPUを単純に実装するために例外とします。]
 
 @<code>{CsrCause}型に例外のcauseを追加します
 (@<list>{eei.veryl.memmisalign-range.CsrCause})。
