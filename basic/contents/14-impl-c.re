@@ -4,9 +4,14 @@
 
 これまでに実装した命令はすべて32ビット幅のものでした。
 RISC-Vには32ビット幅以外の命令が定義されており、
-それぞれ命令の下位ビットで何ビット幅の命令か判断できます(TODO 図)。
+それぞれ命令の下位ビットで何ビット幅の命令か判断できます(@<table>{riscv.instruction-length-encoding})。
 
-TODO 図
+//table[riscv.instruction-length-encoding][RISC-Vの命令長のエンコーディング]{
+命令幅				エンコーディング
+-------------------------------------------------------------
+16-bit (aa≠11)		xxxaa
+32-bit (bbb≠111)	bbb11
+//}
 
 C拡張は16ビット幅の命令を定義する拡張です。
 よく使われる命令の幅を16ビットに圧縮できるようにすることでコードサイズを削減できます。
@@ -16,21 +21,55 @@ C拡張は16ビット幅の命令を定義する拡張です。
 
 //footnote[zc-pseudo][Zc*拡張の一部の命令は複数の命令になります]
 
-RVC命令は表TODOの9つのフォーマットが定義されています。
+RVC命令は表@<img>{rvc-instruction-formats}の9つのフォーマットが定義されています。
 
-表TODO
+//image[rvc-instruction-formats][RVC命令のフォーマット][width=100%]
 
 @<code>{rs1'}、@<code>{rs2'}、@<code>{rd'}は3ビットのフィールドで、
 よく使われる8番(x8)から15番(x15)のレジスタを指定します。
 即値の並び方やそれぞれの命令の具体的なフォーマットについては、
 仕様書か@<secref>{impl-converter-all}のコードを参照してください。
 
-RV32IのCPUに実装されるC拡張には表TODOのRVC命令が定義されています。
-RV64IのCPUに実装されるC拡張には表TODOに加えて表TODOのRVC命令が定義されています。
+TODO 書き換える
+RV32IのCPUに実装されるC拡張には表@<img>{rvc-instruction-formats}のRVC命令が定義されています。
+RV64IのCPUに実装されるC拡張には表@<img>{rvc-instruction-formats}に加えて表@<table>{impl-c.instructions}のRVC命令が定義されています。
 一部のRV32IのRVC命令はRV64Iで別の命令に置き換わっていることに注意してください。
 
-表TODO reservedとHINTについても書く
-表TODO reservedとHINTについても書く
+//table[impl-c.instructions][C拡張の命令]{
+命令		32ビット幅での命令	形式
+-------------------------------------------------------------
+C.LWSP		lw rd, offset(x2)	CI
+C.LDSP		ld rd, offset(x2)	CI
+C.SWSP		sw rs2, offset(x2)	CSS
+C.SDSP		sd rs2, offset(x2)	CSS
+C.LW		lw rd, offset(rs)	CL
+C.LD		ld rd, offset(rs)	CL
+C.SW		sw rs2, offset(rs1)	CS
+C.SD		sd rs2, offset(rs1)	CS
+C.J			jal x0, offset		CJ
+C.JAL		jal x1, offset		CJ
+C.JR		jalr x0, 0(rs1)		CR
+C.JALR		jalr x1, 0(rs1)		CR
+C.BEQZ		beq rs1, x0, offset	CB
+C.BNEZ		bne rs1, x0, offset	CB
+C.LI		addi rd, x0, imm	CI
+C.LUI		lui rd, imm			CI
+C.ADDI		addi rd, rd, imm	CI
+C.ADDIW		addiw rd, rd, imm	CI
+C.ADDI16SP	addi x2, x2, imm	CI
+C.ADDI4SPN	addi rd, x2, imm	CIW
+C.SLLI		slli rd, rd, shamt	CI
+C.SRLI		srli rd, rd, shamt	CB
+C.SRAI		srai rd, rd, shamt	CB
+C.ANDI		andi rd, rd, imm	CB
+C.MV		add rd, x0, rs2		CR
+C.ADD		add rd, rd, rs2		CR
+C.AND		and rd, rd, rs2		CA
+C.OR		or rd, rd, rs2		CA
+C.XOR		xor rd, rd, rs2		CA
+C.SUB		sub rd, rd, rs2		CA
+C.EBREAK	ebreak				CR
+//}
 
 C拡張は浮動小数点命令をサポートするF、D拡張が実装されている場合に他の命令を定義しますが、
 基本編ではF、D拡張を実装しないため実装、解説しません。
@@ -84,9 +123,9 @@ C拡張が実装されている場合には例外が発生しません。
  1. RVC命令を32ビット幅の命令に変換するモジュールを作成する
  1. RVC命令を32ビット幅の命令に変換してcoreモジュールに供給する
 
-最終的な命令フェッチ処理の構成は図TODOのようになります。
+最終的な命令フェッチ処理の構成は図@<img>{inst-fetch-structure}のようになります。
 
-TODO core <-> inst_fetcher <-> memの図
+//image[inst-fetch-structure][命令フェッチ処理の構成][width=100%]
 
 == 命令フェッチモジュールの実装
 

@@ -282,7 +282,15 @@ Environment call from M-mode例外のように委譲することができない�
 
 ==== 割り込みの委譲
 
-図TODO
+ 表TODO
+//table[riscv.supervisor-interrupt-priority][RISC-Vの割り込みの優先順位]{
+cause	説明
+-------------------------------------------------------------
+9		Supervisor external interrupt
+1		Supervisor software interrupt
+5		Supervisor timer interrupt
+//}
+
 
 midelegレジスタは、どの割り込みを委譲するかを制御するMXLENビットのレジスタです(図TODO)。
 各割り込みはmie、mipレジスタと同じ場所のmidelegレジスタのビットによって委譲されるかどうかが制御されます。
