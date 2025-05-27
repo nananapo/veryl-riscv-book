@@ -68,18 +68,66 @@
   <h1 class="boldlines center twolines"><a id="h5"></a><span class="secno">第5章</span> <br/>C拡張の実装</h1>
 
 <h2 class="numbox"><a id="h5-1"></a><span class="secno">5.1</span> 概要</h2>
-<p>これまでに実装した命令はすべて32ビット幅のものでした。RISC-Vには32ビット幅以外の命令が定義されており、それぞれ命令の下位ビットで何ビット幅の命令か判断できます(TODO 図)。</p>
-<p>TODO 図</p>
+<p>これまでに実装した命令はすべて32ビット幅のものでした。RISC-Vには32ビット幅以外の命令が定義されており、それぞれ命令の下位ビットで何ビット幅の命令か判断できます(<span class="tableref"><a href="./14-impl-c.html#riscv.instruction-length-encoding">表5.1</a></span>)。</p>
+<div id="riscv.instruction-length-encoding" class="table">
+<p class="caption">表5.1: RISC-Vの命令長のエンコーディング</p>
+<table>
+<tr class="hline"><th>命令幅</th><th>エンコーディング</th></tr>
+<tr class="hline"><td>16-bit (aa≠11)</td><td>xxxaa</td></tr>
+<tr class="hline"><td>32-bit (bbb≠111)</td><td>bbb11</td></tr>
+</table>
+</div>
 <p>C拡張は16ビット幅の命令を定義する拡張です。よく使われる命令の幅を16ビットに圧縮できるようにすることでコードサイズを削減できます。これ以降、C拡張によって導入される16ビット幅の命令のことをRVC命令と呼びます。</p>
 <p>全てのRVC命令には同じ操作をする32ビット幅の命令が存在します<sup><a id="fnb-zc-pseudo" href="#fn-zc-pseudo" class="noteref" epub:type="noteref">*1</a></sup>。</p>
 <div class="footnote-list">
 <div class="footnote" id="fn-zc-pseudo" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>Zc*拡張の一部の命令は複数の命令になります</p></div>
 </div><!--/.footnote-list-->
-<p>RVC命令は表TODOの9つのフォーマットが定義されています。</p>
-<p>表TODO</p>
+<p>RVC命令は表<span class="imgref"><a href="./14-impl-c.html#rvc-instruction-formats">図5.1</a></span>の9つのフォーマットが定義されています。</p>
+<div id="rvc-instruction-formats" class="image">
+<img src="images/14-impl-c/rvc-instruction-formats.png" alt="RVC命令のフォーマット" class="img" style="width:100%" />
+<p class="caption">
+図5.1: RVC命令のフォーマット
+</p>
+</div>
 <p><code class="inline-code">rs1'</code>、<code class="inline-code">rs2'</code>、<code class="inline-code">rd'</code>は3ビットのフィールドで、よく使われる8番(x8)から15番(x15)のレジスタを指定します。即値の並び方やそれぞれの命令の具体的なフォーマットについては、仕様書か「<a href="14-impl-c.html#h5-6-2">5.6.2 32ビット幅の命令に変換する</a>」のコードを参照してください。</p>
-<p>RV32IのCPUに実装されるC拡張には表TODOのRVC命令が定義されています。RV64IのCPUに実装されるC拡張には表TODOに加えて表TODOのRVC命令が定義されています。一部のRV32IのRVC命令はRV64Iで別の命令に置き換わっていることに注意してください。</p>
-<p>表TODO reservedとHINTについても書く表TODO reservedとHINTについても書く</p>
+<p>TODO 書き換えるRV32IのCPUに実装されるC拡張には表<span class="imgref"><a href="./14-impl-c.html#rvc-instruction-formats">図5.1</a></span>のRVC命令が定義されています。RV64IのCPUに実装されるC拡張には表<span class="imgref"><a href="./14-impl-c.html#rvc-instruction-formats">図5.1</a></span>に加えて表<span class="tableref"><a href="./14-impl-c.html#impl-c.instructions">表5.2</a></span>のRVC命令が定義されています。一部のRV32IのRVC命令はRV64Iで別の命令に置き換わっていることに注意してください。</p>
+<div id="impl-c.instructions" class="table">
+<p class="caption">表5.2: C拡張の命令</p>
+<table>
+<tr class="hline"><th>命令</th><th>32ビット幅での命令</th><th>形式</th></tr>
+<tr class="hline"><td>C.LWSP</td><td>lw rd, offset(x2)</td><td>CI</td></tr>
+<tr class="hline"><td>C.LDSP</td><td>ld rd, offset(x2)</td><td>CI</td></tr>
+<tr class="hline"><td>C.SWSP</td><td>sw rs2, offset(x2)</td><td>CSS</td></tr>
+<tr class="hline"><td>C.SDSP</td><td>sd rs2, offset(x2)</td><td>CSS</td></tr>
+<tr class="hline"><td>C.LW</td><td>lw rd, offset(rs)</td><td>CL</td></tr>
+<tr class="hline"><td>C.LD</td><td>ld rd, offset(rs)</td><td>CL</td></tr>
+<tr class="hline"><td>C.SW</td><td>sw rs2, offset(rs1)</td><td>CS</td></tr>
+<tr class="hline"><td>C.SD</td><td>sd rs2, offset(rs1)</td><td>CS</td></tr>
+<tr class="hline"><td>C.J</td><td>jal x0, offset</td><td>CJ</td></tr>
+<tr class="hline"><td>C.JAL</td><td>jal x1, offset</td><td>CJ</td></tr>
+<tr class="hline"><td>C.JR</td><td>jalr x0, 0(rs1)</td><td>CR</td></tr>
+<tr class="hline"><td>C.JALR</td><td>jalr x1, 0(rs1)</td><td>CR</td></tr>
+<tr class="hline"><td>C.BEQZ</td><td>beq rs1, x0, offset</td><td>CB</td></tr>
+<tr class="hline"><td>C.BNEZ</td><td>bne rs1, x0, offset</td><td>CB</td></tr>
+<tr class="hline"><td>C.LI</td><td>addi rd, x0, imm</td><td>CI</td></tr>
+<tr class="hline"><td>C.LUI</td><td>lui rd, imm</td><td>CI</td></tr>
+<tr class="hline"><td>C.ADDI</td><td>addi rd, rd, imm</td><td>CI</td></tr>
+<tr class="hline"><td>C.ADDIW</td><td>addiw rd, rd, imm</td><td>CI</td></tr>
+<tr class="hline"><td>C.ADDI16SP</td><td>addi x2, x2, imm</td><td>CI</td></tr>
+<tr class="hline"><td>C.ADDI4SPN</td><td>addi rd, x2, imm</td><td>CIW</td></tr>
+<tr class="hline"><td>C.SLLI</td><td>slli rd, rd, shamt</td><td>CI</td></tr>
+<tr class="hline"><td>C.SRLI</td><td>srli rd, rd, shamt</td><td>CB</td></tr>
+<tr class="hline"><td>C.SRAI</td><td>srai rd, rd, shamt</td><td>CB</td></tr>
+<tr class="hline"><td>C.ANDI</td><td>andi rd, rd, imm</td><td>CB</td></tr>
+<tr class="hline"><td>C.MV</td><td>add rd, x0, rs2</td><td>CR</td></tr>
+<tr class="hline"><td>C.ADD</td><td>add rd, rd, rs2</td><td>CR</td></tr>
+<tr class="hline"><td>C.AND</td><td>and rd, rd, rs2</td><td>CA</td></tr>
+<tr class="hline"><td>C.OR</td><td>or rd, rd, rs2</td><td>CA</td></tr>
+<tr class="hline"><td>C.XOR</td><td>xor rd, rd, rs2</td><td>CA</td></tr>
+<tr class="hline"><td>C.SUB</td><td>sub rd, rd, rs2</td><td>CA</td></tr>
+<tr class="hline"><td>C.EBREAK</td><td>ebreak</td><td>CR</td></tr>
+</table>
+</div>
 <p>C拡張は浮動小数点命令をサポートするF、D拡張が実装されている場合に他の命令を定義しますが、基本編ではF、D拡張を実装しないため実装、解説しません。</p>
 
 <h2 class="numbox"><a id="h5-2"></a><span class="secno">5.2</span> IALIGNの変更</h2>
@@ -111,8 +159,13 @@
 <li>RVC命令を32ビット幅の命令に変換するモジュールを作成する</li>
 <li>RVC命令を32ビット幅の命令に変換してcoreモジュールに供給する</li>
 </ol>
-<p>最終的な命令フェッチ処理の構成は図TODOのようになります。</p>
-<p>TODO core &lt;-&gt; inst_fetcher &lt;-&gt; memの図</p>
+<p>最終的な命令フェッチ処理の構成は図<span class="imgref"><a href="./14-impl-c.html#inst-fetch-structure">図5.2</a></span>のようになります。</p>
+<div id="inst-fetch-structure" class="image">
+<img src="images/14-impl-c/inst-fetch-structure.png" alt="命令フェッチ処理の構成" class="img" style="width:100%" />
+<p class="caption">
+図5.2: 命令フェッチ処理の構成
+</p>
+</div>
 
 <h2 class="numbox"><a id="h5-4"></a><span class="secno">5.4</span> 命令フェッチモジュールの実装</h2>
 
