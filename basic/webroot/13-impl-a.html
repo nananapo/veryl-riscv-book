@@ -65,12 +65,12 @@
         </header>
         <main class="page-main">
   <h1 class="boldlines center twolines"><a id="h4"></a><span class="secno">第4章</span> <br/>A拡張の実装</h1>
-<p>本章では、メモリの不可分操作を実現するA拡張を実装します。A拡張にはLoad-Reserved、Store Conditionalを実現するZalrsc拡張(TODO table)、ロードした値を加工した値をメモリにストアする操作を単一の命令で実装するZaamo拡張(TODO table)が含まれています。A拡張の命令を利用すると、同じメモリ空間で複数のソフトウェアが並列、並行して実行されるとき、ソフトウェア間で同期をとりながら実行できます。</p>
+<p>本章では、メモリの不可分操作を実現するA拡張を実装します。A拡張にはLoad-Reserved、Store Conditionalを実現するZalrsc拡張(TODO table)、ロードした値を加工した値をメモリにストアする操作を単一の命令で実装するZaamo拡張(TODO table)が含まれています。A拡張の命令を利用すると、同じメモリ空間で複数のソフトウェアを並列、並行して実行するとき、ソフトウェア間で同期をとりながら実行できます。</p>
 
 <h2 class="numbox"><a id="h4-1"></a><span class="secno">4.1</span> アトミック操作</h2>
 
 <h3 class="none"><a id="h4-1-1"></a><span class="secno">4.1.1</span> アトミック操作とは何か？</h3>
-<p>アトミック操作(Atomic operation、不可分操作)とは、他のシステムからその操作を観測するとき、1つの操作として観測される操作のことです。つまり、他のシステムからは、アトミック操作を行う前、アトミック操作を行った後の状態しか観測できません。</p>
+<p>アトミック操作(Atomic operation、不可分操作)とは、他のシステムからその操作を観測するとき、1つの操作として観測される操作のことです。つまり、他のシステムは、アトミック操作を行う前、アトミック操作を行った後の状態しか観測できません。</p>
 <p>アトミック操作は実行、観測される順序が重要なアプリケーションで利用します。例えば1からNまでの和を求めるプログラムを考えます(図TODO)。2つのコアで同時にアドレスX、またはYの値を変更しようとするとき、命令の実行順序によって最終的な値が1つのコアで実行した場合と異なってしまいます。この状態を避けるためにはロード、加算、ストアをアトミックに行う必要があります。このアトミック操作の実現方法として、A拡張はAMOADD命令、LR命令とSC命令を提供します。</p>
 
 <h3 class="none"><a id="h4-1-2"></a><span class="secno">4.1.2</span> Zaamo拡張</h3>
@@ -82,11 +82,11 @@
 <dl>
 <dt>LR命令</dt>
 <dd>
-   指定されたアドレスのデータを読み込み、予約セット(Reservation set)に指定されたアドレスを登録します。
+   指定されたアドレスのデータを読み込み、指定されたアドレスを予約セット(Reservation set)に登録します。
 </dd>
 <dt>SC命令</dt>
 <dd>
-   予約セットに指定されたアドレスが存在する場合、指定されたアドレスにデータを書き込みます(ストア成功)。
+   指定されたアドレスが予約セットに存在する場合、指定されたアドレスにデータを書き込みます(ストア成功)。
    予約セットにアドレスが存在しない場合は書き込みません(ストア失敗)。
    ストアに成功したら<code class="inline-code">0</code>、失敗したら<code class="inline-code">0</code>以外の値をレジスタにライトバックします。
    命令の実行後に必ず予約セットを空にします。
@@ -102,7 +102,7 @@
     BNEZ x4, atomic_add <span class="balloon">← SC命令が失敗していたらやり直す</span>
 </pre>
 </div>
-<p>同時に他のコアが同じプログラムを実行するとき、間違った値の書き込みはSC命令で失敗します。失敗したらLR命令からやり直すことで、1つのコアで実行した場合と同一の結果になります。</p>
+<p>例えば同時に2つのコアが<span class="listref"><a href="./13-impl-a.html#sample.asm.lrsc">リスト4.1</a></span>を実行するとき、同期をとれていない書き込みはSC命令で失敗します。失敗したらLR命令からやり直すことで、1つのコアで2回実行した場合と同一の結果(<code class="inline-code">1</code>を2回加算)になります。</p>
 <p>予約セットのサイズは実装によって異なります。</p>
 
 <h3 class="none"><a id="h4-1-4"></a><span class="secno">4.1.4</span> 命令の順序</h3>
@@ -126,15 +126,13 @@
     Aのメモリ操作は、Aの前にあるメモリを操作する命令よりも後、Aの後ろにあるメモリを操作する命令よりも前に観測されることが保証されます。
 </dd>
 </dl>
-<p>TODO それぞれの図</p>
-<p>今のところ、CPUはメモリ操作を１命令ずつ直列に実行するため、常にaq=1、rl=1であるように動作します。そのため、本章ではaq、rlビットを考慮しないで実装を行います<sup><a id="fnb-impl-memory-order" href="#fn-impl-memory-order" class="noteref" epub:type="noteref">*1</a></sup>。</p>
+<p>今のところ、CPUはメモリ操作を１命令ずつ直列に実行するため、常にaqが<code class="inline-code">1</code>、rlが<code class="inline-code">1</code>であるように動作します。そのため、本章ではaq、rlビットを考慮しないで実装を行います<sup><a id="fnb-impl-memory-order" href="#fn-impl-memory-order" class="noteref" epub:type="noteref">*1</a></sup>。</p>
 <div class="footnote-list">
 <div class="footnote" id="fn-impl-memory-order" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>メモリ操作の並び替えによる高速化は応用編で検討します。</p></div>
 </div><!--/.footnote-list-->
 
 <h2 class="numbox"><a id="h4-2"></a><span class="secno">4.2</span> 命令のデコード</h2>
-<p>TODO 命令の図</p>
-<p>A拡張の命令はすべてR形式でのopcodeはOP-AMO(<code class="inline-code">7'b0101111</code>)です(TODO 図)。それぞれの命令はfunct5とfunct3で区別できます(TODO テーブル)。</p>
+<p>A拡張の命令はすべてR形式で、opcodeはOP-AMO(<code class="inline-code">7'b0101111</code>)です。それぞれの命令はfunct5とfunct3で区別できます(TODO テーブル)。</p>
 <p>TODO funct5と命令の対応のテーブル</p>
 <p>eeiパッケージにOP-AMOの定数を定義します(<span class="listref"><a href="./13-impl-a.html#eei.veryl.define.op">リスト4.2</a></span>)。</p>
 <div id="eei.veryl.define.op" class="caption-code">
@@ -236,7 +234,7 @@
     );
 </pre>
 </div>
-<p>A拡張の命令でメモリアドレスが操作するデータの幅に整列されていないとき、Store/AMO address misaligned例外が発生します。この例外はストア命令の場合の例外と同じです。</p>
+<p>A拡張の命令のメモリアドレスが、操作するデータの幅に整列されていないとき、Store/AMO address misaligned例外が発生します。この例外はストア命令の場合の例外と同じです。</p>
 <p>EXステージの例外判定でアドレスを使っている部分を変更します(<span class="listref"><a href="./13-impl-a.html#core.veryl.define.exception">リスト4.9</a></span>)。causeとtvalの割り当てがストア命令の場合と同じになっていることを確認してください。</p>
 <div id="core.veryl.define.exception" class="caption-code">
 <span class="caption">リスト4.9: リスト4.9: 例外を判定するアドレスを変更する (core.veryl)</span>
@@ -266,8 +264,7 @@
 </div>
 
 <h2 class="numbox"><a id="h4-3"></a><span class="secno">4.3</span> amounitモジュールの作成</h2>
-<p>TODO 図</p>
-<p>A拡張は他のコア、ハードウェアスレッドと同期してメモリ操作を行うためのものであるため、A拡張の操作はcoreモジュールの外、メモリよりも前で行います。本書では、coreモジュールとmmio_controllerモジュールの間にA拡張の命令を処理するamounitモジュールを実装します(TODO 図)。</p>
+<p>A拡張は他のコア、ハードウェアスレッドと同期してメモリ操作を行うためのものであるため、A拡張の操作はcoreモジュールの外、メモリよりも前で行います。本書では、coreモジュールとmmio_controllerモジュールの間にA拡張の命令を処理するamounitモジュールを実装します。</p>
 
 <h3 class="none"><a id="h4-3-1"></a><span class="secno">4.3.1</span> インターフェースを作成する</h3>
 <p>amounitモジュールにA拡張の操作を指示するために、<code class="inline-code">is_amo</code>フラグ、<code class="inline-code">aq</code>ビット、<code class="inline-code">rl</code>ビット、<code class="inline-code">AMOOp</code>型をmembus_ifインターフェースに追加で定義したインターフェースを作成します。</p>
@@ -582,7 +579,7 @@ module amounit (
         reserved_addr      = 0;
 </pre>
 </div>
-<p>LR命令を実行するとき、予約セットにアドレスを登録してロード結果を返すようにします(<span class="listref"><a href="./13-impl-a.html#amounit.veryl.lr.accept_request_comb">リスト4.24</a></span>、<span class="listref"><a href="./13-impl-a.html#amounit.veryl.lr.master_comb">リスト4.25</a></span>、<span class="listref"><a href="./13-impl-a.html#amounit.veryl.lr.accept_request_ff">リスト4.26</a></span>)。既に予約セットが使われている場合でもアドレスを上書きします。</p>
+<p>LR命令を実行するとき、予約セットにアドレスを登録してロード結果を返すようにします(<span class="listref"><a href="./13-impl-a.html#amounit.veryl.lr.accept_request_comb">リスト4.24</a></span>、<span class="listref"><a href="./13-impl-a.html#amounit.veryl.lr.master_comb">リスト4.25</a></span>、<span class="listref"><a href="./13-impl-a.html#amounit.veryl.lr.accept_request_ff">リスト4.26</a></span>)。既に予約セットが使われている場合はアドレスを上書きします。</p>
 <div id="amounit.veryl.lr.accept_request_comb" class="caption-code">
 <span class="caption">リスト4.24: リスト4.24: accept_request_comb関数の実装 (amounit.veryl)</span>
 <pre class="list language-accept_request_comb">    function accept_request_comb () {
@@ -641,7 +638,7 @@ module amounit (
 
 <h3 class="none"><a id="h4-4-2"></a><span class="secno">4.4.2</span> SC.W、SC.D命令を実装する</h3>
 <p>32ビット幅、64ビット幅のSC命令を実装します。SC.W命令はmemunitモジュールで書き込みマスクを設定しているため、amounitモジュールでSC.W命令とSC.D命令を区別する必要はありません。</p>
-<p>SC命令が成功、失敗したときに結果を返すための状態をState型に追加します(<span class="listref"><a href="./13-impl-a.html#amounit.veryl.sc.State">リスト4.27</a></span>)。</p>
+<p>SC命令が成功、失敗したときに結果を返すための状態を<code class="inline-code">State</code>型に追加します(<span class="listref"><a href="./13-impl-a.html#amounit.veryl.sc.State">リスト4.27</a></span>)。</p>
 <div id="amounit.veryl.sc.State" class="caption-code">
 <span class="caption">リスト4.27: リスト4.27: SC命令用の状態の定義 (amounit.veryl)</span>
 <pre class="list language-State">    enum State {
@@ -668,7 +665,7 @@ module amounit (
     }
 </pre>
 </div>
-<p>SC命令を受け入れるときに予約セットを確認し、アドレスが予約セットのアドレスと異なる場合は状態を<code class="inline-code">State::SCFail</code>に移動させます(<span class="listref"><a href="./13-impl-a.html#amounit.veryl.sc.accept_request_ff">リスト4.29</a></span>)。成功、失敗に関係なく、予約セットを空にします。</p>
+<p>SC命令を受け入れるときに予約セットを確認し、アドレスが予約セットのアドレスと異なる場合は状態を<code class="inline-code">State::SCFail</code>に移動します(<span class="listref"><a href="./13-impl-a.html#amounit.veryl.sc.accept_request_ff">リスト4.29</a></span>)。成功、失敗に関係なく、予約セットを空にします。</p>
 <div id="amounit.veryl.sc.accept_request_ff" class="caption-code">
 <span class="caption">リスト4.29: リスト4.29: accept_request_ff関数で予約セットを確認する (amounit.veryl)</span>
 <pre class="list language-accept_request_ff">    AMOOp::SC: {
@@ -684,7 +681,7 @@ module amounit (
     }
 </pre>
 </div>
-<p>SC命令でメモリの<code class="inline-code">ready</code>が<code class="inline-code">1</code>になるのを待っているとき、<code class="inline-code">ready</code>が<code class="inline-code">1</code>になったら状態を<code class="inline-code">State::SCSuccess</code>に移動させます(<span class="listref"><a href="./13-impl-a.html#amounit.veryl.sc.on_clock">リスト4.30</a></span>)。</p>
+<p>SC命令でメモリの<code class="inline-code">ready</code>が<code class="inline-code">1</code>になるのを待っているとき、<code class="inline-code">ready</code>が<code class="inline-code">1</code>になったら状態を<code class="inline-code">State::SCSuccess</code>に移動します(<span class="listref"><a href="./13-impl-a.html#amounit.veryl.sc.on_clock">リスト4.30</a></span>)。また、命令の実行が終了したときに新しく要求を受け入れるようにします。</p>
 <div id="amounit.veryl.sc.on_clock" class="caption-code">
 <span class="caption">リスト4.30: リスト4.30: SC命令の状態遷移 (amounit.veryl)</span>
 <pre class="list language-on_clock">    function on_clock () {
@@ -745,8 +742,8 @@ module amounit (
 </div>
 
 <h2 class="numbox"><a id="h4-5"></a><span class="secno">4.5</span> Zaamo拡張の実装</h2>
-<p>図TODO</p>
-<p>Zaamo拡張の命令はロード、演算、ストアを行います。本章では、Zaamo拡張の命令を図TODOのような状態遷移で処理するように実装します。<code class="inline-code">State</code>型に新しい状態を定義してください(<span class="listref"><a href="./13-impl-a.html#amounit.veryl.zaamo.State">リスト4.33</a></span>)。</p>
+<p>Zaamo拡張の命令はロード、演算、ストアを行います。本章では、Zaamo拡張の命令を<code class="inline-code">State::Init</code>(、<code class="inline-code">State::AMOLoadReady</code>)、<code class="inline-code">State::AMOLoadValid</code>(、<code class="inline-code">State::AMOStoreReady</code>)、<code class="inline-code">State::AMOStoreValid</code>という状態遷移で処理するように実装します。</p>
+<p><code class="inline-code">State</code>型に新しい状態を定義してください(<span class="listref"><a href="./13-impl-a.html#amounit.veryl.zaamo.State">リスト4.33</a></span>)。</p>
 <div id="amounit.veryl.zaamo.State" class="caption-code">
 <span class="caption">リスト4.33: リスト4.33: Zaamo拡張の命令用の状態の定義 (amounit.veryl)</span>
 <pre class="list language-State">    enum State {
@@ -778,7 +775,7 @@ module amounit (
 }
 </pre>
 </div>
-<p>ロードしたデータと<code class="inline-code">wdata</code>、フラグを利用して、ストアする値を生成する関数を作成します(<span class="listref"><a href="./13-impl-a.html#amounit.veryl.zaamo.calc_amo">リスト4.36</a></span>)。32ビット演算のとき、下位32ビットと上位32ビットのどちらを使うかをアドレスによって判別しています。</p>
+<p>ロードした値と<code class="inline-code">wdata</code>、フラグを利用して、ストアする値を生成する関数を作成します(<span class="listref"><a href="./13-impl-a.html#amounit.veryl.zaamo.calc_amo">リスト4.36</a></span>)。32ビット演算のとき、下位32ビットと上位32ビットのどちらを使うかをアドレスによって判別しています。</p>
 <div id="amounit.veryl.zaamo.calc_amo" class="caption-code">
 <span class="caption">リスト4.36: リスト4.36: Zaamo拡張の命令の計算を行う関数の定義 (amounit.veryl)</span>
 <pre class="list language-calc_amo">    // AMO ALU
@@ -823,7 +820,7 @@ module amounit (
     }
 </pre>
 </div>
-<p>ロードした値を保存しておくレジスタを作成します(<span class="listref"><a href="./13-impl-a.html#amounit.veryl.zaamo.reg">リスト4.37</a></span>、<span class="listref"><a href="./13-impl-a.html#amounit.veryl.zaamo.reset">リスト4.38</a></span>)。</p>
+<p>ロードした値が命令の結果になるため、値を保持するためのレジスタを作成します(<span class="listref"><a href="./13-impl-a.html#amounit.veryl.zaamo.reg">リスト4.37</a></span>、<span class="listref"><a href="./13-impl-a.html#amounit.veryl.zaamo.reset">リスト4.38</a></span>)。</p>
 <div id="amounit.veryl.zaamo.reg" class="caption-code">
 <span class="caption">リスト4.37: リスト4.37: ロードしたデータを格納するレジスタの定義 (amounit.veryl)</span>
 <pre class="list language-reg">    // amo
@@ -837,7 +834,7 @@ module amounit (
     }
 </pre>
 </div>
-<p>メモリアクセスが終了したら、ロードしておいた値を返します(<span class="listref"><a href="./13-impl-a.html#amounit.veryl.zaamo.assign_slave_comb">リスト4.39</a></span>)。</p>
+<p>メモリアクセスが終了したら、ロードした値を返します(<span class="listref"><a href="./13-impl-a.html#amounit.veryl.zaamo.assign_slave_comb">リスト4.39</a></span>)。</p>
 <div id="amounit.veryl.zaamo.assign_slave_comb" class="caption-code">
 <span class="caption">リスト4.39: リスト4.39: 命令の結果を返す (amounit.veryl)</span>
 <pre class="list language-assign_slave_comb">    State::AMOStoreValid: {

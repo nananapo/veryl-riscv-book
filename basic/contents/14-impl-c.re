@@ -23,7 +23,7 @@ RVC命令は表TODOの9つのフォーマットが定義されています。
 @<code>{rs1'}、@<code>{rs2'}、@<code>{rd'}は3ビットのフィールドで、
 よく使われる8番(x8)から15番(x15)のレジスタを指定します。
 即値の並び方やそれぞれの命令の具体的なフォーマットについては、
-仕様書か@<secref>{impl-converter-all}を参照してください。
+仕様書か@<secref>{impl-converter-all}のコードを参照してください。
 
 RV32IのCPUに実装されるC拡張には表TODOのRVC命令が定義されています。
 RV64IのCPUに実装されるC拡張には表TODOに加えて表TODOのRVC命令が定義されています。
@@ -33,16 +33,16 @@ RV64IのCPUに実装されるC拡張には表TODOに加えて表TODOのRVC命令
 表TODO reservedとHINTについても書く
 
 C拡張は浮動小数点命令をサポートするF、D拡張が実装されている場合に他の命令を定義しますが、
-基本編ではF、D拡張を実装しないため解説しません。
+基本編ではF、D拡張を実装しないため実装、解説しません。
 
 == IALIGNの変更
 
-TODO 図
+#@# TODO コード削減の図　できれば
 
 @<secref>{11-impl-exception|def-ialign}で解説したように、
 命令はIALIGNビットに整列したアドレスに配置されます。
 C拡張はIALIGNによる制限を16ビットに緩め、全ての命令が16ビットに整列されたアドレスに配置されるように変更します。
-これにより、RVC命令と32ビット幅の命令の組み合わせがあったとしても効果的にコードサイズを削減できます(TODO 図)。
+これにより、RVC命令と32ビット幅の命令の組み合わせがあったとしても効果的にコードサイズを削減できます。
 
 eeiパッケージに定数@<code>{IALIGN}を定義します
 (@<list>{eei.veryl.ialign.IALIGN})。
@@ -64,7 +64,7 @@ mepcレジスタの書き込みマスクを変更して、
 //}
 
 命令アドレスのミスアライン例外の判定を変更します。
-IALIGNが16の場合は例外が発生しないようにします
+IALIGNが@<code>{16}の場合は例外が発生しないようにします
 (@<list>{core.veryl.ialign.exception})。
 ジャンプ、分岐命令は2バイト単位のアドレスしか指定できないため、
 C拡張が実装されている場合には例外が発生しません。
@@ -136,7 +136,7 @@ core_inst_ifインターフェースで代替します@<fn>{no-del}。
 
 //footnote[no-del][ここで削除するコードは次の@<secref>{impl_fetcher}で実装するコードと似通っているため、削除せずにコメントアウトしておくと少し楽に実装できます。]
 
-coreモジュールの@<code>{i_membus}の型を@<code>{core_inst_if::master}に変更します
+coreモジュールの@<code>{i_membus}の型を@<code>{core_inst_if}に変更します
 (@<list>{core.veryl.if.port})。
 
 //list[core.veryl.if.port][i_membusの型を変更する (core.veryl)]{
@@ -162,13 +162,13 @@ IFステージ部分のコードを次のように変更します
 #@end
 //}
 
-coreモジュールの新しいIFステージ部分は、制御ハザードの情報をインターフェースに割り当てるだけの簡単なコードになっています。
-@<code>{if_fifo_type}型、@<code>{if_fifo_}から始まる変数は使わなくなるため削除してください。
+coreモジュールの新しいIFステージ部分は、制御ハザードの情報をインターフェースに割り当てるだけの簡単なものになっています。
+@<code>{if_fifo_type}型、@<code>{if_fifo_}から始まる変数は使わなくなったので削除してください。
 
 IDステージとcore_inst_ifインターフェースを接続します
 (@<list>{core.veryl.if.idvar}、
 @<list>{core.veryl.if.idex})。
-もともと@<code>{if_fifo}の@<code>{rvalid}、@<code>{rready}、@<code>{rdata}だった部分をインターフェースに変更しています。
+もともと@<code>{if_fifo}の@<code>{rvalid}、@<code>{rready}、@<code>{rdata}だった部分を@<code>{i_membus}に変更しています。
 
 //list[core.veryl.if.idvar][IDステージとi_membusを接続する (core.veryl)]{
 #@maprange(scripts/14/if-range/core/src/core.veryl,idvar)
@@ -193,12 +193,12 @@ IDステージとcore_inst_ifインターフェースを接続します
 
 ==={impl_fetcher} inst_fetcherモジュールを作成する
 
-coreモジュールのIFステージの代わりに命令フェッチをするinst_fetcherモジュールを作成します。
+IFステージの代わりに命令フェッチをするinst_fetcherモジュールを作成します。
 inst_fetcherモジュールでは命令フェッチ処理をfetch、issueの2段階で行います。
 
  : fetch
     メモリから64ビットの値を読み込み、issueとの間のFIFOに格納する。
-    PCを8進めて、次の64ビットを読み込む。
+    アドレスを@<code>{8}進めて、次の64ビットを読み込む。
  : issue
     fetchとの間のFIFOから64ビットを読み込み、
     32ビットずつcoreモジュールとの間のFIFOに格納する。
@@ -223,7 +223,7 @@ module inst_fetcher (
 @<code>{core_if}はcoreモジュールとのインターフェース、
 @<code>{mem_if}はメモリとのインターフェースです。
 
-fetchとissue、issueとcore_ifとの間のFIFOを作成します
+fetchとissue、issueとcore_ifの間のFIFOを作成します
 (@<list>{inst_fetcher.veryl.if.fetch_fifo}、
 @<list>{inst_fetcher.veryl.if.issue_fifo})。
 
@@ -293,7 +293,7 @@ fetchとissue、issueとcore_ifとの間のFIFOを作成します
 //}
 
 メモリへのアクセス処理(fetch)を実装します。
-FIFOに空きがあるとき、64ビットの値を読み込んでPCを8進めます
+FIFOに空きがあるとき、64ビットの値を読み込んでPCを@<code>{8}進めます
 (@<list>{inst_fetcher.veryl.if.fetch_var}、
 @<list>{inst_fetcher.veryl.if.memory_assign}、
 @<list>{inst_fetcher.veryl.if.fetch_pc})。
@@ -447,7 +447,7 @@ FIFOにデータが入っているとき、32ビットずつcoreモジュール�
 
 === inst_fetcherモジュールとcoreモジュールを接続する
 
-core_inst_ifをインスタンス化します。
+topモジュールで、core_inst_ifをインスタンス化します。
 (@<list>{top.veryl.if.i_membus_core})。
 
 //list[top.veryl.if.i_membus_core][インターフェースの定義 (top.veryl)]{
@@ -486,8 +486,8 @@ inst_fetcherモジュールをインスタンス化し、coreモジュールと�
 //}
 
 inst_fetcherモジュールが64ビットのデータを32ビットの命令の列に変換してくれるようになったので、
-@<code>{d_membus}との調停のところでアドレスを読んで32ビットずつ選択する処理が必要なくなりました。
-そのため、@<code>{rdata}をそのまま割り当てて、@<code>{memarb_last_iaddr}変数とビット選択処理を削除します
+@<code>{d_membus}との調停のところで32ビットずつ選択する必要がなくなりました。
+そのため、@<code>{rdata}をそのまま割り当てて、@<code>{memarb_last_iaddr}変数とビットの選択処理を削除します
 (@<list>{top.veryl.if.memarb_last_i_def}、
 @<list>{top.veryl.if.memarb_last_i_update}、
 @<list>{top.veryl.if.memarb})。
@@ -526,7 +526,7 @@ inst_fetcherモジュールが64ビットのデータを32ビットの命令の�
 
 == 16ビット境界に配置された32ビット幅の命令のサポート
 
-inst_fetcherモジュールで、アドレスが2バイトの倍数な32ビット幅の命令をcoreモジュールに供給できるようにします。
+inst_fetcherモジュールで、アドレスが2バイトの倍数の32ビット幅の命令をcoreモジュールに供給できるようにします。
 
 アドレスの下位3ビット(@<code>{issue_pc_offset})が@<code>{6}の場合、
 issueとcoreの間に供給する命令のビット列は@<code>{fetch_fifo_rdata}の上位16ビットと@<code>{fetch_fifo}に格納されている次のデータの下位16ビットを結合したものになります。
@@ -534,7 +534,7 @@ issueとcoreの間に供給する命令のビット列は@<code>{fetch_fifo_rdat
 @<code>{fetch_fifo}から次のデータを読み出せたら、保存していたデータと結合し、アドレスとともに@<code>{issue_fifo}に書き込みます。
 @<code>{issue_pc_offset}が@<code>{0}、@<code>{2}、@<code>{4}の場合、既存の処理との変更点はありません。
 
-@<code>{fetch_fifo_rdata}のデータの下位16ビットとアドレスを保存するための変数を作成します
+@<code>{fetch_fifo_rdata}のデータの下位16ビットとアドレスを保持する変数を作成します
 (@<list>{inst_fetcher.veryl.232.var})。
 
 //list[inst_fetcher.veryl.232.var][データを一時保存するための変数の定義 (inst_fetcher.veryl)]{
@@ -581,9 +581,9 @@ issueとcoreの間に供給する命令のビット列は@<code>{fetch_fifo_rdat
 #@end
 //}
 
-@<code>{issue_pc_offset}が@<code>{2}、@<code>{6}の場合の@<code>{issue_fifo}の書き込み処理を実装します
+@<code>{issue_pc_offset}が@<code>{2}、@<code>{6}の場合の@<code>{issue_fifo}への書き込みを実装します
 (@<list>{inst_fetcher.veryl.232.issue_comb})。
-@<code>{6}の場合、保存していた16ビットと新しく読みだした16ビットを結合した値、保存していたアドレスを書き込みます。
+@<code>{6}の場合、保存していた16ビットと新しく読み出した16ビットを結合した値、保存していたアドレスを書き込みます。
 
 //list[inst_fetcher.veryl.232.issue_comb][issue_fifoにoffsetが2、6の命令を格納する (inst_fetcher.veryl)]{
 #@maprange(scripts/14/232-range/core/src/inst_fetcher.veryl,issue_comb)
@@ -663,7 +663,7 @@ RVC命令かどうかを示すフラグを作成します。
 #@end
 //}
 
-inst_fetcherモジュールで、@<code>{is_rvc}を@<code>{0}に設定してcoreモジュールに供給するようにします
+inst_fetcherモジュールで、@<code>{is_rvc}を@<code>{0}に設定してcoreモジュールに供給します
 (@<list>{inst_fetcher.veryl.is_rvc.issue_fifo_type}、
 @<list>{inst_fetcher.veryl.is_rvc.issue_comb}、
 @<list>{inst_fetcher.veryl.is_rvc.issue_core})。
@@ -724,7 +724,7 @@ inst_decoderモジュールで、@<code>{InstCtrl}構造体の@<code>{is_rvc}フ
 (@<list>{inst_decoder.veryl.is_rvc.port}、
 @<list>{inst_decoder.veryl.is_rvc.ctrl}、
 @<list>{inst_decoder.veryl.is_rvc.valid})。
-また、C拡張が無効なのにRVC命令が供給されたら@<code>@<code>{valid}フラグを@<code>{0}に設定するようにします。
+また、C拡張が無効なのにRVC命令が供給されたら@<code>{valid}フラグを@<code>{0}に設定します。
 
 //list[inst_decoder.veryl.is_rvc.port][is_rvcフラグをポートに追加する (inst_decoder.veryl)]{
 #@maprange(scripts/14/is_rvc-range/core/src/inst_decoder.veryl,port)
@@ -756,7 +756,7 @@ module inst_decoder (
 #@end
 //}
 
-coreモジュールで、inst_decoderモジュールに@<code>{is_rvc}フラグを設定します
+coreモジュールで、inst_decoderモジュールに@<code>{is_rvc}フラグを渡します
 (@<list>{core.veryl.is_rvc.inst_decoder})。
 
 //list[core.veryl.is_rvc.inst_decoder][is_rvcフラグをinst_decoderに渡す (core.veryl)]{
@@ -793,6 +793,8 @@ RVC命令のopcode、functなどのフィールドを読んで、
 その前に、命令のフィールドを引数に32ビット幅の命令を生成する関数を実装します。
 @<code>{src/inst_gen_pkg.veryl}を作成し、次のように記述します
 (@<list>{inst_gen_pkg.veryl.rvcc})。
+関数の名前は基本的に命令名と同じにしていますが、
+Verylのキーワードと被るものは@<code>{inst_}をprefixにしています。
 
 #@# TODO フォーマット
 //list[inst_gen_pkg.veryl.rvcc][命令のビット列を生成する関数を定義する (inst_gen_pkg.veryl)]{
@@ -939,10 +941,10 @@ opcode(@<code>{inst16[1:0]})が@<code>{2'b11}以外なら16ビット幅の命令
 @<code>{is_rvc}に@<code>{1}を割り当てます。
 @<code>{inst32}には、初期値として右に@<code>{inst16}を詰めてゼロで拡張した値を割り当てます。
 
-32ビット幅の命令への変換はopcode、funct、ソースレジスタで分岐して地道に実装します。
+32ビット幅の命令への変換はopcode、funct、レジスタ番号などで分岐して地道に実装します。
 32ビット幅の命令に変換できないとき@<code>{inst32}の値を更新しません。
 
-これにより、@<code>{inst16}が不正なRVC命令のとき、
+@<code>{inst16}が不正なRVC命令のとき、
 inst_decoderモジュールでデコードできない命令をcoreモジュールに供給してIllegal instruction例外を発生させ、
 tvalに16ビット幅の不正な命令が設定されます。
 

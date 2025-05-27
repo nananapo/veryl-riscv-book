@@ -3,7 +3,7 @@
 本章では、メモリの不可分操作を実現するA拡張を実装します。
 A拡張にはLoad-Reserved、Store Conditionalを実現するZalrsc拡張(TODO table)、
 ロードした値を加工した値をメモリにストアする操作を単一の命令で実装するZaamo拡張(TODO table)が含まれています。
-A拡張の命令を利用すると、同じメモリ空間で複数のソフトウェアが並列、並行して実行されるとき、
+A拡張の命令を利用すると、同じメモリ空間で複数のソフトウェアを並列、並行して実行するとき、
 ソフトウェア間で同期をとりながら実行できます。
 
 == アトミック操作
@@ -11,7 +11,7 @@ A拡張の命令を利用すると、同じメモリ空間で複数のソフト�
 === アトミック操作とは何か？
 
 アトミック操作(Atomic operation、不可分操作)とは、他のシステムからその操作を観測するとき、1つの操作として観測される操作のことです。
-つまり、他のシステムからは、アトミック操作を行う前、アトミック操作を行った後の状態しか観測できません。
+つまり、他のシステムは、アトミック操作を行う前、アトミック操作を行った後の状態しか観測できません。
 
 アトミック操作は実行、観測される順序が重要なアプリケーションで利用します。
 例えば1からNまでの和を求めるプログラムを考えます(図TODO)。
@@ -33,10 +33,10 @@ LR命令とSC命令はそれぞれLoad-Reserved、Store Conditional操作を実�
 LR、SC命令はそれぞれ次のように動作します。
 
  : LR命令
-   指定されたアドレスのデータを読み込み、予約セット(Reservation set)に指定されたアドレスを登録します。
+   指定されたアドレスのデータを読み込み、指定されたアドレスを予約セット(Reservation set)に登録します。
 
  : SC命令
-   予約セットに指定されたアドレスが存在する場合、指定されたアドレスにデータを書き込みます(ストア成功)。
+   指定されたアドレスが予約セットに存在する場合、指定されたアドレスにデータを書き込みます(ストア成功)。
    予約セットにアドレスが存在しない場合は書き込みません(ストア失敗)。
    ストアに成功したら@<code>{0}、失敗したら@<code>{0}以外の値をレジスタにライトバックします。
    命令の実行後に必ず予約セットを空にします。
@@ -52,8 +52,8 @@ atomic_add:
     BNEZ x4, atomic_add @<balloon>{SC命令が失敗していたらやり直す}
 //}
 
-同時に他のコアが同じプログラムを実行するとき、間違った値の書き込みはSC命令で失敗します。
-失敗したらLR命令からやり直すことで、1つのコアで実行した場合と同一の結果になります。
+例えば同時に2つのコアが@<list>{sample.asm.lrsc}を実行するとき、同期をとれていない書き込みはSC命令で失敗します。
+失敗したらLR命令からやり直すことで、1つのコアで2回実行した場合と同一の結果(@<code>{1}を2回加算)になります。
 
 予約セットのサイズは実装によって異なります。
 
@@ -73,18 +73,18 @@ A拡張の命令をAとするとき、それぞれのビットの状態に応じ
  : aq=1、rl=1
     Aのメモリ操作は、Aの前にあるメモリを操作する命令よりも後、Aの後ろにあるメモリを操作する命令よりも前に観測されることが保証されます。
 
-TODO それぞれの図
+#@# TODO 余裕があればaqrlそれぞれの図
 
-今のところ、CPUはメモリ操作を１命令ずつ直列に実行するため、常にaq=1、rl=1であるように動作します。
+今のところ、CPUはメモリ操作を１命令ずつ直列に実行するため、常にaqが@<code>{1}、rlが@<code>{1}であるように動作します。
 そのため、本章ではaq、rlビットを考慮しないで実装を行います@<fn>{impl-memory-order}。
 
 //footnote[impl-memory-order][メモリ操作の並び替えによる高速化は応用編で検討します。]
 
 == 命令のデコード
 
-TODO 命令の図
+#@# TODO 余裕があれば 命令の図
 
-A拡張の命令はすべてR形式でのopcodeはOP-AMO(@<code>{7'b0101111})です(TODO 図)。
+A拡張の命令はすべてR形式で、opcodeはOP-AMO(@<code>{7'b0101111})です。
 それぞれの命令はfunct5とfunct3で区別できます(TODO テーブル)。
 
 TODO funct5と命令の対応のテーブル
@@ -217,7 +217,8 @@ memunitモジュールの@<code>{addr}ポートに割り当てる値を@<code>{i
 //}
 
 
-A拡張の命令でメモリアドレスが操作するデータの幅に整列されていないとき、
+A拡張の命令のメモリアドレスが、
+操作するデータの幅に整列されていないとき、
 Store/AMO address misaligned例外が発生します。
 この例外はストア命令の場合の例外と同じです。
 
@@ -258,12 +259,11 @@ A拡張の命令を実行するとき、
 
 == amounitモジュールの作成
 
-TODO 図
+#@# TODO 余裕があれば図
 
 A拡張は他のコア、ハードウェアスレッドと同期してメモリ操作を行うためのものであるため、
 A拡張の操作はcoreモジュールの外、メモリよりも前で行います。
-本書では、coreモジュールとmmio_controllerモジュールの間にA拡張の命令を処理するamounitモジュールを実装します
-(TODO 図)。
+本書では、coreモジュールとmmio_controllerモジュールの間にA拡張の命令を処理するamounitモジュールを実装します。
 
 === インターフェースを作成する
 
@@ -631,7 +631,7 @@ LR命令を実行するとき、予約セットにアドレスを登録してロ
 (@<list>{amounit.veryl.lr.accept_request_comb}、
 @<list>{amounit.veryl.lr.master_comb}、
 @<list>{amounit.veryl.lr.accept_request_ff})。
-既に予約セットが使われている場合でもアドレスを上書きします。
+既に予約セットが使われている場合はアドレスを上書きします。
 
 //list[amounit.veryl.lr.accept_request_comb][accept_request_comb関数の実装 (amounit.veryl)]{
 #@maprange(scripts/13/lr-range/core/src/amounit.veryl,accept_request_comb)
@@ -697,7 +697,7 @@ LR命令を実行するとき、予約セットにアドレスを登録してロ
 SC.W命令はmemunitモジュールで書き込みマスクを設定しているため、
 amounitモジュールでSC.W命令とSC.D命令を区別する必要はありません。
 
-SC命令が成功、失敗したときに結果を返すための状態をState型に追加します
+SC命令が成功、失敗したときに結果を返すための状態を@<code>{State}型に追加します
 (@<list>{amounit.veryl.sc.State})。
 
 //list[amounit.veryl.sc.State][SC命令用の状態の定義 (amounit.veryl)]{
@@ -732,7 +732,7 @@ SC命令が成功、失敗したときに結果を返すための状態をState�
 #@end
 //}
 
-SC命令を受け入れるときに予約セットを確認し、アドレスが予約セットのアドレスと異なる場合は状態を@<code>{State::SCFail}に移動させます
+SC命令を受け入れるときに予約セットを確認し、アドレスが予約セットのアドレスと異なる場合は状態を@<code>{State::SCFail}に移動します
 (@<list>{amounit.veryl.sc.accept_request_ff})。
 成功、失敗に関係なく、予約セットを空にします。
 
@@ -753,8 +753,9 @@ SC命令を受け入れるときに予約セットを確認し、アドレスが
 //}
 
 SC命令でメモリの@<code>{ready}が@<code>{1}になるのを待っているとき、
-@<code>{ready}が@<code>{1}になったら状態を@<code>{State::SCSuccess}に移動させます
+@<code>{ready}が@<code>{1}になったら状態を@<code>{State::SCSuccess}に移動します
 (@<list>{amounit.veryl.sc.on_clock})。
+また、命令の実行が終了したときに新しく要求を受け入れるようにします。
 
 //list[amounit.veryl.sc.on_clock][SC命令の状態遷移 (amounit.veryl)]{
 #@maprange(scripts/13/sc-range/core/src/amounit.veryl,on_clock)
@@ -824,10 +825,15 @@ SC命令によるメモリへの書き込みを実装します
 
 == Zaamo拡張の実装
 
-図TODO
-
 Zaamo拡張の命令はロード、演算、ストアを行います。
-本章では、Zaamo拡張の命令を図TODOのような状態遷移で処理するように実装します。
+本章では、Zaamo拡張の命令を
+@<code>{State::Init}
+(、@<code>{State::AMOLoadReady})
+、@<code>{State::AMOLoadValid}
+(、@<code>{State::AMOStoreReady})
+、@<code>{State::AMOStoreValid}
+という状態遷移で処理するように実装します。
+
 @<code>{State}型に新しい状態を定義してください
 (@<list>{amounit.veryl.zaamo.State})。
 
@@ -872,7 +878,7 @@ modportにimport宣言を追加してください。
 #@end
 //}
 
-ロードしたデータと@<code>{wdata}、フラグを利用して、ストアする値を生成する関数を作成します
+ロードした値と@<code>{wdata}、フラグを利用して、ストアする値を生成する関数を作成します
 (@<list>{amounit.veryl.zaamo.calc_amo})。
 32ビット演算のとき、下位32ビットと上位32ビットのどちらを使うかをアドレスによって判別しています。
 
@@ -921,7 +927,8 @@ modportにimport宣言を追加してください。
 #@end
 //}
 
-ロードした値を保存しておくレジスタを作成します
+ロードした値が命令の結果になるため、
+値を保持するためのレジスタを作成します
 (
 @<list>{amounit.veryl.zaamo.reg}、
 @<list>{amounit.veryl.zaamo.reset}
@@ -942,7 +949,7 @@ modportにimport宣言を追加してください。
 #@end
 //}
 
-メモリアクセスが終了したら、ロードしておいた値を返します
+メモリアクセスが終了したら、ロードした値を返します
 (@<list>{amounit.veryl.zaamo.assign_slave_comb})。
 
 //list[amounit.veryl.zaamo.assign_slave_comb][命令の結果を返す (amounit.veryl)]{
