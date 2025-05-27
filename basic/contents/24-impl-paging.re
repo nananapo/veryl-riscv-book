@@ -104,8 +104,6 @@ mstatusレジスタのMXR、SUM、MPRVビットを利用すると、TODOプロ�
 
 === 実装順序
 
-//image[ptw-mmio-structure][PTWと他のモジュールの接続][width=90%]
-
 RISC-Vでは命令フェッチ、データのロードストアの両方でページングを利用できます。
 命令フェッチ、データのロードストアのそれぞれのために2つのPTWを用意してもいいですが、
 シンプルなアーキテクチャにするために本章では1つのPTWを共有することにします。
@@ -122,6 +120,8 @@ mmio_controllerモジュールは常に物理アドレス空間を扱います�
  1. Sv39を実装する
  1. SFENCE.VMA命令、FENCEI命令を実装する
 
+//image[ptw-mmio-structure][PTWと他のモジュールの接続][width=90%]
+
 == メモリで発生する例外の実装
 
 PTWで発生した例外は、最終的にcsrunitモジュールで処理します。
@@ -130,7 +130,7 @@ PTWで発生した例外は、最終的にcsrunitモジュールで処理しま�
 ページングによって発生する例外のcauseを@<code>{CsrCause}型に追加します
 (@<list>{eei.veryl.CsrCause.def})。
 
-//list[eei.veryl.CsrCause.def][ (eei.veryl)]{
+//list[eei.veryl.CsrCause.def][CsrCause型にページフォルト例外を追加する (eei.veryl)]{
 #@maprange(scripts/24/newexpt-range/core/src/eei.veryl,CsrCause)
     INSTRUCTION_PAGE_FAULT = 12,
     LOAD_PAGE_FAULT = 13,
@@ -146,7 +146,7 @@ PTWで発生した例外は、最終的にcsrunitモジュールで処理しま�
 (@<list>{eei.veryl.newexpt.def})。
 メモリアクセス中に発生する例外の情報はこの構造体で管理します。
 
-//list[eei.veryl.newexpt.def][ (eei.veryl)]{
+//list[eei.veryl.newexpt.def][MemException型の定義 (eei.veryl)]{
 #@maprange(scripts/24/newexpt-range/core/src/eei.veryl,def)
     struct MemException {
         valid     : logic,

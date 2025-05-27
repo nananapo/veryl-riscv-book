@@ -167,31 +167,14 @@
 </div><!--/.footnote-list-->
 
 <h2 class="numbox"><a id="h4-2"></a><span class="secno">4.2</span> 命令のデコード</h2>
-<p>A拡張の命令はすべてR形式で、opcodeはOP-AMO(<code class="inline-code">7'b0101111</code>)です。それぞれの命令はfunct5とfunct3で区別できます(<span class="tableref"><a href="./13-impl-a.html#a.instructions.funct5">表4.3</a></span>)。</p>
-<div id="a.instructions.funct5" class="table">
-<p class="caption">表4.3: A拡張の命令のfunct5</p>
-<table>
-<tr class="hline"><th>funct5</th><th>命令</th></tr>
-<tr class="hline"><td>5'b00010</td><td>LR.W/D</td></tr>
-<tr class="hline"><td>5'b00011</td><td>SC.W/D</td></tr>
-<tr class="hline"><td>5'b00001</td><td>AMOSWAP.W/D</td></tr>
-<tr class="hline"><td>5'b00000</td><td>AMOADD.W/D</td></tr>
-<tr class="hline"><td>5'b00100</td><td>AMOXOR.W/D</td></tr>
-<tr class="hline"><td>5'b01100</td><td>AMOAND.W/D</td></tr>
-<tr class="hline"><td>5'b01000</td><td>AMOOR.W/D</td></tr>
-<tr class="hline"><td>5'b10000</td><td>AMOMIN.W/D</td></tr>
-<tr class="hline"><td>5'b10100</td><td>AMOMAX.W/D</td></tr>
-<tr class="hline"><td>5'b11000</td><td>AMOMINU.W/D</td></tr>
-<tr class="hline"><td>5'b11100</td><td>AMOMAXU.W/D</td></tr>
-</table>
-</div>
+<p>A拡張の命令はすべてR形式で、opcodeはOP-AMO(<code class="inline-code">7'b0101111</code>)です。それぞれの命令はfunct5(<span class="listref"><a href="./13-impl-a.html#eei.veryl.define.AMOOp">リスト4.3</a></span>)とfunct3(Wは<code class="inline-code">2</code>、Dは<code class="inline-code">3</code>)で区別できます。</p>
 <p>eeiパッケージにOP-AMOの定数を定義します(<span class="listref"><a href="./13-impl-a.html#eei.veryl.define.op">リスト4.2</a></span>)。</p>
 <div id="eei.veryl.define.op" class="caption-code">
 <span class="caption">リスト4.2: リスト4.2: OP-AMOの定義 (eei.veryl)</span>
 <pre class="list language-op">    const OP_AMO      : logic&lt;7&gt; = 7'b0101111;
 </pre>
 </div>
-<p>また、A拡張の命令を区別するための列挙型<code class="inline-code">AMOOp</code>を定義します(<span class="listref"><a href="./13-impl-a.html#eei.veryl.define.AMOOp">リスト4.3</a></span>)。それぞれ、命令のfunct5と対応していることを確認してください。</p>
+<p>A拡張の命令を区別するための列挙型<code class="inline-code">AMOOp</code>を定義します(<span class="listref"><a href="./13-impl-a.html#eei.veryl.define.AMOOp">リスト4.3</a></span>)。それぞれ命令のfunct5と対応しています。</p>
 <div id="eei.veryl.define.AMOOp" class="caption-code">
 <span class="caption">リスト4.3: リスト4.3: AMOOp型の定義 (eei.veryl)</span>
 <pre class="list language-AMOOp">    enum AMOOp: logic&lt;5&gt; {

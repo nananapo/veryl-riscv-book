@@ -68,15 +68,15 @@
   <h1 class="boldlines center twolines"><a id="h3"></a><span class="secno">第3章</span> <br/>Memory-mapped I/Oの実装</h1>
 
 <h2 class="numbox"><a id="h3-1"></a><span class="secno">3.1</span> Memory-mapped I/Oとは何か？</h2>
-<div id="mmio" class="image">
-<img src="images/12-impl-mmio/mmio.png" alt="メモリマップドIOの例" class="img" style="width:40%" />
-<p class="caption">
-図3.1: メモリマップドIOの例
-</p>
-</div>
 <p>これまでの実装では、CPUに内蔵された1つの大きなメモリ空間、1つのメモリデバイス(memoryモジュール)に命令データを格納、実行し、データのロードストア命令も同じメモリに対して実行してきました。</p>
 <p>一般に流通するコンピュータは複数のデバイスに接続されています。CPUが起動すると、読み込み専用の小さなメモリ(ROM)に格納されたプログラムから命令の実行を開始します。プログラムは周辺デバイスの初期化などを行ったあと、動かしたいアプリケーションの命令やデータをRAMに展開して、制御をアプリケーションに移します。</p>
 <p>CPUがデバイスにアクセスする方法にはCSRやメモリ空間を経由する方法があります。一般的な方法はメモリ空間を通じてデバイスにアクセスする方法であり、この方式のことを<b>メモリマップドIO</b>(Memory-mapped I/O, <b>MMIO</b>)と呼びます。メモリ空間の一部を、デバイスにアクセスするための空間として扱うことを、メモリ(またはアドレス)に<b>マップ</b>すると呼びます。RAMとROMもメモリデバイスであり、異なるアドレスにマップされています。</p>
+<div id="mmio" class="image">
+<img src="images/12-impl-mmio/mmio.png" alt="メモリマップ" class="img" style="width:40%" />
+<p class="caption">
+図3.1: メモリマップ
+</p>
+</div>
 <p>本章ではCPUのメモリ部分をRAM(Random Access Memory)<sup><a id="fnb-about-ram" href="#fn-about-ram" class="noteref" epub:type="noteref">*1</a></sup>とROM(Read Only Memory)に分割し、アクセスするアドレスに応じてアクセスするデバイスを切り替える機能を実装します。また、デバッグ用の入出力デバイス(64ビットのレジスタ)も追加します。デバイスとメモリ空間の対応は図<span class="imgref"><a href="./12-impl-mmio.html#mmio">図3.1</a></span>のように設定します。図<span class="imgref"><a href="./12-impl-mmio.html#mmio">図3.1</a></span>のようにメモリがどのように配置されているかを示す図のことを<b>メモリマップ</b>(Memory map)と呼びます。あるメモリ空間の先頭アドレスのことをベースアドレス(base address)と呼ぶことがあります。</p>
 <div class="footnote-list">
 <div class="footnote" id="fn-about-ram" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>本章では実際のRAMデバイスへのアクセスを実装せずmemoryモジュールで代用します。FPGAに合成するときに実際のデバイスへのアクセスに置き換えます。</p></div>

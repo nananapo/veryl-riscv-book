@@ -111,23 +111,7 @@ A拡張の命令をAとするとき、それぞれのビットの状態に応じ
 #@# TODO 余裕があれば 命令の図
 
 A拡張の命令はすべてR形式で、opcodeはOP-AMO(@<code>{7'b0101111})です。
-それぞれの命令はfunct5とfunct3で区別できます(@<table>{a.instructions.funct5})。
-
-//table[a.instructions.funct5][A拡張の命令のfunct5]{
-funct5		命令
--------------------------------------------------------------
-5'b00010	LR.W/D
-5'b00011	SC.W/D
-5'b00001	AMOSWAP.W/D
-5'b00000	AMOADD.W/D
-5'b00100	AMOXOR.W/D
-5'b01100	AMOAND.W/D
-5'b01000	AMOOR.W/D
-5'b10000	AMOMIN.W/D
-5'b10100	AMOMAX.W/D
-5'b11000	AMOMINU.W/D
-5'b11100	AMOMAXU.W/D
-//}
+それぞれの命令はfunct5(@<list>{eei.veryl.define.AMOOp})とfunct3(Wは@<code>{2}、Dは@<code>{3})で区別できます。
 
 eeiパッケージにOP-AMOの定数を定義します
 (@<list>{eei.veryl.define.op})。
@@ -138,9 +122,9 @@ eeiパッケージにOP-AMOの定数を定義します
 #@end
 //}
 
-また、A拡張の命令を区別するための列挙型@<code>{AMOOp}を定義します
+A拡張の命令を区別するための列挙型@<code>{AMOOp}を定義します
 (@<list>{eei.veryl.define.AMOOp})。
-それぞれ、命令のfunct5と対応していることを確認してください。
+それぞれ命令のfunct5と対応しています。
 
 //list[eei.veryl.define.AMOOp][AMOOp型の定義 (eei.veryl)]{
 #@maprange(scripts/13/define-range/core/src/eei.veryl,AMOOp)

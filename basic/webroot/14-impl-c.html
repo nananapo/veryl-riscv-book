@@ -68,11 +68,11 @@
   <h1 class="boldlines center twolines"><a id="h5"></a><span class="secno">第5章</span> <br/>C拡張の実装</h1>
 
 <h2 class="numbox"><a id="h5-1"></a><span class="secno">5.1</span> 概要</h2>
-<p>これまでに実装した命令はすべて32ビット幅のものでした。RISC-Vには32ビット幅以外の命令が定義されており、それぞれ命令の下位ビットで何ビット幅の命令か判断できます(<span class="tableref"><a href="./14-impl-c.html#riscv.instruction-length-encoding">表5.1</a></span>)。</p>
+<p>これまでに実装した命令はすべて32ビット幅のものでした。RISC-Vには32ビット幅以外の命令が定義されており、命令の下位ビットで何ビット幅の命令か判断できます(<span class="tableref"><a href="./14-impl-c.html#riscv.instruction-length-encoding">表5.1</a></span>)。</p>
 <div id="riscv.instruction-length-encoding" class="table">
-<p class="caption">表5.1: RISC-Vの命令長のエンコーディング</p>
+<p class="caption">表5.1: RISC-Vの命令長とエンコーディング</p>
 <table>
-<tr class="hline"><th>命令幅</th><th>エンコーディング</th></tr>
+<tr class="hline"><th>命令幅</th><th>命令の下位5ビット</th></tr>
 <tr class="hline"><td>16-bit (aa≠11)</td><td>xxxaa</td></tr>
 <tr class="hline"><td>32-bit (bbb≠111)</td><td>bbb11</td></tr>
 </table>
@@ -84,7 +84,7 @@
 </div><!--/.footnote-list-->
 <p>RVC命令は表<span class="imgref"><a href="./14-impl-c.html#rvc-instruction-formats">図5.1</a></span>の9つのフォーマットが定義されています。</p>
 <div id="rvc-instruction-formats" class="image">
-<img src="images/14-impl-c/rvc-instruction-formats.png" alt="RVC命令のフォーマット" class="img" style="width:90%" />
+<img src="images/14-impl-c/rvc-instruction-formats.png" alt="RVC命令のフォーマット" class="img" style="width:95%" />
 <p class="caption">
 図5.1: RVC命令のフォーマット
 </p>

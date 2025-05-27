@@ -1,20 +1,29 @@
 = まえがき
 
-@<large>{TODO。Linuxを起動できるくらいのCPUにするよ。一部はWeb版だけだよ}
-
-==[notoc] 注意
-
 @<large>{本書は「Verylで作るCPU 基本編」の@<b>{第II部と第III部}です。}
-@<large>{第I部の内容は含まれていません。}
+@<large>{本書に第I部は含まれていませんが、Web版にすべて無料で公開しています。}
 
+@<large>{本書では、第I部で実装したRV64Iの5段パイプラインのCPUに次の機能を実装します。}
 
-#@# 本書(基本編の第I部)では、上の1から6までを実装、解説します。
+ * @<large>{乗除算 (M拡張)}
+ * @<large>{不可分操作 (A拡張)}
+ * @<large>{圧縮命令 (C拡張)}
+ * @<large>{例外 }
+ * @<large>{メモリマップドI/O}
+ * @<large>{特権レベル (M-mode、S-mode、U-mode) }
+ * @<large>{割り込み (ACLINT) }
+ * @<large>{ページング (Sv39) }
+ * @<large>{PLIC }
+
+@<large>{実装するCPUは、最終的にOSを実行できる程度の機能を持つことになります。本書の最後ではLinuxを実行できることを確認します。}
 
 ==[notoc] 本書のソースコード / 問い合わせ先
 
 @<large>{本書で利用するソースコードは、以下のサポートページから入手できます。質問やお問い合わせ方法についてもサポートページを確認してください。}
 
  * @<large>{@<href>{https://github.com/nananapo/veryl-riscv-book/wiki/techbookfest18-support-page}}
+
+//clearpage
 
 ==[notoc] 凡例
 

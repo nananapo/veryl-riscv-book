@@ -4,10 +4,10 @@
 
 これまでに実装した命令はすべて32ビット幅のものでした。
 RISC-Vには32ビット幅以外の命令が定義されており、
-それぞれ命令の下位ビットで何ビット幅の命令か判断できます(@<table>{riscv.instruction-length-encoding})。
+命令の下位ビットで何ビット幅の命令か判断できます(@<table>{riscv.instruction-length-encoding})。
 
-//table[riscv.instruction-length-encoding][RISC-Vの命令長のエンコーディング]{
-命令幅				エンコーディング
+//table[riscv.instruction-length-encoding][RISC-Vの命令長とエンコーディング]{
+命令幅				命令の下位5ビット
 -------------------------------------------------------------
 16-bit (aa≠11)		xxxaa
 32-bit (bbb≠111)	bbb11
@@ -23,7 +23,7 @@ C拡張は16ビット幅の命令を定義する拡張です。
 
 RVC命令は表@<img>{rvc-instruction-formats}の9つのフォーマットが定義されています。
 
-//image[rvc-instruction-formats][RVC命令のフォーマット][width=90%]
+//image[rvc-instruction-formats][RVC命令のフォーマット][width=95%]
 
 @<code>{rs1'}、@<code>{rs2'}、@<code>{rd'}は3ビットのフィールドで、
 よく使われる8番(x8)から15番(x15)のレジスタを指定します。
