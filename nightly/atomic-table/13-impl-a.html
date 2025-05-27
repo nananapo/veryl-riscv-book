@@ -65,7 +65,30 @@
         </header>
         <main class="page-main">
   <h1 class="boldlines center twolines"><a id="h4"></a><span class="secno">第4章</span> <br/>A拡張の実装</h1>
-<p>本章では、メモリの不可分操作を実現するA拡張を実装します。A拡張にはLoad-Reserved、Store Conditionalを実現するZalrsc拡張(TODO table)、ロードした値を加工した値をメモリにストアする操作を単一の命令で実装するZaamo拡張(TODO table)が含まれています。A拡張の命令を利用すると、同じメモリ空間で複数のソフトウェアを並列、並行して実行するとき、ソフトウェア間で同期をとりながら実行できます。</p>
+<p>本章では、メモリの不可分操作を実現するA拡張を実装します。A拡張にはLoad-Reserved、Store Conditionalを実現するZalrsc拡張(<span class="tableref"><a href="./13-impl-a.html#a.instructions.zalrsc">表4.1</a></span>)、ロードした値を加工した値をメモリにストアする操作を単一の命令で実装するZaamo拡張(<span class="tableref"><a href="./13-impl-a.html#a.instructions.zaamo">表4.2</a></span>)が含まれています。A拡張の命令を利用すると、同じメモリ空間で複数のソフトウェアを並列、並行して実行するとき、ソフトウェア間で同期をとりながら実行できます。</p>
+<div id="a.instructions.zalrsc" class="table">
+<p class="caption">表4.1: Zalrsc拡張の命令</p>
+<table>
+<tr class="hline"><th>命令</th><th>動作</th></tr>
+<tr class="hline"><td>LR.W/D</td><td>メモリから32/64ビット読み込み、予約セットにアドレスを登録する</td></tr>
+<tr class="hline"><td>SC.W/D</td><td>予約セットにrs1の値が登録されている場合、メモリにrs2の値を書き込み、0をレジスタにライトバックする<br />予約セットにアドレスが登録されていない場合、メモリに書き込まず、0以外の値をレジスタにライトバックする<br />命令の実行後に予約セットを空にする</td></tr>
+</table>
+</div>
+<div id="a.instructions.zaamo" class="table">
+<p class="caption">表4.2: Zaamo拡張の命令</p>
+<table>
+<tr class="hline"><th>命令</th><th>動作</th></tr>
+<tr class="hline"><td>AMOSWAP.W/D</td><td>メモリから32/64ビット読み込み、rs2の値を書き込む</td></tr>
+<tr class="hline"><td>AMOADD.W/D</td><td>メモリから32/64ビット(符号付き)読み込み、rs2(符号付き)の値を足して書き込む</td></tr>
+<tr class="hline"><td>AMOAND.W/D</td><td>メモリから32/64ビット(符号付き)読み込み、rs2(符号付き)の値をAND演算して書き込む</td></tr>
+<tr class="hline"><td>AMOOR.W/D</td><td>メモリから32/64ビット(符号付き)読み込み、rs2(符号付き)の値をOR演算して書き込む</td></tr>
+<tr class="hline"><td>AMOXOR.W/D</td><td>メモリから32/64ビット(符号付き)読み込み、rs2(符号付き)の値をXOR演算して書き込む</td></tr>
+<tr class="hline"><td>AMOMIN.W/D</td><td>メモリから32/64ビット(符号付き)読み込み、rs2(符号付き)の値と比べて小さい値を書き込む</td></tr>
+<tr class="hline"><td>AMOMAX.W/D</td><td>メモリから32/64ビット(符号付き)読み込み、rs2(符号付き)の値と比べて大きい値をを書き込む</td></tr>
+<tr class="hline"><td>AMOMINU.W/D</td><td>メモリから32/64ビット(符号無し)読み込み、rs2(符号無し)の値と比べて小さい値を書き込む</td></tr>
+<tr class="hline"><td>AMOMAXU.W/D</td><td>メモリから32/64ビット(符号無し)読み込み、rs2(符号無し)の値と比べて大きい値を書き込む</td></tr>
+</table>
+</div>
 
 <h2 class="numbox"><a id="h4-1"></a><span class="secno">4.1</span> アトミック操作</h2>
 
@@ -75,10 +98,9 @@
 
 <h3 class="none"><a id="h4-1-2"></a><span class="secno">4.1.2</span> Zaamo拡張</h3>
 <p>Zaamo拡張は、値をロードして、演算した値をストアする操作を1つの命令で行う命令を定義しています。AMOADD命令はロード、加算、ストアを行う単一の命令です。Zaamo拡張は他の簡単な操作を行う命令も提供しています。</p>
-<p>TODO table</p>
 
 <h3 class="none"><a id="h4-1-3"></a><span class="secno">4.1.3</span> Zalrsc拡張</h3>
-<p>ZalrscLR命令とSC命令はそれぞれLoad-Reserved、Store Conditional操作を実現する命令です。LR、SC命令はそれぞれ次のように動作します。</p>
+<p>Zalrsc拡張は、LR命令とSC命令を定義しています。LR、SC命令は、それぞれLoad-Reserved、Store Conditional操作を実現する命令です。それぞれ次のように動作します。</p>
 <dl>
 <dt>LR命令</dt>
 <dd>
@@ -133,8 +155,24 @@
 </div><!--/.footnote-list-->
 
 <h2 class="numbox"><a id="h4-2"></a><span class="secno">4.2</span> 命令のデコード</h2>
-<p>A拡張の命令はすべてR形式で、opcodeはOP-AMO(<code class="inline-code">7'b0101111</code>)です。それぞれの命令はfunct5とfunct3で区別できます(TODO テーブル)。</p>
-<p>TODO funct5と命令の対応のテーブル</p>
+<p>A拡張の命令はすべてR形式で、opcodeはOP-AMO(<code class="inline-code">7'b0101111</code>)です。それぞれの命令はfunct5とfunct3で区別できます(<span class="tableref"><a href="./13-impl-a.html#a.instructions.funct5">表4.3</a></span>)。</p>
+<div id="a.instructions.funct5" class="table">
+<p class="caption">表4.3: A拡張の命令のfunct5</p>
+<table>
+<tr class="hline"><th>funct5</th><th>命令</th></tr>
+<tr class="hline"><td>5'b00010</td><td>LR.W/D</td></tr>
+<tr class="hline"><td>5'b00011</td><td>SC.W/D</td></tr>
+<tr class="hline"><td>5'b00001</td><td>AMOSWAP.W/D</td></tr>
+<tr class="hline"><td>5'b00000</td><td>AMOADD.W/D</td></tr>
+<tr class="hline"><td>5'b00100</td><td>AMOXOR.W/D</td></tr>
+<tr class="hline"><td>5'b01100</td><td>AMOAND.W/D</td></tr>
+<tr class="hline"><td>5'b01000</td><td>AMOOR.W/D</td></tr>
+<tr class="hline"><td>5'b10000</td><td>AMOMIN.W/D</td></tr>
+<tr class="hline"><td>5'b10100</td><td>AMOMAX.W/D</td></tr>
+<tr class="hline"><td>5'b11000</td><td>AMOMINU.W/D</td></tr>
+<tr class="hline"><td>5'b11100</td><td>AMOMAXU.W/D</td></tr>
+</table>
+</div>
 <p>eeiパッケージにOP-AMOの定数を定義します(<span class="listref"><a href="./13-impl-a.html#eei.veryl.define.op">リスト4.2</a></span>)。</p>
 <div id="eei.veryl.define.op" class="caption-code">
 <span class="caption">リスト4.2: リスト4.2: OP-AMOの定義 (eei.veryl)</span>
