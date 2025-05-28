@@ -33,7 +33,7 @@ RVC命令は表@<img>{rvc-instruction-formats}の9つのフォーマットが定
 RV64IのCPUに実装されるC拡張には@<img>{rvc-instruction-formats}のRVC命令が定義されています。
 
 //table[impl-c.instructions][C拡張の命令]{
-命令		32ビット幅での命令	形式
+命令		同じ意味の32ビット幅の命令	形式
 -------------------------------------------------------------
 C.LWSP		lw rd, offset(x2)	CI
 C.LDSP		ld rd, offset(x2)	CI

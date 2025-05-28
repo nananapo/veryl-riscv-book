@@ -1,6 +1,6 @@
 = S-modeの実装 (1. CSRの実装)
 
-本章ではSupervisortモード(S-mode)を実装します。
+本章ではSupervisorモード(S-mode)を実装します。
 S-modeは主にOSのようなシステムアプリケーションを動かすために使用される特権レベルです。
 S-modeがある環境には必ずU-modeが実装されています。
 
@@ -893,11 +893,19 @@ M-mode向けの割り込みを優先して利用します
 =={impl-sswi} ソフトウェア割り込みの実装 (SSWI)
 
 SSWIデバイスはソフトウェア割り込み(supervisor software insterrupt)を提供するためのデバイスです。
-SSWIデバイスにはハードウェアスレッド毎に4バイトのSETSSIPレジスタが用意されています(TODO テーブル)
+SSWIデバイスにはハードウェアスレッド毎に4バイトのSETSSIPレジスタが用意されています(@<table>{sswi.map.reg})
 SETSSIPレジスタを読み込むと常に@<code>{0}を返しますが、
 最下位ビットに@<code>{1}を書き込むとそれに対応するハードウェアスレッドのmip.SSIPビットが@<code>{1}になります。
 
-TODOテーブル4095個
+//table[sswi.map.reg][SSWIデバイスのメモリマップ]{
+オフセット		レジスタ
+-------------------------------------------------------------
+0000			SETSSIP0
+0004			SETSSIP1
+...				...
+3ff8			SETSSIP4094
+3ffc			MTIME
+//}
 
 //image[setssip][setssipレジスタ][width=90%]
 

@@ -65,7 +65,7 @@
         </header>
         <main class="page-main">
   <h1 class="boldlines center twolines"><a id="h9"></a><span class="secno">第9章</span> <br/>S-modeの実装 (1. CSRの実装)</h1>
-<p>本章ではSupervisortモード(S-mode)を実装します。S-modeは主にOSのようなシステムアプリケーションを動かすために使用される特権レベルです。S-modeがある環境には必ずU-modeが実装されています。</p>
+<p>本章ではSupervisorモード(S-mode)を実装します。S-modeは主にOSのようなシステムアプリケーションを動かすために使用される特権レベルです。S-modeがある環境には必ずU-modeが実装されています。</p>
 <p>S-modeを導入することで変わる主要な機能はトラップです。M-mode、U-modeだけの環境ではトラップで特権レベルをM-modeに変更していましたが、M-modeではなくS-modeに遷移できるようになります。これに伴い、トラップ関連のCSR(stvec、sepc、scause、stvalなど)が追加されます。</p>
 <p>S-modeで新しく導入される大きな機能として仮想記憶システムがあります。仮想記憶システムはページングを使って仮想的なアドレスを使用できるようにする仕組みです。これについては<a href="./24-impl-paging.html">第10章「S-modeの実装 (2. 仮想記憶システム)」</a>で解説します。</p>
 <p>他にはscounterenレジスタ、トラップから戻るためのSRET命令などが追加されます。また、Supervisor software interruptを提供するSSWIデバイスも実装します。それぞれ解説しながら実装します。</p>
@@ -690,8 +690,18 @@
 </div>
 
 <h2 id="impl-sswi" class="numbox"><a id="h9-5"></a><span class="secno">9.5</span> ソフトウェア割り込みの実装 (SSWI)</h2>
-<p>SSWIデバイスはソフトウェア割り込み(supervisor software insterrupt)を提供するためのデバイスです。SSWIデバイスにはハードウェアスレッド毎に4バイトのSETSSIPレジスタが用意されています(TODO テーブル)SETSSIPレジスタを読み込むと常に<code class="inline-code">0</code>を返しますが、最下位ビットに<code class="inline-code">1</code>を書き込むとそれに対応するハードウェアスレッドのmip.SSIPビットが<code class="inline-code">1</code>になります。</p>
-<p>TODOテーブル4095個</p>
+<p>SSWIデバイスはソフトウェア割り込み(supervisor software insterrupt)を提供するためのデバイスです。SSWIデバイスにはハードウェアスレッド毎に4バイトのSETSSIPレジスタが用意されています(<span class="tableref"><a href="./23-smode-csr.html#sswi.map.reg">表9.1</a></span>)SETSSIPレジスタを読み込むと常に<code class="inline-code">0</code>を返しますが、最下位ビットに<code class="inline-code">1</code>を書き込むとそれに対応するハードウェアスレッドのmip.SSIPビットが<code class="inline-code">1</code>になります。</p>
+<div id="sswi.map.reg" class="table">
+<p class="caption">表9.1: SSWIデバイスのメモリマップ</p>
+<table>
+<tr class="hline"><th>オフセット</th><th>レジスタ</th></tr>
+<tr class="hline"><td>0000</td><td>SETSSIP0</td></tr>
+<tr class="hline"><td>0004</td><td>SETSSIP1</td></tr>
+<tr class="hline"><td>..</td><td>..</td></tr>
+<tr class="hline"><td>3ff8</td><td>SETSSIP4094</td></tr>
+<tr class="hline"><td>3ffc</td><td>MTIME</td></tr>
+</table>
+</div>
 <div id="setssip" class="image">
 <img src="images/23-smode-csr/setssip.png" alt="setssipレジスタ" class="img" style="width:90%" />
 <p class="caption">

@@ -411,14 +411,24 @@ module core (
 == ソフトウェア割り込みの実装 (MSWI)
 
 MSWIデバイスはソフトウェア割り込み(machine software interrupt)を提供するためのデバイスです。
-MSWIデバイスにはハードウェアスレッド毎に4バイトのMSIPレジスタが用意されています(TODO テーブル)。
+MSWIデバイスにはハードウェアスレッド毎に4バイトのMSIPレジスタが用意されています(@<table>{mswi.map.reg})。
 MSIPレジスタの上位31ビットは読み込み専用の@<code>{0}であり、最下位ビットのみ変更できます。
 各MSIPレジスタは、それに対応するハードウェアスレッドのmip.MSIPと接続されています。
 
-TODOテーブル (最大4095個) ここにhartIDについてもちょっと書く
+//table[mswi.map.reg][MSWIデバイスのメモリマップ]{
+オフセット		レジスタ
+-------------------------------------------------------------
+0000			MSIP0
+0004			MSIP1
+0008			MSIP2
+...				...
+3ff8			MSIP4094
+3ffc			予約済み
+//}
 
-仕様上はmhartidとACLINTのレジスタのhartIDが一致する必要はありませんが、
+仕様上はmhartidとMSIPの後ろの数字(hartID)が一致する必要はありませんが、
 本書ではmhartidとhartIDが同じになるように実装します。
+他のACLINTのデバイスも同様に実装します。
 
 === MSIPレジスタを実装する
 
@@ -920,11 +930,18 @@ mtvec.MODEにVectoredを書き込めるようにします
 
 MTIMERデバイスは、タイマ割り込み(machine timer interrupt)を提供するためのデバイスです。
 MTIMERデバイスには1つの8バイトのMTIMEレジスタ、
-ハードウェアスレッド毎に8バイトのMTIMECMPレジスタが用意されています(TODOテーブル)。
-本書ではMTIMECMPの後ろにMTIMEを配置します。
+ハードウェアスレッド毎に8バイトのMTIMECMPレジスタが用意されています。
+本書ではMTIMECMPの後ろにMTIMEを配置します(@<table>{mtimer.map.reg})。
 
-TODO テーブル (MTIME)
-TODO テーブル (MTIMECMP 最大4095個)
+//table[mtimer.map.reg][本書のMTIMERデバイスのメモリマップ]{
+オフセット		レジスタ
+-------------------------------------------------------------
+0000			MTIMECMP0
+0008			MTIMECMP1
+...				...
+7ff0			MTIMECMP4094
+7ff8			MTIME
+//}
 
 MTIMEレジスタは、固定された周波数でのクロックサイクル毎にインクリメントするレジスタです。
 リセット時に@<code>{0}になります。

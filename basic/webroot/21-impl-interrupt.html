@@ -365,9 +365,20 @@
 </div>
 
 <h2 class="numbox"><a id="h7-3"></a><span class="secno">7.3</span> ソフトウェア割り込みの実装 (MSWI)</h2>
-<p>MSWIデバイスはソフトウェア割り込み(machine software interrupt)を提供するためのデバイスです。MSWIデバイスにはハードウェアスレッド毎に4バイトのMSIPレジスタが用意されています(TODO テーブル)。MSIPレジスタの上位31ビットは読み込み専用の<code class="inline-code">0</code>であり、最下位ビットのみ変更できます。各MSIPレジスタは、それに対応するハードウェアスレッドのmip.MSIPと接続されています。</p>
-<p>TODOテーブル (最大4095個) ここにhartIDについてもちょっと書く</p>
-<p>仕様上はmhartidとACLINTのレジスタのhartIDが一致する必要はありませんが、本書ではmhartidとhartIDが同じになるように実装します。</p>
+<p>MSWIデバイスはソフトウェア割り込み(machine software interrupt)を提供するためのデバイスです。MSWIデバイスにはハードウェアスレッド毎に4バイトのMSIPレジスタが用意されています(<span class="tableref"><a href="./21-impl-interrupt.html#mswi.map.reg">表7.2</a></span>)。MSIPレジスタの上位31ビットは読み込み専用の<code class="inline-code">0</code>であり、最下位ビットのみ変更できます。各MSIPレジスタは、それに対応するハードウェアスレッドのmip.MSIPと接続されています。</p>
+<div id="mswi.map.reg" class="table">
+<p class="caption">表7.2: MSWIデバイスのメモリマップ</p>
+<table>
+<tr class="hline"><th>オフセット</th><th>レジスタ</th></tr>
+<tr class="hline"><td>0000</td><td>MSIP0</td></tr>
+<tr class="hline"><td>0004</td><td>MSIP1</td></tr>
+<tr class="hline"><td>0008</td><td>MSIP2</td></tr>
+<tr class="hline"><td>..</td><td>..</td></tr>
+<tr class="hline"><td>3ff8</td><td>MSIP4094</td></tr>
+<tr class="hline"><td>3ffc</td><td>予約済み</td></tr>
+</table>
+</div>
+<p>仕様上はmhartidとMSIPの後ろの数字(hartID)が一致する必要はありませんが、本書ではmhartidとhartIDが同じになるように実装します。他のACLINTのデバイスも同様に実装します。</p>
 
 <h3 class="none"><a id="h7-3-1"></a><span class="secno">7.3.1</span> MSIPレジスタを実装する</h3>
 <div id="msip" class="image">
@@ -731,8 +742,18 @@
 <h2 class="numbox"><a id="h7-5"></a><span class="secno">7.5</span> タイマ割り込みの実装 (MTIMER)</h2>
 
 <h3 class="none"><a id="h7-5-1"></a><span class="secno">7.5.1</span> タイマ割り込み</h3>
-<p>MTIMERデバイスは、タイマ割り込み(machine timer interrupt)を提供するためのデバイスです。MTIMERデバイスには1つの8バイトのMTIMEレジスタ、ハードウェアスレッド毎に8バイトのMTIMECMPレジスタが用意されています(TODOテーブル)。本書ではMTIMECMPの後ろにMTIMEを配置します。</p>
-<p>TODO テーブル (MTIME)TODO テーブル (MTIMECMP 最大4095個)</p>
+<p>MTIMERデバイスは、タイマ割り込み(machine timer interrupt)を提供するためのデバイスです。MTIMERデバイスには1つの8バイトのMTIMEレジスタ、ハードウェアスレッド毎に8バイトのMTIMECMPレジスタが用意されています。本書ではMTIMECMPの後ろにMTIMEを配置します(<span class="tableref"><a href="./21-impl-interrupt.html#mtimer.map.reg">表7.3</a></span>)。</p>
+<div id="mtimer.map.reg" class="table">
+<p class="caption">表7.3: 本書のMTIMERデバイスのメモリマップ</p>
+<table>
+<tr class="hline"><th>オフセット</th><th>レジスタ</th></tr>
+<tr class="hline"><td>0000</td><td>MTIMECMP0</td></tr>
+<tr class="hline"><td>0008</td><td>MTIMECMP1</td></tr>
+<tr class="hline"><td>..</td><td>..</td></tr>
+<tr class="hline"><td>7ff0</td><td>MTIMECMP4094</td></tr>
+<tr class="hline"><td>7ff8</td><td>MTIME</td></tr>
+</table>
+</div>
 <p>MTIMEレジスタは、固定された周波数でのクロックサイクル毎にインクリメントするレジスタです。リセット時に<code class="inline-code">0</code>になります。</p>
 <p>MTIMERデバイスは、それに対応するハードウェアスレッドのmip.MTIPと接続されており、MTIMEがMTIMECMPを上回ったときmip.MTIPを<code class="inline-code">1</code>にします。これにより、指定した時間に割り込みを発生させることが可能になります。</p>
 
