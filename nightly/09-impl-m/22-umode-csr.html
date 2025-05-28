@@ -199,7 +199,7 @@
 </div>
 
 <h2 class="numbox"><a id="h8-5"></a><span class="secno">8.5</span> CSRのアクセス権限の確認</h2>
-<p>CSRのアドレスを<code class="inline-code">csr_addr</code>とするとき、<code class="inline-code">csr_addr[9:8]</code>の2ビットはそのCSRにアクセスできる最低の権限レベルを表しています。これを下回る特権レベルでCSRにアクセスしようとするとIllegal instruction例外が発生します。</p>
+<p>CSRのアドレスを<code class="inline-code">csr_addr</code>とするとき、<code class="inline-code">csr_addr[9:8]</code>の2ビットはそのCSRにアクセスできる最低の特権レベルを表しています。これを下回る特権レベルでCSRにアクセスしようとするとIllegal instruction例外が発生します。</p>
 <p>CSRのアドレスと特権レベルを確認して、例外を起こすようにします(<span class="listref"><a href="./22-umode-csr.html#csrunit.veryl.csrrwpriv.priv">リスト8.14</a></span>、<span class="listref"><a href="./22-umode-csr.html#csrunit.veryl.csrrwpriv.raise_expt">リスト8.15</a></span>、<span class="listref"><a href="./22-umode-csr.html#csrunit.veryl.csrrwpriv.cause">リスト8.16</a></span>)。</p>
 <div id="csrunit.veryl.csrrwpriv.priv" class="caption-code">
 <span class="caption">リスト8.14: リスト8.14: 現在の特権レベルでCSRにアクセスできるか判定する (csrunit.veryl)</span>

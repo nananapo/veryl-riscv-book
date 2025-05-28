@@ -135,17 +135,79 @@
 <p>PPN(Physical Page Number)はroot PTEの物理アドレスの一部を格納するフィールドです。root PTEのアドレスは仮想アドレスのVPNビットと組み合わせて作られます(<span class="imgref"><a href="./24-impl-paging.html#rootpteaddr">図10.3</a></span>)。</p>
 
 <h2 id="sv39process" class="numbox"><a id="h10-3"></a><span class="secno">10.3</span> Sv39のアドレス変換</h2>
-<p>Sv39の仮想アドレスは次の方法によって物理アドレスに変換されます<sup><a id="fnb-access-fault" href="#fn-access-fault" class="noteref" epub:type="noteref">*3</a></sup>。</p>
+<div id="virtualaddress" class="image">
+<img src="images/24-impl-paging/virtualaddress.png" alt="仮想アドレス" class="img" style="width:90%" />
+<p class="caption">
+図10.4: 仮想アドレス
+</p>
+</div>
+<div id="physicaladdress" class="image">
+<img src="images/24-impl-paging/physicaladdress.png" alt="物理アドレス" class="img" style="width:90%" />
+<p class="caption">
+図10.5: 物理アドレス
+</p>
+</div>
+<p>Sv39では39ビットの仮想アドレスを56ビットの物理アドレスに変換します。</p>
+<p>ページの最小サイズは4096(<code class="inline-code">2 ** 12</code>)バイト、PTEのサイズは8(<code class="inline-code">2 ** 3</code>)バイトです。それぞれ12と8をPAGESIZE、PTESIZEという定数として定義します。</p>
+<p>ページテーブルのサイズ(1つのページテーブルに含まれるPTEの数)は512(= <code class="inline-code">2 ** 9</code>)個です。1回のアドレス変換で、最大3回PTEをフェッチし、leaf PTEを見つけます。</p>
+<p>アドレスの変換途中でPTEが不正な値だったり、ページが求める権限を持たずにページにアクセスしようとした場合、アクセスする目的に応じたページフォルト(Page fault)例外が発生します<sup><a id="fnb-access-fault" href="#fn-access-fault" class="noteref" epub:type="noteref">*3</a></sup>。命令フェッチはInstruction page fault例外、ロード命令はLoad page fault例外、ストアとAMO命令はStore/AMO page fault例外が発生します。</p>
 <div class="footnote-list">
 <div class="footnote" id="fn-access-fault" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*3] </span>RISC-VのMMUはPMP、PMAという仕組みで物理アドレス空間へのアクセスを制限することができ、それに違反した場合にアクセスフォルト例外を発生させます。本章ではPMP、PMAを実装していないのでアクセスフォルト例外に関する機能について説明せず、実装もしません。これらの機能は応用編で実装します。</p></div>
 </div><!--/.footnote-list-->
-<p>(a) satpレジスタのPPNフィールドと仮想アドレスのフィールドからPTEの物理アドレスを作る。(b) PTEを読み込む。PTEが有効なものか確認する。(c) PTEがページを指しているとき、PTEに書かれている権限を確認してから物理アドレスを作り、アドレス変換終了。(d) PTEが次のPTEを指しているとき、PTEのフィールドと仮想アドレスのフィールドから次のPTEの物理アドレスを作り、bに戻る。</p>
-<p>基本的にアドレス変換はS-mode、U-modeで有効になります。mstatusレジスタのMXR、SUM、MPRVビットを利用すると、特権レベル、PTEの権限についての挙動を少し変更できます。</p>
-<p>アドレスの変換途中でPTEが不正な値だったり、ページが求める権限を持たずにページにアクセスしようとした場合、アクセスする目的に応じたページフォルト(Page fault)例外が発生します。命令フェッチはInstruction page fault例外、ロード命令はLoad page fault例外、ストアとAMO命令はStore/AMO page fault例外が発生します。</p>
+
+<h3 class="none"><a id="h10-3-1"></a><span class="secno">10.3.1</span> ページングが有効になる条件</h3>
+<p>satpレジスタのMODEフィールドがSv39のとき、S-mode、U-modeでアドレス変換が有効になります。ただし、ロードストアのときは、mstatus.MPRVが<code class="inline-code">1</code>なら特権レベルをmstatus.MPPとして判定します。</p>
+<p>有効な仮想アドレスは、MSBでXLENビットに拡張された値である必要があります。有効ではない仮想アドレスの場合、ページフォルト例外が発生します。</p>
+
+<h3 class="none"><a id="h10-3-2"></a><span class="secno">10.3.2</span> PTEのフェッチ</h3>
+<div id="pteaddress" class="image">
+<img src="images/24-impl-paging/pteaddress.png" alt="PTEのアドレス" class="img" style="width:90%" />
+<p class="caption">
+図10.6: PTEのアドレス
+</p>
+</div>
+<p>ページングが有効なとき、まずroot PTEをフェッチします。ここでlevelという変数の値を<code class="inline-code">2</code>とします。</p>
+<p>root PTEの物理アドレスは、satpレジスタのPPNフィールドと仮想アドレスの<code class="inline-code">VPN[level]</code>フィールドを結合し、<code class="inline-code">log2(PTESIZE)</code>だけ左シフトしたアドレスになります。このアドレスは、PPNフィールドを12ビット左シフトしたアドレスに存在するページテーブルの、VPN[level]番目のPTEのアドレスです。</p>
+<div id="pte" class="image">
+<img src="images/24-impl-paging/pte.png" alt="PTEのフィールド" class="img" style="width:90%" />
+<p class="caption">
+図10.7: PTEのフィールド
+</p>
+</div>
+<p>PTEのフィールドは<span class="imgref"><a href="./24-impl-paging.html#pte">図10.7</a></span>のようになっています。このうちN、PBMT、Reservedは使用せず、<code class="inline-code">0</code>でなければページフォルト例外を発生させます。RSWビットは無視します。</p>
+<p>下位8ビットはPTEの状態と権限を表すビットです。</p>
+<p>Vが<code class="inline-code">1</code>のとき、有効なPTEであることを示します。<code class="inline-code">0</code>ならページフォルト例外を発生させます。</p>
+<p>R、W、X、Uはページの権限を指定するビットです。Rは読み込み許可、Wは書き込み許可、Xは実行許可、UはU-modeでアクセスできるかを示します。書き込みできるPTEは読み込みできる必要があり、Wが<code class="inline-code">1</code>なのにRが<code class="inline-code">0</code>ならページフォルト例外を発生させます。</p>
+<p>RとXが<code class="inline-code">0</code>のとき、PTEは次のPTEを指しています。このとき、levelが<code class="inline-code">0</code>ならこれ以上PTEを指すことはできない(VPN[-1]は無い)ので、ページフォルト例外を発生させます。levelが<code class="inline-code">1</code>以上なら、levelから<code class="inline-code">1</code>を引いてPTEをフェッチします。次のPTEのアドレスは、PTEのPPN[2]、PPN[1]、PPN[0]と仮想アドレスのVPN[level]を結合し、<code class="inline-code">log2(PTESIZE)</code>だけ左シフトしたアドレスになります。</p>
+<p>PTEのRかXが<code class="inline-code">1</code>のとき、PTEはleaf PTEで、ページを指し示しています。</p>
+<p>物理アドレスを計算する前に、R、W、X、Uビットで権限を確認します。命令フェッチのときはX、ロードのときはR、ストアのときはW、U-modeのときはUが立っている必要があります。S-modeのときは、Uが立っているページにmstatus.SUMが<code class="inline-code">0</code>の状態でアクセスできません。S-modeのときは、Uが立っているページの実行はできません。これらに違反した場合、ページフォルト例外が発生します。</p>
+<div id="level2" class="image">
+<img src="images/24-impl-paging/level2.png" alt="levelが2のときの物理アドレス" class="img" style="width:95%" />
+<p class="caption">
+図10.8: levelが2のときの物理アドレス
+</p>
+</div>
+<p>levelが<code class="inline-code">2</code>なら、物理アドレスはPTEのPPN[2]、仮想アドレスのVPN[1]、VPN[0]、page offsetを結合した値になります(<span class="imgref"><a href="./24-impl-paging.html#level2">図10.8</a></span>)。</p>
+<div id="level1" class="image">
+<img src="images/24-impl-paging/level1.png" alt="levelが1のときの物理アドレス" class="img" style="width:95%" />
+<p class="caption">
+図10.9: levelが1のときの物理アドレス
+</p>
+</div>
+<p>levelが<code class="inline-code">1</code>なら、物理アドレスはPTEのPPN[2]、PPN[1]、仮想アドレスのVPN[0]、page offsetを結合した値になります(<span class="imgref"><a href="./24-impl-paging.html#level1">図10.9</a></span>)。</p>
+<div id="level0" class="image">
+<img src="images/24-impl-paging/level0.png" alt="levelが0のときの物理アドレス" class="img" style="width:95%" />
+<p class="caption">
+図10.10: levelが0のときの物理アドレス
+</p>
+</div>
+<p>levelが<code class="inline-code">0</code>なら、物理アドレスはPTEのPPN[2]、PPN[1]、PPN[0]、仮想アドレスのpage offsetを結合した値になります(<span class="imgref"><a href="./24-impl-paging.html#level0">図10.10</a></span>)。</p>
+<p>leaf PTEの使わないPPNフィールドは<code class="inline-code">0</code>である必要があり、<code class="inline-code">0</code>ではないならページフォルト例外を発生させます。</p>
+<p>求めた物理アドレスにアクセスする前に、leaf PTEのA、Dビットを確認します。Aはページがこれまでにアクセスされたか、Dはページがこれまでに書き換えられたかを示すビットです。Aが<code class="inline-code">0</code>のとき、Aを<code class="inline-code">1</code>に設定します。Dが<code class="inline-code">0</code>でストアするとき、Dを<code class="inline-code">1</code>に設定します。Aは投機的に<code class="inline-code">1</code>に変更できますが、Dは命令が実行された場合にしか<code class="inline-code">1</code>に変更できません。</p>
 
 <h2 class="numbox"><a id="h10-4"></a><span class="secno">10.4</span> 実装順序</h2>
 <p>RISC-Vでは命令フェッチ、データのロードストアの両方でページングを利用できます。命令フェッチ、データのロードストアのそれぞれのために2つのPTWを用意してもいいですが、シンプルなアーキテクチャにするために本章では1つのPTWを共有することにします。</p>
-<p>inst_fetcherモジュール、amounitモジュールは仮想アドレスを扱うことがありますが、mmio_controllerモジュールは常に物理アドレス空間を扱います。そのため、inst_fetcherモジュール、amounitモジュールとmmio_controllerモジュールの間にPTWを配置します(<span class="imgref"><a href="./24-impl-paging.html#ptw-mmio-structure">図10.4</a></span>)。</p>
+<p>inst_fetcherモジュール、amounitモジュールは仮想アドレスを扱うことがありますが、mmio_controllerモジュールは常に物理アドレス空間を扱います。そのため、inst_fetcherモジュール、amounitモジュールとmmio_controllerモジュールの間にPTWを配置します(<span class="imgref"><a href="./24-impl-paging.html#ptw-mmio-structure">図10.11</a></span>)。</p>
 <p>本章では、仮想記憶システムを次の順序で実装します。</p>
 <ol start="1" type="1">
 <li>PTWで発生する例外をcsrunitモジュールに伝達する</li>
@@ -157,7 +219,7 @@
 <div id="ptw-mmio-structure" class="image">
 <img src="images/24-impl-paging/ptw-mmio-structure.png" alt="PTWと他のモジュールの接続" class="img" style="width:90%" />
 <p class="caption">
-図10.4: PTWと他のモジュールの接続
+図10.11: PTWと他のモジュールの接続
 </p>
 </div>
 
@@ -387,7 +449,7 @@
 
 <h4><a id="h10-5-1-6"></a>ロード、ストア命令のpage fault例外の実装</h4>
 <p>ロード命令、ストア命令、A拡張の命令のメモリアクセス中にページフォルト例外が発生していたとき、Load page fault例外、Store/AMO page fault例外を発生させます。</p>
-<p>csrunitモジュールに、メモリにアクセスする命令の例外情報を監視するためのポートを作成します(<span class="listref"><a href="./24-impl-paging.html#csrunit.veryl.newexpt.port">リスト10.21</a></span>、<span class="listref"><a href="./24-impl-paging.html#core.veryl.newexpt.csru">リスト10.22</a></span>、<span class="listref"><a href="./24-impl-paging.html#csrunit.veryl.newexpt.fault">リスト10.23</a></span>、<span class="listref"><a href="./24-impl-paging.html#csrunit.veryl.newexpt.raise">リスト10.24</a></span>、<span class="listref"><a href="./24-impl-paging.html#csrunit.veryl.newexpt.cause">リスト10.25</a></span>)。</p>
+<p>csrunitモジュールに、メモリにアクセスする命令の例外情報を監視するためのポートを作成します(<span class="listref"><a href="./24-impl-paging.html#csrunit.veryl.newexpt.port">リスト10.21</a></span>、<span class="listref"><a href="./24-impl-paging.html#core.veryl.newexpt.csru">リスト10.22</a></span>)。</p>
 <div id="csrunit.veryl.newexpt.port" class="caption-code">
 <span class="caption">リスト10.21: リスト10.21: メモリアドレス、例外の監視用のポートを追加する (csrunit.veryl)</span>
 <pre class="list language-port"><em class="lineno">1: </em>module csrunit (
@@ -410,7 +472,7 @@
 <em class="lineno">6: </em>    );
 </pre>
 </div>
-<p>例外を発生させます。</p>
+<p>例外を発生させます(<span class="listref"><a href="./24-impl-paging.html#csrunit.veryl.newexpt.fault">リスト10.23</a></span>、<span class="listref"><a href="./24-impl-paging.html#csrunit.veryl.newexpt.raise">リスト10.24</a></span>)。</p>
 <div id="csrunit.veryl.newexpt.fault" class="caption-code">
 <span class="caption">リスト10.23: リスト10.23: メモリアクセス中に例外が発生しているかをチェックする (csrunit.veryl)</span>
 <pre class="list language-fault"><em class="lineno">1: </em>    let expt_memory_fault    : logic = membus.rvalid &amp;&amp; membus.expt.valid;
@@ -426,7 +488,7 @@
 <em class="lineno">6: </em>    };
 </pre>
 </div>
-<p>xtvalに例外が発生したアドレスを設定します。</p>
+<p>xtvalに例外が発生したアドレスを設定します(<span class="listref"><a href="./24-impl-paging.html#csrunit.veryl.newexpt.cause">リスト10.25</a></span>)。</p>
 <div id="csrunit.veryl.newexpt.cause" class="caption-code">
 <span class="caption">リスト10.25: リスト10.25: 例外の原因を設定する (csrunit.veryl)</span>
 <pre class="list language-cause"><em class="lineno">1: </em>    let expt_value: UIntX = switch {
@@ -1103,10 +1165,10 @@
 <div id="statezu" class="image">
 <img src="images/24-impl-paging/statezu.png" alt="状態の遷移図 (点線の状態で新しく要求を受け付け、二重丸の状態で結果を返す)" class="img" style="width:80%" />
 <p class="caption">
-図10.5: 状態の遷移図 (点線の状態で新しく要求を受け付け、二重丸の状態で結果を返す)
+図10.12: 状態の遷移図 (点線の状態で新しく要求を受け付け、二重丸の状態で結果を返す)
 </p>
 </div>
-<p>仮想アドレスを変換するための状態を追加します(<span class="listref"><a href="./24-impl-paging.html#ptw.veryl.sv39.State">リスト10.64</a></span>)。本章ではページングが有効な時に、<code class="inline-code">state</code>が<span class="imgref"><a href="./24-impl-paging.html#statezu">図10.5</a></span>のように遷移するようにします。</p>
+<p>仮想アドレスを変換するための状態を追加します(<span class="listref"><a href="./24-impl-paging.html#ptw.veryl.sv39.State">リスト10.64</a></span>)。本章ではページングが有効な時に、<code class="inline-code">state</code>が<span class="imgref"><a href="./24-impl-paging.html#statezu">図10.12</a></span>のように遷移するようにします。</p>
 <div id="ptw.veryl.sv39.State" class="caption-code">
 <span class="caption">リスト10.64: リスト10.64: 状態の定義 (ptw.veryl)</span>
 <pre class="list language-State"><em class="lineno">1: </em>    enum State {
