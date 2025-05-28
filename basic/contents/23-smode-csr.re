@@ -643,10 +643,7 @@ mieレジスタのSEIE、SSIE、STIEビットを変更できるようにしま�
 書き込みマスクを変更、実装します
 (
 @<list>{csrunit.veryl.mipreg.WMASK}、
-@<list>{csrunit.veryl.mipreg.wmask}、
-@<list>{csrunit.veryl.mipreg.mip}、
-@<list>{csrunit.veryl.mipreg.reset}、
-@<list>{csrunit.veryl.mipreg.write}
+@<list>{csrunit.veryl.mipreg.wmask}
 )。
 
 //list[csrunit.veryl.mipreg.WMASK][書き込みマスクの定義 / 変更 (csrunit.veryl)][lineno=on]{
@@ -664,7 +661,7 @@ mieレジスタのSEIE、SSIE、STIEビットを変更できるようにしま�
 
 @<code>{mip_reg}レジスタを作成します。
 @<code>{mip}の値を、@<code>{mip_reg}とACLINTの状態をOR演算したものに変更します
-()。
+(@<list>{csrunit.veryl.mipreg.mip})。
 
 //list[csrunit.veryl.mipreg.mip][レジスタを作成して変数に適用する (csrunit.veryl)][lineno=on]{
 #@maprange(scripts/23/mipreg-range/core/src/csrunit.veryl,mip)
@@ -674,7 +671,10 @@ mieレジスタのSEIE、SSIE、STIEビットを変更できるようにしま�
 //}
 
 @<code>{mip_reg}レジスタのリセット、書き込みを実装します
-()。
+(
+@<list>{csrunit.veryl.mipreg.reset}、
+@<list>{csrunit.veryl.mipreg.write}
+)。
 @<code>{wdata}にはACLINTの状態が含まれているので、書き込みマスクをもう一度適用します。
 
 //list[csrunit.veryl.mipreg.reset][レジスタの値を0でリセットする (csrunit.veryl)][lineno=on]{

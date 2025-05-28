@@ -481,6 +481,7 @@ mscratchレジスタを定義し、自由に読み書きできるようにしま
     @<b>|var mscratch: UIntX ;|
     var mepc    : UIntX ;
 #@end
+//}
 
 //list[csrunit.veryl.mscratch.reset][mscratchレジスタを0でリセットする (csrunit.veryl)][lineno=on]{
 #@maprange(scripts/20/mscratch-range/core/src/csrunit.veryl,reset)

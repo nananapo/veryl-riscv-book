@@ -500,7 +500,7 @@
 
 <h4><a id="h9-4-7-1"></a>mip、mieレジスタの変更</h4>
 <p>mipレジスタのSEIP、SSIP、STIPビット、mieレジスタのSEIE、SSIE、STIEビットを変更できるようにします。</p>
-<p>書き込みマスクを変更、実装します(<span class="listref"><a href="./23-smode-csr.html#csrunit.veryl.mipreg.WMASK">リスト9.40</a></span>、<span class="listref"><a href="./23-smode-csr.html#csrunit.veryl.mipreg.wmask">リスト9.41</a></span>、<span class="listref"><a href="./23-smode-csr.html#csrunit.veryl.mipreg.mip">リスト9.42</a></span>、<span class="listref"><a href="./23-smode-csr.html#csrunit.veryl.mipreg.reset">リスト9.43</a></span>、<span class="listref"><a href="./23-smode-csr.html#csrunit.veryl.mipreg.write">リスト9.44</a></span>)。</p>
+<p>書き込みマスクを変更、実装します(<span class="listref"><a href="./23-smode-csr.html#csrunit.veryl.mipreg.WMASK">リスト9.40</a></span>、<span class="listref"><a href="./23-smode-csr.html#csrunit.veryl.mipreg.wmask">リスト9.41</a></span>)。</p>
 <div id="csrunit.veryl.mipreg.WMASK" class="caption-code">
 <span class="caption">リスト9.40: リスト9.40: 書き込みマスクの定義 / 変更 (csrunit.veryl)</span>
 <pre class="list language-WMASK"><em class="lineno">1: </em>    <b>const MIP_WMASK       : UIntX = 'h0000_0000_0000_0222 as UIntX;</b>
@@ -512,14 +512,14 @@
 <pre class="list language-wmask"><em class="lineno">1: </em>    CsrAddr::MIP       : MIP_WMASK,
 </pre>
 </div>
-<p><code class="inline-code">mip_reg</code>レジスタを作成します。<code class="inline-code">mip</code>の値を、<code class="inline-code">mip_reg</code>とACLINTの状態をOR演算したものに変更します()。</p>
+<p><code class="inline-code">mip_reg</code>レジスタを作成します。<code class="inline-code">mip</code>の値を、<code class="inline-code">mip_reg</code>とACLINTの状態をOR演算したものに変更します(<span class="listref"><a href="./23-smode-csr.html#csrunit.veryl.mipreg.mip">リスト9.42</a></span>)。</p>
 <div id="csrunit.veryl.mipreg.mip" class="caption-code">
 <span class="caption">リスト9.42: リスト9.42: レジスタを作成して変数に適用する (csrunit.veryl)</span>
 <pre class="list language-mip"><em class="lineno">1: </em>    <b>var mip_reg: UIntX;</b>
 <em class="lineno">2: </em>    let mip    : UIntX = <b>mip_reg |</b> {
 </pre>
 </div>
-<p><code class="inline-code">mip_reg</code>レジスタのリセット、書き込みを実装します()。<code class="inline-code">wdata</code>にはACLINTの状態が含まれているので、書き込みマスクをもう一度適用します。</p>
+<p><code class="inline-code">mip_reg</code>レジスタのリセット、書き込みを実装します(<span class="listref"><a href="./23-smode-csr.html#csrunit.veryl.mipreg.reset">リスト9.43</a></span>、<span class="listref"><a href="./23-smode-csr.html#csrunit.veryl.mipreg.write">リスト9.44</a></span>)。<code class="inline-code">wdata</code>にはACLINTの状態が含まれているので、書き込みマスクをもう一度適用します。</p>
 <div id="csrunit.veryl.mipreg.reset" class="caption-code">
 <span class="caption">リスト9.43: リスト9.43: レジスタの値を0でリセットする (csrunit.veryl)</span>
 <pre class="list language-reset"><em class="lineno">1: </em>    mie        = 0;

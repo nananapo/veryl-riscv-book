@@ -511,10 +511,7 @@ xtvalには1回目のロードでアクセスしたアドレスが書き込ま�
 
 これに対処するために、例外が発生したアドレスのオフセットを例外情報に追加します
 (
-@<list>{eei.veryl.exptoffset.def}、
-@<list>{inst_fetcher.veryl.exptoffset.offset}、
-@<list>{core.veryl.exptoffset.offset}、
-@<list>{csrunit.veryl.exptoffset.offset}
+@<list>{eei.veryl.exptoffset.def}
 )。
 
 //list[eei.veryl.exptoffset.def][MemException型にaddr_offsetを追加する (eei.veryl)][lineno=on]{
@@ -530,7 +527,7 @@ xtvalには1回目のロードでアクセスしたアドレスが書き込ま�
 inst_fetcherモジュールで、
 32ビット幅の命令の上位16ビットを読み込んで@<code>{issue_fifo}に書き込むときに、
 オフセットを@<code>{2}に設定します
-()。
+(@<list>{inst_fetcher.veryl.exptoffset.offset})。
 
 //list[inst_fetcher.veryl.exptoffset.offset][オフセットを2に設定する (inst_fetcher.veryl)][lineno=on]{
 #@maprange(scripts/24/exptoffset-range/core/src/inst_fetcher.veryl,offset)
@@ -543,7 +540,11 @@ inst_fetcherモジュールで、
 #@end
 //}
 
-xtvalを生成するとき、オフセット足します。
+xtvalを生成するとき、オフセットを足します
+(
+@<list>{core.veryl.exptoffset.offset}、
+@<list>{csrunit.veryl.exptoffset.offset}
+)。
 
 //list[core.veryl.exptoffset.offset][命令アドレスにオフセットを足す (core.veryl)][lineno=on]{
 #@maprange(scripts/24/exptoffset-range/core/src/core.veryl,offset)
