@@ -83,7 +83,7 @@
 <p>misa.ExtensionsのUビットを<code class="inline-code">1</code>にします(<span class="listref"><a href="./22-umode-csr.html#csrunit.veryl.misa.misa">リスト8.1</a></span>)。</p>
 <div id="csrunit.veryl.misa.misa" class="caption-code">
 <span class="caption">リスト8.1: リスト8.1: Uビットを1にする (csrunit.veryl)</span>
-<pre class="list language-misa">    let misa    : UIntX  = {2'd2, 1'b0 repeat XLEN - 28, 26'b00000<b>1</b>00000001000100000101}; // U, M, I, C, A
+<pre class="list language-misa"><em class="lineno">1: </em>    let misa    : UIntX  = {2'd2, 1'b0 repeat XLEN - 28, 26'b00000<b>1</b>00000001000100000101}; // U, M, I, C, A
 </pre>
 </div>
 
@@ -92,17 +92,17 @@
 <p>mstatus.UXLを<code class="inline-code">64</code>を示す値である<code class="inline-code">2</code>に設定します(<span class="listref"><a href="./22-umode-csr.html#eei.veryl.misa.def">リスト8.2</a></span>、<span class="listref"><a href="./22-umode-csr.html#csrunit.veryl.misa.reset">リスト8.3</a></span>)。</p>
 <div id="eei.veryl.misa.def" class="caption-code">
 <span class="caption">リスト8.2: リスト8.2: mstatus.UXLの定義 (eei.veryl)</span>
-<pre class="list language-def">    // mstatus
-    const MSTATUS_UXL: UInt64 = 2 &lt;&lt; 32;
+<pre class="list language-def"><em class="lineno">1: </em>    // mstatus
+<em class="lineno">2: </em>    const MSTATUS_UXL: UInt64 = 2 &lt;&lt; 32;
 </pre>
 </div>
 <div id="csrunit.veryl.misa.reset" class="caption-code">
 <span class="caption">リスト8.3: リスト8.3: UXLの初期値を設定する (csrunit.veryl)</span>
-<pre class="list language-reset">    always_ff {
-        if_reset {
-            mode     = PrivMode::M;
-            mstatus  = <b>MSTATUS_UXL</b>;
-            mtvec    = 0;
+<pre class="list language-reset"><em class="lineno">1: </em>    always_ff {
+<em class="lineno">2: </em>        if_reset {
+<em class="lineno">3: </em>            mode     = PrivMode::M;
+<em class="lineno">4: </em>            mstatus  = <b>MSTATUS_UXL</b>;
+<em class="lineno">5: </em>            mtvec    = 0;
 </pre>
 </div>
 
@@ -111,7 +111,7 @@
 <p>本書ではmstatus.TWが<code class="inline-code">1</code>のときに無限時間待てることにして、例外の実装を省略します。mstatus.TWを書き換えられるようにします(<span class="listref"><a href="./22-umode-csr.html#csrunit.veryl.tw.WMASK">リスト8.4</a></span>)。</p>
 <div id="csrunit.veryl.tw.WMASK" class="caption-code">
 <span class="caption">リスト8.4: リスト8.4: 書き込みマスクを変更する (csrunit.veryl)</span>
-<pre class="list language-WMASK">    const MSTATUS_WMASK : UIntX = 'h0000_0000_00<b>2</b>0_0088 as UIntX;
+<pre class="list language-WMASK"><em class="lineno">1: </em>    const MSTATUS_WMASK : UIntX = 'h0000_0000_00<b>2</b>0_0088 as UIntX;
 </pre>
 </div>
 
@@ -123,78 +123,78 @@
 <p>mstatus.MPPに値を書き込めるようにします(<span class="listref"><a href="./22-umode-csr.html#csrunit.veryl.mpp.WMASK">リスト8.5</a></span>)。</p>
 <div id="csrunit.veryl.mpp.WMASK" class="caption-code">
 <span class="caption">リスト8.5: リスト8.5: 書き込みマスクを変更する (csrunit.veryl)</span>
-<pre class="list language-WMASK">    const MSTATUS_WMASK : UIntX = 'h0000_0000_0020_<b>18</b>88 as UIntX;
+<pre class="list language-WMASK"><em class="lineno">1: </em>    const MSTATUS_WMASK : UIntX = 'h0000_0000_0020_<b>18</b>88 as UIntX;
 </pre>
 </div>
 <p>MPPには<code class="inline-code">2'b00</code>(U-mode)と<code class="inline-code">2'b11</code>(M-mode)のみ設定できるようにします。サポートしていない値を書き込もうとする場合は現在の値を維持します(<span class="listref"><a href="./22-umode-csr.html#csrunit.veryl.mpp.write">リスト8.6</a></span>、<span class="listref"><a href="./22-umode-csr.html#csrunit.veryl.mpp.func">リスト8.7</a></span>)。</p>
 <div id="csrunit.veryl.mpp.write" class="caption-code">
 <span class="caption">リスト8.6: リスト8.6: mstatusの書き込み (csrunit.veryl)</span>
-<pre class="list language-write">    CsrAddr::MSTATUS : mstatus  = validate_mstatus(mstatus, wdata);
+<pre class="list language-write"><em class="lineno">1: </em>    CsrAddr::MSTATUS : mstatus  = validate_mstatus(mstatus, wdata);
 </pre>
 </div>
 <div id="csrunit.veryl.mpp.func" class="caption-code">
 <span class="caption">リスト8.7: リスト8.7: mstatusレジスタの値を確認する関数 (csrunit.veryl)</span>
-<pre class="list language-func">    function validate_mstatus (
-        mstatus: input UIntX,
-        wdata  : input UIntX,
-    ) -&gt; UIntX {
-        var result: UIntX;
-        result = wdata;
-        // MPP
-        if wdata[12:11] != PrivMode::M &amp;&amp; wdata[12:11] != PrivMode::U {
-            result[12:11] = mstatus[12:11];
-        }
-        return result;
-    }
+<pre class="list language-func"><em class="lineno">1: </em>    function validate_mstatus (
+<em class="lineno">2: </em>        mstatus: input UIntX,
+<em class="lineno">3: </em>        wdata  : input UIntX,
+<em class="lineno">4: </em>    ) -&gt; UIntX {
+<em class="lineno">5: </em>        var result: UIntX;
+<em class="lineno">6: </em>        result = wdata;
+<em class="lineno">7: </em>        // MPP
+<em class="lineno">8: </em>        if wdata[12:11] != PrivMode::M &amp;&amp; wdata[12:11] != PrivMode::U {
+<em class="lineno">9: </em>            result[12:11] = mstatus[12:11];
+<em class="lineno">10: </em>        }
+<em class="lineno">11: </em>        return result;
+<em class="lineno">12: </em>    }
 </pre>
 </div>
 <p>トラップが発生する、トラップから戻るときの遷移先の特権レベルを求めます(<span class="listref"><a href="./22-umode-csr.html#csrunit.veryl.mpp.mpp">リスト8.8</a></span>、<span class="listref"><a href="./22-umode-csr.html#csrunit.veryl.mpp.interrupt_mode">リスト8.9</a></span>、<span class="listref"><a href="./22-umode-csr.html#csrunit.veryl.mpp.expt_mode">リスト8.10</a></span>、<span class="listref"><a href="./22-umode-csr.html#csrunit.veryl.mpp.trap_return_mode">リスト8.11</a></span>、<span class="listref"><a href="./22-umode-csr.html#csrunit.veryl.mpp.trap_mode_next">リスト8.12</a></span>)。</p>
 <div id="csrunit.veryl.mpp.mpp" class="caption-code">
 <span class="caption">リスト8.8: リスト8.8: ビットを変数として定義する (csrunit.veryl)</span>
-<pre class="list language-mpp">    <b>let mstatus_mpp : PrivMode = mstatus[12:11] as PrivMode;</b>
-    let mstatus_mpie: logic    = mstatus[7];
-    let mstatus_mie : logic    = mstatus[3];
+<pre class="list language-mpp"><em class="lineno">1: </em>    <b>let mstatus_mpp : PrivMode = mstatus[12:11] as PrivMode;</b>
+<em class="lineno">2: </em>    let mstatus_mpie: logic    = mstatus[7];
+<em class="lineno">3: </em>    let mstatus_mie : logic    = mstatus[3];
 </pre>
 </div>
 <div id="csrunit.veryl.mpp.interrupt_mode" class="caption-code">
 <span class="caption">リスト8.9: リスト8.9: 割り込みの遷移先の特権レベルを示す変数 (csrunit.veryl)</span>
-<pre class="list language-interrupt_mode">    let interrupt_mode: PrivMode = PrivMode::M;
+<pre class="list language-interrupt_mode"><em class="lineno">1: </em>    let interrupt_mode: PrivMode = PrivMode::M;
 </pre>
 </div>
 <div id="csrunit.veryl.mpp.expt_mode" class="caption-code">
 <span class="caption">リスト8.10: リスト8.10: 例外の遷移先の特権レベルを示す変数 (csrunit.veryl)</span>
-<pre class="list language-expt_mode">    let expt_mode  : PrivMode = PrivMode::M;
+<pre class="list language-expt_mode"><em class="lineno">1: </em>    let expt_mode  : PrivMode = PrivMode::M;
 </pre>
 </div>
 <div id="csrunit.veryl.mpp.trap_return_mode" class="caption-code">
 <span class="caption">リスト8.11: リスト8.11: MRET命令の遷移先の特権レベルを示す変数 (csrunit.veryl)</span>
-<pre class="list language-trap_return_mode">    let trap_return_mode: PrivMode = mstatus_mpp;
+<pre class="list language-trap_return_mode"><em class="lineno">1: </em>    let trap_return_mode: PrivMode = mstatus_mpp;
 </pre>
 </div>
 <div id="csrunit.veryl.mpp.trap_mode_next" class="caption-code">
 <span class="caption">リスト8.12: リスト8.12: 遷移先の特権レベルを求める (csrunit.veryl)</span>
-<pre class="list language-trap_mode_next">    let trap_mode_next: PrivMode = switch {
-        raise_expt     : expt_mode,
-        raise_interrupt: interrupt_mode,
-        trap_return    : trap_return_mode,
-        default        : PrivMode::U,
-    };
+<pre class="list language-trap_mode_next"><em class="lineno">1: </em>    let trap_mode_next: PrivMode = switch {
+<em class="lineno">2: </em>        raise_expt     : expt_mode,
+<em class="lineno">3: </em>        raise_interrupt: interrupt_mode,
+<em class="lineno">4: </em>        trap_return    : trap_return_mode,
+<em class="lineno">5: </em>        default        : PrivMode::U,
+<em class="lineno">6: </em>    };
 </pre>
 </div>
 <p>トラップが発生するとき、mstatus.MPPに現在の特権レベルを保存します(<span class="listref"><a href="./22-umode-csr.html#csrunit.veryl.mpp.trap">リスト8.13</a></span>)。また、トラップから戻るとき、特権レベルをmstatus.MPPに設定し、mstatus.MPPに実装がサポートする最小の特権レベルである<code class="inline-code">PrivMode::U</code>を書き込みます。</p>
 <div id="csrunit.veryl.mpp.trap" class="caption-code">
 <span class="caption">リスト8.13: リスト8.13: 特権レベル、mstatus.MPPを更新する (csrunit.veryl)</span>
-<pre class="list language-trap">    if raise_trap {
-        if raise_expt || raise_interrupt {
-            ...
-            <b>// save current privilege level to mstatus.mpp</b>
-            @&lt;b&lt;|mstatus[12:11] = mode;|
-        } else if trap_return {
-            ...
-            <b>// set mstatus.mpp = U (least privilege level)</b>
-            <b>mstatus[12:11] = PrivMode::U;</b>
-        }
-        <b>mode = trap_mode_next;</b>
+<pre class="list language-trap"><em class="lineno">1: </em>    if raise_trap {
+<em class="lineno">2: </em>        if raise_expt || raise_interrupt {
+<em class="lineno">3: </em>            ...
+<em class="lineno">4: </em>            <b>// save current privilege level to mstatus.mpp</b>
+<em class="lineno">5: </em>            @&lt;b&lt;|mstatus[12:11] = mode;|
+<em class="lineno">6: </em>        } else if trap_return {
+<em class="lineno">7: </em>            ...
+<em class="lineno">8: </em>            <b>// set mstatus.mpp = U (least privilege level)</b>
+<em class="lineno">9: </em>            <b>mstatus[12:11] = PrivMode::U;</b>
+<em class="lineno">10: </em>        }
+<em class="lineno">11: </em>        <b>mode = trap_mode_next;</b>
 </pre>
 </div>
 
@@ -203,25 +203,25 @@
 <p>CSRのアドレスと特権レベルを確認して、例外を起こすようにします(<span class="listref"><a href="./22-umode-csr.html#csrunit.veryl.csrrwpriv.priv">リスト8.14</a></span>、<span class="listref"><a href="./22-umode-csr.html#csrunit.veryl.csrrwpriv.raise_expt">リスト8.15</a></span>、<span class="listref"><a href="./22-umode-csr.html#csrunit.veryl.csrrwpriv.cause">リスト8.16</a></span>)。</p>
 <div id="csrunit.veryl.csrrwpriv.priv" class="caption-code">
 <span class="caption">リスト8.14: リスト8.14: 現在の特権レベルでCSRにアクセスできるか判定する (csrunit.veryl)</span>
-<pre class="list language-priv">    let expt_csr_priv_violation: logic = is_wsc &amp;&amp; csr_addr[9:8] &gt;: mode; // attempt to access CSR without privilege level
+<pre class="list language-priv"><em class="lineno">1: </em>    let expt_csr_priv_violation: logic = is_wsc &amp;&amp; csr_addr[9:8] &gt;: mode; // attempt to access CSR without privilege level
 </pre>
 </div>
 <div id="csrunit.veryl.csrrwpriv.raise_expt" class="caption-code">
 <span class="caption">リスト8.15: リスト8.15: 例外の発生条件に追加する (csrunit.veryl)</span>
-<pre class="list language-raise_expt">    let raise_expt: logic = valid &amp;&amp; (expt_info.valid || expt_write_readonly_csr || <b>expt_csr_priv_violation</b>);
+<pre class="list language-raise_expt"><em class="lineno">1: </em>    let raise_expt: logic = valid &amp;&amp; (expt_info.valid || expt_write_readonly_csr || <b>expt_csr_priv_violation</b>);
 </pre>
 </div>
 <div id="csrunit.veryl.csrrwpriv.cause" class="caption-code">
 <span class="caption">リスト8.16: リスト8.16: causeを設定する (csrunit.veryl)</span>
-<pre class="list language-cause">    expt_write_readonly_csr: CsrCause::ILLEGAL_INSTRUCTION,
-    <b>expt_csr_priv_violation: CsrCause::ILLEGAL_INSTRUCTION,</b>
-    default                : 0,
+<pre class="list language-cause"><em class="lineno">1: </em>    expt_write_readonly_csr: CsrCause::ILLEGAL_INSTRUCTION,
+<em class="lineno">2: </em>    <b>expt_csr_priv_violation: CsrCause::ILLEGAL_INSTRUCTION,</b>
+<em class="lineno">3: </em>    default                : 0,
 </pre>
 </div>
 
 <h2 id="impl-mcounteren" class="numbox"><a id="h8-6"></a><span class="secno">8.6</span> mcounterenレジスタの実装</h2>
 <div id="mcounteren" class="image">
-<img src="images/22-umode-csr/mcounteren.png" alt="mcounterenレジスタ" class="img" style="width:100%" />
+<img src="images/22-umode-csr/mcounteren.png" alt="mcounterenレジスタ" class="img" style="width:90%" />
 <p class="caption">
 図8.1: mcounterenレジスタ
 </p>
@@ -234,58 +234,58 @@
 <p>mcounterenレジスタを作成し、CY、TM、IRビットに書き込みできるようにします(<span class="listref"><a href="./22-umode-csr.html#csrunit.veryl.mcounteren.reg">リスト8.17</a></span>、<span class="listref"><a href="./22-umode-csr.html#csrunit.veryl.mcounteren.rdata">リスト8.19</a></span>、<span class="listref"><a href="./22-umode-csr.html#csrunit.veryl.mcounteren.WMASK">リスト8.20</a></span>、<span class="listref"><a href="./22-umode-csr.html#csrunit.veryl.mcounteren.wmask">リスト8.21</a></span>、<span class="listref"><a href="./22-umode-csr.html#csrunit.veryl.mcounteren.reset">リスト8.18</a></span>、<span class="listref"><a href="./22-umode-csr.html#csrunit.veryl.mcounteren.write">リスト8.22</a></span>)。</p>
 <div id="csrunit.veryl.mcounteren.reg" class="caption-code">
 <span class="caption">リスト8.17: リスト8.17: mcounterenレジスタの定義 (csrunit.veryl)</span>
-<pre class="list language-reg">    var mcounteren: UInt32;
+<pre class="list language-reg"><em class="lineno">1: </em>    var mcounteren: UInt32;
 </pre>
 </div>
 <div id="csrunit.veryl.mcounteren.reset" class="caption-code">
 <span class="caption">リスト8.18: リスト8.18: mcounterenレジスタを0でリセットする (csrunit.veryl)</span>
-<pre class="list language-reset">    mie        = 0;
-    <b>mcounteren = 0;</b>
-    mscratch   = 0;
+<pre class="list language-reset"><em class="lineno">1: </em>    mie        = 0;
+<em class="lineno">2: </em>    <b>mcounteren = 0;</b>
+<em class="lineno">3: </em>    mscratch   = 0;
 </pre>
 </div>
 <div id="csrunit.veryl.mcounteren.rdata" class="caption-code">
 <span class="caption">リスト8.19: リスト8.19: rdataにmcounterenレジスタを設定する (csrunit.veryl)</span>
-<pre class="list language-rdata">    CsrAddr::MIE       : mie,
-    <b>CsrAddr::MCOUNTEREN: {1'b0 repeat XLEN - 32, mcounteren},</b>
-    CsrAddr::MCYCLE    : mcycle,
+<pre class="list language-rdata"><em class="lineno">1: </em>    CsrAddr::MIE       : mie,
+<em class="lineno">2: </em>    <b>CsrAddr::MCOUNTEREN: {1'b0 repeat XLEN - 32, mcounteren},</b>
+<em class="lineno">3: </em>    CsrAddr::MCYCLE    : mcycle,
 </pre>
 </div>
 <div id="csrunit.veryl.mcounteren.WMASK" class="caption-code">
 <span class="caption">リスト8.20: リスト8.20: 書き込みマスクの定義 (csrunit.veryl)</span>
-<pre class="list language-WMASK">    const MCOUNTEREN_WMASK: UIntX = 'h0000_0000_0000_0007 as UIntX;
+<pre class="list language-WMASK"><em class="lineno">1: </em>    const MCOUNTEREN_WMASK: UIntX = 'h0000_0000_0000_0007 as UIntX;
 </pre>
 </div>
 <div id="csrunit.veryl.mcounteren.wmask" class="caption-code">
 <span class="caption">リスト8.21: リスト8.21: wmaskに書き込みマスクを設定する (csrunit.veryl)</span>
-<pre class="list language-wmask">    CsrAddr::MIE       : MIE_WMASK,
-    <b>CsrAddr::MCOUNTEREN: MCOUNTEREN_WMASK,</b>
-    CsrAddr::MSCRATCH  : MSCRATCH_WMASK,
+<pre class="list language-wmask"><em class="lineno">1: </em>    CsrAddr::MIE       : MIE_WMASK,
+<em class="lineno">2: </em>    <b>CsrAddr::MCOUNTEREN: MCOUNTEREN_WMASK,</b>
+<em class="lineno">3: </em>    CsrAddr::MSCRATCH  : MSCRATCH_WMASK,
 </pre>
 </div>
 <div id="csrunit.veryl.mcounteren.write" class="caption-code">
 <span class="caption">リスト8.22: リスト8.22: mcounterenレジスタの書き込み (csrunit.veryl)</span>
-<pre class="list language-write">    CsrAddr::MIE       : mie        = wdata;
-    <b>CsrAddr::MCOUNTEREN: mcounteren = wdata[31:0];</b>
-    CsrAddr::MSCRATCH  : mscratch   = wdata;
+<pre class="list language-write"><em class="lineno">1: </em>    CsrAddr::MIE       : mie        = wdata;
+<em class="lineno">2: </em>    <b>CsrAddr::MCOUNTEREN: mcounteren = wdata[31:0];</b>
+<em class="lineno">3: </em>    CsrAddr::MSCRATCH  : mscratch   = wdata;
 </pre>
 </div>
 <p>U-modeでハードウェアパフォーマンスモニタにアクセスするとき、mcounterenレジスタのビットが<code class="inline-code">0</code>ならIllegal instruction例外を発生させます(<span class="listref"><a href="./22-umode-csr.html#csrunit.veryl.mcounteren.priv">リスト8.23</a></span>、<span class="listref"><a href="./22-umode-csr.html#csrunit.veryl.mcounteren.cause">リスト8.24</a></span>)。</p>
 <div id="csrunit.veryl.mcounteren.priv" class="caption-code">
 <span class="caption">リスト8.23: リスト8.23: U-modeのとき、mcounterenレジスタを確認する (csrunit.veryl)</span>
-<pre class="list language-priv">    let expt_zicntr_priv       : logic = is_wsc &amp;&amp; mode == PrivMode::U &amp;&amp; case csr_addr {
-        CsrAddr::CYCLE  : !mcounteren[0],
-        CsrAddr::TIME   : !mcounteren[1],
-        CsrAddr::INSTRET: !mcounteren[2],
-        default         : 0,
-    }; // attemp to access Zicntr CSR without permission
+<pre class="list language-priv"><em class="lineno">1: </em>    let expt_zicntr_priv       : logic = is_wsc &amp;&amp; mode == PrivMode::U &amp;&amp; case csr_addr {
+<em class="lineno">2: </em>        CsrAddr::CYCLE  : !mcounteren[0],
+<em class="lineno">3: </em>        CsrAddr::TIME   : !mcounteren[1],
+<em class="lineno">4: </em>        CsrAddr::INSTRET: !mcounteren[2],
+<em class="lineno">5: </em>        default         : 0,
+<em class="lineno">6: </em>    }; // attemp to access Zicntr CSR without permission
 </pre>
 </div>
 <div id="csrunit.veryl.mcounteren.cause" class="caption-code">
 <span class="caption">リスト8.24: リスト8.24: causeを設定する (csrunit.veryl)</span>
-<pre class="list language-cause">    expt_csr_priv_violation: CsrCause::ILLEGAL_INSTRUCTION,
-    <b>expt_zicntr_priv       : CsrCause::ILLEGAL_INSTRUCTION,</b>
-    default                : 0,
+<pre class="list language-cause"><em class="lineno">1: </em>    expt_csr_priv_violation: CsrCause::ILLEGAL_INSTRUCTION,
+<em class="lineno">2: </em>    <b>expt_zicntr_priv       : CsrCause::ILLEGAL_INSTRUCTION,</b>
+<em class="lineno">3: </em>    default                : 0,
 </pre>
 </div>
 
@@ -294,20 +294,20 @@
 <p>命令がMRET命令のとき、特権レベルを確認して例外を発生させます(<span class="listref"><a href="./22-umode-csr.html#csrunit.veryl.umret.priv">リスト8.25</a></span>、<span class="listref"><a href="./22-umode-csr.html#csrunit.veryl.umret.raise_expt">リスト8.26</a></span>、<span class="listref"><a href="./22-umode-csr.html#csrunit.veryl.umret.cause">リスト8.27</a></span>)。</p>
 <div id="csrunit.veryl.umret.priv" class="caption-code">
 <span class="caption">リスト8.25: リスト8.25: MRET命令を実行するとき、現在の特権レベルを確認する (csrunit.veryl)</span>
-<pre class="list language-priv">    let expt_trap_return_priv: logic = is_mret &amp;&amp; mode &lt;: PrivMode::M; // attempt to execute trap return instruction in low privilege level
+<pre class="list language-priv"><em class="lineno">1: </em>    let expt_trap_return_priv: logic = is_mret &amp;&amp; mode &lt;: PrivMode::M; // attempt to execute trap return instruction in low privilege level
 </pre>
 </div>
 <div id="csrunit.veryl.umret.raise_expt" class="caption-code">
 <span class="caption">リスト8.26: リスト8.26: 例外の発生条件に追加する (csrunit.veryl)</span>
-<pre class="list language-raise_expt">    let raise_expt: logic = valid &amp;&amp; (expt_info.valid || expt_write_readonly_csr || expt_csr_priv_violation || expt_zicntr_priv <b>|| expt_trap_return_priv</b>);
+<pre class="list language-raise_expt"><em class="lineno">1: </em>    let raise_expt: logic = valid &amp;&amp; (expt_info.valid || expt_write_readonly_csr || expt_csr_priv_violation || expt_zicntr_priv <b>|| expt_trap_return_priv</b>);
 </pre>
 </div>
 <div id="csrunit.veryl.umret.cause" class="caption-code">
 <span class="caption">リスト8.27: リスト8.27: causeを設定する (csrunit.veryl)</span>
-<pre class="list language-cause">        expt_zicntr_priv       : CsrCause::ILLEGAL_INSTRUCTION,
-        <b>expt_trap_return_priv  : CsrCause::ILLEGAL_INSTRUCTION,</b>
-        default                : 0,
-    };
+<pre class="list language-cause"><em class="lineno">1: </em>        expt_zicntr_priv       : CsrCause::ILLEGAL_INSTRUCTION,
+<em class="lineno">2: </em>        <b>expt_trap_return_priv  : CsrCause::ILLEGAL_INSTRUCTION,</b>
+<em class="lineno">3: </em>        default                : 0,
+<em class="lineno">4: </em>    };
 </pre>
 </div>
 
@@ -325,39 +325,39 @@
 <p>ここで各例外のcauseがU-modeのcauseに特権レベルの数値を足したものになっていることを利用します。<code class="inline-code">CsrCause</code>型にEnvironment call from U-mode例外のcauseを追加します(<span class="listref"><a href="./22-umode-csr.html#eei.veryl.ecallm.CsrCause">リスト8.28</a></span>)。</p>
 <div id="eei.veryl.ecallm.CsrCause" class="caption-code">
 <span class="caption">リスト8.28: リスト8.28: CsrCause型に例外のcauseを追加する (eei.veryl)</span>
-<pre class="list language-CsrCause">    STORE_AMO_ADDRESS_MISALIGNED = 6,
-    <b>ENVIRONMENT_CALL_FROM_U_MODE = 8,</b>
-    ENVIRONMENT_CALL_FROM_M_MODE = 11,
+<pre class="list language-CsrCause"><em class="lineno">1: </em>    STORE_AMO_ADDRESS_MISALIGNED = 6,
+<em class="lineno">2: </em>    <b>ENVIRONMENT_CALL_FROM_U_MODE = 8,</b>
+<em class="lineno">3: </em>    ENVIRONMENT_CALL_FROM_M_MODE = 11,
 </pre>
 </div>
 <p>csrunitモジュールの<code class="inline-code">mode</code>レジスタをポート宣言に移動し、IDステージでECALL命令をデコードするときにcauseに<code class="inline-code">mode</code>を足します(<span class="listref"><a href="./22-umode-csr.html#csrunit.veryl.ecallm.port">リスト8.29</a></span>、<span class="listref"><a href="./22-umode-csr.html#core.veryl.ecallm.reg">リスト8.30</a></span>、<span class="listref"><a href="./22-umode-csr.html#core.veryl.ecallm.port">リスト8.31</a></span>、<span class="listref"><a href="./22-umode-csr.html#core.veryl.ecallm.expt">リスト8.32</a></span>)。</p>
 <div id="csrunit.veryl.ecallm.port" class="caption-code">
 <span class="caption">リスト8.29: リスト8.29: modeレジスタをポートに移動する (csrunit.veryl)</span>
-<pre class="list language-port">    rdata      : output  UIntX               ,
-    <b>mode       : output  PrivMode            ,</b>
-    raise_trap : output  logic               ,
+<pre class="list language-port"><em class="lineno">1: </em>    rdata      : output  UIntX               ,
+<em class="lineno">2: </em>    <b>mode       : output  PrivMode            ,</b>
+<em class="lineno">3: </em>    raise_trap : output  logic               ,
 </pre>
 </div>
 <div id="core.veryl.ecallm.reg" class="caption-code">
 <span class="caption">リスト8.30: リスト8.30: csrunitから現在の特権レベルを受け取る変数 (core.veryl)</span>
-<pre class="list language-reg">    var csru_priv_mode  : PrivMode;
+<pre class="list language-reg"><em class="lineno">1: </em>    var csru_priv_mode  : PrivMode;
 </pre>
 </div>
 <div id="core.veryl.ecallm.port" class="caption-code">
 <span class="caption">リスト8.31: リスト8.31: csrunitモジュールのインスタンスから現在の特権レベルを受け取る (core.veryl)</span>
-<pre class="list language-port">    rdata      : csru_rdata           ,
-    <b>mode       : csru_priv_mode       ,</b>
-    raise_trap : csru_raise_trap      ,
+<pre class="list language-port"><em class="lineno">1: </em>    rdata      : csru_rdata           ,
+<em class="lineno">2: </em>    <b>mode       : csru_priv_mode       ,</b>
+<em class="lineno">3: </em>    raise_trap : csru_raise_trap      ,
 </pre>
 </div>
 <div id="core.veryl.ecallm.expt" class="caption-code">
 <span class="caption">リスト8.32: リスト8.32: Environment call from U-mode例外のcauseに特権レベルの数値を足す (core.veryl)</span>
-<pre class="list language-expt">    } else if ids_inst_bits == 32'h00000073 {
-        // ECALL
-        exq_wdata.expt.valid      = 1;
-        exq_wdata.expt.cause      = <b>CsrCause::ENVIRONMENT_CALL_FROM_U_MODE;</b>
-        <b>exq_wdata.expt.cause[1:0] = csru_priv_mode;</b>
-        exq_wdata.expt.value      = 0;
+<pre class="list language-expt"><em class="lineno">1: </em>    } else if ids_inst_bits == 32'h00000073 {
+<em class="lineno">2: </em>        // ECALL
+<em class="lineno">3: </em>        exq_wdata.expt.valid      = 1;
+<em class="lineno">4: </em>        exq_wdata.expt.cause      = <b>CsrCause::ENVIRONMENT_CALL_FROM_U_MODE;</b>
+<em class="lineno">5: </em>        <b>exq_wdata.expt.cause[1:0] = csru_priv_mode;</b>
+<em class="lineno">6: </em>        exq_wdata.expt.value      = 0;
 </pre>
 </div>
 
@@ -372,7 +372,7 @@
 <p>現在の特権レベルによって割り込みが発生する条件を切り替えます。U-modeのときはmstatus.MIEを考慮しないようにします(<span class="listref"><a href="./22-umode-csr.html#csrunit.veryl.intr.raise_interrupt">リスト8.33</a></span>)。</p>
 <div id="csrunit.veryl.intr.raise_interrupt" class="caption-code">
 <span class="caption">リスト8.33: リスト8.33: U-modeのとき、割り込みの発生条件を変更する (csrunit.veryl)</span>
-<pre class="list language-raise_interrupt">    let raise_interrupt  : logic = valid &amp;&amp; can_intr &amp;&amp; <b>(mode != PrivMode::M ||</b> mstatus_mie<b>)</b> &amp;&amp; interrupt_pending != 0;
+<pre class="list language-raise_interrupt"><em class="lineno">1: </em>    let raise_interrupt  : logic = valid &amp;&amp; can_intr &amp;&amp; <b>(mode != PrivMode::M ||</b> mstatus_mie<b>)</b> &amp;&amp; interrupt_pending != 0;
 </pre>
 </div>
         </main>
