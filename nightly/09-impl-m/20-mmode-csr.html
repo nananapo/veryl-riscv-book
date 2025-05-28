@@ -420,11 +420,13 @@
 <pre class="list language-reg"><em class="lineno">1: </em>    var mcycle  : UInt64;
 <em class="lineno">2: </em>    <b>var mscratch: UIntX ;</b>
 <em class="lineno">3: </em>    var mepc    : UIntX ;
-<em class="lineno">4: </em>
-<em class="lineno">5: </em>//list[csrunit.veryl.mscratch.reset][mscratchレジスタを0でリセットする (csrunit.veryl)][lineno=on]{
-<em class="lineno">6: </em>    mtvec    = 0;
-<em class="lineno">7: </em>    <b>mscratch = 0;</b>
-<em class="lineno">8: </em>    mcycle   = 0;
+</pre>
+</div>
+<div id="csrunit.veryl.mscratch.reset" class="caption-code">
+<span class="caption">リスト6.30: リスト6.30: mscratchレジスタを0でリセットする (csrunit.veryl)</span>
+<pre class="list language-reset"><em class="lineno">1: </em>    mtvec    = 0;
+<em class="lineno">2: </em>    <b>mscratch = 0;</b>
+<em class="lineno">3: </em>    mcycle   = 0;
 </pre>
 </div>
 <div id="csrunit.veryl.mscratch.rdata" class="caption-code">

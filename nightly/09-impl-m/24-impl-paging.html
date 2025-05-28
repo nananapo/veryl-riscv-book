@@ -443,7 +443,7 @@
 <p>ページフォルト例外が発生したとき、xtvalにはページフォルトが発生した仮想アドレスを格納します。</p>
 <p>実は現状の実装では、メモリにアクセスする操作がページの境界をまたぐとき、ページフォルトが発生した正確な仮想アドレスをxtvalに格納できていません。</p>
 <p>例えば、inst_fetcherモジュールで32ビット幅の命令を2回のメモリ読み込みでフェッチするとき、1回目(下位16ビット)のロードは成功して、2回目(上位16ビット)のロードでページフォルトが発生したとします。このとき、ページフォルトが発生したアドレスは2回目のロードでアクセスしたアドレスなのに、xtvalには1回目のロードでアクセスしたアドレスが書き込まれます。</p>
-<p>これに対処するために、例外が発生したアドレスのオフセットを例外情報に追加します(<span class="listref"><a href="./24-impl-paging.html#eei.veryl.exptoffset.def">リスト10.26</a></span>、<span class="listref"><a href="./24-impl-paging.html#inst_fetcher.veryl.exptoffset.offset">リスト10.27</a></span>、<span class="listref"><a href="./24-impl-paging.html#core.veryl.exptoffset.offset">リスト10.28</a></span>、<span class="listref"><a href="./24-impl-paging.html#csrunit.veryl.exptoffset.offset">リスト10.29</a></span>)。</p>
+<p>これに対処するために、例外が発生したアドレスのオフセットを例外情報に追加します(<span class="listref"><a href="./24-impl-paging.html#eei.veryl.exptoffset.def">リスト10.26</a></span>)。</p>
 <div id="eei.veryl.exptoffset.def" class="caption-code">
 <span class="caption">リスト10.26: リスト10.26: MemException型にaddr_offsetを追加する (eei.veryl)</span>
 <pre class="list language-def"><em class="lineno">1: </em>    struct MemException {
@@ -453,7 +453,7 @@
 <em class="lineno">5: </em>    }
 </pre>
 </div>
-<p>inst_fetcherモジュールで、32ビット幅の命令の上位16ビットを読み込んで<code class="inline-code">issue_fifo</code>に書き込むときに、オフセットを<code class="inline-code">2</code>に設定します()。</p>
+<p>inst_fetcherモジュールで、32ビット幅の命令の上位16ビットを読み込んで<code class="inline-code">issue_fifo</code>に書き込むときに、オフセットを<code class="inline-code">2</code>に設定します(<span class="listref"><a href="./24-impl-paging.html#inst_fetcher.veryl.exptoffset.offset">リスト10.27</a></span>)。</p>
 <div id="inst_fetcher.veryl.exptoffset.offset" class="caption-code">
 <span class="caption">リスト10.27: リスト10.27: オフセットを2に設定する (inst_fetcher.veryl)</span>
 <pre class="list language-offset"><em class="lineno">1: </em>    if issue_is_rdata_saved {
@@ -464,7 +464,7 @@
 <em class="lineno">6: </em>        <b>issue_fifo_wdata.expt.addr_offset = 2;</b>
 </pre>
 </div>
-<p>xtvalを生成するとき、オフセット足します。</p>
+<p>xtvalを生成するとき、オフセットを足します(<span class="listref"><a href="./24-impl-paging.html#core.veryl.exptoffset.offset">リスト10.28</a></span>、<span class="listref"><a href="./24-impl-paging.html#csrunit.veryl.exptoffset.offset">リスト10.29</a></span>)。</p>
 <div id="core.veryl.exptoffset.offset" class="caption-code">
 <span class="caption">リスト10.28: リスト10.28: 命令アドレスにオフセットを足す (core.veryl)</span>
 <pre class="list language-offset"><em class="lineno">1: </em>    exq_wdata.expt.valid = 1;
