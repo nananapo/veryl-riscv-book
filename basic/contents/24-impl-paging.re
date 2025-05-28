@@ -85,21 +85,94 @@ root PTEのアドレスは仮想アドレスのVPNビットと組み合わせて
 
 =={sv39process} Sv39のアドレス変換
 
-Sv39の仮想アドレスは次の方法によって物理アドレスに変換されます@<fn>{access-fault}。
+//image[virtualaddress][仮想アドレス][width=90%]
+//image[physicaladdress][物理アドレス][width=90%]
+
+Sv39では39ビットの仮想アドレスを56ビットの物理アドレスに変換します。
+
+ページの最小サイズは4096(@<code>{2 ** 12})バイト、
+PTEのサイズは8(@<code>{2 ** 3})バイトです。
+それぞれ12と8をPAGESIZE、PTESIZEという定数として定義します。
+
+ページテーブルのサイズ(1つのページテーブルに含まれるPTEの数)は512(= @<code>{2 ** 9})個です。
+1回のアドレス変換で、最大3回PTEをフェッチし、leaf PTEを見つけます。
+
+アドレスの変換途中でPTEが不正な値だったり、ページが求める権限を持たずにページにアクセスしようとした場合、
+アクセスする目的に応じたページフォルト(Page fault)例外が発生します@<fn>{access-fault}。
+命令フェッチはInstruction page fault例外、ロード命令はLoad page fault例外、ストアとAMO命令はStore/AMO page fault例外が発生します。
 
 //footnote[access-fault][RISC-VのMMUはPMP、PMAという仕組みで物理アドレス空間へのアクセスを制限することができ、それに違反した場合にアクセスフォルト例外を発生させます。本章ではPMP、PMAを実装していないのでアクセスフォルト例外に関する機能について説明せず、実装もしません。これらの機能は応用編で実装します。]
 
-(a) satpレジスタのPPNフィールドと仮想アドレスのフィールドからPTEの物理アドレスを作る。
-(b) PTEを読み込む。PTEが有効なものか確認する。
-(c) PTEがページを指しているとき、PTEに書かれている権限を確認してから物理アドレスを作り、アドレス変換終了。
-(d) PTEが次のPTEを指しているとき、PTEのフィールドと仮想アドレスのフィールドから次のPTEの物理アドレスを作り、bに戻る。
+=== ページングが有効になる条件
 
-基本的にアドレス変換はS-mode、U-modeで有効になります。
-mstatusレジスタのMXR、SUM、MPRVビットを利用すると、特権レベル、PTEの権限についての挙動を少し変更できます。
+satpレジスタのMODEフィールドがSv39のとき、S-mode、U-modeでアドレス変換が有効になります。
+ただし、ロードストアのときは、mstatus.MPRVが@<code>{1}なら特権レベルをmstatus.MPPとして判定します。
 
-アドレスの変換途中でPTEが不正な値だったり、ページが求める権限を持たずにページにアクセスしようとした場合、
-アクセスする目的に応じたページフォルト(Page fault)例外が発生します。
-命令フェッチはInstruction page fault例外、ロード命令はLoad page fault例外、ストアとAMO命令はStore/AMO page fault例外が発生します。
+有効な仮想アドレスは、MSBでXLENビットに拡張された値である必要があります。
+有効ではない仮想アドレスの場合、ページフォルト例外が発生します。
+
+=== PTEのフェッチ
+
+//image[pteaddress][PTEのアドレス][width=90%]
+
+ページングが有効なとき、まずroot PTEをフェッチします。
+ここでlevelという変数の値を@<code>{2}とします。
+
+root PTEの物理アドレスは、
+satpレジスタのPPNフィールドと仮想アドレスの@<code>{VPN[level]}フィールドを結合し、
+@<code>{log2(PTESIZE)}だけ左シフトしたアドレスになります。
+このアドレスは、PPNフィールドを12ビット左シフトしたアドレスに存在するページテーブルの、
+VPN[level]番目のPTEのアドレスです。
+
+//image[pte][PTEのフィールド][width=90%]
+
+PTEのフィールドは@<img>{pte}のようになっています。
+このうちN、PBMT、Reservedは使用せず、@<code>{0}でなければページフォルト例外を発生させます。
+RSWビットは無視します。
+
+下位8ビットはPTEの状態と権限を表すビットです。
+
+Vが@<code>{1}のとき、有効なPTEであることを示します。
+@<code>{0}ならページフォルト例外を発生させます。
+
+R、W、X、Uはページの権限を指定するビットです。
+Rは読み込み許可、Wは書き込み許可、Xは実行許可、UはU-modeでアクセスできるかを示します。
+書き込みできるPTEは読み込みできる必要があり、
+Wが@<code>{1}なのにRが@<code>{0}ならページフォルト例外を発生させます。
+
+RとXが@<code>{0}のとき、PTEは次のPTEを指しています。
+このとき、levelが@<code>{0}ならこれ以上PTEを指すことはできない(VPN[-1]は無い)ので、ページフォルト例外を発生させます。
+levelが@<code>{1}以上なら、levelから@<code>{1}を引いてPTEをフェッチします。
+次のPTEのアドレスは、PTEのPPN[2]、PPN[1]、PPN[0]と仮想アドレスのVPN[level]を結合し、
+@<code>{log2(PTESIZE)}だけ左シフトしたアドレスになります。
+
+PTEのRかXが@<code>{1}のとき、PTEはleaf PTEで、ページを指し示しています。
+
+物理アドレスを計算する前に、R、W、X、Uビットで権限を確認します。
+命令フェッチのときはX、ロードのときはR、ストアのときはW、U-modeのときはUが立っている必要があります。
+S-modeのときは、Uが立っているページにmstatus.SUMが@<code>{0}の状態でアクセスできません。
+S-modeのときは、Uが立っているページの実行はできません。
+これらに違反した場合、ページフォルト例外が発生します。
+
+//image[level2][levelが2のときの物理アドレス][width=95%]
+
+levelが@<code>{2}なら、物理アドレスはPTEのPPN[2]、仮想アドレスのVPN[1]、VPN[0]、page offsetを結合した値になります(@<img>{level2})。
+
+//image[level1][levelが1のときの物理アドレス][width=95%]
+
+levelが@<code>{1}なら、物理アドレスはPTEのPPN[2]、PPN[1]、仮想アドレスのVPN[0]、page offsetを結合した値になります(@<img>{level1})。
+
+//image[level0][levelが0のときの物理アドレス][width=95%]
+
+levelが@<code>{0}なら、物理アドレスはPTEのPPN[2]、PPN[1]、PPN[0]、仮想アドレスのpage offsetを結合した値になります(@<img>{level0})。
+
+leaf PTEの使わないPPNフィールドは@<code>{0}である必要があり、@<code>{0}ではないならページフォルト例外を発生させます。
+
+求めた物理アドレスにアクセスする前に、leaf PTEのA、Dビットを確認します。
+Aはページがこれまでにアクセスされたか、Dはページがこれまでに書き換えられたかを示すビットです。
+Aが@<code>{0}のとき、Aを@<code>{1}に設定します。
+Dが@<code>{0}でストアするとき、Dを@<code>{1}に設定します。
+Aは投機的に@<code>{1}に変更できますが、Dは命令が実行された場合にしか@<code>{1}に変更できません。
 
 == 実装順序
 
@@ -432,10 +505,7 @@ csrunitモジュールに、
 メモリにアクセスする命令の例外情報を監視するためのポートを作成します
 (
 @<list>{csrunit.veryl.newexpt.port}、
-@<list>{core.veryl.newexpt.csru}、
-@<list>{csrunit.veryl.newexpt.fault}、
-@<list>{csrunit.veryl.newexpt.raise}、
-@<list>{csrunit.veryl.newexpt.cause}
+@<list>{core.veryl.newexpt.csru}
 )。
 
 //list[csrunit.veryl.newexpt.port][メモリアドレス、例外の監視用のポートを追加する (csrunit.veryl)][lineno=on]{
@@ -462,7 +532,9 @@ module csrunit (
 #@end
 //}
 
-例外を発生させます。
+例外を発生させます
+(@<list>{csrunit.veryl.newexpt.fault}、
+@<list>{csrunit.veryl.newexpt.raise})。
 
 //list[csrunit.veryl.newexpt.fault][メモリアクセス中に例外が発生しているかをチェックする (csrunit.veryl)][lineno=on]{
 #@maprange(scripts/24/newexpt-range/core/src/csrunit.veryl,fault)
@@ -481,7 +553,8 @@ module csrunit (
 #@end
 //}
 
-xtvalに例外が発生したアドレスを設定します。
+xtvalに例外が発生したアドレスを設定します
+(@<list>{csrunit.veryl.newexpt.cause})。
 
 //list[csrunit.veryl.newexpt.cause][例外の原因を設定する (csrunit.veryl)][lineno=on]{
 #@maprange(scripts/24/newexpt-range/core/src/csrunit.veryl,cause)
