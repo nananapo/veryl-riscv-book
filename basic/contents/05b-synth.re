@@ -47,8 +47,8 @@ LUTとは、真理値表を記憶素子に保存しておいて、
 
 本書では2つのFPGA(Tang Nano 9K、PYNQ-Z1)を使用して実機でCPUを動作させます。
 2024年11月12日時点ではどちらも秋月電子通商で入手できて、
-Tang Nano 9KはAliExpressで3000円くらい、
-PYNQ-Z1は秋月電子通商で50000円くらいで入手できます。
+Tang Nano 9Kは3000円くらい、
+PYNQ-Z1は50000円くらいで入手できます。
 
 == LEDの制御
 
@@ -777,6 +777,7 @@ Clocking Wizardを追加します(@<img>{xilinx/bd/11}、@<img>{xilinx/bd/12})�
 
 @<img>{xilinx/bd/15}のようにポートを接続します。
 接続元から接続先にドラッグすることでポートを接続できます。
+また、proc_sys_reset_0のext_reset_inをMake Externalしてrstを作成してください。
 
 //image[xilinx/bd/15][ポートを接続する]
 
@@ -855,7 +856,7 @@ BTN0を押すとLEDが消灯します。
 ===={pynq_z1.test.blink} LEDの点滅を確認する
 
 
-core_top_vモジュールの@<code>{MEMORY_FILEPATH}パラメータの値を@<code>{test/ledcounter.hex}で変更して、
+core_top_vモジュールの@<code>{MEMORY_FILEPATH}パラメータの値を@<code>{test/ledcounter.hex}のパスに変更して、
 再度@<code>{Generate Bitstream}を実行します。
 
 Hardware Managerを開いてProgram deviceを押すとLEDが点滅します@<fn>{pynq_z1.led_counter}。
