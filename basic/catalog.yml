@@ -11,15 +11,15 @@ PREDEF:
 
 ## 本文
 CHAPS:
-  # - RV32I/RV64Iの実装:
-  #   - 02-setup.re
-  #   - 03-veryl.re
-  #   - 04-impl-rv32i.re
-  #   - 04a-zicsr.re
-  #   - 04b-riscvtests.re
-  #   - 05-impl-rv64i.re
-  #   - 05a-pipeline.re
-  #   - 05b-synth.re
+  - RV32I/RV64Iの実装:
+    - 02-setup.re
+    - 03-veryl.re
+    - 04-impl-rv32i.re
+    - 04a-zicsr.re
+    - 04b-riscvtests.re
+    - 05-impl-rv64i.re
+    - 05a-pipeline.re
+    - 05b-synth.re
   - RV64IMACの実装:
     - 10-impl-m.re
     - 11-impl-exception.re
@@ -43,9 +43,10 @@ APPENDIX:
 
 ## あとがき
 POSTDEF:
+  - 99-postface.re
   - 99b-postface.re
-  # - 100-contribute.re
-  # - bib.re
+  - 100-contribute.re
+  - bib.re
 ##
 ## 【Tips】
 ##
