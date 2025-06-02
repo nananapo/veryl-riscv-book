@@ -1,0 +1,1157 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    
+    <title>ハードウェア記述言語 Veryl | Verylで作るCPU</title>
+
+    <link rel="stylesheet" type="text/css" href="css/normalize.css" />
+    <link rel="stylesheet" type="text/css" href="css/webstyle.css" />
+    <link rel="next" title="RV32Iの実装" href="04-impl-rv32i.html">
+    <link rel="prev" title="環境構築" href="02-setup.html">
+    <meta name="generator" content="Re:VIEW Starter">
+
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+
+  </head>
+  <body style="background-color:#eff4ff">
+    <div class="page-outer" style="background-color:white">
+      <div class="side-content">
+                <a class="nav-title" href="index.html">Verylで作るCPU</a>
+
+        <div style="display:flex; gap:10px; align-items: center;">
+          <a class="github-button" href="https://github.com/nananapo/veryl-riscv-book" data-color-scheme="no-preference: light_high_contrast; light: light; dark: dark;" data-size="large" data-show-count="true" aria-label="Star nananapo/veryl-riscv-book on GitHub">Star</a>
+          <div style="">
+            <a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-show-count="false">Tweet</a>
+          </div>
+          <div style="margin-bottom: 14px;" id="share-facebook" class="fb-share-button" data-href="" data-layout="" data-size=""><a target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Finvalid.invalid%2F&amp;src=sdkpreparse" class="fb-xfbml-parse-ignore">Facebookでシェアする</a></div>
+        </div>
+        <ul class="toc toc-1">
+    <li class="toc-chapter"><a href="./00-preface.html">まえがき</a></li>
+<li class="toc-part">第I部 RV32I/RV64Iの実装
+  <ul class="toc toc-2">
+    <li class="toc-chapter"><a href="./02-setup.html">1 環境構築</a></li>
+    <li class="toc-chapter"><a href="./03-veryl.html">2 ハードウェア記述言語 Veryl</a>
+      <ul class="toc toc-3">
+        <li class="toc-section"><a href="./03-veryl.html#h2-1">2.1 ハードウェア記述言語</a></li>
+        <li class="toc-section"><a href="./03-veryl.html#h2-2">2.2 Verylの基本文法、機能</a></li>
+      </ul>
+    </li>
+    <li class="toc-chapter"><a href="./04-impl-rv32i.html">3 RV32Iの実装</a></li>
+    <li class="toc-chapter"><a href="./04a-zicsr.html">4 Zicsr拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./04b-riscvtests.html">5 riscv-testsによるテスト</a></li>
+    <li class="toc-chapter"><a href="./05-impl-rv64i.html">6 RV64Iの実装</a></li>
+    <li class="toc-chapter"><a href="./05a-pipeline.html">7 CPUのパイプライン化</a></li>
+    <li class="toc-chapter"><a href="./05b-synth.html">8 CPUの合成</a></li>
+  </ul>
+</li>
+<li class="toc-part">第II部 RV64IMACの実装
+  <ul class="toc toc-2">
+    <li class="toc-chapter"><a href="./10-impl-m.html">9 M拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./11-impl-exception.html">10 例外の実装</a></li>
+    <li class="toc-chapter"><a href="./12-impl-mmio.html">11 Memory-mapped I/Oの実装</a></li>
+    <li class="toc-chapter"><a href="./13-impl-a.html">12 A拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./14-impl-c.html">13 C拡張の実装</a></li>
+  </ul>
+</li>
+<li class="toc-part">第III部 特権/割り込みの実装
+  <ul class="toc toc-2">
+    <li class="toc-chapter"><a href="./20-mmode-csr.html">14 M-modeの実装 (1. CSRの実装)</a></li>
+    <li class="toc-chapter"><a href="./21-impl-interrupt.html">15 M-modeの実装 (2. 割り込みの実装)</a></li>
+    <li class="toc-chapter"><a href="./22-umode-csr.html">16 U-modeの実装</a></li>
+    <li class="toc-chapter"><a href="./23-smode-csr.html">17 S-modeの実装 (1. CSRの実装)</a></li>
+    <li class="toc-chapter"><a href="./24-impl-paging.html">18 S-modeの実装 (2. 仮想記憶システム)</a></li>
+    <li class="toc-chapter"><a href="./25-impl-plic.html">19 PLICの実装</a></li>
+    <li class="toc-chapter"><a href="./26-run-linux.html">20 Linuxを動かす</a></li>
+  </ul>
+</li>
+    <li class="toc-chapter"><a href="./99-postface.html">あとがき (第Ⅰ部)</a></li>
+    <li class="toc-chapter"><a href="./99b-postface.html">あとがき (第Ⅱ部、第Ⅲ部)</a></li>
+    <li class="toc-chapter"><a href="./100-contribute.html">このプロジェクトに貢献する</a></li>
+    <li class="toc-chapter"><a href="./bib.html">参考文献</a></li>
+</ul>
+      </div>
+      <div class="page-inner">
+        <header class="page-header">
+        </header>
+        <main class="page-main">
+  <h1 class="boldlines center twolines"><a id="h2"></a><span class="secno">第2章</span> <br/>ハードウェア記述言語 Veryl</h1>
+<p>CPU (Central Proccessing Unit, 中央演算処理装置)は、コンピュータを構成する主要な部品の1つであり、電気で動くとても複雑な回路で構成されています。</p>
+<p>本書では「ハードウェア記述言語」によってCPUをの回路を記述します。回路を記述するといっても、いったい何をどうやって記述するのでしょうか?</p>
+<p>まずは、論理回路を構成する方法から考えます。</p>
+
+<h2 id="hdl" class="numbox"><a id="h2-1"></a><span class="secno">2.1</span> ハードウェア記述言語</h2>
+
+<h3 class="none"><a id="h2-1-1"></a><span class="secno">2.1.1</span> 論理回路の構成</h3>
+<p><b>論理回路</b>とは、デジタル(例えば0と1だけ)なデータを利用して、データを加工、保持する回路のことです。論理回路は、組み合わせ回路と順序回路に分類できます。</p>
+<p><b>組み合わせ回路</b>とは、入力に対して、一意に出力の決まる回路<a href="bib.html#bib-ronrikairo">[2]</a>のことです。例えば、1ビット同士の加算をする回路は<span class="imgref"><a href="./03-veryl.html#halfadder">図2.1</a></span>、<span class="tableref"><a href="./03-veryl.html#halfadder.truth">表2.1</a></span>のように表されます。この回路は半加算器と呼ばれていて、1ビットのXとYを入力として受けとり、1ビットの和Sと桁上げCを出力します。入力(X、Y)が決まると出力(C、S)が一意に決まるため、半加算器は組み合わせ回路です。</p>
+<div id="halfadder" class="image">
+<img src="images/03-veryl/halfadder.png" alt="半加算器 (MIL記法の回路図)" class="img" style="width:45%" />
+<p class="caption">
+図2.1: 半加算器 (MIL記法の回路図)
+</p>
+</div>
+<div id="halfadder.truth" class="table">
+<p class="caption">表2.1: 半加算器 (真理値表)</p>
+<table>
+<tr class="hline"><th>X</th><th>Y</th><th>C</th><th>S</th></tr>
+<tr class="hline"><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+<tr class="hline"><td>0</td><td>1</td><td>0</td><td>1</td></tr>
+<tr class="hline"><td>1</td><td>0</td><td>0</td><td>1</td></tr>
+<tr class="hline"><td>1</td><td>1</td><td>1</td><td>0</td></tr>
+</table>
+</div>
+<p><b>順序回路</b>とは、入力と回路自身の状態によって一意に出力の決まる回路<a href="bib.html#bib-ronrikairo">[2]</a>です。例えば、入力が1になるたびにカウントアップして値を表示するカウンタを考えます(<span class="imgref"><a href="./03-veryl.html#downcounter">図2.2</a></span>)。カウントアップするためには、今のカウンタの値(状態)を保持する必要があります。そのため、このカウンタは入力と状態によって一意に出力の決まる順序回路です。</p>
+<p>1ビットの値はフリップフロップ(flip-flop, FF)という回路によって保持できます。フリップフロップをN個並列に並べると、Nビットの値を保持できます。フリップフロップを並列に並べた記憶装置のことを<b>レジスタ</b>(register, 置数器)と呼びます。基本的に、レジスタの値は<b>リセット信号</b>(reset signal, reset)によって初期化し、<b>クロック信号</b>(clock signal, clock)に同期したタイミングで変更します。</p>
+<div id="downcounter" class="image">
+<img src="images/03-veryl/downcounter.png" alt="カウンタ (順序回路の例)" class="img" style="width:70%" />
+<p class="caption">
+図2.2: カウンタ (順序回路の例)
+</p>
+</div>
+<p>論理回路を設計するには、真理値表を作成し、それを実現する論理演算を構成します。入力数や状態数が数十個ならどうにか人力で設計できるかもしれませんが、数千、数万の入力や状態があるとき、手作業で設計するのはほとんど不可能です。これを設計するために、ハードウェア記述言語を利用します。</p>
+
+<h3 class="none"><a id="h2-1-2"></a><span class="secno">2.1.2</span> ハードウェア記述言語</h3>
+<p><b>ハードウェア記述言語</b>(Hardware Description Language, HDL)とは、デジタル回路を設計するための言語です。例えばHDLであるSystemVerilogを利用すると、半加算器は<span class="listref"><a href="./03-veryl.html#halfadder.sv">リスト2.1</a></span>のように記述できます。</p>
+<div id="halfadder.sv" class="caption-code">
+<span class="caption">リスト2.1: リスト2.1: SystemVerilogによる半加算器の記述</span>
+<pre class="list language-sv">module HalfAdder(
+  input logic x,        // 入力値X
+  input logic y,        // 入力値Y
+  output logic c,       // 出力値C
+  output logic s        // 出力値S
+);
+  assign c = x &amp; y; // &amp;はAND演算
+  assign s = x ^ y; // ^はXOR演算
+endmodule
+</pre>
+</div>
+<p>半加算器(HalfAdder)モジュールは、入力としてxとyを受け取り、出力cとsにxとyを使った演算を割り当てています。</p>
+<p>また、レジスタを利用した回路を<span class="listref"><a href="./03-veryl.html#counter.sv">リスト2.2</a></span>のように記述できます。レジスタの値を、リセット信号<code class="inline-code">rst</code>が<code class="inline-code">0</code>になったタイミングで<code class="inline-code">0</code>に初期化し、クロック信号<code class="inline-code">clk</code>が<code class="inline-code">1</code>になったタイミングでカウントアップします。</p>
+<div id="counter.sv" class="caption-code">
+<span class="caption">リスト2.2: リスト2.2: SystemVerilogによるカウンタの記述</span>
+<pre class="list language-sv">module Counter(
+  input logic clk, // クロック信号
+  input logic rst  // リセット信号
+);
+  // 32ビットのレジスタの定義
+  logic [31:0] count;
+
+  always_ff @(posedge clk, negedge rst) begin
+    if (!rst) begin
+      // rstが0になったとき、countを0に初期化する
+      count &lt;= 0;
+    end else begin
+      // clkが1になったとき、countの値をカウントアップする
+      count &lt;= count + 1;
+    end
+  end
+endmodule
+</pre>
+</div>
+<p>HDLを使用した論理回路の設計は、レジスタの値と入力値を使った組み合わせ回路と、その結果をレジスタに格納する操作の記述によって行えます。このような、レジスタからレジスタに、組み合わせ回路を通したデータを転送する抽象度のことを<b>レジスタ転送レベル</b>(Register Transfer Level, <b>RTL</b>)と呼びます。</p>
+<p>HDLで記述されたRTLを実際の回路のデータに変換することを<b>合成</b>と呼びます。合成するソフトウェアのことを合成系と呼びます。</p>
+
+<h3 class="none"><a id="h2-1-3"></a><span class="secno">2.1.3</span> Veryl</h3>
+<p>メジャーなHDLといえば、Verilog HDL、SystemVerilog, VHDLなどが挙げられます。</p>
+<p>Verilog HDL(Verilog)とVHDLは1980年代に開発された言語であり、最近のプログラミング言語と比べると機能が少なく、冗長な記述が必要です。SystemVerilogはVerilogのスーパーセットです。言語機能が増えて便利になっていますが、スーパーセットであることから、あまり推奨されない古い書き方が可能だったり、バグの原因となるような良くない仕様<sup><a id="fnb-nettype" href="#fn-nettype" class="noteref" epub:type="noteref">*1</a></sup>を受け継いでいます。</p>
+<div class="footnote-list">
+<div class="footnote" id="fn-nettype" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>例えば、未定義の変数が1ビット幅の信号線として解釈される仕様があります</p></div>
+</div><!--/.footnote-list-->
+<p>本書では、CPUの実装にVerylというHDLを使用します。Verylは2022年12月に公開された言語です。Verylの抽象度は、Verilogと同じくレジスタ転送レベルです。Verylの文法や機能は、VerilogやSystemVerilogに似通ったものになっています。しかし、if式やcase式、クロックとリセットの抽象化、ジェネリクスなどの痒い所に手が届く機能が提供されており、高い生産性を発揮します。</p>
+<p>Verylのソースコードはコンパイラ(トランスパイラ)によって、自然で読みやすいSystemVerilogのソースコードに変換されます。そのため、Verylは旧来のSystemVerilogの環境と共存でき、SystemVerilogの資産を利用できます。</p>
+<div class="miniblock miniblock-caution">
+<p class="miniblock-caption">注意</p>
+<p>本書は2024/11/3時点のVeryl(バージョン0.13.2)を、本書で利用する範囲の文法と機能を解説しています。Verylはまだ開発中(安定版がリリースされていない)状態の言語であるため、破壊的変更が入り、記載しているコードが使えなくなる可能性があります。</p>
+</div>
+
+<h2 class="numbox"><a id="h2-2"></a><span class="secno">2.2</span> Verylの基本文法、機能</h2>
+<p>それでは、Verylの書き方を学んでいきましょう。Verylのドキュメントは<a href="https://doc.veryl-lang.org/book/ja/" class="link">https://doc.veryl-lang.org/book/ja/</a>に存在します。また、<a href="https://doc.veryl-lang.org/playground/" class="link">Veryl Playground</a>では、VerylのSystemVerilogへのトランスパイルをウェブブラウザ上でお試しできます。</p>
+
+<h3 class="none"><a id="h2-2-1"></a><span class="secno">2.2.1</span> コメント</h3>
+<p>Verylでは次のようにコメントを記述できます(<span class="listref"><a href="./03-veryl.html#code.comment">リスト2.3</a></span>)。</p>
+<div id="code.comment" class="caption-code">
+<span class="caption">リスト2.3: リスト2.3: コメント</span>
+<pre class="list language-comment">  // 1行のコメント
+  /* 範囲コメント */
+  /*
+     範囲コメントは改行してもOK
+  */
+</pre>
+</div>
+
+<h3 class="none"><a id="h2-2-2"></a><span class="secno">2.2.2</span> 値、リテラル</h3>
+<p>論理回路では、デジタルな値を扱います。デジタルな値は<code class="inline-code">0</code>と<code class="inline-code">1</code>の二値(2-state)で表現されますが、一般的なハードウェア記述言語では、<code class="inline-code">0</code>と<code class="inline-code">1</code>に<code class="inline-code">x</code>と<code class="inline-code">z</code>を加えた四値(4-state)が利用されます(<span class="tableref"><a href="./03-veryl.html#table.fourstate">表2.2</a></span>)。</p>
+<div id="table.fourstate" class="table">
+<p class="caption">表2.2: 4-stateの値</p>
+<table>
+<tr class="hline"><th>値</th><th>意味</th><th>真偽</th></tr>
+<tr class="hline"><td>0</td><td>0</td><td>偽</td></tr>
+<tr class="hline"><td>1</td><td>1</td><td>真</td></tr>
+<tr class="hline"><td>x</td><td>不定値</td><td>偽</td></tr>
+<tr class="hline"><td>z</td><td>ハイインピーダンス</td><td>偽</td></tr>
+</table>
+</div>
+<p><b>不定値</b>(unknown value, <code class="inline-code">x</code>)とは、<code class="inline-code">0</code>か<code class="inline-code">1</code>のどちらか分からない値です。不定値は、未初期化のレジスタの値の表現に利用されたり、不定値との演算の結果として生成されます。<b>ハイインピーダンス</b>(high-inpedance, <code class="inline-code">z</code>)とは、どのレジスタや信号とも接続されていないことを表す値です。物理的なハードウェア上では、全ての値は<code class="inline-code">0</code>か<code class="inline-code">1</code>の二値として解釈されますが、信号の状態としてハイインピーダンスを持ちます。不定値はシミュレーションのときに利用します。</p>
+<p>1ビットの四値を表現するための型は<b>logic</b>です。Nビットのlogic型は<code class="inline-code">logic&lt;N&gt;</code>と記述できます。1ビットの二値を表現する型は<b>bit</b>です。基本的に、レジスタや信号の定義にbit型は利用せず、logic型を利用します。</p>
+<p>logic型とbit型は、デフォルトで符号が無い型として扱われます。符号付き型として扱いたいときは、型名の前に<b>signed</b>キーワードを追加します(<span class="listref"><a href="./03-veryl.html#code.signed_keyword">リスト2.4</a></span>)。</p>
+<div id="code.signed_keyword" class="caption-code">
+<span class="caption">リスト2.4: リスト2.4: 符号付き型</span>
+<pre class="list language-signed_keyword">signed logic&lt;4&gt; // 4ビットの符号付きlogic型
+signed bit&lt;2&gt; // 2ビットの符号付きbit型
+</pre>
+</div>
+<p>32ビットと64ビットのbit型を表す型が定義されています(<span class="tableref"><a href="./03-veryl.html#ui3264">表2.3</a></span>)。</p>
+<div id="ui3264" class="table">
+<p class="caption">表2.3: 整数型</p>
+<table>
+<tr class="hline"><th>型名</th><th>等価な型</th></tr>
+<tr class="hline"><td>u32</td><td><code class="inline-code">bit&lt;32&gt;</code></td></tr>
+<tr class="hline"><td>u64</td><td><code class="inline-code">bit&lt;64&gt;</code></td></tr>
+<tr class="hline"><td>i32</td><td><code class="inline-code">signed bit&lt;32&gt;</code></td></tr>
+<tr class="hline"><td>i64</td><td><code class="inline-code">signed bit&lt;64&gt;</code></td></tr>
+</table>
+</div>
+<p>数値は<span class="listref"><a href="./03-veryl.html#code.num_literal">リスト2.5</a></span>のように記述できます。</p>
+<div id="code.num_literal" class="caption-code">
+<span class="caption">リスト2.5: リスト2.5: 数値リテラル</span>
+<pre class="list language-num_literal">4'b0101 // 4ビットの数値 (2進数表記)
+4'bxxzz // 4ビットの数値 (2進数表記)
+
+12'o34xz // 12ビットの数値 (8進数表記)
+32'h89abcdef // 32ビットの数値 (16進数表記)
+
+123 // 10進数の数値
+32'd12345 // 32ビットの数値 (10進数表記)
+
+// 数値リテラルの好きな場所に_を挿入できる
+1_2_34_567
+
+// xとzは大文字でも良い
+4'bxXzZ
+
+// 全ビット0、1、x、zにする
+'0
+'1
+'x
+'z
+
+// 指定したビット幅だけ0、1、x、zにする
+8'0 // 8ビット0
+8'1 // 8ビット1
+8'x // 8ビットx
+8'z // 8ビットz
+
+// 幅を指定しない場合、幅が自動で推定される
+'hffff // 16ビット
+'h1fff // 13ビット (13'b1_1111_1111_1111)
+</pre>
+</div>
+<p>文字列は<b>string</b>型で表現できます。文字列の値は<span class="listref"><a href="./03-veryl.html#string.literal">リスト2.6</a></span>のように記述できます。</p>
+<div id="string.literal" class="caption-code">
+<span class="caption">リスト2.6: リスト2.6: 文字列リテラル</span>
+<pre class="list language-literal">&quot;Hello World!&quot; // 文字列リテラル 
+&quot;abcdef\nabc&quot;  // エスケープシーケンスを含む文字列リテラル
+</pre>
+</div>
+
+<h3 class="none"><a id="h2-2-3"></a><span class="secno">2.2.3</span> module</h3>
+<p>論理回路は<b>モジュール</b>(Module)というコンポーネントで構成されます。例えば、半加算器のモジュールは次のように定義できます(<span class="listref"><a href="./03-veryl.html#halfadder.veryl">リスト2.7</a></span>).</p>
+<div id="halfadder.veryl" class="caption-code">
+<span class="caption">リスト2.7: リスト2.7: 半加算器(HalfAdder)モジュール</span>
+<pre class="list language-veryl">module HalfAdder (
+        x: input  logic, // 1ビットのlogic型の入力
+        y: input  logic, // 1ビットのlogic型の入力
+        s: output logic, // 1ビットのlogic型の出力
+        c: output logic, // 1ビットのlogic型の出力
+) {
+        always_comb {
+                s = x ^ y; // sにx XOR yを代入
+                c = x &amp; y; // cにx AND yを代入
+        }
+}
+</pre>
+</div>
+<p>HalfAdderモジュールには、入力変数として<code class="inline-code">x</code>と<code class="inline-code">y</code>、出力変数として<code class="inline-code">s</code>と<code class="inline-code">c</code>が宣言されています。入出力の変数のことを<b>接続ポート</b>、または単に<b>ポート</b>と呼びます。</p>
+<p>入力ポートを定義するとき、モジュール名の後の括弧の中に、<code class="inline-code">変数名 : input 型名</code>と記述します。出力ポートを宣言するときは<code class="inline-code">input</code>の代わりに<code class="inline-code">output</code>と記述します。複数のポートを宣言するとき、宣言の末尾にカンマ(<code class="inline-code">,</code>)を記述します。</p>
+
+<h4><a id="h2-2-3-1"></a>変数のブロッキング代入</h4>
+<p>HalfAdderモジュールでは、<b>always_comb</b>ブロックの中で出力変数<code class="inline-code">s</code>と<code class="inline-code">c</code>に値を代入しています。変数への代入は<code class="inline-code">変数名 = 式;</code>で行います。always_combブロック内での代入のことを、<b>ブロッキング代入</b>(blocking assignment)と呼びます。</p>
+<p>通常のプログラミング言語での代入とは、スタック領域やレジスタに存在する変数に値を格納することです。これに対してalways_combブロック内での代入は、式が評価(計算)された値が変数に1度だけ代入されるのではなく、変数の値は常に式の計算結果になります。</p>
+<p>具体例で考えます。例えばalways_combブロックの中で、1ビットの変数<code class="inline-code">x</code>に1ビットの変数<code class="inline-code">y</code>を代入します(<span class="listref"><a href="./03-veryl.html#assign.wave">リスト2.8</a></span>)。</p>
+<div id="assign.wave" class="caption-code">
+<span class="caption">リスト2.8: リスト2.8: xにyを割り当てる</span>
+<pre class="list language-wave">always_comb {
+        x = y;
+}
+</pre>
+</div>
+<p><code class="inline-code">y</code>の値が時間経過により<code class="inline-code">0</code>→<code class="inline-code">1</code>→<code class="inline-code">0</code>→<code class="inline-code">1</code>→<code class="inline-code">0</code>と変化したとします。このとき、<code class="inline-code">x</code>の値は<code class="inline-code">y</code>が変わるのと同時に変化します(<span class="imgref"><a href="./03-veryl.html#assign_wave">図2.3</a></span>)。<span class="imgref"><a href="./03-veryl.html#assign_wave">図2.3</a></span>は、時間を横軸、<code class="inline-code">x</code>と<code class="inline-code">y</code>の値を線の高低で表しています。<span class="imgref"><a href="./03-veryl.html#assign_wave">図2.3</a></span>のような図を<b>波形図</b>(waveform)、または単に<b>波形</b>と呼びます。</p>
+<p><code class="inline-code">x</code>に<code class="inline-code">y</code>ではなく<code class="inline-code">a + b</code>を代入すると、<code class="inline-code">a</code>か<code class="inline-code">b</code>の変化をトリガーに<code class="inline-code">x</code>の値が変化します。</p>
+<div id="assign_wave" class="image">
+<img src="images/03-veryl/assign_wave.png" alt="xはyの値の変化に追従する" class="img" style="width:60%" />
+<p class="caption">
+図2.3: xはyの値の変化に追従する
+</p>
+</div>
+<p>always_combブロックには複数の代入文を記述できます。このとき、代入文は上から順番に実行(逐次実行)されます。</p>
+<div id="always_comb.order" class="caption-code">
+<span class="caption">リスト2.9: リスト2.9: ブロッキング代入は逐次実行される</span>
+<pre class="list language-order">always_comb {
+        s = X;
+        a = s; // a = X
+        s = Y;
+        b = a; // b = Y
+}
+</pre>
+</div>
+<p>例えば<span class="listref"><a href="./03-veryl.html#always_comb.order">リスト2.9</a></span>では、<code class="inline-code">a</code>には<code class="inline-code">X</code>が代入されますが、<code class="inline-code">b</code>には<code class="inline-code">Y</code>が代入されます。変数<code class="inline-code">a</code>と<code class="inline-code">b</code>と<code class="inline-code">s</code>は、変数<code class="inline-code">X</code>か<code class="inline-code">Y</code>の変化をトリガーに値が更新されます。</p>
+<p>1つの変数にしかブロッキング代入しないとき、<b>assign</b>文でもブロッキング代入できます(<span class="listref"><a href="./03-veryl.html#always_comb.assign">リスト2.10</a></span>)。</p>
+<div id="always_comb.assign" class="caption-code">
+<span class="caption">リスト2.10: リスト2.10: assign文によるブロッキング代入</span>
+<pre class="list language-assign">// assign 変数名 = 式;
+assign a = b + 100;
+</pre>
+</div>
+<p>always_combブロック内での代入と同じように、<span class="listref"><a href="./03-veryl.html#always_comb.assign">リスト2.10</a></span>では<code class="inline-code">b</code>の変化をトリガーに<code class="inline-code">a</code>の値が変化します。</p>
+<p>ブロッキング代入は論理回路の状態(レジスタ)を変更しません。そのため、ブロッキング代入文は組み合わせ回路になります。</p>
+
+<h4><a id="h2-2-3-2"></a>変数の宣言</h4>
+<p>モジュールの中では、<b>var</b>文によって新しく変数を宣言できます(<span class="listref"><a href="./03-veryl.html#var.stmt">リスト2.11</a></span>)。</p>
+<div id="var.stmt" class="caption-code">
+<span class="caption">リスト2.11: リスト2.11: 変数の宣言</span>
+<pre class="list language-stmt">// var 変数名 : 型名;
+var value : logic&lt;32&gt;;
+</pre>
+</div>
+<p>var文で宣言した変数に対してブロッキング代入できます。</p>
+<p><b>let</b>文を使うと、変数の宣言とブロッキング代入を同時に行えます(<span class="listref"><a href="./03-veryl.html#let.stmt">リスト2.12</a></span>)。</p>
+<div id="let.stmt" class="caption-code">
+<span class="caption">リスト2.12: リスト2.12: 変数の宣言とブロッキング代入</span>
+<pre class="list language-stmt">// let 変数名 : 型名 = 式;
+let value : logic&lt;32&gt; = 100 + a;
+</pre>
+</div>
+
+<h4><a id="h2-2-3-3"></a>レジスタの定義と代入</h4>
+<p>変数を宣言するとき、変数に式がブロッキング代入されない場合、変数はレジスタとして解釈できます(<span class="listref"><a href="./03-veryl.html#reg.define">リスト2.13</a></span>)。</p>
+<div id="reg.define" class="caption-code">
+<span class="caption">リスト2.13: リスト2.13: レジスタの定義</span>
+<pre class="list language-define">// var レジスタ名 : 型名;
+var reg_value : logic&lt;32&gt;;
+
+// reg_valueにブロッキング代入しない
+</pre>
+</div>
+<p>本書ではレジスタのことを変数、または変数のことをレジスタと呼ぶことがあります。</p>
+<p>レジスタの値はクロック信号に同期したタイミングで変更し、リセット信号に同期したタイミングで初期化します(<span class="imgref"><a href="./03-veryl.html#register_wave">図2.4</a></span>)。本書では、クロック信号が<b>立ち上がる</b>(<code class="inline-code">0</code>から<code class="inline-code">1</code>に変わる)タイミングでレジスタの値を変更し、リセット信号が<b>立ち下がる</b>(<code class="inline-code">1</code>から<code class="inline-code">0</code>に変わる)タイミングでレジスタの値を初期化することとします。</p>
+<div id="register_wave" class="image">
+<img src="images/03-veryl/register_wave.png" alt="レジスタ(value)の値はクロック信号(clk)が立ち上がるタイミングで変わる" class="img" style="width:50%" />
+<p class="caption">
+図2.4: レジスタ(value)の値はクロック信号(clk)が立ち上がるタイミングで変わる
+</p>
+</div>
+<p>レジスタの値は、<b>always_ff</b>ブロックで初期化、変更します(<span class="listref"><a href="./03-veryl.html#always_ff.first">リスト2.14</a></span>)。always_ffブロックには、値の変更タイミングのためのクロック信号とリセット信号を指定します。</p>
+<div id="always_ff.first" class="caption-code">
+<span class="caption">リスト2.14: リスト2.14: レジスタの値の初期化と変更</span>
+<pre class="list language-first">// レジスタの定義
+var value : logic&lt;32&gt;;
+
+// always_ff(クロック信号, リセット信号)
+always_ff(clk, rst) {
+        if_reset {
+                // リセット信号のタイミングで0に初期化する
+                value = 0;
+        } else {
+                // クロック信号のタイミングでカウントアップする
+                value = value + 1;
+        }
+}
+</pre>
+</div>
+<p><b>if_reset</b>文の中の文は、リセット信号のタイミングで実行されます。if_reset文にelse文を付けることで、クロック信号のタイミングで処理を実行できます。レジスタの値をリセットしない場合、リセット信号とif_reset文を省略できます。逆に、リセット信号を指定する場合は必ずif_reset文を書かなければいけません。</p>
+<p>クロック信号はclock型、リセット信号はreset型で定義します。モジュールのポートに１組のクロック信号とリセット信号が定義されているとき、always_ffブロックのクロック信号とリセット信号の指定を省略できます(<span class="listref"><a href="./03-veryl.html#always_ff.omit">リスト2.15</a></span>)。</p>
+<div id="always_ff.omit" class="caption-code">
+<span class="caption">リスト2.15: リスト2.15: クロック信号とリセット信号の省略</span>
+<pre class="list language-omit">module ModuleA(
+  clk: input clock,
+  rst: input reset,
+){
+        // always_ff(clk, rst)と等しい
+        always_ff {}
+}
+</pre>
+</div>
+<p>レジスタの値は、同じタイミングで動くalways_ffブロックの中の全ての代入文の右辺を評価した後に変更されます(<span class="listref"><a href="./03-veryl.html#multi.always_ff.nonblocking">リスト2.16</a></span>)。この代入はブロッキング代入と違って逐次実行されないので、<b>ノンブロッキング代入</b>(non-blocking assignment)と呼びます。</p>
+<p>2つ以上のalways_ffブロックで、1つの同じレジスタの値を変更することはできません。</p>
+<div id="multi.always_ff.nonblocking" class="caption-code">
+<span class="caption">リスト2.16: リスト2.16: 複数のレジスタの値を同じタイミングで変更する</span>
+<pre class="list language-nonblocking">// 全ての代入文の右辺を評価した後に、AとBが変更される
+// その結果、AとBの値が入れ替わる
+always_ff(clk, rst) {
+        A = B;
+}
+always_ff(clk, rst) {
+        B = A;
+}
+</pre>
+</div>
+<p><span class="listref"><a href="./03-veryl.html#multi.always_ff.nonblocking">リスト2.16</a></span>の<code class="inline-code">A</code>と<code class="inline-code">B</code>の代入文は、1つのalways_ffブロックにまとめて記述できます(<span class="listref"><a href="./03-veryl.html#always_ff.nonblocking">リスト2.17</a></span>)。この場合も<span class="listref"><a href="./03-veryl.html#multi.always_ff.nonblocking">リスト2.16</a></span>と同様に、<code class="inline-code">A</code>と<code class="inline-code">B</code>の代入文の右辺を評価した後に、レジスタの値が変更されます。</p>
+<div id="always_ff.nonblocking" class="caption-code">
+<span class="caption">リスト2.17: リスト2.17: ノンブロッキング代入の更新タイミングは同じ</span>
+<pre class="list language-nonblocking">always_ff {
+        // AとBの値を入れ替える
+        A = B;
+        B = A;
+}
+</pre>
+</div>
+<p>本書ではブロッキング代入とノンブロッキング代入を区別せず、どちらも代入と呼ぶことがあります。</p>
+<p>変数への代入方法と動作を<span class="tableref"><a href="./03-veryl.html#table.assign">表2.4</a></span>にまとめます。大変間違えやすいため、気を付けてください。</p>
+<div id="table.assign" class="table">
+<p class="caption">表2.4: 変数への代入方法と動作の違い</p>
+<table>
+<tr class="hline"><th>代入場所</th><th>代入文の名称</th><th>更新タイミング</th></tr>
+<tr class="hline"><td>always_comb</td><td>ブロッキング代入</td><td>ブロック内の式で参照されている変数が更新されたとき。<br />上から順に実行される。</td></tr>
+<tr class="hline"><td>always_ff</td><td>ノンブロッキング代入</td><td>クロック信号、リセット信号のタイミング。<br />同じタイミングで実行される全ての代入文の右辺を評価した後<br />にレジスタの値が変更される。</td></tr>
+</table>
+</div>
+
+<h4><a id="h2-2-3-4"></a>モジュールのインスタンス化</h4>
+<p>あるモジュールを利用したいとき、モジュールを<b>インスタンス化</b>(instantiate)することにより、モジュールの実体を宣言できます。</p>
+<p>モジュールは、<b>inst</b>キーワードによってインスタンス化できます(<span class="listref"><a href="./03-veryl.html#module.inst">リスト2.18</a></span>)。</p>
+<div id="module.inst" class="caption-code">
+<span class="caption">リスト2.18: リスト2.18: ModuleAモジュール内でHalfAdderモジュールをインスタンス化する</span>
+<pre class="list language-inst">module ModuleA {
+        // モジュールと接続するための変数の宣言
+        let x : logic = 0;
+        let y : logic = 1;
+        var s : logic;
+        var c : logic;
+
+        // inst インスタンス名 : モジュール名(ポートとの接続);
+        inst ha1 : HalfAdder(
+                x: x, // ポートxに変数xを接続する
+                y: y,
+                s,    // ポート名と変数名が同じとき、ポート名の指定を省略できる 
+                c,
+        );
+}
+</pre>
+</div>
+<p>インスタンス名が違えば、同一のモジュールを2つ以上インスタンス化できます。</p>
+
+<h4><a id="h2-2-3-5"></a>パラメータ、定数</h4>
+<p>モジュールには、インスタンス化するときに変更可能な定数(<b>パラメータ</b>)を用意できます。</p>
+<p>モジュールのパラメータは、ポート宣言の前の<code class="inline-code">#()</code>の中で<b>param</b>キーワードによって宣言できます(<span class="listref"><a href="./03-veryl.html#module.param.define">リスト2.19</a></span>)。</p>
+<div id="module.param.define" class="caption-code">
+<span class="caption">リスト2.19: リスト2.19: モジュールのパラメータの宣言</span>
+<pre class="list language-define">module ModuleA #(
+        // param パラメータ名 : 型名 = デフォルト値 
+        param WIDTH : u32 = 100, // u32型のパラメータ
+        param DATA_TYPE : type = logic, // type型のパラメータには型を指定できる
+) (
+        // ポートの宣言
+) {}
+</pre>
+</div>
+<p>モジュールをインスタンス化するとき、ポートの割り当てと同じようにパラメータの値を割り当てられます(<span class="listref"><a href="./03-veryl.html#module.param.inst">リスト2.20</a></span>)。</p>
+<div id="module.param.inst" class="caption-code">
+<span class="caption">リスト2.20: リスト2.20: パラメータの値を指定する</span>
+<pre class="list language-inst">inst ma : ModuleA #(
+        // パラメータの割り当て
+        WIDTH: 10,
+        DATA_TYPE: logic&lt;10&gt;
+) ( /* ポートの接続 */ );
+</pre>
+</div>
+<p>パラメータに指定する値は、合成時に確定する値(定数)である必要があります。</p>
+<p>モジュール内では、変更不可能なパラメータ(定数)を定義できます。定数を定義するには<b>const</b>キーワードを使用します(<span class="listref"><a href="./03-veryl.html#const.use">リスト2.21</a></span>)。</p>
+<div id="const.use" class="caption-code">
+<span class="caption">リスト2.21: リスト2.21: 定数の定義</span>
+<pre class="list language-use">// const 定数名 : 型名 = 式;
+// 式に変数が含まれてはいけない
+const SECRET : u32 = 42;
+</pre>
+</div>
+
+<h3 class="none"><a id="h2-2-4"></a><span class="secno">2.2.4</span> ユーザー定義型</h3>
+
+<h4><a id="h2-2-4-1"></a>構造体型</h4>
+<p>構造体(struct)とは、複数のデータから構成される型です。例えば、<span class="listref"><a href="./03-veryl.html#struct.define">リスト2.22</a></span>のように記述すると、<code class="inline-code">logic&lt;32&gt;</code>と<code class="inline-code">logic&lt;16&gt;</code>の2つのデータから構成される型を定義できます。</p>
+<div id="struct.define" class="caption-code">
+<span class="caption">リスト2.22: リスト2.22: 構造体型の定義</span>
+<pre class="list language-define">// struct 型名 { フィールドの定義 }
+struct MyPair {
+        // 名前 : 型
+        word: logic&lt;32&gt;,
+        half: logic&lt;16&gt;,
+}
+</pre>
+</div>
+<p>構造体の要素(フィールド, field)には<code class="inline-code">.</code>を介してアクセスできます(<span class="listref"><a href="./03-veryl.html#struct.field.access">リスト2.23</a></span>)。</p>
+<div id="struct.field.access" class="caption-code">
+<span class="caption">リスト2.23: リスト2.23: フィールドへのアクセス、割り当て</span>
+<pre class="list language-access">// 構造体型の変数の宣言
+var pair: MyPair;
+
+// フィールドにアクセスする
+let w : logic&lt;32&gt; = pair.word;
+
+// フィールドに値を割り当てる
+always_comb {
+        pair.word = 12345;
+}
+</pre>
+</div>
+
+<h4><a id="h2-2-4-2"></a>列挙型</h4>
+<p>複数の値の候補から値を選択できる型を作りたいとき、<b>列挙型</b>(enumerable type)を利用できます。列挙型の値の候補のことを<b>バリアント</b>(variant)と呼びます。</p>
+<p>例えば、A、B、C、Dのいずれかのバリアントをとる型は次のように定義できます(<span class="listref"><a href="./03-veryl.html#enum.define">リスト2.24</a></span>)。</p>
+<div id="enum.define" class="caption-code">
+<span class="caption">リスト2.24: リスト2.24: 列挙型の定義</span>
+<pre class="list language-define">// enum 型名 : logic&lt;バリアント数を保持できるだけのビット数&gt; { バリアントの定義 }
+enum abcd : logic&lt;2&gt; {
+        // バリアント名 : バリアントを表す値,
+        A = 2'd0,
+        B = 2'd1,
+        C = 2'd2,
+        D = 2'd3,
+}
+</pre>
+</div>
+<p>enum型の値は<code class="inline-code">型名::バリアント名</code>で利用できます(<span class="listref"><a href="./03-veryl.html#enum.use">リスト2.25</a></span>)。</p>
+<div id="enum.use" class="caption-code">
+<span class="caption">リスト2.25: リスト2.25: 列挙型の値</span>
+<pre class="list language-use">// enum型の変数の定義
+let v : abcd = abcd::A;
+</pre>
+</div>
+<p>バリアントを表す値や、バリアントを保持できるだけのビット数は省略できます(<span class="listref"><a href="./03-veryl.html#enum.omit">リスト2.26</a></span>)。</p>
+<div id="enum.omit" class="caption-code">
+<span class="caption">リスト2.26: リスト2.26: 列挙型の省略した定義</span>
+<pre class="list language-omit">enum abcd {
+        A, B, C, D
+}
+</pre>
+</div>
+
+<h4><a id="h2-2-4-3"></a>配列</h4>
+<p><code class="inline-code">&lt;&gt;</code>を使用することで、多次元の型を定義できます(<span class="listref"><a href="./03-veryl.html#logic.md">リスト2.27</a></span>)。<code class="inline-code">&lt;&gt;</code>を使用して構成される型の要素は、連続した領域に並ぶことが保証されます(<span class="imgref"><a href="./03-veryl.html#packed_array">図2.5</a></span>)。</p>
+<div id="logic.md" class="caption-code">
+<span class="caption">リスト2.27: リスト2.27: 多次元の型</span>
+<pre class="list language-md">logic&lt;N&gt;     // Nビットのlogic型
+logic&lt;A, B&gt;  // BビットのlogicがA個並ぶ型
+</pre>
+</div>
+<div id="packed_array" class="image">
+<img src="images/03-veryl/packed_array.png" alt="&amp;lt;&amp;gt;の型の要素は連続した領域に並ぶ (例 : v[1][0]とv[0][3]が隣り合う)" class="img" />
+<p class="caption">
+図2.5: &lt;&gt;の型の要素は連続した領域に並ぶ (例 : v[1][0]とv[0][3]が隣り合う)
+</p>
+</div>
+<p><code class="inline-code">[]</code>を使用することでも、多次元の型を定義できます(<span class="listref"><a href="./03-veryl.html#array.define">リスト2.28</a></span>)。ただし、<code class="inline-code">[]</code>を使用して構成される型の要素は、連続した領域に並ぶことが保証されません。</p>
+<div id="array.define" class="caption-code">
+<span class="caption">リスト2.28: リスト2.28: 配列型</span>
+<pre class="list language-define">// 型名[個数] で、&quot;型名&quot;型が&quot;個数&quot;個の配列になる
+logic[32]     // 要素数が32のlogicの配列型
+logic[4, 8]   // logicが8個の配列が4個ある配列型
+</pre>
+</div>
+
+<h4><a id="h2-2-4-4"></a>型に別名をつける</h4>
+<p><b>type</b>キーワードを使うと、型に別名を付けられます(<span class="listref"><a href="./03-veryl.html#type.define">リスト2.29</a></span>)。</p>
+<div id="type.define" class="caption-code">
+<span class="caption">リスト2.29: リスト2.29: 型に別名を付ける</span>
+<pre class="list language-define">// type 名前 = 型;
+type ptr = logic&lt;32&gt;;
+type ptr_array = ptr&lt;32&gt;;
+</pre>
+</div>
+
+<h3 class="none"><a id="h2-2-5"></a><span class="secno">2.2.5</span> 式、文、宣言</h3>
+
+<h4><a id="h2-2-5-1"></a>ビット選択</h4>
+<div id="bitsel" class="image">
+<img src="images/03-veryl/bitsel.png" alt="ビット選択" class="img" style="width:50%" />
+<p class="caption">
+図2.6: ビット選択
+</p>
+</div>
+<p>変数の任意のビットを切り出すには<code class="inline-code">[]</code>を使用します(<span class="imgref"><a href="./03-veryl.html#bitsel">図2.6</a></span>)。範囲の選択には<code class="inline-code">[:]</code>を使用します。最上位ビット(most significant bit, MSB)は<b>msb</b>キーワード、最下位ビット(least significant bit, LSB)は<b>lsb</b>キーワードで指定できます。選択する場所の指定には式を使えます。</p>
+<p>よく使われる範囲の選択には、別の書き方が用意されています(<span class="listref"><a href="./03-veryl.html#bitsel.range_sel">リスト2.30</a></span>)。</p>
+<div id="bitsel.range_sel" class="caption-code">
+<span class="caption">リスト2.30: リスト2.30: 範囲の選択の別の記法</span>
+<pre class="list language-range_sel">v[s +: w]   // = v[s+w-1   : s    ]
+v[s -: w]   // = v[s       : s-w+1]
+v[i step w] // = v[i*(w+1) : i*w  ] = v[i*w +: w]
+</pre>
+</div>
+
+<h4><a id="h2-2-5-2"></a>演算子</h4>
+<p>Verylでは、<span class="tableref"><a href="./03-veryl.html#operator.priority">表2.5</a></span>の演算子を使用できます。ほとんどの演算子と優先度は通常のプログラミング言語と同じですが、ビット演算の種類が多かったり、<code class="inline-code">x</code>と<code class="inline-code">z</code>を考慮した演算があるなどの違いがあります。</p>
+<p>SystemVerilogとの差異を説明すると、<code class="inline-code">++</code>、<code class="inline-code">--</code>、<code class="inline-code">:=</code>、<code class="inline-code">:/</code>、<code class="inline-code">&lt;=</code>(代入)、<code class="inline-code">?:</code>(三項演算子)が無く、<code class="inline-code">&lt;</code>と<code class="inline-code">&gt;</code>がそれぞれ<code class="inline-code">&lt;:</code>と<code class="inline-code">&gt;:</code>に変更されています。また、<code class="inline-code">inside</code>と<code class="inline-code">{{}}</code>の形式が変更され、if式、case式、switch式が追加されています。</p>
+<p>単項、二項演算子の使用例は次の通りです(<span class="listref"><a href="./03-veryl.html#operator.use">リスト2.31</a></span>)。</p>
+<div id="operator.use" class="caption-code">
+<span class="caption">リスト2.31: リスト2.31: 単項、二項演算子 (Verylのドキュメントの例&lt;a href=&quot;bib.html#bib-veryl-doc.operators&quot;&gt;[4]&lt;/a&gt;を改変)</span>
+<pre class="list language-use">// 単項算術演算
+a = +1;
+a = -1; // 正負を反転させる
+
+// 単項論理演算
+a = !1; // 否定 (真偽を反転させる)
+a = ~1; // ビット反転 (0を1、1を0にする)
+
+// 単項集約演算
+//
+// 集約: 左のビットから順に1ビットずつビット演算する
+//   例: k = 3'b110のとき、&amp;k = 0
+//       &amp;k = 1 &amp; 1 &amp; 0          
+//       まず、k[msb]とk[1]をANDして1を得る。
+//       次に、その結果とk[0]をANDして0を得る。
+//       この値が&amp;kの結果になる。
+a = &amp;1;  // AND
+a = |1;  // OR
+a = ^1;  // XOR
+a = ~&amp;1; // NAND
+a = ~|1; // NOR
+a = ~^1; // XNOR
+a = ^~1; // XNOR
+
+// 二項算術演算
+a = k ** p; // kのp乗
+a = 1 * 1;  // かけ算
+a = 1 / 1;  // 割り算
+a = 1 % 1;  // 剰余
+a = 1 + 1;  // 足し算
+a = 1 - 1;  // 引き算
+
+// シフト演算
+// 注意 : 右オペランド(シフト数)は符号無しの数として扱われる
+a = k &lt;&lt;  n; // kをnビット左シフトする。空いたビットは0で埋める
+a = k &lt;&lt;&lt; n; // &lt;&lt;と同じ
+a = k &gt;&gt;  n; // kをnビット右シフトする。空いたビットは0で埋める
+a = k &gt;&gt;&gt; n; // kが符号無しのとき&gt;&gt;と同じ。符号付きのとき、空いたビットはMSBで埋める
+
+// 比較演算
+a = n &lt;: m;  // nはm未満
+a = n &lt;= m;  // nはm以下
+a = n &gt;: m;  // nはmよりも大きい (mを含まない)
+a = n &gt;= m;  // nはm以上 (mを含む)
+a = n == m;  // nはmと等しい (xかzを含む場合、x)
+a = n != m;  // nはmと等しくない (xかzを含む場合、x)
+a = n === m; // nはmと等しい (xとzを含めて完全に一致)
+a = n !== m; // nはmと等しくない (xとzを含めて完全に一致)
+a = n ==? m; // ===と同じ。ただし、mに含まれるx,zはワイルドカードになる
+a = n !=? m; // !(==?)と同じ
+
+// ビット演算 (ビット単位, bitwise)
+a = 1 &amp; 1;  // ビット単位AND
+a = 1 ^ 1;  // ビット単位XOR
+a = 1 ~^ 1; // ビット単位XNOR
+a = 1 ^~ 1; // ビット単位XNOR
+a = 1 | 1;  // ビット単位OR
+
+// 二項論理演算
+a = x &amp;&amp; y; // xとyの両方が真のとき真
+a = x || y; // xまたはyが真のとき真
+</pre>
+</div>
+<div id="operator.priority" class="table">
+<p class="caption">表2.5: 演算子と優先度 <a href="bib.html#bib-veryl-doc.operator.precedence">[3]</a></p>
+<table>
+<tr class="hline"><th>演算子</th><th>結合性</th><th>優先順位</th></tr>
+<tr class="hline"><td><code class="inline-code">()</code> <code class="inline-code">[]</code> <code class="inline-code">::</code> <code class="inline-code">.</code></td><td>左</td><td>高い</td></tr>
+<tr class="hline"><td><code class="inline-code">+</code> <code class="inline-code">-</code> <code class="inline-code">!</code> <code class="inline-code">~</code> <code class="inline-code">&amp;</code> <code class="inline-code">~&amp;</code> <code class="inline-code">|</code> <code class="inline-code">~|</code> <code class="inline-code">^</code> <code class="inline-code">~^</code> <code class="inline-code">^~</code>(単項)</td><td>左</td><td></td></tr>
+<tr class="hline"><td><code class="inline-code">**</code></td><td>左</td><td></td></tr>
+<tr class="hline"><td><code class="inline-code">*</code> <code class="inline-code">/</code> <code class="inline-code">%</code></td><td>左</td><td></td></tr>
+<tr class="hline"><td><code class="inline-code">+</code> <code class="inline-code">-</code> (二項)</td><td>左</td><td></td></tr>
+<tr class="hline"><td><code class="inline-code">&lt;&lt;</code> <code class="inline-code">&gt;&gt;</code> <code class="inline-code">&lt;&lt;&lt;</code> <code class="inline-code">&gt;&gt;&gt;</code></td><td>左</td><td></td></tr>
+<tr class="hline"><td><code class="inline-code">&lt;:</code> <code class="inline-code">&lt;=</code> <code class="inline-code">&gt;:</code> <code class="inline-code">&gt;=</code></td><td>左</td><td></td></tr>
+<tr class="hline"><td><code class="inline-code">==</code> <code class="inline-code">!=</code> <code class="inline-code">===</code> <code class="inline-code">!==</code> <code class="inline-code">==?</code> <code class="inline-code">!=?</code></td><td>左</td><td></td></tr>
+<tr class="hline"><td><code class="inline-code">&amp;</code> (二項)</td><td>左</td><td></td></tr>
+<tr class="hline"><td><code class="inline-code">^</code> <code class="inline-code">~^</code> <code class="inline-code">^~</code> (二項)</td><td>左</td><td></td></tr>
+<tr class="hline"><td><code class="inline-code">|</code> (二項)</td><td>左</td><td></td></tr>
+<tr class="hline"><td><code class="inline-code">&amp;&amp;</code></td><td>左</td><td></td></tr>
+<tr class="hline"><td><code class="inline-code">||</code></td><td>左</td><td></td></tr>
+<tr class="hline"><td><code class="inline-code">=</code> <code class="inline-code">+=</code> <code class="inline-code">-=</code> <code class="inline-code">*=</code> <code class="inline-code">/=</code> <code class="inline-code">%=</code> <code class="inline-code">&amp;=</code> <code class="inline-code">^=</code> <code class="inline-code">|=</code> <code class="inline-code">&lt;&lt;=</code> <code class="inline-code">&gt;&gt;=</code> <code class="inline-code">&lt;&lt;&lt;=</code> <code class="inline-code">&gt;&gt;&gt;=</code></td><td>なし</td><td></td></tr>
+<tr class="hline"><td><code class="inline-code">{}</code> <code class="inline-code">inside</code> <code class="inline-code">outside</code> <code class="inline-code">if</code> <code class="inline-code">case</code> <code class="inline-code">switch</code></td><td>なし</td><td>低い</td></tr>
+</table>
+</div>
+
+<h4><a id="h2-2-5-3"></a>if、switch、case</h4>
+<p>条件によって動作や値を変えたいとき、<b>if</b>文を使用します (<span class="listref"><a href="./03-veryl.html#if.only">リスト2.32</a></span>)。if文は式にできます。if式は必ず値を返す必要があり、elseが必須です。</p>
+<div id="if.only" class="caption-code">
+<span class="caption">リスト2.32: リスト2.32: if文、if式</span>
+<pre class="list language-only">var v : logic&lt;32&gt;;
+always_comb {
+        if WIDTH == 0 {
+                // WIDTH == 0のとき
+                v = 0;
+        } else if WIDTH == 1 {
+                // WIDTH != 0かつWIDTH == 1のとき
+                v = 1;
+        } else {
+                // WIDTH != 0かつWIDTH != 1のとき
+                v = if WIDTH == 3 { // ifは式にもなる
+                        3
+                } else {
+                        // if式はelseが必須
+                        4
+                };
+        }
+}
+</pre>
+</div>
+<p>always_combブロック内で変数に代入するとき、if文の全ての場合で代入する必要があることに注意してください(<code class="inline-code">v</code>は常に代入されています)。</p>
+<p><span class="listref"><a href="./03-veryl.html#if.only">リスト2.32</a></span>と同じ意味の文を<b>switch</b>文で書けます(<span class="listref"><a href="./03-veryl.html#switch.only">リスト2.33</a></span>)。どの条件にも当てはまらないときの動作は<b>default</b>で指定します。switchは式にできます。switch式は必ず値を返す必要があり、defaultが必須です。</p>
+<div id="switch.only" class="caption-code">
+<span class="caption">リスト2.33: リスト2.33: switch文、switch式</span>
+<pre class="list language-only">var v : logic&lt;32&gt;;
+always_comb {
+        switch {
+                // WIDTH == 0のとき
+                WIDTH == 0: {
+                        v = 0;
+                }
+                // WIDTH != 0かつWIDTH == 1のとき
+                WIDTH == 1: v = 1; // 要素が1つの文のとき、{}は省略できる
+                // WIDTH != 0かつWIDTH != 1のとき
+                default: 
+                        // switch式
+                        v = switch {
+                                WIDTH == 3: 3, // カンマで区切る
+                                default : 4, // switch式はdefaultが必須
+                        };
+        }
+}
+</pre>
+</div>
+<p><span class="listref"><a href="./03-veryl.html#if.only">リスト2.32</a></span>のように1つの要素(<code class="inline-code">WIDTH</code>)の一致のみが条件のとき、同じ意味の文を<b>case</b>文で書けます(<span class="listref"><a href="./03-veryl.html#case.only">リスト2.34</a></span>)。式にできたり、式にdefaultが必須なのはswitch文と同様です。</p>
+<div id="case.only" class="caption-code">
+<span class="caption">リスト2.34: リスト2.34: case文、case式</span>
+<pre class="list language-only">var v: logic&lt;32&gt;;
+always_comb {
+        case WIDTH {
+                // WIDTH == 0のとき
+                0: {
+                        v = 0;
+                }
+                // WIDTH != 0かつWIDTH == 1のとき
+                1: v = 1; // 要素が1つの文のとき、{}は省略できる
+                // WIDTH != 0かつWIDTH != 1のとき
+                default: 
+                        // case式
+                        v = case WIDTH {
+                                3: 3, // カンマで区切る
+                                default : 4, // case式はdefaultが必須
+                        };
+        }
+}
+</pre>
+</div>
+
+<h4><a id="h2-2-5-4"></a>連結、repeat</h4>
+<p>ビット列や文字列を連結したいとき、<code class="inline-code">{}</code>を使用できます(<span class="listref"><a href="./03-veryl.html#renketu">リスト2.35</a></span>)。<code class="inline-code">+</code>では連結できない(値の足し算になる)ことに注意してください。同じビット列、文字列を繰り返して連結したいときは<b>repeat</b>キーワードを使用します(<span class="listref"><a href="./03-veryl.html#repeat">リスト2.36</a></span>)。</p>
+<div id="renketu" class="caption-code">
+<span class="caption">リスト2.35: リスト2.35: 連結</span>
+<pre class="list">{12'h123, 32'habcd0123} // 44'h123_abcde0123になる
+{&quot;Hello&quot;, &quot; &quot;, &quot;World!&quot;} // &quot;Hello World!&quot;になる
+</pre>
+</div>
+<div id="repeat" class="caption-code">
+<span class="caption">リスト2.36: リスト2.36: repeatを使って連結を繰り返す</span>
+<pre class="list">// {繰り返したい要素 repeat 繰り返す回数}
+{4'0011 repeat 3, 4'b1111} // 16'b0011_0011_0011_1111になる
+{&quot;Happy&quot; repeat 3} // &quot;HappyHappyHappy&quot;になる
+</pre>
+</div>
+
+<h4><a id="h2-2-5-5"></a>for</h4>
+<p><b>for</b>文はループを実現するための文です。for文は<span class="listref"><a href="./03-veryl.html#for.code">リスト2.37</a></span>のように記述できます。例えばループ変数が0から31になるまで(32回)繰り返すなら、範囲に<code class="inline-code">0..32</code>、または<code class="inline-code">0..=31</code>と記述します。範囲には定数のみ指定できます。</p>
+<div id="for.code" class="caption-code">
+<span class="caption">リスト2.37: リスト2.37: for文の記法</span>
+<pre class="list language-code">// for ループ変数名: 型 in 範囲 { 処理 }
+for i: u32 in 0..32 { ... }
+</pre>
+</div>
+<p><b>break</b>文を使うとループから抜け出せます。例えば<span class="listref"><a href="./03-veryl.html#always_comb.for">リスト2.38</a></span>では<code class="inline-code">x</code>の値は256になります。</p>
+<div id="always_comb.for" class="caption-code">
+<span class="caption">リスト2.38: リスト2.38: always_combブロック内でfor文を記述する例</span>
+<pre class="list language-for">var x: u32;
+always_comb {
+    x = 0;
+    for _: u32 in 0..1024 {
+        if x == 256 {
+            break;
+        }
+        x += 1;
+    }
+}
+</pre>
+</div>
+
+<h4><a id="h2-2-5-6"></a>inside、outside</h4>
+<p>値がある範囲に含まれているかという条件を記述したいとき、<b>inside</b>式を利用できます。<code class="inline-code">inside 式 {範囲}</code>で、式の結果が範囲内にあるかという条件を記述できます(<span class="listref"><a href="./03-veryl.html#inside-outside">リスト2.39</a></span>)。逆に、範囲外にあるという条件は<b>outside</b>式で記述できます。</p>
+<div id="inside-outside" class="caption-code">
+<span class="caption">リスト2.39: リスト2.39: inside、outside</span>
+<pre class="list">inside n {0..10}    // nが0以上10未満のとき1
+inside n {0..=10}   // nが0以上10以下のとき1
+inside n {0, 1, 3}  // nが0、1、3のいずれかのとき1
+inside n {0, 2..10} // nが0、または2以上10未満のとき1
+
+// outsideはinsideの逆
+outside n {0..10}   // nが0未満、または10より大きいとき1
+outside n {0, 1, 3} // nが0、1、3以外の値のとき1
+</pre>
+</div>
+
+<h4><a id="h2-2-5-7"></a>function</h4>
+<p>何度も記述する操作や計算は、関数(<b>function</b>)を使うことでまとめて記述できます(<span class="listref"><a href="./03-veryl.html#function.first">リスト2.40</a></span>)。関数は値を引数で受け取り、<b>return</b>文で値を返します。値を返さないとき、戻り値の型の指定を省略できます。</p>
+<p>引数には向きを指定できます。functionの実行を開始するとき、<code class="inline-code">input</code>として指定されている実引数の値が仮引数にコピーされます。functionの実行が終了するとき、<code class="inline-code">output</code>として指定されている仮引数の値が実引数の変数にコピーされます。outputを使用することで、変数に値を割り当てることができます。</p>
+<div id="function.first" class="caption-code">
+<span class="caption">リスト2.40: リスト2.40: 関数</span>
+<pre class="list language-first">// べき乗を返す関数
+function get_power(
+        a : input u32,
+        b : input u32,
+) -&gt; u32 {
+        return a ** b;
+}
+
+val v1 : logic&lt;32&gt;;
+val v2 : logic&lt;32&gt;;
+
+always_comb {
+        v1 = get_power(2, 10); // v1 = 1024
+        v2 = get_power(3, 3); // v2 = 27
+}
+
+
+
+// a + 1をbに代入する関数
+function assign_plus1(
+        a : input  logic&lt;32&gt;,
+        b : output logic&lt;32&gt;,
+) { // 戻り値はないので省略
+        b = a + 1;
+}
+
+val v3 : logic&lt;32&gt;;
+
+always_comb {
+        assign_plus1(v1, v3); // v3 = v1 + 1
+}
+</pre>
+</div>
+
+<h3 class="none"><a id="h2-2-6"></a><span class="secno">2.2.6</span> interface</h3>
+<p>モジュールに何個もポートが存在するとき、ポートの接続は非常に手間のかかる作業になります。例えば<span class="listref"><a href="./03-veryl.html#interface.motivate">リスト2.41</a></span>では、向きが対になっているポートがModuleAとModuleBに定義されており、これを一つ一つ接続しています。</p>
+<div id="interface.motivate" class="caption-code">
+<span class="caption">リスト2.41: リスト2.41: モジュールのポートの相互接続</span>
+<pre class="list language-motivate">module ModuleA (
+        req_a: output logic,
+        req_b: output logic,
+        req_c: output logic,
+){}
+module ModuleB (
+        resp_a: input logic,
+        resp_b: input logic,
+        resp_c: input logic,
+){}
+module Top{
+        var a: logic;
+        var b: logic;
+        var c: logic;
+        inst ma : ModuleA (
+                req_a:a,
+                req_b:b,
+                req_c:c,
+        );
+        inst mb : ModuleB (
+                resp_a:a,
+                resp_b:b,
+                resp_c:c,
+        );
+}
+</pre>
+</div>
+<p>モジュール間のポートの接続を簡単に行うために、インターフェース(<b>interface</b>)という機能が用意されています。<span class="listref"><a href="./03-veryl.html#interface.motivate">リスト2.41</a></span>のModuleAとModuleBを相互接続するようなインターフェースは次のように定義できます(<span class="listref"><a href="./03-veryl.html#interface.example">リスト2.42</a></span>)。</p>
+<div id="interface.example" class="caption-code">
+<span class="caption">リスト2.42: リスト2.42: インターフェースの定義</span>
+<pre class="list language-example">// interface インターフェース名 { }
+interface iff_ab {
+        var a : logic;
+        var b : logic;
+        var c : logic;
+
+        modport req {
+                a: input,
+                b: input,
+                c: input,
+        }
+        modport resp {
+                a: output,
+                b: output,
+                c: output,
+        }
+}
+</pre>
+</div>
+<p>iff_abインターフェースを利用すると、<span class="listref"><a href="./03-veryl.html#interface.motivate">リスト2.41</a></span>を簡潔に記述できます(<span class="listref"><a href="./03-veryl.html#interface.good">リスト2.43</a></span>)。</p>
+<div id="interface.good" class="caption-code">
+<span class="caption">リスト2.43: リスト2.43: インターフェースによる接続</span>
+<pre class="list language-good">module ModuleA (
+        req : modport iff_ab::req,
+){}
+module ModuleB (
+        resp : modport iff_ab::resp,
+){}
+module Top{
+        // インターフェースのインスタンス化
+        inst iab : iff_ab;
+        inst ma : ModuleA (req: iab);
+        inst mb : ModuleB (resp: iab);
+}
+</pre>
+</div>
+<p>インターフェースはポートの宣言と接続を抽象化します。インターフェース内に変数を定義すると、<b>modport</b>文によってポートと向きを宣言できます。モジュールでのポートの宣言は、<code class="inline-code">ポート名 : <b>modport</b> インターフェース名::modport名</code>と記述できます。modportで宣言されたポートにインターフェースのインスタンスを渡すことにより、ポートの接続を一気に行えます。</p>
+<p>モジュールと同じように、インターフェースにはパラメータを宣言できます(<span class="listref"><a href="./03-veryl.html#interface.param">リスト2.44</a></span>)。</p>
+<div id="interface.param" class="caption-code">
+<span class="caption">リスト2.44: リスト2.44: パラメータ付きのインターフェース</span>
+<pre class="list language-param">// interface インターフェース名 #( パラメータの定義 ) { }
+interface iff_params # (
+        param PARAM_A : u32 = 100,
+        param PARAM_B : u64 = 200,
+){ }
+</pre>
+</div>
+<p>インターフェース内には関数の定義やalways_combブロック、always_ffブロックなどの文を記述できます。</p>
+
+<h3 class="none"><a id="h2-2-7"></a><span class="secno">2.2.7</span> package</h3>
+<p>複数のモジュールやインターフェースにまたがって使用したいパラメータや型、関数はパッケージ(<b>package</b>)に定義できます(<span class="listref"><a href="./03-veryl.html#package.define">リスト2.45</a></span>)。</p>
+<div id="package.define" class="caption-code">
+<span class="caption">リスト2.45: リスト2.45: パッケージの定義</span>
+<pre class="list language-define">package PackageA {
+        const WIDTH : u32 = 1234;
+        type foo = logic&lt;WIDTH&gt;;
+        function bar () -&gt; u32 {
+                return 1234;
+        }
+}
+</pre>
+</div>
+<p>パッケージに定義した要素には、<code class="inline-code">パッケージ名::要素名</code>でアクセスできます(<span class="listref"><a href="./03-veryl.html#package.access">リスト2.46</a></span>)。</p>
+<div id="package.access" class="caption-code">
+<span class="caption">リスト2.46: リスト2.46: パッケージの要素にアクセスする</span>
+<pre class="list language-access">module ModuleA {
+        const W : u32 = PackageA::WIDTH;
+        var value1 : PackageA::foo;
+        let value2 : u32 = PackageA::bar();
+}
+</pre>
+</div>
+<p><b>import</b>文を使用すると、要素へのアクセス時にパッケージ名の指定を省略できます(<span class="listref"><a href="./03-veryl.html#package.import">リスト2.47</a></span>)。</p>
+<div id="package.import" class="caption-code">
+<span class="caption">リスト2.47: リスト2.47: パッケージをimportする</span>
+<pre class="list language-import">import PackageA::WIDTH; // 特定の要素をimportする
+import PackageA::*; // 全ての要素をimportする
+</pre>
+</div>
+
+<h3 class="none"><a id="h2-2-8"></a><span class="secno">2.2.8</span> ジェネリクス</h3>
+<p>関数やモジュール、インターフェース、パッケージ、構造体は<b>ジェネリクス</b>(generics)によってパラメータ化できます。</p>
+<p>例えば、要素に任意の型TやWビットのデータを持つ構造体は、次のように<b>ジェネリックパラメータ</b>(generic parameter)を使うことで定義できます(<span class="listref"><a href="./03-veryl.html#generics.sample">リスト2.48</a></span>)。ジェネリックパラメータに渡される値は、ジェネリクスの定義位置からアクセスできる定数である必要があります。</p>
+<div id="generics.sample" class="caption-code">
+<span class="caption">リスト2.48: リスト2.48: パラメータ化された構造体</span>
+<pre class="list language-sample">module ModuleA {
+        // ::&lt;&gt;でジェネリックパラメータを定義する
+        // constで数値を受け取る
+        struct StructA::&lt;W: const&gt; {
+            A: logic&lt;W&gt;,
+        }
+
+        // 複数のジェネリックパラメータを定義できる
+        // typeで型を受け取る
+        // デフォルト値を設定できる
+        struct StructB::&lt;W: const, T: type, D:const = 100&gt; {
+                A: logic&lt;W&gt;,
+                B: T,
+                C: logic&lt;D&gt;
+        }
+
+        // ::&lt;&gt;でジェネリックパラメータを指定する
+        type A = StructA::&lt;16&gt;;
+        type B = StructB::&lt;17, A&gt;;
+        type C = StructB::&lt;18, B, 19&gt;;
+}
+</pre>
+</div>
+
+<h3 class="none"><a id="h2-2-9"></a><span class="secno">2.2.9</span> その他の機能、文</h3>
+
+<h4><a id="h2-2-9-1"></a>initial、final</h4>
+<p><b>initial</b>ブロックの中の文はシミュレーションの開始時に実行されます。<b>final</b>ブロックの中の文はシミュレーションの終了時に実行されます(<span class="listref"><a href="./03-veryl.html#initial.final">リスト2.49</a></span>)。</p>
+<div id="initial.final" class="caption-code">
+<span class="caption">リスト2.49: リスト2.49: initial、finalブロック</span>
+<pre class="list language-final">module ModuleA {
+        initial {
+                // シミュレーション開始時に実行される
+        }
+        final {
+                // シミュレーション終了時に実行される
+        }
+}
+</pre>
+</div>
+
+<h4><a id="h2-2-9-2"></a>SystemVerilogとの連携</h4>
+<p>SystemVerilogのモジュールやパッケージ、インターフェースを利用できます。SystemVerilogのリソースにアクセスするには<code class="inline-code">$sv::</code>を使用します(<span class="listref"><a href="./03-veryl.html#sv.use">リスト2.50</a></span>)。</p>
+<div id="sv.use" class="caption-code">
+<span class="caption">リスト2.50: リスト2.50: SystemVerilogの要素を利用する</span>
+<pre class="list language-use">module ModuleA {
+        // SystemVerilogでsvpackageとして
+        // 定義されているパッケージを利用する
+        let x = $sv::svpackage::X;
+        let y = $sv::svpackage::Y;
+
+        var s: logic;
+        var c: logic;
+
+        // SystemVerilogでHalfAdderとして
+        // 定義されているモジュールをインスタンス化する
+        inst ha : $sv::HalfAdder(
+                x, y, s, c
+        );
+
+        // SystemVerilogでsvinterfaceとして
+        // 定義されているインターフェースをインスタンス化する
+        inst c: $sv::svinterface;
+}
+</pre>
+</div>
+<p>SystemVerilogのソースコードを直接埋め込み、展開できます(<span class="listref"><a href="./03-veryl.html#sv.integrate">リスト2.51</a></span>)。</p>
+<div id="sv.integrate" class="caption-code">
+<span class="caption">リスト2.51: リスト2.51: SystemVerilog記述を埋め込む</span>
+<pre class="list language-integrate">// SystemVerilog記述を直接埋め込む
+embed (inline) sv{{{
+        module ModuleA(
+                output logic a
+        );
+                assign a = 0;
+        endmodule
+}}}
+
+// SystemVerilogのソースファイルを展開する
+// パスは相対パス
+include(inline, &quot;filename.sv&quot;);
+</pre>
+</div>
+
+<h4><a id="h2-2-9-3"></a>システム関数、システムタスク</h4>
+<p>SystemVerilogに標準で用意されている関数(システム関数、システムタスク)を利用できます。システム関数(system function)とシステムタスク(system task)の名前は<code class="inline-code">$</code>から始まります。本書で利用するシステム関数とシステムタスクを<span class="tableref"><a href="./03-veryl.html#systemtasks">表2.6</a></span>に列挙します。</p>
+<div id="systemtasks" class="table">
+<p class="caption">表2.6: 本書で使用するシステム関数、システムタスク</p>
+<table>
+<tr class="hline"><th>関数名</th><th>機能</th><th>戻り値</th></tr>
+<tr class="hline"><td>$clog2</td><td>値のlog2のceilを求める</td><td>数値</td></tr>
+<tr class="hline"><td>$size</td><td>配列のサイズを求める</td><td>数値</td></tr>
+<tr class="hline"><td>$bits</td><td>値の幅を求める</td><td>数値</td></tr>
+<tr class="hline"><td>$signed</td><td>値を符号付きとして扱う</td><td>符号付きの値</td></tr>
+<tr class="hline"><td>$readmemh</td><td>レジスタにファイルのデータを代入する</td><td>なし</td></tr>
+<tr class="hline"><td>$display</td><td>文字列を出力する</td><td>なし</td></tr>
+<tr class="hline"><td>$error</td><td>エラー出力する</td><td>なし</td></tr>
+<tr class="hline"><td>$finish</td><td>シミュレーションを終了する</td><td>なし</td></tr>
+</table>
+</div>
+<p>それぞれの使用例は次の通りです(<span class="listref"><a href="./03-veryl.html#systemtask.use">リスト2.52</a></span>)。システム関数やシステムタスクを利用するときは、通常の関数呼び出しのように使用します。</p>
+<div id="systemtask.use" class="caption-code">
+<span class="caption">リスト2.52: リスト2.52: システム関数、システムタスクの使用例</span>
+<pre class="list language-use">const w1 : u32 = $clog2(32); // 5
+const w2 : u32 = $clog2(35); // 6
+
+var array : logic&lt;4,8&gt;;
+const s1 : u32 = $size(array); // 4
+const s2 : u32 = $bits(array); // 32
+
+var uvalue : u32;
+let svalue : i32 = $signed(uvalue) + 1;
+
+initial {
+        $readmemh(&quot;file.hex&quot;, array);
+        $display(&quot;Hello World!&quot;);
+        $error(&quot;Error!&quot;);
+        $finish();
+}
+</pre>
+</div>
+
+<h4><a id="h2-2-9-4"></a>アトリビュート</h4>
+<p>アトリビュートを使うと、宣言に注釈をつけられます。例えば<span class="listref"><a href="./03-veryl.html#attribute.use">リスト2.53</a></span>は、<span class="listref"><a href="./03-veryl.html#attribute.sv">リスト2.54</a></span>にトランスパイルされます。</p>
+<div id="attribute.use" class="caption-code">
+<span class="caption">リスト2.53: リスト2.53: アトリビュートを使ったVerylコード</span>
+<pre class="list language-use">#[sv(&quot;keep=\&quot;true\&quot;&quot;)]
+var aaa : logic;
+
+#[ifdef(IS_DEBUG)]
+var bbb : logic;
+
+#[ifndef(TEST)]
+var ccc : logic;
+</pre>
+</div>
+<div id="attribute.sv" class="caption-code">
+<span class="caption">リスト2.54: リスト2.54: 同じ意味のSystemVerilogコード</span>
+<pre class="list language-sv">(* keep=&quot;true&quot; *)
+logic aaa;
+
+`ifdef IS_DEBUG
+logic bbb;
+`endif
+
+`ifndef TEST
+logic ccc;
+`endif
+</pre>
+</div>
+<p><code class="inline-code">#[sv()]</code>は、宣言にSystemVerilogの属性を付けられます。属性は使用するときに説明します。<code class="inline-code">#[ifdef(マクロ名)]</code>をつけられた宣言は、マクロが存在するときにのみ定義されるようになります。<code class="inline-code">#[ifndef(マクロ名)]</code>はその逆で、マクロが存在しないときにのみ定義されるようになります。</p>
+<p>アトリビュートはポートやパラメータ、ブロック、モジュール、インターフェース、パッケージなど、どの宣言にも付けることができます。</p>
+
+<h4><a id="h2-2-9-5"></a>標準ライブラリ</h4>
+<p>Verylには、よく使うモジュールなどが標準ライブラリとして準備されています。標準ライブラリは<a href="https://std.veryl-lang.org/" class="link">https://std.veryl-lang.org/</a>で確認できます。</p>
+<p>本書では標準ライブラリを使用していないため、説明は割愛します。</p>
+        </main>
+        <nav class="page-navi">
+          <a href="02-setup.html" class="page-prev">&#9664;</a>
+          <a href="04-impl-rv32i.html" class="page-next">&#9654;</a>
+        </nav>
+        <br>
+        <br>
+        <footer style="background:#dddddd">
+      <div style="padding: 20px 20px 20px 20px;">
+          <div style="font-size:1.4rem"><b>コンピュータは、CPUを書けば理解できる！</b></div><br>
+          コンピュータアーキテクチャはCPUを作れば理解できます。
+          「Verylで作るCPU」は、ハードウェア記述言語VerylでRISC-VのCPUを自作する方法を解説するプロジェクトです。<br>
+          「Verylで作るCPU 基本編」では、ハードウェア記述言語の基礎から、OSを実行できる程度のCPUの実装方法までを解説します。<br>
+          <br>
+          キーワード: 自作CPU , RISC-V , Veryl , FPGA<br>
+      <div>
+        </footer>
+      </div>
+    </div>
+    
+    <script>
+      let url = window.location.href;
+      let encoded_url = encodeURI(url);
+      let fb = document.getElementById("share-facebook");
+      fb["data-href"] = url;
+      console.log(fb);
+    </script>
+    <div id="fb-root"></div>
+    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/ja_JP/sdk.js#xfbml=1&version=v21.0"></script>
+    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+  </body>
+</html>
+<!-- layout.html5.erb -->

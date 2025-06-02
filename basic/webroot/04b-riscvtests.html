@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    
+    <title>riscv-testsによるテスト | Verylで作るCPU</title>
+
+    <link rel="stylesheet" type="text/css" href="css/normalize.css" />
+    <link rel="stylesheet" type="text/css" href="css/webstyle.css" />
+    <link rel="next" title="RV64Iの実装" href="05-impl-rv64i.html">
+    <link rel="prev" title="Zicsr拡張の実装" href="04a-zicsr.html">
+    <meta name="generator" content="Re:VIEW Starter">
+
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+
+  </head>
+  <body style="background-color:#eff4ff">
+    <div class="page-outer" style="background-color:white">
+      <div class="side-content">
+                <a class="nav-title" href="index.html">Verylで作るCPU</a>
+
+        <div style="display:flex; gap:10px; align-items: center;">
+          <a class="github-button" href="https://github.com/nananapo/veryl-riscv-book" data-color-scheme="no-preference: light_high_contrast; light: light; dark: dark;" data-size="large" data-show-count="true" aria-label="Star nananapo/veryl-riscv-book on GitHub">Star</a>
+          <div style="">
+            <a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-show-count="false">Tweet</a>
+          </div>
+          <div style="margin-bottom: 14px;" id="share-facebook" class="fb-share-button" data-href="" data-layout="" data-size=""><a target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Finvalid.invalid%2F&amp;src=sdkpreparse" class="fb-xfbml-parse-ignore">Facebookでシェアする</a></div>
+        </div>
+        <ul class="toc toc-1">
+    <li class="toc-chapter"><a href="./00-preface.html">まえがき</a></li>
+<li class="toc-part">第I部 RV32I/RV64Iの実装
+  <ul class="toc toc-2">
+    <li class="toc-chapter"><a href="./02-setup.html">1 環境構築</a></li>
+    <li class="toc-chapter"><a href="./03-veryl.html">2 ハードウェア記述言語 Veryl</a></li>
+    <li class="toc-chapter"><a href="./04-impl-rv32i.html">3 RV32Iの実装</a></li>
+    <li class="toc-chapter"><a href="./04a-zicsr.html">4 Zicsr拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./04b-riscvtests.html">5 riscv-testsによるテスト</a>
+      <ul class="toc toc-3">
+        <li class="toc-section"><a href="./04b-riscvtests.html#h5-1">5.1 riscv-testsとは何か?</a></li>
+        <li class="toc-section"><a href="./04b-riscvtests.html#h5-2">5.2 riscv-testsのビルド</a></li>
+        <li class="toc-section"><a href="./04b-riscvtests.html#h5-3">5.3 テスト内容の確認</a></li>
+        <li class="toc-section"><a href="./04b-riscvtests.html#h5-4">5.4 テストの終了検知</a></li>
+        <li class="toc-section"><a href="./04b-riscvtests.html#h5-5">5.5 テストの実行</a></li>
+        <li class="toc-section"><a href="./04b-riscvtests.html#h5-6">5.6 複数のテストの自動実行</a></li>
+      </ul>
+    </li>
+    <li class="toc-chapter"><a href="./05-impl-rv64i.html">6 RV64Iの実装</a></li>
+    <li class="toc-chapter"><a href="./05a-pipeline.html">7 CPUのパイプライン化</a></li>
+    <li class="toc-chapter"><a href="./05b-synth.html">8 CPUの合成</a></li>
+  </ul>
+</li>
+<li class="toc-part">第II部 RV64IMACの実装
+  <ul class="toc toc-2">
+    <li class="toc-chapter"><a href="./10-impl-m.html">9 M拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./11-impl-exception.html">10 例外の実装</a></li>
+    <li class="toc-chapter"><a href="./12-impl-mmio.html">11 Memory-mapped I/Oの実装</a></li>
+    <li class="toc-chapter"><a href="./13-impl-a.html">12 A拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./14-impl-c.html">13 C拡張の実装</a></li>
+  </ul>
+</li>
+<li class="toc-part">第III部 特権/割り込みの実装
+  <ul class="toc toc-2">
+    <li class="toc-chapter"><a href="./20-mmode-csr.html">14 M-modeの実装 (1. CSRの実装)</a></li>
+    <li class="toc-chapter"><a href="./21-impl-interrupt.html">15 M-modeの実装 (2. 割り込みの実装)</a></li>
+    <li class="toc-chapter"><a href="./22-umode-csr.html">16 U-modeの実装</a></li>
+    <li class="toc-chapter"><a href="./23-smode-csr.html">17 S-modeの実装 (1. CSRの実装)</a></li>
+    <li class="toc-chapter"><a href="./24-impl-paging.html">18 S-modeの実装 (2. 仮想記憶システム)</a></li>
+    <li class="toc-chapter"><a href="./25-impl-plic.html">19 PLICの実装</a></li>
+    <li class="toc-chapter"><a href="./26-run-linux.html">20 Linuxを動かす</a></li>
+  </ul>
+</li>
+    <li class="toc-chapter"><a href="./99-postface.html">あとがき (第Ⅰ部)</a></li>
+    <li class="toc-chapter"><a href="./99b-postface.html">あとがき (第Ⅱ部、第Ⅲ部)</a></li>
+    <li class="toc-chapter"><a href="./100-contribute.html">このプロジェクトに貢献する</a></li>
+    <li class="toc-chapter"><a href="./bib.html">参考文献</a></li>
+</ul>
+      </div>
+      <div class="page-inner">
+        <header class="page-header">
+        </header>
+        <main class="page-main">
+  <h1 class="boldlines center twolines"><a id="h5"></a><span class="secno">第5章</span> <br/>riscv-testsによるテスト</h1>
+<p><a href="./04-impl-rv32i.html">第3章</a>では、RV32IのCPUを実装しました。簡単なテストを作成して動作を確かめましたが、まだテストできていない命令が複数あります。そこで、riscv-testsというテストを利用することで、CPUがある程度正しく動いているらしいことを確かめます。</p>
+
+<h2 class="numbox"><a id="h5-1"></a><span class="secno">5.1</span> riscv-testsとは何か?</h2>
+<p>riscv-testsは、RISC-Vのプロセッサ向けのユニットテストやベンチマークテストの集合です。命令や機能ごとにテストが用意されており、これを利用することで簡単に実装を確かめられます。すべての命令のすべての場合を網羅するようなテストではないため、riscv-testsをパスしても、確実に実装が正しいとは言えないことに注意してください<sup><a id="fnb-about.formal" href="#fn-about.formal" class="noteref" epub:type="noteref">*1</a></sup>。</p>
+<div class="footnote-list">
+<div class="footnote" id="fn-about.formal" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>実装の正しさを完全に確かめるには形式的検証(formal verification)を行う必要があります</p></div>
+</div><!--/.footnote-list-->
+<p>GitHubの<a href="https://github.com/riscv-software-src/riscv-tests" class="link">riscv-software-src/riscv-tests</a>からソースコードをダウンロードできます。</p>
+
+<h2 class="numbox"><a id="h5-2"></a><span class="secno">5.2</span> riscv-testsのビルド</h2>
+<div class="miniblock miniblock-info">
+<p class="miniblock-caption">riscv-testsのビルドが面倒、もしくはよく分からなくなってしまった方へ</p>
+<p><a href="https://github.com/nananapo/riscv-tests-bin/tree/bin4" class="link">https://github.com/nananapo/riscv-tests-bin/tree/bin4</a></p>
+<p>完成品を上記のURLにおいておきます。core/testにコピーしてください。</p>
+</div>
+
+<h3 class="none"><a id="h5-2-1"></a><span class="secno">5.2.1</span> riscv-testsをビルドする</h3>
+<p>まず、riscv-testsをcloneします(<span class="listref"><a href="./04b-riscvtests.html#riscv-tests.build">リスト5.1</a></span>)。</p>
+<div id="riscv-tests.build" class="cmd-code">
+<span class="caption">リスト5.1: リスト5.1: riscv-testsのclone</span>
+<pre class="list language-build">$ <span class="userinput">git clone https://github.com/riscv-software-src/riscv-tests</span>
+$ <span class="userinput">cd riscv-tests</span>
+$ <span class="userinput">git submodule update --init --recursive</span>
+</pre>
+</div>
+<p>riscv-testsは、プログラムの実行が<code class="inline-code">0x80000000</code>から始まると仮定した設定になっています。しかし、CPUはアドレス<code class="inline-code">0x00000000</code>から実行を開始するため、リンカにわたす設定ファイル<code class="inline-code">env/p/link.ld</code>を変更する必要があります(<span class="listref"><a href="./04b-riscvtests.html#link.ld">リスト5.2</a></span>)。</p>
+<div id="link.ld" class="caption-code">
+<span class="caption">リスト5.2: リスト5.2: riscv-tests/env/p/link.ld</span>
+<pre class="list language-ld">OUTPUT_ARCH( &quot;riscv&quot; )
+ENTRY(_start)
+
+SECTIONS
+{
+  . = <b>0x00000000</b>; <span class="balloon">← 先頭を0x00000000に変更する</span>
+</pre>
+</div>
+<p>riscv-testsをビルドします。必要なソフトウェアがインストールされていない場合、適宜インストールしてください(<span class="listref"><a href="./04b-riscvtests.html#riscvtests.autoconf">リスト5.3</a></span>)。</p>
+<div id="riscvtests.autoconf" class="cmd-code">
+<span class="caption">リスト5.3: リスト5.3: riscv-testsのビルド</span>
+<pre class="list language-autoconf">$ <span class="userinput">cd riscv-testsをcloneしたディレクトリ</span>
+$ <span class="userinput">autoconf</span>
+$ <span class="userinput">./configure --prefix=core/testへのパス</span>
+$ <span class="userinput">make</span>
+$ <span class="userinput">make install</span>
+</pre>
+</div>
+<p>core/testにshareディレクトリが作成されます。</p>
+
+<h3 class="none"><a id="h5-2-2"></a><span class="secno">5.2.2</span> 成果物を$readmemhで読み込める形式に変換する</h3>
+<p>riscv-testsをビルドできましたが、これは<code class="inline-code">$readmemh</code>システムタスクで読み込める形式(以降HEX形式と呼びます)ではありません。これをCPUでテストを実行できるように、ビルドしたテストのバイナリファイルをHEX形式に変換します。</p>
+<p>まず、バイナリファイルをHEX形式に変換するPythonプログラム<code class="inline-code">test/bin2hex.py</code>を作成します(<span class="listref"><a href="./04b-riscvtests.html#bin2hex.py">リスト5.4</a></span>)。</p>
+<div id="bin2hex.py" class="caption-code">
+<span class="caption">リスト5.4: リスト5.4: test/bin2hex.py</span>
+<pre class="list language-py">import sys
+
+# 使い方を表示する
+def print_usage():
+    print(sys.argv[1])
+    print(&quot;Usage:&quot;, sys.argv[0], &quot;[bytes per line] [filename]&quot;)
+    exit()
+
+# コマンドライン引数を受け取る
+args = sys.argv[1:]
+if len(args) != 2:
+    print_usage()
+BYTES_PER_LINE = None
+try:
+    BYTES_PER_LINE = int(args[0])
+except:
+    print_usage()
+FILE_NAME = args[1]
+
+# バイナリファイルを読み込む
+allbytes = []
+with open(FILE_NAME, &quot;rb&quot;) as f:
+    allbytes = f.read()
+
+# 値を文字列に変換する
+bytestrs = []
+for b in allbytes:
+    bytestrs.append(format(b, '02x'))
+
+# 00を足すことでBYTES_PER_LINEの倍数に揃える
+bytestrs += [&quot;00&quot;] * (BYTES_PER_LINE - len(bytestrs) % BYTES_PER_LINE)
+
+# 出力
+results = []
+for i in range(0, len(bytestrs), BYTES_PER_LINE):
+    s = &quot;&quot;
+    for j in range(BYTES_PER_LINE):
+        s += bytestrs[i + BYTES_PER_LINE - j - 1]
+    results.append(s)
+print(&quot;\n&quot;.join(results))
+</pre>
+</div>
+<p>このプログラムは、第二引数に指定されるバイナリファイルを、第一引数に与えられた数のバイト毎に区切り、16進数のテキストで出力します。</p>
+<p>HEXファイルに変換する前に、ビルドした成果物を確認する必要があります。例えば<code class="inline-code">test/share/riscv-tests/isa/rv32ui-p-add</code>はELFファイル<sup><a id="fnb-what.is.elf" href="#fn-what.is.elf" class="noteref" epub:type="noteref">*2</a></sup>です。CPUはELFを直接に実行する機能を持っていないため、<code class="inline-code">riscv64-unknown-elf-objcopy</code>を利用して、ELFファイルを余計な情報を取り除いたバイナリファイルに変換します(<span class="listref"><a href="./04b-riscvtests.html#elf.bin">リスト5.5</a></span>)。</p>
+<div class="footnote-list">
+<div class="footnote" id="fn-what.is.elf" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*2] </span>ELF(Executable and Linkable Format)とは実行可能ファイルの形式です</p></div>
+</div><!--/.footnote-list-->
+<div id="elf.bin" class="cmd-code">
+<span class="caption">リスト5.5: リスト5.5: ELFファイルをバイナリファイルに変換する</span>
+<pre class="list language-bin">$ <span class="userinput">find share/ -type f -not -name &quot;*.dump&quot; -exec riscv32-unknown-elf-objcopy -O binary {} {}.bin \;</span>
+</pre>
+</div>
+<p>最後に、objcopyで生成されたバイナリファイルを、PythonプログラムでHEXファイルに変換します(<span class="listref"><a href="./04b-riscvtests.html#bin.hex">リスト5.6</a></span>)。</p>
+<div id="bin.hex" class="cmd-code">
+<span class="caption">リスト5.6: リスト5.6: バイナリファイルをHEXファイルに変換する</span>
+<pre class="list language-hex">$ <span class="userinput">find share/ -type f -name &quot;*.bin&quot; -exec sh -c &quot;python3 bin2hex.py 4 {} &gt; {}.hex&quot; \;</span>
+</pre>
+</div>
+
+<h2 class="numbox"><a id="h5-3"></a><span class="secno">5.3</span> テスト内容の確認</h2>
+<p>riscv-testsには複数のテストが用意されていますが、本章では、名前が<code class="inline-code">rv32ui-p-</code>から始まるRV32I向けのテストを利用します。</p>
+<p>例えば、ADD命令のテストである<code class="inline-code">test/share/riscv-tests/isa/rv32ui-p-add.dump</code>を読んでみます(<span class="listref"><a href="./04b-riscvtests.html#rv32ui-p-add.dump">リスト5.7</a></span>)。<code class="inline-code">rv32ui-p-add.dump</code>は、<code class="inline-code">rv32ui-p-add</code>のダンプファイルです。</p>
+<div id="rv32ui-p-add.dump" class="caption-code">
+<span class="caption">リスト5.7: リスト5.7: rv32ui-p-add.dump</span>
+<pre class="list language-dump">Disassembly of section .text.init:
+
+00000000 &lt;_start&gt;:
+   0:   0500006f                j       50 &lt;reset_vector&gt;
+
+00000004 &lt;trap_vector&gt;:
+   4:   34202f73                csrr    t5,mcause <span class="balloon">← t5 = mcause</span>
+  ...
+  18:   00b00f93                li      t6,11
+  1c:   03ff0063                beq     t5,t6,3c &lt;write_tohost&gt;
+  ...
+
+0000003c &lt;write_tohost&gt;: <span class="balloon">← 0x1000にテスト結果を書き込む</span>
+  3c:   00001f17                auipc   t5,0x1
+  40:   fc3f2223                sw      gp,-60(t5) # 1000 &lt;tohost&gt;
+  ...
+
+00000050 &lt;reset_vector&gt;:
+  50:   00000093                li      ra,0
+ ...    <span class="balloon">← レジスタ値のゼロ初期化</span>
+  c8:   00000f93                li      t6,0
+ ...    
+ 130:   00000297                auipc   t0,0x0
+ 134:   ed428293                addi    t0,t0,-300 # 4 &lt;trap_vector&gt;
+ 138:   30529073                csrw    mtvec,t0 <span class="balloon">← mtvecにtrap_vectorのアドレスを書き込む</span>
+ ...    
+ 178:   00000297                auipc   t0,0x0
+ 17c:   01428293                addi    t0,t0,20 # 18c &lt;test_2&gt;
+ 180:   34129073                csrw    mepc,t0 <span class="balloon">← mepcにtest_2のアドレスを書き込む</span>
+ ...    
+ 188:   30200073                mret <span class="balloon">← mepcのアドレス=test_2にジャンプする</span>
+
+0000018c &lt;test_2&gt;: <span class="balloon">← 0 + 0 = 0のテスト</span>
+ 18c:   00200193                li      gp,2 <span class="balloon">← gp = 2</span>
+ 190:   00000593                li      a1,0
+ 194:   00000613                li      a2,0
+ 198:   00c58733                add     a4,a1,a2
+ 19c:   00000393                li      t2,0
+ 1a0:   4c771663                bne     a4,t2,66c &lt;fail&gt;
+ ...
+0000066c &lt;fail&gt;: <span class="balloon">← 失敗したときのジャンプ先</span>
+ ...
+ 674:   00119193                sll     gp,gp,0x1 <span class="balloon">← gpを1ビット左シフトする</span>
+ 678:   0011e193                or      gp,gp,1 <span class="balloon">← gpのLSBを1にする</span>
+ ...
+ 684:   00000073                ecall
+
+00000688 &lt;pass&gt;: <span class="balloon">← すべてのテストに成功したときのジャンプ先</span>
+ ...
+ 68c:   00100193                li      gp,1 <span class="balloon">← gp = 1</span>
+ 690:   05d00893                li      a7,93
+ 694:   00000513                li      a0,0
+ 698:   00000073                ecall
+ 69c:   c0001073                unimp
+</pre>
+</div>
+<p>命令のテストは次の流れで実行されます。</p>
+<ol start="1" type="1">
+<li>_start : reset_vectorにジャンプする。</li>
+<li>reset_vector : 各種状態を初期化する。</li>
+<li>test_* : テストを実行する。命令の結果がおかしかったらfailにジャンプする。最後まで正常に実行できたらpassにジャンプする。</li>
+<li>fail、pass : テストの成否をレジスタに書き込み、trap_vectorにジャンプする。</li>
+<li>trap_vector : write_tohostにジャンプする。</li>
+<li>write_tohost : テスト結果をメモリに書き込む。ここでループする。</li>
+</ol>
+<p><code class="inline-code">_start</code>から実行を開始し、最終的に<code class="inline-code">write_tohost</code>に移動します。テスト結果はメモリの<code class="inline-code">.tohost</code>に書き込まれます。<code class="inline-code">.tohost</code>のアドレスは、リンカの設定ファイルに記述されています(<span class="listref"><a href="./04b-riscvtests.html#link.ld.tohost">リスト5.8</a></span>)。プログラムのサイズは<code class="inline-code">0x1000</code>よりも小さいため、<code class="inline-code">.tohost</code>のアドレスは<code class="inline-code">0x1000</code>になります。</p>
+<div id="link.ld.tohost" class="caption-code">
+<span class="caption">リスト5.8: リスト5.8: riscv-tests/env/p/link.ld</span>
+<pre class="list language-tohost">OUTPUT_ARCH( &quot;riscv&quot; )
+ENTRY(_start)
+
+SECTIONS
+{
+  . = 0x00000000;
+  .text.init : { *(.text.init) }
+  <b>. = ALIGN(0x1000);</b>
+  <b>.tohost : { *(.tohost) }</b>
+</pre>
+</div>
+
+<h2 class="numbox"><a id="h5-4"></a><span class="secno">5.4</span> テストの終了検知</h2>
+<p>テストを実行するとき、テストの終了を検知して、成功か失敗かを報告する必要があります。</p>
+<p>riscv-testsはテストの終了を示すために、<code class="inline-code">.tohost</code>にLSBが<code class="inline-code">1</code>な値を書き込みます。書き込まれた値が<code class="inline-code">32'h1</code>のとき、テストが正常に終了したことを表しています。それ以外のときは、テストが失敗したことを表しています。</p>
+<p>riscv-testsが終了したことを検知する処理をtopモジュールに記述します。topモジュールでメモリへのアクセスを監視し、<code class="inline-code">.tohost</code>にLSBが<code class="inline-code">1</code>な値が書き込まれたら、<code class="inline-code">test_success</code>に結果を書き込んでテストを終了します。(<span class="listref"><a href="./04b-riscvtests.html#top.veryl.detect-finish-range.detect">リスト5.9</a></span>)。</p>
+<div id="top.veryl.detect-finish-range.detect" class="caption-code">
+<span class="caption">リスト5.9: リスト5.9: メモリアクセスを監視して終了を検知する (top.veryl)</span>
+<pre class="list language-detect">    // riscv-testsの終了を検知する
+    #[ifdef(TEST_MODE)]
+    always_ff {
+        let RISCVTESTS_TOHOST_ADDR: Addr = 'h1000 as Addr;
+        if d_membus.valid &amp;&amp; d_membus.ready &amp;&amp; d_membus.wen == 1 &amp;&amp; d_membus.addr == RISCVTESTS_TOHOST_ADDR &amp;&amp; d_membus.wdata[lsb] == 1'b1 {
+            test_success = d_membus.wdata == 1;
+            if d_membus.wdata == 1 {
+                $display(&quot;riscv-tests success!&quot;);
+            } else {
+                $display(&quot;riscv-tests failed!&quot;);
+                $error  (&quot;wdata : %h&quot;, d_membus.wdata);
+            }
+            $finish();
+        }
+    }
+</pre>
+</div>
+<p><code class="inline-code">test_success</code>はポートとして定義します(<span class="listref"><a href="./04b-riscvtests.html#top.veryl.detect-finish-range.port">リスト5.10</a></span>)。</p>
+<div id="top.veryl.detect-finish-range.port" class="caption-code">
+<span class="caption">リスト5.10: リスト5.10: テスト結果を報告するためのポートを宣言する (top.veryl)</span>
+<pre class="list language-port">module top #(
+    param MEMORY_FILEPATH_IS_ENV: bit    = 1                 ,
+    param MEMORY_FILEPATH       : string = &quot;MEMORY_FILE_PATH&quot;,
+) (
+    clk: input clock,
+    rst: input reset,
+    <b>#[ifdef(TEST_MODE)]</b>
+    <b>test_success: output bit,</b>
+) {
+</pre>
+</div>
+<p>アトリビュートによって、終了検知のコードと<code class="inline-code">test_success</code>ポートは<code class="inline-code">TEST_MODE</code>マクロが定義されているときにのみ存在するようになっています。</p>
+
+<h2 class="numbox"><a id="h5-5"></a><span class="secno">5.5</span> テストの実行</h2>
+<p>試しにADD命令のテストを実行してみましょう。ADD命令のテストのHEXファイルは<code class="inline-code">test/share/riscv-tests/isa/rv32ui-p-add.bin.hex</code>です。</p>
+<p>TEST_MODEマクロを定義してシミュレータをビルドし、正常に動くことを確認します(<span class="listref"><a href="./04b-riscvtests.html#test.add.sim">リスト5.11</a></span>)。</p>
+<div id="test.add.sim" class="cmd-code">
+<span class="caption">リスト5.11: リスト5.11: ADD命令のriscv-testsを実行する</span>
+<pre class="list language-sim">$ <span class="userinput">make build</span>
+$ <span class="userinput">make sim VERILATOR_FLAGS=&quot;-DTEST_MODE&quot;</span> <span class="balloon">← TEST_MODEマクロを定義してビルドする</span>
+$ <span class="userinput">./obj_dir/sim test/share/riscv-tests/isa/rv32ui-p-add.bin.hex 0</span>
+#                    4
+00000000 : 0500006f
+#                    8
+00000050 : 00000093
+...
+#                  593
+00000040 : fc3f2223
+  itype     : 000100
+  imm       : ffffffc4
+  rs1[30]   : 0000103c
+  rs2[ 3]   : 00000001
+  op1       : 0000103c
+  op2       : ffffffc4
+  alu res   : 00001000
+  mem stall : 1
+  mem rdata : ff1ff06f
+riscv-tests success!
+- ~/core/src/top.sv:26: Verilog $finish
+</pre>
+</div>
+<p><code class="inline-code">riscv-tests success!</code>と表示され、テストが正常終了しました<sup><a id="fnb-if_not_success" href="#fn-if_not_success" class="noteref" epub:type="noteref">*3</a></sup>。</p>
+<div class="footnote-list">
+<div class="footnote" id="fn-if_not_success" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*3] </span>実行が終了しない場合はどこかしらにバグがあります。rv32ui-p-add.dumpと実行ログを見比べて、頑張って原因を探してください</p></div>
+</div><!--/.footnote-list-->
+
+<h2 class="numbox"><a id="h5-6"></a><span class="secno">5.6</span> 複数のテストの自動実行</h2>
+<p>ADD命令以外の命令もテストしたいですが、わざわざコマンドを手打ちしたくありません。自動でテストを実行して、その結果を報告するプログラムを作成しましょう。</p>
+<p><code class="inline-code">test/test.py</code>を作成し、次のように記述します(<span class="listref"><a href="./04b-riscvtests.html#test.py">リスト5.12</a></span>)。</p>
+<div id="test.py" class="caption-code">
+<span class="caption">リスト5.12: リスト5.12: test.py</span>
+<pre class="list language-py">import argparse
+import os
+import subprocess
+
+parser = argparse.ArgumentParser()
+parser.add_argument(&quot;sim_path&quot;, help=&quot;path to simlator&quot;)
+parser.add_argument(&quot;dir&quot;, help=&quot;directory includes test&quot;)
+parser.add_argument(&quot;files&quot;, nargs='*', help=&quot;test hex file names&quot;)
+parser.add_argument(&quot;-r&quot;, &quot;--recursive&quot;, action='store_true', help=&quot;search file recursively&quot;)
+parser.add_argument(&quot;-e&quot;, &quot;--extension&quot;, default=&quot;hex&quot;, help=&quot;test file extension&quot;)
+parser.add_argument(&quot;-o&quot;, &quot;--output_dir&quot;, default=&quot;results&quot;, help=&quot;result output directory&quot;)
+parser.add_argument(&quot;-t&quot;, &quot;--time_limit&quot;, type=float, default=10, help=&quot;limit of execution time. set 0 to nolimit&quot;)
+args = parser.parse_args()
+
+# run test
+def test(file_name):
+    result_file_path = os.path.join(args.output_dir, file_name.replace(os.sep, &quot;_&quot;) + &quot;.txt&quot;)
+    cmd = args.sim_path + &quot; &quot; + file_name + &quot; 0&quot;
+    success = False
+    with open(result_file_path, &quot;w&quot;) as f:
+        no = f.fileno()
+        p = subprocess.Popen(&quot;exec &quot; + cmd, shell=True, stdout=no, stderr=no)
+        try:
+            p.wait(None if args.time_limit == 0 else args.time_limit)
+            success = p.returncode == 0
+        except: pass
+        finally:
+            p.terminate()
+            p.kill()
+    print((&quot;PASS&quot; if success else &quot;FAIL&quot;) + &quot; : &quot;+ file_name)
+    return (file_name, success)
+
+# search files
+def dir_walk(dir):
+    for entry in os.scandir(dir):
+        if entry.is_dir():
+            if args.recursive:
+                for e in dir_walk(entry.path):
+                    yield e
+            continue
+        if entry.is_file():
+            if not entry.name.endswith(args.extension):
+                continue
+            if len(args.files) == 0:
+                yield entry.path
+            for f in args.files:
+                if entry.name.find(f) != -1:
+                    yield entry.path
+                    break
+
+if __name__ == '__main__':
+    os.makedirs(args.output_dir, exist_ok=True)
+
+    res_strs = []
+    res_statuses = []
+
+    for hexpath in dir_walk(args.dir):
+        f, s = test(os.path.abspath(hexpath))
+        res_strs.append((&quot;PASS&quot; if s else &quot;FAIL&quot;) + &quot; : &quot; + f)
+        res_statuses.append(s)
+
+    res_strs = sorted(res_strs)
+    statusText = &quot;Test Result : &quot; + str(sum(res_statuses)) + &quot; / &quot; + str(len(res_statuses))
+
+    with open(os.path.join(args.output_dir, &quot;result.txt&quot;), &quot;w&quot;, encoding='utf-8') as f:
+        f.write(statusText + &quot;\n&quot;)
+        f.write(&quot;\n&quot;.join(res_strs))
+
+    print(statusText)
+
+    if sum(res_statuses) != len(res_statuses):
+        exit(1)
+</pre>
+</div>
+<p>このPythonプログラムは、第2引数で指定したディレクトリに存在する、第3引数で指定した文字列を名前に含むファイルを、第1引数で指定したシミュレータで実行し、その結果を報告します。</p>
+<p>次のオプションの引数が存在します。</p>
+<dl>
+<dt>-r</dt>
+<dd>
+    第2引数で指定されたディレクトリの中にあるディレクトリも走査します。
+    デフォルトでは走査しません。
+</dd>
+<dt>-e 拡張子</dt>
+<dd>
+    指定した拡張子のファイルのみを対象にテストします。
+    HEXファイルをテストしたい場合は、<code class="inline-code">-e hex</code>にします。
+    デフォルトでは<code class="inline-code">hex</code>が指定されています。
+</dd>
+<dt>-o ディレクトリ</dt>
+<dd>
+    指定したディレクトリにテスト結果を格納します。
+    デフォルトでは<code class="inline-code">result</code>ディレクトリに格納します。
+</dd>
+<dt>-t 時間</dt>
+<dd>
+    テストに時間制限を設けます。
+    0を指定すると時間制限はなくなります。
+    デフォルト値は10(秒)です。
+</dd>
+</dl>
+<p>テストが成功したか失敗したかの判定には、シミュレータの終了コードを利用しています。テストが失敗したときに終了コードが<code class="inline-code">1</code>になるように、Verilatorに渡しているC++プログラムを変更します(<span class="listref"><a href="./04b-riscvtests.html#tb_verilator.cpp.detect-finish-range.return">リスト5.13</a></span>)。</p>
+<div id="tb_verilator.cpp.detect-finish-range.return" class="caption-code">
+<span class="caption">リスト5.13: リスト5.13: tb_verilator.cpp</span>
+<pre class="list language-return">    #ifdef TEST_MODE
+        return dut-&gt;test_success != 1;
+    #endif
+</pre>
+</div>
+<p>それでは、RV32Iのテストを実行しましょう。riscv-testsのRV32I向けのテストの接頭辞である<code class="inline-code">rv32ui-p-</code>を引数に指定します(<span class="listref"><a href="./04b-riscvtests.html#python.test.py">リスト5.14</a></span>)。</p>
+<div id="python.test.py" class="cmd-code">
+<span class="caption">リスト5.14: リスト5.14: rv32ui-pから始まるテストを実行する</span>
+<pre class="list language-py">$ <span class="userinput">make build</span>
+$ <span class="userinput">make sim VERILATOR_FLAGS=&quot;-DTEST_MODE&quot;</span>
+$ <span class="userinput">python3 test/test.py -r obj_dir/sim test/share rv32ui-p-</span>
+PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-lh.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-sb.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-sltiu.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-sh.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-bltu.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-or.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-sra.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-xor.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-addi.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-srai.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-srli.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-auipc.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-slli.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-slti.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-lb.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-lw.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-bge.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-sub.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-xori.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-sw.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-beq.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-fence_i.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-jal.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-and.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-lui.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-bgeu.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-slt.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-sll.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-jalr.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-add.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-simple.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-andi.bin.hex
+FAIL : ~/core/test/share/riscv-tests/isa/rv32ui-p-ma_data.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-lhu.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-lbu.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-sltu.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-ori.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-blt.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-bne.bin.hex
+PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-srl.bin.hex
+Test Result : 39 / 40
+</pre>
+</div>
+<p><code class="inline-code">rv32ui-p-</code>から始まる40個のテストの内、39個のテストに成功しました。テストの詳細な結果はresultsディレクトリに格納されています。</p>
+<p><code class="inline-code">rv32ui-p-ma_data</code>は、ロードストアするサイズに整列されていないアドレスへのロードストア命令のテストです。これは後の章で例外として対処するため、今は無視します。</p>
+        </main>
+        <nav class="page-navi">
+          <a href="04a-zicsr.html" class="page-prev">&#9664;</a>
+          <a href="05-impl-rv64i.html" class="page-next">&#9654;</a>
+        </nav>
+        <br>
+        <br>
+        <footer style="background:#dddddd">
+      <div style="padding: 20px 20px 20px 20px;">
+          <div style="font-size:1.4rem"><b>コンピュータは、CPUを書けば理解できる！</b></div><br>
+          コンピュータアーキテクチャはCPUを作れば理解できます。
+          「Verylで作るCPU」は、ハードウェア記述言語VerylでRISC-VのCPUを自作する方法を解説するプロジェクトです。<br>
+          「Verylで作るCPU 基本編」では、ハードウェア記述言語の基礎から、OSを実行できる程度のCPUの実装方法までを解説します。<br>
+          <br>
+          キーワード: 自作CPU , RISC-V , Veryl , FPGA<br>
+      <div>
+        </footer>
+      </div>
+    </div>
+    
+    <script>
+      let url = window.location.href;
+      let encoded_url = encodeURI(url);
+      let fb = document.getElementById("share-facebook");
+      fb["data-href"] = url;
+      console.log(fb);
+    </script>
+    <div id="fb-root"></div>
+    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/ja_JP/sdk.js#xfbml=1&version=v21.0"></script>
+    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+  </body>
+</html>
+<!-- layout.html5.erb -->
