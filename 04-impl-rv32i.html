@@ -56,7 +56,28 @@
     <li class="toc-chapter"><a href="./05b-synth.html">8 CPUの合成</a></li>
   </ul>
 </li>
-    <li class="toc-chapter"><a href="./99-postface.html">あとがき</a></li>
+<li class="toc-part">第II部 RV64IMACの実装
+  <ul class="toc toc-2">
+    <li class="toc-chapter"><a href="./10-impl-m.html">9 M拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./11-impl-exception.html">10 例外の実装</a></li>
+    <li class="toc-chapter"><a href="./12-impl-mmio.html">11 Memory-mapped I/Oの実装</a></li>
+    <li class="toc-chapter"><a href="./13-impl-a.html">12 A拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./14-impl-c.html">13 C拡張の実装</a></li>
+  </ul>
+</li>
+<li class="toc-part">第III部 特権/割り込みの実装
+  <ul class="toc toc-2">
+    <li class="toc-chapter"><a href="./20-mmode-csr.html">14 M-modeの実装 (1. CSRの実装)</a></li>
+    <li class="toc-chapter"><a href="./21-impl-interrupt.html">15 M-modeの実装 (2. 割り込みの実装)</a></li>
+    <li class="toc-chapter"><a href="./22-umode-csr.html">16 U-modeの実装</a></li>
+    <li class="toc-chapter"><a href="./23-smode-csr.html">17 S-modeの実装 (1. CSRの実装)</a></li>
+    <li class="toc-chapter"><a href="./24-impl-paging.html">18 S-modeの実装 (2. 仮想記憶システム)</a></li>
+    <li class="toc-chapter"><a href="./25-impl-plic.html">19 PLICの実装</a></li>
+    <li class="toc-chapter"><a href="./26-run-linux.html">20 Linuxを動かす</a></li>
+  </ul>
+</li>
+    <li class="toc-chapter"><a href="./99-postface.html">あとがき (第Ⅰ部)</a></li>
+    <li class="toc-chapter"><a href="./99b-postface.html">あとがき (第Ⅱ部、第Ⅲ部)</a></li>
     <li class="toc-chapter"><a href="./100-contribute.html">このプロジェクトに貢献する</a></li>
     <li class="toc-chapter"><a href="./bib.html">参考文献</a></li>
 </ul>
@@ -1731,20 +1752,6 @@ module memunit (
     membus: modport membus_if::&lt;MEM_DATA_WIDTH, XLEN&gt;::master, // メモリとのinterface
 ) {
 
-    // 命令がメモリにアクセスする命令か判別する関数
-    function inst_is_memop (
-        ctrl: input InstCtrl,
-    ) -&gt; logic    {
-        return ctrl.itype == InstType::S || ctrl.is_load;
-    }
-
-    // 命令がストア命令か判別する関数
-    function inst_is_store (
-        ctrl: input InstCtrl,
-    ) -&gt; logic    {
-        return inst_is_memop(ctrl) &amp;&amp; !ctrl.is_load;
-    }
-
     // memunitの状態を表す列挙型
     enum State: logic&lt;2&gt; {
         Init, // 命令を受け付ける状態
@@ -2437,7 +2444,7 @@ deadbeef // 0x0
 <div id="core.veryl.jump-range.hazard_assign" class="caption-code">
 <span class="caption">リスト3.84: リスト3.84: control_hazardとcontrol_hazard_pc_nextの割り当て (core.veryl)</span>
 <pre class="list language-hazard_assign" translate="no">    assign control_hazard         = inst_valid &amp;&amp; inst_ctrl.is_jump;
-    assign control_hazard_pc_next = alu_result;
+    assign control_hazard_pc_next = alu_result &amp; ~1;
 </pre>
 </div>
 <p><code class="inline-code" translate="no" >control_hazard</code>を利用して<code class="inline-code" translate="no" >if_pc</code>を更新し、新しく命令をフェッチしなおすようにします(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.jump-range.always">リスト3.85</a></span>)。</p>
@@ -2659,7 +2666,7 @@ module brunit (
     assign control_hazard_pc_next = <b>if inst_is_br(inst_ctrl) {</b>
         <b>inst_pc + inst_imm</b>
     <b>} else {</b>
-        alu_result
+        alu_result &amp; ~1
     <b>}</b>;
 </pre>
 </div>
@@ -2726,7 +2733,7 @@ $ <span class="userinput">obj_dir/sim src/sample_br.hex 15</span>
         <footer style="background:#dddddd">
       <div style="padding: 20px 20px 20px 20px;">
           <div style="font-size:1.4rem"><b>コンピュータは、CPUを書けば理解できる！</b></div><br>
-          コンピュータアーキテクチャは、CPUを作ることで理解することができます。
+          コンピュータアーキテクチャはCPUを作れば理解できます。
           「Verylで作るCPU」は、ハードウェア記述言語VerylでRISC-VのCPUを自作する方法を解説するプロジェクトです。<br>
           「Verylで作るCPU 基本編」では、ハードウェア記述言語の基礎から、OSを実行できる程度のCPUの実装方法までを解説します。<br>
           <br>
