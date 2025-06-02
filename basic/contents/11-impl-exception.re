@@ -257,7 +257,7 @@ mtvalレジスタを実装して、書き込み、読み込みできるように
 #@end
 //}
 
-//list[csrunit.veryl.mtval-range.reg][mtval変数を作成する (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.mtval-range.reg][mtvalレジスタを作成する (csrunit.veryl)][lineno=on]{
 #@maprange(scripts/11/mtval-range/core/src/csrunit.veryl,reg)
     var mtvec : UIntX;
     var mepc  : UIntX;
@@ -284,7 +284,7 @@ mtvalレジスタを実装して、書き込み、読み込みできるように
 #@end
 //}
 
-//list[csrunit.veryl.mtval-range.reset][mtval変数をリセットする (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.mtval-range.reset][mtvalレジスタをリセットする (csrunit.veryl)][lineno=on]{
 #@maprange(scripts/11/mtval-range/core/src/csrunit.veryl,reset)
     always_ff {
         if_reset {
@@ -390,8 +390,7 @@ EEIが認識できない不正な命令ビット列を実行しようとした�
 CPUに実装していない命令、つまりデコードできない命令を実行しようとするとき、
 Illegal instruction例外が発生します。
 
-今のところopcodeが未知の命令は何もしない命令として実行し、
-それ以外の命令については何も対処していません。
+今のところ未知の命令は何もしない命令として実行しています。
 ここで、inst_decoderモジュールを、未知の命令であることを報告するように変更します。
 
 inst_decoderモジュールに、命令が有効かどうかを示す@<code>{valid}ポートを追加します
@@ -526,18 +525,18 @@ CSRに値が書き込まれるのは次のいずれかの場合です。
 
  1. CSRRW、CSRRWI命令である
  2. CSRRS命令でrs1が0番目のレジスタ以外である
- 3. CSRRSI命令で即値が@<b>{0}以外である
+ 3. CSRRSI命令で即値が@<code>{0}以外である
  4. CSRRC命令でrs1が0番目のレジスタ以外である
- 5. CSRRCI命令で即値が@<b>{0}以外である
+ 5. CSRRCI命令で即値が@<code>{0}以外である
 
-ソースレジスタの値が@<b>{0}だとしても、0番目のレジスタではない場合にはCSRに書き込むと判断します。
+ソースレジスタの値が@<code>{0}だとしても、0番目のレジスタではない場合にはCSRに書き込むと判断します。
 CSRに書き込むかどうかを正しく判定するために、
 csrunitモジュールの@<code>{rs1}ポートを@<code>{rs1_addr}と@<code>{rs1_data}に分解します
 (
 @<list>{core.veryl.csrro-range.csru}、
 @<list>{csrunit.veryl.csrro-range.port}、
 @<list>{csrunit.veryl.csrro-range.wdata}
-)。
+)@<fn>{fix-wmask-bug}。
 また、causeを設定するためにcsrunitモジュールに命令のビット列を供給します。
 
 
@@ -585,7 +584,7 @@ module csrunit (
 #@end
 //}
 
-//list[csrunit.veryl.csrro-range.wdata][rs1の変更に対応する@<fn>{fix-wmask-bug} (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.csrro-range.wdata][rs1の変更に対応する (csrunit.veryl)][lineno=on]{
 #@maprange(scripts/11/csrro-range/core/src/csrunit.veryl,wdata)
     @<b>|let wsource: UIntX = if ctrl.funct3[2] ? {1'b0 repeat XLEN - 5, rs1_addr} : rs1_data;|
     wdata   = case ctrl.funct3[1:0] {

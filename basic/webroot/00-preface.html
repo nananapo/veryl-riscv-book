@@ -30,6 +30,7 @@
     <li class="toc-chapter"><a href="./00-preface.html">まえがき</a>
       <ul class="toc toc-2">
         <li class="toc-section"><a href="./00-preface.html#h">本書のソースコード / 問い合わせ先</a></li>
+        <li class="toc-section"><a href="./00-preface.html#h">部、章の番号について</a></li>
         <li class="toc-section"><a href="./00-preface.html#h">凡例</a></li>
       </ul>
     </li>
@@ -61,7 +62,7 @@
         </header>
         <main class="page-main">
   <h1 class="none center"><a id="h"></a><br/>まえがき</h1>
-<p><span style="font-size:large">本書は「Verylで作るCPU 基本編」の<b>第II部と第III部</b>です。</span><span style="font-size:large">本書に第I部は含まれていませんが、Web版にすべて無料で公開しています。</span></p>
+<p><span style="font-size:large">本書は「Verylで作るCPU 基本編」の<b>第II部と第III部</b>です。</span><span style="font-size:large">本書に第I部は含まれていませんが、<a href="https://cpu.kanataso.net Web版" class="link">https://cpu.kanataso.net Web版</a>にすべて無料で公開しています。</span></p>
 <p><span style="font-size:large">本書では、第I部で実装したRV64Iの5段パイプラインのCPUに次の機能を実装します。</span></p>
 <ul>
 <li><span style="font-size:large">乗除算 (M拡張)</span>
@@ -82,18 +83,22 @@
 </li>
 </ul>
 <p><span style="font-size:large">実装するCPUは、最終的にOSを実行できる程度の機能を持つことになります。本書の最後ではLinuxを実行できることを確認します。</span></p>
+<p><span style="font-size:large"><b>OSを動かせるくらい高機能なCPUを作りたいあなたに完全なロードマップを提供します！</b></span></p>
 
 <h2 id="id_00-preface_nonum1" notoc="true">本書のソースコード / 問い合わせ先</h2>
 <p><span style="font-size:large">本書で利用するソースコードは、以下のサポートページから入手できます。質問やお問い合わせ方法についてもサポートページを確認してください。</span></p>
 <ul>
-<li><span style="font-size:large"><a href="https://github.com/nananapo/veryl-riscv-book/wiki/techbookfest18-support-page" class="link">https://github.com/nananapo/veryl-riscv-book/wiki/techbookfest18-support-page</a></span>
+<li><span style="font-size:large"><a href="https://github.com/nananapo/veryl-riscv-book/wiki/" class="link">https://github.com/nananapo/veryl-riscv-book/wiki/</a></span>
 </li>
 </ul>
+
+<h2 id="id_00-preface_nonum2" notoc="true">部、章の番号について</h2>
+<p><span style="font-size:large">組版に使っているソフトの都合により第2部が第1部第1章から始まっています。正しくは第2部第9章です。</span></p>
 <p></p>
 <hr />
 <p></p>
 
-<h2 id="id_00-preface_nonum2" notoc="true">凡例</h2>
+<h2 id="id_00-preface_nonum3" notoc="true">凡例</h2>
 <p>プログラムコードの差分を表示する場合は、追加されたコードを太字で、削除されたコードを取り消し線で表します。ただし、リスト内のコードが全て新しく追加されるときは太字を利用しません。コードを置き換えるときは太字で示し、削除されたコードを示さない場合もあります。</p>
 <div class="caption-code">
 <pre class="emlist"><del>print(&quot;Hello, <b>world</b>!\n&quot;);</del>       <span class="balloon">← 取り消し線は削除したコード</span>

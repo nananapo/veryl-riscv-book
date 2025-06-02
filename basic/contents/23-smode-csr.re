@@ -892,7 +892,7 @@ M-mode向けの割り込みを優先して利用します
 
 =={impl-sswi} ソフトウェア割り込みの実装 (SSWI)
 
-SSWIデバイスはソフトウェア割り込み(supervisor software insterrupt)を提供するためのデバイスです。
+SSWIデバイスはソフトウェア割り込み(Supervisor software insterrupt)を提供するためのデバイスです。
 SSWIデバイスにはハードウェアスレッド毎に4バイトのSETSSIPレジスタが用意されています(@<table>{sswi.map.reg})
 SETSSIPレジスタを読み込むと常に@<code>{0}を返しますが、
 最下位ビットに@<code>{1}を書き込むとそれに対応するハードウェアスレッドのmip.SSIPビットが@<code>{1}になります。
@@ -913,8 +913,7 @@ SETSSIPレジスタを読み込むと常に@<code>{0}を返しますが、
 aclint_ifインターフェースに、
 mipレジスタのSSIPビットを@<code>{1}にする要求のための@<code>{setssip}を作成します
 (
-@<list>{aclint_if.veryl.sswi.setssip}、
-@<list>{aclint_memory.veryl.sswi.comb}
+@<list>{aclint_if.veryl.sswi.setssip}
 ）。
 
 //list[aclint_if.veryl.sswi.setssip][setssipをインターフェースに追加する (aclint_if.veryl)][lineno=on]{
@@ -933,7 +932,10 @@ interface aclint_if {
 #@end
 //}
 
-aclintモジュールでSETSSIP0への書き込みを検知し、最下位ビットを@<code>{setssip}に接続します。
+aclintモジュールでSETSSIP0への書き込みを検知し、最下位ビットを@<code>{setssip}に接続します
+(
+@<list>{aclint_memory.veryl.sswi.comb}
+)。
 
 //list[aclint_memory.veryl.sswi.comb][SETSSIP0に書き込むときsetssipにLSBを割り当てる (aclint_memory.veryl)][lineno=on]{
 #@maprange(scripts/23/sswi-range/core/src/aclint_memory.veryl,comb)

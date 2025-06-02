@@ -245,7 +245,7 @@ EXステージに命令が存在し(@<code>{exs_valid})、
 既に計算を要求していない(@<code>{!exs_muldiv_is_requested})
 場合です。
 
-@<code>{!exs_muldiv_is_requested}変数を定義し、
+@<code>{exs_muldiv_is_requested}変数を定義し、
 ステージの遷移条件とmuldivunitに計算を要求したかの状態によって値を更新します(@<list>{core.veryl.create-mdu-range.exs_muldiv_is_requested})。
 
 //list[core.veryl.create-mdu-range.exs_muldiv_is_requested][exs_muldiv_is_requested変数 (core.veryl)][lineno=on]{
@@ -335,7 +335,7 @@ muldivunitモジュールは計算が完了したクロックでしか@<code>{rv
 @<code>{src/muldivunit.veryl}の中にmulunitモジュールを作成します(@<list>{muldivunit.veryl.impl-mulunit-range.mulunit})。
 
 //list[muldivunit.veryl.impl-mulunit-range.mulunit][muldivunit.veryl][lineno=on]{
-#@maprange(scripts/10/impl-mulunit-range/core/src/muldivunit.veryl,mulunit)
+#@# maprange(scripts/10/impl-mulunit-range/core/src/muldivunit.veryl,mulunit)
 module mulunit #(
     param WIDTH: u32 = 0,
 ) (
@@ -362,7 +362,7 @@ module mulunit #(
         rvalid = state == State::Finish;
     }
 
-    var add_count: u32;
+    var add_count: logic<32>;
 
     always_ff {
         if_reset {
@@ -395,7 +395,7 @@ module mulunit #(
         }
     }
 }
-#@end
+#@# end
 //}
 
 mulunitモジュールは@<code>{op1 * op2}を計算するモジュールです。
@@ -454,15 +454,15 @@ funct3の下位2ビットによってmulunitモジュールの結果を選択す
 (@<list>{muldivunit.veryl.mulhu-range.result})。
 
 //list[muldivunit.veryl.mulhu-range.result][MULHUモジュールの結果を取得する (muldivunit.veryl)][lineno=on]{
-#@maprange(scripts/10/mulhu-range/core/src/muldivunit.veryl,result)
+#@# maprange(scripts/10/mulhu-range/core/src/muldivunit.veryl,result)
     State::WaitValid: if is_mul && mu_rvalid {
         state  = State::Finish;
-        result = case funct3_saved[1:0] {
-            2'b11  : mu_result[XLEN+:XLEN], // MULHU
-            default: 0,
-        };
+        @<b>|result = case funct3_saved[1:0] {|
+        @<b>|    2'b11  : mu_result[XLEN+:XLEN], // MULHU|
+        @<b>|    default: 0,|
+        @<b>|};|
     }
-#@end
+#@# end
 //}
 
 
@@ -1010,7 +1010,7 @@ abs関数を利用して、DIV、REM命令のときにdivunitモジュールに�
 @<list>{muldivunit.veryl.divrem-range.error}
 @<list>{muldivunit.veryl.divrem-range.idle}
 )。
-符号付き演算かどうかを@<code>{funct3}のLSBで確認し、例外的な処理ではない場合にのみdivunitモジュールで計算を開始するようにしています。
+符号付き演算かどうかを@<code>{funct3}のLSBで確認し、例外的な処理ではない場合にのみdivunitモジュールで計算を開始するようにします。
 
 //list[muldivunit.veryl.divrem-range.error][符号付き除算がオーバーフローするか、ゼロ除算かどうかを判定する (muldivunit.veryl)][lineno=on]{
 #@maprange(scripts/10/divrem-range/core/src/muldivunit.veryl,error)

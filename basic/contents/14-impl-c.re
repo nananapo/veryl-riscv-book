@@ -21,7 +21,7 @@ C拡張は16ビット幅の命令を定義する拡張です。
 
 //footnote[zc-pseudo][Zc*拡張の一部の命令は複数の命令になります]
 
-RVC命令は表@<img>{rvc-instruction-formats}の9つのフォーマットが定義されています。
+RVC命令は@<img>{rvc-instruction-formats}の9つのフォーマットが定義されています。
 
 //image[rvc-instruction-formats][RVC命令のフォーマット][width=95%]
 
@@ -30,7 +30,7 @@ RVC命令は表@<img>{rvc-instruction-formats}の9つのフォーマットが定
 即値の並び方やそれぞれの命令の具体的なフォーマットについては、
 仕様書か@<secref>{impl-converter-all}のコードを参照してください。
 
-RV64IのCPUに実装されるC拡張には@<img>{rvc-instruction-formats}のRVC命令が定義されています。
+RV64IのCPUに実装されるC拡張には@<table>{impl-c.instructions}のRVC命令が定義されています。
 
 //table[impl-c.instructions][C拡張の命令]{
 命令		同じ意味の32ビット幅の命令	形式

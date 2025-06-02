@@ -85,7 +85,7 @@
 <p>一般的に仮想記憶システムはハードウェアによって提供されます。メモリアクセスを処理するハードウェア部品のことをメモリ管理ユニット(Memory Management Unit, MMU)と呼びます。</p>
 
 <h3 class="none"><a id="h10-1-2"></a><span class="secno">10.1.2</span> ページング方式</h3>
-<p>仮想記憶システムを実現する方式の1つにページング方式(Paging)があります。ページング方式は、物理アドレス空間の一部をページ(Page)という単位に割り当て、ページを参照するための情報をページテーブル(Page Table)に格納します。ページテーブルに格納する情報の単位のことをページテーブルエントリ(Page Table Entry、PTE)と呼びます。仮想アドレスから物理アドレスへの変換はページテーブルにあるPTEを参照して行います<span class="imgref"><a href="./24-impl-paging.html#ptpte">図10.1</a></span>。</p>
+<p>仮想記憶システムを実現する方式の1つにページング方式(Paging)があります。ページング方式は、物理アドレス空間の一部をページ(Page)という単位に割り当て、ページを参照するための情報をページテーブル(Page Table)に格納します。ページテーブルに格納する情報の単位のことをページテーブルエントリ(Page Table Entry、PTE)と呼びます。仮想アドレスから物理アドレスへの変換はページテーブルにあるPTEを参照して行います(<span class="imgref"><a href="./24-impl-paging.html#ptpte">図10.1</a></span>)。</p>
 <div id="ptpte" class="image">
 <img src="images/24-impl-paging/ptpte.png" alt="仮想アドレスの変換にPTEを使う" class="img" style="width:80%" />
 <p class="caption">
@@ -96,7 +96,7 @@
 <h3 class="none"><a id="h10-1-3"></a><span class="secno">10.1.3</span> RISC-Vの仮想記憶システム</h3>
 <p>RISC-Vの仮想記憶システムはページング方式を採用しており、RV32I向けにはSv32、RV64I向けにはSv39、Sv48、Sv57が定義されています。</p>
 <p>RISC-Vの仮想アドレスの変換を簡単に説明します。仮想アドレスの変換は次のプロセスで行います。</p>
-<p>(a) satpレジスタのPPNフィールドと仮想アドレスのフィールドからPTEの物理アドレスを作る。(b) PTEを読み込む。PTEが有効なものか確認する。(c) PTEがページを指しているとき、PTEに書かれている権限を確認してから物理アドレスを作り、アドレス変換終了。(d) PTEが次のPTEを指しているとき、PTEのフィールドと仮想アドレスのフィールドから次のPTEの物理アドレスを作り、bに戻る。</p>
+<p>(a) satpレジスタのPPNフィールドと仮想アドレスのフィールドからPTEの物理アドレスを作る。(b) PTEを読み込む。PTEが有効なものか確認する。(c) PTEがページを指しているとき、PTEに書かれている権限を確認してから物理アドレスを作り、アドレス変換終了。(d) PTEが次のPTEを指しているとき、PTEのフィールドと仮想アドレスのフィールドから次のPTEの物理アドレスを作り、(b)に戻る。</p>
 <p>satpレジスタは仮想記憶システムを制御するためのCSRです。一番最初に参照するPTEのことをroot PTEと呼びます。また、PTEがページを指しているとき、そのPTEのことをleaf PTEと呼びます。</p>
 <p>RISC-Vのページングでは、satpレジスタと仮想アドレス、PTEを使って多段階のPTEの参照を行い、仮想アドレスを物理アドレスに変換します。Sv39の場合、何段階で物理アドレスに変換できるかによってページサイズは4KiB、2MiB、1GiBと異なります。これ以降、MMU内のページング方式を実現する部品のことをPTW(Page Table Walker)と呼びます<sup><a id="fnb-ptw" href="#fn-ptw" class="noteref" epub:type="noteref">*1</a></sup>。</p>
 <div class="footnote-list">
@@ -1422,6 +1422,7 @@
 <pre class="list language-flush"><em class="lineno">1: </em>    assign flush     = valid &amp;&amp; (wsc_flush <b>|| is_fence_i</b>);
 </pre>
 </div>
+<p>riscv-testsの<code class="inline-code">-v-</code>を含むテストを実行し、実装している命令のテストに成功することを確認してください。</p>
         </main>
         <nav class="page-navi">
           <a href="23-smode-csr.html" class="page-prev">&#9664;</a>

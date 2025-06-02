@@ -23,9 +23,9 @@ RAMとROMもメモリデバイスであり、異なるアドレスにマップ�
 
 本章ではCPUのメモリ部分をRAM(Random Access Memory)@<fn>{about-ram}とROM(Read Only Memory)に分割し、
 アクセスするアドレスに応じてアクセスするデバイスを切り替える機能を実装します。
-また、デバッグ用の入出力デバイス(64ビットのレジスタ)も追加します。
-デバイスとメモリ空間の対応は図@<img>{mmio}のように設定します。
-図@<img>{mmio}のようにメモリがどのように配置されているかを示す図のことを@<b>{メモリマップ}(Memory map)と呼びます。
+また、デバッグ用の入出力デバイス(64ビットのレジスタ)も実装します。
+デバイスとメモリ空間の対応は@<img>{mmio}のように設定します。
+@<img>{mmio}のようにメモリがどのように配置されているかを示す図のことを@<b>{メモリマップ}(Memory map)と呼びます。
 あるメモリ空間の先頭アドレスのことをベースアドレス(base address)と呼ぶことがあります。
 
 //footnote[about-ram][本章では実際のRAMデバイスへのアクセスを実装せずmemoryモジュールで代用します。FPGAに合成するときに実際のデバイスへのアクセスに置き換えます。]
@@ -61,11 +61,13 @@ eeiパッケージに定義しているメモリの定数をRAM用の定数に�
 @<code>{MEM_DATA_WIDTH}、@<code>{MEM_ADDR_WIDTH}を使っている部分を@<code>{MEMBUS_DATA_WIDTH}、@<code>{XLEN}に置き換えます。
 @<code>{MEMBUS_DATA_WIDTH}と@<code>{XLEN}を使うmembus_ifインターフェースに別名@<code>{Membus}をつけて利用します
 (
-@<list>{membus_if.veryl.memtoram.Membus}
-@<list>{core.veryl.memtoram.port}
+@<list>{membus_if.veryl.memtoram.Membus}、
+@<list>{core.veryl.memtoram.port}、
+@<list>{memunit.veryl.memtoram.port}、
+@<list>{memunit.veryl.memtoram.var}
 )。
 
-//list[membus_if.veryl.memtoram.Membus][定数名を変更する (membus_if.veryl)][lineno=on]{
+//list[membus_if.veryl.memtoram.Membus][別名の定義 (membus_if.veryl)][lineno=on]{
 #@maprange(scripts/12/memtoram-range/core/src/membus_if.veryl,Membus)
 alias interface Membus = membus_if::<eei::MEMBUS_DATA_WIDTH, eei::XLEN>;
 #@end
@@ -723,7 +725,7 @@ riscv-testsをビルドしなおし、成果物をtestディレクトリに配�
 ビルドしなおしたので、HEXファイルを再度生成します
 (@<list>{terminal.ram.recompile})。
 
-//terminal[terminal.ram.recompile][]{
+//terminal[terminal.ram.recompile][HEXファイルの再生成]{
 $ @<userinput>{cd test}
 $ @<userinput>{find share/ -type f -not -name "*.dump" -exec riscv64-unknown-elf-objcopy -O binary {} {}.bin \;}
 $ @<userinput>{find share/ -type f -name "*.bin" -exec sh -c "python3 bin2hex.py 8 {} > {}.hex" \;}

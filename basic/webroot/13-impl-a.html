@@ -93,9 +93,9 @@
 <tr class="hline"><th>命令</th><th>動作 (読み込んだ値をレジスタにライトバックする)</th></tr>
 <tr class="hline"><td>AMOSWAP.W/D</td><td>メモリから32/64ビット読み込み、<br />rs2の値を書き込む</td></tr>
 <tr class="hline"><td>AMOADD.W/D</td><td>メモリから32/64ビット(符号付き)読み込み<br />rs2(符号付き)の値を足して書き込む</td></tr>
-<tr class="hline"><td>AMOAND.W/D</td><td>メモリから32/64ビット(符号付き)読み込み<br />rs2(符号付き)の値をAND演算して書き込む</td></tr>
-<tr class="hline"><td>AMOOR.W/D</td><td>メモリから32/64ビット(符号付き)読み込み<br />rs2(符号付き)の値をOR演算して書き込む</td></tr>
-<tr class="hline"><td>AMOXOR.W/D</td><td>メモリから32/64ビット(符号付き)読み込み<br />rs2(符号付き)の値をXOR演算して書き込む</td></tr>
+<tr class="hline"><td>AMOAND.W/D</td><td>メモリから32/64ビット読み込み<br />rs2の値をAND演算して書き込む</td></tr>
+<tr class="hline"><td>AMOOR.W/D</td><td>メモリから32/64ビット読み込み<br />rs2の値をOR演算して書き込む</td></tr>
+<tr class="hline"><td>AMOXOR.W/D</td><td>メモリから32/64ビット読み込み<br />rs2の値をXOR演算して書き込む</td></tr>
 <tr class="hline"><td>AMOMIN.W/D</td><td>メモリから32/64ビット(符号付き)読み込み<br />rs2(符号付き)の値と比べて小さい値を書き込む</td></tr>
 <tr class="hline"><td>AMOMAX.W/D</td><td>メモリから32/64ビット(符号付き)読み込み<br />rs2(符号付き)の値と比べて大きい値をを書き込む</td></tr>
 <tr class="hline"><td>AMOMINU.W/D</td><td>メモリから32/64ビット(符号無し)読み込み<br />rs2(符号無し)の値と比べて小さい値を書き込む</td></tr>
@@ -510,7 +510,7 @@
 </pre>
 </div>
 <div id="top.veryl.empty.core" class="caption-code">
-<span class="caption">リスト4.15: リスト4.15: ポート名に割り当てるインターフェースを変更する (top.veryl)</span>
+<span class="caption">リスト4.15: リスト4.15: ポートに割り当てるインターフェースを変更する (top.veryl)</span>
 <pre class="list language-core"><em class="lineno">1: </em>    inst c: core (
 <em class="lineno">2: </em>        clk                    ,
 <em class="lineno">3: </em>        rst                    ,
@@ -601,7 +601,7 @@
 </div>
 
 <h2 class="numbox"><a id="h4-4"></a><span class="secno">4.4</span> Zalrsc拡張の実装</h2>
-<p>予約セットのサイズは実装が自由に決めることができるため、本書では1つのアドレスのみ保持できるようにします。</p>
+<p>Zalrsc拡張の命令を実装します。予約セットのサイズは実装が自由に決めることができるため、本書では1つのアドレスのみ保持できるようにします。</p>
 
 <h3 class="none"><a id="h4-4-1"></a><span class="secno">4.4.1</span> LR.W、LR.D命令を実装する</h3>
 <p>32ビット幅、64ビット幅のLR命令を実装します。LR.W命令はmemunitモジュールで64ビットに符号拡張されるため、amounitモジュールでLR.W命令とLR.D命令を区別する必要はありません。</p>

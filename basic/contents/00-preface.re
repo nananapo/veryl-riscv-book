@@ -1,7 +1,8 @@
 = まえがき
 
 @<large>{本書は「Verylで作るCPU 基本編」の@<b>{第II部と第III部}です。}
-@<large>{本書に第I部は含まれていませんが、Web版にすべて無料で公開しています。}
+@<large>{本書に第I部は含まれていませんが、@<hlink>{https://cpu.kanataso.net Web版}にすべて無料で公開しています。}
+
 
 @<large>{本書では、第I部で実装したRV64Iの5段パイプラインのCPUに次の機能を実装します。}
 
@@ -16,11 +17,17 @@
 
 @<large>{実装するCPUは、最終的にOSを実行できる程度の機能を持つことになります。本書の最後ではLinuxを実行できることを確認します。}
 
+@<large>{@<b>{OSを動かせるくらい高機能なCPUを作りたいあなたに完全なロードマップを提供します！}}
+
 ==[notoc] 本書のソースコード / 問い合わせ先
 
 @<large>{本書で利用するソースコードは、以下のサポートページから入手できます。質問やお問い合わせ方法についてもサポートページを確認してください。}
 
- * @<large>{@<href>{https://github.com/nananapo/veryl-riscv-book/wiki/techbookfest18-support-page}}
+ * @<large>{@<href>{https://github.com/nananapo/veryl-riscv-book/wiki/}}
+
+==[notoc] 部、章の番号について
+
+@<large>{組版に使っているソフトの都合により第2部が第1部第1章から始まっています。正しくは第2部第9章です。}
 
 //clearpage
 
