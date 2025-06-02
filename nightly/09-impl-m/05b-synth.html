@@ -8,7 +8,7 @@
 
     <link rel="stylesheet" type="text/css" href="css/normalize.css" />
     <link rel="stylesheet" type="text/css" href="css/webstyle.css" />
-    <link rel="next" title="M拡張の実装" href="09-impl-m.html">
+    <link rel="next" title="M拡張の実装" href="10-impl-m.html">
     <link rel="prev" title="CPUのパイプライン化" href="05a-pipeline.html">
     <meta name="generator" content="Re:VIEW Starter">
 
@@ -50,10 +50,26 @@
 </li>
 <li class="toc-part">第II部 RV64IMACの実装
   <ul class="toc toc-2">
-    <li class="toc-chapter"><a href="./09-impl-m.html">9 M拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./10-impl-m.html">9 M拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./11-impl-exception.html">10 例外の実装</a></li>
+    <li class="toc-chapter"><a href="./12-impl-mmio.html">11 Memory-mapped I/Oの実装</a></li>
+    <li class="toc-chapter"><a href="./13-impl-a.html">12 A拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./14-impl-c.html">13 C拡張の実装</a></li>
   </ul>
 </li>
-    <li class="toc-chapter"><a href="./99-postface.html">あとがき</a></li>
+<li class="toc-part">第III部 特権/割り込みの実装
+  <ul class="toc toc-2">
+    <li class="toc-chapter"><a href="./20-mmode-csr.html">14 M-modeの実装 (1. CSRの実装)</a></li>
+    <li class="toc-chapter"><a href="./21-impl-interrupt.html">15 M-modeの実装 (2. 割り込みの実装)</a></li>
+    <li class="toc-chapter"><a href="./22-umode-csr.html">16 U-modeの実装</a></li>
+    <li class="toc-chapter"><a href="./23-smode-csr.html">17 S-modeの実装 (1. CSRの実装)</a></li>
+    <li class="toc-chapter"><a href="./24-impl-paging.html">18 S-modeの実装 (2. 仮想記憶システム)</a></li>
+    <li class="toc-chapter"><a href="./25-impl-plic.html">19 PLICの実装</a></li>
+    <li class="toc-chapter"><a href="./26-run-linux.html">20 Linuxを動かす</a></li>
+  </ul>
+</li>
+    <li class="toc-chapter"><a href="./99-postface.html">あとがき (第Ⅰ部)</a></li>
+    <li class="toc-chapter"><a href="./99b-postface.html">あとがき (第Ⅱ部、第Ⅲ部)</a></li>
     <li class="toc-chapter"><a href="./100-contribute.html">このプロジェクトに貢献する</a></li>
     <li class="toc-chapter"><a href="./bib.html">参考文献</a></li>
 </ul>
@@ -120,7 +136,7 @@
 <div class="footnote-list">
 <div class="footnote" id="fn-riscv.isa.csr_addr" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*2] </span>The RISC-V Instruction Set Manual Volume II: Privileged Architecture version 20240411 Table 3. Allocation of RISC-V CSR address ranges.</p></div>
 </div><!--/.footnote-list-->
-<p>まず、CsrAddr型にLED制御用レジスタのアドレスを追加します(<span class="listref"><a href="./05b-synth.html#csrunit.veryl.ledcsr-range.addr">リスト8.1</a></span>)。</p>
+<p>まず、<code class="inline-code">CsrAddr</code>型にLED制御用レジスタのアドレスを追加します(<span class="listref"><a href="./05b-synth.html#csrunit.veryl.ledcsr-range.addr">リスト8.1</a></span>)。</p>
 <div id="csrunit.veryl.ledcsr-range.addr" class="caption-code">
 <span class="caption">リスト8.1: リスト8.1: LEDの制御用レジスタのアドレスを追加する (csrunit.veryl)</span>
 <pre class="list language-addr">    enum CsrAddr: logic&lt;12&gt; {
@@ -947,14 +963,14 @@ set_property -dict { PACKAGE_PIN M14 IOSTANDARD LVCMOS33 } [ get_ports led[3] ];
         </main>
         <nav class="page-navi">
           <a href="05a-pipeline.html" class="page-prev">&#9664;</a>
-          <a href="09-impl-m.html" class="page-next">&#9654;</a>
+          <a href="10-impl-m.html" class="page-next">&#9654;</a>
         </nav>
         <br>
         <br>
         <footer style="background:#dddddd">
       <div style="padding: 20px 20px 20px 20px;">
           <div style="font-size:1.4rem"><b>コンピュータは、CPUを書けば理解できる！</b></div><br>
-          コンピュータアーキテクチャは、CPUを作ることで理解することができます。
+          コンピュータアーキテクチャはCPUを作れば理解できます。
           「Verylで作るCPU」は、ハードウェア記述言語VerylでRISC-VのCPUを自作する方法を解説するプロジェクトです。<br>
           「Verylで作るCPU 基本編」では、ハードウェア記述言語の基礎から、OSを実行できる程度のCPUの実装方法までを解説します。<br>
           <br>

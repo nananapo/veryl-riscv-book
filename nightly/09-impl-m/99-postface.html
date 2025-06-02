@@ -4,10 +4,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width">
     
-    <title>あとがき | Verylで作るCPU</title>
+    <title>あとがき (第Ⅰ部) | Verylで作るCPU</title>
 
     <link rel="stylesheet" type="text/css" href="css/normalize.css" />
     <link rel="stylesheet" type="text/css" href="css/webstyle.css" />
+    <link rel="next" title="あとがき (第Ⅱ部、第Ⅲ部)" href="99b-postface.html">
     <link rel="prev" title="Linuxを動かす" href="26-run-linux.html">
     <meta name="generator" content="Re:VIEW Starter">
 
@@ -27,39 +28,55 @@
           <div style="margin-bottom: 14px;" id="share-facebook" class="fb-share-button" data-href="" data-layout="" data-size=""><a target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Finvalid.invalid%2F&amp;src=sdkpreparse" class="fb-xfbml-parse-ignore">Facebookでシェアする</a></div>
         </div>
         <ul class="toc toc-1">
-<li class="toc-part">第I部 RV64IMACの実装
+    <li class="toc-chapter"><a href="./00-preface.html">まえがき</a></li>
+<li class="toc-part">第I部 RV32I/RV64Iの実装
   <ul class="toc toc-2">
-    <li class="toc-chapter"><a href="./10-impl-m.html">1 M拡張の実装</a></li>
-    <li class="toc-chapter"><a href="./11-impl-exception.html">2 例外の実装</a></li>
-    <li class="toc-chapter"><a href="./12-impl-mmio.html">3 Memory-mapped I/Oの実装</a></li>
-    <li class="toc-chapter"><a href="./13-impl-a.html">4 A拡張の実装</a></li>
-    <li class="toc-chapter"><a href="./14-impl-c.html">5 C拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./02-setup.html">1 環境構築</a></li>
+    <li class="toc-chapter"><a href="./03-veryl.html">2 ハードウェア記述言語 Veryl</a></li>
+    <li class="toc-chapter"><a href="./04-impl-rv32i.html">3 RV32Iの実装</a></li>
+    <li class="toc-chapter"><a href="./04a-zicsr.html">4 Zicsr拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./04b-riscvtests.html">5 riscv-testsによるテスト</a></li>
+    <li class="toc-chapter"><a href="./05-impl-rv64i.html">6 RV64Iの実装</a></li>
+    <li class="toc-chapter"><a href="./05a-pipeline.html">7 CPUのパイプライン化</a></li>
+    <li class="toc-chapter"><a href="./05b-synth.html">8 CPUの合成</a></li>
   </ul>
 </li>
-<li class="toc-part">第II部 特権/割り込みの実装
+<li class="toc-part">第II部 RV64IMACの実装
   <ul class="toc toc-2">
-    <li class="toc-chapter"><a href="./20-mmode-csr.html">6 M-modeの実装 (1. CSRの実装)</a></li>
-    <li class="toc-chapter"><a href="./21-impl-interrupt.html">7 M-modeの実装 (2. 割り込みの実装)</a></li>
-    <li class="toc-chapter"><a href="./22-umode-csr.html">8 U-modeの実装</a></li>
-    <li class="toc-chapter"><a href="./23-smode-csr.html">9 S-modeの実装</a></li>
-    <li class="toc-chapter"><a href="./24-impl-paging.html">10 仮想記憶システムの実装</a></li>
-    <li class="toc-chapter"><a href="./25-impl-plic.html">11 PLICの実装</a></li>
-    <li class="toc-chapter"><a href="./26-run-linux.html">12 Linuxを動かす</a></li>
+    <li class="toc-chapter"><a href="./10-impl-m.html">9 M拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./11-impl-exception.html">10 例外の実装</a></li>
+    <li class="toc-chapter"><a href="./12-impl-mmio.html">11 Memory-mapped I/Oの実装</a></li>
+    <li class="toc-chapter"><a href="./13-impl-a.html">12 A拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./14-impl-c.html">13 C拡張の実装</a></li>
   </ul>
 </li>
-    <li class="toc-chapter"><a href="./99-postface.html">あとがき</a>
+<li class="toc-part">第III部 特権/割り込みの実装
+  <ul class="toc toc-2">
+    <li class="toc-chapter"><a href="./20-mmode-csr.html">14 M-modeの実装 (1. CSRの実装)</a></li>
+    <li class="toc-chapter"><a href="./21-impl-interrupt.html">15 M-modeの実装 (2. 割り込みの実装)</a></li>
+    <li class="toc-chapter"><a href="./22-umode-csr.html">16 U-modeの実装</a></li>
+    <li class="toc-chapter"><a href="./23-smode-csr.html">17 S-modeの実装 (1. CSRの実装)</a></li>
+    <li class="toc-chapter"><a href="./24-impl-paging.html">18 S-modeの実装 (2. 仮想記憶システム)</a></li>
+    <li class="toc-chapter"><a href="./25-impl-plic.html">19 PLICの実装</a></li>
+    <li class="toc-chapter"><a href="./26-run-linux.html">20 Linuxを動かす</a></li>
+  </ul>
+</li>
+    <li class="toc-chapter"><a href="./99-postface.html">あとがき (第Ⅰ部)</a>
       <ul class="toc toc-2">
         <li class="toc-section"><a href="./99-postface.html#h">著者について</a></li>
         <li class="toc-section"><a href="./99-postface.html#h">謝辞</a></li>
       </ul>
     </li>
+    <li class="toc-chapter"><a href="./99b-postface.html">あとがき (第Ⅱ部、第Ⅲ部)</a></li>
+    <li class="toc-chapter"><a href="./100-contribute.html">このプロジェクトに貢献する</a></li>
+    <li class="toc-chapter"><a href="./bib.html">参考文献</a></li>
 </ul>
       </div>
       <div class="page-inner">
         <header class="page-header">
         </header>
         <main class="page-main">
-  <h1 class="none center"><a id="h"></a><br/>あとがき</h1>
+  <h1 class="none center"><a id="h"></a><br/>あとがき (第Ⅰ部)</h1>
 <p>いかがだったでしょうか。本書が自作CPUの助けになれば幸いです。</p>
 <p><br /></p>
 
@@ -96,6 +113,7 @@
         </main>
         <nav class="page-navi">
           <a href="26-run-linux.html" class="page-prev">&#9664;</a>
+          <a href="99b-postface.html" class="page-next">&#9654;</a>
         </nav>
         <br>
         <br>
