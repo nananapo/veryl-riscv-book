@@ -107,13 +107,13 @@
 図8.2: <span class="tableref"><a href="./05b-synth.html#lut_sample_truth">表8.1</a></span>を実現するLUT
 </p>
 </div>
-<p>LUTとは、真理値表を記憶素子に保存しておいて、入力によって記憶された真理値を選択して出力する回路のことです。例えば、2つの入力<code class="inline-code">X</code>と<code class="inline-code">Y</code>を受け取って<code class="inline-code">A</code>を出力する論理回路(<span class="tableref"><a href="./05b-synth.html#lut_sample_truth">表8.1</a></span>)は、<span class="imgref"><a href="./05b-synth.html#lut">図8.2</a></span>の回路で実現できます。ここでマルチプレクサ(multiplexer, MUX)とは、複数の入力を選択信号によって選択して出力する回路のことです。</p>
-<p><span class="imgref"><a href="./05b-synth.html#lut">図8.2</a></span>では、記憶素子のデータを<code class="inline-code">Y</code>によって選択し、さらに<code class="inline-code">X</code>によって選択することで2入力1出力の真理値表の論理回路を実現しています。入力がN個で出力がM個のLUTのことをN入力M出力LUTと呼びます。</p>
+<p>LUTとは、真理値表を記憶素子に保存しておいて、入力によって記憶された真理値を選択して出力する回路のことです。例えば、2つの入力<code class="inline-code" translate="no" >X</code>と<code class="inline-code" translate="no" >Y</code>を受け取って<code class="inline-code" translate="no" >A</code>を出力する論理回路(<span class="tableref"><a href="./05b-synth.html#lut_sample_truth">表8.1</a></span>)は、<span class="imgref"><a href="./05b-synth.html#lut">図8.2</a></span>の回路で実現できます。ここでマルチプレクサ(multiplexer, MUX)とは、複数の入力を選択信号によって選択して出力する回路のことです。</p>
+<p><span class="imgref"><a href="./05b-synth.html#lut">図8.2</a></span>では、記憶素子のデータを<code class="inline-code" translate="no" >Y</code>によって選択し、さらに<code class="inline-code" translate="no" >X</code>によって選択することで2入力1出力の真理値表の論理回路を実現しています。入力がN個で出力がM個のLUTのことをN入力M出力LUTと呼びます。</p>
 <p>ルックアップ・テーブル方式のFPGAは、多数のLUT、入出力装置、これらを相互接続するための配線によって構成されています。また、乗算回路やメモリなどの部品はFPGAよりも専用の回路で実現した方が良い<sup><a id="fnb-memory.fpga" href="#fn-memory.fpga" class="noteref" epub:type="noteref">*1</a></sup>ので、メモリや乗算回路の部品が内蔵されていることがあります。</p>
 <div class="footnote-list">
 <div class="footnote" id="fn-memory.fpga" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>例えばメモリは同じパターンの論理回路の繰り返しで大きな面積を要します。メモリはよく利用される回路であるため、専用の回路を用意した方が空間的な効率が改善される上に、遅延が少なくなるという利点があります</p></div>
 </div><!--/.footnote-list-->
-<p>本書では2つのFPGA(Tang Nano 9K、PYNQ-Z1)を使用して実機でCPUを動作させます。2024年11月12日時点ではどちらも秋月電子通商で入手できて、Tang Nano 9KはAliExpressで3000円くらい、PYNQ-Z1は秋月電子通商で50000円くらいで入手できます。</p>
+<p>本書では2つのFPGA(Tang Nano 9K、PYNQ-Z1)を使用して実機でCPUを動作させます。2024年11月12日時点ではどちらも秋月電子通商で入手できて、Tang Nano 9Kは3000円くらい、PYNQ-Z1は50000円くらいで入手できます。</p>
 
 <h2 class="numbox"><a id="h8-2"></a><span class="secno">8.2</span> LEDの制御</h2>
 <div id="tangmega138k_led" class="image">
@@ -132,14 +132,14 @@
 </div>
 
 <h3 class="none"><a id="h8-2-1"></a><span class="secno">8.2.1</span> CSRにLED制御用レジスタを実装する</h3>
-<p>RISC-VのCSRのアドレス空間には、読み込みと書き込みができるCSRを自由に定義できる場所(<code class="inline-code">0x800</code>から<code class="inline-code">0x8FF</code>)が用意されています<sup><a id="fnb-riscv.isa.csr_addr" href="#fn-riscv.isa.csr_addr" class="noteref" epub:type="noteref">*2</a></sup>。これの先頭アドレス<code class="inline-code">0x800</code>をLEDの制御用レジスタのアドレスとして実装を進めます。</p>
+<p>RISC-VのCSRのアドレス空間には、読み込みと書き込みができるCSRを自由に定義できる場所(<code class="inline-code" translate="no" >0x800</code>から<code class="inline-code" translate="no" >0x8FF</code>)が用意されています<sup><a id="fnb-riscv.isa.csr_addr" href="#fn-riscv.isa.csr_addr" class="noteref" epub:type="noteref">*2</a></sup>。これの先頭アドレス<code class="inline-code" translate="no" >0x800</code>をLEDの制御用レジスタのアドレスとして実装を進めます。</p>
 <div class="footnote-list">
 <div class="footnote" id="fn-riscv.isa.csr_addr" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*2] </span>The RISC-V Instruction Set Manual Volume II: Privileged Architecture version 20240411 Table 3. Allocation of RISC-V CSR address ranges.</p></div>
 </div><!--/.footnote-list-->
-<p>まず、<code class="inline-code">CsrAddr</code>型にLED制御用レジスタのアドレスを追加します(<span class="listref"><a href="./05b-synth.html#csrunit.veryl.ledcsr-range.addr">リスト8.1</a></span>)。</p>
+<p>まず、<code class="inline-code" translate="no" >CsrAddr</code>型にLED制御用レジスタのアドレスを追加します(<span class="listref"><a href="./05b-synth.html#csrunit.veryl.ledcsr-range.addr">リスト8.1</a></span>)。</p>
 <div id="csrunit.veryl.ledcsr-range.addr" class="caption-code">
 <span class="caption">リスト8.1: リスト8.1: LEDの制御用レジスタのアドレスを追加する (csrunit.veryl)</span>
-<pre class="list language-addr">    enum CsrAddr: logic&lt;12&gt; {
+<pre class="list language-addr" translate="no">    enum CsrAddr: logic&lt;12&gt; {
         MTVEC = 12'h305,
         MEPC = 12'h341,
         MCAUSE = 12'h342,
@@ -150,13 +150,13 @@
 <p>書き込みマスクはすべて書き込み可にします(<span class="listref"><a href="./05b-synth.html#csrunit.veryl.ledcsr-range.wmask">リスト8.2</a></span>)。</p>
 <div id="csrunit.veryl.ledcsr-range.wmask" class="caption-code">
 <span class="caption">リスト8.2: リスト8.2: LEDの制御用レジスタの書き込みマスク (csrunit.veryl)</span>
-<pre class="list language-wmask">    const LED_WMASK   : UIntX = 'hffff_ffff_ffff_ffff;
+<pre class="list language-wmask" translate="no">    const LED_WMASK   : UIntX = 'hffff_ffff_ffff_ffff;
 </pre>
 </div>
 <p>LEDの制御用レジスタをcsrunitモジュールのポートに定義します。CSRの幅はUIntXです(<span class="listref"><a href="./05b-synth.html#csrunit.veryl.ledcsr-range.port">リスト8.3</a></span>)。</p>
 <div id="csrunit.veryl.ledcsr-range.port" class="caption-code">
 <span class="caption">リスト8.3: リスト8.3: LEDの制御用レジスタを定義する (csrunit.veryl)</span>
-<pre class="list language-port">module csrunit (
+<pre class="list language-port" translate="no">module csrunit (
     ...
     rdata      : output UIntX       ,
     raise_trap : output logic       ,
@@ -165,10 +165,10 @@
 ) {
 </pre>
 </div>
-<p><code class="inline-code">rdata</code>と<code class="inline-code">wmask</code>にLEDの制御用レジスタの値を割り当てます(<span class="listref"><a href="./05b-synth.html#csrunit.veryl.ledcsr-range.rdata_wmask">リスト8.4</a></span>)。</p>
+<p><code class="inline-code" translate="no" >rdata</code>と<code class="inline-code" translate="no" >wmask</code>にLEDの制御用レジスタの値を割り当てます(<span class="listref"><a href="./05b-synth.html#csrunit.veryl.ledcsr-range.rdata_wmask">リスト8.4</a></span>)。</p>
 <div id="csrunit.veryl.ledcsr-range.rdata_wmask" class="caption-code">
 <span class="caption">リスト8.4: リスト8.4: rdataとwmaskに値を割り当てる (csrunit.veryl)</span>
-<pre class="list language-rdata_wmask">    // read
+<pre class="list language-rdata_wmask" translate="no">    // read
     rdata = case csr_addr {
         CsrAddr::MTVEC : mtvec,
         CsrAddr::MEPC  : mepc,
@@ -189,7 +189,7 @@
 <p>リセット時にLEDの制御用レジスタの値を0に設定します(<span class="listref"><a href="./05b-synth.html#csrunit.veryl.ledcsr-range.reset">リスト8.5</a></span>)。</p>
 <div id="csrunit.veryl.ledcsr-range.reset" class="caption-code">
 <span class="caption">リスト8.5: リスト8.5: リセット値の設定 (csrunit.veryl)</span>
-<pre class="list language-reset">    if_reset {
+<pre class="list language-reset" translate="no">    if_reset {
         mtvec  = 0;
         mepc   = 0;
         mcause = 0;
@@ -200,7 +200,7 @@
 <p>LEDの制御用レジスタへの書き込み処理を実装します(<span class="listref"><a href="./05b-synth.html#csrunit.veryl.ledcsr-range.write">リスト8.6</a></span>)。</p>
 <div id="csrunit.veryl.ledcsr-range.write" class="caption-code">
 <span class="caption">リスト8.6: リスト8.6: LEDの制御用レジスタへの書き込み (csrunit.veryl)</span>
-<pre class="list language-write">    case csr_addr {
+<pre class="list language-write" translate="no">    case csr_addr {
         CsrAddr::MTVEC : mtvec  = wdata;
         CsrAddr::MEPC  : mepc   = wdata;
         CsrAddr::MCAUSE: mcause = wdata;
@@ -214,7 +214,7 @@
 <p>LEDはトップモジュールのポートを経由して制御します(<span class="imgref"><a href="./05b-synth.html#ledreg_to_led">図8.4</a></span>)。そのため、トップモジュールにLEDを制御するポートを作成して、csrunitのLEDの制御用レジスタの値を接続します(<span class="listref"><a href="./05b-synth.html#core.veryl.ledcsr-range.port">リスト8.7</a></span>、<span class="listref"><a href="./05b-synth.html#core.veryl.ledcsr-range.inst">リスト8.8</a></span>、<span class="listref"><a href="./05b-synth.html#top.veryl.ledcsr-range.port">リスト8.9</a></span>、<span class="listref"><a href="./05b-synth.html#top.veryl.ledcsr-range.inst">リスト8.10</a></span>)。LEDの個数はFPGAによって異なるため、とりあえずXLEN(=64)ビットのポートを定義します。</p>
 <div id="core.veryl.ledcsr-range.port" class="caption-code">
 <span class="caption">リスト8.7: リスト8.7: coreモジュールにポートを追加する (core.veryl)</span>
-<pre class="list language-port">module core (
+<pre class="list language-port" translate="no">module core (
     clk     : input   clock                                    ,
     rst     : input   reset                                    ,
     i_membus: modport membus_if::&lt;ILEN, XLEN&gt;::master          ,
@@ -224,7 +224,7 @@
 </div>
 <div id="core.veryl.ledcsr-range.inst" class="caption-code">
 <span class="caption">リスト8.8: リスト8.8: csrunitモジュールのledポートと接続する (core.veryl)</span>
-<pre class="list language-inst">    inst csru: csrunit (
+<pre class="list language-inst" translate="no">    inst csru: csrunit (
         ...
         rdata      : csru_rdata      ,
         raise_trap : csru_raise_trap ,
@@ -235,7 +235,7 @@
 </div>
 <div id="top.veryl.ledcsr-range.port" class="caption-code">
 <span class="caption">リスト8.9: リスト8.9: topモジュールにポートを追加する (top.veryl)</span>
-<pre class="list language-port">module top #(
+<pre class="list language-port" translate="no">module top #(
     param MEMORY_FILEPATH_IS_ENV: bit    = 1                 ,
     param MEMORY_FILEPATH       : string = &quot;MEMORY_FILE_PATH&quot;,
 ) (
@@ -249,7 +249,7 @@
 </div>
 <div id="top.veryl.ledcsr-range.inst" class="caption-code">
 <span class="caption">リスト8.10: リスト8.10: coreモジュールのledポートと接続する (top.veryl)</span>
-<pre class="list language-inst">    inst c: core (
+<pre class="list language-inst" translate="no">    inst c: core (
         clk       ,
         rst       ,
         i_membus  ,
@@ -263,16 +263,16 @@
 <h3 class="none"><a id="h8-2-3"></a><span class="secno">8.2.3</span> テストを作成する</h3>
 
 <h4><a id="h8-2-3-1"></a>LEDを点灯させるプログラム</h4>
-<p>LEDを点灯させるプログラムを作成します(<span class="listref"><a href="./05b-synth.html#led.asm.led-test">リスト8.11</a></span>、<span class="listref"><a href="./05b-synth.html#led.hex.led-test">リスト8.12</a></span>)。CSRRWI命令で<code class="inline-code">0x800</code>に12(<code class="inline-code">'b01100</code>)を書き込みます。</p>
+<p>LEDを点灯させるプログラムを作成します(<span class="listref"><a href="./05b-synth.html#led.asm.led-test">リスト8.11</a></span>、<span class="listref"><a href="./05b-synth.html#led.hex.led-test">リスト8.12</a></span>)。CSRRWI命令で<code class="inline-code" translate="no" >0x800</code>に12(<code class="inline-code" translate="no" >'b01100</code>)を書き込みます。</p>
 <div id="led.asm.led-test" class="caption-code">
 <span class="caption">リスト8.11: リスト8.11: LEDを点灯させるプログラム (test/led.asm)</span>
-<pre class="list language-led-test">80065073 //  0: csrrwi x0, 0x800, 12
+<pre class="list language-led-test" translate="no">80065073 //  0: csrrwi x0, 0x800, 12
 00000067 //  4: jal x0, 0
 </pre>
 </div>
 <div id="led.hex.led-test" class="caption-code">
 <span class="caption">リスト8.12: リスト8.12: LEDを点灯させるプログラム (test/led.hex)</span>
-<pre class="list language-led-test">0000006780065073
+<pre class="list language-led-test" translate="no">0000006780065073
 </pre>
 </div>
 
@@ -280,7 +280,7 @@
 <p>LEDを点滅させるプログラムを作成します(<span class="listref"><a href="./05b-synth.html#led_counter.asm.led-test">リスト8.13</a></span>、<span class="listref"><a href="./05b-synth.html#led_counter.hex.led-test">リスト8.14</a></span>)。これはちょっと複雑です。</p>
 <div id="led_counter.asm.led-test" class="caption-code">
 <span class="caption">リスト8.13: リスト8.13: LEDを点滅させるプログラム (test/led_counter.asm)</span>
-<pre class="list language-led-test">000f40b7 //  0: lui x1, 244
+<pre class="list language-led-test" translate="no">000f40b7 //  0: lui x1, 244
 24008093 //  4: addi x1, x1, 576
 00000113 //  8: addi x2, x0, 0
 00110113 //  c: addi x2, x2, 1
@@ -294,7 +294,7 @@ fe209ee3 // 10: bne x1, x2, -4
 </div>
 <div id="led_counter.hex.led-test" class="caption-code">
 <span class="caption">リスト8.14: リスト8.14: LEDを点滅させるプログラム (test/led_counter.hex)</span>
-<pre class="list language-led-test">24008093000f40b7
+<pre class="list language-led-test" translate="no">24008093000f40b7
 0011011300000113
 800031f3fe209ee3
 8001907300118193
@@ -303,13 +303,13 @@ fe209ee3 // 10: bne x1, x2, -4
 </div>
 <p><span class="listref"><a href="./05b-synth.html#led_counter.asm.led-test">リスト8.13</a></span>は次のように動作します。</p>
 <ol start="1" type="1">
-<li>x1に1000000(<code class="inline-code">(244 &lt;&lt; 12) + 576</code>)を代入する</li>
+<li>x1に1000000(<code class="inline-code" translate="no" >(244 &lt;&lt; 12) + 576</code>)を代入する</li>
 <li>x2に0を代入</li>
 <li>x2がx1と一致するまでx2に1を足し続ける</li>
 <li>LEDのCSRをx3に読み取り、1を足した値を書き込む</li>
 <li>1 ~ 4を繰り返す</li>
 </ol>
-<p>これにより、LEDの制御用レジスタは一定の時間ごとに<code class="inline-code">0</code>→<code class="inline-code">1</code>→<code class="inline-code">2</code>と値が変わっていきます。</p>
+<p>これにより、LEDの制御用レジスタは一定の時間ごとに<code class="inline-code" translate="no" >0</code>→<code class="inline-code" translate="no" >1</code>→<code class="inline-code" translate="no" >2</code>と値が変わっていきます。</p>
 
 <h2 class="numbox"><a id="h8-3"></a><span class="secno">8.3</span> FPGAへの合成① (Tang Nano 9K)</h2>
 <p>Tang Nano 9KをターゲットにCPUを合成します。使用するEDAのバージョンは次の通りです。</p>
@@ -327,12 +327,12 @@ fe209ee3 // 10: bne x1, x2, -4
 図8.5: Tang Nano 9KのLED(6個)
 </p>
 </div>
-<p>Tang Nano 9KにはLEDが6個実装されています(<span class="imgref"><a href="./05b-synth.html#tangnano9k_led">図8.5</a></span>)。そのため、LEDの制御には6ビット必要です。それに対して、topモジュールの<code class="inline-code">led</code>ポートは64ビットであるため、ビット幅が一致しません。</p>
-<p>Tang Nano 9Kのためだけにtopモジュールの<code class="inline-code">led</code>ポートのビット幅を変更すると柔軟性がなくなってしまうため、topモジュールの上位に合成用のモジュールを作成して調整します。</p>
-<p><code class="inline-code">src/top_tang.veryl</code>を作成し、次のように記述します(<span class="listref"><a href="./05b-synth.html#top_tang.veryl.tangnano9k">リスト8.15</a></span>)。top_tangモジュールの<code class="inline-code">led</code>ポートは6ビットとして定義して、topモジュールの<code class="inline-code">led</code>ポートの下位6ビットを接続しています。</p>
+<p>Tang Nano 9KにはLEDが6個実装されています(<span class="imgref"><a href="./05b-synth.html#tangnano9k_led">図8.5</a></span>)。そのため、LEDの制御には6ビット必要です。それに対して、topモジュールの<code class="inline-code" translate="no" >led</code>ポートは64ビットであるため、ビット幅が一致しません。</p>
+<p>Tang Nano 9Kのためだけにtopモジュールの<code class="inline-code" translate="no" >led</code>ポートのビット幅を変更すると柔軟性がなくなってしまうため、topモジュールの上位に合成用のモジュールを作成して調整します。</p>
+<p><code class="inline-code" translate="no" >src/top_tang.veryl</code>を作成し、次のように記述します(<span class="listref"><a href="./05b-synth.html#top_tang.veryl.tangnano9k">リスト8.15</a></span>)。top_tangモジュールの<code class="inline-code" translate="no" >led</code>ポートは6ビットとして定義して、topモジュールの<code class="inline-code" translate="no" >led</code>ポートの下位6ビットを接続しています。</p>
 <div id="top_tang.veryl.tangnano9k" class="caption-code">
 <span class="caption">リスト8.15: リスト8.15: Tang Nano 9K用の最上位モジュール (top_tang.veryl)</span>
-<pre class="list language-tangnano9k">import eei::*;
+<pre class="list language-tangnano9k" translate="no">import eei::*;
 
 module top_tang (
     clk: input  clock   ,
@@ -360,7 +360,7 @@ module top_tang (
 </div>
 
 <h3 id="tangnano9k.create_project" class="none"><a id="h8-3-2"></a><span class="secno">8.3.2</span> プロジェクトを作成する</h3>
-<p>新規プロジェクトを作成します。GOWIN FPGA Designerを開いて、Quick Startの<code class="inline-code">New Project...</code>を選択します。選択したら表示されるウィンドウでは、FPGA Design Projectを選択してOKを押してください(<span class="imgref"><a href="./05b-synth.html#id_gowin_2Fnew__project">図8.6</a></span>)。</p>
+<p>新規プロジェクトを作成します。GOWIN FPGA Designerを開いて、Quick Startの<code class="inline-code" translate="no" >New Project...</code>を選択します。選択したら表示されるウィンドウでは、FPGA Design Projectを選択してOKを押してください(<span class="imgref"><a href="./05b-synth.html#id_gowin_2Fnew__project">図8.6</a></span>)。</p>
 <div id="id_gowin_2Fnew__project" class="image">
 <img src="images/05b-synth/gowin/new_project.png" alt="FPGA Design Projectを選択する" class="img" />
 <p class="caption">
@@ -374,7 +374,7 @@ module top_tang (
 図8.7: プロジェクト名と場所の指定
 </p>
 </div>
-<p>ターゲットのFPGAを選択します。<code class="inline-code">GW1NR-LV9QN88PC6/I5</code>を選択して、Nextを押してください(<span class="imgref"><a href="./05b-synth.html#id_gowin_2Fselect__device">図8.8</a></span>)。</p>
+<p>ターゲットのFPGAを選択します。<code class="inline-code" translate="no" >GW1NR-LV9QN88PC6/I5</code>を選択して、Nextを押してください(<span class="imgref"><a href="./05b-synth.html#id_gowin_2Fselect__device">図8.8</a></span>)。</p>
 <div id="id_gowin_2Fselect__device" class="image">
 <img src="images/05b-synth/gowin/select_device.png" alt="ターゲットを選択する" class="img" />
 <p class="caption">
@@ -398,7 +398,7 @@ module top_tang (
 図8.10: 設定画面を開く
 </p>
 </div>
-<p>SynthesizeのVerilog Languageを<code class="inline-code">System Verilog 2017</code>に設定します。同じ画面でトップモジュール(Top Module/Entity)を設定できるため、<code class="inline-code">core_top_tang</code>を指定します(<span class="imgref"><a href="./05b-synth.html#id_gowin_2Fconfiguration">図8.11</a></span>)。</p>
+<p>SynthesizeのVerilog Languageを<code class="inline-code" translate="no" >System Verilog 2017</code>に設定します。同じ画面でトップモジュール(Top Module/Entity)を設定できるため、<code class="inline-code" translate="no" >core_top_tang</code>を指定します(<span class="imgref"><a href="./05b-synth.html#id_gowin_2Fconfiguration">図8.11</a></span>)。</p>
 <div id="id_gowin_2Fconfiguration" class="image">
 <img src="images/05b-synth/gowin/configuration.png" alt="設定を変更する" class="img" />
 <p class="caption">
@@ -407,11 +407,11 @@ module top_tang (
 </div>
 
 <h3 id="tangnano9k.import" class="none"><a id="h8-3-4"></a><span class="secno">8.3.4</span> 設計ファイルを追加する</h3>
-<p>Verylのソースファイルをビルドして、生成されるファイルリスト(<code class="inline-code">core.f</code>)を利用して、生成されたSystemVerilogソースファイルをプロジェクトに追加します。</p>
-<p>Gowin FPGA Programmerでファイルを追加するには、ウィンドウ下部のConsole画面で<code class="inline-code">add_file</code>を実行します。しかし、<code class="inline-code">add_file</code>はファイルリストの読み込みに対応していないので、ファイルリストを読み込んで<code class="inline-code">add_file</code>を実行するスクリプトを作成します(<span class="listref"><a href="./05b-synth.html#add_file.tcl.tangnano9k">リスト8.16</a></span>)。</p>
+<p>Verylのソースファイルをビルドして、生成されるファイルリスト(<code class="inline-code" translate="no" >core.f</code>)を利用して、生成されたSystemVerilogソースファイルをプロジェクトに追加します。</p>
+<p>Gowin FPGA Programmerでファイルを追加するには、ウィンドウ下部のConsole画面で<code class="inline-code" translate="no" >add_file</code>を実行します。しかし、<code class="inline-code" translate="no" >add_file</code>はファイルリストの読み込みに対応していないので、ファイルリストを読み込んで<code class="inline-code" translate="no" >add_file</code>を実行するスクリプトを作成します(<span class="listref"><a href="./05b-synth.html#add_file.tcl.tangnano9k">リスト8.16</a></span>)。</p>
 <div id="add_file.tcl.tangnano9k" class="caption-code">
 <span class="caption">リスト8.16: リスト8.16: add_files.tcl</span>
-<pre class="list language-tangnano9k">set file_list [open &quot;ファイルリストのパス&quot; r]
+<pre class="list language-tangnano9k" translate="no">set file_list [open &quot;ファイルリストのパス&quot; r]
 while {[gets $file_list line] != -1} {
     # skip blank or comment line
     if {[string trim $line] eq &quot;&quot; || [string index $line 0] eq &quot;#&quot;} {
@@ -426,7 +426,7 @@ close $file_list
 <p>ウィンドウの下部にあるConsole画面で、次のコマンドを実行します(<span class="listref"><a href="./05b-synth.html#gowin.add_files.command">リスト8.17</a></span>、<span class="imgref"><a href="./05b-synth.html#id_gowin_2Fsource__add__files">図8.12</a></span>)。VerylをWSLで実行してGOWIN FPGA DesignerをWindowsで開いている場合、ファイルリスト内のパスをWindowsから参照できるパスに変更する必要があります。</p>
 <div id="gowin.add_files.command" class="caption-code">
 <span class="caption">リスト8.17: リスト8.17: Tclスクリプトを実行する</span>
-<pre class="list language-command">source add_files.tclのパス
+<pre class="list language-command" translate="no">source add_files.tclのパス
 </pre>
 </div>
 <div id="id_gowin_2Fsource__add__files" class="image">
@@ -461,7 +461,7 @@ close $file_list
 図8.15: 物理制約ファイルを選択する
 </p>
 </div>
-<p>名前は<code class="inline-code">tangnano9k.cst</code>にします(<span class="imgref"><a href="./05b-synth.html#id_gowin_2Fnew__cst__file">図8.16</a></span>)。</p>
+<p>名前は<code class="inline-code" translate="no" >tangnano9k.cst</code>にします(<span class="imgref"><a href="./05b-synth.html#id_gowin_2Fnew__cst__file">図8.16</a></span>)。</p>
 <div id="id_gowin_2Fnew__cst__file" class="image">
 <img src="images/05b-synth/gowin/new_cst_file.png" alt="名前を設定する" class="img" />
 <p class="caption">
@@ -471,7 +471,7 @@ close $file_list
 <p>物理制約ファイルには、次のように記述します(<span class="listref"><a href="./05b-synth.html#tangnano9k.cst.tangnano9k">リスト8.18</a></span>)。</p>
 <div id="tangnano9k.cst.tangnano9k" class="caption-code">
 <span class="caption">リスト8.18: リスト8.18: 物理制約ファイル (tangnano9k.cst)</span>
-<pre class="list language-tangnano9k">// Clock and Reset
+<pre class="list language-tangnano9k" translate="no">// Clock and Reset
 IO_LOC &quot;clk&quot; 52;
 IO_PORT &quot;clk&quot; IO_TYPE=LVCMOS33 PULL_MODE=UP;
 IO_LOC &quot;rst&quot; 4;
@@ -493,8 +493,8 @@ IO_PORT &quot;led[1]&quot; PULL_MODE=UP DRIVE=8;
 IO_PORT &quot;led[0]&quot; PULL_MODE=UP DRIVE=8;
 </pre>
 </div>
-<p><code class="inline-code">IO_LOC</code>で接続する場所の名前を指定します。</p>
-<p>場所の名前はTang Nano 9Kのデータシートで確認できます。例えば<span class="imgref"><a href="./05b-synth.html#tangnano9k_datasheet_led">図8.17</a></span>と<span class="imgref"><a href="./05b-synth.html#tangnano9k_datasheet_ledpos">図8.18</a></span>から、LEDは<code class="inline-code">10</code>、<code class="inline-code">11</code>、<code class="inline-code">13</code>、<code class="inline-code">14</code>、<code class="inline-code">15</code>、<code class="inline-code">16</code>に割り当てられていることが分かります。また、LEDが負論理(<code class="inline-code">1</code>で消灯、<code class="inline-code">0</code>で点灯)であることが分かります。水晶発信器とボタンについても、データシートを見て確認してください。</p>
+<p><code class="inline-code" translate="no" >IO_LOC</code>で接続する場所の名前を指定します。</p>
+<p>場所の名前はTang Nano 9Kのデータシートで確認できます。例えば<span class="imgref"><a href="./05b-synth.html#tangnano9k_datasheet_led">図8.17</a></span>と<span class="imgref"><a href="./05b-synth.html#tangnano9k_datasheet_ledpos">図8.18</a></span>から、LEDは<code class="inline-code" translate="no" >10</code>、<code class="inline-code" translate="no" >11</code>、<code class="inline-code" translate="no" >13</code>、<code class="inline-code" translate="no" >14</code>、<code class="inline-code" translate="no" >15</code>、<code class="inline-code" translate="no" >16</code>に割り当てられていることが分かります。また、LEDが負論理(<code class="inline-code" translate="no" >1</code>で消灯、<code class="inline-code" translate="no" >0</code>で点灯)であることが分かります。水晶発信器とボタンについても、データシートを見て確認してください。</p>
 <div id="tangnano9k_datasheet_led" class="image">
 <img src="images/05b-synth/tangnano9k_datasheet_led.png" alt="LED" class="img" />
 <p class="caption">
@@ -517,7 +517,7 @@ IO_PORT &quot;led[0]&quot; PULL_MODE=UP DRIVE=8;
 図8.19: タイミング制約ファイルを選択する
 </p>
 </div>
-<p>名前は<code class="inline-code">timing.sdc</code>にします(<span class="imgref"><a href="./05b-synth.html#id_gowin_2Fnew__timing__file">図8.20</a></span>)。</p>
+<p>名前は<code class="inline-code" translate="no" >timing.sdc</code>にします(<span class="imgref"><a href="./05b-synth.html#id_gowin_2Fnew__timing__file">図8.20</a></span>)。</p>
 <div id="id_gowin_2Fnew__timing__file" class="image">
 <img src="images/05b-synth/gowin/new_timing_file.png" alt="名前を設定する" class="img" />
 <p class="caption">
@@ -527,19 +527,19 @@ IO_PORT &quot;led[0]&quot; PULL_MODE=UP DRIVE=8;
 <p>タイミング制約ファイルには、次のように記述します(<span class="listref"><a href="./05b-synth.html#timing.sdc.tangnano9k">リスト8.19</a></span>)。</p>
 <div id="timing.sdc.tangnano9k" class="caption-code">
 <span class="caption">リスト8.19: リスト8.19: タイミング制約ファイル (timing.sdc)</span>
-<pre class="list language-tangnano9k">create_clock -name clk -period 37.037 -waveform {0 18.518} [get_ports {clk}]
+<pre class="list language-tangnano9k" translate="no">create_clock -name clk -period 37.037 -waveform {0 18.518} [get_ports {clk}]
 </pre>
 </div>
-<p>Tang Nano 9Kの水晶発振器は27MHzで振動します。そのため、<code class="inline-code">create_clock</code>で<code class="inline-code">clk</code>ポートの周期を<code class="inline-code">37.037</code>ナノ秒(27MHz)に設定しています。</p>
+<p>Tang Nano 9Kの水晶発振器は27MHzで振動します。そのため、<code class="inline-code" translate="no" >create_clock</code>で<code class="inline-code" translate="no" >clk</code>ポートの周期を<code class="inline-code" translate="no" >37.037</code>ナノ秒(27MHz)に設定しています。</p>
 
 <h3 id="tangnano9k.test" class="none"><a id="h8-3-6"></a><span class="secno">8.3.6</span> テスト</h3>
 
 <h4 id="tangnano9k.test.led"><a id="h8-3-6-1"></a>LEDの点灯を確認する</h4>
 <p>まず、LEDの点灯を確認します。</p>
-<p>インポートされた<code class="inline-code">top_tang.sv</code>のtopモジュールをインスタンス化している場所で、<code class="inline-code">MEMORY_FILEPATH</code>パラメータの値を<code class="inline-code">test/led.hex</code>のパスに設定します(<span class="listref"><a href="./05b-synth.html#led.hex.set">リスト8.20</a></span>)。</p>
+<p>インポートされた<code class="inline-code" translate="no" >top_tang.sv</code>のtopモジュールをインスタンス化している場所で、<code class="inline-code" translate="no" >MEMORY_FILEPATH</code>パラメータの値を<code class="inline-code" translate="no" >test/led.hex</code>のパスに設定します(<span class="listref"><a href="./05b-synth.html#led.hex.set">リスト8.20</a></span>)。</p>
 <div id="led.hex.set" class="caption-code">
 <span class="caption">リスト8.20: リスト8.20: 読み込むファイルを設定する (top_tang.sv)</span>
-<pre class="list language-set">core_top #(
+<pre class="list language-set" translate="no">core_top #(
     .MEMORY_FILEPATH_IS_ENV (0 ),
     .MEMORY_FILEPATH        (&quot;test/led.hexへのパス&quot;)
 ) t (
@@ -559,7 +559,7 @@ IO_PORT &quot;led[0]&quot; PULL_MODE=UP DRIVE=8;
 図8.22: 合成するとエラーが発生する
 </p>
 </div>
-<p>これは、Tang Nano 9Kに搭載されているメモリ用の部品の数が足りないために発生しているエラーです。この問題を回避するために、eeiパッケージの<code class="inline-code">MEM_ADDR_WIDTH</code>の値を<code class="inline-code">10</code>に変更します<sup><a id="fnb-mem_10" href="#fn-mem_10" class="noteref" epub:type="noteref">*3</a></sup>。メモリの幅を変更したら、Verylファイルをビルドしなおして、もう一度合成します。</p>
+<p>これは、Tang Nano 9Kに搭載されているメモリ用の部品の数が足りないために発生しているエラーです。この問題を回避するために、eeiパッケージの<code class="inline-code" translate="no" >MEM_ADDR_WIDTH</code>の値を<code class="inline-code" translate="no" >10</code>に変更します<sup><a id="fnb-mem_10" href="#fn-mem_10" class="noteref" epub:type="noteref">*3</a></sup>。メモリの幅を変更したら、Verylファイルをビルドしなおして、もう一度合成します。</p>
 <div class="footnote-list">
 <div class="footnote" id="fn-mem_10" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*3] </span>適当な値です</p></div>
 </div><!--/.footnote-list-->
@@ -569,7 +569,7 @@ IO_PORT &quot;led[0]&quot; PULL_MODE=UP DRIVE=8;
 図8.23: 合成と配置配線に成功した
 </p>
 </div>
-<p>合成に成功したら、<code class="inline-code">Place &amp; Route</code>を押して、論理回路の配置配線情報を生成します(<span class="imgref"><a href="./05b-synth.html#id_gowin_2Fsynth__success">図8.23</a></span>)。それが終了したら、Tang Nano 9KをPCに接続して、Gowin Programmerを開いて設計をFPGAに書き込みます(<span class="imgref"><a href="./05b-synth.html#id_gowin_2Fprogrammer">図8.24</a></span>)。</p>
+<p>合成に成功したら、<code class="inline-code" translate="no" >Place &amp; Route</code>を押して、論理回路の配置配線情報を生成します(<span class="imgref"><a href="./05b-synth.html#id_gowin_2Fsynth__success">図8.23</a></span>)。それが終了したら、Tang Nano 9KをPCに接続して、Gowin Programmerを開いて設計をFPGAに書き込みます(<span class="imgref"><a href="./05b-synth.html#id_gowin_2Fprogrammer">図8.24</a></span>)。</p>
 <div id="id_gowin_2Fprogrammer" class="image">
 <img src="images/05b-synth/gowin/programmer.png" alt="Program / Configureボタンを押して書き込む" class="img" />
 <p class="caption">
@@ -578,17 +578,17 @@ IO_PORT &quot;led[0]&quot; PULL_MODE=UP DRIVE=8;
 </div>
 <p>Tang Nano 9Kの中央2つ以外のLEDが点灯していることを確認できます。<span class="imgref"><a href="./05b-synth.html#tangnano9k_led">図8.5</a></span>の左下のボタンを押すと全てのLEDが点灯します。</p>
 <div id="tangnano9k_test_led" class="image">
-<img src="images/05b-synth/tangnano9k_test_led.jpg" alt="LEDの制御用レジスタの値が12(&lt;code class=&quot;inline-code&quot;&gt;64'b1100&lt;/code&gt;)なので中央2つのLEDが点灯せず、それ以外が点灯する" class="img" style="width:70%" />
+<img src="images/05b-synth/tangnano9k_test_led.jpg" alt="LEDの制御用レジスタの値が12(&lt;code class=&quot;inline-code&quot; translate=&quot;no&quot; &gt;64'b1100&lt;/code&gt;)なので中央2つのLEDが点灯せず、それ以外が点灯する" class="img" style="width:70%" />
 <p class="caption">
-図8.25: LEDの制御用レジスタの値が12(<code class="inline-code">64'b1100</code>)なので中央2つのLEDが点灯せず、それ以外が点灯する
+図8.25: LEDの制御用レジスタの値が12(<code class="inline-code" translate="no" >64'b1100</code>)なので中央2つのLEDが点灯せず、それ以外が点灯する
 </p>
 </div>
 
 <h4 id="tangnano9k.test.blink"><a id="h8-3-6-2"></a>LEDの点滅を確認する</h4>
-<p><code class="inline-code">MEMORY_FILEPATH</code>パラメータの値を<code class="inline-code">test/led_counter.hex</code>のパスに設定します(<span class="listref"><a href="./05b-synth.html#led_counter.hex.set">リスト8.21</a></span>)。</p>
+<p><code class="inline-code" translate="no" >MEMORY_FILEPATH</code>パラメータの値を<code class="inline-code" translate="no" >test/led_counter.hex</code>のパスに設定します(<span class="listref"><a href="./05b-synth.html#led_counter.hex.set">リスト8.21</a></span>)。</p>
 <div id="led_counter.hex.set" class="caption-code">
 <span class="caption">リスト8.21: リスト8.21: 読み込むファイルを変更する (top_tang.sv)</span>
-<pre class="list language-set">core_top #(
+<pre class="list language-set" translate="no">core_top #(
     .MEMORY_FILEPATH_IS_ENV (0 ),
     .MEMORY_FILEPATH        (&quot;test/led_counter.hexへのパス&quot;)
 ) t (
@@ -615,11 +615,11 @@ IO_PORT &quot;led[0]&quot; PULL_MODE=UP DRIVE=8;
 </p>
 </div>
 <p>PYNQ-Z1にはLEDが6個実装されています(<span class="imgref"><a href="./05b-synth.html#pynq_z1_led">図8.26</a></span>)。本章ではボタンの上の横並びの4つのLED(<span class="imgref"><a href="./05b-synth.html#pynq_z1_led">図8.26</a></span>右下)を使用します。</p>
-<p>「<a href="05b-synth.html#h8-3-1">8.3.1 合成用のモジュールを作成する</a>」とおなじように、<code class="inline-code">led</code>ポートのビット幅を一致させるためにPYNQ-Z1の合成のためのトップモジュールを作成します。</p>
-<p><code class="inline-code">src/top_pynq_z1.veryl</code>を作成し、次のように記述します(<span class="listref"><a href="./05b-synth.html#top_pynq_z1.veryl.pynq_z1">リスト8.22</a></span>)。top_pynq_z1モジュールの<code class="inline-code">led</code>ポートは4ビットとして定義して、topモジュールの<code class="inline-code">led</code>ポートの下位4ビットを接続しています。</p>
+<p>「<a href="05b-synth.html#h8-3-1">8.3.1 合成用のモジュールを作成する</a>」とおなじように、<code class="inline-code" translate="no" >led</code>ポートのビット幅を一致させるためにPYNQ-Z1の合成のためのトップモジュールを作成します。</p>
+<p><code class="inline-code" translate="no" >src/top_pynq_z1.veryl</code>を作成し、次のように記述します(<span class="listref"><a href="./05b-synth.html#top_pynq_z1.veryl.pynq_z1">リスト8.22</a></span>)。top_pynq_z1モジュールの<code class="inline-code" translate="no" >led</code>ポートは4ビットとして定義して、topモジュールの<code class="inline-code" translate="no" >led</code>ポートの下位4ビットを接続しています。</p>
 <div id="top_pynq_z1.veryl.pynq_z1" class="caption-code">
 <span class="caption">リスト8.22: リスト8.22: PYNQ-Z1用の最上位モジュール (top_pynq_z1.veryl)</span>
-<pre class="list language-pynq_z1">import eei::*;
+<pre class="list language-pynq_z1" translate="no">import eei::*;
 
 module top_pynq_z1 #(
     param MEMORY_FILEPATH: string = &quot;&quot;,
@@ -664,7 +664,7 @@ module top_pynq_z1 #(
 図8.28: プロジェクト名とフォルダを入力する
 </p>
 </div>
-<p>プロジェクトの形式を設定します(<span class="imgref"><a href="./05b-synth.html#id_xilinx_2Fpj_2F2">図8.29</a></span>)。RTL Projectを選択して、<code class="inline-code">Do not specify sources at this time</code>にチェックを入れてNextを押します。</p>
+<p>プロジェクトの形式を設定します(<span class="imgref"><a href="./05b-synth.html#id_xilinx_2Fpj_2F2">図8.29</a></span>)。RTL Projectを選択して、<code class="inline-code" translate="no" >Do not specify sources at this time</code>にチェックを入れてNextを押します。</p>
 <div id="id_xilinx_2Fpj_2F2" class="image">
 <img src="images/05b-synth/xilinx/pj/2.png" alt="プロジェクトの形式を選択する" class="img" />
 <p class="caption">
@@ -694,11 +694,11 @@ module top_pynq_z1 #(
 </div>
 
 <h3 id="pynq_z1.import" class="none"><a id="h8-4-3"></a><span class="secno">8.4.3</span> 設計ファイルを追加する</h3>
-<p>Verylのソースファイルをビルドして、生成されるファイルリスト(<code class="inline-code">core.f</code>)を利用して、生成されたSystemVerilogソースファイルをプロジェクトに追加します。</p>
-<p>Vivadoでファイルを追加するには、ウィンドウ下部のTcl Console画面で<code class="inline-code">add_file</code>を実行します。しかし、<code class="inline-code">add_file</code>はファイルリストの読み込みに対応していないので、ファイルリストを読み込んで<code class="inline-code">add_file</code>を実行するスクリプトを作成します(<span class="listref"><a href="./05b-synth.html#add_files.tcl.pynq_z1">リスト8.23</a></span>)。</p>
+<p>Verylのソースファイルをビルドして、生成されるファイルリスト(<code class="inline-code" translate="no" >core.f</code>)を利用して、生成されたSystemVerilogソースファイルをプロジェクトに追加します。</p>
+<p>Vivadoでファイルを追加するには、ウィンドウ下部のTcl Console画面で<code class="inline-code" translate="no" >add_file</code>を実行します。しかし、<code class="inline-code" translate="no" >add_file</code>はファイルリストの読み込みに対応していないので、ファイルリストを読み込んで<code class="inline-code" translate="no" >add_file</code>を実行するスクリプトを作成します(<span class="listref"><a href="./05b-synth.html#add_files.tcl.pynq_z1">リスト8.23</a></span>)。</p>
 <div id="add_files.tcl.pynq_z1" class="caption-code">
 <span class="caption">リスト8.23: リスト8.23: add_files.tcl</span>
-<pre class="list language-pynq_z1">set file_list [open &quot;ファイルリストのパス&quot; r]
+<pre class="list language-pynq_z1" translate="no">set file_list [open &quot;ファイルリストのパス&quot; r]
 while {[gets $file_list line] != -1} {
     # skip blank or comment line
     if {[string trim $line] eq &quot;&quot; || [string index $line 0] eq &quot;#&quot;} {
@@ -713,7 +713,7 @@ close $file_list
 <p>ウィンドウの下部にあるTcl Console画面で、次のコマンドを実行します(<span class="listref"><a href="./05b-synth.html#vivado.add_files.command">リスト8.24</a></span>、<span class="imgref"><a href="./05b-synth.html#id_xilinx_2Fadd_2F0">図8.33</a></span>)。VerylをWSLで実行してVivadoをWindowsで開いている場合、ファイルリスト内のパスをWindowsから参照できるパスに変更する必要があります。</p>
 <div id="vivado.add_files.command" class="caption-code">
 <span class="caption">リスト8.24: リスト8.24: Tclスクリプトを実行する</span>
-<pre class="list language-command">source add_files.tclのパス
+<pre class="list language-command" translate="no">source add_files.tclのパス
 </pre>
 </div>
 <div id="id_xilinx_2Fadd_2F0" class="image">
@@ -734,7 +734,7 @@ close $file_list
 <p>VerylファイルはSystemVerilogファイルに変換されますが、VivadoではトップモジュールにSystemVerilogファイルを使用できません。この問題を回避するために、Verilogでtop_pynq_z1モジュールをインスタンス化するモジュールを記述します(<span class="listref"><a href="./05b-synth.html#core_top_v.v.pynq_z1">リスト8.25</a></span>)。</p>
 <div id="core_top_v.v.pynq_z1" class="caption-code">
 <span class="caption">リスト8.25: リスト8.25: PYNQ-Z1用の最上位モジュール (core_top_v.v)</span>
-<pre class="list language-pynq_z1">module core_top_v #(
+<pre class="list language-pynq_z1" translate="no">module core_top_v #(
     parameter MEMORY_FILEPATH = &quot;&quot;
 ) (
     input wire          clk,
@@ -751,10 +751,10 @@ close $file_list
 endmodule
 </pre>
 </div>
-<p><code class="inline-code">core_top_v.v</code>をadd_filesでプロジェクトに追加します(<span class="listref"><a href="./05b-synth.html#vivado.add_files.core_top_v">リスト8.26</a></span>)。</p>
+<p><code class="inline-code" translate="no" >core_top_v.v</code>をadd_filesでプロジェクトに追加します(<span class="listref"><a href="./05b-synth.html#vivado.add_files.core_top_v">リスト8.26</a></span>)。</p>
 <div id="vivado.add_files.core_top_v" class="caption-code">
 <span class="caption">リスト8.26: リスト8.26: Tcl Consoleで実行する</span>
-<pre class="list language-core_top_v">add_files -norecurse core_top_v.vのパス
+<pre class="list language-core_top_v" translate="no">add_files -norecurse core_top_v.vのパス
 </pre>
 </div>
 
@@ -762,7 +762,7 @@ endmodule
 <p>Vivadoではモジュール間の接続をブロック図によって行えます。設計したモジュールをブロック図に追加して、クロックやリセット、LEDの接続を行います。</p>
 
 <h4><a id="h8-4-5-1"></a>ブロック図の作成とトップモジュールの設定</h4>
-<p>画面左のFlow Navigatorで<code class="inline-code">Create Block Design</code>を押してブロック図を作成します(<span class="imgref"><a href="./05b-synth.html#id_xilinx_2Fbd_2F0">図8.35</a></span>)。</p>
+<p>画面左のFlow Navigatorで<code class="inline-code" translate="no" >Create Block Design</code>を押してブロック図を作成します(<span class="imgref"><a href="./05b-synth.html#id_xilinx_2Fbd_2F0">図8.35</a></span>)。</p>
 <div id="id_xilinx_2Fbd_2F0" class="image">
 <img src="images/05b-synth/xilinx/bd/0.png" alt="IP INTEGRATOR &amp;gt; Create Block Design" class="img" />
 <p class="caption">
@@ -776,7 +776,7 @@ endmodule
 図8.36: 名前を入力する
 </p>
 </div>
-<p>Sourcesタブに作成されたブロック図が追加されるので、右クリックして<code class="inline-code">Create HDL Wrapper...</code>を押します(<span class="imgref"><a href="./05b-synth.html#id_xilinx_2Fbd_2F2">図8.37</a></span>)。</p>
+<p>Sourcesタブに作成されたブロック図が追加されるので、右クリックして<code class="inline-code" translate="no" >Create HDL Wrapper...</code>を押します(<span class="imgref"><a href="./05b-synth.html#id_xilinx_2Fbd_2F2">図8.37</a></span>)。</p>
 <div id="id_xilinx_2Fbd_2F2" class="image">
 <img src="images/05b-synth/xilinx/bd/2.png" alt="Create HDL Wrapper...を押す" class="img" />
 <p class="caption">
@@ -790,7 +790,7 @@ endmodule
 図8.38: OKを押す
 </p>
 </div>
-<p>ブロック図がVerilogモジュールになるので、<code class="inline-code">Set as Top</code>を押して、これをトップモジュールにします(<span class="imgref"><a href="./05b-synth.html#id_xilinx_2Fbd_2F4">図8.39</a></span>)。</p>
+<p>ブロック図がVerilogモジュールになるので、<code class="inline-code" translate="no" >Set as Top</code>を押して、これをトップモジュールにします(<span class="imgref"><a href="./05b-synth.html#id_xilinx_2Fbd_2F4">図8.39</a></span>)。</p>
 <div id="id_xilinx_2Fbd_2F4" class="image">
 <img src="images/05b-synth/xilinx/bd/4.png" alt="Set as Topを押す" class="img" />
 <p class="caption">
@@ -807,7 +807,7 @@ endmodule
 
 <h4><a id="h8-4-5-2"></a>ブロック図の設計</h4>
 <p>Diagram画面でブロック図を組み立てます。</p>
-<p>まず、core_top_vモジュールを追加します。適当な場所で右クリックして、<code class="inline-code">Add Module...</code>を押します(<span class="imgref"><a href="./05b-synth.html#id_xilinx_2Fbd_2F6">図8.41</a></span>)。</p>
+<p>まず、core_top_vモジュールを追加します。適当な場所で右クリックして、<code class="inline-code" translate="no" >Add Module...</code>を押します(<span class="imgref"><a href="./05b-synth.html#id_xilinx_2Fbd_2F6">図8.41</a></span>)。</p>
 <div id="id_xilinx_2Fbd_2F6" class="image">
 <img src="images/05b-synth/xilinx/bd/6.png" alt="Add Module...を押す" class="img" />
 <p class="caption">
@@ -821,7 +821,7 @@ endmodule
 図8.42: core_top_vを選択する
 </p>
 </div>
-<p>core_top_vが追加されるので、ledポートをクリックして<code class="inline-code">Make External</code>を押します(<code class="inline-code">xilinx/bd/8</code>)。</p>
+<p>core_top_vが追加されるので、ledポートをクリックして<code class="inline-code" translate="no" >Make External</code>を押します(<code class="inline-code" translate="no" >xilinx/bd/8</code>)。</p>
 <div id="id_xilinx_2Fbd_2F8" class="image">
 <img src="images/05b-synth/xilinx/bd/8.png" alt="Make Externalを押す" class="img" />
 <p class="caption">
@@ -855,7 +855,7 @@ endmodule
 図8.47: 3つIPを追加する
 </p>
 </div>
-<p>上に<code class="inline-code">Designer Assistance Available</code>と出るので、<code class="inline-code">Run Block Automation</code>を押します(<span class="imgref"><a href="./05b-synth.html#id_xilinx_2Fbd_2F13">図8.48</a></span>)。</p>
+<p>上に<code class="inline-code" translate="no" >Designer Assistance Available</code>と出るので、<code class="inline-code" translate="no" >Run Block Automation</code>を押します(<span class="imgref"><a href="./05b-synth.html#id_xilinx_2Fbd_2F13">図8.48</a></span>)。</p>
 <div id="id_xilinx_2Fbd_2F13" class="image">
 <img src="images/05b-synth/xilinx/bd/13.png" alt="Run Block Automationを押す" class="img" />
 <p class="caption">
@@ -869,14 +869,14 @@ endmodule
 図8.49: DDRとFIXED_IOが追加された
 </p>
 </div>
-<p><span class="imgref"><a href="./05b-synth.html#id_xilinx_2Fbd_2F15">図8.50</a></span>のようにポートを接続します。接続元から接続先にドラッグすることでポートを接続できます。</p>
+<p><span class="imgref"><a href="./05b-synth.html#id_xilinx_2Fbd_2F15">図8.50</a></span>のようにポートを接続します。接続元から接続先にドラッグすることでポートを接続できます。また、proc_sys_reset_0のext_reset_inをMake Externalしてrstを作成してください。</p>
 <div id="id_xilinx_2Fbd_2F15" class="image">
 <img src="images/05b-synth/xilinx/bd/15.png" alt="ポートを接続する" class="img" />
 <p class="caption">
 図8.50: ポートを接続する
 </p>
 </div>
-<p>ZYNQ7 Processing Systemのoutputポートには、100MHzのクロック信号<code class="inline-code">FCLK_CLK0</code>が定義されています。これをそのままcore_top_vに供給しても良いですが、現状のコードではcore_top_vが100MHzで動くように合成できません。そのため、Clocking Wizardで50MHzに変換したクロックをcore_top_vに供給します。</p>
+<p>ZYNQ7 Processing Systemのoutputポートには、100MHzのクロック信号<code class="inline-code" translate="no" >FCLK_CLK0</code>が定義されています。これをそのままcore_top_vに供給しても良いですが、現状のコードではcore_top_vが100MHzで動くように合成できません。そのため、Clocking Wizardで50MHzに変換したクロックをcore_top_vに供給します。</p>
 <p>clk_wiz_0をダブルクリックして、入力を50MHzに変換する用に設定します。clk_out1のRequestedを50に変更してください。また、Enable Optional ～のresetとlockedのチェックを外します(<span class="imgref"><a href="./05b-synth.html#id_xilinx_2Fbd_2F16">図8.51</a></span>)。</p>
 <div id="id_xilinx_2Fbd_2F16" class="image">
 <img src="images/05b-synth/xilinx/bd/16.png" alt="Clocking Wizardの設定を変更する" class="img" />
@@ -894,10 +894,10 @@ endmodule
 
 <h3 id="pynq_z1.create_constraint" class="none"><a id="h8-4-6"></a><span class="secno">8.4.6</span> 制約ファイルを作成する</h3>
 <p>ブロック図のrst、ledを、それぞれPYNQ-Z1のボタン(BTN0)、LED(LD0、LD1、LD2、LD3)に接続します。接続の設定には物理制約ファイルを作成します。</p>
-<p><code class="inline-code">pynq.xdc</code>を作成し、次のように記述します(<span class="listref"><a href="./05b-synth.html#pynq.xdc.pynq_z1">リスト8.27</a></span>)。</p>
+<p><code class="inline-code" translate="no" >pynq.xdc</code>を作成し、次のように記述します(<span class="listref"><a href="./05b-synth.html#pynq.xdc.pynq_z1">リスト8.27</a></span>)。</p>
 <div id="pynq.xdc.pynq_z1" class="caption-code">
 <span class="caption">リスト8.27: リスト8.27: 物理制約ファイル (pynq.xdc)</span>
-<pre class="list language-pynq_z1"># reset (BTN0)
+<pre class="list language-pynq_z1" translate="no"># reset (BTN0)
 set_property -dict { PACKAGE_PIN D19 IOSTANDARD LVCMOS33} [ get_ports rst ]
 
 # led (LD0 - LD4)
@@ -907,7 +907,7 @@ set_property -dict { PACKAGE_PIN N16 IOSTANDARD LVCMOS33 } [ get_ports led[2] ];
 set_property -dict { PACKAGE_PIN M14 IOSTANDARD LVCMOS33 } [ get_ports led[3] ];
 </pre>
 </div>
-<p><span class="listref"><a href="./05b-synth.html#pynq.xdc.pynq_z1">リスト8.27</a></span>では、rstにD19を割り当てて、led[0]、led[1]、led[2]、led[3]にR14、P14、N16、M14を割り当てます(<span class="imgref"><a href="./05b-synth.html#pynq_z1_gpio">図8.53</a></span>)。ボタンは押されていないときに<code class="inline-code">1</code>、押されているときに<code class="inline-code">0</code>になります。LEDは<code class="inline-code">1</code>のときに点灯して、<code class="inline-code">0</code>のときに消灯します。</p>
+<p><span class="listref"><a href="./05b-synth.html#pynq.xdc.pynq_z1">リスト8.27</a></span>では、rstにD19を割り当てて、led[0]、led[1]、led[2]、led[3]にR14、P14、N16、M14を割り当てます(<span class="imgref"><a href="./05b-synth.html#pynq_z1_gpio">図8.53</a></span>)。ボタンは押されていないときに<code class="inline-code" translate="no" >1</code>、押されているときに<code class="inline-code" translate="no" >0</code>になります。LEDは<code class="inline-code" translate="no" >1</code>のときに点灯して、<code class="inline-code" translate="no" >0</code>のときに消灯します。</p>
 <div id="pynq_z1_gpio" class="image">
 <img src="images/05b-synth/pynq_z1_gpio.png" alt="LEDとボタン&lt;a href=&quot;bib.html#bib-pynq_z1.manual&quot;&gt;[13]&lt;/a&gt;" class="img" style="width:50%" />
 <p class="caption">
@@ -918,28 +918,28 @@ set_property -dict { PACKAGE_PIN M14 IOSTANDARD LVCMOS33 } [ get_ports led[3] ];
 <h3 id="pynq_z1.test" class="none"><a id="h8-4-7"></a><span class="secno">8.4.7</span> テスト</h3>
 
 <h4 id="pynq_z1.test.led"><a id="h8-4-7-1"></a>LEDの点灯を確認する</h4>
-<p>ブロック図のcore_top_v_0をダブルクリックすることで、core_top_vモジュールの<code class="inline-code">MEMORY_FILEPATH</code>パラメータを変更します。パラメータにはテストのHEXファイルのパスを設定します(<span class="imgref"><a href="./05b-synth.html#id_xilinx_2Fprogram_2F0">図8.54</a></span>)。LEDの点灯のテストのために<code class="inline-code">test/led.hex</code>のパスを入力します。</p>
+<p>ブロック図のcore_top_v_0をダブルクリックすることで、core_top_vモジュールの<code class="inline-code" translate="no" >MEMORY_FILEPATH</code>パラメータを変更します。パラメータにはテストのHEXファイルのパスを設定します(<span class="imgref"><a href="./05b-synth.html#id_xilinx_2Fprogram_2F0">図8.54</a></span>)。LEDの点灯のテストのために<code class="inline-code" translate="no" >test/led.hex</code>のパスを入力します。</p>
 <div id="id_xilinx_2Fprogram_2F0" class="image">
 <img src="images/05b-synth/xilinx/program/0.png" alt="テストのHEXファイルのパスを設定する" class="img" />
 <p class="caption">
 図8.54: テストのHEXファイルのパスを設定する
 </p>
 </div>
-<p>PROGRAM AND DEBUGの<code class="inline-code">Generate Bitstream</code>を押して合成と配置配線を実行します(<span class="imgref"><a href="./05b-synth.html#id_xilinx_2Fprogram_2F1">図8.55</a></span>)。</p>
+<p>PROGRAM AND DEBUGの<code class="inline-code" translate="no" >Generate Bitstream</code>を押して合成と配置配線を実行します(<span class="imgref"><a href="./05b-synth.html#id_xilinx_2Fprogram_2F1">図8.55</a></span>)。</p>
 <div id="id_xilinx_2Fprogram_2F1" class="image">
 <img src="images/05b-synth/xilinx/program/1.png" alt="合成、配置配線" class="img" />
 <p class="caption">
 図8.55: 合成、配置配線
 </p>
 </div>
-<p>合成が完了したら<code class="inline-code">Open Hardware Manager</code>を押して、開かれたHARDWARE MANAGERの<code class="inline-code">Open Target</code>の<code class="inline-code">Auto Connect</code>を押してPYNQ-Z1と接続します(<span class="imgref"><a href="./05b-synth.html#id_xilinx_2Fprogram_2F2">図8.56</a></span>)。</p>
+<p>合成が完了したら<code class="inline-code" translate="no" >Open Hardware Manager</code>を押して、開かれたHARDWARE MANAGERの<code class="inline-code" translate="no" >Open Target</code>の<code class="inline-code" translate="no" >Auto Connect</code>を押してPYNQ-Z1と接続します(<span class="imgref"><a href="./05b-synth.html#id_xilinx_2Fprogram_2F2">図8.56</a></span>)。</p>
 <div id="id_xilinx_2Fprogram_2F2" class="image">
 <img src="images/05b-synth/xilinx/program/2.png" alt="PYNQ-Z1を接続する" class="img" />
 <p class="caption">
 図8.56: PYNQ-Z1を接続する
 </p>
 </div>
-<p><code class="inline-code">Program device</code>を押すと、PYNQ-Z1に設計が書き込まれます。</p>
+<p><code class="inline-code" translate="no" >Program device</code>を押すと、PYNQ-Z1に設計が書き込まれます。</p>
 <div id="id_xilinx_2Fprogram_2F3" class="image">
 <img src="images/05b-synth/xilinx/program/3.png" alt="設計を書き込む" class="img" />
 <p class="caption">
@@ -948,14 +948,14 @@ set_property -dict { PACKAGE_PIN M14 IOSTANDARD LVCMOS33 } [ get_ports led[3] ];
 </div>
 <p>LEDが点灯しているのを確認できます(<span class="imgref"><a href="./05b-synth.html#pynq_z1_test_led">図8.58</a></span>)。BTN0を押すとLEDが消灯します。</p>
 <div id="pynq_z1_test_led" class="image">
-<img src="images/05b-synth/pynq_z1_test_led.jpg" alt="LEDの制御用レジスタの値が12(&lt;code class=&quot;inline-code&quot;&gt;64'b1100&lt;/code&gt;)なので、LD3、LD2が点灯する" class="img" />
+<img src="images/05b-synth/pynq_z1_test_led.jpg" alt="LEDの制御用レジスタの値が12(&lt;code class=&quot;inline-code&quot; translate=&quot;no&quot; &gt;64'b1100&lt;/code&gt;)なので、LD3、LD2が点灯する" class="img" />
 <p class="caption">
-図8.58: LEDの制御用レジスタの値が12(<code class="inline-code">64'b1100</code>)なので、LD3、LD2が点灯する
+図8.58: LEDの制御用レジスタの値が12(<code class="inline-code" translate="no" >64'b1100</code>)なので、LD3、LD2が点灯する
 </p>
 </div>
 
 <h4 id="pynq_z1.test.blink"><a id="h8-4-7-2"></a>LEDの点滅を確認する</h4>
-<p>core_top_vモジュールの<code class="inline-code">MEMORY_FILEPATH</code>パラメータの値を<code class="inline-code">test/ledcounter.hex</code>で変更して、再度<code class="inline-code">Generate Bitstream</code>を実行します。</p>
+<p>core_top_vモジュールの<code class="inline-code" translate="no" >MEMORY_FILEPATH</code>パラメータの値を<code class="inline-code" translate="no" >test/ledcounter.hex</code>のパスに変更して、再度<code class="inline-code" translate="no" >Generate Bitstream</code>を実行します。</p>
 <p>Hardware Managerを開いてProgram deviceを押すとLEDが点滅します<sup><a id="fnb-pynq_z1.led_counter" href="#fn-pynq_z1.led_counter" class="noteref" epub:type="noteref">*5</a></sup>。BTN0を押すと状態がリセットされます。</p>
 <iframe width="100%" max-width="640" style="aspect-ratio: 16 / 9;" src="https://www.youtube.com/embed/byCr_464dW4" title="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe><div class="footnote-list">
 <div class="footnote" id="fn-pynq_z1.led_counter" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*5] </span><a href="https://youtu.be/byCr_464dW4" class="link">https://youtu.be/byCr_464dW4</a></p></div>
