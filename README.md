@@ -2,7 +2,7 @@
 
 ### 作り方を知って、初めて理解する!
 
-コンピュータアーキテクチャは、CPUを作ることで大体理解することができます。  
+コンピュータアーキテクチャはCPUを作ることで大体理解できます。  
 「Verylで作るCPU」は、ハードウェア記述言語VerylでRISC-VのCPUを自作する方法を解説するプロジェクトです。
 
 [/basic](https://github.com/nananapo/veryl-riscv-book/tree/main/basic/README.md) : 基本編

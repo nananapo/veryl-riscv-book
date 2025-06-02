@@ -20,31 +20,31 @@ CHAPS:
     - 05-impl-rv64i.re
     - 05a-pipeline.re
     - 05b-synth.re
-  # - RV64IMACの実装(未執筆):
-    # - 09-impl-m.re
-    # - 10-impl-exception.re
-    # - 11-impl-mmio.re
-    # - 12-visualize.re
-    # - 13-benchmark.re
-    # - 14-impl-a.re
-    # - 15-impl-c.re
-  # - CSRの実装 (未執筆):
-    # - 20-impl-interrupt.re
-    # - 21-impl-clint.re
-    # - 22-impl-mmode.re
-    # - 23-impl-smode.re
-    # - 24-impl-paging.re
-    # - 25-impl-plic.re
-    # - 30-run-xv6.re
-    # - 31-run-linux.re
+  - RV64IMACの実装:
+    - 10-impl-m.re
+    - 11-impl-exception.re
+    - 12-impl-mmio.re
+    - 13-impl-a.re
+    - 14-impl-c.re
+  - 特権/割り込みの実装:
+    - 20-mmode-csr.re
+    - 21-impl-interrupt.re
+    - 22-umode-csr.re
+    - 23-smode-csr.re
+    - 24-impl-paging.re
+    - 25-impl-plic.re
+    - 26-run-linux.re
 ## 付録
 APPENDIX:
+  # - 200-impl-uart.re
+  # - 201-debug.re
   # - old-04-bluecore.re
   # - old-05-impl-log.re
 
 ## あとがき
 POSTDEF:
   - 99-postface.re
+  - 99b-postface.re
   - 100-contribute.re
   - bib.re
 ##

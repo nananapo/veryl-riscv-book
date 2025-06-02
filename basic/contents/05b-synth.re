@@ -71,10 +71,10 @@ RISC-VのCSRのアドレス空間には、読み込みと書き込みができ�
 
 //footnote[riscv.isa.csr_addr][The RISC-V Instruction Set Manual Volume II: Privileged Architecture version 20240411 Table 3. Allocation of RISC-V CSR address ranges.]
 
-まず、CsrAddr型にLED制御用レジスタのアドレスを追加します(@<list>{csrunit.veryl.ledcsr-range.addr})。
+まず、@<code>{CsrAddr}型にLED制御用レジスタのアドレスを追加します(@<list>{csrunit.veryl.ledcsr-range.addr})。
 
 //list[csrunit.veryl.ledcsr-range.addr][LEDの制御用レジスタのアドレスを追加する (csrunit.veryl)]{
-#@maprange(scripts/05b/ledcsr-range/core/src/csrunit.veryl,addr)
+#@maprange(scripts/05b/ledcsr-range/core/src/eei.veryl,addr)
     enum CsrAddr: logic<12> {
         MTVEC = 12'h305,
         MEPC = 12'h341,
@@ -304,8 +304,8 @@ import eei::*;
 
 module top_tang (
     clk: input  clock   ,
-    rst: input     reset   ,
-    led: output    logic<6>,
+    rst: input  reset   ,
+    led: output logic<6>,
 ) {
     // CSRの下位ビットをLEDに接続する
     var led_top: UIntX;
@@ -314,10 +314,10 @@ module top_tang (
     }
 
     inst t: top #(
-        MEMORY_FILEPATH_IS_ENV: 0,
+        MEMORY_FILEPATH_IS_ENV: 0 ,
         MEMORY_FILEPATH       : "",
     ) (
-        clk,
+        clk         ,
         rst         ,
         led: led_top,
         #[ifdef(TEST_MODE)]
@@ -492,7 +492,7 @@ Tang Nano 9Kの水晶発振器は27MHzで振動します。
 インポートされた@<code>{top_tang.sv}のtopモジュールをインスタンス化している場所で、
 @<code>{MEMORY_FILEPATH}パラメータの値を@<code>{test/led.hex}のパスに設定します(@<list>{led.hex.set})。
 
-#@# TODO mapにする
+#@# TODO mapに戻す　できれば
 //list[led.hex.set][読み込むファイルを設定する (top_tang.sv)]{
 core_top #(
     .MEMORY_FILEPATH_IS_ENV (0 ),
@@ -529,7 +529,7 @@ Tang Nano 9Kの中央2つ以外のLEDが点灯していることを確認でき�
 
 @<code>{MEMORY_FILEPATH}パラメータの値を@<code>{test/led_counter.hex}のパスに設定します(@<list>{led_counter.hex.set})。
 
-#@# TODO map
+#@# TODO mapに戻す　できれば
 //list[led_counter.hex.set][読み込むファイルを変更する (top_tang.sv)]{
 core_top #(
     .MEMORY_FILEPATH_IS_ENV (0 ),

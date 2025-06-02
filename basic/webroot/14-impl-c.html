@@ -1,0 +1,1111 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    
+    <title>C拡張の実装 | Verylで作るCPU</title>
+
+    <link rel="stylesheet" type="text/css" href="css/normalize.css" />
+    <link rel="stylesheet" type="text/css" href="css/webstyle.css" />
+    <link rel="next" title="M-modeの実装 (1. CSRの実装)" href="20-mmode-csr.html">
+    <link rel="prev" title="A拡張の実装" href="13-impl-a.html">
+    <meta name="generator" content="Re:VIEW Starter">
+
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+
+  </head>
+  <body style="background-color:#eff4ff">
+    <div class="page-outer" style="background-color:white">
+      <div class="side-content">
+                <a class="nav-title" href="index.html">Verylで作るCPU</a>
+
+        <div style="display:flex; gap:10px; align-items: center;">
+          <a class="github-button" href="https://github.com/nananapo/veryl-riscv-book" data-color-scheme="no-preference: light_high_contrast; light: light; dark: dark;" data-size="large" data-show-count="true" aria-label="Star nananapo/veryl-riscv-book on GitHub">Star</a>
+          <div style="">
+            <a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-show-count="false">Tweet</a>
+          </div>
+          <div style="margin-bottom: 14px;" id="share-facebook" class="fb-share-button" data-href="" data-layout="" data-size=""><a target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Finvalid.invalid%2F&amp;src=sdkpreparse" class="fb-xfbml-parse-ignore">Facebookでシェアする</a></div>
+        </div>
+        <ul class="toc toc-1">
+    <li class="toc-chapter"><a href="./00-preface.html">まえがき</a></li>
+<li class="toc-part">第I部 RV32I/RV64Iの実装
+  <ul class="toc toc-2">
+    <li class="toc-chapter"><a href="./02-setup.html">1 環境構築</a></li>
+    <li class="toc-chapter"><a href="./03-veryl.html">2 ハードウェア記述言語 Veryl</a></li>
+    <li class="toc-chapter"><a href="./04-impl-rv32i.html">3 RV32Iの実装</a></li>
+    <li class="toc-chapter"><a href="./04a-zicsr.html">4 Zicsr拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./04b-riscvtests.html">5 riscv-testsによるテスト</a></li>
+    <li class="toc-chapter"><a href="./05-impl-rv64i.html">6 RV64Iの実装</a></li>
+    <li class="toc-chapter"><a href="./05a-pipeline.html">7 CPUのパイプライン化</a></li>
+    <li class="toc-chapter"><a href="./05b-synth.html">8 CPUの合成</a></li>
+  </ul>
+</li>
+<li class="toc-part">第II部 RV64IMACの実装
+  <ul class="toc toc-2">
+    <li class="toc-chapter"><a href="./10-impl-m.html">9 M拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./11-impl-exception.html">10 例外の実装</a></li>
+    <li class="toc-chapter"><a href="./12-impl-mmio.html">11 Memory-mapped I/Oの実装</a></li>
+    <li class="toc-chapter"><a href="./13-impl-a.html">12 A拡張の実装</a></li>
+    <li class="toc-chapter"><a href="./14-impl-c.html">13 C拡張の実装</a>
+      <ul class="toc toc-3">
+        <li class="toc-section"><a href="./14-impl-c.html#h13-1">13.1 概要</a></li>
+        <li class="toc-section"><a href="./14-impl-c.html#h13-2">13.2 IALIGNの変更</a></li>
+        <li class="toc-section"><a href="./14-impl-c.html#h13-3">13.3 実装方針</a></li>
+        <li class="toc-section"><a href="./14-impl-c.html#h13-4">13.4 命令フェッチモジュールの実装</a></li>
+        <li class="toc-section"><a href="./14-impl-c.html#h13-5">13.5 16ビット境界に配置された32ビット幅の命令のサポート</a></li>
+        <li class="toc-section"><a href="./14-impl-c.html#h13-6">13.6 RVC命令の変換</a></li>
+      </ul>
+    </li>
+  </ul>
+</li>
+<li class="toc-part">第III部 特権/割り込みの実装
+  <ul class="toc toc-2">
+    <li class="toc-chapter"><a href="./20-mmode-csr.html">14 M-modeの実装 (1. CSRの実装)</a></li>
+    <li class="toc-chapter"><a href="./21-impl-interrupt.html">15 M-modeの実装 (2. 割り込みの実装)</a></li>
+    <li class="toc-chapter"><a href="./22-umode-csr.html">16 U-modeの実装</a></li>
+    <li class="toc-chapter"><a href="./23-smode-csr.html">17 S-modeの実装 (1. CSRの実装)</a></li>
+    <li class="toc-chapter"><a href="./24-impl-paging.html">18 S-modeの実装 (2. 仮想記憶システム)</a></li>
+    <li class="toc-chapter"><a href="./25-impl-plic.html">19 PLICの実装</a></li>
+    <li class="toc-chapter"><a href="./26-run-linux.html">20 Linuxを動かす</a></li>
+  </ul>
+</li>
+    <li class="toc-chapter"><a href="./99-postface.html">あとがき (第Ⅰ部)</a></li>
+    <li class="toc-chapter"><a href="./99b-postface.html">あとがき (第Ⅱ部、第Ⅲ部)</a></li>
+    <li class="toc-chapter"><a href="./100-contribute.html">このプロジェクトに貢献する</a></li>
+    <li class="toc-chapter"><a href="./bib.html">参考文献</a></li>
+</ul>
+      </div>
+      <div class="page-inner">
+        <header class="page-header">
+        </header>
+        <main class="page-main">
+  <h1 class="boldlines center twolines"><a id="h13"></a><span class="secno">第13章</span> <br/>C拡張の実装</h1>
+
+<h2 class="numbox"><a id="h13-1"></a><span class="secno">13.1</span> 概要</h2>
+<p>これまでに実装した命令はすべて32ビット幅のものでした。RISC-Vには32ビット幅以外の命令が定義されており、命令の下位ビットで何ビット幅の命令か判断できます(<span class="tableref"><a href="./14-impl-c.html#riscv.instruction-length-encoding">表13.1</a></span>)。</p>
+<div id="riscv.instruction-length-encoding" class="table">
+<p class="caption">表13.1: RISC-Vの命令長とエンコーディング</p>
+<table>
+<tr class="hline"><th>命令幅</th><th>命令の下位5ビット</th></tr>
+<tr class="hline"><td>16-bit (aa≠11)</td><td>xxxaa</td></tr>
+<tr class="hline"><td>32-bit (bbb≠111)</td><td>bbb11</td></tr>
+</table>
+</div>
+<p>C拡張は16ビット幅の命令を定義する拡張です。よく使われる命令の幅を16ビットに圧縮できるようにすることでコードサイズを削減できます。これ以降、C拡張によって導入される16ビット幅の命令のことをRVC命令と呼びます。</p>
+<p>全てのRVC命令には同じ操作をする32ビット幅の命令が存在します<sup><a id="fnb-zc-pseudo" href="#fn-zc-pseudo" class="noteref" epub:type="noteref">*1</a></sup>。</p>
+<div class="footnote-list">
+<div class="footnote" id="fn-zc-pseudo" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>Zc*拡張の一部の命令は複数の命令になります</p></div>
+</div><!--/.footnote-list-->
+<p>RVC命令は<span class="imgref"><a href="./14-impl-c.html#rvc-instruction-formats">図13.1</a></span>の9つのフォーマットが定義されています。</p>
+<div id="rvc-instruction-formats" class="image">
+<img src="images/14-impl-c/rvc-instruction-formats.png" alt="RVC命令のフォーマット" class="img" style="width:95%" />
+<p class="caption">
+図13.1: RVC命令のフォーマット
+</p>
+</div>
+<p><code class="inline-code" translate="no" >rs1'</code>、<code class="inline-code" translate="no" >rs2'</code>、<code class="inline-code" translate="no" >rd'</code>は3ビットのフィールドで、よく使われる8番(x8)から15番(x15)のレジスタを指定します。即値の並び方やそれぞれの命令の具体的なフォーマットについては、仕様書か「<a href="14-impl-c.html#h13-6-2">13.6.2 32ビット幅の命令に変換する</a>」のコードを参照してください。</p>
+<p>RV64IのCPUに実装されるC拡張には<span class="tableref"><a href="./14-impl-c.html#impl-c.instructions">表13.2</a></span>のRVC命令が定義されています。</p>
+<div id="impl-c.instructions" class="table">
+<p class="caption">表13.2: C拡張の命令</p>
+<table>
+<tr class="hline"><th>命令</th><th>同じ意味の32ビット幅の命令</th><th>形式</th></tr>
+<tr class="hline"><td>C.LWSP</td><td>lw rd, offset(x2)</td><td>CI</td></tr>
+<tr class="hline"><td>C.LDSP</td><td>ld rd, offset(x2)</td><td>CI</td></tr>
+<tr class="hline"><td>C.SWSP</td><td>sw rs2, offset(x2)</td><td>CSS</td></tr>
+<tr class="hline"><td>C.SDSP</td><td>sd rs2, offset(x2)</td><td>CSS</td></tr>
+<tr class="hline"><td>C.LW</td><td>lw rd, offset(rs)</td><td>CL</td></tr>
+<tr class="hline"><td>C.LD</td><td>ld rd, offset(rs)</td><td>CL</td></tr>
+<tr class="hline"><td>C.SW</td><td>sw rs2, offset(rs1)</td><td>CS</td></tr>
+<tr class="hline"><td>C.SD</td><td>sd rs2, offset(rs1)</td><td>CS</td></tr>
+<tr class="hline"><td>C.J</td><td>jal x0, offset</td><td>CJ</td></tr>
+<tr class="hline"><td>C.JR</td><td>jalr x0, 0(rs1)</td><td>CR</td></tr>
+<tr class="hline"><td>C.JALR</td><td>jalr x1, 0(rs1)</td><td>CR</td></tr>
+<tr class="hline"><td>C.BEQZ</td><td>beq rs1, x0, offset</td><td>CB</td></tr>
+<tr class="hline"><td>C.BNEZ</td><td>bne rs1, x0, offset</td><td>CB</td></tr>
+<tr class="hline"><td>C.LI</td><td>addi rd, x0, imm</td><td>CI</td></tr>
+<tr class="hline"><td>C.LUI</td><td>lui rd, imm</td><td>CI</td></tr>
+<tr class="hline"><td>C.ADDI</td><td>addi rd, rd, imm</td><td>CI</td></tr>
+<tr class="hline"><td>C.ADDIW</td><td>addiw rd, rd, imm</td><td>CI</td></tr>
+<tr class="hline"><td>C.ADDI16SP</td><td>addi x2, x2, imm</td><td>CI</td></tr>
+<tr class="hline"><td>C.ADDI4SPN</td><td>addi rd, x2, imm</td><td>CIW</td></tr>
+<tr class="hline"><td>C.SLLI</td><td>slli rd, rd, shamt</td><td>CI</td></tr>
+<tr class="hline"><td>C.SRLI</td><td>srli rd, rd, shamt</td><td>CB</td></tr>
+<tr class="hline"><td>C.SRAI</td><td>srai rd, rd, shamt</td><td>CB</td></tr>
+<tr class="hline"><td>C.ANDI</td><td>andi rd, rd, imm</td><td>CB</td></tr>
+<tr class="hline"><td>C.MV</td><td>add rd, x0, rs2</td><td>CR</td></tr>
+<tr class="hline"><td>C.ADD</td><td>add rd, rd, rs2</td><td>CR</td></tr>
+<tr class="hline"><td>C.AND</td><td>and rd, rd, rs2</td><td>CA</td></tr>
+<tr class="hline"><td>C.OR</td><td>or rd, rd, rs2</td><td>CA</td></tr>
+<tr class="hline"><td>C.XOR</td><td>xor rd, rd, rs2</td><td>CA</td></tr>
+<tr class="hline"><td>C.SUB</td><td>sub rd, rd, rs2</td><td>CA</td></tr>
+<tr class="hline"><td>C.EBREAK</td><td>ebreak</td><td>CR</td></tr>
+</table>
+</div>
+<p>C.ADDIW命令はRV32IのC拡張に定義されているC.JAL命令とエンコーディングが同じです。本書で実装するモジュールはRV32IのC拡張にも対応したものになっています。RV32IのC拡張については、仕様書か「<a href="14-impl-c.html#h13-6-2">13.6.2 32ビット幅の命令に変換する</a>」のコードを参照してください。</p>
+<p>C拡張は浮動小数点命令をサポートするF、D拡張が実装されている場合に他の命令を定義しますが、基本編ではF、D拡張を実装しないため実装、解説しません。</p>
+
+<h2 class="numbox"><a id="h13-2"></a><span class="secno">13.2</span> IALIGNの変更</h2>
+<p>「<a href="11-impl-exception.html#h10-5">10.5 命令アドレスのミスアライン例外</a>」で解説したように、命令はIALIGNビットに整列したアドレスに配置されます。C拡張はIALIGNによる制限を16ビットに緩め、全ての命令が16ビットに整列されたアドレスに配置されるように変更します。これにより、RVC命令と32ビット幅の命令の組み合わせがあったとしても効果的にコードサイズを削減できます。</p>
+<p>eeiパッケージに定数<code class="inline-code" translate="no" >IALIGN</code>を定義します(<span class="listref"><a href="./14-impl-c.html#eei.veryl.ialign.IALIGN">リスト13.1</a></span>)。</p>
+<div id="eei.veryl.ialign.IALIGN" class="caption-code">
+<span class="caption">リスト13.1: リスト13.1: IALIGNの定義 (eei.veryl)</span>
+<pre class="list language-IALIGN" translate="no"><em class="lineno">1: </em>    const IALIGN: u32 = 16;
+</pre>
+</div>
+<p>mepcレジスタの書き込みマスクを変更して、トラップ時のジャンプ先アドレスに16ビットに整列されたアドレスを指定できるようにします(<span class="listref"><a href="./14-impl-c.html#csrunit.veryl.ialign.mepc">リスト13.2</a></span>)。</p>
+<div id="csrunit.veryl.ialign.mepc" class="caption-code">
+<span class="caption">リスト13.2: リスト13.2: MEPCの書き込みマスクを変更する (eei.veryl)</span>
+<pre class="list language-mepc" translate="no"><em class="lineno">1: </em>    const MEPC_WMASK  : UIntX = 'hffff_ffff_ffff_fff<b>e</b>;
+</pre>
+</div>
+<p>命令アドレスのミスアライン例外の判定を変更します。IALIGNが<code class="inline-code" translate="no" >16</code>の場合は例外が発生しないようにします(<span class="listref"><a href="./14-impl-c.html#core.veryl.ialign.exception">リスト13.3</a></span>)。ジャンプ、分岐命令は2バイト単位のアドレスしか指定できないため、C拡張が実装されている場合には例外が発生しません。</p>
+<div id="core.veryl.ialign.exception" class="caption-code">
+<span class="caption">リスト13.3: リスト13.3: IALIGNが16のときに例外が発生しないようにする (core.veryl)</span>
+<pre class="list language-exception" translate="no"><em class="lineno">1: </em>        let instruction_address_misaligned: logic = <b>IALIGN == 32 &amp;&amp;</b> memq_wdata.br_taken &amp;&amp; memq_wdata.jump_addr[1:0] != 2'b00;
+</pre>
+</div>
+
+<h2 class="numbox"><a id="h13-3"></a><span class="secno">13.3</span> 実装方針</h2>
+<p>本章では次の順序でC拡張を実装します。</p>
+<ol start="1" type="1">
+<li>命令フェッチ処理(IFステージ)をcoreモジュールから分離する</li>
+<li>16ビットに整列されたアドレスに配置された32ビット幅の命令を処理できるようにする</li>
+<li>RVC命令を32ビット幅の命令に変換するモジュールを作成する</li>
+<li>RVC命令を32ビット幅の命令に変換してcoreモジュールに供給する</li>
+</ol>
+<p>最終的な命令フェッチ処理の構成は図<span class="imgref"><a href="./14-impl-c.html#inst-fetch-structure">図13.2</a></span>のようになります。</p>
+<div id="inst-fetch-structure" class="image">
+<img src="images/14-impl-c/inst-fetch-structure.png" alt="命令フェッチ処理の構成" class="img" style="width:90%" />
+<p class="caption">
+図13.2: 命令フェッチ処理の構成
+</p>
+</div>
+
+<h2 class="numbox"><a id="h13-4"></a><span class="secno">13.4</span> 命令フェッチモジュールの実装</h2>
+
+<h3 class="none"><a id="h13-4-1"></a><span class="secno">13.4.1</span> インターフェースを作成する</h3>
+<p>まず、命令フェッチを行うモジュールとcoreモジュールのインターフェースを定義します。</p>
+<p><code class="inline-code" translate="no" >src/core_inst_if.veryl</code>を作成し、次のように記述します(<span class="listref"><a href="./14-impl-c.html#core_inst_if.veryl.if">リスト13.4</a></span>)。</p>
+<div id="core_inst_if.veryl.if" class="caption-code">
+<span class="caption">リスト13.4: リスト13.4: core_inst_if.veryl</span>
+<pre class="list language-if" translate="no"><em class="lineno">1: </em>import eei::*;
+<em class="lineno">2: </em>
+<em class="lineno">3: </em>interface core_inst_if {
+<em class="lineno">4: </em>    var rvalid   : logic;
+<em class="lineno">5: </em>    var rready   : logic;
+<em class="lineno">6: </em>    var raddr    : Addr ;
+<em class="lineno">7: </em>    var rdata    : Inst ;
+<em class="lineno">8: </em>    var is_hazard: logic;
+<em class="lineno">9: </em>    var next_pc  : Addr ;
+<em class="lineno">10: </em>
+<em class="lineno">11: </em>    modport master {
+<em class="lineno">12: </em>        rvalid   : input ,
+<em class="lineno">13: </em>        rready   : output,
+<em class="lineno">14: </em>        raddr    : input ,
+<em class="lineno">15: </em>        rdata    : input ,
+<em class="lineno">16: </em>        is_hazard: output, // control hazard
+<em class="lineno">17: </em>        next_pc  : output, // actual next pc
+<em class="lineno">18: </em>    }
+<em class="lineno">19: </em>
+<em class="lineno">20: </em>    modport slave {
+<em class="lineno">21: </em>        ..converse(master)
+<em class="lineno">22: </em>    }
+<em class="lineno">23: </em>}
+</pre>
+</div>
+<p><code class="inline-code" translate="no" >rvalid</code>、<code class="inline-code" translate="no" >rready</code>、<code class="inline-code" translate="no" >raddr</code>、<code class="inline-code" translate="no" >rdata</code>は、coreモジュールのFIFO(<code class="inline-code" translate="no" >if_fifo</code>)の<code class="inline-code" translate="no" >wvalid</code>、<code class="inline-code" translate="no" >wready</code>、<code class="inline-code" translate="no" >wdata.addr</code>、<code class="inline-code" translate="no" >wdata.bits</code>と同じ役割を果たします。<code class="inline-code" translate="no" >is_hazard</code>、<code class="inline-code" translate="no" >next_pc</code>は制御ハザードの情報を伝えるための変数です。</p>
+
+<h3 class="none"><a id="h13-4-2"></a><span class="secno">13.4.2</span> coreモジュールのIFステージを削除する</h3>
+<p>coreモジュールのIFステージを削除し、core_inst_ifインターフェースで代替します<sup><a id="fnb-no-del" href="#fn-no-del" class="noteref" epub:type="noteref">*2</a></sup>。</p>
+<div class="footnote-list">
+<div class="footnote" id="fn-no-del" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*2] </span>ここで削除するコードは次の「<a href="14-impl-c.html#h13-4-3">13.4.3 inst_fetcherモジュールを作成する</a>」で実装するコードと似通っているため、削除せずにコメントアウトしておくと少し楽に実装できます。</p></div>
+</div><!--/.footnote-list-->
+<p>coreモジュールの<code class="inline-code" translate="no" >i_membus</code>の型を<code class="inline-code" translate="no" >core_inst_if</code>に変更します(<span class="listref"><a href="./14-impl-c.html#core.veryl.if.port">リスト13.5</a></span>)。</p>
+<div id="core.veryl.if.port" class="caption-code">
+<span class="caption">リスト13.5: リスト13.5: i_membusの型を変更する (core.veryl)</span>
+<pre class="list language-port" translate="no"><em class="lineno">1: </em>    i_membus: modport <b>core_inst_if</b>::master,
+</pre>
+</div>
+<p>IFステージ部分のコードを次のように変更します(<span class="listref"><a href="./14-impl-c.html#core.veryl.if.if">リスト13.6</a></span>)。</p>
+<div id="core.veryl.if.if" class="caption-code">
+<span class="caption">リスト13.6: リスト13.6: IFステージの変更 (core.veryl)</span>
+<pre class="list language-if" translate="no"><em class="lineno">1: </em>    ///////////////////////////////// IF Stage /////////////////////////////////
+<em class="lineno">2: </em>
+<em class="lineno">3: </em>    var control_hazard        : logic;
+<em class="lineno">4: </em>    var control_hazard_pc_next: Addr ;
+<em class="lineno">5: </em>
+<em class="lineno">6: </em>    always_comb {
+<em class="lineno">7: </em>        i_membus.is_hazard = control_hazard;
+<em class="lineno">8: </em>        i_membus.next_pc = control_hazard_pc_next;
+<em class="lineno">9: </em>    }
+</pre>
+</div>
+<p>coreモジュールの新しいIFステージ部分は、制御ハザードの情報をインターフェースに割り当てるだけの簡単なものになっています。<code class="inline-code" translate="no" >if_fifo_type</code>型、<code class="inline-code" translate="no" >if_fifo_</code>から始まる変数は使わなくなったので削除してください。</p>
+<p>IDステージとcore_inst_ifインターフェースを接続します(<span class="listref"><a href="./14-impl-c.html#core.veryl.if.idvar">リスト13.7</a></span>、<span class="listref"><a href="./14-impl-c.html#core.veryl.if.idex">リスト13.8</a></span>)。もともと<code class="inline-code" translate="no" >if_fifo</code>の<code class="inline-code" translate="no" >rvalid</code>、<code class="inline-code" translate="no" >rready</code>、<code class="inline-code" translate="no" >rdata</code>だった部分を<code class="inline-code" translate="no" >i_membus</code>に変更しています。</p>
+<div id="core.veryl.if.idvar" class="caption-code">
+<span class="caption">リスト13.7: リスト13.7: IDステージとi_membusを接続する (core.veryl)</span>
+<pre class="list language-idvar" translate="no"><em class="lineno">1: </em>    let ids_valid     : logic    = <b>i_membus.rvalid</b>;
+<em class="lineno">2: </em>    let ids_pc        : Addr     = <b>i_membus.raddr</b>;
+<em class="lineno">3: </em>    let ids_inst_bits : Inst     = <b>i_membus.rdata</b>;
+</pre>
+</div>
+<div id="core.veryl.if.idex" class="caption-code">
+<span class="caption">リスト13.8: リスト13.8: EXステージに進められるときにrreadyを1にする (core.veryl)</span>
+<pre class="list language-idex" translate="no"><em class="lineno">1: </em>    always_comb {
+<em class="lineno">2: </em>        // ID -&gt; EX
+<em class="lineno">3: </em>        <b>i_membus.</b>rready = exq_wready;
+<em class="lineno">4: </em>        exq_wvalid      = <b>i_membus.</b>rvalid;
+<em class="lineno">5: </em>        exq_wdata.addr  = <b>i_membus.</b>raddr;
+<em class="lineno">6: </em>        exq_wdata.bits  = <b>i_membus.</b>rdata;
+<em class="lineno">7: </em>        exq_wdata.ctrl  = ids_ctrl;
+<em class="lineno">8: </em>        exq_wdata.imm   = ids_imm;
+</pre>
+</div>
+
+<h3 id="impl_fetcher" class="none"><a id="h13-4-3"></a><span class="secno">13.4.3</span> inst_fetcherモジュールを作成する</h3>
+<p>IFステージの代わりに命令フェッチをするinst_fetcherモジュールを作成します。inst_fetcherモジュールでは命令フェッチ処理をfetch、issueの2段階で行います。</p>
+<dl>
+<dt>fetch</dt>
+<dd>
+    メモリから64ビットの値を読み込み、issueとの間のFIFOに格納する。
+    アドレスを<code class="inline-code" translate="no" >8</code>進めて、次の64ビットを読み込む。
+</dd>
+<dt>issue</dt>
+<dd>
+    fetchとの間のFIFOから64ビットを読み込み、
+    32ビットずつcoreモジュールとの間のFIFOに格納する。
+</dd>
+</dl>
+<p>fetchとissueは並列に独立して動かします。</p>
+<p>inst_fetcherモジュールのポートを定義します。<code class="inline-code" translate="no" >src/inst_fetcher.veryl</code>を作成し、次のように記述します(<span class="listref"><a href="./14-impl-c.html#inst_fetcher.veryl.if.port">リスト13.9</a></span>)。</p>
+<div id="inst_fetcher.veryl.if.port" class="caption-code">
+<span class="caption">リスト13.9: リスト13.9: ポートの定義 (inst_fetcher.veryl)</span>
+<pre class="list language-port" translate="no"><em class="lineno">1: </em>module inst_fetcher (
+<em class="lineno">2: </em>    clk    : input   clock              ,
+<em class="lineno">3: </em>    rst    : input   reset              ,
+<em class="lineno">4: </em>    core_if: modport core_inst_if::slave,
+<em class="lineno">5: </em>    mem_if : modport Membus::master     ,
+<em class="lineno">6: </em>) {
+</pre>
+</div>
+<p><code class="inline-code" translate="no" >core_if</code>はcoreモジュールとのインターフェース、<code class="inline-code" translate="no" >mem_if</code>はメモリとのインターフェースです。</p>
+<p>fetchとissue、issueとcore_ifの間のFIFOを作成します(<span class="listref"><a href="./14-impl-c.html#inst_fetcher.veryl.if.fetch_fifo">リスト13.10</a></span>、<span class="listref"><a href="./14-impl-c.html#inst_fetcher.veryl.if.issue_fifo">リスト13.11</a></span>)。</p>
+<div id="inst_fetcher.veryl.if.fetch_fifo" class="caption-code">
+<span class="caption">リスト13.10: リスト13.10: fetchとissueを繋ぐFIFOの作成 (inst_fetcher.veryl)</span>
+<pre class="list language-fetch_fifo" translate="no"><em class="lineno">1: </em>    struct fetch_fifo_type {
+<em class="lineno">2: </em>        addr: Addr                    ,
+<em class="lineno">3: </em>        bits: logic&lt;MEMBUS_DATA_WIDTH&gt;,
+<em class="lineno">4: </em>    }
+<em class="lineno">5: </em>
+<em class="lineno">6: </em>    var fetch_fifo_flush : logic          ;
+<em class="lineno">7: </em>    var fetch_fifo_wvalid: logic          ;
+<em class="lineno">8: </em>    var fetch_fifo_wready: logic          ;
+<em class="lineno">9: </em>    var fetch_fifo_wdata : fetch_fifo_type;
+<em class="lineno">10: </em>    var fetch_fifo_rdata : fetch_fifo_type;
+<em class="lineno">11: </em>    var fetch_fifo_rready: logic          ;
+<em class="lineno">12: </em>    var fetch_fifo_rvalid: logic          ;
+<em class="lineno">13: </em>
+<em class="lineno">14: </em>    inst fetch_fifo: fifo #(
+<em class="lineno">15: </em>        DATA_TYPE: fetch_fifo_type,
+<em class="lineno">16: </em>        WIDTH    : 3              ,
+<em class="lineno">17: </em>    ) (
+<em class="lineno">18: </em>        clk                          ,
+<em class="lineno">19: </em>        rst                          ,
+<em class="lineno">20: </em>        flush     : fetch_fifo_flush ,
+<em class="lineno">21: </em>        wready    : _                ,
+<em class="lineno">22: </em>        wready_two: fetch_fifo_wready,
+<em class="lineno">23: </em>        wvalid    : fetch_fifo_wvalid,
+<em class="lineno">24: </em>        wdata     : fetch_fifo_wdata ,
+<em class="lineno">25: </em>        rready    : fetch_fifo_rready,
+<em class="lineno">26: </em>        rvalid    : fetch_fifo_rvalid,
+<em class="lineno">27: </em>        rdata     : fetch_fifo_rdata ,
+<em class="lineno">28: </em>    );
+</pre>
+</div>
+<div id="inst_fetcher.veryl.if.issue_fifo" class="caption-code">
+<span class="caption">リスト13.11: リスト13.11: issueとcoreモジュールを繋ぐFIFOの作成 (inst_fetcher.veryl)</span>
+<pre class="list language-issue_fifo" translate="no"><em class="lineno">1: </em>    struct issue_fifo_type {
+<em class="lineno">2: </em>        addr: Addr,
+<em class="lineno">3: </em>        bits: Inst,
+<em class="lineno">4: </em>    }
+<em class="lineno">5: </em>
+<em class="lineno">6: </em>    var issue_fifo_flush : logic          ;
+<em class="lineno">7: </em>    var issue_fifo_wvalid: logic          ;
+<em class="lineno">8: </em>    var issue_fifo_wready: logic          ;
+<em class="lineno">9: </em>    var issue_fifo_wdata : issue_fifo_type;
+<em class="lineno">10: </em>    var issue_fifo_rdata : issue_fifo_type;
+<em class="lineno">11: </em>    var issue_fifo_rready: logic          ;
+<em class="lineno">12: </em>    var issue_fifo_rvalid: logic          ;
+<em class="lineno">13: </em>
+<em class="lineno">14: </em>    inst issue_fifo: fifo #(
+<em class="lineno">15: </em>        DATA_TYPE: issue_fifo_type,
+<em class="lineno">16: </em>        WIDTH    : 3              ,
+<em class="lineno">17: </em>    ) (
+<em class="lineno">18: </em>        clk                      ,
+<em class="lineno">19: </em>        rst                      ,
+<em class="lineno">20: </em>        flush : issue_fifo_flush ,
+<em class="lineno">21: </em>        wready: issue_fifo_wready,
+<em class="lineno">22: </em>        wvalid: issue_fifo_wvalid,
+<em class="lineno">23: </em>        wdata : issue_fifo_wdata ,
+<em class="lineno">24: </em>        rready: issue_fifo_rready,
+<em class="lineno">25: </em>        rvalid: issue_fifo_rvalid,
+<em class="lineno">26: </em>        rdata : issue_fifo_rdata ,
+<em class="lineno">27: </em>    );
+</pre>
+</div>
+<p>メモリへのアクセス処理(fetch)を実装します。FIFOに空きがあるとき、64ビットの値を読み込んでPCを<code class="inline-code" translate="no" >8</code>進めます(<span class="listref"><a href="./14-impl-c.html#inst_fetcher.veryl.if.fetch_var">リスト13.12</a></span>、<span class="listref"><a href="./14-impl-c.html#inst_fetcher.veryl.if.memory_assign">リスト13.13</a></span>、<span class="listref"><a href="./14-impl-c.html#inst_fetcher.veryl.if.fetch_pc">リスト13.14</a></span>)。この処理はcoreモジュールの元のIFステージとほとんど同じです。</p>
+<div id="inst_fetcher.veryl.if.fetch_var" class="caption-code">
+<span class="caption">リスト13.12: リスト13.12: PCと状態管理用の変数の定義 (inst_fetcher.veryl)</span>
+<pre class="list language-fetch_var" translate="no"><em class="lineno">1: </em>    var fetch_pc          : Addr ;
+<em class="lineno">2: </em>    var fetch_requested   : logic;
+<em class="lineno">3: </em>    var fetch_pc_requested: Addr ;
+</pre>
+</div>
+<div id="inst_fetcher.veryl.if.memory_assign" class="caption-code">
+<span class="caption">リスト13.13: リスト13.13: メモリへの要求の割り当て (inst_fetcher.veryl)</span>
+<pre class="list language-memory_assign" translate="no"><em class="lineno">1: </em>    always_comb {
+<em class="lineno">2: </em>        mem_if.valid = 0;
+<em class="lineno">3: </em>        mem_if.addr  = 0;
+<em class="lineno">4: </em>        mem_if.wen   = 0;
+<em class="lineno">5: </em>        mem_if.wdata = 0;
+<em class="lineno">6: </em>        mem_if.wmask = 0;
+<em class="lineno">7: </em>        if !core_if.is_hazard {
+<em class="lineno">8: </em>            mem_if.valid = fetch_fifo_wready;
+<em class="lineno">9: </em>            if fetch_requested {
+<em class="lineno">10: </em>                mem_if.valid = mem_if.valid &amp;&amp; mem_if.rvalid;
+<em class="lineno">11: </em>            }
+<em class="lineno">12: </em>            mem_if.addr = fetch_pc;
+<em class="lineno">13: </em>        }
+<em class="lineno">14: </em>    }
+</pre>
+</div>
+<div id="inst_fetcher.veryl.if.fetch_pc" class="caption-code">
+<span class="caption">リスト13.14: リスト13.14: PC、状態の更新 (inst_fetcher.veryl)</span>
+<pre class="list language-fetch_pc" translate="no"><em class="lineno">1: </em>    always_ff {
+<em class="lineno">2: </em>        if_reset {
+<em class="lineno">3: </em>            fetch_pc           = INITIAL_PC;
+<em class="lineno">4: </em>            fetch_requested    = 0;
+<em class="lineno">5: </em>            fetch_pc_requested = 0;
+<em class="lineno">6: </em>        } else {
+<em class="lineno">7: </em>            if core_if.is_hazard {
+<em class="lineno">8: </em>                fetch_pc           = {core_if.next_pc[XLEN - 1:3], 3'b0};
+<em class="lineno">9: </em>                fetch_requested    = 0;
+<em class="lineno">10: </em>                fetch_pc_requested = 0;
+<em class="lineno">11: </em>            } else {
+<em class="lineno">12: </em>                if fetch_requested {
+<em class="lineno">13: </em>                    if mem_if.rvalid {
+<em class="lineno">14: </em>                        fetch_requested = mem_if.ready &amp;&amp; mem_if.valid;
+<em class="lineno">15: </em>                        if mem_if.ready &amp;&amp; mem_if.valid {
+<em class="lineno">16: </em>                            fetch_pc_requested =  fetch_pc;
+<em class="lineno">17: </em>                            fetch_pc           += 8;
+<em class="lineno">18: </em>                        }
+<em class="lineno">19: </em>                    }
+<em class="lineno">20: </em>                } else {
+<em class="lineno">21: </em>                    if mem_if.ready &amp;&amp; mem_if.valid {
+<em class="lineno">22: </em>                        fetch_requested    =  1;
+<em class="lineno">23: </em>                        fetch_pc_requested =  fetch_pc;
+<em class="lineno">24: </em>                        fetch_pc           += 8;
+<em class="lineno">25: </em>                    }
+<em class="lineno">26: </em>                }
+<em class="lineno">27: </em>            }
+<em class="lineno">28: </em>        }
+<em class="lineno">29: </em>    }
+</pre>
+</div>
+<p>メモリから読み込んだ値をissueとの間のFIFOに格納します(<span class="listref"><a href="./14-impl-c.html#inst_fetcher.veryl.if.memory_fetch">リスト13.15</a></span>)。</p>
+<div id="inst_fetcher.veryl.if.memory_fetch" class="caption-code">
+<span class="caption">リスト13.15: リスト13.15: ロードした64ビットの値をFIFOに格納する (inst_fetcher.veryl)</span>
+<pre class="list language-memory_fetch" translate="no"><em class="lineno">1: </em>    // memory -&gt; fetch_fifo
+<em class="lineno">2: </em>    always_comb {
+<em class="lineno">3: </em>        fetch_fifo_flush      = core_if.is_hazard;
+<em class="lineno">4: </em>        fetch_fifo_wvalid     = fetch_requested &amp;&amp; mem_if.rvalid;
+<em class="lineno">5: </em>        fetch_fifo_wdata.addr = fetch_pc_requested;
+<em class="lineno">6: </em>        fetch_fifo_wdata.bits = mem_if.rdata;
+<em class="lineno">7: </em>    }
+</pre>
+</div>
+<p>coreモジュールに命令を供給する処理(issue)を実装します。FIFOにデータが入っているとき、32ビットずつcoreモジュールとの間のFIFOに格納します。2つの32ビットの命令をFIFOに格納出来たら、fetchとの間のFIFOを読み進めます(<span class="listref"><a href="./14-impl-c.html#inst_fetcher.veryl.if.issue_offset">リスト13.16</a></span>、<span class="listref"><a href="./14-impl-c.html#inst_fetcher.veryl.if.fetch_issue">リスト13.17</a></span>)。</p>
+<div id="inst_fetcher.veryl.if.issue_offset" class="caption-code">
+<span class="caption">リスト13.16: リスト13.16: オフセットの更新 (inst_fetcher.veryl)</span>
+<pre class="list language-issue_offset" translate="no"><em class="lineno">1: </em>    var issue_pc_offset: logic&lt;3&gt;;
+<em class="lineno">2: </em>
+<em class="lineno">3: </em>    always_ff {
+<em class="lineno">4: </em>        if_reset {
+<em class="lineno">5: </em>            issue_pc_offset = 0;
+<em class="lineno">6: </em>        } else {
+<em class="lineno">7: </em>            if core_if.is_hazard {
+<em class="lineno">8: </em>                issue_pc_offset = core_if.next_pc[2:0];
+<em class="lineno">9: </em>            } else {
+<em class="lineno">10: </em>                if issue_fifo_wready &amp;&amp; issue_fifo_wvalid {
+<em class="lineno">11: </em>                    issue_pc_offset += 4;
+<em class="lineno">12: </em>                }
+<em class="lineno">13: </em>            }
+<em class="lineno">14: </em>        }
+<em class="lineno">15: </em>    }
+</pre>
+</div>
+<div id="inst_fetcher.veryl.if.fetch_issue" class="caption-code">
+<span class="caption">リスト13.17: リスト13.17: issue_fifoに32ビットずつ命令を格納する (inst_fetcher.veryl)</span>
+<pre class="list language-fetch_issue" translate="no"><em class="lineno">1: </em>    // fetch_fifo &lt;-&gt; issue_fifo
+<em class="lineno">2: </em>    always_comb {
+<em class="lineno">3: </em>        let raddr : Addr                     = fetch_fifo_rdata.addr;
+<em class="lineno">4: </em>        let rdata : logic&lt;MEMBUS_DATA_WIDTH&gt; = fetch_fifo_rdata.bits;
+<em class="lineno">5: </em>        let offset: logic&lt;3&gt;                 = issue_pc_offset;
+<em class="lineno">6: </em>
+<em class="lineno">7: </em>        fetch_fifo_rready = 0;
+<em class="lineno">8: </em>        issue_fifo_wvalid = 0;
+<em class="lineno">9: </em>        issue_fifo_wdata  = 0;
+<em class="lineno">10: </em>
+<em class="lineno">11: </em>        if !core_if.is_hazard &amp;&amp; fetch_fifo_rvalid {
+<em class="lineno">12: </em>            if issue_fifo_wready {
+<em class="lineno">13: </em>                fetch_fifo_rready     = offset == 4;
+<em class="lineno">14: </em>                issue_fifo_wvalid     = 1;
+<em class="lineno">15: </em>                issue_fifo_wdata.addr = {raddr[msb:3], offset};
+<em class="lineno">16: </em>                issue_fifo_wdata.bits = case offset {
+<em class="lineno">17: </em>                    0      : rdata[31:0],
+<em class="lineno">18: </em>                    4      : rdata[63:32],
+<em class="lineno">19: </em>                    default: 0,
+<em class="lineno">20: </em>                };
+<em class="lineno">21: </em>            }
+<em class="lineno">22: </em>        }
+<em class="lineno">23: </em>    }
+</pre>
+</div>
+<p><code class="inline-code" translate="no" >core_if</code>とFIFOを接続します(<span class="listref"><a href="./14-impl-c.html#inst_fetcher.veryl.if.issue_core">リスト13.18</a></span>)。</p>
+<div id="inst_fetcher.veryl.if.issue_core" class="caption-code">
+<span class="caption">リスト13.18: リスト13.18: issue_fifoとインターフェースを接続する (inst_fetcher.veryl)</span>
+<pre class="list language-issue_core" translate="no"><em class="lineno">1: </em>    // issue_fifo &lt;-&gt; core
+<em class="lineno">2: </em>    always_comb {
+<em class="lineno">3: </em>        issue_fifo_flush  = core_if.is_hazard;
+<em class="lineno">4: </em>        issue_fifo_rready = core_if.rready;
+<em class="lineno">5: </em>        core_if.rvalid    = issue_fifo_rvalid;
+<em class="lineno">6: </em>        core_if.raddr     = issue_fifo_rdata.addr;
+<em class="lineno">7: </em>        core_if.rdata     = issue_fifo_rdata.bits;
+<em class="lineno">8: </em>    }
+</pre>
+</div>
+
+<h3 class="none"><a id="h13-4-4"></a><span class="secno">13.4.4</span> inst_fetcherモジュールとcoreモジュールを接続する</h3>
+<p>topモジュールで、core_inst_ifをインスタンス化します。(<span class="listref"><a href="./14-impl-c.html#top.veryl.if.i_membus_core">リスト13.19</a></span>)。</p>
+<div id="top.veryl.if.i_membus_core" class="caption-code">
+<span class="caption">リスト13.19: リスト13.19: インターフェースの定義 (top.veryl)</span>
+<pre class="list language-i_membus_core" translate="no"><em class="lineno">1: </em>    inst i_membus_core: core_inst_if;
+</pre>
+</div>
+<p>inst_fetcherモジュールをインスタンス化し、coreモジュールと接続します(<span class="listref"><a href="./14-impl-c.html#top.veryl.if.inst">リスト13.20</a></span>、<span class="listref"><a href="./14-impl-c.html#top.veryl.if.core">リスト13.21</a></span>)。</p>
+<div id="top.veryl.if.inst" class="caption-code">
+<span class="caption">リスト13.20: リスト13.20: inst_fetcherモジュールのインスタンス化 (top.veryl)</span>
+<pre class="list language-inst" translate="no"><em class="lineno">1: </em>    inst fetcher: inst_fetcher (
+<em class="lineno">2: </em>        clk                   ,
+<em class="lineno">3: </em>        rst                   ,
+<em class="lineno">4: </em>        core_if: i_membus_core,
+<em class="lineno">5: </em>        mem_if : i_membus     ,
+<em class="lineno">6: </em>    );
+</pre>
+</div>
+<div id="top.veryl.if.core" class="caption-code">
+<span class="caption">リスト13.21: リスト13.21: インターフェースを変更する (top.veryl)</span>
+<pre class="list language-core" translate="no"><em class="lineno">1: </em>    inst c: core (
+<em class="lineno">2: </em>        clk                    ,
+<em class="lineno">3: </em>        rst                    ,
+<em class="lineno">4: </em>        <b>i_membus: i_membus_core,</b>
+<em class="lineno">5: </em>        d_membus: d_membus_core,
+<em class="lineno">6: </em>        led                    ,
+<em class="lineno">7: </em>    );
+</pre>
+</div>
+<p>inst_fetcherモジュールが64ビットのデータを32ビットの命令の列に変換してくれるようになったので、<code class="inline-code" translate="no" >d_membus</code>との調停のところで32ビットずつ選択する必要がなくなりました。そのため、<code class="inline-code" translate="no" >rdata</code>をそのまま割り当てて、<code class="inline-code" translate="no" >memarb_last_iaddr</code>変数とビットの選択処理を削除します(<span class="listref"><a href="./14-impl-c.html#top.veryl.if.memarb_last_i_def">リスト13.22</a></span>、<span class="listref"><a href="./14-impl-c.html#top.veryl.if.memarb_last_i_update">リスト13.23</a></span>、<span class="listref"><a href="./14-impl-c.html#top.veryl.if.memarb">リスト13.24</a></span>)。</p>
+<div id="top.veryl.if.memarb_last_i_def" class="caption-code">
+<span class="caption">リスト13.22: リスト13.22: 使用しない変数を削除する (top.veryl)</span>
+<pre class="list language-memarb_last_i_def" translate="no"><em class="lineno">1: </em>    var memarb_last_i: logic;
+<em class="lineno">2: </em>    <del>var memarb_last_iaddr: Addr;</del>
+</pre>
+</div>
+<div id="top.veryl.if.memarb_last_i_update" class="caption-code">
+<span class="caption">リスト13.23: リスト13.23: 使用しない変数を削除する (top.veryl)</span>
+<pre class="list language-memarb_last_i_update" translate="no"><em class="lineno">1: </em>    always_ff {
+<em class="lineno">2: </em>        if_reset {
+<em class="lineno">3: </em>            memarb_last_i = 0;
+<em class="lineno">4: </em>            <del>memarb_last_i = 0;</del>
+<em class="lineno">5: </em>        } else {
+<em class="lineno">6: </em>            if mmio_membus.ready {
+<em class="lineno">7: </em>                memarb_last_i = !d_membus.valid;
+<em class="lineno">8: </em>                <del>memarb_last_iaddr = i_membus.addr;</del>
+<em class="lineno">9: </em>            }
+<em class="lineno">10: </em>        }
+<em class="lineno">11: </em>    }
+</pre>
+</div>
+<div id="top.veryl.if.memarb" class="caption-code">
+<span class="caption">リスト13.24: リスト13.24: ビットの選択処理を削除する (top.veryl)</span>
+<pre class="list language-memarb" translate="no"><em class="lineno">1: </em>    always_comb {
+<em class="lineno">2: </em>        i_membus.ready  = mmio_membus.ready &amp;&amp; !d_membus.valid;
+<em class="lineno">3: </em>        i_membus.rvalid = mmio_membus.rvalid &amp;&amp; memarb_last_i;
+<em class="lineno">4: </em>        i_membus.rdata  = <b>mmio_membus.rdata</b>;
+</pre>
+</div>
+
+<h2 class="numbox"><a id="h13-5"></a><span class="secno">13.5</span> 16ビット境界に配置された32ビット幅の命令のサポート</h2>
+<p>inst_fetcherモジュールで、アドレスが2バイトの倍数の32ビット幅の命令をcoreモジュールに供給できるようにします。</p>
+<p>アドレスの下位3ビット(<code class="inline-code" translate="no" >issue_pc_offset</code>)が<code class="inline-code" translate="no" >6</code>の場合、issueとcoreの間に供給する命令のビット列は<code class="inline-code" translate="no" >fetch_fifo_rdata</code>の上位16ビットと<code class="inline-code" translate="no" >fetch_fifo</code>に格納されている次のデータの下位16ビットを結合したものになります。このとき、<code class="inline-code" translate="no" >fetch_fifo_rdata</code>のデータの下位16ビットとアドレスを保存して、次のデータを読み出します。<code class="inline-code" translate="no" >fetch_fifo</code>から次のデータを読み出せたら、保存していたデータと結合し、アドレスとともに<code class="inline-code" translate="no" >issue_fifo</code>に書き込みます。<code class="inline-code" translate="no" >issue_pc_offset</code>が<code class="inline-code" translate="no" >0</code>、<code class="inline-code" translate="no" >2</code>、<code class="inline-code" translate="no" >4</code>の場合、既存の処理との変更点はありません。</p>
+<p><code class="inline-code" translate="no" >fetch_fifo_rdata</code>のデータの下位16ビットとアドレスを保持する変数を作成します(<span class="listref"><a href="./14-impl-c.html#inst_fetcher.veryl.232.var">リスト13.25</a></span>)。</p>
+<div id="inst_fetcher.veryl.232.var" class="caption-code">
+<span class="caption">リスト13.25: リスト13.25: データを一時保存するための変数の定義 (inst_fetcher.veryl)</span>
+<pre class="list language-var" translate="no"><em class="lineno">1: </em>    var issue_is_rdata_saved: logic    ;
+<em class="lineno">2: </em>    var issue_saved_addr    : Addr     ;
+<em class="lineno">3: </em>    var issue_saved_bits    : logic&lt;16&gt;; // rdata[63:48]
+</pre>
+</div>
+<p><code class="inline-code" translate="no" >issue_pc_offset</code>が<code class="inline-code" translate="no" >6</code>のとき、変数にデータを保存します(<span class="listref"><a href="./14-impl-c.html#inst_fetcher.veryl.232.issue_ff">リスト13.26</a></span>)。</p>
+<div id="inst_fetcher.veryl.232.issue_ff" class="caption-code">
+<span class="caption">リスト13.26: リスト13.26: offsetが6のとき、変数に命令の下位16ビットとアドレスを保存する (inst_fetcher.veryl)</span>
+<pre class="list language-issue_ff" translate="no"><em class="lineno">1: </em>    always_ff {
+<em class="lineno">2: </em>        if_reset {
+<em class="lineno">3: </em>            issue_pc_offset      = 0;
+<em class="lineno">4: </em>            <b>issue_is_rdata_saved = 0;</b>
+<em class="lineno">5: </em>            <b>issue_saved_addr     = 0;</b>
+<em class="lineno">6: </em>            <b>issue_saved_bits     = 0;</b>
+<em class="lineno">7: </em>        } else {
+<em class="lineno">8: </em>            if core_if.is_hazard {
+<em class="lineno">9: </em>                issue_pc_offset      = core_if.next_pc[2:0];
+<em class="lineno">10: </em>                <b>issue_is_rdata_saved = 0;</b>
+<em class="lineno">11: </em>            } else {
+<em class="lineno">12: </em>                <b>// offsetが6な32ビット命令の場合、</b>
+<em class="lineno">13: </em>                <b>// アドレスと上位16ビットを保存してFIFOを読み進める</b>
+<em class="lineno">14: </em>                <b>if issue_pc_offset == 6 &amp;&amp; !issue_is_rdata_saved {</b>
+<em class="lineno">15: </em>                <b>    if fetch_fifo_rvalid {</b>
+<em class="lineno">16: </em>                <b>        issue_is_rdata_saved = 1;</b>
+<em class="lineno">17: </em>                <b>        issue_saved_addr     = fetch_fifo_rdata.addr;</b>
+<em class="lineno">18: </em>                <b>        issue_saved_bits     = fetch_fifo_rdata.bits[63:48];</b>
+<em class="lineno">19: </em>                <b>    }</b>
+<em class="lineno">20: </em>                <b>} else {</b>
+<em class="lineno">21: </em>                    if issue_fifo_wready &amp;&amp; issue_fifo_wvalid {
+<em class="lineno">22: </em>                        issue_pc_offset      += 4;
+<em class="lineno">23: </em>                        <b>issue_is_rdata_saved =  0;</b>
+<em class="lineno">24: </em>                    }
+<em class="lineno">25: </em>                <b>}</b>
+<em class="lineno">26: </em>            }
+<em class="lineno">27: </em>        }
+<em class="lineno">28: </em>    }
+</pre>
+</div>
+<p><code class="inline-code" translate="no" >issue_pc_offset</code>が<code class="inline-code" translate="no" >2</code>、<code class="inline-code" translate="no" >6</code>の場合の<code class="inline-code" translate="no" >issue_fifo</code>への書き込みを実装します(<span class="listref"><a href="./14-impl-c.html#inst_fetcher.veryl.232.issue_comb">リスト13.27</a></span>)。<code class="inline-code" translate="no" >6</code>の場合、保存していた16ビットと新しく読み出した16ビットを結合した値、保存していたアドレスを書き込みます。</p>
+<div id="inst_fetcher.veryl.232.issue_comb" class="caption-code">
+<span class="caption">リスト13.27: リスト13.27: issue_fifoにoffsetが2、6の命令を格納する (inst_fetcher.veryl)</span>
+<pre class="list language-issue_comb" translate="no"><em class="lineno">1: </em>        if !core_if.is_hazard &amp;&amp; fetch_fifo_rvalid {
+<em class="lineno">2: </em>            if issue_fifo_wready {
+<em class="lineno">3: </em>                <b>if offset == 6 {</b>
+<em class="lineno">4: </em>                <b>    // offsetが6な32ビット命令の場合、</b>
+<em class="lineno">5: </em>                <b>    // 命令は{rdata_next[15:0], rdata[63:48}になる</b>
+<em class="lineno">6: </em>                <b>    if issue_is_rdata_saved {</b>
+<em class="lineno">7: </em>                <b>        issue_fifo_wvalid     = 1;</b>
+<em class="lineno">8: </em>                <b>        issue_fifo_wdata.addr = {issue_saved_addr[msb:3], offset};</b>
+<em class="lineno">9: </em>                <b>        issue_fifo_wdata.bits = {rdata[15:0], issue_saved_bits};</b>
+<em class="lineno">10: </em>                <b>    } else {</b>
+<em class="lineno">11: </em>                <b>        // Read next 8 bytes</b>
+<em class="lineno">12: </em>                <b>        fetch_fifo_rready = 1;</b>
+<em class="lineno">13: </em>                <b>    }</b>
+<em class="lineno">14: </em>                <b>} else {</b>
+<em class="lineno">15: </em>                    fetch_fifo_rready     = offset == 4;
+<em class="lineno">16: </em>                    issue_fifo_wvalid     = 1;
+<em class="lineno">17: </em>                    issue_fifo_wdata.addr = {raddr[msb:3], offset};
+<em class="lineno">18: </em>                    issue_fifo_wdata.bits = case offset {
+<em class="lineno">19: </em>                        0      : rdata[31:0],
+<em class="lineno">20: </em>                        <b>2      : rdata[47:16],</b>
+<em class="lineno">21: </em>                        4      : rdata[63:32],
+<em class="lineno">22: </em>                        default: 0,
+<em class="lineno">23: </em>                    };
+<em class="lineno">24: </em>                <b>}</b>
+<em class="lineno">25: </em>            }
+<em class="lineno">26: </em>        }
+</pre>
+</div>
+<p>32ビット幅の命令の下位16ビットが既に保存されている(<code class="inline-code" translate="no" >issue_is_rdata_saved</code>が<code class="inline-code" translate="no" >1</code>)とき、<code class="inline-code" translate="no" >fetch_fifo</code>から供給されるデータには、32ビット幅の命令の上位16ビットを除いた残りの48ビットが含まれているので<code class="inline-code" translate="no" >fetch_fifo_rready</code>を<code class="inline-code" translate="no" >1</code>に設定しないことに注意してください。</p>
+
+<h2 class="numbox"><a id="h13-6"></a><span class="secno">13.6</span> RVC命令の変換</h2>
+
+<h3 class="none"><a id="h13-6-1"></a><span class="secno">13.6.1</span> RVC命令フラグの実装</h3>
+<p>RVC命令を32ビット幅の命令に変換するモジュールを作る前に、RVC命令かどうかを示すフラグを作成します。</p>
+<p>まず、<code class="inline-code" translate="no" >core_inst_if</code>インターフェースと<code class="inline-code" translate="no" >InstCtrl</code>構造体に<code class="inline-code" translate="no" >is_rvc</code>フラグを追加します(<span class="listref"><a href="./14-impl-c.html#core_inst_if.veryl.is_rvc.var">リスト13.28</a></span>、<span class="listref"><a href="./14-impl-c.html#core_inst_if.veryl.is_rvc.master">リスト13.29</a></span>、<span class="listref"><a href="./14-impl-c.html#corectrl.veryl.is_rvc.InstCtrl">リスト13.30</a></span>)。</p>
+<div id="core_inst_if.veryl.is_rvc.var" class="caption-code">
+<span class="caption">リスト13.28: リスト13.28: is_rvcフラグの定義 (core_inst_if.veryl)</span>
+<pre class="list language-var" translate="no"><em class="lineno">1: </em>    var rdata    : Inst ;
+<em class="lineno">2: </em>    <b>var is_rvc   : logic;</b>
+<em class="lineno">3: </em>    var is_hazard: logic;
+</pre>
+</div>
+<div id="core_inst_if.veryl.is_rvc.master" class="caption-code">
+<span class="caption">リスト13.29: リスト13.29: modportにis_rvcを追加する (core_inst_if.veryl)</span>
+<pre class="list language-master" translate="no"><em class="lineno">1: </em>    modport master {
+<em class="lineno">2: </em>        rvalid   : input ,
+<em class="lineno">3: </em>        rready   : output,
+<em class="lineno">4: </em>        raddr    : input ,
+<em class="lineno">5: </em>        rdata    : input ,
+<em class="lineno">6: </em>        <b>is_rvc   : input ,</b>
+<em class="lineno">7: </em>        is_hazard: output, // control hazard
+<em class="lineno">8: </em>        next_pc  : output, // actual next pc
+<em class="lineno">9: </em>    }
+</pre>
+</div>
+<div id="corectrl.veryl.is_rvc.InstCtrl" class="caption-code">
+<span class="caption">リスト13.30: リスト13.30: InstCtrl型にis_rvcフラグを追加する (corectrl.veryl)</span>
+<pre class="list language-InstCtrl" translate="no"><em class="lineno">1: </em>        is_amo   : logic      , // AMO instruction
+<em class="lineno">2: </em>        <b>is_rvc   : logic      , // RVC instruction</b>
+<em class="lineno">3: </em>        funct3   : logic   &lt;3&gt;, // 命令のfunct3フィールド
+</pre>
+</div>
+<p>inst_fetcherモジュールで、<code class="inline-code" translate="no" >is_rvc</code>を<code class="inline-code" translate="no" >0</code>に設定してcoreモジュールに供給します(<span class="listref"><a href="./14-impl-c.html#inst_fetcher.veryl.is_rvc.issue_fifo_type">リスト13.31</a></span>、<span class="listref"><a href="./14-impl-c.html#inst_fetcher.veryl.is_rvc.issue_comb">リスト13.32</a></span>、<span class="listref"><a href="./14-impl-c.html#inst_fetcher.veryl.is_rvc.issue_core">リスト13.33</a></span>)。</p>
+<div id="inst_fetcher.veryl.is_rvc.issue_fifo_type" class="caption-code">
+<span class="caption">リスト13.31: リスト13.31: issue_fifo_type型にis_rvcフラグを追加する (inst_fetcher.veryl)</span>
+<pre class="list language-issue_fifo_type" translate="no"><em class="lineno">1: </em>    struct issue_fifo_type {
+<em class="lineno">2: </em>        addr  : Addr ,
+<em class="lineno">3: </em>        bits  : Inst ,
+<em class="lineno">4: </em>        <b>is_rvc: logic,</b>
+<em class="lineno">5: </em>    }
+</pre>
+</div>
+<div id="inst_fetcher.veryl.is_rvc.issue_comb" class="caption-code">
+<span class="caption">リスト13.32: リスト13.32: is_rvcフラグを0に設定する (inst_fetcher.veryl)</span>
+<pre class="list language-issue_comb" translate="no"><em class="lineno">1: </em>    if offset == 6 {
+<em class="lineno">2: </em>        // offsetが6な32ビット命令の場合、
+<em class="lineno">3: </em>        // 命令は{rdata_next[15:0], rdata[63:48}になる
+<em class="lineno">4: </em>        if issue_is_rdata_saved {
+<em class="lineno">5: </em>            issue_fifo_wvalid       = 1;
+<em class="lineno">6: </em>            issue_fifo_wdata.addr   = {issue_saved_addr[msb:3], offset};
+<em class="lineno">7: </em>            issue_fifo_wdata.bits   = {rdata[15:0], issue_saved_bits};
+<em class="lineno">8: </em>            <b>issue_fifo_wdata.is_rvc = 0;</b>
+<em class="lineno">9: </em>        } else {
+<em class="lineno">10: </em>            // Read next 8 bytes
+<em class="lineno">11: </em>            fetch_fifo_rready = 1;
+<em class="lineno">12: </em>        }
+<em class="lineno">13: </em>    } else {
+<em class="lineno">14: </em>        fetch_fifo_rready     = offset == 4;
+<em class="lineno">15: </em>        issue_fifo_wvalid     = 1;
+<em class="lineno">16: </em>        issue_fifo_wdata.addr = {raddr[msb:3], offset};
+<em class="lineno">17: </em>        issue_fifo_wdata.bits = case offset {
+<em class="lineno">18: </em>            0      : rdata[31:0],
+<em class="lineno">19: </em>            2      : rdata[47:16],
+<em class="lineno">20: </em>            4      : rdata[63:32],
+<em class="lineno">21: </em>            default: 0,
+<em class="lineno">22: </em>        };
+<em class="lineno">23: </em>        <b>issue_fifo_wdata.is_rvc = 0;</b>
+<em class="lineno">24: </em>    }
+</pre>
+</div>
+<div id="inst_fetcher.veryl.is_rvc.issue_core" class="caption-code">
+<span class="caption">リスト13.33: リスト13.33: is_rvcフラグを接続する (inst_fetcher.veryl)</span>
+<pre class="list language-issue_core" translate="no"><em class="lineno">1: </em>    always_comb {
+<em class="lineno">2: </em>        issue_fifo_flush  = core_if.is_hazard;
+<em class="lineno">3: </em>        issue_fifo_rready = core_if.rready;
+<em class="lineno">4: </em>        core_if.rvalid    = issue_fifo_rvalid;
+<em class="lineno">5: </em>        core_if.raddr     = issue_fifo_rdata.addr;
+<em class="lineno">6: </em>        core_if.rdata     = issue_fifo_rdata.bits;
+<em class="lineno">7: </em>        <b>core_if.is_rvc    = issue_fifo_rdata.is_rvc;</b>
+<em class="lineno">8: </em>    }
+</pre>
+</div>
+<p>inst_decoderモジュールで、<code class="inline-code" translate="no" >InstCtrl</code>構造体の<code class="inline-code" translate="no" >is_rvc</code>フラグを設定します(<span class="listref"><a href="./14-impl-c.html#inst_decoder.veryl.is_rvc.port">リスト13.34</a></span>、<span class="listref"><a href="./14-impl-c.html#inst_decoder.veryl.is_rvc.ctrl">リスト13.35</a></span>、<span class="listref"><a href="./14-impl-c.html#inst_decoder.veryl.is_rvc.valid">リスト13.36</a></span>)。また、C拡張が無効なのにRVC命令が供給されたら<code class="inline-code" translate="no" >valid</code>フラグを<code class="inline-code" translate="no" >0</code>に設定します。</p>
+<div id="inst_decoder.veryl.is_rvc.port" class="caption-code">
+<span class="caption">リスト13.34: リスト13.34: is_rvcフラグをポートに追加する (inst_decoder.veryl)</span>
+<pre class="list language-port" translate="no"><em class="lineno">1: </em>module inst_decoder (
+<em class="lineno">2: </em>    bits  : input  Inst    ,
+<em class="lineno">3: </em>    <b>is_rvc: input  logic   ,</b>
+<em class="lineno">4: </em>    valid : output logic   ,
+<em class="lineno">5: </em>    ctrl  : output InstCtrl,
+<em class="lineno">6: </em>    imm   : output UIntX   ,
+<em class="lineno">7: </em>) {
+</pre>
+</div>
+<div id="inst_decoder.veryl.is_rvc.ctrl" class="caption-code">
+<span class="caption">リスト13.35: リスト13.35: InstCtrlにis_rvcフラグを設定する (inst_decoder.veryl)</span>
+<pre class="list language-ctrl" translate="no"><em class="lineno">1: </em>                default: {
+<em class="lineno">2: </em>                    InstType::X, F, F, F, F, F, F, F, F, F
+<em class="lineno">3: </em>                },
+<em class="lineno">4: </em>            }, <b>is_rvc,</b> f3, f7
+<em class="lineno">5: </em>        };
+</pre>
+</div>
+<div id="inst_decoder.veryl.is_rvc.valid" class="caption-code">
+<span class="caption">リスト13.36: リスト13.36: IALIGNが32ではないとき、不正な命令にする (inst_decoder.veryl)</span>
+<pre class="list language-valid" translate="no"><em class="lineno">1: </em>            OP_AMO     : f3 == 3'b010 || f3 == 3'b011, // AMO
+<em class="lineno">2: </em>            default    : F,
+<em class="lineno">3: </em>        } <b>&amp;&amp; (IALIGN == 16 || !is_rvc)</b>; <b>// IALIGN == 32のとき、C拡張は無効</b>
+</pre>
+</div>
+<p>coreモジュールで、inst_decoderモジュールに<code class="inline-code" translate="no" >is_rvc</code>フラグを渡します(<span class="listref"><a href="./14-impl-c.html#core.veryl.is_rvc.inst_decoder">リスト13.37</a></span>)。</p>
+<div id="core.veryl.is_rvc.inst_decoder" class="caption-code">
+<span class="caption">リスト13.37: リスト13.37: is_rvcフラグをinst_decoderに渡す (core.veryl)</span>
+<pre class="list language-inst_decoder" translate="no"><em class="lineno">1: </em>    inst decoder: inst_decoder (
+<em class="lineno">2: </em>        bits  : ids_inst_bits  ,
+<em class="lineno">3: </em>        <b>is_rvc: i_membus.is_rvc,</b>
+<em class="lineno">4: </em>        valid : ids_inst_valid ,
+<em class="lineno">5: </em>        ctrl  : ids_ctrl       ,
+<em class="lineno">6: </em>        imm   : ids_imm        ,
+<em class="lineno">7: </em>    );
+</pre>
+</div>
+<p>ジャンプ命令でライトバックする値は次の命令のアドレスであるため、RVC命令の場合はPCに<code class="inline-code" translate="no" >2</code>を足した値を設定します(<span class="listref"><a href="./14-impl-c.html#core.veryl.is_rvc.wb_data">リスト13.38</a></span>)。</p>
+<div id="core.veryl.is_rvc.wb_data" class="caption-code">
+<span class="caption">リスト13.38: リスト13.38: 次の命令のアドレスを変える (core.veryl)</span>
+<pre class="list language-wb_data" translate="no"><em class="lineno">1: </em>    let wbs_wb_data: UIntX    = if wbs_ctrl.is_lui ?
+<em class="lineno">2: </em>        wbs_imm
+<em class="lineno">3: </em>    : if wbs_ctrl.is_jump ?
+<em class="lineno">4: </em>        wbs_pc + <b>(if wbs_ctrl.is_rvc ? 2 : </b>4<b>)</b>
+<em class="lineno">5: </em>    : if wbs_ctrl.is_load || wbs_ctrl.is_amo ?
+</pre>
+</div>
+
+<h3 id="impl-converter-all" class="none"><a id="h13-6-2"></a><span class="secno">13.6.2</span> 32ビット幅の命令に変換する</h3>
+<p>RVC命令のopcode、functなどのフィールドを読んで、32ビット幅の命令を生成するrvc_converterモジュールを実装します。</p>
+<p>その前に、命令のフィールドを引数に32ビット幅の命令を生成する関数を実装します。<code class="inline-code" translate="no" >src/inst_gen_pkg.veryl</code>を作成し、次のように記述します(<span class="listref"><a href="./14-impl-c.html#inst_gen_pkg.veryl.rvcc">リスト13.39</a></span>)。関数の名前は基本的に命令名と同じにしていますが、Verylのキーワードと被るものは<code class="inline-code" translate="no" >inst_</code>をprefixにしています。</p>
+<div id="inst_gen_pkg.veryl.rvcc" class="caption-code">
+<span class="caption">リスト13.39: リスト13.39: 命令のビット列を生成する関数を定義する (inst_gen_pkg.veryl)</span>
+<pre class="list language-rvcc" translate="no"><em class="lineno">1: </em>import eei::*;
+<em class="lineno">2: </em>
+<em class="lineno">3: </em>package inst_gen_pkg {
+<em class="lineno">4: </em>    function add (rd: input logic&lt;5&gt;, rs1: input logic&lt;5&gt;, rs2: input logic&lt;5&gt;) -&gt; Inst {
+<em class="lineno">5: </em>        return {7'b0000000, rs2, rs1, 3'b000, rd, OP_OP};
+<em class="lineno">6: </em>    }
+<em class="lineno">7: </em>
+<em class="lineno">8: </em>    function addw (rd: input logic&lt;5&gt;, rs1: input logic&lt;5&gt;, rs2: input logic&lt;5&gt;) -&gt; Inst {
+<em class="lineno">9: </em>        return {7'b0000000, rs2, rs1, 3'b000, rd, OP_OP_32};
+<em class="lineno">10: </em>    }
+<em class="lineno">11: </em>
+<em class="lineno">12: </em>    function addi (rd : input logic&lt;5&gt; , rs1: input logic&lt;5&gt; , imm: input logic&lt;12&gt;) -&gt; Inst {
+<em class="lineno">13: </em>        return {imm, rs1, 3'b000, rd, OP_OP_IMM};
+<em class="lineno">14: </em>    }
+<em class="lineno">15: </em>
+<em class="lineno">16: </em>    function addiw (rd: input logic&lt;5&gt; ,rs1: input logic&lt;5&gt;, imm: input logic&lt;12&gt;) -&gt; Inst {
+<em class="lineno">17: </em>        return {imm, rs1, 3'b000, rd, OP_OP_IMM_32};
+<em class="lineno">18: </em>    }
+<em class="lineno">19: </em>
+<em class="lineno">20: </em>    function sub (rd: input logic&lt;5&gt;,rs1: input logic&lt;5&gt;, rs2: input logic&lt;5&gt;) -&gt; Inst {
+<em class="lineno">21: </em>        return {7'b0100000, rs2, rs1, 3'b000, rd, OP_OP};
+<em class="lineno">22: </em>    }
+<em class="lineno">23: </em>
+<em class="lineno">24: </em>    function subw (rd: input logic&lt;5&gt;, rs1: input logic&lt;5&gt;, rs2: input logic&lt;5&gt;) -&gt; Inst {
+<em class="lineno">25: </em>        return {7'b0100000, rs2, rs1, 3'b000, rd, OP_OP_32};
+<em class="lineno">26: </em>    }
+<em class="lineno">27: </em>
+<em class="lineno">28: </em>    function inst_xor (rd: input logic&lt;5&gt;, rs1: input logic&lt;5&gt;, rs2: input logic&lt;5&gt;) -&gt; Inst {
+<em class="lineno">29: </em>        return {7'b0000000, rs2, rs1, 3'b100, rd, OP_OP};
+<em class="lineno">30: </em>    }
+<em class="lineno">31: </em>
+<em class="lineno">32: </em>    function inst_or (rd: input logic&lt;5&gt;, rs1: input logic&lt;5&gt;, rs2: input logic&lt;5&gt;) -&gt; Inst {
+<em class="lineno">33: </em>        return {7'b0000000, rs2, rs1, 3'b110, rd, OP_OP};
+<em class="lineno">34: </em>    }
+<em class="lineno">35: </em>
+<em class="lineno">36: </em>    function inst_and (rd: input logic&lt;5&gt;, rs1: input logic&lt;5&gt;, rs2: input logic&lt;5&gt;) -&gt; Inst {
+<em class="lineno">37: </em>        return {7'b0000000, rs2, rs1, 3'b111, rd, OP_OP};
+<em class="lineno">38: </em>    }
+<em class="lineno">39: </em>
+<em class="lineno">40: </em>    function andi (rd: input logic&lt;5&gt; , rs1: input logic&lt;5&gt;, imm: input logic&lt;12&gt;) -&gt; Inst {
+<em class="lineno">41: </em>        return {imm, rs1, 3'b111, rd, OP_OP_IMM};
+<em class="lineno">42: </em>    }
+<em class="lineno">43: </em>
+<em class="lineno">44: </em>    function slli (rd: input logic&lt;5&gt;, rs1: input logic&lt;5&gt;, shamt: input logic&lt;6&gt;) -&gt; Inst {
+<em class="lineno">45: </em>        return {6'b000000, shamt, rs1, 3'b001, rd, OP_OP_IMM};
+<em class="lineno">46: </em>    }
+<em class="lineno">47: </em>
+<em class="lineno">48: </em>    function srli (rd: input logic&lt;5&gt;, rs1: input logic&lt;5&gt;, shamt: input logic&lt;6&gt;) -&gt; Inst {
+<em class="lineno">49: </em>        return {6'b000000, shamt, rs1, 3'b101, rd, OP_OP_IMM};
+<em class="lineno">50: </em>    }
+<em class="lineno">51: </em>
+<em class="lineno">52: </em>    function srai (rd: input logic&lt;5&gt;, rs1: input logic&lt;5&gt;, shamt: input logic&lt;6&gt;) -&gt; Inst {
+<em class="lineno">53: </em>        return {6'b010000, shamt, rs1, 3'b101, rd, OP_OP_IMM};
+<em class="lineno">54: </em>    }
+<em class="lineno">55: </em>
+<em class="lineno">56: </em>    function lui (rd: input logic&lt;5&gt;, imm: input logic&lt;20&gt;) -&gt; Inst {
+<em class="lineno">57: </em>        return {imm, rd, OP_LUI};
+<em class="lineno">58: </em>    }
+<em class="lineno">59: </em>
+<em class="lineno">60: </em>    function load (rd: input logic&lt;5&gt; ,rs1: input logic&lt;5&gt;, imm: input logic&lt;12&gt;, funct3: input logic&lt;3&gt;) -&gt; Inst {
+<em class="lineno">61: </em>        return {imm, rs1, funct3, rd, OP_LOAD};
+<em class="lineno">62: </em>    }
+<em class="lineno">63: </em>
+<em class="lineno">64: </em>    function store (rs1: input logic&lt;5&gt;, rs2: input logic&lt;5&gt;, imm: input logic&lt;12&gt;, funct3: input logic&lt;3&gt;) -&gt; Inst {
+<em class="lineno">65: </em>        return {imm[11:5], rs2, rs1, funct3, imm[4:0], OP_STORE};
+<em class="lineno">66: </em>    }
+<em class="lineno">67: </em>
+<em class="lineno">68: </em>    function jal (rd : input logic&lt;5&gt;, imm: input logic&lt;20&gt;) -&gt; Inst {
+<em class="lineno">69: </em>        return {imm[19], imm[9:0], imm[10], imm[18:11], rd, OP_JAL};
+<em class="lineno">70: </em>    }
+<em class="lineno">71: </em>
+<em class="lineno">72: </em>    function jalr (rd: input logic&lt;5&gt;, rs1: input logic&lt;5&gt;, imm: input logic&lt;12&gt;) -&gt; Inst {
+<em class="lineno">73: </em>        return {imm, rs1, 3'b000, rd, OP_JALR};
+<em class="lineno">74: </em>    }
+<em class="lineno">75: </em>
+<em class="lineno">76: </em>    function beq (rs1: input logic&lt;5&gt;, rs2: input logic&lt;5&gt;, imm: input logic&lt;12&gt;) -&gt; Inst {
+<em class="lineno">77: </em>        return {imm[11], imm[9:4], rs2, rs1, 3'b000, imm[3:0], imm[10], OP_BRANCH};
+<em class="lineno">78: </em>    }
+<em class="lineno">79: </em>
+<em class="lineno">80: </em>    function bne (rs1: input logic&lt;5&gt;, rs2: input logic&lt;5&gt;, imm: input logic&lt;12&gt;) -&gt; Inst {
+<em class="lineno">81: </em>        return {imm[11], imm[9:4], rs2, rs1, 3'b001, imm[3:0], imm[10], OP_BRANCH};
+<em class="lineno">82: </em>    }
+<em class="lineno">83: </em>
+<em class="lineno">84: </em>    function ebreak () -&gt; Inst {
+<em class="lineno">85: </em>        return 32'h00100073;
+<em class="lineno">86: </em>    }
+<em class="lineno">87: </em>}
+</pre>
+</div>
+<p>rvc_conveterモジュールのポートを定義します。<code class="inline-code" translate="no" >src/rvc_converter.veryl</code>を作成し、次のように記述します(<span class="listref"><a href="./14-impl-c.html#rvc_converter.veryl.rvcc.port">リスト13.40</a></span>)。</p>
+<div id="rvc_converter.veryl.rvcc.port" class="caption-code">
+<span class="caption">リスト13.40: リスト13.40: ポートの定義 (rvc_converter.veryl)</span>
+<pre class="list language-port" translate="no"><em class="lineno">1: </em>import eei::*;
+<em class="lineno">2: </em>import inst_gen_pkg::*;
+<em class="lineno">3: </em>
+<em class="lineno">4: </em>module rvc_converter (
+<em class="lineno">5: </em>    inst16: input  logic&lt;16&gt;,
+<em class="lineno">6: </em>    is_rvc: output logic    ,
+<em class="lineno">7: </em>    inst32: output Inst     ,
+<em class="lineno">8: </em>) {
+</pre>
+</div>
+<p>rvc_converterモジュールは、<code class="inline-code" translate="no" >inst16</code>で16ビットの値を受け取り、それがRVC命令なら<code class="inline-code" translate="no" >is_rvc</code>を<code class="inline-code" translate="no" >1</code>にして、<code class="inline-code" translate="no" >inst32</code>に同じ意味の32ビット幅の命令を出力する組み合わせ回路です。</p>
+<p><code class="inline-code" translate="no" >inst16</code>からソースレジスタ番号を生成します(<span class="listref"><a href="./14-impl-c.html#rvc_converter.veryl.rvcc.rs">リスト13.41</a></span>)。<code class="inline-code" translate="no" >rs1d</code>、<code class="inline-code" translate="no" >rs2d</code>の番号の範囲は<code class="inline-code" translate="no" >x8</code>から<code class="inline-code" translate="no" >x15</code>です。</p>
+<div id="rvc_converter.veryl.rvcc.rs" class="caption-code">
+<span class="caption">リスト13.41: リスト13.41: レジスタ番号の生成 (rvc_converter.veryl)</span>
+<pre class="list language-rs" translate="no"><em class="lineno">1: </em>    let rs1 : logic&lt;5&gt; = inst16[11:7];
+<em class="lineno">2: </em>    let rs2 : logic&lt;5&gt; = inst16[6:2];
+<em class="lineno">3: </em>    let rs1d: logic&lt;5&gt; = {2'b01, inst16[9:7]};
+<em class="lineno">4: </em>    let rs2d: logic&lt;5&gt; = {2'b01, inst16[4:2]};
+</pre>
+</div>
+<p><code class="inline-code" translate="no" >inst16</code>から即値を生成します(<span class="listref"><a href="./14-impl-c.html#rvc_converter.veryl.rvcc.imm">リスト13.42</a></span>)。</p>
+<div id="rvc_converter.veryl.rvcc.imm" class="caption-code">
+<span class="caption">リスト13.42: リスト13.42: 即値の生成 (rvc_converter.veryl)</span>
+<pre class="list language-imm" translate="no"><em class="lineno">1: </em>    let imm_i    : logic&lt;12&gt; = {inst16[12] repeat 7, inst16[6:2]};
+<em class="lineno">2: </em>    let imm_shamt: logic&lt;6&gt;  = {inst16[12], inst16[6:2]};
+<em class="lineno">3: </em>    let imm_j    : logic&lt;20&gt; = {inst16[12] repeat 10, inst16[8], inst16[10:9], inst16[6], inst16[7], inst16[2], inst16[11], inst16[5:3]};
+<em class="lineno">4: </em>    let imm_br   : logic&lt;12&gt; = {inst16[12] repeat 5, inst16[6:5], inst16[2], inst16[11:10], inst16[4:3]};
+<em class="lineno">5: </em>    let c0_mem_w : logic&lt;12&gt; = {5'b0, inst16[5], inst16[12:10], inst16[6], 2'b0}; // C.LW, C.SW
+<em class="lineno">6: </em>    let c0_mem_d : logic&lt;12&gt; = {4'b0, inst16[6:5], inst16[12:10], 3'b0}; // C.LD, C.SD
+</pre>
+</div>
+<p><code class="inline-code" translate="no" >inst16</code>から32ビット幅の命令を生成します(<span class="listref"><a href="./14-impl-c.html#rvc_converter.veryl.rvcc.always_comb">リスト13.43</a></span>)。opcode(<code class="inline-code" translate="no" >inst16[1:0]</code>)が<code class="inline-code" translate="no" >2'b11</code>以外なら16ビット幅の命令なので、<code class="inline-code" translate="no" >is_rvc</code>に<code class="inline-code" translate="no" >1</code>を割り当てます。<code class="inline-code" translate="no" >inst32</code>には、初期値として右に<code class="inline-code" translate="no" >inst16</code>を詰めてゼロで拡張した値を割り当てます。</p>
+<p>32ビット幅の命令への変換はopcode、funct、レジスタ番号などで分岐して地道に実装します。32ビット幅の命令に変換できないとき<code class="inline-code" translate="no" >inst32</code>の値を更新しません。</p>
+<p><code class="inline-code" translate="no" >inst16</code>が不正なRVC命令のとき、inst_decoderモジュールでデコードできない命令をcoreモジュールに供給してIllegal instruction例外を発生させ、tvalに16ビット幅の不正な命令が設定されます。</p>
+<div id="rvc_converter.veryl.rvcc.always_comb" class="caption-code">
+<span class="caption">リスト13.43: リスト13.43: RVC命令を32ビット幅の命令に変換する (rvc_converter.veryl)</span>
+<pre class="list language-always_comb" translate="no"><em class="lineno">1: </em>    always_comb {
+<em class="lineno">2: </em>        is_rvc = inst16[1:0] != 2'b11;
+<em class="lineno">3: </em>        inst32 = {16'b0, inst16};
+<em class="lineno">4: </em>
+<em class="lineno">5: </em>        let funct3: logic&lt;3&gt; = inst16[15:13];
+<em class="lineno">6: </em>        case inst16[1:0] { // opcode
+<em class="lineno">7: </em>            2'b00: case funct3 { // C0
+<em class="lineno">8: </em>                3'b000: if inst16 != 0 { // C.ADDI4SPN
+<em class="lineno">9: </em>                    let nzuimm: logic&lt;10&gt; = {inst16[10:7], inst16[12:11], inst16[5], inst16[6], 2'b0};
+<em class="lineno">10: </em>                    inst32 = addi(rs2d, 2, {2'b0, nzuimm});
+<em class="lineno">11: </em>                }
+<em class="lineno">12: </em>                3'b010: inst32 = load(rs2d, rs1d, c0_mem_w, 3'b010); // C.LW
+<em class="lineno">13: </em>                3'b011: if XLEN &gt;= 64 { // C.LD
+<em class="lineno">14: </em>                    inst32 = load(rs2d, rs1d, c0_mem_d, 3'b011);
+<em class="lineno">15: </em>                }
+<em class="lineno">16: </em>                3'b110: inst32 = store(rs1d, rs2d, c0_mem_w, 3'b010); // C.SW
+<em class="lineno">17: </em>                3'b111: if XLEN &gt;= 64 { // C.SD
+<em class="lineno">18: </em>                    inst32 = store(rs1d, rs2d, c0_mem_d, 3'b011);
+<em class="lineno">19: </em>                }
+<em class="lineno">20: </em>                default: {}
+<em class="lineno">21: </em>            }
+<em class="lineno">22: </em>            2'b01: case funct3 { // C1
+<em class="lineno">23: </em>                3'b000: inst32 = addi(rs1, rs1, imm_i); // C.ADDI
+<em class="lineno">24: </em>                3'b001: inst32 = if XLEN == 32 ? jal(1, imm_j) : addiw(rs1, rs1, imm_i); // C.JAL / C.ADDIW
+<em class="lineno">25: </em>                3'b010: inst32 = addi(rs1, 0, imm_i); // C.LI
+<em class="lineno">26: </em>                3'b011: if rs1 == 2 { // C.ADDI16SP
+<em class="lineno">27: </em>                    let imm   : logic&lt;10&gt; = {inst16[12], inst16[4:3], inst16[5], inst16[2], inst16[6], 4'b0};
+<em class="lineno">28: </em>                    inst32 = addi(2, 2, {imm[msb] repeat 2, imm});
+<em class="lineno">29: </em>                } else { // C.LUI
+<em class="lineno">30: </em>                    inst32 = lui(rs1, {imm_i[msb] repeat 8, imm_i});
+<em class="lineno">31: </em>                }
+<em class="lineno">32: </em>                3'b100: case inst16[11:10] { // funct2 or funct6[1:0]
+<em class="lineno">33: </em>                    2'b00: if !(XLEN == 32 &amp;&amp; imm_shamt[msb] == 1) {
+<em class="lineno">34: </em>                        inst32 = srli(rs1d, rs1d, imm_shamt); // C.SRLI
+<em class="lineno">35: </em>                    }
+<em class="lineno">36: </em>                    2'b01: if !(XLEN == 32 &amp;&amp; imm_shamt[msb] == 1) {
+<em class="lineno">37: </em>                        inst32 = srai(rs1d, rs1d, imm_shamt); // C.SRAI
+<em class="lineno">38: </em>                    }
+<em class="lineno">39: </em>                    2'b10: inst32 = andi(rs1d, rs1d, imm_i); // C.ADNI
+<em class="lineno">40: </em>                    2'b11: if inst16[12] == 0 {
+<em class="lineno">41: </em>                        case inst16[6:5] {
+<em class="lineno">42: </em>                            2'b00  : inst32 = sub(rs1d, rs1d, rs2d); // C.SUB
+<em class="lineno">43: </em>                            2'b01  : inst32 = inst_xor(rs1d, rs1d, rs2d); // C.XOR
+<em class="lineno">44: </em>                            2'b10  : inst32 = inst_or(rs1d, rs1d, rs2d); // C.OR
+<em class="lineno">45: </em>                            2'b11  : inst32 = inst_and(rs1d, rs1d, rs2d); // C.AND
+<em class="lineno">46: </em>                            default: {}
+<em class="lineno">47: </em>                        }
+<em class="lineno">48: </em>                    } else {
+<em class="lineno">49: </em>                        if XLEN &gt;= 64 {
+<em class="lineno">50: </em>                            if inst16[6:5] == 2'b00 {
+<em class="lineno">51: </em>                                inst32 = subw(rs1d, rs1d, rs2d); // C.SUBW
+<em class="lineno">52: </em>                            } else if inst16[6:5] == 2'b01 {
+<em class="lineno">53: </em>                                inst32 = addw(rs1d, rs1d, rs2d); // C.ADDW
+<em class="lineno">54: </em>                            }
+<em class="lineno">55: </em>                        }
+<em class="lineno">56: </em>                    }
+<em class="lineno">57: </em>                    default: {}
+<em class="lineno">58: </em>                }
+<em class="lineno">59: </em>                3'b101 : inst32 = jal(0, imm_j); // C.J
+<em class="lineno">60: </em>                3'b110 : inst32 = beq(rs1d, 0, imm_br); // C.BEQZ
+<em class="lineno">61: </em>                3'b111 : inst32 = bne(rs1d, 0, imm_br); // C.BNEZ
+<em class="lineno">62: </em>                default: {}
+<em class="lineno">63: </em>            }
+<em class="lineno">64: </em>            2'b10: case funct3 { // C2
+<em class="lineno">65: </em>                3'b000: if !(XLEN == 32 &amp;&amp; imm_shamt[msb] == 1) {
+<em class="lineno">66: </em>                    inst32 = slli(rs1, rs1, imm_shamt); // C.SLLI
+<em class="lineno">67: </em>                }
+<em class="lineno">68: </em>                3'b010: if rs1 != 0 { // C.LWSP
+<em class="lineno">69: </em>                    let offset: logic&lt;8&gt; = {inst16[3:2], inst16[12], inst16[6:4], 2'b0};
+<em class="lineno">70: </em>                    inst32 = load(rs1, 2, {4'b0, offset}, 3'b010);
+<em class="lineno">71: </em>                }
+<em class="lineno">72: </em>                3'b011: if XLEN &gt;= 64 &amp;&amp; rs1 != 0 { // C.LDSP
+<em class="lineno">73: </em>                    let offset: logic&lt;9&gt; = {inst16[4:2], inst16[12], inst16[6:5], 3'b0};
+<em class="lineno">74: </em>                    inst32 = load(rs1, 2, {3'b0, offset}, 3'b011);
+<em class="lineno">75: </em>                }
+<em class="lineno">76: </em>                3'b100: if inst16[12] == 0 {
+<em class="lineno">77: </em>                    inst32 = if rs2 == 0 ? jalr(0, rs1, 0) : addi(rs1, rs2, 0); // C.JR / C.MV
+<em class="lineno">78: </em>                } else {
+<em class="lineno">79: </em>                    if rs2 == 0 {
+<em class="lineno">80: </em>                        inst32 = if rs1 == 0 ? ebreak() : jalr(1, rs1, 0); // C.EBREAK : C.JALR
+<em class="lineno">81: </em>                    } else {
+<em class="lineno">82: </em>                        inst32 = add(rs1, rs1, rs2); // C.ADD
+<em class="lineno">83: </em>                    }
+<em class="lineno">84: </em>                }
+<em class="lineno">85: </em>                3'b110: { // C.SWSP
+<em class="lineno">86: </em>                    let offset: logic&lt;8&gt; = {inst16[8:7], inst16[12:9], 2'b0};
+<em class="lineno">87: </em>                    inst32 = store(2, rs2, {4'b0, offset}, 3'b010);
+<em class="lineno">88: </em>                }
+<em class="lineno">89: </em>                3'b111: if XLEN &gt;= 64 { // C.SDSP
+<em class="lineno">90: </em>                    let offset: logic&lt;9&gt; = {inst16[9:7], inst16[12:10], 3'b0};
+<em class="lineno">91: </em>                    inst32 = store(2, rs2, {3'b0, offset}, 3'b011);
+<em class="lineno">92: </em>                }
+<em class="lineno">93: </em>                default: {}
+<em class="lineno">94: </em>            }
+<em class="lineno">95: </em>            default: {}
+<em class="lineno">96: </em>        }
+<em class="lineno">97: </em>    }
+</pre>
+</div>
+
+<h3 class="none"><a id="h13-6-3"></a><span class="secno">13.6.3</span> RVC命令を発行する</h3>
+<p>inst_fetcherモジュールでrvc_converterモジュールをインスタンス化し、RVC命令をcoreモジュールに供給します。</p>
+<p>まず、rvc_converterモジュールをインスタンス化します(<span class="listref"><a href="./14-impl-c.html#inst_fetcher.veryl.rvcc.inst">リスト13.44</a></span>)。</p>
+<div id="inst_fetcher.veryl.rvcc.inst" class="caption-code">
+<span class="caption">リスト13.44: リスト13.44: rvc_converterモジュールのインスタンス化 (inst_fetcher.veryl)</span>
+<pre class="list language-inst" translate="no"><em class="lineno">1: </em>    // instruction converter
+<em class="lineno">2: </em>    var rvcc_inst16: logic&lt;16&gt;;
+<em class="lineno">3: </em>    var rvcc_is_rvc: logic    ;
+<em class="lineno">4: </em>    var rvcc_inst32: Inst     ;
+<em class="lineno">5: </em>
+<em class="lineno">6: </em>    inst rvcc: rvc_converter (
+<em class="lineno">7: </em>        inst16: case issue_pc_offset {
+<em class="lineno">8: </em>            0      : fetch_fifo_rdata.bits[15:0],
+<em class="lineno">9: </em>            2      : fetch_fifo_rdata.bits[31:16],
+<em class="lineno">10: </em>            4      : fetch_fifo_rdata.bits[47:32],
+<em class="lineno">11: </em>            6      : fetch_fifo_rdata.bits[63:48],
+<em class="lineno">12: </em>            default: 0,
+<em class="lineno">13: </em>        },
+<em class="lineno">14: </em>        is_rvc: rvcc_is_rvc,
+<em class="lineno">15: </em>        inst32: rvcc_inst32,
+<em class="lineno">16: </em>    );
+</pre>
+</div>
+<p>RVC命令のとき、変換された32ビット幅の命令を<code class="inline-code" translate="no" >issue_fifo</code>に書き込み、<code class="inline-code" translate="no" >issue_pc_offset</code>を<code class="inline-code" translate="no" >4</code>ではなく<code class="inline-code" translate="no" >2</code>増やすようにします(<span class="listref"><a href="./14-impl-c.html#inst_fetcher.veryl.rvcc.issue_ff">リスト13.45</a></span>、<span class="listref"><a href="./14-impl-c.html#inst_fetcher.veryl.rvcc.issue_comb">リスト13.46</a></span>)。</p>
+<div id="inst_fetcher.veryl.rvcc.issue_ff" class="caption-code">
+<span class="caption">リスト13.45: リスト13.45: RVC命令のときのオフセットの更新 (inst_fetcher.veryl)</span>
+<pre class="list language-issue_ff" translate="no"><em class="lineno">1: </em>// offsetが6な32ビット命令の場合、
+<em class="lineno">2: </em>// アドレスと上位16ビットを保存してFIFOを読み進める
+<em class="lineno">3: </em>if issue_pc_offset == 6 &amp;&amp; <b>!rvcc_is_rvc &amp;&amp;</b> !issue_is_rdata_saved {
+<em class="lineno">4: </em>    if fetch_fifo_rvalid {
+<em class="lineno">5: </em>        issue_is_rdata_saved = 1;
+<em class="lineno">6: </em>        issue_saved_addr     = fetch_fifo_rdata.addr;
+<em class="lineno">7: </em>        issue_saved_bits     = fetch_fifo_rdata.bits[63:48];
+<em class="lineno">8: </em>    }
+<em class="lineno">9: </em>} else {
+<em class="lineno">10: </em>    if issue_fifo_wready &amp;&amp; issue_fifo_wvalid {
+<em class="lineno">11: </em>        issue_pc_offset      += <b>if issue_is_rdata_saved || !rvcc_is_rvc ?</b> 4 <b>: 2</b>;
+<em class="lineno">12: </em>        issue_is_rdata_saved =  0;
+<em class="lineno">13: </em>    }
+<em class="lineno">14: </em>}
+</pre>
+</div>
+<div id="inst_fetcher.veryl.rvcc.issue_comb" class="caption-code">
+<span class="caption">リスト13.46: リスト13.46: RVC命令のときのissue_fifoへの書き込み (inst_fetcher.veryl)</span>
+<pre class="list language-issue_comb" translate="no"><em class="lineno">1: </em>if !core_if.is_hazard &amp;&amp; fetch_fifo_rvalid {
+<em class="lineno">2: </em>    if issue_fifo_wready {
+<em class="lineno">3: </em>        if offset == 6 {
+<em class="lineno">4: </em>            // offsetが6な32ビット命令の場合、
+<em class="lineno">5: </em>            // 命令は{rdata_next[15:0], rdata[63:48}になる
+<em class="lineno">6: </em>            if issue_is_rdata_saved {
+<em class="lineno">7: </em>                issue_fifo_wvalid       = 1;
+<em class="lineno">8: </em>                issue_fifo_wdata.addr   = {issue_saved_addr[msb:3], offset};
+<em class="lineno">9: </em>                issue_fifo_wdata.bits   = {rdata[15:0], issue_saved_bits};
+<em class="lineno">10: </em>                issue_fifo_wdata.is_rvc = 0;
+<em class="lineno">11: </em>            } else {
+<em class="lineno">12: </em>                fetch_fifo_rready = 1;
+<em class="lineno">13: </em>                <b>if rvcc_is_rvc {</b>
+<em class="lineno">14: </em>                <b>    issue_fifo_wvalid       = 1;</b>
+<em class="lineno">15: </em>                <b>    issue_fifo_wdata.addr   = {raddr[msb:3], offset};</b>
+<em class="lineno">16: </em>                <b>    issue_fifo_wdata.is_rvc = 1;</b>
+<em class="lineno">17: </em>                <b>    issue_fifo_wdata.bits   = rvcc_inst32;</b>
+<em class="lineno">18: </em>                <b>} else {</b>
+<em class="lineno">19: </em>                    // Read next 8 bytes
+<em class="lineno">20: </em>                <b>}</b>
+<em class="lineno">21: </em>            }
+<em class="lineno">22: </em>        } else {
+<em class="lineno">23: </em>            fetch_fifo_rready     = <b>!rvcc_is_rvc &amp;&amp;</b> offset == 4;
+<em class="lineno">24: </em>            issue_fifo_wvalid     = 1;
+<em class="lineno">25: </em>            issue_fifo_wdata.addr = {raddr[msb:3], offset};
+<em class="lineno">26: </em>            <b>if rvcc_is_rvc {</b>
+<em class="lineno">27: </em>            <b>    issue_fifo_wdata.bits = rvcc_inst32;</b>
+<em class="lineno">28: </em>            <b>} else {</b>
+<em class="lineno">29: </em>                issue_fifo_wdata.bits = case offset {
+<em class="lineno">30: </em>                    0      : rdata[31:0],
+<em class="lineno">31: </em>                    2      : rdata[47:16],
+<em class="lineno">32: </em>                    4      : rdata[63:32],
+<em class="lineno">33: </em>                    default: 0,
+<em class="lineno">34: </em>                };
+<em class="lineno">35: </em>            <b>}</b>
+<em class="lineno">36: </em>            issue_fifo_wdata.is_rvc = <b>rvcc_is_rvc</b>;
+<em class="lineno">37: </em>        }
+<em class="lineno">38: </em>    }
+<em class="lineno">39: </em>}
+</pre>
+</div>
+<p>riscv-testsの<code class="inline-code" translate="no" >rv64uc-p-</code>から始まるテストを実行し、成功することを確認してください。</p>
+        </main>
+        <nav class="page-navi">
+          <a href="13-impl-a.html" class="page-prev">&#9664;</a>
+          <a href="20-mmode-csr.html" class="page-next">&#9654;</a>
+        </nav>
+        <br>
+        <br>
+        <footer style="background:#dddddd">
+      <div style="padding: 20px 20px 20px 20px;">
+          <div style="font-size:1.4rem"><b>コンピュータは、CPUを書けば理解できる！</b></div><br>
+          コンピュータアーキテクチャはCPUを作れば理解できます。
+          「Verylで作るCPU」は、ハードウェア記述言語VerylでRISC-VのCPUを自作する方法を解説するプロジェクトです。<br>
+          「Verylで作るCPU 基本編」では、ハードウェア記述言語の基礎から、OSを実行できる程度のCPUの実装方法までを解説します。<br>
+          <br>
+          キーワード: 自作CPU , RISC-V , Veryl , FPGA<br>
+      <div>
+        </footer>
+      </div>
+    </div>
+    
+    <script>
+      let url = window.location.href;
+      let encoded_url = encodeURI(url);
+      let fb = document.getElementById("share-facebook");
+      fb["data-href"] = url;
+      console.log(fb);
+    </script>
+    <div id="fb-root"></div>
+    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/ja_JP/sdk.js#xfbml=1&version=v21.0"></script>
+    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+  </body>
+</html>
+<!-- layout.html5.erb -->
