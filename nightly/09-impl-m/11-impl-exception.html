@@ -254,7 +254,7 @@
 </pre>
 </div>
 <div id="csrunit.veryl.mtval-range.reg" class="caption-code">
-<span class="caption">リスト2.15: リスト2.15: mtval変数を作成する (csrunit.veryl)</span>
+<span class="caption">リスト2.15: リスト2.15: mtvalレジスタを作成する (csrunit.veryl)</span>
 <pre class="list language-reg"><em class="lineno">1: </em>    var mtvec : UIntX;
 <em class="lineno">2: </em>    var mepc  : UIntX;
 <em class="lineno">3: </em>    var mcause: UIntX;
@@ -279,7 +279,7 @@
 </pre>
 </div>
 <div id="csrunit.veryl.mtval-range.reset" class="caption-code">
-<span class="caption">リスト2.17: リスト2.17: mtval変数をリセットする (csrunit.veryl)</span>
+<span class="caption">リスト2.17: リスト2.17: mtvalレジスタをリセットする (csrunit.veryl)</span>
 <pre class="list language-reset"><em class="lineno">1: </em>    always_ff {
 <em class="lineno">2: </em>        if_reset {
 <em class="lineno">3: </em>            mtvec  = 0;
@@ -357,7 +357,7 @@
 
 <h3 class="none"><a id="h2-4-1"></a><span class="secno">2.4.1</span> 不正な命令ビット列で例外を起こす</h3>
 <p>CPUに実装していない命令、つまりデコードできない命令を実行しようとするとき、Illegal instruction例外が発生します。</p>
-<p>今のところopcodeが未知の命令は何もしない命令として実行し、それ以外の命令については何も対処していません。ここで、inst_decoderモジュールを、未知の命令であることを報告するように変更します。</p>
+<p>今のところ未知の命令は何もしない命令として実行しています。ここで、inst_decoderモジュールを、未知の命令であることを報告するように変更します。</p>
 <p>inst_decoderモジュールに、命令が有効かどうかを示す<code class="inline-code">valid</code>ポートを追加します(<span class="listref"><a href="./11-impl-exception.html#inst_decoder.veryl.instillegal-range.port">リスト2.23</a></span>、<span class="listref"><a href="./11-impl-exception.html#core.veryl.instillegal-range.ids">リスト2.24</a></span>)。</p>
 <div id="inst_decoder.veryl.instillegal-range.port" class="caption-code">
 <span class="caption">リスト2.23: リスト2.23: validポートを追加する (inst_decoder.veryl)</span>
@@ -464,11 +464,11 @@
 <ol start="1" type="1">
 <li>CSRRW、CSRRWI命令である</li>
 <li>CSRRS命令でrs1が0番目のレジスタ以外である</li>
-<li>CSRRSI命令で即値が<b>0</b>以外である</li>
+<li>CSRRSI命令で即値が<code class="inline-code">0</code>以外である</li>
 <li>CSRRC命令でrs1が0番目のレジスタ以外である</li>
-<li>CSRRCI命令で即値が<b>0</b>以外である</li>
+<li>CSRRCI命令で即値が<code class="inline-code">0</code>以外である</li>
 </ol>
-<p>ソースレジスタの値が<b>0</b>だとしても、0番目のレジスタではない場合にはCSRに書き込むと判断します。CSRに書き込むかどうかを正しく判定するために、csrunitモジュールの<code class="inline-code">rs1</code>ポートを<code class="inline-code">rs1_addr</code>と<code class="inline-code">rs1_data</code>に分解します(<span class="listref"><a href="./11-impl-exception.html#core.veryl.csrro-range.csru">リスト2.30</a></span>、<span class="listref"><a href="./11-impl-exception.html#csrunit.veryl.csrro-range.port">リスト2.29</a></span>、<span class="listref"><a href="./11-impl-exception.html#csrunit.veryl.csrro-range.wdata">リスト2.31</a></span>)。また、causeを設定するためにcsrunitモジュールに命令のビット列を供給します。</p>
+<p>ソースレジスタの値が<code class="inline-code">0</code>だとしても、0番目のレジスタではない場合にはCSRに書き込むと判断します。CSRに書き込むかどうかを正しく判定するために、csrunitモジュールの<code class="inline-code">rs1</code>ポートを<code class="inline-code">rs1_addr</code>と<code class="inline-code">rs1_data</code>に分解します(<span class="listref"><a href="./11-impl-exception.html#core.veryl.csrro-range.csru">リスト2.30</a></span>、<span class="listref"><a href="./11-impl-exception.html#csrunit.veryl.csrro-range.port">リスト2.29</a></span>、<span class="listref"><a href="./11-impl-exception.html#csrunit.veryl.csrro-range.wdata">リスト2.31</a></span>)<sup><a id="fnb-fix-wmask-bug" href="#fn-fix-wmask-bug" class="noteref" epub:type="noteref">*5</a></sup>。また、causeを設定するためにcsrunitモジュールに命令のビット列を供給します。</p>
 <div id="csrunit.veryl.csrro-range.port" class="caption-code">
 <span class="caption">リスト2.29: リスト2.29: csrunitモジュールのポート定義を変更する (csrunit.veryl)</span>
 <pre class="list language-port"><em class="lineno">1: </em>module csrunit (
@@ -512,7 +512,7 @@
 </pre>
 </div>
 <div id="csrunit.veryl.csrro-range.wdata" class="caption-code">
-<span class="caption">リスト2.31: リスト2.31: rs1の変更に対応する&lt;sup&gt;&lt;a id=&quot;fnb-fix-wmask-bug&quot; href=&quot;#fn-fix-wmask-bug&quot; class=&quot;noteref&quot; epub:type=&quot;noteref&quot;&gt;*5&lt;/a&gt;&lt;/sup&gt; (csrunit.veryl)</span>
+<span class="caption">リスト2.31: リスト2.31: rs1の変更に対応する (csrunit.veryl)</span>
 <pre class="list language-wdata"><em class="lineno">1: </em>    <b>let wsource: UIntX = if ctrl.funct3[2] ? {1'b0 repeat XLEN - 5, rs1_addr} : rs1_data;</b>
 <em class="lineno">2: </em>    wdata   = case ctrl.funct3[1:0] {
 <em class="lineno">3: </em>        2'b01  : <b>wsource</b>,

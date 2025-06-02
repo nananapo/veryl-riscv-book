@@ -77,7 +77,7 @@
 図3.1: メモリマップ
 </p>
 </div>
-<p>本章ではCPUのメモリ部分をRAM(Random Access Memory)<sup><a id="fnb-about-ram" href="#fn-about-ram" class="noteref" epub:type="noteref">*1</a></sup>とROM(Read Only Memory)に分割し、アクセスするアドレスに応じてアクセスするデバイスを切り替える機能を実装します。また、デバッグ用の入出力デバイス(64ビットのレジスタ)も追加します。デバイスとメモリ空間の対応は図<span class="imgref"><a href="./12-impl-mmio.html#mmio">図3.1</a></span>のように設定します。図<span class="imgref"><a href="./12-impl-mmio.html#mmio">図3.1</a></span>のようにメモリがどのように配置されているかを示す図のことを<b>メモリマップ</b>(Memory map)と呼びます。あるメモリ空間の先頭アドレスのことをベースアドレス(base address)と呼ぶことがあります。</p>
+<p>本章ではCPUのメモリ部分をRAM(Random Access Memory)<sup><a id="fnb-about-ram" href="#fn-about-ram" class="noteref" epub:type="noteref">*1</a></sup>とROM(Read Only Memory)に分割し、アクセスするアドレスに応じてアクセスするデバイスを切り替える機能を実装します。また、デバッグ用の入出力デバイス(64ビットのレジスタ)も実装します。デバイスとメモリ空間の対応は<span class="imgref"><a href="./12-impl-mmio.html#mmio">図3.1</a></span>のように設定します。<span class="imgref"><a href="./12-impl-mmio.html#mmio">図3.1</a></span>のようにメモリがどのように配置されているかを示す図のことを<b>メモリマップ</b>(Memory map)と呼びます。あるメモリ空間の先頭アドレスのことをベースアドレス(base address)と呼ぶことがあります。</p>
 <div class="footnote-list">
 <div class="footnote" id="fn-about-ram" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>本章では実際のRAMデバイスへのアクセスを実装せずmemoryモジュールで代用します。FPGAに合成するときに実際のデバイスへのアクセスに置き換えます。</p></div>
 </div><!--/.footnote-list-->
@@ -103,9 +103,9 @@
 <em class="lineno">15: </em>    const MMAP_ROM_END  : Addr = MMAP_ROM_BEGIN + 'h3ff as Addr;
 </pre>
 </div>
-<p><code class="inline-code">MEM_DATA_WIDTH</code>、<code class="inline-code">MEM_ADDR_WIDTH</code>を使っている部分を<code class="inline-code">MEMBUS_DATA_WIDTH</code>、<code class="inline-code">XLEN</code>に置き換えます。<code class="inline-code">MEMBUS_DATA_WIDTH</code>と<code class="inline-code">XLEN</code>を使うmembus_ifインターフェースに別名<code class="inline-code">Membus</code>をつけて利用します(<span class="listref"><a href="./12-impl-mmio.html#membus_if.veryl.memtoram.Membus">リスト3.2</a></span><span class="listref"><a href="./12-impl-mmio.html#core.veryl.memtoram.port">リスト3.3</a></span>)。</p>
+<p><code class="inline-code">MEM_DATA_WIDTH</code>、<code class="inline-code">MEM_ADDR_WIDTH</code>を使っている部分を<code class="inline-code">MEMBUS_DATA_WIDTH</code>、<code class="inline-code">XLEN</code>に置き換えます。<code class="inline-code">MEMBUS_DATA_WIDTH</code>と<code class="inline-code">XLEN</code>を使うmembus_ifインターフェースに別名<code class="inline-code">Membus</code>をつけて利用します(<span class="listref"><a href="./12-impl-mmio.html#membus_if.veryl.memtoram.Membus">リスト3.2</a></span>、<span class="listref"><a href="./12-impl-mmio.html#core.veryl.memtoram.port">リスト3.3</a></span>、<span class="listref"><a href="./12-impl-mmio.html#memunit.veryl.memtoram.port">リスト3.4</a></span>、<span class="listref"><a href="./12-impl-mmio.html#memunit.veryl.memtoram.var">リスト3.5</a></span>)。</p>
 <div id="membus_if.veryl.memtoram.Membus" class="caption-code">
-<span class="caption">リスト3.2: リスト3.2: 定数名を変更する (membus_if.veryl)</span>
+<span class="caption">リスト3.2: リスト3.2: 別名の定義 (membus_if.veryl)</span>
 <pre class="list language-Membus"><em class="lineno">1: </em>alias interface Membus = membus_if::&lt;eei::MEMBUS_DATA_WIDTH, eei::XLEN&gt;;
 </pre>
 </div>
@@ -638,7 +638,7 @@
 </div>
 <p>riscv-testsをビルドしなおし、成果物をtestディレクトリに配置してください。ビルドしなおしたので、HEXファイルを再度生成します(<span class="listref"><a href="./12-impl-mmio.html#terminal.ram.recompile">リスト3.33</a></span>)。</p>
 <div id="terminal.ram.recompile" class="cmd-code">
-<span class="caption">リスト3.33: リスト3.33: </span>
+<span class="caption">リスト3.33: リスト3.33: HEXファイルの再生成</span>
 <pre class="list language-recompile">$ <span class="userinput">cd test</span>
 $ <span class="userinput">find share/ -type f -not -name &quot;*.dump&quot; -exec riscv64-unknown-elf-objcopy -O binary {</span> {}.bin \;}
 $ <span class="userinput">find share/ -type f -name &quot;*.bin&quot; -exec sh -c &quot;python3 bin2hex.py 8 {</span> &gt; {}.hex&quot; \;}

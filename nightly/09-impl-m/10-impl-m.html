@@ -274,7 +274,7 @@
 </pre>
 </div>
 <p>muldivunitモジュールで計算を開始するのは、EXステージに命令が存在し(<code class="inline-code">exs_valid</code>)、命令がM拡張の命令であり(<code class="inline-code">exs_ctrl.is_muldiv</code>)、データハザードが発生しておらず(<code class="inline-code">!exs_data_hazard</code>)、既に計算を要求していない(<code class="inline-code">!exs_muldiv_is_requested</code>)場合です。</p>
-<p><code class="inline-code">!exs_muldiv_is_requested</code>変数を定義し、ステージの遷移条件とmuldivunitに計算を要求したかの状態によって値を更新します(<span class="listref"><a href="./10-impl-m.html#core.veryl.create-mdu-range.exs_muldiv_is_requested">リスト1.6</a></span>)。</p>
+<p><code class="inline-code">exs_muldiv_is_requested</code>変数を定義し、ステージの遷移条件とmuldivunitに計算を要求したかの状態によって値を更新します(<span class="listref"><a href="./10-impl-m.html#core.veryl.create-mdu-range.exs_muldiv_is_requested">リスト1.6</a></span>)。</p>
 <div id="core.veryl.create-mdu-range.exs_muldiv_is_requested" class="caption-code">
 <span class="caption">リスト1.6: リスト1.6: exs_muldiv_is_requested変数 (core.veryl)</span>
 <pre class="list language-exs_muldiv_is_requested"><em class="lineno">1: </em>    var exs_muldiv_is_requested: logic;
@@ -373,7 +373,7 @@
 <em class="lineno">24: </em>        rvalid = state == State::Finish;
 <em class="lineno">25: </em>    }
 <em class="lineno">26: </em>
-<em class="lineno">27: </em>    var add_count: u32;
+<em class="lineno">27: </em>    var add_count: logic&lt;32&gt;;
 <em class="lineno">28: </em>
 <em class="lineno">29: </em>    always_ff {
 <em class="lineno">30: </em>        if_reset {
@@ -455,10 +455,10 @@
 <span class="caption">リスト1.11: リスト1.11: MULHUモジュールの結果を取得する (muldivunit.veryl)</span>
 <pre class="list language-result"><em class="lineno">1: </em>    State::WaitValid: if is_mul &amp;&amp; mu_rvalid {
 <em class="lineno">2: </em>        state  = State::Finish;
-<em class="lineno">3: </em>        result = case funct3_saved[1:0] {
-<em class="lineno">4: </em>            2'b11  : mu_result[XLEN+:XLEN], // MULHU
-<em class="lineno">5: </em>            default: 0,
-<em class="lineno">6: </em>        };
+<em class="lineno">3: </em>        <b>result = case funct3_saved[1:0] {</b>
+<em class="lineno">4: </em>        <b>    2'b11  : mu_result[XLEN+:XLEN], // MULHU</b>
+<em class="lineno">5: </em>        <b>    default: 0,</b>
+<em class="lineno">6: </em>        <b>};</b>
 <em class="lineno">7: </em>    }
 </pre>
 </div>
@@ -897,7 +897,7 @@
 <em class="lineno">12: </em>    );
 </pre>
 </div>
-<p><span class="tableref"><a href="./10-impl-m.html#riscv.div.expt">表1.4</a></span>にあるように、符号付き演算は結果がオーバーフローする場合とゼロで割る場合の結果が定められています。その場合には、divunitモジュールで除算を実行せず、muldivunitで計算結果を直接生成するようにします(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.divrem-range.error">リスト1.34</a></span><span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.divrem-range.idle">リスト1.35</a></span>)。符号付き演算かどうかを<code class="inline-code">funct3</code>のLSBで確認し、例外的な処理ではない場合にのみdivunitモジュールで計算を開始するようにしています。</p>
+<p><span class="tableref"><a href="./10-impl-m.html#riscv.div.expt">表1.4</a></span>にあるように、符号付き演算は結果がオーバーフローする場合とゼロで割る場合の結果が定められています。その場合には、divunitモジュールで除算を実行せず、muldivunitで計算結果を直接生成するようにします(<span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.divrem-range.error">リスト1.34</a></span><span class="listref"><a href="./10-impl-m.html#muldivunit.veryl.divrem-range.idle">リスト1.35</a></span>)。符号付き演算かどうかを<code class="inline-code">funct3</code>のLSBで確認し、例外的な処理ではない場合にのみdivunitモジュールで計算を開始するようにします。</p>
 <div id="muldivunit.veryl.divrem-range.error" class="caption-code">
 <span class="caption">リスト1.34: リスト1.34: 符号付き除算がオーバーフローするか、ゼロ除算かどうかを判定する (muldivunit.veryl)</span>
 <pre class="list language-error"><em class="lineno">1: </em>    var du_signed_overflow: logic;
