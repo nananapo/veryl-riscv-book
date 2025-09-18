@@ -267,35 +267,31 @@ Test Result : 14 / 52
 <p>inst_decoderモジュールの<code class="inline-code" translate="no" >InstCtrl</code>と即値を生成している部分を変更します(<span class="listref"><a href="./05-impl-rv64i.html#inst_decoder.veryl.addsubw-range.ctrl">リスト6.13</a></span>、<span class="listref"><a href="./05-impl-rv64i.html#inst_decoder.veryl.addsubw-range.imm">リスト6.14</a></span>)。これでデコードは完了です。</p>
 <div id="inst_decoder.veryl.addsubw-range.ctrl" class="caption-code">
 <span class="caption">リスト6.13: リスト6.13: OP-32、OP-IMM-32のInstCtrlの生成 (inst_decoder.veryl)</span>
-<pre class="list language-ctrl" translate="no">                                       is_op32を追加
-    ctrl = {case op {                        ↓
-        OP_LUI      : {InstType::U, T, T, F, <b>F</b>, F, F, F},
-        OP_AUIPC    : {InstType::U, T, F, F, <b>F</b>, F, F, F},
-        OP_JAL      : {InstType::J, T, F, F, <b>F</b>, T, F, F},
-        OP_JALR     : {InstType::I, T, F, F, <b>F</b>, T, F, F},
-        OP_BRANCH   : {InstType::B, F, F, F, <b>F</b>, F, F, F},
-        OP_LOAD     : {InstType::I, T, F, F, <b>F</b>, F, T, F},
-        OP_STORE    : {InstType::S, F, F, F, <b>F</b>, F, F, F},
-        OP_OP       : {InstType::R, T, F, T, <b>F</b>, F, F, F},
-        OP_OP_IMM   : {InstType::I, T, F, T, <b>F</b>, F, F, F},
-        <b>OP_OP_32    : {InstType::R, T, F, T, T, F, F, F},</b>
-        <b>OP_OP_IMM_32: {InstType::I, T, F, T, T, F, F, F},</b>
-        OP_SYSTEM   : {InstType::I, T, F, F, <b>F</b>, F, F, T},
-        default     : {InstType::X, F, F, F, <b>F</b>, F, F, F},
-    }, f3, f7};
+<pre class="list language-ctrl" translate="no">                OP_OP_IMM: {
+                    InstType::I, T, F, T, <b>F,</b> F, F, F
+                },
+                <b>OP_OP_32: {</b>
+                <b>    InstType::R, T, F, T, T, F, F, F</b>
+                <b>},</b>
+                <b>OP_OP_IMM_32: {</b>
+                <b>    InstType::I, T, F, T, T, F, F, F</b>
+                <b>},</b>
+                OP_SYSTEM: {
+                    InstType::I, T, F, F, <b>F,</b> F, F, T
+                },
 </pre>
 </div>
 <div id="inst_decoder.veryl.addsubw-range.imm" class="caption-code">
 <span class="caption">リスト6.14: リスト6.14: OP-IMM-32の即値の生成 (inst_decoder.veryl)</span>
-<pre class="list language-imm" translate="no">    imm = case op {
-        OP_LUI, OP_AUIPC       : imm_u,
-        OP_JAL                 : imm_j,
-        OP_JALR, OP_LOAD       : imm_i,
-        OP_OP_IMM, <b>OP_OP_IMM_32</b>: imm_i,
-        OP_BRANCH              : imm_b,
-        OP_STORE               : imm_s,
-        default                : 'x,
-    };
+<pre class="list language-imm" translate="no">        imm = case op {
+            OP_LUI, OP_AUIPC       : imm_u,
+            OP_JAL                 : imm_j,
+            OP_JALR, OP_LOAD       : imm_i,
+            OP_OP_IMM, <b>OP_OP_IMM_32</b>: imm_i,
+            OP_BRANCH              : imm_b,
+            OP_STORE               : imm_s,
+            default                : 'x,
+        };
 </pre>
 </div>
 
@@ -327,11 +323,12 @@ Test Result : 14 / 52
 <p>sel_w関数を使用し、aluモジュールの演算処理を変更します。case文の足し算と引き算の部分を次のように変更します(<span class="listref"><a href="./05-impl-rv64i.html#alu.veryl.addsubw-range.case">リスト6.17</a></span>)。</p>
 <div id="alu.veryl.addsubw-range.case" class="caption-code">
 <span class="caption">リスト6.17: リスト6.17: 32ビットの演算結果を選択する (alu.veryl)</span>
-<pre class="list language-case" translate="no">    3'b000: result = if ctrl.itype == InstType::I | ctrl.funct7 == 0 {
-        <b>sel_w(ctrl.is_op32, add32, add)</b>
-    } else {
-        <b>sel_w(ctrl.is_op32, sub32, sub)</b>
-    };
+<pre class="list language-case" translate="no">    always_comb {
+        if ctrl.is_aluop {
+            case ctrl.funct3 {
+                3'b000 : result = if ctrl.itype == InstType::I | ctrl.funct7 == 0 ? <b>sel_w(ctrl.is_op32, add32, </b>add<b>)</b> : <b>sel_w(ctrl.is_op32, sub32, </b>sub<b>)</b>;
+                3'b001 : result = sll;
+                3'b010 : result = slt;
 </pre>
 </div>
 
@@ -388,13 +385,13 @@ PASS : ~/core/test/share/riscv-tests/isa/rv64ui-p-subw.bin.hex
 <p>生成したシフト演算の結果をsel_w関数で選択します。case文のシフト演算の部分を次のように変更します(<span class="listref"><a href="./05-impl-rv64i.html#alu.veryl.sllsrlsraw-range.case">リスト6.21</a></span>)。</p>
 <div id="alu.veryl.sllsrlsraw-range.case" class="caption-code">
 <span class="caption">リスト6.21: リスト6.21: 32ビットの演算結果を選択する (alu.veryl)</span>
-<pre class="list language-case" translate="no">    3'b001: result = <b>sel_w(ctrl.is_op32, sll32, sll)</b>;
-    ...
-    3'b101: result = if ctrl.funct7 == 0 {
-        <b>sel_w(ctrl.is_op32, srl32, srl)</b>
-    } else {
-        <b>sel_w(ctrl.is_op32, sra32, sra)</b>
-    };
+<pre class="list language-case" translate="no">            case ctrl.funct3 {
+                3'b000: result = if ctrl.itype == InstType::I | ctrl.funct7 == 0 ? sel_w(ctrl.is_op32, add32, add) : sel_w(ctrl.is_op32, sub32, sub);
+                3'b001: result = <b>sel_w(ctrl.is_op32, sll32, </b>sll<b>)</b>;
+                3'b010: result = slt;
+                3'b011: result = sltu;
+                3'b100: result = op1 ^ op2;
+                3'b101: result = if ctrl.funct7[5] == 0 ? <b>sel_w(ctrl.is_op32, srl32, </b>srl<b>)</b> : <b>sel_w(ctrl.is_op32, sra32, </b>sra<b>)</b>;
 </pre>
 </div>
 
@@ -509,11 +506,7 @@ Test Result : 1 / 1
 <p>このレジスタの値を利用し、<code class="inline-code" translate="no" >i_membus.rdata</code>に割り当てる値を選択します(<span class="listref"><a href="./05-impl-rv64i.html#top.veryl.ldsd-range.rdata">リスト6.29</a></span>)。</p>
 <div id="top.veryl.ldsd-range.rdata" class="caption-code">
 <span class="caption">リスト6.29: リスト6.29: アドレスによってデータを選択する (top.veryl)</span>
-<pre class="list language-rdata" translate="no">    i_membus.rdata  = if memarb_last_iaddr[2] == 0 {
-        membus.rdata[31:0]
-    } else {
-        membus.rdata[63:32]
-    };
+<pre class="list language-rdata" translate="no">        i_membus.rdata  = if memarb_last_iaddr[2] == 0 ? membus.rdata[31:0] : membus.rdata[63:32];
 </pre>
 </div>
 
@@ -522,29 +515,29 @@ Test Result : 1 / 1
 <p>書き込むデータはアドレスの下位2ビットではなく下位3ビット分シフトします(<span class="listref"><a href="./05-impl-rv64i.html#memunit.veryl.ldsd-range.wdata">リスト6.30</a></span>)。</p>
 <div id="memunit.veryl.ldsd-range.wdata" class="caption-code">
 <span class="caption">リスト6.30: リスト6.30: 書き込むデータの変更 (memunit.veryl)</span>
-<pre class="list language-wdata" translate="no">    req_wdata = rs2 &lt;&lt; {addr[<b>2</b>:0], 3'b0};
+<pre class="list language-wdata" translate="no">                        req_wdata = rs2 &lt;&lt; {addr[<b>2</b>:0], 3'b0};
 </pre>
 </div>
 <p>書き込みマスクは4ビットから8ビットに拡張されるため、アドレスの下位2ビットではなく下位3ビットで選択します(<span class="listref"><a href="./05-impl-rv64i.html#memunit.veryl.ldsd-range.wmask">リスト6.31</a></span>)。</p>
 <div id="memunit.veryl.ldsd-range.wmask" class="caption-code">
 <span class="caption">リスト6.31: リスト6.31: 書き込みマスクの変更 (memunit.veryl)</span>
-<pre class="list language-wmask" translate="no">    req_wmask = case ctrl.funct3[1:0] {
-        2'b00  : <b>8</b>'b1 &lt;&lt; addr[<b>2</b>:0],
-        2'b01  : case addr[<b>2</b>:0] {
-            <b>6      : 8'b11000000,</b>
-            <b>4      : 8'b00110000,</b>
-            2      : <b>8'b00001100</b>,
-            0      : <b>8'b00000011</b>,
-            default: 'x,
-        },
-        2'b10  : <b>case addr[2:0] {</b>
-            <b>0      : 8'b00001111,</b>
-            <b>4      : 8'b11110000,</b>
-            <b>default: 'x,</b>
-        <b>},</b>
-        <b>2'b11  : 8'b11111111,</b>
-        default: 'x,
-    };
+<pre class="list language-wmask" translate="no">                        req_wmask = case ctrl.funct3[1:0] {
+                            2'b00: <b>8</b>'b1 &lt;&lt; addr[<b>2</b>:0],
+                            2'b01: case addr[<b>2</b>:0] {
+                                <b>6      : 8'b11000000,</b>
+                                <b>4      : 8'b00110000,</b>
+                                2      : <b>8'b00001100</b>,
+                                0      : <b>8'b00000011</b>,
+                                default: 'x,
+                            },
+                            2'b10: <b>case addr[2:0] {</b>
+                                <b>0      : 8'b00001111,</b>
+                                <b>4      : 8'b11110000,</b>
+                                <b>default: 'x,</b>
+                            <b>},</b>
+                            <b>2'b11  : 8'b11111111,</b>
+                            default: 'x,
+                        };
 </pre>
 </div>
 
@@ -552,33 +545,33 @@ Test Result : 1 / 1
 <p>メモリのデータ幅が64ビットに広がるため、<code class="inline-code" translate="no" >rdata</code>に割り当てる値を、アドレスの下位2ビットではなく下位3ビットで選択します(<span class="listref"><a href="./05-impl-rv64i.html#memunit.veryl.ldsd-range.rdata">リスト6.32</a></span>)。</p>
 <div id="memunit.veryl.ldsd-range.rdata" class="caption-code">
 <span class="caption">リスト6.32: リスト6.32: rdataの変更 (memunit.veryl)</span>
-<pre class="list language-rdata" translate="no">    rdata = case ctrl.funct3[1:0] {
-        2'b00  : case addr[<b>2</b>:0] {
-            0      : {sext &amp; D[7] repeat W - 8, D[7:0]},
-            1      : {sext &amp; D[15] repeat W - 8, D[15:8]},
-            2      : {sext &amp; D[23] repeat W - 8, D[23:16]},
-            3      : {sext &amp; D[31] repeat W - 8, D[31:24]},
-            <b>4      : {sext &amp; D[39] repeat W - 8, D[39:32]},</b>
-            <b>5      : {sext &amp; D[47] repeat W - 8, D[47:40]},</b>
-            <b>6      : {sext &amp; D[55] repeat W - 8, D[55:48]},</b>
-            <b>7      : {sext &amp; D[63] repeat W - 8, D[63:56]},</b>
+<pre class="list language-rdata" translate="no">        rdata = case ctrl.funct3[1:0] {
+            2'b00: case addr[<b>2</b>:0] {
+                0      : {sext &amp; D[7] repeat W - 8, D[7:0]},
+                1      : {sext &amp; D[15] repeat W - 8, D[15:8]},
+                2      : {sext &amp; D[23] repeat W - 8, D[23:16]},
+                3      : {sext &amp; D[31] repeat W - 8, D[31:24]},
+                <b>4      : {sext &amp; D[39] repeat W - 8, D[39:32]},</b>
+                <b>5      : {sext &amp; D[47] repeat W - 8, D[47:40]},</b>
+                <b>6      : {sext &amp; D[55] repeat W - 8, D[55:48]},</b>
+                <b>7      : {sext &amp; D[63] repeat W - 8, D[63:56]},</b>
+                default: 'x,
+            },
+            2'b01: case addr[<b>2</b>:0] {
+                0      : {sext &amp; D[15] repeat W - 16, D[15:0]},
+                2      : {sext &amp; D[31] repeat W - 16, D[31:16]},
+                <b>4      : {sext &amp; D[47] repeat W - 16, D[47:32]},</b>
+                <b>6      : {sext &amp; D[63] repeat W - 16, D[63:48]},</b>
+                default: 'x,
+            },
+            <b>2'b10: case addr[2:0] {</b>
+            <b>    0      : {sext &amp; D[31] repeat W - 32, D[31:0]},</b>
+            <b>    4      : {sext &amp; D[63] repeat W - 32, D[63:32]},</b>
+            <b>    default: 'x,</b>
+            <b>},</b>
+            <b>2'b11  :</b> D,
             default: 'x,
-        },
-        2'b01  : case addr[<b>2</b>:0] {
-            0      : {sext &amp; D[15] repeat W - 16, D[15:0]},
-            2      : {sext &amp; D[31] repeat W - 16, D[31:16]},
-            <b>4      : {sext &amp; D[47] repeat W - 16, D[47:32]},</b>
-            <b>6      : {sext &amp; D[63] repeat W - 16, D[63:48]},</b>
-            default: 'x,
-        },
-        2'b10  : <b>case addr[2:0] {</b>
-            <b>0      : {sext &amp; D[31] repeat W - 32, D[31:0]},</b>
-            <b>4      : {sext &amp; D[63] repeat W - 32, D[63:32]},</b>
-            <b>default: 'x,</b>
-        <b>},</b>
-        <b>2'b11  : D,</b>
-        default: 'x,
-    };
+        };
 </pre>
 </div>
 

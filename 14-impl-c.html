@@ -748,11 +748,13 @@
 <p>ジャンプ命令でライトバックする値は次の命令のアドレスであるため、RVC命令の場合はPCに<code class="inline-code" translate="no" >2</code>を足した値を設定します(<span class="listref"><a href="./14-impl-c.html#core.veryl.is_rvc.wb_data">リスト13.38</a></span>)。</p>
 <div id="core.veryl.is_rvc.wb_data" class="caption-code">
 <span class="caption">リスト13.38: リスト13.38: 次の命令のアドレスを変える (core.veryl)</span>
-<pre class="list language-wb_data" translate="no"><em class="lineno">1: </em>    let wbs_wb_data: UIntX    = if wbs_ctrl.is_lui ?
-<em class="lineno">2: </em>        wbs_imm
-<em class="lineno">3: </em>    : if wbs_ctrl.is_jump ?
-<em class="lineno">4: </em>        wbs_pc + <b>(if wbs_ctrl.is_rvc ? 2 : </b>4<b>)</b>
-<em class="lineno">5: </em>    : if wbs_ctrl.is_load || wbs_ctrl.is_amo ?
+<pre class="list language-wb_data" translate="no"><em class="lineno">1: </em>    let wbs_wb_data: UIntX    = switch {
+<em class="lineno">2: </em>        wbs_ctrl.is_lui                    : wbs_imm,
+<em class="lineno">3: </em>        wbs_ctrl.is_jump                   : wbs_pc + <b>(if wbs_ctrl.is_rvc ? 2 : </b>4<b>)</b>,
+<em class="lineno">4: </em>        wbs_ctrl.is_load || wbs_ctrl.is_amo: wbq_rdata.mem_rdata,
+<em class="lineno">5: </em>        wbs_ctrl.is_csr                    : wbq_rdata.csr_rdata,
+<em class="lineno">6: </em>        default                            : wbq_rdata.alu_result
+<em class="lineno">7: </em>    };
 </pre>
 </div>
 

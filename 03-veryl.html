@@ -159,7 +159,7 @@ endmodule
 <div class="footnote-list">
 <div class="footnote" id="fn-nettype" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>例えば、未定義の変数が1ビット幅の信号線として解釈される仕様があります</p></div>
 </div><!--/.footnote-list-->
-<p>本書では、CPUの実装にVerylというHDLを使用します。Verylは2022年12月に公開された言語です。Verylの抽象度は、Verilogと同じくレジスタ転送レベルです。Verylの文法や機能は、VerilogやSystemVerilogに似通ったものになっています。しかし、if式やcase式、クロックとリセットの抽象化、ジェネリクスなどの痒い所に手が届く機能が提供されており、高い生産性を発揮します。</p>
+<p>本書では、CPUの実装にVerylというHDLを使用します。Verylは2022年12月に公開された言語です。Verylの抽象度は、Verilogと同じくレジスタ転送レベルです。Verylの文法や機能は、VerilogやSystemVerilogに似通ったものになっています。しかし、case式、クロックとリセットの抽象化、ジェネリクスなどの痒い所に手が届く機能が提供されており、高い生産性を発揮します。</p>
 <p>Verylのソースコードはコンパイラ(トランスパイラ)によって、自然で読みやすいSystemVerilogのソースコードに変換されます。そのため、Verylは旧来のSystemVerilogの環境と共存でき、SystemVerilogの資産を利用できます。</p>
 
 <h2 class="numbox"><a id="h2-2"></a><span class="secno">2.2</span> Verylの基本文法、機能</h2>
@@ -587,7 +587,7 @@ v[i step w] // = v[i*(w+1) : i*w  ] = v[i*w +: w]
 
 <h4><a id="h2-2-5-2"></a>演算子</h4>
 <p>Verylでは、<span class="tableref"><a href="./03-veryl.html#operator.priority">表2.5</a></span>の演算子を使用できます。ほとんどの演算子と優先度は通常のプログラミング言語と同じですが、ビット演算の種類が多かったり、<code class="inline-code" translate="no" >x</code>と<code class="inline-code" translate="no" >z</code>を考慮した演算があるなどの違いがあります。</p>
-<p>SystemVerilogとの差異を説明すると、<code class="inline-code" translate="no" >++</code>、<code class="inline-code" translate="no" >--</code>、<code class="inline-code" translate="no" >:=</code>、<code class="inline-code" translate="no" >:/</code>、<code class="inline-code" translate="no" >&lt;=</code>(代入)、<code class="inline-code" translate="no" >?:</code>(三項演算子)が無く、<code class="inline-code" translate="no" >&lt;</code>と<code class="inline-code" translate="no" >&gt;</code>がそれぞれ<code class="inline-code" translate="no" >&lt;:</code>と<code class="inline-code" translate="no" >&gt;:</code>に変更されています。また、<code class="inline-code" translate="no" >inside</code>と<code class="inline-code" translate="no" >{{}}</code>の形式が変更され、if式、case式、switch式が追加されています。</p>
+<p>SystemVerilogとの差異を説明すると、<code class="inline-code" translate="no" >++</code>、<code class="inline-code" translate="no" >--</code>、<code class="inline-code" translate="no" >:=</code>、<code class="inline-code" translate="no" >:/</code>、<code class="inline-code" translate="no" >&lt;=</code>(代入)、<code class="inline-code" translate="no" >&lt;</code>と<code class="inline-code" translate="no" >&gt;</code>がそれぞれ<code class="inline-code" translate="no" >&lt;:</code>と<code class="inline-code" translate="no" >&gt;:</code>に変更されています。また、<code class="inline-code" translate="no" >inside</code>と<code class="inline-code" translate="no" >{{}}</code>、<code class="inline-code" translate="no" >?:</code>(三項演算子)の形式が変更され、case式、switch式が追加されています。</p>
 <p>単項、二項演算子の使用例は次の通りです(<span class="listref"><a href="./03-veryl.html#operator.use">リスト2.31</a></span>)。</p>
 <div id="operator.use" class="caption-code">
 <span class="caption">リスト2.31: リスト2.31: 単項、二項演算子 (Verylのドキュメントの例&lt;a href=&quot;bib.html#bib-veryl-doc.operators&quot;&gt;[4]&lt;/a&gt;を改変)</span>
@@ -677,7 +677,7 @@ a = x || y; // xまたはyが真のとき真
 </div>
 
 <h4><a id="h2-2-5-3"></a>if、switch、case</h4>
-<p>条件によって動作や値を変えたいとき、<b>if</b>文を使用します (<span class="listref"><a href="./03-veryl.html#if.only">リスト2.32</a></span>)。if文は式にできます。if式は必ず値を返す必要があり、elseが必須です。</p>
+<p>条件によって動作や値を変えたいとき、<b>if</b>文を使用します (<span class="listref"><a href="./03-veryl.html#if.only">リスト2.32</a></span>)。括弧と<code class="inline-code" translate="no" >else</code>の代わりに<code class="inline-code" translate="no" >?</code>と<code class="inline-code" translate="no" >:</code>を使うことで式にできます。</p>
 <div id="if.only" class="caption-code">
 <span class="caption">リスト2.32: リスト2.32: if文、if式</span>
 <pre class="list language-only" translate="no">var v : logic&lt;32&gt;;
@@ -690,12 +690,7 @@ always_comb {
                 v = 1;
         } else {
                 // WIDTH != 0かつWIDTH != 1のとき
-                v = if WIDTH == 3 { // ifは式にもなる
-                        3
-                } else {
-                        // if式はelseが必須
-                        4
-                };
+                v = if WIDTH == 3 ? 3 : 4; // ifは式にもなる
         }
 }
 </pre>

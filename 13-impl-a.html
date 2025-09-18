@@ -302,13 +302,13 @@
 <p>A拡張の命令を実行するとき、ロードした値をレジスタにライトバックするように変更します(<span class="listref"><a href="./13-impl-a.html#core.veryl.define.wb_data">リスト12.10</a></span>)。</p>
 <div id="core.veryl.define.wb_data" class="caption-code">
 <span class="caption">リスト12.10: リスト12.10: メモリからロードした値をライトバックする (core.veryl)</span>
-<pre class="list language-wb_data" translate="no"><em class="lineno">1: </em>    let wbs_wb_data: UIntX    = if wbs_ctrl.is_lui ?
-<em class="lineno">2: </em>        wbs_imm
-<em class="lineno">3: </em>    : if wbs_ctrl.is_jump ?
-<em class="lineno">4: </em>        wbs_pc + 4
-<em class="lineno">5: </em>    : if wbs_ctrl.is_load <b>|| wbs_ctrl.is_amo</b> ?
-<em class="lineno">6: </em>        wbq_rdata.mem_rdata
-<em class="lineno">7: </em>    : if wbs_ctrl.is_csr ?
+<pre class="list language-wb_data" translate="no"><em class="lineno">1: </em>    let wbs_wb_data: UIntX    = switch {
+<em class="lineno">2: </em>        wbs_ctrl.is_lui                    : wbs_imm,
+<em class="lineno">3: </em>        wbs_ctrl.is_jump                   : wbs_pc + 4,
+<em class="lineno">4: </em>        wbs_ctrl.is_load <b>|| wbs_ctrl.is_amo</b>: wbq_rdata.mem_rdata,
+<em class="lineno">5: </em>        wbs_ctrl.is_csr                    : wbq_rdata.csr_rdata,
+<em class="lineno">6: </em>        default                            : wbq_rdata.alu_result
+<em class="lineno">7: </em>    };
 </pre>
 </div>
 

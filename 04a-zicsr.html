@@ -129,20 +129,44 @@
 <p>これでデコード処理を書く準備が整いました。inst_decoderモジュールの<code class="inline-code" translate="no" >InstCtrl</code>を生成している部分を変更します(<span class="listref"><a href="./04a-zicsr.html#inst_decoder.veryl.create-csrunit-range.decode">リスト4.3</a></span>)。</p>
 <div id="inst_decoder.veryl.create-csrunit-range.decode" class="caption-code">
 <span class="caption">リスト4.3: リスト4.3: OP_SYSTEMとis_csrを追加する (inst_decoder.veryl)</span>
-<pre class="list language-decode" translate="no">                                           is_csrを追加
-    ctrl = {case op {                           ↓
-        OP_LUI   : {InstType::U, T, T, F, F, F, <b>F</b>},
-        OP_AUIPC : {InstType::U, T, F, F, F, F, <b>F</b>},
-        OP_JAL   : {InstType::J, T, F, F, T, F, <b>F</b>},
-        OP_JALR  : {InstType::I, T, F, F, T, F, <b>F</b>},
-        OP_BRANCH: {InstType::B, F, F, F, F, F, <b>F</b>},
-        OP_LOAD  : {InstType::I, T, F, F, F, T, <b>F</b>},
-        OP_STORE : {InstType::S, F, F, F, F, F, <b>F</b>},
-        OP_OP    : {InstType::R, T, F, T, F, F, <b>F</b>},
-        OP_OP_IMM: {InstType::I, T, F, T, F, F, <b>F</b>},
-        <b>OP_SYSTEM: {InstType::I, T, F, F, F, F, T},</b>
-        default  : {InstType::X, F, F, F, F, F, <b>F</b>},
-    }, f3, f7};
+<pre class="list language-decode" translate="no">                                                ↓ is_csrを追加
+        ctrl = {
+            case op {
+                OP_LUI: {
+                    InstType::U, T, T, F, F, F<b>, F</b>
+                },
+                OP_AUIPC: {
+                    InstType::U, T, F, F, F, F<b>, F</b>
+                },
+                OP_JAL: {
+                    InstType::J, T, F, F, T, F<b>, F</b>
+                },
+                OP_JALR: {
+                    InstType::I, T, F, F, T, F<b>, F</b>
+                },
+                OP_BRANCH: {
+                    InstType::B, F, F, F, F, F<b>, F</b>
+                },
+                OP_LOAD: {
+                    InstType::I, T, F, F, F, T<b>, F</b>
+                },
+                OP_STORE: {
+                    InstType::S, F, F, F, F, F<b>, F</b>
+                },
+                OP_OP: {
+                    InstType::R, T, F, T, F, F<b>, F</b>
+                },
+                OP_OP_IMM: {
+                    InstType::I, T, F, T, F, F<b>, F</b>
+                },
+                <b>OP_SYSTEM: {</b>
+                <b>    InstType::I, T, F, F, F, F, T</b>
+                <b>},</b>
+                default: {
+                    InstType::X, F, F, F, F, F<b>, F</b>
+                },
+            }, f3, f7
+        };
 </pre>
 </div>
 <p><span class="listref"><a href="./04a-zicsr.html#inst_decoder.veryl.create-csrunit-range.decode">リスト4.3</a></span>では、opcodeが<code class="inline-code" translate="no" >OP_SYSTEM</code>な命令を、I形式、レジスタに結果を書き込む、CSRを操作する命令であるということにしています。他のopcodeの命令はCSRを操作しない命令であるということにしています。</p>
@@ -208,12 +232,9 @@ module csrunit (
         valid   : inst_valid      ,
         ctrl    : inst_ctrl       ,
         csr_addr: inst_bits[31:20],
-        rs1     : if inst_ctrl.funct3[2] == 1 &amp;&amp; inst_ctrl.funct3[1:0] != 0 {
-            {1'b0 repeat XLEN - $bits(rs1_addr), rs1_addr} // rs1を0で拡張する
-        } else {
-            rs1_data
-        },
-        rdata: csru_rdata,
+        rs1     : if inst_ctrl.funct3[2] == 1 &amp;&amp; inst_ctrl.funct3[1:0] != 0 ? {1'b0 repeat XLEN - $bits(rs1_addr), rs1_addr} // rs1を0で拡張する
+         : rs1_data,
+        rdata: csru_rdata                                                                                                           ,
     );
 </pre>
 </div>
@@ -223,16 +244,12 @@ module csrunit (
 <div id="core.veryl.create-csrunit-range.wb" class="caption-code">
 <span class="caption">リスト4.6: リスト4.6: CSR命令の結果がライトバックされるようにする (core.veryl)</span>
 <pre class="list language-wb" translate="no">    let rd_addr: logic&lt;5&gt; = inst_bits[11:7];
-    let wb_data: UIntX    = if inst_ctrl.is_lui {
-        inst_imm
-    } else if inst_ctrl.is_jump {
-        inst_pc + 4
-    } else if inst_ctrl.is_load {
-        memu_rdata
-    } <b>else if inst_ctrl.is_csr {</b>
-        <b>csru_rdata</b>
-    <b>}</b> else {
-        alu_result
+    let wb_data: UIntX    = switch {
+        inst_ctrl.is_lui : inst_imm,
+        inst_ctrl.is_jump: inst_pc + 4,
+        inst_ctrl.is_load: memu_rdata,
+        <b>inst_ctrl.is_csr : csru_rdata,</b>
+        default          : alu_result
     };
 </pre>
 </div>
@@ -314,7 +331,7 @@ module csrunit (
             2'b10  : rdata | rs1,
             2'b11  : rdata &amp; ~rs1,
             default: 'x,
-        } &amp; wmask;
+        } &amp; wmask | (rdata &amp; ~wmask);
     }
 </pre>
 </div>
@@ -539,13 +556,10 @@ $ <span class="userinput">./obj_dir/sim test/sample_csr.hex 5</span>
         ctrl    : inst_ctrl       ,
         <b>rd_addr                   ,</b>
         csr_addr: inst_bits[31:20],
-        rs1     : if inst_ctrl.funct3[2] == 1 &amp;&amp; inst_ctrl.funct3[1:0] != 0 {
-            {1'b0 repeat XLEN - $bits(rs1_addr), rs1_addr} // rs1を0で拡張する
-        } else {
-            rs1_data
-        },
-        rdata      : csru_rdata,
-        <b>raise_trap : csru_raise_trap,</b>
+        rs1     : if inst_ctrl.funct3[2] == 1 &amp;&amp; inst_ctrl.funct3[1:0] != 0 ? {1'b0 repeat XLEN - $bits(rs1_addr), rs1_addr} // rs1を0で拡張する
+         : rs1_data,
+        rdata      : csru_rdata                                                                                                           ,
+        <b>raise_trap : csru_raise_trap ,</b>
         <b>trap_vector: csru_trap_vector,</b>
     );
 </pre>
@@ -554,17 +568,11 @@ $ <span class="userinput">./obj_dir/sim test/sample_csr.hex 5</span>
 <p>例外が発生するとき、<code class="inline-code" translate="no" >csru_raise_trap</code>が<code class="inline-code" translate="no" >1</code>になり、<code class="inline-code" translate="no" >csru_trap_vector</code>がトラップ先になります。トラップするときの動作には、ジャンプと分岐命令の仕組みを利用します。<code class="inline-code" translate="no" >control_hazard</code>の条件に<code class="inline-code" translate="no" >csru_raise_trap</code>を追加して、トラップするときに<code class="inline-code" translate="no" >control_hazard_pc_next</code>を<code class="inline-code" translate="no" >csru_trap_vector</code>に設定します(<span class="listref"><a href="./04a-zicsr.html#core.veryl.create-ecall-range.hazard">リスト4.25</a></span>)。</p>
 <div id="core.veryl.create-ecall-range.hazard" class="caption-code">
 <span class="caption">リスト4.25: リスト4.25: 例外の発生時にジャンプさせる (core.veryl)</span>
-<pre class="list language-hazard" translate="no">    assign control_hazard = inst_valid &amp;&amp; (
-        <b>csru_raise_trap ||</b>
-        inst_ctrl.is_jump ||
-        inst_is_br(inst_ctrl) &amp;&amp; brunit_take
-    );
-    assign control_hazard_pc_next = <b>if csru_raise_trap {</b>
-        <b>csru_trap_vector</b> <span class="balloon">← トラップするとき、trap_vectorに飛ぶ</span>
-    <b>} else </b>if inst_is_br(inst_ctrl) {
-        inst_pc + inst_imm
-    } else {
-        alu_result &amp; ~1
+<pre class="list language-hazard" translate="no">    assign control_hazard         = inst_valid &amp;&amp; (<b>csru_raise_trap</b> || inst_ctrl.is_jump || inst_is_br(inst_ctrl) &amp;&amp; brunit_take);
+    assign control_hazard_pc_next = <b>switch {</b>
+        <b>csru_raise_trap      : csru_trap_vector,</b><span class="balloon">← トラップするとき、trap_vectorに飛ぶ</span>
+        inst_is_br(inst_ctrl): inst_pc + inst_imm,
+        <b>default</b>              : alu_result &amp; ~1
     };
 </pre>
 </div>
@@ -605,8 +613,10 @@ $ <span class="userinput">./obj_dir/sim test/sample_csr.hex 5</span>
     } else {
         if valid {
             <b>if raise_trap {</b> <span class="balloon">← トラップ時の動作</span>
-                <b>mepc   = pc;</b>
-                <b>mcause = trap_cause;</b>
+                <b>if raise_expt {</b> <span class="balloon">← 例外時の動作</span>
+                    <b>mepc   = pc;</b>
+                    <b>mcause = trap_cause;</b>
+                <b>}</b>
             <b>} else {</b>
                 if is_wsc {
                     ...
@@ -693,11 +703,7 @@ $ <span class="userinput">./obj_dir/sim test/sample_ecall.hex 10</span>
 <pre class="list language-trap" translate="no">    // Trap
     assign raise_trap  = raise_expt <b>|| (valid &amp;&amp; is_mret)</b>;
     let trap_cause : UIntX = expt_cause;
-    assign trap_vector = <b>if raise_expt {</b>
-        mtvec
-    <b>} else {</b>
-        <b>mepc</b>
-    <b>}</b>;
+    assign trap_vector = <b>if raise_expt ?</b> mtvec <b>: mepc</b>;
 </pre>
 </div>
 <div class="note">
