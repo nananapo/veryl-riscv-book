@@ -105,27 +105,22 @@ $ @<userinput>{veryl new core}
 [INFO ]      Created "core" project
 //}
 
-すると、プロジェクト名のディレクトリと、その中に@<code>{Veryl.toml}が作成されます。
-@<code>{Veryl.toml}を次のように変更してください(@<list>{Veryl.toml.first})。
+すると、プロジェクト名のディレクトリと、その中に@<code>{Veryl.toml}、srcディレクトリが作成されます。
+Verylのソースファイルはsrcディレクトリに作成します。
+
+@<code>{Veryl.toml}にはプロジェクトの設定を記述します。
+デフォルトの状態だとソースマップファイルが生成されますが、使用しない場合は@<code>{Veryl.toml}を次のように変更してください(@<list>{Veryl.toml.first})。
 
 //list[Veryl.toml.first][Veryl.toml]{
 #@mapfile(scripts/04/init-range/core/Veryl.toml)
 [project]
 name = "core"
 version = "0.1.0"
-
-@<b>|[build]|
+[build]
+source = "src"
 @<b>|sourcemap_target = {type ="none"}|
+target = {type = "directory", path = "target"}
 #@end
-//}
-
-Verylのソースファイルを格納するために、
-プロジェクトのディレクトリ内にsrcディレクトリを作成してください
-(@<list>{create.src})。
-
-//terminal[create.src][srcディレクトリを作成する]{
-$ @<userinput>{cd core}
-$ @<userinput>{mkdir src}
 //}
 
 == 定数の定義
@@ -209,7 +204,7 @@ rdata		logic<DATA_WIDTH>	output	受容した読み込み命令の結果
 
 //list[membus_if.veryl][インターフェースの定義 (membus_if.veryl)]{
 #@mapfile(scripts/04/memif/core/src/membus_if.veryl)
-interface membus_if::<DATA_WIDTH: const, ADDR_WIDTH: const> {
+interface membus_if::<DATA_WIDTH: u32, ADDR_WIDTH: u32> {
     var valid : logic            ;
     var ready : logic            ;
     var addr  : logic<ADDR_WIDTH>;
@@ -229,13 +224,7 @@ interface membus_if::<DATA_WIDTH: const, ADDR_WIDTH: const> {
     }
 
     modport slave {
-        valid : input ,
-        ready : output,
-        addr  : input ,
-        wen   : input ,
-        wdata : input ,
-        rvalid: output,
-        rdata : output,
+        ..converse(master)
     }
 }
 #@end
@@ -257,7 +246,7 @@ interfaceを利用することで変数の定義が不要になり、
 
 //list[memory.veryl][メモリモジュールの定義 (memory.veryl)]{
 #@mapfile(scripts/04/memif/core/src/memory.veryl)
-module memory::<DATA_WIDTH: const, ADDR_WIDTH: const> #(
+module memory::<DATA_WIDTH: u32, ADDR_WIDTH: u32> #(
     param FILEPATH_IS_ENV: logic  = 0 , // FILEPATHが環境変数名かどうか
     param FILEPATH       : string = "", // メモリの初期化用ファイルのパス, または環境変数名
 ) (
@@ -565,7 +554,7 @@ memoryモジュールは32ビット(=4バイト)単位でデータを整列し�
 #@maprange(scripts/04/create-core-range/core/src/top.veryl,addr_to_memaddr)
     // アドレスをメモリのデータ単位でのアドレスに変換する
     function addr_to_memaddr (
-        addr: input logic<XLEN>          ,
+        addr: input logic<XLEN>,
     ) -> logic<MEM_ADDR_WIDTH> {
         return addr[$clog2(MEM_DATA_WIDTH / 8)+:MEM_ADDR_WIDTH];
     }
@@ -923,18 +912,16 @@ module fifo #(
     param DATA_TYPE: type = logic,
     param WIDTH    : u32  = 2    ,
 ) (
-    clk   : input  clock    ,
-    rst   : input  reset    ,
-    wready: output logic    ,
-    wvalid: input  logic    ,
-    wdata : input  DATA_TYPE,
-    rready: input  logic    ,
-    rvalid: output logic    ,
-    rdata : output DATA_TYPE,
+    clk       : input  clock        ,
+    rst       : input  reset        ,
+    wready    : output logic        ,
+    wready_two: output logic     = _,
+    wvalid    : input  logic        ,
+    wdata     : input  DATA_TYPE    ,
+    rready    : input  logic        ,
+    rvalid    : output logic        ,
+    rdata     : output DATA_TYPE    ,
 ) {
-    // 2つ以上空きがあるかどうか
-    var wready_two: logic;
-
     if WIDTH == 1 :width_one {
         always_comb {
             wready     = !rvalid || rready;
@@ -942,6 +929,7 @@ module fifo #(
         }
         always_ff {
             if_reset {
+                rdata  = 0;
                 rvalid = 0;
             } else {
                 if wready && wvalid {
@@ -1038,12 +1026,13 @@ fifoモジュールを使って、命令フェッチ処理を変更します。
 //list[core.veryl.if-fifo-range.fifo_reg][FIFOと接続するための変数を定義する (core.veryl)]{
 #@maprange(scripts/04/if-fifo-range/core/src/core.veryl,fifo_reg)
     // FIFOの制御用レジスタ
-    var if_fifo_wready: logic       ;
-    var if_fifo_wvalid: logic       ;
-    var if_fifo_wdata : if_fifo_type;
-    var if_fifo_rready: logic       ;
-    var if_fifo_rvalid: logic       ;
-    var if_fifo_rdata : if_fifo_type;
+    var if_fifo_wready    : logic       ;
+    var if_fifo_wready_two: logic       ;
+    var if_fifo_wvalid    : logic       ;
+    var if_fifo_wdata     : if_fifo_type;
+    var if_fifo_rready    : logic       ;
+    var if_fifo_rvalid    : logic       ;
+    var if_fifo_rdata     : if_fifo_type;
 #@end
 //}
 
@@ -1061,14 +1050,15 @@ FIFOモジュールをインスタンス化します(@<list>{core.veryl.if-fifo-
         DATA_TYPE: if_fifo_type,
         WIDTH    : 3           ,
     ) (
-        clk                   ,
-        rst                   ,
-        wready: if_fifo_wready,
-        wvalid: if_fifo_wvalid,
-        wdata : if_fifo_wdata ,
-        rready: if_fifo_rready,
-        rvalid: if_fifo_rvalid,
-        rdata : if_fifo_rdata ,
+        clk                           ,
+        rst                           ,
+        wready    : if_fifo_wready    ,
+        wready_two: if_fifo_wready_two,
+        wvalid    : if_fifo_wvalid    ,
+        wdata     : if_fifo_wdata     ,
+        rready    : if_fifo_rready    ,
+        rvalid    : if_fifo_rvalid    ,
+        rdata     : if_fifo_rdata     ,
     );
 #@end
 //}
@@ -1081,7 +1071,7 @@ fifoモジュールをインスタンス化したので、
     // 命令フェッチ処理
     always_comb {
         // FIFOに2個以上空きがあるとき、命令をフェッチする
-        membus.valid = @<b>|if_fifo.wready_two|;
+        membus.valid = @<b>|if_fifo_wready_two|;
         membus.addr  = if_pc;
         membus.wen   = 0;
         membus.wdata = 'x; // wdataは使用しない
@@ -2269,7 +2259,7 @@ module core (
 //list[core.veryl.lwsw-range.fetch][membusをi_membusに置き換える (core.veryl)]{
 #@maprange(scripts/04/lwsw-range/core/src/core.veryl,fetch)
     // FIFOに2個以上空きがあるとき、命令をフェッチする
-    @<b>|i_|membus.valid = if_fifo.wready_two;
+    @<b>|i_|membus.valid = if_fifo_wready_two;
     @<b>|i_|membus.addr  = if_pc;
     @<b>|i_|membus.wen   = 0;
     @<b>|i_|membus.wdata = 'x; // wdataは使用しない
@@ -2613,8 +2603,7 @@ memoryモジュールは、32ビット単位の読み書きしかサポートし
 書き込む場所をバイト単位で示す信号@<code>{wmask}を追加します
 (
 @<list>{membus_if.veryl.lbhsbh-range.wmask}, 
-@<list>{membus_if.veryl.lbhsbh-range.master},
-@<list>{membus_if.veryl.lbhsbh-range.slave}
+@<list>{membus_if.veryl.lbhsbh-range.master}
 )。
 
 //list[membus_if.veryl.lbhsbh-range.wmask][wmaskの定義 (membus_if.veryl)]{
@@ -2623,21 +2612,11 @@ memoryモジュールは、32ビット単位の読み書きしかサポートし
 #@end
 //}
 
-//list[membus_if.veryl.lbhsbh-range.master][modport masterにwmaskを追加する (membus_if.veryl)]{
+//list[membus_if.veryl.lbhsbh-range.master][modport masterとslaveにwmaskを追加する (membus_if.veryl)]{
 #@maprange(scripts/04/lbhsbh-range/core/src/membus_if.veryl,master)
     modport master {
         ...
         @<b>|wmask : output,|
-        ...
-    }
-#@end
-//}
-
-//list[membus_if.veryl.lbhsbh-range.slave][modport slaveにwmaskを追加する (membus_if.veryl)]{
-#@maprange(scripts/04/lbhsbh-range/core/src/membus_if.veryl,slave)
-    modport slave {
-        ...
-        @<b>|wmask : input ,|
         ...
     }
 #@end
@@ -2651,7 +2630,7 @@ memoryモジュールは、32ビット単位の読み書きしかサポートし
 
 //list[memory.veryl.lbhsbh][書き込みマスクをサポートするmemoryモジュール (memory.veryl)]{
 #@mapfile(scripts/04/lbhsbh/core/src/memory.veryl)
-module memory::<DATA_WIDTH: const, ADDR_WIDTH: const> #(
+module memory::<DATA_WIDTH: u32, ADDR_WIDTH: u32> #(
     param FILEPATH_IS_ENV: logic  = 0 , // FILEPATHが環境変数名かどうか
     param FILEPATH       : string = "", // メモリの初期化用ファイルのパス, または環境変数名
 ) (
@@ -3003,10 +2982,10 @@ module fifo #(
     param DATA_TYPE: type = logic,
     param WIDTH    : u32  = 2    ,
 ) (
-    clk   : input  clock    ,
-    rst   : input  reset    ,
-    @<b>|flush : input  logic    ,|
-    wready: output logic    ,
+    clk       : input  clock        ,
+    rst       : input  reset        ,
+    @<b>|flush     : input  logic        ,|
+    wready    : output logic        ,
 #@end
 //}
 
@@ -3017,6 +2996,7 @@ module fifo #(
 #@maprange(scripts/04/jump-range/core/src/fifo.veryl,always_one)
     always_ff {
         if_reset {
+            rdata  = 0;
             rvalid = 0;
         } else {
             @<b>|if flush {|
@@ -3068,9 +3048,9 @@ FIFOをリセットします(@<list>{core.veryl.jump-range.fifo})。
         DATA_TYPE: if_fifo_type,
         WIDTH    : 3           ,
     ) (
-        clk                   ,
-        rst                   ,
-        @<b>|flush : control_hazard,|
+        clk                           ,
+        rst                           ,
+        @<b>|flush     : control_hazard    ,|
         ...
     );
 #@end

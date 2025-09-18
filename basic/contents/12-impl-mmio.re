@@ -161,9 +161,6 @@ module top #(
     param RAM_FILEPATH_IS_ENV: bit    = 1              ,
     param RAM_FILEPATH       : string = "RAM_FILE_PATH",
 ) (
-    clk          : input clock,
-    rst          : input reset,
-    MMAP_DBG_ADDR: input Addr ,
 #@end
 //}
 

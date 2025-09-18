@@ -231,7 +231,6 @@ PTWで発生した例外は、最終的にcsrunitモジュールで処理しま�
 (
 @<list>{membus_if.veryl.newexpt.var}、
 @<list>{membus_if.veryl.newexpt.master}、
-@<list>{membus_if.veryl.newexpt.slave}、
 @<list>{membus_if.veryl.newexpt.response}
 )。
 インターフェースの@<code>{rvalid}が@<code>{1}で、
@@ -249,16 +248,6 @@ PTWで発生した例外は、最終的にcsrunitモジュールで処理しま�
     modport master {
         ...
         @<b>|expt        : input ,|
-        ...
-    }
-#@end
-//}
-
-//list[membus_if.veryl.newexpt.slave][slaveにexptを追加する (membus_if.veryl)][lineno=on]{
-#@maprange(scripts/24/newexpt-range/core/src/membus_if.veryl,slave)
-    modport slave {
-        ...
-        @<b>|expt        : output,|
         ...
     }
 #@end
