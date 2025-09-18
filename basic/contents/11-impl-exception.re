@@ -318,9 +318,9 @@ mtvalレジスタを実装して、書き込み、読み込みできるように
 
 //list[csrunit.veryl.mtval-range.info][tvalを変数に割り当てる (csrunit.veryl)][lineno=on]{
 #@maprange(scripts/11/mtval-range/core/src/csrunit.veryl,info)
-    let raise_expt : logic = valid && expt_info.valid;
-    let expt_cause : UIntX = expt_info.cause;
-    @<b>|let expt_value : UIntX = expt_info.value;|
+    let raise_expt: logic = valid && expt_info.valid;
+    let expt_cause: UIntX = expt_info.cause;
+    @<b>|let expt_value: UIntX = expt_info.value;|
 #@end
 //}
 
@@ -433,41 +433,41 @@ module inst_decoder (
 
 //list[inst_decoder.veryl.instillegal-range.valid][命令の有効判定を行う (inst_decoder.veryl)][lineno=on]{
 #@maprange(scripts/11/instillegal-range/core/src/inst_decoder.veryl,valid)
-valid = case op {
-    OP_LUI, OP_AUIPC, OP_JAL, OP_JALR: T,
-    OP_BRANCH                        : f3 != 3'b010 && f3 != 3'b011,
-    OP_LOAD                          : f3 != 3'b111,
-    OP_STORE                         : f3[2] == 1'b0,
-    OP_OP                            : case f7 {
-        7'b0000000                       : T, // RV32I
-        7'b0100000                       : f3 == 3'b000 || f3 == 3'b101, // SUB, SRA
-        7'b0000001                       : T, // RV32M
-        default                          : F,
-    },
-    OP_OP_IMM: case f3 {
-        3'b001   : f7[6:1] == 6'b000000, // SLLI (RV64I)
-        3'b101   : f7[6:1] == 6'b000000 || f7[6:1] == 6'b010000, // SRLI, SRAI (RV64I)
-        default  : T,
-    },
-    OP_OP_32  : case f7 {
-        7'b0000001: f3 == 3'b000 || f3[2] == 1'b1, // RV64M
-        7'b0000000: f3 == 3'b000 || f3 == 3'b001 || f3 == 3'b101, // ADDW, SLLW, SRLW
-        7'b0100000: f3 == 3'b000 || f3 == 3'b101, // SUBW, SRAW
-        default   : F,
-    },
-    OP_OP_IMM_32: case f3 {
-        3'b000      : T, // ADDIW
-        3'b001      : f7 == 7'b0000000, // SLLIW
-        3'b101      : f7 == 7'b0000000 || f7 == 7'b0100000, // SRLIW, SRAIW
-        default     : F,
-    },
-    OP_SYSTEM: f3 != 3'b000 && f3 != 3'b100 || // CSRR(W|S|C)[I]
-     bits == 32'h00000073 || // ECALL
-     bits == 32'h00100073 || // EBREAK
-     bits == 32'h30200073, //MRET
-    OP_MISC_MEM: T, // FENCE
-    default    : F,
-};
+        valid = case op {
+            OP_LUI, OP_AUIPC, OP_JAL, OP_JALR: T,
+            OP_BRANCH                        : f3 != 3'b010 && f3 != 3'b011,
+            OP_LOAD                          : f3 != 3'b111,
+            OP_STORE                         : f3[2] == 1'b0,
+            OP_OP                            : case f7 {
+                7'b0000000: T, // RV32I
+                7'b0100000: f3 == 3'b000 || f3 == 3'b101, // SUB, SRA
+                7'b0000001: T, // RV32M
+                default   : F,
+            },
+            OP_OP_IMM: case f3 {
+                3'b001 : f7[6:1] == 6'b000000, // SLLI (RV64I)
+                3'b101 : f7[6:1] == 6'b000000 || f7[6:1] == 6'b010000, // SRLI, SRAI (RV64I)
+                default: T,
+            },
+            OP_OP_32: case f7 {
+                7'b0000001: f3 == 3'b000 || f3[2] == 1'b1, // RV64M
+                7'b0000000: f3 == 3'b000 || f3 == 3'b001 || f3 == 3'b101, // ADDW, SLLW, SRLW
+                7'b0100000: f3 == 3'b000 || f3 == 3'b101, // SUBW, SRAW
+                default   : F,
+            },
+            OP_OP_IMM_32: case f3 {
+                3'b000 : T, // ADDIW
+                3'b001 : f7 == 7'b0000000, // SLLIW
+                3'b101 : f7 == 7'b0000000 || f7 == 7'b0100000, // SRLIW, SRAIW
+                default: F,
+            },
+            OP_SYSTEM: f3 != 3'b000 && f3 != 3'b100 || // CSRR(W|S|C)[I]
+             bits == 32'h00000073 || // ECALL
+             bits == 32'h00100073 || // EBREAK
+             bits == 32'h30200073, //MRET
+            OP_MISC_MEM: T, // FENCE
+            default    : F,
+        };
 #@end
 //}
 

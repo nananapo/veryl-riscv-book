@@ -320,9 +320,9 @@
 <p>例外が発生するとき、mtvalレジスタに<code class="inline-code" translate="no" >expt_info.value</code>を書き込むようにします(<span class="listref"><a href="./11-impl-exception.html#csrunit.veryl.mtval-range.info">リスト10.19</a></span>、<span class="listref"><a href="./11-impl-exception.html#csrunit.veryl.mtval-range.update">リスト10.20</a></span>)。</p>
 <div id="csrunit.veryl.mtval-range.info" class="caption-code">
 <span class="caption">リスト10.19: リスト10.19: tvalを変数に割り当てる (csrunit.veryl)</span>
-<pre class="list language-info" translate="no"><em class="lineno">1: </em>    let raise_expt : logic = valid &amp;&amp; expt_info.valid;
-<em class="lineno">2: </em>    let expt_cause : UIntX = expt_info.cause;
-<em class="lineno">3: </em>    <b>let expt_value : UIntX = expt_info.value;</b>
+<pre class="list language-info" translate="no"><em class="lineno">1: </em>    let raise_expt: logic = valid &amp;&amp; expt_info.valid;
+<em class="lineno">2: </em>    let expt_cause: UIntX = expt_info.cause;
+<em class="lineno">3: </em>    <b>let expt_value: UIntX = expt_info.value;</b>
 </pre>
 </div>
 <div id="csrunit.veryl.mtval-range.update" class="caption-code">
@@ -404,41 +404,41 @@
 <p>今のところ実装してある命令を有効な命令として判定する処理をalways_combブロックに記述します(<span class="listref"><a href="./11-impl-exception.html#inst_decoder.veryl.instillegal-range.valid">リスト10.25</a></span>)。</p>
 <div id="inst_decoder.veryl.instillegal-range.valid" class="caption-code">
 <span class="caption">リスト10.25: リスト10.25: 命令の有効判定を行う (inst_decoder.veryl)</span>
-<pre class="list language-valid" translate="no"><em class="lineno">1: </em>valid = case op {
-<em class="lineno">2: </em>    OP_LUI, OP_AUIPC, OP_JAL, OP_JALR: T,
-<em class="lineno">3: </em>    OP_BRANCH                        : f3 != 3'b010 &amp;&amp; f3 != 3'b011,
-<em class="lineno">4: </em>    OP_LOAD                          : f3 != 3'b111,
-<em class="lineno">5: </em>    OP_STORE                         : f3[2] == 1'b0,
-<em class="lineno">6: </em>    OP_OP                            : case f7 {
-<em class="lineno">7: </em>        7'b0000000                       : T, // RV32I
-<em class="lineno">8: </em>        7'b0100000                       : f3 == 3'b000 || f3 == 3'b101, // SUB, SRA
-<em class="lineno">9: </em>        7'b0000001                       : T, // RV32M
-<em class="lineno">10: </em>        default                          : F,
-<em class="lineno">11: </em>    },
-<em class="lineno">12: </em>    OP_OP_IMM: case f3 {
-<em class="lineno">13: </em>        3'b001   : f7[6:1] == 6'b000000, // SLLI (RV64I)
-<em class="lineno">14: </em>        3'b101   : f7[6:1] == 6'b000000 || f7[6:1] == 6'b010000, // SRLI, SRAI (RV64I)
-<em class="lineno">15: </em>        default  : T,
-<em class="lineno">16: </em>    },
-<em class="lineno">17: </em>    OP_OP_32  : case f7 {
-<em class="lineno">18: </em>        7'b0000001: f3 == 3'b000 || f3[2] == 1'b1, // RV64M
-<em class="lineno">19: </em>        7'b0000000: f3 == 3'b000 || f3 == 3'b001 || f3 == 3'b101, // ADDW, SLLW, SRLW
-<em class="lineno">20: </em>        7'b0100000: f3 == 3'b000 || f3 == 3'b101, // SUBW, SRAW
-<em class="lineno">21: </em>        default   : F,
-<em class="lineno">22: </em>    },
-<em class="lineno">23: </em>    OP_OP_IMM_32: case f3 {
-<em class="lineno">24: </em>        3'b000      : T, // ADDIW
-<em class="lineno">25: </em>        3'b001      : f7 == 7'b0000000, // SLLIW
-<em class="lineno">26: </em>        3'b101      : f7 == 7'b0000000 || f7 == 7'b0100000, // SRLIW, SRAIW
-<em class="lineno">27: </em>        default     : F,
-<em class="lineno">28: </em>    },
-<em class="lineno">29: </em>    OP_SYSTEM: f3 != 3'b000 &amp;&amp; f3 != 3'b100 || // CSRR(W|S|C)[I]
-<em class="lineno">30: </em>     bits == 32'h00000073 || // ECALL
-<em class="lineno">31: </em>     bits == 32'h00100073 || // EBREAK
-<em class="lineno">32: </em>     bits == 32'h30200073, //MRET
-<em class="lineno">33: </em>    OP_MISC_MEM: T, // FENCE
-<em class="lineno">34: </em>    default    : F,
-<em class="lineno">35: </em>};
+<pre class="list language-valid" translate="no"><em class="lineno">1: </em>        valid = case op {
+<em class="lineno">2: </em>            OP_LUI, OP_AUIPC, OP_JAL, OP_JALR: T,
+<em class="lineno">3: </em>            OP_BRANCH                        : f3 != 3'b010 &amp;&amp; f3 != 3'b011,
+<em class="lineno">4: </em>            OP_LOAD                          : f3 != 3'b111,
+<em class="lineno">5: </em>            OP_STORE                         : f3[2] == 1'b0,
+<em class="lineno">6: </em>            OP_OP                            : case f7 {
+<em class="lineno">7: </em>                7'b0000000: T, // RV32I
+<em class="lineno">8: </em>                7'b0100000: f3 == 3'b000 || f3 == 3'b101, // SUB, SRA
+<em class="lineno">9: </em>                7'b0000001: T, // RV32M
+<em class="lineno">10: </em>                default   : F,
+<em class="lineno">11: </em>            },
+<em class="lineno">12: </em>            OP_OP_IMM: case f3 {
+<em class="lineno">13: </em>                3'b001 : f7[6:1] == 6'b000000, // SLLI (RV64I)
+<em class="lineno">14: </em>                3'b101 : f7[6:1] == 6'b000000 || f7[6:1] == 6'b010000, // SRLI, SRAI (RV64I)
+<em class="lineno">15: </em>                default: T,
+<em class="lineno">16: </em>            },
+<em class="lineno">17: </em>            OP_OP_32: case f7 {
+<em class="lineno">18: </em>                7'b0000001: f3 == 3'b000 || f3[2] == 1'b1, // RV64M
+<em class="lineno">19: </em>                7'b0000000: f3 == 3'b000 || f3 == 3'b001 || f3 == 3'b101, // ADDW, SLLW, SRLW
+<em class="lineno">20: </em>                7'b0100000: f3 == 3'b000 || f3 == 3'b101, // SUBW, SRAW
+<em class="lineno">21: </em>                default   : F,
+<em class="lineno">22: </em>            },
+<em class="lineno">23: </em>            OP_OP_IMM_32: case f3 {
+<em class="lineno">24: </em>                3'b000 : T, // ADDIW
+<em class="lineno">25: </em>                3'b001 : f7 == 7'b0000000, // SLLIW
+<em class="lineno">26: </em>                3'b101 : f7 == 7'b0000000 || f7 == 7'b0100000, // SRLIW, SRAIW
+<em class="lineno">27: </em>                default: F,
+<em class="lineno">28: </em>            },
+<em class="lineno">29: </em>            OP_SYSTEM: f3 != 3'b000 &amp;&amp; f3 != 3'b100 || // CSRR(W|S|C)[I]
+<em class="lineno">30: </em>             bits == 32'h00000073 || // ECALL
+<em class="lineno">31: </em>             bits == 32'h00100073 || // EBREAK
+<em class="lineno">32: </em>             bits == 32'h30200073, //MRET
+<em class="lineno">33: </em>            OP_MISC_MEM: T, // FENCE
+<em class="lineno">34: </em>            default    : F,
+<em class="lineno">35: </em>        };
 </pre>
 </div>
 <p>riscv-testsでメモリ読み書きの順序を保証するFENCE命令<sup><a id="fnb-memory.order" href="#fn-memory.order" class="noteref" epub:type="noteref">*4</a></sup>を使用しているため、opcodeがOP-MISCである命令を合法な命令として取り扱っています。OP-MISCのopcode(<code class="inline-code" translate="no" >7'b0001111</code>)をeeiパッケージに定義してください(<span class="listref"><a href="./11-impl-exception.html#eei.veryl.instillegal-range.op">リスト10.26</a></span>)。</p>

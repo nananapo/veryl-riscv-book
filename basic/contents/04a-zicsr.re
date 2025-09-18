@@ -72,20 +72,44 @@ inst_decoderモジュールの@<code>{InstCtrl}を生成している部分を変
 
 //list[inst_decoder.veryl.create-csrunit-range.decode][OP_SYSTEMとis_csrを追加する (inst_decoder.veryl)]{
 #@maprange(scripts/04a/create-csrunit-range/core/src/inst_decoder.veryl,decode)
-                                           is_csrを追加
-    ctrl = {case op {                           ↓
-        OP_LUI   : {InstType::U, T, T, F, F, F, @<b>|F|},
-        OP_AUIPC : {InstType::U, T, F, F, F, F, @<b>|F|},
-        OP_JAL   : {InstType::J, T, F, F, T, F, @<b>|F|},
-        OP_JALR  : {InstType::I, T, F, F, T, F, @<b>|F|},
-        OP_BRANCH: {InstType::B, F, F, F, F, F, @<b>|F|},
-        OP_LOAD  : {InstType::I, T, F, F, F, T, @<b>|F|},
-        OP_STORE : {InstType::S, F, F, F, F, F, @<b>|F|},
-        OP_OP    : {InstType::R, T, F, T, F, F, @<b>|F|},
-        OP_OP_IMM: {InstType::I, T, F, T, F, F, @<b>|F|},
-        @<b>|OP_SYSTEM: {InstType::I, T, F, F, F, F, T},|
-        default  : {InstType::X, F, F, F, F, F, @<b>|F|},
-    }, f3, f7};
+                                                ↓ is_csrを追加
+        ctrl = {
+            case op {
+                OP_LUI: {
+                    InstType::U, T, T, F, F, F@<b>|, F|
+                },
+                OP_AUIPC: {
+                    InstType::U, T, F, F, F, F@<b>|, F|
+                },
+                OP_JAL: {
+                    InstType::J, T, F, F, T, F@<b>|, F|
+                },
+                OP_JALR: {
+                    InstType::I, T, F, F, T, F@<b>|, F|
+                },
+                OP_BRANCH: {
+                    InstType::B, F, F, F, F, F@<b>|, F|
+                },
+                OP_LOAD: {
+                    InstType::I, T, F, F, F, T@<b>|, F|
+                },
+                OP_STORE: {
+                    InstType::S, F, F, F, F, F@<b>|, F|
+                },
+                OP_OP: {
+                    InstType::R, T, F, T, F, F@<b>|, F|
+                },
+                OP_OP_IMM: {
+                    InstType::I, T, F, T, F, F@<b>|, F|
+                },
+                @<b>|OP_SYSTEM: {|
+                @<b>|    InstType::I, T, F, F, F, F, T|
+                @<b>|},|
+                default: {
+                    InstType::X, F, F, F, F, F@<b>|, F|
+                },
+            }, f3, f7
+        };
 #@end
 //}
 
@@ -170,12 +194,9 @@ csrunitモジュールを、coreモジュールの中でインスタンス化し
         valid   : inst_valid      ,
         ctrl    : inst_ctrl       ,
         csr_addr: inst_bits[31:20],
-        rs1     : if inst_ctrl.funct3[2] == 1 && inst_ctrl.funct3[1:0] != 0 {
-            {1'b0 repeat XLEN - $bits(rs1_addr), rs1_addr} // rs1を0で拡張する
-        } else {
-            rs1_data
-        },
-        rdata: csru_rdata,
+        rs1     : if inst_ctrl.funct3[2] == 1 && inst_ctrl.funct3[1:0] != 0 ? {1'b0 repeat XLEN - $bits(rs1_addr), rs1_addr} // rs1を0で拡張する
+         : rs1_data,
+        rdata: csru_rdata                                                                                                           ,
     );
 #@end
 //}
@@ -197,16 +218,12 @@ csrunitモジュールをインスタンス化しています。
 //list[core.veryl.create-csrunit-range.wb][CSR命令の結果がライトバックされるようにする (core.veryl)]{
 #@maprange(scripts/04a/create-csrunit-range/core/src/core.veryl,wb)
     let rd_addr: logic<5> = inst_bits[11:7];
-    let wb_data: UIntX    = if inst_ctrl.is_lui {
-        inst_imm
-    } else if inst_ctrl.is_jump {
-        inst_pc + 4
-    } else if inst_ctrl.is_load {
-        memu_rdata
-    } @<b>|else if inst_ctrl.is_csr {|
-        @<b>|csru_rdata|
-    @<b>|}| else {
-        alu_result
+    let wb_data: UIntX    = switch {
+        inst_ctrl.is_lui : inst_imm,
+        inst_ctrl.is_jump: inst_pc + 4,
+        inst_ctrl.is_load: memu_rdata,
+        @<b>|inst_ctrl.is_csr : csru_rdata,|
+        default          : alu_result
     };
 #@end
 //}
@@ -329,7 +346,7 @@ mtvecレジスタの読み込みを実装します(@<list>{csrunit.veryl.create-
             2'b10  : rdata | rs1,
             2'b11  : rdata & ~rs1,
             default: 'x,
-        } & wmask;
+        } & wmask | (rdata & ~wmask);
     }
 #@end
 //}
@@ -645,13 +662,10 @@ csrunitモジュールと接続するための変数を定義してcsrunitモジ
         ctrl    : inst_ctrl       ,
         @<b>|rd_addr                   ,|
         csr_addr: inst_bits[31:20],
-        rs1     : if inst_ctrl.funct3[2] == 1 && inst_ctrl.funct3[1:0] != 0 {
-            {1'b0 repeat XLEN - $bits(rs1_addr), rs1_addr} // rs1を0で拡張する
-        } else {
-            rs1_data
-        },
-        rdata      : csru_rdata,
-        @<b>|raise_trap : csru_raise_trap,|
+        rs1     : if inst_ctrl.funct3[2] == 1 && inst_ctrl.funct3[1:0] != 0 ? {1'b0 repeat XLEN - $bits(rs1_addr), rs1_addr} // rs1を0で拡張する
+         : rs1_data,
+        rdata      : csru_rdata                                                                                                           ,
+        @<b>|raise_trap : csru_raise_trap ,|
         @<b>|trap_vector: csru_trap_vector,|
     );
 #@end
@@ -670,17 +684,11 @@ csrunitモジュールと接続するための変数を定義してcsrunitモジ
 
 //list[core.veryl.create-ecall-range.hazard][例外の発生時にジャンプさせる (core.veryl)]{
 #@maprange(scripts/04a/create-ecall-range/core/src/core.veryl,hazard)
-    assign control_hazard = inst_valid && (
-        @<b>{csru_raise_trap ||}
-        inst_ctrl.is_jump ||
-        inst_is_br(inst_ctrl) && brunit_take
-    );
-    assign control_hazard_pc_next = @<b>|if csru_raise_trap {|
-        @<b>|csru_trap_vector| @<balloon>{トラップするとき、trap_vectorに飛ぶ}
-    @<b>|} else |if inst_is_br(inst_ctrl) {
-        inst_pc + inst_imm
-    } else {
-        alu_result & ~1
+    assign control_hazard         = inst_valid && (@<b>|csru_raise_trap| || inst_ctrl.is_jump || inst_is_br(inst_ctrl) && brunit_take);
+    assign control_hazard_pc_next = @<b>|switch {|
+        @<b>|csru_raise_trap      : csru_trap_vector,|@<balloon>{トラップするとき、trap_vectorに飛ぶ}
+        inst_is_br(inst_ctrl): inst_pc + inst_imm,
+        @<b>|default|              : alu_result & ~1
     };
 #@end
 //}
@@ -743,8 +751,10 @@ always_ff {
     } else {
         if valid {
             @<b>|if raise_trap {| @<balloon>{トラップ時の動作}
-                @<b>|mepc   = pc;|
-                @<b>|mcause = trap_cause;|
+                @<b>|if raise_expt {| @<balloon>{例外時の動作}
+                    @<b>|mepc   = pc;|
+                    @<b>|mcause = trap_cause;|
+                @<b>|}|
             @<b>|} else {|
                 if is_wsc {
                     ...
@@ -862,11 +872,7 @@ csrunitモジュールにMRET命令が供給されているときにmepcにジ�
     // Trap
     assign raise_trap  = raise_expt @<b>{|| (valid && is_mret)};
     let trap_cause : UIntX = expt_cause;
-    assign trap_vector = @<b>|if raise_expt {|
-        mtvec
-    @<b>|} else {|
-        @<b>|mepc|
-    @<b>|}|;
+    assign trap_vector = @<b>|if raise_expt ?| mtvec @<b>|: mepc|;
 #@end
 //}
 

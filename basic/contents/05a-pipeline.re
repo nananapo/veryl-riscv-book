@@ -514,16 +514,8 @@ EXステージでは、
     let @<b>|exs_|rs2_addr: logic<5> = @<b>|exs|_inst_bits[24:20];
 
     // ソースレジスタのデータ
-    let @<b>|exs_|rs1_data: UIntX = if @<b>|exs_|rs1_addr == 0 {
-        0
-    } else {
-        regfile[@<b>|exs_|rs1_addr]
-    };
-    let @<b>|exs_|rs2_data: UIntX = if @<b>|exs_|rs2_addr == 0 {
-        0
-    } else {
-        regfile[@<b>|exs_|rs2_addr]
-    };
+    let @<b>|exs_|rs1_data: UIntX = if @<b>|exs_|rs1_addr == 0 ? 0 : regfile[@<b>|exs_|rs1_addr];
+    let @<b>|exs_|rs2_data: UIntX = if @<b>|exs_|rs2_addr == 0 ? 0 : regfile[@<b>|exs_|rs2_addr];
 
     // ALU
     var @<b>|exs_|op1       : UIntX;
@@ -533,21 +525,21 @@ EXステージでは、
     always_comb {
         case @<b>|exs|_ctrl.itype {
             InstType::R, InstType::B: {
-                                          @<b>|exs_|op1 = @<b>|exs_|rs1_data;
-                                          @<b>|exs_|op2 = @<b>|exs_|rs2_data;
-                                      }
+                @<b>|exs_|op1 = @<b>|exs_|rs1_data;
+                @<b>|exs_|op2 = @<b>|exs_|rs2_data;
+            }
             InstType::I, InstType::S: {
-                                          @<b>|exs_|op1 = @<b>|exs_|rs1_data;
-                                          @<b>|exs_|op2 = @<b>|exs|_imm;
-                                      }
+                @<b>|exs_|op1 = @<b>|exs_|rs1_data;
+                @<b>|exs_|op2 = @<b>|exs|_imm;
+            }
             InstType::U, InstType::J: {
-                                          @<b>|exs_|op1 = @<b>|exs|_pc;
-                                          @<b>|exs_|op2 = @<b>|exs|_imm;
-                                      }
+                @<b>|exs_|op1 = @<b>|exs|_pc;
+                @<b>|exs_|op2 = @<b>|exs|_imm;
+            }
             default: {
-                         @<b>|exs_|op1 = 'x;
-                         @<b>|exs_|op2 = 'x;
-                     }
+                @<b>|exs_|op1 = 'x;
+                @<b>|exs_|op2 = 'x;
+            }
         }
     }
 
@@ -590,11 +582,7 @@ MEMステージにデータを渡すために、
         memq_wdata.alu_result = exs_alu_result;
         @<balloon>{ジャンプ命令、または、分岐命令かつ分岐が成立するとき、1にする}
         memq_wdata.br_taken   = exs_ctrl.is_jump || inst_is_br(exs_ctrl) && exs_brunit_take;
-        memq_wdata.jump_addr  = if inst_is_br(exs_ctrl) {
-            exs_pc + exs_imm @<balloon>{分岐命令の分岐先アドレス}
-        } else {
-            exs_alu_result & ~1 @<balloon>{ジャンプ命令のジャンプ先アドレス}
-        };
+        memq_wdata.jump_addr  = if inst_is_br(exs_ctrl) ? exs_pc + exs_imm : exs_alu_result & ~1;
     }
 #@end
 //}
@@ -691,13 +679,13 @@ memunitモジュールとcsrunitモジュールのポートに割り当ててい
         ctrl    : @<b>|mems|_ctrl            ,
         rd_addr : @<b>|mems|_rd_addr         ,
         csr_addr: @<b>|mems|_inst_bits[31:20],
-        rs1     : if @<b>|mems|_ctrl.funct3[2] == 1 && @<b>|mems|_ctrl.funct3[1:0] != 0 {
+        rs1     : if @<b>|mems|_ctrl.funct3[2] == 1 && @<b>|mems|_ctrl.funct3[1:0] != 0 ?
             {1'b0 repeat XLEN - $bits(@<b>|memq_rdata.|rs1_addr), @<b>|memq_rdata.|rs1_addr} // rs1を0で拡張する
-        } else {
+        :
             @<b>|memq_rdata.|rs1_data
-        },
-        rdata      : csru_rdata,
-        raise_trap : csru_raise_trap,
+        ,
+        rdata      : csru_rdata      ,
+        raise_trap : csru_raise_trap ,
         trap_vector: csru_trap_vector,
     );
 #@end
@@ -710,12 +698,8 @@ EXステージで計算したデータとCSRステージのトラップ情報を
 
 //list[mem_prefix1][ジャンプの判定処理 (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,mem_prefix1)
-    assign control_hazard         = @<b>|mems|_valid && (csru_raise_trap || @<b>|mems|_ctrl.is_jump || @<b>|memq_rdata.|br_taken);
-    assign control_hazard_pc_next = if csru_raise_trap {
-        csru_trap_vector
-    } else {
-        @<b>|memq_rdata.|jump_addr
-    };
+    assign control_hazard         = @<b>|mems|_valid && (csru_raise_trap || @<b>|mems_|ctrl.is_jump || @<b>|memq_rdata.|br_taken);
+    assign control_hazard_pc_next = if csru_raise_trap ? csru_trap_vector : @<b>|memq_rdata.|jump_addr;
 #@end
 //}
 
@@ -779,17 +763,13 @@ WBステージが完了したら命令の処理は終わりなので、命令を
 
 //list[wb_prefix][変数名を変更する (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,wb_prefix)
-    let @<b>|wbs_|rd_addr: logic<5> = @<b>|wbs|_inst_bits[11:7];
-    let @<b>|wbs_|wb_data: UIntX    = if @<b>|wbs|_ctrl.is_lui {
-        @<b>|wbs|_imm
-    } else if @<b>|wbs|_ctrl.is_jump {
-        @<b>|wbs_pc| + 4
-    } else if @<b>|wbs|_ctrl.is_load {
-        @<b>|wbq_rdata.|mem_rdata
-    } else if @<b>|wbs|_ctrl.is_csr {
-        @<b>|wbq_rdata.|csr_rdata
-    } else {
-        @<b>|wbq_rdata.|alu_result
+    let @<b>|wbs_|rd_addr: logic<5> = @<b>|wbs_|inst_bits[11:7];
+    let @<b>|wbs_|wb_data: UIntX    = switch {
+        @<b>|wbs_|ctrl.is_lui : @<b>|wbs_|imm,
+        @<b>|wbs_|ctrl.is_jump: @<b>|wbs_|pc + 4,
+        @<b>|wbs_|ctrl.is_load: @<b>|wbq_rdata.|mem_rdata,
+        @<b>|wbs_|ctrl.is_csr : @<b>|wbq_rdata.|csr_rdata,
+        default         : @<b>|wbq_rdata.|alu_result
     };
 
     always_ff {

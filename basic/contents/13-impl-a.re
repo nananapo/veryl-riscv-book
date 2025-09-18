@@ -271,13 +271,13 @@ A拡張の命令を実行するとき、
 
 //list[core.veryl.define.wb_data][メモリからロードした値をライトバックする (core.veryl)][lineno=on]{
 #@maprange(scripts/13/define-range/core/src/core.veryl,wb_data)
-    let wbs_wb_data: UIntX    = if wbs_ctrl.is_lui ?
-        wbs_imm
-    : if wbs_ctrl.is_jump ?
-        wbs_pc + 4
-    : if wbs_ctrl.is_load @<b>{|| wbs_ctrl.is_amo} ?
-        wbq_rdata.mem_rdata
-    : if wbs_ctrl.is_csr ?
+    let wbs_wb_data: UIntX    = switch {
+        wbs_ctrl.is_lui                    : wbs_imm,
+        wbs_ctrl.is_jump                   : wbs_pc + 4,
+        wbs_ctrl.is_load @<b>{|| wbs_ctrl.is_amo}: wbq_rdata.mem_rdata,
+        wbs_ctrl.is_csr                    : wbq_rdata.csr_rdata,
+        default                            : wbq_rdata.alu_result
+    };
 #@end
 //}
 

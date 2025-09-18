@@ -265,36 +265,32 @@ inst_decoderモジュールの@<code>{InstCtrl}と即値を生成している部
 
 //list[inst_decoder.veryl.addsubw-range.ctrl][OP-32、OP-IMM-32のInstCtrlの生成 (inst_decoder.veryl)]{
 #@maprange(scripts/05/addsubw-range/core/src/inst_decoder.veryl,ctrl)
-                                       is_op32を追加
-    ctrl = {case op {                        ↓
-        OP_LUI      : {InstType::U, T, T, F, @<b>|F|, F, F, F},
-        OP_AUIPC    : {InstType::U, T, F, F, @<b>|F|, F, F, F},
-        OP_JAL      : {InstType::J, T, F, F, @<b>|F|, T, F, F},
-        OP_JALR     : {InstType::I, T, F, F, @<b>|F|, T, F, F},
-        OP_BRANCH   : {InstType::B, F, F, F, @<b>|F|, F, F, F},
-        OP_LOAD     : {InstType::I, T, F, F, @<b>|F|, F, T, F},
-        OP_STORE    : {InstType::S, F, F, F, @<b>|F|, F, F, F},
-        OP_OP       : {InstType::R, T, F, T, @<b>|F|, F, F, F},
-        OP_OP_IMM   : {InstType::I, T, F, T, @<b>|F|, F, F, F},
-        @<b>|OP_OP_32    : {InstType::R, T, F, T, T, F, F, F},|
-        @<b>|OP_OP_IMM_32: {InstType::I, T, F, T, T, F, F, F},|
-        OP_SYSTEM   : {InstType::I, T, F, F, @<b>|F|, F, F, T},
-        default     : {InstType::X, F, F, F, @<b>|F|, F, F, F},
-    }, f3, f7};
+                OP_OP_IMM: {
+                    InstType::I, T, F, T, @<b>|F,| F, F, F
+                },
+                @<b>|OP_OP_32: {|
+                @<b>|    InstType::R, T, F, T, T, F, F, F|
+                @<b>|},|
+                @<b>|OP_OP_IMM_32: {|
+                @<b>|    InstType::I, T, F, T, T, F, F, F|
+                @<b>|},|
+                OP_SYSTEM: {
+                    InstType::I, T, F, F, @<b>|F,| F, F, T
+                },
 #@end
 //}
 
 //list[inst_decoder.veryl.addsubw-range.imm][OP-IMM-32の即値の生成 (inst_decoder.veryl)]{
 #@maprange(scripts/05/addsubw-range/core/src/inst_decoder.veryl,imm)
-    imm = case op {
-        OP_LUI, OP_AUIPC       : imm_u,
-        OP_JAL                 : imm_j,
-        OP_JALR, OP_LOAD       : imm_i,
-        OP_OP_IMM, @<b>|OP_OP_IMM_32|: imm_i,
-        OP_BRANCH              : imm_b,
-        OP_STORE               : imm_s,
-        default                : 'x,
-    };
+        imm = case op {
+            OP_LUI, OP_AUIPC       : imm_u,
+            OP_JAL                 : imm_j,
+            OP_JALR, OP_LOAD       : imm_i,
+            OP_OP_IMM, @<b>|OP_OP_IMM_32|: imm_i,
+            OP_BRANCH              : imm_b,
+            OP_STORE               : imm_s,
+            default                : 'x,
+        };
 #@end
 //}
 
@@ -341,11 +337,12 @@ case文の足し算と引き算の部分を次のように変更します
 
 //list[alu.veryl.addsubw-range.case][32ビットの演算結果を選択する (alu.veryl)]{
 #@maprange(scripts/05/addsubw-range/core/src/alu.veryl,case)
-    3'b000: result = if ctrl.itype == InstType::I | ctrl.funct7 == 0 {
-        @<b>|sel_w(ctrl.is_op32, add32, add)|
-    } else {
-        @<b>|sel_w(ctrl.is_op32, sub32, sub)|
-    };
+    always_comb {
+        if ctrl.is_aluop {
+            case ctrl.funct3 {
+                3'b000 : result = if ctrl.itype == InstType::I | ctrl.funct7 == 0 ? @<b>|sel_w(ctrl.is_op32, add32, |add@<b>|)| : @<b>|sel_w(ctrl.is_op32, sub32, |sub@<b>|)|;
+                3'b001 : result = sll;
+                3'b010 : result = slt;
 #@end
 //}
 
@@ -418,13 +415,13 @@ case文のシフト演算の部分を次のように変更します
 
 //list[alu.veryl.sllsrlsraw-range.case][32ビットの演算結果を選択する (alu.veryl)]{
 #@maprange(scripts/05/sllsrlsraw-range/core/src/alu.veryl,case)
-    3'b001: result = @<b>|sel_w(ctrl.is_op32, sll32, sll)|;
-    ...
-    3'b101: result = if ctrl.funct7 == 0 {
-        @<b>|sel_w(ctrl.is_op32, srl32, srl)|
-    } else {
-        @<b>|sel_w(ctrl.is_op32, sra32, sra)|
-    };
+            case ctrl.funct3 {
+                3'b000: result = if ctrl.itype == InstType::I | ctrl.funct7 == 0 ? sel_w(ctrl.is_op32, add32, add) : sel_w(ctrl.is_op32, sub32, sub);
+                3'b001: result = @<b>|sel_w(ctrl.is_op32, sll32, |sll@<b>|)|;
+                3'b010: result = slt;
+                3'b011: result = sltu;
+                3'b100: result = op1 ^ op2;
+                3'b101: result = if ctrl.funct7[5] == 0 ? @<b>|sel_w(ctrl.is_op32, srl32, |srl@<b>|)| : @<b>|sel_w(ctrl.is_op32, sra32, |sra@<b>|)|;
 #@end
 //}
 
@@ -580,11 +577,7 @@ SD命令はS形式で、opcodeは@<code>{STORE}です。
 
 //list[top.veryl.ldsd-range.rdata][アドレスによってデータを選択する (top.veryl)]{
 #@maprange(scripts/05/ldsd-range/core/src/top.veryl,rdata)
-    i_membus.rdata  = if memarb_last_iaddr[2] == 0 {
-        membus.rdata[31:0]
-    } else {
-        membus.rdata[63:32]
-    };
+        i_membus.rdata  = if memarb_last_iaddr[2] == 0 ? membus.rdata[31:0] : membus.rdata[63:32];
 #@end
 //}
 
@@ -598,7 +591,7 @@ SD命令の実装のためには、
 
 //list[memunit.veryl.ldsd-range.wdata][書き込むデータの変更 (memunit.veryl)]{
 #@maprange(scripts/05/ldsd-range/core/src/memunit.veryl,wdata)
-    req_wdata = rs2 << {addr[@<b>|2|:0], 3'b0};
+                        req_wdata = rs2 << {addr[@<b>|2|:0], 3'b0};
 #@end
 //}
 
@@ -608,23 +601,23 @@ SD命令の実装のためには、
 
 //list[memunit.veryl.ldsd-range.wmask][書き込みマスクの変更 (memunit.veryl)]{
 #@maprange(scripts/05/ldsd-range/core/src/memunit.veryl,wmask)
-    req_wmask = case ctrl.funct3[1:0] {
-        2'b00  : @<b>|8|'b1 << addr[@<b>|2|:0],
-        2'b01  : case addr[@<b>|2|:0] {
-            @<b>|6      : 8'b11000000,|
-            @<b>|4      : 8'b00110000,|
-            2      : @<b>|8'b00001100|,
-            0      : @<b>|8'b00000011|,
-            default: 'x,
-        },
-        2'b10  : @<b>|case addr[2:0] {|
-            @<b>|0      : 8'b00001111,|
-            @<b>|4      : 8'b11110000,|
-            @<b>|default: 'x,|
-        @<b>|},|
-        @<b>|2'b11  : 8'b11111111,|
-        default: 'x,
-    };
+                        req_wmask = case ctrl.funct3[1:0] {
+                            2'b00: @<b>|8|'b1 << addr[@<b>|2|:0],
+                            2'b01: case addr[@<b>|2|:0] {
+                                @<b>|6      : 8'b11000000,|
+                                @<b>|4      : 8'b00110000,|
+                                2      : @<b>|8'b00001100|,
+                                0      : @<b>|8'b00000011|,
+                                default: 'x,
+                            },
+                            2'b10: @<b>|case addr[2:0] {|
+                                @<b>|0      : 8'b00001111,|
+                                @<b>|4      : 8'b11110000,|
+                                @<b>|default: 'x,|
+                            @<b>|},|
+                            @<b>|2'b11  : 8'b11111111,|
+                            default: 'x,
+                        };
 #@end
 //}
 
@@ -637,33 +630,33 @@ SD命令の実装のためには、
 
 //list[memunit.veryl.ldsd-range.rdata][rdataの変更 (memunit.veryl)]{
 #@maprange(scripts/05/ldsd-range/core/src/memunit.veryl,rdata)
-    rdata = case ctrl.funct3[1:0] {
-        2'b00  : case addr[@<b>|2|:0] {
-            0      : {sext & D[7] repeat W - 8, D[7:0]},
-            1      : {sext & D[15] repeat W - 8, D[15:8]},
-            2      : {sext & D[23] repeat W - 8, D[23:16]},
-            3      : {sext & D[31] repeat W - 8, D[31:24]},
-            @<b>|4      : {sext & D[39] repeat W - 8, D[39:32]},|
-            @<b>|5      : {sext & D[47] repeat W - 8, D[47:40]},|
-            @<b>|6      : {sext & D[55] repeat W - 8, D[55:48]},|
-            @<b>|7      : {sext & D[63] repeat W - 8, D[63:56]},|
+        rdata = case ctrl.funct3[1:0] {
+            2'b00: case addr[@<b>|2|:0] {
+                0      : {sext & D[7] repeat W - 8, D[7:0]},
+                1      : {sext & D[15] repeat W - 8, D[15:8]},
+                2      : {sext & D[23] repeat W - 8, D[23:16]},
+                3      : {sext & D[31] repeat W - 8, D[31:24]},
+                @<b>|4      : {sext & D[39] repeat W - 8, D[39:32]},|
+                @<b>|5      : {sext & D[47] repeat W - 8, D[47:40]},|
+                @<b>|6      : {sext & D[55] repeat W - 8, D[55:48]},|
+                @<b>|7      : {sext & D[63] repeat W - 8, D[63:56]},|
+                default: 'x,
+            },
+            2'b01: case addr[@<b>|2|:0] {
+                0      : {sext & D[15] repeat W - 16, D[15:0]},
+                2      : {sext & D[31] repeat W - 16, D[31:16]},
+                @<b>|4      : {sext & D[47] repeat W - 16, D[47:32]},|
+                @<b>|6      : {sext & D[63] repeat W - 16, D[63:48]},|
+                default: 'x,
+            },
+            @<b>|2'b10: case addr[2:0] {|
+            @<b>|    0      : {sext & D[31] repeat W - 32, D[31:0]},|
+            @<b>|    4      : {sext & D[63] repeat W - 32, D[63:32]},|
+            @<b>|    default: 'x,|
+            @<b>|},|
+            @<b>|2'b11  :| D,
             default: 'x,
-        },
-        2'b01  : case addr[@<b>|2|:0] {
-            0      : {sext & D[15] repeat W - 16, D[15:0]},
-            2      : {sext & D[31] repeat W - 16, D[31:16]},
-            @<b>|4      : {sext & D[47] repeat W - 16, D[47:32]},|
-            @<b>|6      : {sext & D[63] repeat W - 16, D[63:48]},|
-            default: 'x,
-        },
-        2'b10  : @<b>|case addr[2:0] {|
-            @<b>|0      : {sext & D[31] repeat W - 32, D[31:0]},|
-            @<b>|4      : {sext & D[63] repeat W - 32, D[63:32]},|
-            @<b>|default: 'x,|
-        @<b>|},|
-        @<b>|2'b11  : D,|
-        default: 'x,
-    };
+        };
 #@end
 //}
 

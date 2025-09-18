@@ -816,11 +816,13 @@ RVC命令の場合はPCに@<code>{2}を足した値を設定します
 
 //list[core.veryl.is_rvc.wb_data][次の命令のアドレスを変える (core.veryl)][lineno=on]{
 #@maprange(scripts/14/is_rvc-range/core/src/core.veryl,wb_data)
-    let wbs_wb_data: UIntX    = if wbs_ctrl.is_lui ?
-        wbs_imm
-    : if wbs_ctrl.is_jump ?
-        wbs_pc + @<b>|(if wbs_ctrl.is_rvc ? 2 : |4@<b>|)|
-    : if wbs_ctrl.is_load || wbs_ctrl.is_amo ?
+    let wbs_wb_data: UIntX    = switch {
+        wbs_ctrl.is_lui                    : wbs_imm,
+        wbs_ctrl.is_jump                   : wbs_pc + @<b>|(if wbs_ctrl.is_rvc ? 2 : |4@<b>|)|,
+        wbs_ctrl.is_load || wbs_ctrl.is_amo: wbq_rdata.mem_rdata,
+        wbs_ctrl.is_csr                    : wbq_rdata.csr_rdata,
+        default                            : wbq_rdata.alu_result
+    };
 #@end
 //}
 

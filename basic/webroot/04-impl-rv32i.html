@@ -1156,18 +1156,40 @@ module inst_decoder (
             OP_STORE        : imm_s,
             default         : 'x,
         };
-        ctrl = {case op {
-            OP_LUI   : {InstType::U, T, T, F, F, F},
-            OP_AUIPC : {InstType::U, T, F, F, F, F},
-            OP_JAL   : {InstType::J, T, F, F, T, F},
-            OP_JALR  : {InstType::I, T, F, F, T, F},
-            OP_BRANCH: {InstType::B, F, F, F, F, F},
-            OP_LOAD  : {InstType::I, T, F, F, F, T},
-            OP_STORE : {InstType::S, F, F, F, F, F},
-            OP_OP    : {InstType::R, T, F, T, F, F},
-            OP_OP_IMM: {InstType::I, T, F, T, F, F},
-            default  : {InstType::X, F, F, F, F, F},
-        }, f3, f7};
+        ctrl = {
+            case op {
+                OP_LUI: {
+                    InstType::U, T, T, F, F, F
+                },
+                OP_AUIPC: {
+                    InstType::U, T, F, F, F, F
+                },
+                OP_JAL: {
+                    InstType::J, T, F, F, T, F
+                },
+                OP_JALR: {
+                    InstType::I, T, F, F, T, F
+                },
+                OP_BRANCH: {
+                    InstType::B, F, F, F, F, F
+                },
+                OP_LOAD: {
+                    InstType::I, T, F, F, F, T
+                },
+                OP_STORE: {
+                    InstType::S, F, F, F, F, F
+                },
+                OP_OP: {
+                    InstType::R, T, F, T, F, F
+                },
+                OP_OP_IMM: {
+                    InstType::I, T, F, T, F, F
+                },
+                default: {
+                    InstType::X, F, F, F, F, F
+                },
+            }, f3, f7
+        };
     }
 }
 </pre>
@@ -1269,19 +1291,11 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 7</span>
     let rs2_addr: logic&lt;5&gt; = inst_bits[24:20];
 
     // ソースレジスタのデータ
-    let rs1_data: UIntX = if rs1_addr == 0 {
-        0
-    } else {
-        regfile[rs1_addr]
-    };
-    let rs2_data: UIntX = if rs2_addr == 0 {
-        0
-    } else {
-        regfile[rs2_addr]
-    };
+    let rs1_data: UIntX = if rs1_addr == 0 ? 0 : regfile[rs1_addr];
+    let rs2_data: UIntX = if rs2_addr == 0 ? 0 : regfile[rs2_addr];
 </pre>
 </div>
-<p>if式を使うことで、0番目のレジスタが指定されたときは、値が常に<code class="inline-code" translate="no" >0</code>になるようにします。</p>
+<p>ifを使うことで、0番目のレジスタが指定されたときは、値が常に<code class="inline-code" translate="no" >0</code>になるようにします。</p>
 <p>レジスタの値を読み込めていることを確認するために、デバッグ表示にソースレジスタの値を追加します(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.reg-range.debug">リスト3.38</a></span>)。<code class="inline-code" translate="no" >$display</code>システムタスクで、命令のレジスタ番号と値をデバッグ表示します。</p>
 <div id="core.veryl.reg-range.debug" class="caption-code">
 <span class="caption">リスト3.38: リスト3.38: レジスタの値をデバッグ表示する (core.veryl)</span>
@@ -1300,14 +1314,14 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 7</span>
 <div class="footnote-list">
 <div class="footnote" id="fn-verilator.x" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*5] </span>Verilatorはデフォルト設定では不定値に対応していないため、不定値は0になります</p></div>
 </div><!--/.footnote-list-->
-<p>これではテストする意味がないため、レジスタの値を適当な値に初期化します。always_ffブロックのif_resetで、<code class="inline-code" translate="no" >i</code>番目(0 &lt; <code class="inline-code" translate="no" >i</code> &lt; 32)のレジスタの値を<code class="inline-code" translate="no" >i + 100</code>で初期化します(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.reg-range.init">リスト3.39</a></span>)。</p>
+<p>これではテストする意味がないため、レジスタの値を適当な値に初期化します。always_ffブロックのif_resetで、<code class="inline-code" translate="no" >i</code>番目(0 &lt; <code class="inline-code" translate="no" >i</code> &lt; 32)のレジスタの値を<code class="inline-code" translate="no" >i</code>で初期化します(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.reg-range.init">リスト3.39</a></span>)。</p>
 <div id="core.veryl.reg-range.init" class="caption-code">
 <span class="caption">リスト3.39: リスト3.39: レジスタを適当な値で初期化する (core.veryl)</span>
 <pre class="list language-init" translate="no">    // レジスタの初期化
     always_ff {
         if_reset {
             for i: i32 in 0..32 {
-                regfile[i] = i + 100;
+                regfile[i] = i;
             }
         }
     }
@@ -1322,26 +1336,26 @@ $ <span class="userinput">obj_dir/sim sample.hex 7</span>
 00000000 : 01234567
   itype   : 000010
   imm     : 00000012
-  rs1[ 6] : 0000006a
-  rs2[18] : 00000076
+  rs1[ 6] : 00000006
+  rs2[18] : 00000012
 00000004 : 89abcdef
   itype   : 100000
   imm     : fffbc09a
-  rs1[23] : 0000007b
-  rs2[26] : 0000007e
+  rs1[23] : 00000017
+  rs2[26] : 0000001a
 00000008 : deadbeef
   itype   : 100000
   imm     : fffdb5ea
-  rs1[27] : 0000007f
-  rs2[10] : 0000006e
+  rs1[27] : 0000001b
+  rs2[10] : 0000000a
 0000000c : cafebebe
   itype   : 000000
   imm     : 00000000
-  rs1[29] : 00000081
-  rs2[15] : 00000073
+  rs1[29] : 0000001d
+  rs2[15] : 0000000f
 </pre>
 </div>
-<p><code class="inline-code" translate="no" >32'h01234567</code>は<code class="inline-code" translate="no" >jalr x10, 18(x6)</code>です。JALR命令は、ソースレジスタ<code class="inline-code" translate="no" >x6</code>を使用します。<code class="inline-code" translate="no" >x6</code>はレジスタ番号が6であることを表しており、値は106に初期化しています。これは16進数で<code class="inline-code" translate="no" >32'h0000006a</code>です。</p>
+<p><code class="inline-code" translate="no" >32'h01234567</code>は<code class="inline-code" translate="no" >jalr x10, 18(x6)</code>です。JALR命令は、ソースレジスタ<code class="inline-code" translate="no" >x6</code>を使用します。<code class="inline-code" translate="no" >x6</code>は6番目のレジスタです。</p>
 <p>シミュレーションと結果が一致していることを確認してください。</p>
 
 <h2 class="numbox"><a id="h3-9"></a><span class="secno">3.9</span> ALUによる計算の実装</h2>
@@ -1381,20 +1395,12 @@ module alu (
     always_comb {
         if ctrl.is_aluop {
             case ctrl.funct3 {
-                3'b000: result = if ctrl.itype == InstType::I | ctrl.funct7 == 0 {
-                    add
-                } else {
-                    sub
-                };
-                3'b001: result = sll;
-                3'b010: result = slt;
-                3'b011: result = sltu;
-                3'b100: result = op1 ^ op2;
-                3'b101: result = if ctrl.funct7 == 0 {
-                    srl
-                } else {
-                    sra
-                };
+                3'b000 : result = if ctrl.itype == InstType::I | ctrl.funct7 == 0 ? add : sub;
+                3'b001 : result = sll;
+                3'b010 : result = slt;
+                3'b011 : result = sltu;
+                3'b100 : result = op1 ^ op2;
+                3'b101 : result = if ctrl.funct7[5] == 0 ? srl : sra;
                 3'b110 : result = op1 | op2;
                 3'b111 : result = op1 &amp; op2;
                 default: result = 'x;
@@ -1447,21 +1453,21 @@ module alu (
     always_comb {
         case inst_ctrl.itype {
             InstType::R, InstType::B: {
-                                          op1 = rs1_data;
-                                          op2 = rs2_data;
-                                      }
+                op1 = rs1_data;
+                op2 = rs2_data;
+            }
             InstType::I, InstType::S: {
-                                          op1 = rs1_data;
-                                          op2 = inst_imm;
-                                      }
+                op1 = rs1_data;
+                op2 = inst_imm;
+            }
             InstType::U, InstType::J: {
-                                          op1 = inst_pc;
-                                          op2 = inst_imm;
-                                      }
+                op1 = inst_pc;
+                op2 = inst_imm;
+            }
             default: {
-                         op1 = 'x;
-                         op2 = 'x;
-                     }
+                op1 = 'x;
+                op2 = 'x;
+            }
         }
     }
 </pre>
@@ -1566,9 +1572,9 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 6</span>
   imm     : 00000000
   rs1[ 1] : 00000065
   rs2[ 2] : 00000066
-  op1     : 00000065
-  op2     : 00000066
-  alu res : 000000cb
+  op1     : 00000001
+  op2     : 00000002
+  alu res : 00000003
 </pre>
 </div>
 <p>まだ、結果をディスティネーションレジスタに格納する処理を作成していません。そのため、命令を実行してもレジスタの値は変わらないことに注意してください</p>
@@ -1591,11 +1597,8 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 6</span>
 </dd>
 <dt>add x3, x1, x2</dt>
 <dd>
-	<code class="inline-code" translate="no" >op1</code>は1番目のレジスタの値です。
-	1番目のレジスタは101として初期化しているので、<code class="inline-code" translate="no" >32'h00000065</code>と表示されています。
-	<code class="inline-code" translate="no" >op2</code>は2番目のレジスタの値です。
-	2番目のレジスタは102として初期化しているので、<code class="inline-code" translate="no" >32'h00000066</code>と表示されています。
-	ALUの計算結果として、これを足した結果<code class="inline-code" translate="no" >32'h000000cb</code>が表示されています。
+	<code class="inline-code" translate="no" >op1</code>、<code class="inline-code" translate="no" >op2</code>は1、2番目のレジスタの値です。
+	ALUの計算結果として、それぞれの初期値<code class="inline-code" translate="no" >1</code>と<code class="inline-code" translate="no" >2</code>を足した結果<code class="inline-code" translate="no" >32'h00000003</code>が表示されています。
 </dd>
 </dl>
 
@@ -1609,16 +1612,12 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 6</span>
 <div id="core.veryl.wb-range.wb" class="caption-code">
 <span class="caption">リスト3.48: リスト3.48: ライトバック処理の実装 (core.veryl)</span>
 <pre class="list language-wb" translate="no">    <b>let rd_addr: logic&lt;5&gt; = inst_bits[11:7];</b>
-    <b>let wb_data: UIntX    = if inst_ctrl.is_lui {</b>
-    <b>    inst_imm</b>
-    <b>} else {</b>
-    <b>    alu_result</b>
-    <b>};</b>
+    <b>let wb_data: UIntX    = if inst_ctrl.is_lui ? inst_imm : alu_result;</b>
 
     always_ff {
         if_reset {
             for i: i32 in 0..32 {
-                regfile[i] = i + 100;
+                regfile[i] = i;
             }
         } <b>else {</b>
             <b>if if_fifo_rvalid &amp;&amp; inst_ctrl.rwb_en {</b>
@@ -1990,12 +1989,10 @@ module memunit (
 <div id="core.veryl.lwsw-range.rd" class="caption-code">
 <span class="caption">リスト3.61: リスト3.61: memunitモジュールの結果をライトバックする (core.veryl)</span>
 <pre class="list language-rd" translate="no">    let rd_addr: logic&lt;5&gt; = inst_bits[11:7];
-    let wb_data: UIntX    = if inst_ctrl.is_lui {
-        inst_imm
-    } <b>else if inst_ctrl.is_load {</b>
-        <b>memu_rdata</b>
-    <b>}</b> else {
-        alu_result
+    let wb_data: UIntX    = <b>switch {</b>
+        inst_ctrl.is_lui <b>:</b> inst_imm,
+        <b>inst_ctrl.is_load: memu_rdata,</b>
+        <b>default          :</b> alu_result
     };
 </pre>
 </div>
@@ -2140,23 +2137,23 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 13</span>
 <p>funct3をcase文で分岐し、アドレスの下位ビットを見ることで、命令とアドレスに応じた値をrdataに設定します(<span class="listref"><a href="./04-impl-rv32i.html#memunit.veryl.lbhsbh-range.load">リスト3.69</a></span>)。</p>
 <div id="memunit.veryl.lbhsbh-range.load" class="caption-code">
 <span class="caption">リスト3.69: リスト3.69: rdataをアドレスと読み込みサイズに応じて変更する (memunit.veryl)</span>
-<pre class="list language-load" translate="no">    // loadの結果
-    rdata = case ctrl.funct3[1:0] {
-        2'b00  : case addr[1:0] {
-            0      : {sext &amp; D[7] repeat W - 8, D[7:0]},
-            1      : {sext &amp; D[15] repeat W - 8, D[15:8]},
-            2      : {sext &amp; D[23] repeat W - 8, D[23:16]},
-            3      : {sext &amp; D[31] repeat W - 8, D[31:24]},
+<pre class="list language-load" translate="no">        // loadの結果
+        rdata = case ctrl.funct3[1:0] {
+            2'b00: case addr[1:0] {
+                0      : {sext &amp; D[7] repeat W - 8, D[7:0]},
+                1      : {sext &amp; D[15] repeat W - 8, D[15:8]},
+                2      : {sext &amp; D[23] repeat W - 8, D[23:16]},
+                3      : {sext &amp; D[31] repeat W - 8, D[31:24]},
+                default: 'x,
+            },
+            2'b01: case addr[1:0] {
+                0      : {sext &amp; D[15] repeat W - 16, D[15:0]},
+                2      : {sext &amp; D[31] repeat W - 16, D[31:16]},
+                default: 'x,
+            },
+            2'b10  : D,
             default: 'x,
-        },
-        2'b01  : case addr[1:0] {
-            0      : {sext &amp; D[15] repeat W - 16, D[15:0]},
-            2      : {sext &amp; D[31] repeat W - 16, D[31:16]},
-            default: 'x,
-        },
-        2'b10  : D,
-        default: 'x,
-    };
+        };
 </pre>
 </div>
 <p>ロードした値の拡張を行うとき、値の最上位ビットと<code class="inline-code" translate="no" >sext</code>をAND演算した値を使って拡張します。これにより、符号拡張するときは最上位ビットの値が、ゼロで拡張するときは<code class="inline-code" translate="no" >0</code>が拡張に利用されます。</p>
@@ -2251,20 +2248,20 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 13</span>
         } else {
             case state {
                 State::Ready: {
-                                  membus.rvalid = membus.valid &amp; !membus.wen;
-                                  membus.rdata  = mem[membus.addr[ADDR_WIDTH - 1:0]];
-                                  addr_saved    = membus.addr[ADDR_WIDTH - 1:0];
-                                  wdata_saved   = membus.wdata;
-                                  wmask_saved   = membus.wmask;
-                                  rdata_saved   = mem[membus.addr[ADDR_WIDTH - 1:0]];
-                                  if membus.valid &amp;&amp; membus.wen {
-                                      state = State::WriteValid;
-                                  }
-                              }
+                    membus.rvalid = membus.valid &amp; !membus.wen;
+                    membus.rdata  = mem[membus.addr[ADDR_WIDTH - 1:0]];
+                    addr_saved    = membus.addr[ADDR_WIDTH - 1:0];
+                    wdata_saved   = membus.wdata;
+                    wmask_saved   = membus.wmask;
+                    rdata_saved   = mem[membus.addr[ADDR_WIDTH - 1:0]];
+                    if membus.valid &amp;&amp; membus.wen {
+                        state = State::WriteValid;
+                    }
+                }
                 State::WriteValid: {
-                                       state         = State::Ready;
-                                       membus.rvalid = 1;
-                                   }
+                    state         = State::Ready;
+                    membus.rvalid = 1;
+                }
             }
         }
     }
@@ -2315,12 +2312,12 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 13</span>
 </div>
 <div id="memunit.veryl.lbhsbh-range.mem_wmask" class="caption-code">
 <span class="caption">リスト3.75: リスト3.75: membusにwmaskを設定する (memunit.veryl)</span>
-<pre class="list language-mem_wmask" translate="no">    // メモリアクセス
-    membus.valid = state == State::WaitReady;
-    membus.addr  = req_addr;
-    membus.wen   = req_wen;
-    membus.wdata = req_wdata;
-    <b>membus.wmask = req_wmask;</b>
+<pre class="list language-mem_wmask" translate="no">        // メモリアクセス
+        membus.valid = state == State::WaitReady;
+        membus.addr  = req_addr;
+        membus.wen   = req_wen;
+        membus.wdata = req_wdata;
+        <b>membus.wmask = req_wmask;</b>
 </pre>
 </div>
 <p>always_ffの中で、<code class="inline-code" translate="no" >req_wmask</code>の値を設定します。それぞれの命令のとき、<code class="inline-code" translate="no" >wmask</code>がどうなるかを確認してください(<span class="listref"><a href="./04-impl-rv32i.html#memunit.veryl.lbhsbh-range.always_reset">リスト3.76</a></span>、<span class="listref"><a href="./04-impl-rv32i.html#memunit.veryl.lbhsbh-range.always_wmask">リスト3.77</a></span>)。</p>
@@ -2338,8 +2335,8 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 13</span>
 <div id="memunit.veryl.lbhsbh-range.always_wmask" class="caption-code">
 <span class="caption">リスト3.77: リスト3.77: メモリにアクセスする命令のとき、wmaskを設定する (memunit.veryl)</span>
 <pre class="list language-always_wmask" translate="no">    req_wmask = case ctrl.funct3[1:0] {
-        2'b00  : 4'b1 &lt;&lt; addr[1:0], <span class="balloon">← SB命令のとき、アドレス下位2ビット分だけ1を左シフトする</span>
-        2'b01  : case addr[1:0] { <span class="balloon">← SH命令のとき</span>
+        2'b00: 4'b1 &lt;&lt; addr[1:0],<span class="balloon">← SB命令のとき、アドレス下位2ビット分だけ1を左シフトする</span>
+        2'b01: case addr[1:0] { <span class="balloon">← SH命令のとき</span>
             2      : 4'b1100, <span class="balloon">← 上位2バイトに書き込む</span>
             0      : 4'b0011, <span class="balloon">← 下位2バイトに書き込む</span>
             default: 'x,
@@ -2404,14 +2401,11 @@ deadbeef // 0x0
 <p>それでは、無条件ジャンプを実装します。まず、ジャンプ命令を実行するときにライトバックする値を<code class="inline-code" translate="no" >inst_pc + 4</code>にします(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.jump-range.wb">リスト3.80</a></span>)。</p>
 <div id="core.veryl.jump-range.wb" class="caption-code">
 <span class="caption">リスト3.80: リスト3.80: pc + 4を書き込む (core.veryl)</span>
-<pre class="list language-wb" translate="no">    let wb_data: UIntX    = if inst_ctrl.is_lui {
-        inst_imm
-    } <b>else if inst_ctrl.is_jump {</b>
-        <b>inst_pc + 4</b>
-    <b>}</b> else if inst_ctrl.is_load {
-        memu_rdata
-    } else {
-        alu_result
+<pre class="list language-wb" translate="no">    let wb_data: UIntX    = switch {
+        inst_ctrl.is_lui : inst_imm,
+        <b>inst_ctrl.is_jump: inst_pc + 4,</b>
+        inst_ctrl.is_load: memu_rdata,
+        default          : alu_result
     };
 </pre>
 </div>

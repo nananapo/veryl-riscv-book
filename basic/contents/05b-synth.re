@@ -177,7 +177,18 @@ module core (
 //list[core.veryl.ledcsr-range.inst][csrunitモジュールのledポートと接続する (core.veryl)]{
 #@maprange(scripts/05b/ledcsr-range/core/src/core.veryl,inst)
     inst csru: csrunit (
-        ...
+        clk                            ,
+        rst                            ,
+        valid   : mems_valid           ,
+        pc      : mems_pc              ,
+        ctrl    : mems_ctrl            ,
+        rd_addr : mems_rd_addr         ,
+        csr_addr: mems_inst_bits[31:20],
+        rs1     : if mems_ctrl.funct3[2] == 1 && mems_ctrl.funct3[1:0] != 0 ?
+            {1'b0 repeat XLEN - $bits(memq_rdata.rs1_addr), memq_rdata.rs1_addr} // rs1を0で拡張する
+        :
+            memq_rdata.rs1_data
+        ,
         rdata      : csru_rdata      ,
         raise_trap : csru_raise_trap ,
         trap_vector: csru_trap_vector,
@@ -192,11 +203,12 @@ module top #(
     param MEMORY_FILEPATH_IS_ENV: bit    = 1                 ,
     param MEMORY_FILEPATH       : string = "MEMORY_FILE_PATH",
 ) (
+    #[ifdef(TEST_MODE)]
+    test_success: output bit,
+
     clk: input  clock,
     rst: input  reset,
     @<b>|led: output UIntX,|
-    #[ifdef(TEST_MODE)]
-    test_success: output bit,
 ) {
 #@end
 //}
@@ -317,11 +329,12 @@ module top_tang (
         MEMORY_FILEPATH_IS_ENV: 0 ,
         MEMORY_FILEPATH       : "",
     ) (
+        #[ifdef(TEST_MODE)]
+        test_success: _,
+
         clk         ,
         rst         ,
         led: led_top,
-        #[ifdef(TEST_MODE)]
-        test_success: _,
     );
 }
 #@end
@@ -588,11 +601,12 @@ module top_pynq_z1 #(
         MEMORY_FILEPATH_IS_ENV: 0              ,
         MEMORY_FILEPATH       : MEMORY_FILEPATH,
     ) (
+        #[ifdef(TEST_MODE)]
+        test_success: _,
+
         clk         ,
         rst         ,
         led: led_top,
-        #[ifdef(TEST_MODE)]
-        test_success: _,
     );
 }
 #@end

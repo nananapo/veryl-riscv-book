@@ -134,7 +134,7 @@ Verylは2022年12月に公開された言語です。
 Verylの抽象度は、Verilogと同じくレジスタ転送レベルです。
 Verylの文法や機能は、VerilogやSystemVerilogに似通ったものになっています。
 しかし、
-if式やcase式、
+case式、
 クロックとリセットの抽象化、
 ジェネリクスなどの痒い所に手が届く機能が提供されており、
 高い生産性を発揮します。
@@ -689,9 +689,9 @@ Verylでは、@<table>{operator.priority}の演算子を使用できます。
 @<code>{x}と@<code>{z}を考慮した演算があるなどの違いがあります。
 
 SystemVerilogとの差異を説明すると、
-@<code>{++}、@<code>{--}、@<code>{:=}、@<code>{:/}、@<code>{<=}(代入)、@<code>{?:}(三項演算子)が無く、
+@<code>{++}、@<code>{--}、@<code>{:=}、@<code>{:/}、@<code>{<=}(代入)、
 @<code>{<}と@<code>{>}がそれぞれ@<code>{<:}と@<code>{>:}に変更されています。
-また、@<code>{inside}と@<code>{{{\}\}}の形式が変更され、if式、case式、switch式が追加されています。
+また、@<code>{inside}と@<code>{{{\}\}}、@<code>{?:}(三項演算子)の形式が変更され、case式、switch式が追加されています。
 
 単項、二項演算子の使用例は次の通りです(@<list>{operator.use})。
 
@@ -782,8 +782,7 @@ a = x || y; // xまたはyが真のとき真
 ==== if、switch、case
 
 条件によって動作や値を変えたいとき、@<b>{if}文を使用します (@<list>{if.only})。
-if文は式にできます。
-if式は必ず値を返す必要があり、elseが必須です。
+括弧と@<code>{else}の代わりに@<code>{?}と@<code>{:}を使うことで式にできます。
 
 //list[if.only][if文、if式]{
 var v : logic<32>;
@@ -796,12 +795,7 @@ always_comb {
 		v = 1;
 	} else {
 		// WIDTH != 0かつWIDTH != 1のとき
-		v = if WIDTH == 3 { // ifは式にもなる
-			3
-		} else {
-			// if式はelseが必須
-			4
-		};
+		v = if WIDTH == 3 ? 3 : 4; // ifは式にもなる
 	}
 }
 //}

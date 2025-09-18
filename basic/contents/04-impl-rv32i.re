@@ -1349,18 +1349,40 @@ module inst_decoder (
             OP_STORE        : imm_s,
             default         : 'x,
         };
-        ctrl = {case op {
-            OP_LUI   : {InstType::U, T, T, F, F, F},
-            OP_AUIPC : {InstType::U, T, F, F, F, F},
-            OP_JAL   : {InstType::J, T, F, F, T, F},
-            OP_JALR  : {InstType::I, T, F, F, T, F},
-            OP_BRANCH: {InstType::B, F, F, F, F, F},
-            OP_LOAD  : {InstType::I, T, F, F, F, T},
-            OP_STORE : {InstType::S, F, F, F, F, F},
-            OP_OP    : {InstType::R, T, F, T, F, F},
-            OP_OP_IMM: {InstType::I, T, F, T, F, F},
-            default  : {InstType::X, F, F, F, F, F},
-        }, f3, f7};
+        ctrl = {
+            case op {
+                OP_LUI: {
+                    InstType::U, T, T, F, F, F
+                },
+                OP_AUIPC: {
+                    InstType::U, T, F, F, F, F
+                },
+                OP_JAL: {
+                    InstType::J, T, F, F, T, F
+                },
+                OP_JALR: {
+                    InstType::I, T, F, F, T, F
+                },
+                OP_BRANCH: {
+                    InstType::B, F, F, F, F, F
+                },
+                OP_LOAD: {
+                    InstType::I, T, F, F, F, T
+                },
+                OP_STORE: {
+                    InstType::S, F, F, F, F, F
+                },
+                OP_OP: {
+                    InstType::R, T, F, T, F, F
+                },
+                OP_OP_IMM: {
+                    InstType::I, T, F, T, F, F
+                },
+                default: {
+                    InstType::X, F, F, F, F, F
+                },
+            }, f3, f7
+        };
     }
 }
 #@end
@@ -1511,20 +1533,12 @@ I形式の命令の実行にはソースレジスタの値と即値を利用し�
     let rs2_addr: logic<5> = inst_bits[24:20];
 
     // ソースレジスタのデータ
-    let rs1_data: UIntX = if rs1_addr == 0 {
-        0
-    } else {
-        regfile[rs1_addr]
-    };
-    let rs2_data: UIntX = if rs2_addr == 0 {
-        0
-    } else {
-        regfile[rs2_addr]
-    };
+    let rs1_data: UIntX = if rs1_addr == 0 ? 0 : regfile[rs1_addr];
+    let rs2_data: UIntX = if rs2_addr == 0 ? 0 : regfile[rs2_addr];
 #@end
 //}
 
-if式を使うことで、
+ifを使うことで、
 0番目のレジスタが指定されたときは、
 値が常に@<code>{0}になるようにします。
 
@@ -1556,7 +1570,7 @@ if式を使うことで、
 これではテストする意味がないため、
 レジスタの値を適当な値に初期化します。
 always_ffブロックのif_resetで、
-@<code>{i}番目(0 < @<code>{i} < 32)のレジスタの値を@<code>{i + 100}で初期化します(@<list>{core.veryl.reg-range.init})。
+@<code>{i}番目(0 < @<code>{i} < 32)のレジスタの値を@<code>{i}で初期化します(@<list>{core.veryl.reg-range.init})。
 
 //list[core.veryl.reg-range.init][レジスタを適当な値で初期化する (core.veryl)]{
 #@maprange(scripts/04/reg-range/core/src/core.veryl,init)
@@ -1564,7 +1578,7 @@ always_ffブロックのif_resetで、
     always_ff {
         if_reset {
             for i: i32 in 0..32 {
-                regfile[i] = i + 100;
+                regfile[i] = i;
             }
         }
     }
@@ -1580,29 +1594,28 @@ $ @<userinput>{obj_dir/sim sample.hex 7}
 00000000 : 01234567
   itype   : 000010
   imm     : 00000012
-  rs1[ 6] : 0000006a
-  rs2[18] : 00000076
+  rs1[ 6] : 00000006
+  rs2[18] : 00000012
 00000004 : 89abcdef
   itype   : 100000
   imm     : fffbc09a
-  rs1[23] : 0000007b
-  rs2[26] : 0000007e
+  rs1[23] : 00000017
+  rs2[26] : 0000001a
 00000008 : deadbeef
   itype   : 100000
   imm     : fffdb5ea
-  rs1[27] : 0000007f
-  rs2[10] : 0000006e
+  rs1[27] : 0000001b
+  rs2[10] : 0000000a
 0000000c : cafebebe
   itype   : 000000
   imm     : 00000000
-  rs1[29] : 00000081
-  rs2[15] : 00000073
+  rs1[29] : 0000001d
+  rs2[15] : 0000000f
 //}
 
 @<code>{32'h01234567}は@<code>{jalr x10, 18(x6)}です。
 JALR命令は、ソースレジスタ@<code>{x6}を使用します。
-@<code>{x6}はレジスタ番号が6であることを表しており、
-値は106に初期化しています。これは16進数で@<code>{32'h0000006a}です。
+@<code>{x6}は6番目のレジスタです。
 
 シミュレーションと結果が一致していることを確認してください。
 
@@ -1654,20 +1667,12 @@ module alu (
     always_comb {
         if ctrl.is_aluop {
             case ctrl.funct3 {
-                3'b000: result = if ctrl.itype == InstType::I | ctrl.funct7 == 0 {
-                    add
-                } else {
-                    sub
-                };
-                3'b001: result = sll;
-                3'b010: result = slt;
-                3'b011: result = sltu;
-                3'b100: result = op1 ^ op2;
-                3'b101: result = if ctrl.funct7 == 0 {
-                    srl
-                } else {
-                    sra
-                };
+                3'b000 : result = if ctrl.itype == InstType::I | ctrl.funct7 == 0 ? add : sub;
+                3'b001 : result = sll;
+                3'b010 : result = slt;
+                3'b011 : result = sltu;
+                3'b100 : result = op1 ^ op2;
+                3'b101 : result = if ctrl.funct7[5] == 0 ? srl : sra;
                 3'b110 : result = op1 | op2;
                 3'b111 : result = op1 & op2;
                 default: result = 'x;
@@ -1736,21 +1741,21 @@ always_combブロックで値を割り当てます
     always_comb {
         case inst_ctrl.itype {
             InstType::R, InstType::B: {
-                                          op1 = rs1_data;
-                                          op2 = rs2_data;
-                                      }
+                op1 = rs1_data;
+                op2 = rs2_data;
+            }
             InstType::I, InstType::S: {
-                                          op1 = rs1_data;
-                                          op2 = inst_imm;
-                                      }
+                op1 = rs1_data;
+                op2 = inst_imm;
+            }
             InstType::U, InstType::J: {
-                                          op1 = inst_pc;
-                                          op2 = inst_imm;
-                                      }
+                op1 = inst_pc;
+                op2 = inst_imm;
+            }
             default: {
-                         op1 = 'x;
-                         op2 = 'x;
-                     }
+                op1 = 'x;
+                op2 = 'x;
+            }
         }
     }
 #@end
@@ -1861,9 +1866,9 @@ $ @<userinput>{obj_dir/sim src/sample.hex 6}
   imm     : 00000000
   rs1[ 1] : 00000065
   rs2[ 2] : 00000066
-  op1     : 00000065
-  op2     : 00000066
-  alu res : 000000cb
+  op1     : 00000001
+  op2     : 00000002
+  alu res : 00000003
 //}
 
 まだ、結果をディスティネーションレジスタに格納する処理を作成していません。
@@ -1884,11 +1889,8 @@ $ @<userinput>{obj_dir/sim src/sample.hex 6}
 	ALUの計算結果として、これを足した結果@<code>{32'h00100004}が表示されています。
 
  : add x3, x1, x2
-	@<code>{op1}は1番目のレジスタの値です。
-	1番目のレジスタは101として初期化しているので、@<code>{32'h00000065}と表示されています。
-	@<code>{op2}は2番目のレジスタの値です。
-	2番目のレジスタは102として初期化しているので、@<code>{32'h00000066}と表示されています。
-	ALUの計算結果として、これを足した結果@<code>{32'h000000cb}が表示されています。
+	@<code>{op1}、@<code>{op2}は1、2番目のレジスタの値です。
+	ALUの計算結果として、それぞれの初期値@<code>{1}と@<code>{2}を足した結果@<code>{32'h00000003}が表示されています。
 
 == レジスタに結果を書き込む
 
@@ -1914,16 +1916,12 @@ LUI命令のときは即値をそのまま、
 //list[core.veryl.wb-range.wb][ライトバック処理の実装 (core.veryl)]{
 #@maprange(scripts/04/wb-range/core/src/core.veryl,wb)
     @<b>|let rd_addr: logic<5> = inst_bits[11:7];|
-    @<b>|let wb_data: UIntX    = if inst_ctrl.is_lui {|
-    @<b>|    inst_imm|
-    @<b>|} else {|
-    @<b>|    alu_result|
-    @<b>|};|
+    @<b>|let wb_data: UIntX    = if inst_ctrl.is_lui ? inst_imm : alu_result;|
 
     always_ff {
         if_reset {
             for i: i32 in 0..32 {
-                regfile[i] = i + 100;
+                regfile[i] = i;
             }
         } @<b>|else {|
             @<b>|if if_fifo_rvalid && inst_ctrl.rwb_en {|
@@ -2382,12 +2380,10 @@ FIFOからの命令の取り出しを停止します。
 //list[core.veryl.lwsw-range.rd][memunitモジュールの結果をライトバックする (core.veryl)]{
 #@maprange(scripts/04/lwsw-range/core/src/core.veryl,rd)
     let rd_addr: logic<5> = inst_bits[11:7];
-    let wb_data: UIntX    = if inst_ctrl.is_lui {
-        inst_imm
-    } @<b>|else if inst_ctrl.is_load {|
-        @<b>|memu_rdata|
-    @<b>|}| else {
-        alu_result
+    let wb_data: UIntX    = @<b>|switch {|
+        inst_ctrl.is_lui @<b>|:| inst_imm,
+        @<b>|inst_ctrl.is_load: memu_rdata,|
+        @<b>|default          :| alu_result
     };
 #@end
 //}
@@ -2564,23 +2560,23 @@ funct3をcase文で分岐し、
 
 //list[memunit.veryl.lbhsbh-range.load][rdataをアドレスと読み込みサイズに応じて変更する (memunit.veryl)]{
 #@maprange(scripts/04/lbhsbh-range/core/src/memunit.veryl,load)
-    // loadの結果
-    rdata = case ctrl.funct3[1:0] {
-        2'b00  : case addr[1:0] {
-            0      : {sext & D[7] repeat W - 8, D[7:0]},
-            1      : {sext & D[15] repeat W - 8, D[15:8]},
-            2      : {sext & D[23] repeat W - 8, D[23:16]},
-            3      : {sext & D[31] repeat W - 8, D[31:24]},
+        // loadの結果
+        rdata = case ctrl.funct3[1:0] {
+            2'b00: case addr[1:0] {
+                0      : {sext & D[7] repeat W - 8, D[7:0]},
+                1      : {sext & D[15] repeat W - 8, D[15:8]},
+                2      : {sext & D[23] repeat W - 8, D[23:16]},
+                3      : {sext & D[31] repeat W - 8, D[31:24]},
+                default: 'x,
+            },
+            2'b01: case addr[1:0] {
+                0      : {sext & D[15] repeat W - 16, D[15:0]},
+                2      : {sext & D[31] repeat W - 16, D[31:16]},
+                default: 'x,
+            },
+            2'b10  : D,
             default: 'x,
-        },
-        2'b01  : case addr[1:0] {
-            0      : {sext & D[15] repeat W - 16, D[15:0]},
-            2      : {sext & D[31] repeat W - 16, D[31:16]},
-            default: 'x,
-        },
-        2'b10  : D,
-        default: 'x,
-    };
+        };
 #@end
 //}
 
@@ -2696,20 +2692,20 @@ module memory::<DATA_WIDTH: u32, ADDR_WIDTH: u32> #(
         } else {
             case state {
                 State::Ready: {
-                                  membus.rvalid = membus.valid & !membus.wen;
-                                  membus.rdata  = mem[membus.addr[ADDR_WIDTH - 1:0]];
-                                  addr_saved    = membus.addr[ADDR_WIDTH - 1:0];
-                                  wdata_saved   = membus.wdata;
-                                  wmask_saved   = membus.wmask;
-                                  rdata_saved   = mem[membus.addr[ADDR_WIDTH - 1:0]];
-                                  if membus.valid && membus.wen {
-                                      state = State::WriteValid;
-                                  }
-                              }
+                    membus.rvalid = membus.valid & !membus.wen;
+                    membus.rdata  = mem[membus.addr[ADDR_WIDTH - 1:0]];
+                    addr_saved    = membus.addr[ADDR_WIDTH - 1:0];
+                    wdata_saved   = membus.wdata;
+                    wmask_saved   = membus.wmask;
+                    rdata_saved   = mem[membus.addr[ADDR_WIDTH - 1:0]];
+                    if membus.valid && membus.wen {
+                        state = State::WriteValid;
+                    }
+                }
                 State::WriteValid: {
-                                       state         = State::Ready;
-                                       membus.rvalid = 1;
-                                   }
+                    state         = State::Ready;
+                    membus.rvalid = 1;
+                }
             }
         }
     }
@@ -2774,12 +2770,12 @@ memunitモジュールで@<code>{wmask}を設定します。
 
 //list[memunit.veryl.lbhsbh-range.mem_wmask][membusにwmaskを設定する (memunit.veryl)]{
 #@maprange(scripts/04/lbhsbh-range/core/src/memunit.veryl,mem_wmask)
-    // メモリアクセス
-    membus.valid = state == State::WaitReady;
-    membus.addr  = req_addr;
-    membus.wen   = req_wen;
-    membus.wdata = req_wdata;
-    @<b>|membus.wmask = req_wmask;|
+        // メモリアクセス
+        membus.valid = state == State::WaitReady;
+        membus.addr  = req_addr;
+        membus.wen   = req_wen;
+        membus.wdata = req_wdata;
+        @<b>|membus.wmask = req_wmask;|
 #@end
 //}
 
@@ -2804,8 +2800,8 @@ always_ffの中で、@<code>{req_wmask}の値を設定します。
 //list[memunit.veryl.lbhsbh-range.always_wmask][メモリにアクセスする命令のとき、wmaskを設定する (memunit.veryl)]{
 #@maprange(scripts/04/lbhsbh-range/core/src/memunit.veryl,always_wmask)
     req_wmask = case ctrl.funct3[1:0] {
-        2'b00  : 4'b1 << addr[1:0], @<balloon>{SB命令のとき、アドレス下位2ビット分だけ1を左シフトする}
-        2'b01  : case addr[1:0] { @<balloon>{SH命令のとき}
+        2'b00: 4'b1 << addr[1:0],@<balloon>{SB命令のとき、アドレス下位2ビット分だけ1を左シフトする}
+        2'b01: case addr[1:0] { @<balloon>{SH命令のとき}
             2      : 4'b1100, @<balloon>{上位2バイトに書き込む}
             0      : 4'b0011, @<balloon>{下位2バイトに書き込む}
             default: 'x,
@@ -2905,14 +2901,11 @@ JALR命令(I形式)ならrs1と即値になっていることを確認してく�
 
 //list[core.veryl.jump-range.wb][pc + 4を書き込む (core.veryl)]{
 #@maprange(scripts/04/jump-range/core/src/core.veryl,wb)
-    let wb_data: UIntX    = if inst_ctrl.is_lui {
-        inst_imm
-    } @<b>|else if inst_ctrl.is_jump {|
-        @<b>|inst_pc + 4|
-    @<b>|}| else if inst_ctrl.is_load {
-        memu_rdata
-    } else {
-        alu_result
+    let wb_data: UIntX    = switch {
+        inst_ctrl.is_lui : inst_imm,
+        @<b>|inst_ctrl.is_jump: inst_pc + 4,|
+        inst_ctrl.is_load: memu_rdata,
+        default          : alu_result
     };
 #@end
 //}

@@ -428,16 +428,8 @@
     let <b>exs_</b>rs2_addr: logic&lt;5&gt; = <b>exs</b>_inst_bits[24:20];
 
     // ソースレジスタのデータ
-    let <b>exs_</b>rs1_data: UIntX = if <b>exs_</b>rs1_addr == 0 {
-        0
-    } else {
-        regfile[<b>exs_</b>rs1_addr]
-    };
-    let <b>exs_</b>rs2_data: UIntX = if <b>exs_</b>rs2_addr == 0 {
-        0
-    } else {
-        regfile[<b>exs_</b>rs2_addr]
-    };
+    let <b>exs_</b>rs1_data: UIntX = if <b>exs_</b>rs1_addr == 0 ? 0 : regfile[<b>exs_</b>rs1_addr];
+    let <b>exs_</b>rs2_data: UIntX = if <b>exs_</b>rs2_addr == 0 ? 0 : regfile[<b>exs_</b>rs2_addr];
 
     // ALU
     var <b>exs_</b>op1       : UIntX;
@@ -447,21 +439,21 @@
     always_comb {
         case <b>exs</b>_ctrl.itype {
             InstType::R, InstType::B: {
-                                          <b>exs_</b>op1 = <b>exs_</b>rs1_data;
-                                          <b>exs_</b>op2 = <b>exs_</b>rs2_data;
-                                      }
+                <b>exs_</b>op1 = <b>exs_</b>rs1_data;
+                <b>exs_</b>op2 = <b>exs_</b>rs2_data;
+            }
             InstType::I, InstType::S: {
-                                          <b>exs_</b>op1 = <b>exs_</b>rs1_data;
-                                          <b>exs_</b>op2 = <b>exs</b>_imm;
-                                      }
+                <b>exs_</b>op1 = <b>exs_</b>rs1_data;
+                <b>exs_</b>op2 = <b>exs</b>_imm;
+            }
             InstType::U, InstType::J: {
-                                          <b>exs_</b>op1 = <b>exs</b>_pc;
-                                          <b>exs_</b>op2 = <b>exs</b>_imm;
-                                      }
+                <b>exs_</b>op1 = <b>exs</b>_pc;
+                <b>exs_</b>op2 = <b>exs</b>_imm;
+            }
             default: {
-                         <b>exs_</b>op1 = 'x;
-                         <b>exs_</b>op2 = 'x;
-                     }
+                <b>exs_</b>op1 = 'x;
+                <b>exs_</b>op2 = 'x;
+            }
         }
     }
 
@@ -499,11 +491,7 @@
         memq_wdata.alu_result = exs_alu_result;
         <span class="balloon">← ジャンプ命令、または、分岐命令かつ分岐が成立するとき、1にする</span>
         memq_wdata.br_taken   = exs_ctrl.is_jump || inst_is_br(exs_ctrl) &amp;&amp; exs_brunit_take;
-        memq_wdata.jump_addr  = if inst_is_br(exs_ctrl) {
-            exs_pc + exs_imm <span class="balloon">← 分岐命令の分岐先アドレス</span>
-        } else {
-            exs_alu_result &amp; ~1 <span class="balloon">← ジャンプ命令のジャンプ先アドレス</span>
-        };
+        memq_wdata.jump_addr  = if inst_is_br(exs_ctrl) ? exs_pc + exs_imm : exs_alu_result &amp; ~1;
     }
 </pre>
 </div>
@@ -571,13 +559,13 @@
         ctrl    : <b>mems</b>_ctrl            ,
         rd_addr : <b>mems</b>_rd_addr         ,
         csr_addr: <b>mems</b>_inst_bits[31:20],
-        rs1     : if <b>mems</b>_ctrl.funct3[2] == 1 &amp;&amp; <b>mems</b>_ctrl.funct3[1:0] != 0 {
+        rs1     : if <b>mems</b>_ctrl.funct3[2] == 1 &amp;&amp; <b>mems</b>_ctrl.funct3[1:0] != 0 ?
             {1'b0 repeat XLEN - $bits(<b>memq_rdata.</b>rs1_addr), <b>memq_rdata.</b>rs1_addr} // rs1を0で拡張する
-        } else {
+        :
             <b>memq_rdata.</b>rs1_data
-        },
-        rdata      : csru_rdata,
-        raise_trap : csru_raise_trap,
+        ,
+        rdata      : csru_rdata      ,
+        raise_trap : csru_raise_trap ,
         trap_vector: csru_trap_vector,
     );
 </pre>
@@ -585,12 +573,8 @@
 <p>フェッチ先が変わったことを表す変数<code class="inline-code" translate="no" >control_hazard</code>と、新しいフェッチ先を示す信号<code class="inline-code" translate="no" >control_hazard_pc_next</code>では、EXステージで計算したデータとCSRステージのトラップ情報を利用します(<span class="listref"><a href="./05a-pipeline.html#mem_prefix1">リスト7.16</a></span>)。</p>
 <div id="mem_prefix1" class="caption-code">
 <span class="caption">リスト7.16: リスト7.16: ジャンプの判定処理 (core.veryl)</span>
-<pre class="list" translate="no">    assign control_hazard         = <b>mems</b>_valid &amp;&amp; (csru_raise_trap || <b>mems</b>_ctrl.is_jump || <b>memq_rdata.</b>br_taken);
-    assign control_hazard_pc_next = if csru_raise_trap {
-        csru_trap_vector
-    } else {
-        <b>memq_rdata.</b>jump_addr
-    };
+<pre class="list" translate="no">    assign control_hazard         = <b>mems</b>_valid &amp;&amp; (csru_raise_trap || <b>mems_</b>ctrl.is_jump || <b>memq_rdata.</b>br_taken);
+    assign control_hazard_pc_next = if csru_raise_trap ? csru_trap_vector : <b>memq_rdata.</b>jump_addr;
 </pre>
 </div>
 <p>ジャンプ命令の後ろの余計な命令を実行しないために、<code class="inline-code" translate="no" >control_hazard</code>が<code class="inline-code" translate="no" >1</code>になったとき、ID、EX、MEMステージに命令を供給するFIFOをフラッシュします。<code class="inline-code" translate="no" >control_hazard</code>が<code class="inline-code" translate="no" >1</code>になるとき、MEMステージの処理は完了しています。後述しますが、WBステージの処理は必ず1クロックで終了します。そのため、フラッシュするとき、MEMステージにある命令は必ずWBステージに移動します。</p>
@@ -628,17 +612,13 @@
 <p>次に、WBステージで扱う変数名を変更します。変数名に<code class="inline-code" translate="no" >wbs_</code>をつけます(<span class="listref"><a href="./05a-pipeline.html#wb_prefix">リスト7.19</a></span>)。</p>
 <div id="wb_prefix" class="caption-code">
 <span class="caption">リスト7.19: リスト7.19: 変数名を変更する (core.veryl)</span>
-<pre class="list" translate="no">    let <b>wbs_</b>rd_addr: logic&lt;5&gt; = <b>wbs</b>_inst_bits[11:7];
-    let <b>wbs_</b>wb_data: UIntX    = if <b>wbs</b>_ctrl.is_lui {
-        <b>wbs</b>_imm
-    } else if <b>wbs</b>_ctrl.is_jump {
-        <b>wbs_pc</b> + 4
-    } else if <b>wbs</b>_ctrl.is_load {
-        <b>wbq_rdata.</b>mem_rdata
-    } else if <b>wbs</b>_ctrl.is_csr {
-        <b>wbq_rdata.</b>csr_rdata
-    } else {
-        <b>wbq_rdata.</b>alu_result
+<pre class="list" translate="no">    let <b>wbs_</b>rd_addr: logic&lt;5&gt; = <b>wbs_</b>inst_bits[11:7];
+    let <b>wbs_</b>wb_data: UIntX    = switch {
+        <b>wbs_</b>ctrl.is_lui : <b>wbs_</b>imm,
+        <b>wbs_</b>ctrl.is_jump: <b>wbs_</b>pc + 4,
+        <b>wbs_</b>ctrl.is_load: <b>wbq_rdata.</b>mem_rdata,
+        <b>wbs_</b>ctrl.is_csr : <b>wbq_rdata.</b>csr_rdata,
+        default         : <b>wbq_rdata.</b>alu_result
     };
 
     always_ff {
