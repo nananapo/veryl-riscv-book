@@ -2163,25 +2163,51 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 13</span>
 
 <h4><a id="h3-11-3-1"></a>memoryモジュールで書き込みマスクをサポートする</h4>
 <p>memoryモジュールは、32ビット単位の読み書きしかサポートしておらず、一部のみの書き込みをサポートしていません。本書では、一部のみ書き込む命令をmemoryモジュールでサポートすることでSB、SH命令を実装します。</p>
-<p>まず、membus_ifインターフェースに、書き込む場所をバイト単位で示す信号<code class="inline-code" translate="no" >wmask</code>を追加します(<span class="listref"><a href="./04-impl-rv32i.html#membus_if.veryl.lbhsbh-range.wmask">リスト3.70</a></span>,<span class="listref"><a href="./04-impl-rv32i.html#membus_if.veryl.lbhsbh-range.master">リスト3.71</a></span>)。</p>
+<p>まず、membus_ifインターフェースに、書き込む場所をバイト単位で示す信号<code class="inline-code" translate="no" >wmask</code>を追加します(<span class="listref"><a href="./04-impl-rv32i.html#membus_if.veryl.lbhsbh-range.wmask">リスト3.70</a></span>)。</p>
 <div id="membus_if.veryl.lbhsbh-range.wmask" class="caption-code">
 <span class="caption">リスト3.70: リスト3.70: wmaskの定義 (membus_if.veryl)</span>
 <pre class="list language-wmask" translate="no">    var wmask : logic&lt;DATA_WIDTH / 8&gt;;
 </pre>
 </div>
+<p>後で<code class="inline-code" translate="no" >wmask</code>を<code class="inline-code" translate="no" >DATA_WIDTH</code>ビットに展開して使うので、wmaskを展開するwmask_expand関数を定義します(<span class="listref"><a href="./04-impl-rv32i.html#membus_if.veryl.lbhsbh-range.master">リスト3.72</a></span>)。</p>
+<div id="membus_if.veryl.lbhsbh-range.func" class="caption-code">
+<span class="caption">リスト3.71: リスト3.71: wmask_expand関数の定義 (membus_if.veryl)</span>
+<pre class="list language-func" translate="no">    // get DATA_WIDTH-bit expanded wmask
+    function wmask_expand () -&gt; logic&lt;DATA_WIDTH&gt; {
+        var result: logic&lt;DATA_WIDTH&gt;;
+
+        for i: u32 in 0..DATA_WIDTH {
+            result[i] = wmask[i / 8];
+        }
+        return result;
+    }
+</pre>
+</div>
+<p><code class="inline-code" translate="no" >wmask</code>、wmask_expand関数をmodportに追加します(<span class="listref"><a href="./04-impl-rv32i.html#membus_if.veryl.lbhsbh-range.master">リスト3.72</a></span>)。</p>
 <div id="membus_if.veryl.lbhsbh-range.master" class="caption-code">
-<span class="caption">リスト3.71: リスト3.71: modport masterとslaveにwmaskを追加する (membus_if.veryl)</span>
+<span class="caption">リスト3.72: リスト3.72: modport masterとslaveにwmask、wmask_expand関数を追加する (membus_if.veryl)</span>
 <pre class="list language-master" translate="no">    modport master {
-        ...
-        <b>wmask : output,</b>
-        ...
+        valid       : output,
+        ready       : input ,
+        addr        : output,
+        wen         : output,
+        wdata       : output,
+        <b>wmask       : output,</b>
+        rvalid      : input ,
+        rdata       : input ,
+        <b>wmask_expand: import,</b>
+    }
+
+    modport slave {
+        <b>wmask_expand: import,</b>
+        ..converse(master)
     }
 </pre>
 </div>
 <p><code class="inline-code" translate="no" >wmask</code>には、書き込む部分を<code class="inline-code" translate="no" >1</code>、書き込まない部分を<code class="inline-code" translate="no" >0</code>で指定します。このような挙動をする値を、書き込みマスクと呼びます。バイト単位で指定するため、<code class="inline-code" translate="no" >wmask</code>の幅は<code class="inline-code" translate="no" >DATA_WIDTH / 8</code>ビットです。</p>
-<p>次に、memoryモジュールで書き込みマスクをサポートします(<span class="listref"><a href="./04-impl-rv32i.html#memory.veryl.lbhsbh">リスト3.72</a></span>)。</p>
+<p>次に、memoryモジュールで書き込みマスクをサポートします(<span class="listref"><a href="./04-impl-rv32i.html#memory.veryl.lbhsbh">リスト3.73</a></span>)。</p>
 <div id="memory.veryl.lbhsbh" class="caption-code">
-<span class="caption">リスト3.72: リスト3.72: 書き込みマスクをサポートするmemoryモジュール (memory.veryl)</span>
+<span class="caption">リスト3.73: リスト3.73: 書き込みマスクをサポートするmemoryモジュール (memory.veryl)</span>
 <pre class="list language-lbhsbh" translate="no">module memory::&lt;DATA_WIDTH: u32, ADDR_WIDTH: u32&gt; #(
     param FILEPATH_IS_ENV: logic  = 0 , // FILEPATHが環境変数名かどうか
     param FILEPATH       : string = &quot;&quot;, // メモリの初期化用ファイルのパス, または環境変数名
@@ -2194,14 +2220,6 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 13</span>
     type MaskType = logic&lt;DATA_WIDTH / 8&gt;;
 
     var mem: DataType [2 ** ADDR_WIDTH];
-
-    // 書き込みマスクをDATA_WIDTHに展開した値
-    var wmask_expand: DataType;
-    always_comb {
-        for i: u32 in 0..DATA_WIDTH {
-            wmask_expand[i] = wmask_saved[i / 8];
-        }
-    }
 
     initial {
         // memを初期化する
@@ -2231,8 +2249,9 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 13</span>
     }
 
     always_ff {
+        let wmask: logic&lt;DATA_WIDTH&gt; = membus.wmask_expand();
         if state == State::WriteValid {
-            mem[addr_saved[ADDR_WIDTH - 1:0]] = wdata_saved &amp; wmask_expand | rdata_saved &amp; ~wmask_expand;
+            mem[addr_saved[ADDR_WIDTH - 1:0]] = wdata_saved &amp; wmask | rdata_saved &amp; ~wmask;
         }
     }
 
@@ -2284,9 +2303,9 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 13</span>
 </dd>
 </dl>
 <p>memoryモジュールは、書き込み要求が送られてきた場合、名前が<code class="inline-code" translate="no" >_saved</code>で終わるレジスタに要求の内容を格納します。また、指定されたアドレスのデータを<code class="inline-code" translate="no" >rdata_saved</code>に格納します。次のクロックで、書き込みマスクを使った書き込みを行い、要求の処理を終了します。</p>
-<p>topモジュールの調停処理で、<code class="inline-code" translate="no" >wmask</code>も調停します(<span class="listref"><a href="./04-impl-rv32i.html#top.veryl.lbhsbh-range.wmask">リスト3.73</a></span>)。</p>
+<p>topモジュールの調停処理で、<code class="inline-code" translate="no" >wmask</code>も調停します(<span class="listref"><a href="./04-impl-rv32i.html#top.veryl.lbhsbh-range.wmask">リスト3.74</a></span>)。</p>
 <div id="top.veryl.lbhsbh-range.wmask" class="caption-code">
-<span class="caption">リスト3.73: リスト3.73: wmaskの調停 (top.veryl)</span>
+<span class="caption">リスト3.74: リスト3.74: wmaskの調停 (top.veryl)</span>
 <pre class="list language-wmask" translate="no">    membus.valid = i_membus.valid | d_membus.valid;
     if d_membus.valid {
         membus.addr  = addr_to_memaddr(d_membus.addr);
@@ -2304,14 +2323,14 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 13</span>
 
 <h4><a id="h3-11-3-2"></a>memunitモジュールの実装</h4>
 <p>memoryモジュールが書き込みマスクをサポートしたので、memunitモジュールで<code class="inline-code" translate="no" >wmask</code>を設定します。</p>
-<p><code class="inline-code" translate="no" >req_wmask</code>レジスタを作成し、<code class="inline-code" translate="no" >membus.wmask</code>と接続します(<span class="listref"><a href="./04-impl-rv32i.html#memunit.veryl.lbhsbh-range.def_wmask">リスト3.74</a></span>、<span class="listref"><a href="./04-impl-rv32i.html#memunit.veryl.lbhsbh-range.mem_wmask">リスト3.75</a></span>)。</p>
+<p><code class="inline-code" translate="no" >req_wmask</code>レジスタを作成し、<code class="inline-code" translate="no" >membus.wmask</code>と接続します(<span class="listref"><a href="./04-impl-rv32i.html#memunit.veryl.lbhsbh-range.def_wmask">リスト3.75</a></span>、<span class="listref"><a href="./04-impl-rv32i.html#memunit.veryl.lbhsbh-range.mem_wmask">リスト3.76</a></span>)。</p>
 <div id="memunit.veryl.lbhsbh-range.def_wmask" class="caption-code">
-<span class="caption">リスト3.74: リスト3.74: req_wmaskの定義 (memunit.veryl)</span>
+<span class="caption">リスト3.75: リスト3.75: req_wmaskの定義 (memunit.veryl)</span>
 <pre class="list language-def_wmask" translate="no">    var req_wmask: logic&lt;MEM_DATA_WIDTH / 8&gt;;
 </pre>
 </div>
 <div id="memunit.veryl.lbhsbh-range.mem_wmask" class="caption-code">
-<span class="caption">リスト3.75: リスト3.75: membusにwmaskを設定する (memunit.veryl)</span>
+<span class="caption">リスト3.76: リスト3.76: membusにwmaskを設定する (memunit.veryl)</span>
 <pre class="list language-mem_wmask" translate="no">        // メモリアクセス
         membus.valid = state == State::WaitReady;
         membus.addr  = req_addr;
@@ -2320,9 +2339,9 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 13</span>
         <b>membus.wmask = req_wmask;</b>
 </pre>
 </div>
-<p>always_ffの中で、<code class="inline-code" translate="no" >req_wmask</code>の値を設定します。それぞれの命令のとき、<code class="inline-code" translate="no" >wmask</code>がどうなるかを確認してください(<span class="listref"><a href="./04-impl-rv32i.html#memunit.veryl.lbhsbh-range.always_reset">リスト3.76</a></span>、<span class="listref"><a href="./04-impl-rv32i.html#memunit.veryl.lbhsbh-range.always_wmask">リスト3.77</a></span>)。</p>
+<p>always_ffの中で、<code class="inline-code" translate="no" >req_wmask</code>の値を設定します。それぞれの命令のとき、<code class="inline-code" translate="no" >wmask</code>がどうなるかを確認してください(<span class="listref"><a href="./04-impl-rv32i.html#memunit.veryl.lbhsbh-range.always_reset">リスト3.77</a></span>、<span class="listref"><a href="./04-impl-rv32i.html#memunit.veryl.lbhsbh-range.always_wmask">リスト3.78</a></span>)。</p>
 <div id="memunit.veryl.lbhsbh-range.always_reset" class="caption-code">
-<span class="caption">リスト3.76: リスト3.76: if_resetでreq_wmaskを初期化する (memunit.veryl)</span>
+<span class="caption">リスト3.77: リスト3.77: if_resetでreq_wmaskを初期化する (memunit.veryl)</span>
 <pre class="list language-always_reset" translate="no">    if_reset {
         state     = State::Init;
         req_wen   = 0;
@@ -2333,7 +2352,7 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 13</span>
 </pre>
 </div>
 <div id="memunit.veryl.lbhsbh-range.always_wmask" class="caption-code">
-<span class="caption">リスト3.77: リスト3.77: メモリにアクセスする命令のとき、wmaskを設定する (memunit.veryl)</span>
+<span class="caption">リスト3.78: リスト3.78: メモリにアクセスする命令のとき、wmaskを設定する (memunit.veryl)</span>
 <pre class="list language-always_wmask" translate="no">    req_wmask = case ctrl.funct3[1:0] {
         2'b00: 4'b1 &lt;&lt; addr[1:0],<span class="balloon">← SB命令のとき、アドレス下位2ビット分だけ1を左シフトする</span>
         2'b01: case addr[1:0] { <span class="balloon">← SH命令のとき</span>
@@ -2350,7 +2369,7 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 13</span>
 <h3 class="none"><a id="h3-11-4"></a><span class="secno">3.11.4</span> LB、LBU、LH、LHU、SB、SH命令をテストする</h3>
 <p>簡単なテストを作成し、動作をテストします。2つテストを記載するので、正しく動いているか確認してください。</p>
 <div id="sample_lbh.hex" class="caption-code">
-<span class="caption">リスト3.78: リスト3.78: src/sample_lbh.hex</span>
+<span class="caption">リスト3.79: リスト3.79: src/sample_lbh.hex</span>
 <pre class="list language-hex" translate="no">02000083 // lb x1, 0x20(x0)  : x1 = ffffffef
 02104083 // lbu x1, 0x21(x0) : x1 = 000000be
 02201083 // lh x1, 0x22(x0)  : x1 = ffffdead
@@ -2363,7 +2382,7 @@ deadbeef // 0x0
 </pre>
 </div>
 <div id="sample_sbsh.hex" class="caption-code">
-<span class="caption">リスト3.79: リスト3.79: src/sample_sbsh.hex</span>
+<span class="caption">リスト3.80: リスト3.80: src/sample_sbsh.hex</span>
 <pre class="list language-hex" translate="no">12300093 // addi x1, x0, 0x123
 02101023 // sh x1, 0x20(x0)
 02100123 // sb x1, 0x22(x0)
@@ -2398,9 +2417,9 @@ deadbeef // 0x0
 <p>無条件ジャンプであるかどうかは<code class="inline-code" translate="no" >InstCtrl.is_jump</code>で確かめられます。また、<code class="inline-code" translate="no" >InstCtrl.is_aluop</code>が<code class="inline-code" translate="no" >0</code>なため、ALUは常に加算を行います。加算の対象のデータが、JAL命令(J形式)ならPCと即値、JALR命令(I形式)ならrs1と即値になっていることを確認してください(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.alu-range.data">リスト3.43</a></span>)。</p>
 
 <h4><a id="h3-12-1-1"></a>無条件ジャンプの実装</h4>
-<p>それでは、無条件ジャンプを実装します。まず、ジャンプ命令を実行するときにライトバックする値を<code class="inline-code" translate="no" >inst_pc + 4</code>にします(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.jump-range.wb">リスト3.80</a></span>)。</p>
+<p>それでは、無条件ジャンプを実装します。まず、ジャンプ命令を実行するときにライトバックする値を<code class="inline-code" translate="no" >inst_pc + 4</code>にします(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.jump-range.wb">リスト3.81</a></span>)。</p>
 <div id="core.veryl.jump-range.wb" class="caption-code">
-<span class="caption">リスト3.80: リスト3.80: pc + 4を書き込む (core.veryl)</span>
+<span class="caption">リスト3.81: リスト3.81: pc + 4を書き込む (core.veryl)</span>
 <pre class="list language-wb" translate="no">    let wb_data: UIntX    = switch {
         inst_ctrl.is_lui : inst_imm,
         <b>inst_ctrl.is_jump: inst_pc + 4,</b>
@@ -2409,22 +2428,22 @@ deadbeef // 0x0
     };
 </pre>
 </div>
-<p>次に、次にフェッチする命令をジャンプ先の命令に変更します。フェッチ先の変更が発生を示す信号<code class="inline-code" translate="no" >control_hazard</code>と、新しいフェッチ先を示す信号<code class="inline-code" translate="no" >control_hazard_pc_next</code>を作成します(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.jump-range.hazard_reg">リスト3.81</a></span>、<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.jump-range.hazard_assign">リスト3.82</a></span>)。</p>
+<p>次に、次にフェッチする命令をジャンプ先の命令に変更します。フェッチ先の変更が発生を示す信号<code class="inline-code" translate="no" >control_hazard</code>と、新しいフェッチ先を示す信号<code class="inline-code" translate="no" >control_hazard_pc_next</code>を作成します(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.jump-range.hazard_reg">リスト3.82</a></span>、<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.jump-range.hazard_assign">リスト3.83</a></span>)。</p>
 <div id="core.veryl.jump-range.hazard_reg" class="caption-code">
-<span class="caption">リスト3.81: リスト3.81: control_hazardとcontrol_hazard_pc_nextの定義 (core.veryl)</span>
+<span class="caption">リスト3.82: リスト3.82: control_hazardとcontrol_hazard_pc_nextの定義 (core.veryl)</span>
 <pre class="list language-hazard_reg" translate="no">    var control_hazard        : logic;
     var control_hazard_pc_next: Addr ;
 </pre>
 </div>
 <div id="core.veryl.jump-range.hazard_assign" class="caption-code">
-<span class="caption">リスト3.82: リスト3.82: control_hazardとcontrol_hazard_pc_nextの割り当て (core.veryl)</span>
+<span class="caption">リスト3.83: リスト3.83: control_hazardとcontrol_hazard_pc_nextの割り当て (core.veryl)</span>
 <pre class="list language-hazard_assign" translate="no">    assign control_hazard         = inst_valid &amp;&amp; inst_ctrl.is_jump;
     assign control_hazard_pc_next = alu_result &amp; ~1;
 </pre>
 </div>
-<p><code class="inline-code" translate="no" >control_hazard</code>を利用して<code class="inline-code" translate="no" >if_pc</code>を更新し、新しく命令をフェッチしなおすようにします(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.jump-range.always">リスト3.83</a></span>)。</p>
+<p><code class="inline-code" translate="no" >control_hazard</code>を利用して<code class="inline-code" translate="no" >if_pc</code>を更新し、新しく命令をフェッチしなおすようにします(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.jump-range.always">リスト3.84</a></span>)。</p>
 <div id="core.veryl.jump-range.always" class="caption-code">
-<span class="caption">リスト3.83: リスト3.83: PCをジャンプ先に変更する (core.veryl)</span>
+<span class="caption">リスト3.84: リスト3.84: PCをジャンプ先に変更する (core.veryl)</span>
 <pre class="list language-always" translate="no">    always_ff {
         if_reset {
             ...
@@ -2454,9 +2473,9 @@ deadbeef // 0x0
 </p>
 </div>
 <p>実行するべきではない命令を実行しないようにするために、ジャンプ命令を実行するときに、FIFOをリセットします。</p>
-<p>FIFOに、中身をリセットするための信号<code class="inline-code" translate="no" >flush</code>を実装します(<span class="listref"><a href="./04-impl-rv32i.html#fifo.veryl.jump-range.port">リスト3.84</a></span>)。</p>
+<p>FIFOに、中身をリセットするための信号<code class="inline-code" translate="no" >flush</code>を実装します(<span class="listref"><a href="./04-impl-rv32i.html#fifo.veryl.jump-range.port">リスト3.85</a></span>)。</p>
 <div id="fifo.veryl.jump-range.port" class="caption-code">
-<span class="caption">リスト3.84: リスト3.84: ポートにflushを追加する (fifo.veryl)</span>
+<span class="caption">リスト3.85: リスト3.85: ポートにflushを追加する (fifo.veryl)</span>
 <pre class="list language-port" translate="no">module fifo #(
     param DATA_TYPE: type = logic,
     param WIDTH    : u32  = 2    ,
@@ -2467,9 +2486,9 @@ deadbeef // 0x0
     wready    : output logic        ,
 </pre>
 </div>
-<p><code class="inline-code" translate="no" >flush</code>が<code class="inline-code" translate="no" >1</code>のとき、<code class="inline-code" translate="no" >head</code>と<code class="inline-code" translate="no" >tail</code>を<code class="inline-code" translate="no" >0</code>に初期化することでFIFOを空にします(<span class="listref"><a href="./04-impl-rv32i.html#fifo.veryl.jump-range.always_one">リスト3.85</a></span>、<span class="listref"><a href="./04-impl-rv32i.html#fifo.veryl.jump-range.always_two">リスト3.86</a></span>)。</p>
+<p><code class="inline-code" translate="no" >flush</code>が<code class="inline-code" translate="no" >1</code>のとき、<code class="inline-code" translate="no" >head</code>と<code class="inline-code" translate="no" >tail</code>を<code class="inline-code" translate="no" >0</code>に初期化することでFIFOを空にします(<span class="listref"><a href="./04-impl-rv32i.html#fifo.veryl.jump-range.always_one">リスト3.86</a></span>、<span class="listref"><a href="./04-impl-rv32i.html#fifo.veryl.jump-range.always_two">リスト3.87</a></span>)。</p>
 <div id="fifo.veryl.jump-range.always_one" class="caption-code">
-<span class="caption">リスト3.85: リスト3.85: flushが1のとき、FIFOを空にする (fifo.veryl、WIDTH==1)</span>
+<span class="caption">リスト3.86: リスト3.86: flushが1のとき、FIFOを空にする (fifo.veryl、WIDTH==1)</span>
 <pre class="list language-always_one" translate="no">    always_ff {
         if_reset {
             rdata  = 0;
@@ -2490,7 +2509,7 @@ deadbeef // 0x0
 </pre>
 </div>
 <div id="fifo.veryl.jump-range.always_two" class="caption-code">
-<span class="caption">リスト3.86: リスト3.86: flushが1のとき、FIFOを空にする (fifo.veryl、WIDTH!=1)</span>
+<span class="caption">リスト3.87: リスト3.87: flushが1のとき、FIFOを空にする (fifo.veryl、WIDTH!=1)</span>
 <pre class="list language-always_two" translate="no">    always_ff {
         if_reset {
             head = 0;
@@ -2512,9 +2531,9 @@ deadbeef // 0x0
     }
 </pre>
 </div>
-<p>coreモジュールで、<code class="inline-code" translate="no" >control_hazard</code>と<code class="inline-code" translate="no" >flush</code>を接続し、FIFOをリセットします(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.jump-range.fifo">リスト3.87</a></span>)。</p>
+<p>coreモジュールで、<code class="inline-code" translate="no" >control_hazard</code>と<code class="inline-code" translate="no" >flush</code>を接続し、FIFOをリセットします(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.jump-range.fifo">リスト3.88</a></span>)。</p>
 <div id="core.veryl.jump-range.fifo" class="caption-code">
-<span class="caption">リスト3.87: リスト3.87: ジャンプ命令のとき、FIFOをリセットする (core.veryl)</span>
+<span class="caption">リスト3.88: リスト3.88: ジャンプ命令のとき、FIFOをリセットする (core.veryl)</span>
 <pre class="list language-fifo" translate="no">    inst if_fifo: fifo #(
         DATA_TYPE: if_fifo_type,
         WIDTH    : 3           ,
@@ -2528,9 +2547,9 @@ deadbeef // 0x0
 </div>
 
 <h4><a id="h3-12-1-2"></a>無条件ジャンプのテスト</h4>
-<p>簡単なテストを作成し、動作をテストします(<span class="listref"><a href="./04-impl-rv32i.html#sample_jump.hex">リスト3.88</a></span>、<span class="listref"><a href="./04-impl-rv32i.html#jump.test">リスト3.89</a></span>)。</p>
+<p>簡単なテストを作成し、動作をテストします(<span class="listref"><a href="./04-impl-rv32i.html#sample_jump.hex">リスト3.89</a></span>、<span class="listref"><a href="./04-impl-rv32i.html#jump.test">リスト3.90</a></span>)。</p>
 <div id="sample_jump.hex" class="caption-code">
-<span class="caption">リスト3.88: リスト3.88: sample_jump.hex</span>
+<span class="caption">リスト3.89: リスト3.89: sample_jump.hex</span>
 <pre class="list language-hex" translate="no">0100006f //  0: jal x0, 0x10 : 0x10にジャンプする
 deadbeef //  4:
 deadbeef //  8:
@@ -2543,7 +2562,7 @@ fe1ff06f // 20: jal x0, -0x20 : 0にジャンプする
 </pre>
 </div>
 <div id="jump.test" class="cmd-code">
-<span class="caption">リスト3.89: リスト3.89: テストの実行</span>
+<span class="caption">リスト3.90: リスト3.90: テストの実行</span>
 <pre class="list language-test" translate="no">$ <span class="userinput">make build</span>
 $ <span class="userinput">make sim</span>
 $ <span class="userinput">obj_dir/sim src/sample_jump.hex 17</span>
@@ -2581,9 +2600,9 @@ $ <span class="userinput">obj_dir/sim src/sample_jump.hex 17</span>
 </div>
 
 <h4><a id="h3-12-2-1"></a>条件分岐の実装</h4>
-<p>分岐の条件が成立するかどうかを判定するモジュールを作成します。<code class="inline-code" translate="no" >src/brunit.veryl</code>を作成し、次のように記述します(<span class="listref"><a href="./04-impl-rv32i.html#brunit.veryl.br-range">リスト3.90</a></span>)。</p>
+<p>分岐の条件が成立するかどうかを判定するモジュールを作成します。<code class="inline-code" translate="no" >src/brunit.veryl</code>を作成し、次のように記述します(<span class="listref"><a href="./04-impl-rv32i.html#brunit.veryl.br-range">リスト3.91</a></span>)。</p>
 <div id="brunit.veryl.br-range" class="caption-code">
-<span class="caption">リスト3.90: リスト3.90: brunit.veryl</span>
+<span class="caption">リスト3.91: リスト3.91: brunit.veryl</span>
 <pre class="list language-br-range" translate="no">import eei::*;
 import corectrl::*;
 
@@ -2612,9 +2631,9 @@ module brunit (
 </pre>
 </div>
 <p>brunitモジュールは、<code class="inline-code" translate="no" >funct3</code>に応じて<code class="inline-code" translate="no" >take</code>の条件を切り替えます。分岐が成立するときに<code class="inline-code" translate="no" >take</code>が<code class="inline-code" translate="no" >1</code>になります。</p>
-<p>brunitモジュールを、coreモジュールでインスタンス化します(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.br-range.inst">リスト3.91</a></span>)。命令がB形式のとき、<code class="inline-code" translate="no" >op1</code>は<code class="inline-code" translate="no" >rs1_data</code>、<code class="inline-code" translate="no" >op2</code>は<code class="inline-code" translate="no" >rs2_data</code>になっていることを確認してください(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.alu-range.data">リスト3.43</a></span>)。</p>
+<p>brunitモジュールを、coreモジュールでインスタンス化します(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.br-range.inst">リスト3.92</a></span>)。命令がB形式のとき、<code class="inline-code" translate="no" >op1</code>は<code class="inline-code" translate="no" >rs1_data</code>、<code class="inline-code" translate="no" >op2</code>は<code class="inline-code" translate="no" >rs2_data</code>になっていることを確認してください(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.alu-range.data">リスト3.43</a></span>)。</p>
 <div id="core.veryl.br-range.inst" class="caption-code">
-<span class="caption">リスト3.91: リスト3.91: brunitモジュールのインスタンス化 (core.veryl)</span>
+<span class="caption">リスト3.92: リスト3.92: brunitモジュールのインスタンス化 (core.veryl)</span>
 <pre class="list language-inst" translate="no">    var brunit_take: logic;
 
     inst bru: brunit (
@@ -2625,9 +2644,9 @@ module brunit (
     );
 </pre>
 </div>
-<p>命令が条件分岐命令で<code class="inline-code" translate="no" >brunit_take</code>が<code class="inline-code" translate="no" >1</code>のとき、次のPCをPC + 即値にします(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.br-range.function">リスト3.92</a></span>、<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.br-range.hazard">リスト3.93</a></span>)。</p>
+<p>命令が条件分岐命令で<code class="inline-code" translate="no" >brunit_take</code>が<code class="inline-code" translate="no" >1</code>のとき、次のPCをPC + 即値にします(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.br-range.function">リスト3.93</a></span>、<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.br-range.hazard">リスト3.94</a></span>)。</p>
 <div id="core.veryl.br-range.function" class="caption-code">
-<span class="caption">リスト3.92: リスト3.92: 命令が条件分岐命令か判定する関数 (core.veryl)</span>
+<span class="caption">リスト3.93: リスト3.93: 命令が条件分岐命令か判定する関数 (core.veryl)</span>
 <pre class="list language-function" translate="no">    // 命令が分岐命令かどうかを判定する
     function inst_is_br (
         ctrl: input InstCtrl,
@@ -2637,7 +2656,7 @@ module brunit (
 </pre>
 </div>
 <div id="core.veryl.br-range.hazard" class="caption-code">
-<span class="caption">リスト3.93: リスト3.93: 分岐成立時のPCの設定 (core.veryl)</span>
+<span class="caption">リスト3.94: リスト3.94: 分岐成立時のPCの設定 (core.veryl)</span>
 <pre class="list language-hazard" translate="no">    assign control_hazard         = inst_valid &amp;&amp; <b>(</b>inst_ctrl.is_jump <b>|| inst_is_br(inst_ctrl) &amp;&amp; brunit_take)</b>;
     assign control_hazard_pc_next = <b>if inst_is_br(inst_ctrl) {</b>
         <b>inst_pc + inst_imm</b>
@@ -2649,17 +2668,17 @@ module brunit (
 <p><code class="inline-code" translate="no" >control_hazard</code>は、命令が無条件ジャンプ命令か、命令が条件分岐命令かつ分岐が成立するときに<code class="inline-code" translate="no" >1</code>になります。<code class="inline-code" translate="no" >control_hazard_pc_next</code>は、無条件ジャンプ命令のときは<code class="inline-code" translate="no" >alu_result</code>、条件分岐命令のときはPC + 即値になります。</p>
 
 <h4><a id="h3-12-2-2"></a>条件分岐命令のテスト</h4>
-<p>条件分岐命令を実行するとき、分岐の成否をデバッグ表示します。デバッグ表示を行っているalways_ffブロック内に、次のコードを追加します(<span class="listref"><a href="./04-impl-rv32i.html#core.very.br-range.debug">リスト3.94</a></span>)。</p>
+<p>条件分岐命令を実行するとき、分岐の成否をデバッグ表示します。デバッグ表示を行っているalways_ffブロック内に、次のコードを追加します(<span class="listref"><a href="./04-impl-rv32i.html#core.very.br-range.debug">リスト3.95</a></span>)。</p>
 <div id="core.very.br-range.debug" class="caption-code">
-<span class="caption">リスト3.94: リスト3.94: 分岐判定のデバッグ表示 (core.veryl)</span>
+<span class="caption">リスト3.95: リスト3.95: 分岐判定のデバッグ表示 (core.veryl)</span>
 <pre class="list language-debug" translate="no">    if inst_is_br(inst_ctrl) {
         $display(&quot;  br take   : %b&quot;, brunit_take);
     }
 </pre>
 </div>
-<p>簡単なテストを作成し、動作をテストします(<span class="listref"><a href="./04-impl-rv32i.html#sample_br.hex">リスト3.95</a></span>, <span class="listref"><a href="./04-impl-rv32i.html#br.test">リスト3.96</a></span>)。</p>
+<p>簡単なテストを作成し、動作をテストします(<span class="listref"><a href="./04-impl-rv32i.html#sample_br.hex">リスト3.96</a></span>, <span class="listref"><a href="./04-impl-rv32i.html#br.test">リスト3.97</a></span>)。</p>
 <div id="sample_br.hex" class="caption-code">
-<span class="caption">リスト3.95: リスト3.95: sample_br.hex</span>
+<span class="caption">リスト3.96: リスト3.96: sample_br.hex</span>
 <pre class="list language-hex" translate="no">00100093 //  0: addi x1, x0, 1
 10100063 //  4: beq x0, x1, 0x100
 00101863 //  8: bne x0, x1, 0x10
@@ -2670,7 +2689,7 @@ deadbeef // 14:
 </pre>
 </div>
 <div id="br.test" class="cmd-code">
-<span class="caption">リスト3.96: リスト3.96: テストの実行</span>
+<span class="caption">リスト3.97: リスト3.97: テストの実行</span>
 <pre class="list language-test" translate="no">$ <span class="userinput">make build</span>
 $ <span class="userinput">make sim</span>
 $ <span class="userinput">obj_dir/sim src/sample_br.hex 15</span>

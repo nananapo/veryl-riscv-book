@@ -2598,8 +2598,7 @@ memoryモジュールは、32ビット単位の読み書きしかサポートし
 まず、membus_ifインターフェースに、
 書き込む場所をバイト単位で示す信号@<code>{wmask}を追加します
 (
-@<list>{membus_if.veryl.lbhsbh-range.wmask}, 
-@<list>{membus_if.veryl.lbhsbh-range.master}
+@<list>{membus_if.veryl.lbhsbh-range.wmask}
 )。
 
 //list[membus_if.veryl.lbhsbh-range.wmask][wmaskの定義 (membus_if.veryl)]{
@@ -2608,12 +2607,49 @@ memoryモジュールは、32ビット単位の読み書きしかサポートし
 #@end
 //}
 
-//list[membus_if.veryl.lbhsbh-range.master][modport masterとslaveにwmaskを追加する (membus_if.veryl)]{
+後で@<code>{wmask}を@<code>{DATA_WIDTH}ビットに展開して使うので、wmaskを展開するwmask_expand関数を定義します
+(
+@<list>{membus_if.veryl.lbhsbh-range.master}
+)。
+
+//list[membus_if.veryl.lbhsbh-range.func][wmask_expand関数の定義 (membus_if.veryl)]{
+#@maprange(scripts/04/lbhsbh-range/core/src/membus_if.veryl,func)
+    // get DATA_WIDTH-bit expanded wmask
+    function wmask_expand () -> logic<DATA_WIDTH> {
+        var result: logic<DATA_WIDTH>;
+
+        for i: u32 in 0..DATA_WIDTH {
+            result[i] = wmask[i / 8];
+        }
+        return result;
+    }
+#@end
+//}
+
+
+@<code>{wmask}、wmask_expand関数をmodportに追加します
+(
+@<list>{membus_if.veryl.lbhsbh-range.master}
+)。
+
+
+//list[membus_if.veryl.lbhsbh-range.master][modport masterとslaveにwmask、wmask_expand関数を追加する (membus_if.veryl)]{
 #@maprange(scripts/04/lbhsbh-range/core/src/membus_if.veryl,master)
     modport master {
-        ...
-        @<b>|wmask : output,|
-        ...
+        valid       : output,
+        ready       : input ,
+        addr        : output,
+        wen         : output,
+        wdata       : output,
+        @<b>|wmask       : output,|
+        rvalid      : input ,
+        rdata       : input ,
+        @<b>|wmask_expand: import,|
+    }
+
+    modport slave {
+        @<b>|wmask_expand: import,|
+        ..converse(master)
     }
 #@end
 //}
@@ -2638,14 +2674,6 @@ module memory::<DATA_WIDTH: u32, ADDR_WIDTH: u32> #(
     type MaskType = logic<DATA_WIDTH / 8>;
 
     var mem: DataType [2 ** ADDR_WIDTH];
-
-    // 書き込みマスクをDATA_WIDTHに展開した値
-    var wmask_expand: DataType;
-    always_comb {
-        for i: u32 in 0..DATA_WIDTH {
-            wmask_expand[i] = wmask_saved[i / 8];
-        }
-    }
 
     initial {
         // memを初期化する
@@ -2675,8 +2703,9 @@ module memory::<DATA_WIDTH: u32, ADDR_WIDTH: u32> #(
     }
 
     always_ff {
+        let wmask: logic<DATA_WIDTH> = membus.wmask_expand();
         if state == State::WriteValid {
-            mem[addr_saved[ADDR_WIDTH - 1:0]] = wdata_saved & wmask_expand | rdata_saved & ~wmask_expand;
+            mem[addr_saved[ADDR_WIDTH - 1:0]] = wdata_saved & wmask | rdata_saved & ~wmask;
         }
     }
 

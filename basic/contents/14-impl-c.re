@@ -940,7 +940,7 @@ import inst_gen_pkg::*;
 module rvc_converter (
     inst16: input  logic<16>,
     is_rvc: output logic    ,
-    inst32: output Inst     ,
+    inst32: output Inst     , // expanded inst16
 ) {
 #@end
 //}
