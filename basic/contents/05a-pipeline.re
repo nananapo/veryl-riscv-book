@@ -20,7 +20,8 @@ CPUの性能指標は、
 プログラムの実行時間は、次のような式で表せます
 (@<img>{cpu-seino-houteisiki})
 
-//image[cpu-seino-houteisiki][CPU性能方程式@<bib>{patahene}][width=40%]
+#@# @<bib>{patahene}
+//image[cpu-seino-houteisiki][CPU性能方程式][width=40%]
 
 #@# TODO imageからtexに置き換える
 #@# (@<eq>{cpu-seino-houteisiki})。

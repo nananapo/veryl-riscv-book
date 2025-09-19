@@ -46,7 +46,7 @@ POSTDEF:
   - 99-postface.re
   - 99b-postface.re
   - 100-contribute.re
-  - bib.re
+  # - bib.re
 ##
 ## 【Tips】
 ##

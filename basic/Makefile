@@ -6,6 +6,9 @@ pdf: preproc
 html: preproc
 	sudo docker run --rm -v $(PWD):/work -w /work kauplan/review2.5 rake web
 
+md:
+	sudo docker run --rm -v $(PWD):/work -w /work kauplan/review2.5 rake markdown
+
 clean:
 	sudo docker run --rm -v $(PWD):/work -w /work kauplan/review2.5 rake clean
 

@@ -82,8 +82,9 @@ ISAを知らずして実装はできないし、
 物理的な製造のハードルは高いですが、
 FPGAを使うことで簡単にお試しできます。
 @<b>{FPGA}(Field Programmable Gate Array)とは、
-任意の論理回路を実現できる集積回路のことです@<bib>{amano.fpga}。
+任意の論理回路を実現できる集積回路のことです。
 最近では、安価(数千 ～ 数万円)でFPGAを入手できます。
+#@# @<bib>{amano.fpga}。
 
 CPUのテストはシミュレータとFPGAで行います。
 本書では、Tang Nano 9KとPYNQ-Z1というFPGAを利用します。

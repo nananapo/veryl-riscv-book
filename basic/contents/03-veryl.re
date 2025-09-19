@@ -18,7 +18,7 @@ CPU (Central Proccessing Unit, 中央演算処理装置)は、
 論理回路は、組み合わせ回路と順序回路に分類できます。
 
 @<b>{組み合わせ回路}とは、
-入力に対して、一意に出力の決まる回路@<bib>{ronrikairo}のことです。
+入力に対して、一意に出力の決まる回路のことです。
 例えば、1ビット同士の加算をする回路は@<img>{halfadder}、@<table>{halfadder.truth}のように表されます。
 この回路は半加算器と呼ばれていて、
 1ビットのXとYを入力として受けとり、1ビットの和Sと桁上げCを出力します。
@@ -36,7 +36,7 @@ X	Y	C	S
 //}
 
 @<b>{順序回路}とは、
-入力と回路自身の状態によって一意に出力の決まる回路@<bib>{ronrikairo}です。
+入力と回路自身の状態によって一意に出力の決まる回路です。
 例えば、入力が1になるたびにカウントアップして値を表示するカウンタを考えます(@<img>{downcounter})。
 カウントアップするためには、
 今のカウンタの値(状態)を保持する必要があります。
@@ -695,7 +695,8 @@ SystemVerilogとの差異を説明すると、
 
 単項、二項演算子の使用例は次の通りです(@<list>{operator.use})。
 
-//list[operator.use][単項、二項演算子 (Verylのドキュメントの例@<bib>{veryl-doc.operators}を改変)]{
+#@# @<bib>{veryl-doc.operators}
+//list[operator.use][単項、二項演算子 (Verylのドキュメントの例を改変)]{
 // 単項算術演算
 a = +1;
 a = -1; // 正負を反転させる
@@ -759,7 +760,8 @@ a = x && y; // xとyの両方が真のとき真
 a = x || y; // xまたはyが真のとき真
 //}
 
-//table[operator.priority][演算子と優先度 @<bib>{veryl-doc.operator.precedence}]{
+#@# @<bib>{veryl-doc.operator.precedence}
+//table[operator.priority][演算子と優先度]{
 演算子	結合性	優先順位
 ==============================================
 @<code>{()} @<code>{[]} @<code>{::} @<code>{.}																														左		高い
