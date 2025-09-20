@@ -19,7 +19,7 @@ S-modeで新しく導入される大きな機能として仮想記憶システ�
 
 eeiパッケージに、本書で実装するS-modeのCSRをすべて定義します。
 
-//list[eei.veryl.addr.CsrAddr][CSRのアドレスを定義する (eei.veryl)][lineno=on]{
+//list[eei.veryl.addr.CsrAddr][CSRのアドレスを定義する (eei.veryl)]{
 #@maprange(scripts/23/addr-range/core/src/eei.veryl,CsrAddr)
     enum CsrAddr: logic<12> {
         // Supervisor Trap Setup
@@ -45,7 +45,7 @@ S-modeを実装しているかどうかはmisa.ExtensionsのSビットで確認�
 misa.ExtensionsのSビットを@<code>{1}に設定します
 (@<list>{csrunit.veryl.misamppsxl.misa})。
 
-//list[csrunit.veryl.misamppsxl.misa][Sビットを1にする (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.misamppsxl.misa][Sビットを1にする (csrunit.veryl)]{
 #@maprange(scripts/23/misamppsxl-range/core/src/csrunit.veryl,misa)
     let misa      : UIntX  = {2'd2, 1'b0 repeat XLEN - 28, 26'b0000010@<b>|1|000001000100000101}; // U, @<b>|S|, M, I, C, A
 #@end
@@ -60,7 +60,7 @@ mstatus.SXLを@<code>{64}を示す値である@<code>{2}に設定します
 @<list>{csrunit.veryl.misamppsxl.reset}
 )。
 
-//list[eei.veryl.misamppsxl.sxl][mstatus.SXLの定義 (eei.veryl)][lineno=on]{
+//list[eei.veryl.misamppsxl.sxl][mstatus.SXLの定義 (eei.veryl)]{
 #@maprange(scripts/23/misamppsxl-range/core/src/eei.veryl,sxl)
     const MSTATUS_UXL: UInt64 = 2 << 32;
     @<b>|const MSTATUS_SXL: UInt64 = 2 << 34;|
@@ -68,7 +68,7 @@ mstatus.SXLを@<code>{64}を示す値である@<code>{2}に設定します
 //}
 
 #@# マップにする
-//list[csrunit.veryl.misamppsxl.reset][mstatus.SXLの初期値を設定する (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.misamppsxl.reset][mstatus.SXLの初期値を設定する (csrunit.veryl)]{
 #@# maprange(scripts/23/misamppsxl-range/core/src/csrunit.veryl,reset)
     always_ff {
         if_reset {
@@ -82,7 +82,7 @@ S-modeの値(@<code>{2'b10})も書き込めるように変更します
 (@<list>{csrunit.veryl.misamppsxl.mstatus})。
 これにより、MRET命令でS-modeに移動できるようになります。
 
-//list[csrunit.veryl.misamppsxl.mstatus][MPPにS-modeを書き込めるようにする (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.misamppsxl.mstatus][MPPにS-modeを書き込めるようにする (csrunit.veryl)]{
 #@maprange(scripts/23/misamppsxl-range/core/src/csrunit.veryl,mstatus)
     function validate_mstatus (
         mstatus: input UIntX,
@@ -122,13 +122,13 @@ scounterenレジスタを作成し、読み書きできるようにします
 @<list>{csrunit.veryl.scounteren.write}
 )。
 
-//list[csrunit.veryl.scounteren.reg][scounternレジスタの定義 (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.scounteren.reg][scounternレジスタの定義 (csrunit.veryl)]{
 #@maprange(scripts/23/scounteren-range/core/src/csrunit.veryl,reg)
     var scounteren: UInt32;
 #@end
 //}
 
-//list[csrunit.veryl.scounteren.reset][scounterenレジスタを0でリセットする (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.scounteren.reset][scounterenレジスタを0でリセットする (csrunit.veryl)]{
 #@maprange(scripts/23/scounteren-range/core/src/csrunit.veryl,reset)
     mtval      = 0;
     @<b>|scounteren = 0;|
@@ -136,7 +136,7 @@ scounterenレジスタを作成し、読み書きできるようにします
 #@end
 //}
 
-//list[csrunit.veryl.scounteren.rdata][rdataにscounterenレジスタの値を設定する (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.scounteren.rdata][rdataにscounterenレジスタの値を設定する (csrunit.veryl)]{
 #@maprange(scripts/23/scounteren-range/core/src/csrunit.veryl,rdata)
     CsrAddr::MTVAL     : mtval,
     @<b>|CsrAddr::SCOUNTEREN: {1'b0 repeat XLEN - 32, scounteren},|
@@ -144,13 +144,13 @@ scounterenレジスタを作成し、読み書きできるようにします
 #@end
 //}
 
-//list[csrunit.veryl.scounteren.WMASK][書き込みマスクの定義 (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.scounteren.WMASK][書き込みマスクの定義 (csrunit.veryl)]{
 #@maprange(scripts/23/scounteren-range/core/src/csrunit.veryl,WMASK)
     const SCOUNTEREN_WMASK: UIntX = 'h0000_0000_0000_0007 as UIntX;
 #@end
 //}
 
-//list[csrunit.veryl.scounteren.wmask][wmaskに書き込みマスクを設定する (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.scounteren.wmask][wmaskに書き込みマスクを設定する (csrunit.veryl)]{
 #@maprange(scripts/23/scounteren-range/core/src/csrunit.veryl,wmask)
     CsrAddr::MTVAL     : MTVAL_WMASK,
     @<b>|CsrAddr::SCOUNTEREN: SCOUNTEREN_WMASK,|
@@ -158,7 +158,7 @@ scounterenレジスタを作成し、読み書きできるようにします
 #@end
 //}
 
-//list[csrunit.veryl.scounteren.write][scounterenレジスタに書き込む (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.scounteren.write][scounterenレジスタに書き込む (csrunit.veryl)]{
 #@maprange(scripts/23/scounteren-range/core/src/csrunit.veryl,write)
     CsrAddr::MTVAL     : mtval      = wdata;
     @<b>|CsrAddr::SCOUNTEREN: scounteren = wdata[31:0];|
@@ -171,7 +171,7 @@ scounterenレジスタを作成し、読み書きできるようにします
 S-modeでアクセスするときはmcounterenレジスタだけ確認し、
 U-modeでアクセスするときはmcounterenレジスタとscounterenレジスタを確認します。
 
-//list[csrunit.veryl.scounteren.priv][許可の確認ロジックを変更する (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.scounteren.priv][許可の確認ロジックを変更する (csrunit.veryl)]{
 #@maprange(scripts/23/scounteren-range/core/src/csrunit.veryl,priv)
     let expt_zicntr_priv       : logic = is_wsc && @<b>|(|mode @<b>{<=} PrivMode::S && case csr_addr {
         CsrAddr::CYCLE  : !mcounteren[0],
@@ -200,13 +200,13 @@ sstatusレジスタの書き込みマスクを定義します
 @<list>{csrunit.veryl.sstatus.wmask}
 )。
 
-//list[csrunit.veryl.sstatus.WMASK][書き込みマスクの定義 (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.sstatus.WMASK][書き込みマスクの定義 (csrunit.veryl)]{
 #@maprange(scripts/23/sstatus-range/core/src/csrunit.veryl,WMASK)
     const SSTATUS_WMASK   : UIntX = 'h0000_0000_0000_0000 as UIntX;
 #@end
 //}
 
-//list[csrunit.veryl.sstatus.wmask][wmaskに書き込みマスクを設定する (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.sstatus.wmask][wmaskに書き込みマスクを設定する (csrunit.veryl)]{
 #@maprange(scripts/23/sstatus-range/core/src/csrunit.veryl,wmask)
     CsrAddr::MTVAL     : MTVAL_WMASK,
     @<b>|CsrAddr::SSTATUS   : SSTATUS_WMASK,|
@@ -221,19 +221,19 @@ sstatusレジスタの書き込みマスクを定義します
 @<list>{csrunit.veryl.sstatus.rdata}
 )。
 
-//list[csrunit.veryl.sstatus.RMASK][読み込みマスクの定義 (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.sstatus.RMASK][読み込みマスクの定義 (csrunit.veryl)]{
 #@maprange(scripts/23/sstatus-range/core/src/csrunit.veryl,RMASK)
     const SSTATUS_RMASK: UIntX = 'h8000_0003_018f_e762;
 #@end
 //}
 
-//list[csrunit.veryl.sstatus.reg][sstatusの値をmstatusにマスクを適用したものにする (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.sstatus.reg][sstatusの値をmstatusにマスクを適用したものにする (csrunit.veryl)]{
 #@maprange(scripts/23/sstatus-range/core/src/csrunit.veryl,reg)
     let sstatus   : UIntX  = mstatus & SSTATUS_RMASK;
 #@end
 //}
 
-//list[csrunit.veryl.sstatus.rdata][rdataにsstatusレジスタの値を設定する (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.sstatus.rdata][rdataにsstatusレジスタの値を設定する (csrunit.veryl)]{
 #@maprange(scripts/23/sstatus-range/core/src/csrunit.veryl,rdata)
     CsrAddr::MTVAL     : mtval,
     @<b>|CsrAddr::SSTATUS   : sstatus,|
@@ -246,7 +246,7 @@ sstatusレジスタの書き込みマスクを定義します
 書き込みマスクが適用されたwdataと、
 書き込みマスクをビット反転した値でマスクされたmstatusレジスタの値のORを書き込みます。
 
-//list[csrunit.veryl.sstatus.write][sstatusレジスタへの書き込みでmstatusレジスタに書き込む (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.sstatus.write][sstatusレジスタへの書き込みでmstatusレジスタに書き込む (csrunit.veryl)]{
 #@maprange(scripts/23/sstatus-range/core/src/csrunit.veryl,write)
     CsrAddr::SSTATUS   : mstatus    = validate_mstatus(mstatus, wdata | mstatus & ~SSTATUS_WMASK);
 #@end
@@ -322,7 +322,7 @@ S-modeに委譲されたトラップで使用するstvec、sscratch、sepc、sca
 @<list>{csrunit.veryl.trapreg.write}
 )。
 
-//list[csrunit.veryl.trapreg.reg][レジスタの定義 (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.trapreg.reg][レジスタの定義 (csrunit.veryl)]{
 #@maprange(scripts/23/trapreg-range/core/src/csrunit.veryl,reg)
     var stvec     : UIntX ;
     var sscratch  : UIntX ;
@@ -332,7 +332,7 @@ S-modeに委譲されたトラップで使用するstvec、sscratch、sepc、sca
 #@end
 //}
 
-//list[csrunit.veryl.trapreg.reset][レジスタを0でリセットする (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.trapreg.reset][レジスタを0でリセットする (csrunit.veryl)]{
 #@maprange(scripts/23/trapreg-range/core/src/csrunit.veryl,reset)
     stvec      = 0;
     sscratch   = 0;
@@ -342,7 +342,7 @@ S-modeに委譲されたトラップで使用するstvec、sscratch、sepc、sca
 #@end
 //}
 
-//list[csrunit.veryl.trapreg.rdata][rdataにレジスタの値を割り当てる (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.trapreg.rdata][rdataにレジスタの値を割り当てる (csrunit.veryl)]{
 #@maprange(scripts/23/trapreg-range/core/src/csrunit.veryl,rdata)
     CsrAddr::STVEC     : stvec,
     CsrAddr::SSCRATCH  : sscratch,
@@ -354,7 +354,7 @@ S-modeに委譲されたトラップで使用するstvec、sscratch、sepc、sca
 
 それぞれ、mtvec、mscratch、mepc、mcause、mtvalレジスタと同じ書き込みマスクを設定します。
 
-//list[csrunit.veryl.trapreg.WMASK][書き込みマスクの定義 (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.trapreg.WMASK][書き込みマスクの定義 (csrunit.veryl)]{
 #@maprange(scripts/23/trapreg-range/core/src/csrunit.veryl,WMASK)
     const STVEC_WMASK     : UIntX = 'hffff_ffff_ffff_fffd;
     const SSCRATCH_WMASK  : UIntX = 'hffff_ffff_ffff_ffff;
@@ -364,7 +364,7 @@ S-modeに委譲されたトラップで使用するstvec、sscratch、sepc、sca
 #@end
 //}
 
-//list[csrunit.veryl.trapreg.wmask][wmaskに書き込みマスクを設定する (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.trapreg.wmask][wmaskに書き込みマスクを設定する (csrunit.veryl)]{
 #@maprange(scripts/23/trapreg-range/core/src/csrunit.veryl,wmask)
     CsrAddr::STVEC     : STVEC_WMASK,
     CsrAddr::SSCRATCH  : SSCRATCH_WMASK,
@@ -374,7 +374,7 @@ S-modeに委譲されたトラップで使用するstvec、sscratch、sepc、sca
 #@end
 //}
 
-//list[csrunit.veryl.trapreg.write][レジスタの書き込み (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.trapreg.write][レジスタの書き込み (csrunit.veryl)]{
 #@maprange(scripts/23/trapreg-range/core/src/csrunit.veryl,write)
     CsrAddr::STVEC     : stvec      = wdata;
     CsrAddr::SSCRATCH  : sscratch   = wdata;
@@ -395,7 +395,7 @@ S-modeに委譲されたトラップで使用するstvec、sscratch、sepc、sca
 割り込み、例外それぞれにレジスタを選択する変数を定義し、
 mtvecを使っていたところを新しい変数に置き換えます。
 
-//list[csrunit.veryl.stvec.interrupt][トラップベクタを遷移先の特権レベルによって変更する (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.stvec.interrupt][トラップベクタを遷移先の特権レベルによって変更する (csrunit.veryl)]{
 #@maprange(scripts/23/stvec-range/core/src/csrunit.veryl,interrupt)
     @<b>|let interrupt_xtvec : Addr = if interrupt_mode == PrivMode::M ? mtvec : stvec;|
     let interrupt_vector: Addr = if @<b>|interrupt_x|tvec[0] == 0 ?
@@ -406,7 +406,7 @@ mtvecを使っていたところを新しい変数に置き換えます。
 #@end
 //}
 
-//list[csrunit.veryl.stvec.expt][トラップベクタを遷移先の特権レベルによって変更する (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.stvec.expt][トラップベクタを遷移先の特権レベルによって変更する (csrunit.veryl)]{
 #@maprange(scripts/23/stvec-range/core/src/csrunit.veryl,expt)
     @<b>|let expt_xtvec : Addr     = if expt_mode == PrivMode::M ? mtvec : stvec;|
     let expt_vector: Addr     = {@<b>|expt_x|tvec[msb:2], 2'b0};
@@ -421,7 +421,7 @@ mtvecを使っていたところを新しい変数に置き換えます。
 トラップ時に@<code>{trap_mode_next}で処理を分岐します
 (@<list>{csrunit.veryl.trapregchange.ff})。
 
-//list[csrunit.veryl.trapregchange.ff][遷移先の特権レベルによってトラップ処理を分岐する (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.trapregchange.ff][遷移先の特権レベルによってトラップ処理を分岐する (csrunit.veryl)]{
 #@maprange(scripts/23/trapregchange-range/core/src/csrunit.veryl,ff)
 if raise_expt || raise_interrupt {
     @<b>|let x|epc@<b>|: Addr| = if raise_expt ? pc : // exception
@@ -463,13 +463,13 @@ mstatus、sstatusレジスタのSIE、SPIE、SPPビットに書き込めるよ�
 @<list>{csrunit.veryl.spp.sstatus_WMASK}
 )。
 
-//list[csrunit.veryl.spp.mstatus_WMASK][書き込みマスクを変更する (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.spp.mstatus_WMASK][書き込みマスクを変更する (csrunit.veryl)]{
 #@maprange(scripts/23/spp-range/core/src/csrunit.veryl,mstatus_WMASK)
     const MSTATUS_WMASK   : UIntX = 'h0000_0000_0020_1@<b>|9aa| as UIntX;
 #@end
 //}
 
-//list[csrunit.veryl.spp.sstatus_WMASK][書き込みマスクを変更する (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.spp.sstatus_WMASK][書き込みマスクを変更する (csrunit.veryl)]{
 #@maprange(scripts/23/spp-range/core/src/csrunit.veryl,sstatus_WMASK)
     const SSTATUS_WMASK   : UIntX = 'h0000_0000_0000_0@<b>|122| as UIntX;
 #@end
@@ -481,7 +481,7 @@ sstatus.SIEに@<code>{0}、
 sstatus.SPPにトラップ前の特権レベルを格納します
 (@<list>{csrunit.veryl.spp.ff})。
 
-//list[csrunit.veryl.spp.ff][sstatus.SPIE、SIE、SPPをトラップで変更する (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.spp.ff][sstatus.SPIE、SIE、SPPをトラップで変更する (csrunit.veryl)]{
 #@maprange(scripts/23/spp-range/core/src/csrunit.veryl,ff)
     } else {
         sepc   = xepc;
@@ -509,7 +509,7 @@ SRET命令はS-mode以上の特権レベルのときにしか実行できませ�
 inst_decoderモジュールでSRET命令をデコードできるようにします
 (@<list>{inst_decoder.veryl.sret.SRET})。
 
-//list[inst_decoder.veryl.sret.SRET][SRET命令のときvalidを1にする (inst_decoder.veryl)][lineno=on]{
+//list[inst_decoder.veryl.sret.SRET][SRET命令のときvalidを1にする (inst_decoder.veryl)]{
 #@maprange(scripts/23/sret-range/core/src/inst_decoder.veryl,SRET)
    OP_SYSTEM: f3 != 3'b000 && f3 != 3'b100 || // CSRR(W|S|C)[I]
     bits == 32'h00000073 || // ECALL
@@ -527,13 +527,13 @@ SRET命令を判定し、ジャンプ先と遷移先の特権レベルを命令�
 @<list>{csrunit.veryl.sret.vec}
 )。
 
-//list[csrunit.veryl.sret.is_sret][SRT命令の判定 (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.sret.is_sret][SRT命令の判定 (csrunit.veryl)]{
 #@maprange(scripts/23/sret-range/core/src/csrunit.veryl,is_sret)
     let is_sret: logic = inst_bits == 32'h10200073;
 #@end
 //}
 
-//list[csrunit.veryl.sret.ret][SRET命令のとき遷移先の特権レベル、アドレスを変更する (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.sret.ret][SRET命令のとき遷移先の特権レベル、アドレスを変更する (csrunit.veryl)]{
 #@maprange(scripts/23/sret-range/core/src/csrunit.veryl,ret)
     assign trap_return        = valid && @<b>{(}is_mret @<b>{|| is_sret)} && !raise_expt && !raise_interrupt;
     let trap_return_mode  : PrivMode = @<b>|if is_mret ?| mstatus_mpp @<b>|: mstatus_spp|;
@@ -541,7 +541,7 @@ SRET命令を判定し、ジャンプ先と遷移先の特権レベルを命令�
 #@end
 //}
 
-//list[csrunit.veryl.sret.vec][trap_return_vectorをtrap_vectorに割り当てる (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.sret.vec][trap_return_vectorをtrap_vectorに割り当てる (csrunit.veryl)]{
 #@maprange(scripts/23/sret-range/core/src/csrunit.veryl,vec)
     assign trap_vector = switch {
         raise_expt     : expt_vector,
@@ -558,7 +558,7 @@ sstatus.SPIEに@<code>{0}、
 sstatus.SPPに実装がサポートする最小の特権レベル(U-mode)を示す値を格納します
 (@<list>{csrunit.veryl.sret.ff})。
 
-//list[csrunit.veryl.sret.ff][SRET命令によるsstatusの変更 (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.sret.ff][SRET命令によるsstatusの変更 (csrunit.veryl)]{
 #@maprange(scripts/23/sret-range/core/src/csrunit.veryl,ff)
     } else if trap_return {
         @<b>|if is_mret {|
@@ -583,7 +583,7 @@ sstatus.SPPに実装がサポートする最小の特権レベル(U-mode)を示�
 SRET命令をS-mode未満の特権レベルで実行しようとしたら例外が発生するようにします
 (@<list>{csrunit.veryl.sret.priv})。
 
-//list[csrunit.veryl.sret.priv][SRET命令を実行するときに特権レベルを確認する (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.sret.priv][SRET命令を実行するときに特権レベルを確認する (csrunit.veryl)]{
 #@maprange(scripts/23/sret-range/core/src/csrunit.veryl,priv)
     let expt_trap_return_priv: logic = (is_mret && mode <: PrivMode::M) @<b>{|| (is_sret && mode <: PrivMode::S)};
 #@end
@@ -598,7 +598,7 @@ SRET命令をS-modeで実行したときに例外を発生させるかを制御�
 mstatus.TSRを変更できるようにします
 (@<list>{csrunit.veryl.tsr.WMASK})。
 
-//list[csrunit.veryl.tsr.WMASK][書き込みマスクを変更する (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.tsr.WMASK][書き込みマスクを変更する (csrunit.veryl)]{
 #@maprange(scripts/23/tsr-range/core/src/csrunit.veryl,WMASK)
     const MSTATUS_WMASK   : UIntX = 'h0000_0000_00@<b>|6|0_19aa as UIntX;
 #@end
@@ -610,13 +610,13 @@ mstatus.TSRを変更できるようにします
 @<list>{csrunit.veryl.tsr.priv}
 )。
 
-//list[csrunit.veryl.tsr.tw][TSRビットを表す変数 (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.tsr.tw][TSRビットを表す変数 (csrunit.veryl)]{
 #@maprange(scripts/23/tsr-range/core/src/csrunit.veryl,tsr)
     let mstatus_tsr : logic    = mstatus[22];
 #@end
 //}
 
-//list[csrunit.veryl.tsr.priv][mstatus.TSRが1のときにS-modeでSRET命令を実行したら例外にする (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.tsr.priv][mstatus.TSRが1のときにS-modeでSRET命令を実行したら例外にする (csrunit.veryl)]{
 #@maprange(scripts/23/tsr-range/core/src/csrunit.veryl,priv)
     let expt_trap_return_priv: logic = (is_mret && mode <: PrivMode::M) || (is_sret && @<b>{(}mode <: PrivMode::S @<b>{|| (mode == PrivMode::S && mstatus_tsr)}));
 #@end
@@ -646,14 +646,14 @@ mieレジスタのSEIE、SSIE、STIEビットを変更できるようにしま�
 @<list>{csrunit.veryl.mipreg.wmask}
 )。
 
-//list[csrunit.veryl.mipreg.WMASK][書き込みマスクの定義 / 変更 (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.mipreg.WMASK][書き込みマスクの定義 / 変更 (csrunit.veryl)]{
 #@maprange(scripts/23/mipreg-range/core/src/csrunit.veryl,WMASK)
     @<b>|const MIP_WMASK       : UIntX = 'h0000_0000_0000_0222 as UIntX;|
     const MIE_WMASK       : UIntX = 'h0000_0000_0000_0@<b>|2aa| as UIntX;
 #@end
 //}
 
-//list[csrunit.veryl.mipreg.wmask][wmaskに書き込みマスクを設定する (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.mipreg.wmask][wmaskに書き込みマスクを設定する (csrunit.veryl)]{
 #@maprange(scripts/23/mipreg-range/core/src/csrunit.veryl,wmask)
     CsrAddr::MIP       : MIP_WMASK,
 #@end
@@ -663,7 +663,7 @@ mieレジスタのSEIE、SSIE、STIEビットを変更できるようにしま�
 @<code>{mip}の値を、@<code>{mip_reg}とACLINTの状態をOR演算したものに変更します
 (@<list>{csrunit.veryl.mipreg.mip})。
 
-//list[csrunit.veryl.mipreg.mip][レジスタを作成して変数に適用する (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.mipreg.mip][レジスタを作成して変数に適用する (csrunit.veryl)]{
 #@maprange(scripts/23/mipreg-range/core/src/csrunit.veryl,mip)
     @<b>|var mip_reg: UIntX;|
     let mip    : UIntX = @<b>{mip_reg |} {
@@ -677,7 +677,7 @@ mieレジスタのSEIE、SSIE、STIEビットを変更できるようにしま�
 )。
 @<code>{wdata}にはACLINTの状態が含まれているので、書き込みマスクをもう一度適用します。
 
-//list[csrunit.veryl.mipreg.reset][レジスタの値を0でリセットする (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.mipreg.reset][レジスタの値を0でリセットする (csrunit.veryl)]{
 #@maprange(scripts/23/mipreg-range/core/src/csrunit.veryl,reset)
     mie        = 0;
     @<b>|mip_reg    = 0;|
@@ -685,7 +685,7 @@ mieレジスタのSEIE、SSIE、STIEビットを変更できるようにしま�
 #@end
 //}
 
-//list[csrunit.veryl.mipreg.write][mipレジスタの書き込み (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.mipreg.write][mipレジスタの書き込み (csrunit.veryl)]{
 #@maprange(scripts/23/mipreg-range/core/src/csrunit.veryl,write)
     CsrAddr::MTVEC     : mtvec      = wdata;
     @<b>|CsrAddr::MIP       : mip_reg    = wdata & MIP_WMASK;|
@@ -698,7 +698,7 @@ mieレジスタのSEIE、SSIE、STIEビットを変更できるようにしま�
 S-modeの割り込みのcauseを設定します
 (@<list>{csrunit.veryl.mipreg.cause})。
 
-//list[csrunit.veryl.mipreg.cause][割り込み原因の追加 (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.mipreg.cause][割り込み原因の追加 (csrunit.veryl)]{
 #@maprange(scripts/23/mipreg-range/core/src/csrunit.veryl,cause)
     let interrupt_cause  : UIntX = switch {
         interrupt_pending[3]: CsrCause::MACHINE_SOFTWARE_INTERRUPT,
@@ -732,41 +732,41 @@ sieレジスタはmidelegレジスタで委譲された割り込みに対応す�
 @<list>{csrunit.veryl.siesipdeleg.si_rdata}
 )。
 
-//list[csrunit.veryl.siesipdeleg.deleg][medeleg、midelegレジスタの定義 (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.siesipdeleg.deleg][medeleg、midelegレジスタの定義 (csrunit.veryl)]{
 #@maprange(scripts/23/siesipdeleg-range/core/src/csrunit.veryl,deleg)
     var medeleg   : UInt64;
     var mideleg   : UIntX ;
 #@end
 //}
 
-//list[csrunit.veryl.siesipdeleg.sipsie][sie、sieレジスタの定義 (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.siesipdeleg.sipsie][sie、sieレジスタの定義 (csrunit.veryl)]{
 #@maprange(scripts/23/siesipdeleg-range/core/src/csrunit.veryl,sipsie)
     let sip       : UIntX  = mip & mideleg;
     var sie       : UIntX ;
 #@end
 //}
 
-//list[csrunit.veryl.siesipdeleg.deleg_reset][medeleg、midelegレジスタを0でリセットする (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.siesipdeleg.deleg_reset][medeleg、midelegレジスタを0でリセットする (csrunit.veryl)]{
 #@maprange(scripts/23/siesipdeleg-range/core/src/csrunit.veryl,deleg_reset)
     medeleg    = 0;
     mideleg    = 0;
 #@end
 //}
 
-//list[csrunit.veryl.siesipdeleg.si_reset][sieレジスタを0でリセットする (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.siesipdeleg.si_reset][sieレジスタを0でリセットする (csrunit.veryl)]{
 #@maprange(scripts/23/siesipdeleg-range/core/src/csrunit.veryl,sie_reset)
     sie        = 0;
 #@end
 //}
 
-//list[csrunit.veryl.siesipdeleg.deleg_rdata][rdataにmedeleg、midelegレジスタの値を割り当てる (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.siesipdeleg.deleg_rdata][rdataにmedeleg、midelegレジスタの値を割り当てる (csrunit.veryl)]{
 #@maprange(scripts/23/siesipdeleg-range/core/src/csrunit.veryl,deleg_rdata)
     CsrAddr::MEDELEG   : medeleg,
     CsrAddr::MIDELEG   : mideleg,
 #@end
 //}
 
-//list[csrunit.veryl.siesipdeleg.si_rdata][rdataにsip、sieレジスタの値を割り当てる (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.siesipdeleg.si_rdata][rdataにsip、sieレジスタの値を割り当てる (csrunit.veryl)]{
 #@maprange(scripts/23/siesipdeleg-range/core/src/csrunit.veryl,si_rdata)
     CsrAddr::SIP       : sip,
     CsrAddr::SIE       : sie & mideleg,
@@ -783,41 +783,41 @@ sieレジスタはmidelegレジスタで委譲された割り込みに対応す�
 @<list>{csrunit.veryl.siesipdeleg.sie_write}
 )。
 
-//list[csrunit.veryl.siesipdeleg.WMASK_deleg][書き込みマスクの定義 (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.siesipdeleg.WMASK_deleg][書き込みマスクの定義 (csrunit.veryl)]{
 #@maprange(scripts/23/siesipdeleg-range/core/src/csrunit.veryl,WMASK_deleg)
     const MEDELEG_WMASK   : UIntX = 'hffff_ffff_fffe_f7ff;
     const MIDELEG_WMASK   : UIntX = 'h0000_0000_0000_0222 as UIntX;
 #@end
 //}
 
-//list[csrunit.veryl.siesipdeleg.WMASK_sie][書き込みマスクの定義 (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.siesipdeleg.WMASK_sie][書き込みマスクの定義 (csrunit.veryl)]{
 #@maprange(scripts/23/siesipdeleg-range/core/src/csrunit.veryl,WMASK_sie)
     const SIE_WMASK       : UIntX = 'h0000_0000_0000_0222 as UIntX;
 #@end
 //}
 
-//list[csrunit.veryl.siesipdeleg.deleg_wmask][wmaskに書き込みマスクを設定する (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.siesipdeleg.deleg_wmask][wmaskに書き込みマスクを設定する (csrunit.veryl)]{
 #@maprange(scripts/23/siesipdeleg-range/core/src/csrunit.veryl,deleg_wmask)
     CsrAddr::MEDELEG   : MEDELEG_WMASK,
     CsrAddr::MIDELEG   : MIDELEG_WMASK,
 #@end
 //}
 
-//list[csrunit.veryl.siesipdeleg.sie_wmask][wmaskに書き込みマスクを設定する (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.siesipdeleg.sie_wmask][wmaskに書き込みマスクを設定する (csrunit.veryl)]{
 #@maprange(scripts/23/siesipdeleg-range/core/src/csrunit.veryl,sie_wmask)
     CsrAddr::SIE       : SIE_WMASK & mideleg,
 #@end
 //}
 
 
-//list[csrunit.veryl.siesipdeleg.deleg_write][medeleg、midelegレジスタの書き込み (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.siesipdeleg.deleg_write][medeleg、midelegレジスタの書き込み (csrunit.veryl)]{
 #@maprange(scripts/23/siesipdeleg-range/core/src/csrunit.veryl,deleg_write)
     CsrAddr::MEDELEG   : medeleg    = wdata;
     CsrAddr::MIDELEG   : mideleg    = wdata;
 #@end
 //}
 
-//list[csrunit.veryl.siesipdeleg.sie_write][sieレジスタの書き込み (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.siesipdeleg.sie_write][sieレジスタの書き込み (csrunit.veryl)]{
 #@maprange(scripts/23/siesipdeleg-range/core/src/csrunit.veryl,sie_write)
     CsrAddr::SIE       : sie        = wdata;
 #@end
@@ -830,7 +830,7 @@ sieレジスタはmidelegレジスタで委譲された割り込みに対応す�
 例外が発生するとき、遷移先の特権レベルをmedelegレジスタによって変更します
 (@<list>{csrunit.veryl.trapdeleg.expt}）。
 
-//list[csrunit.veryl.trapdeleg.expt][例外の遷移先の特権レベルを求める (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.trapdeleg.expt][例外の遷移先の特権レベルを求める (csrunit.veryl)]{
 #@maprange(scripts/23/trapdeleg-range/core/src/csrunit.veryl,expt)
     let expt_mode  : PrivMode = @<b>{if mode == PrivMode::M || !medeleg[expt_cause[5:0]] ?} PrivMode::M @<b>{: PrivMode::S};
 #@end
@@ -842,7 +842,7 @@ sieレジスタはmidelegレジスタで委譲された割り込みに対応す�
 @<list>{csrunit.veryl.trapdeleg.smode}
 ）。
 
-//list[csrunit.veryl.trapdeleg.mmode][M-modeに遷移する割り込みを示す変数 (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.trapdeleg.mmode][M-modeに遷移する割り込みを示す変数 (csrunit.veryl)]{
 #@maprange(scripts/23/trapdeleg-range/core/src/csrunit.veryl,mmode)
     // Interrupt to M-mode
     let interrupt_pending_mmode: UIntX = mip & mie & ~mideleg;
@@ -858,7 +858,7 @@ sieレジスタはmidelegレジスタで委譲された割り込みに対応す�
 #@end
 //}
 
-//list[csrunit.veryl.trapdeleg.smode][S-modeに遷移する割り込みを示す変数 (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.trapdeleg.smode][S-modeに遷移する割り込みを示す変数 (csrunit.veryl)]{
 #@maprange(scripts/23/trapdeleg-range/core/src/csrunit.veryl,smode)
     // Interrupt to S-mode
     let interrupt_pending_smode: UIntX = sip & sie;
@@ -875,7 +875,7 @@ sieレジスタはmidelegレジスタで委譲された割り込みに対応す�
 M-mode向けの割り込みを優先して利用します
 (@<list>{csrunit.veryl.trapdeleg.intr}）。
 
-//list[csrunit.veryl.trapdeleg.intr][M-mode、S-modeに遷移する割り込みを調停する (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.trapdeleg.intr][M-mode、S-modeに遷移する割り込みを調停する (csrunit.veryl)]{
 #@maprange(scripts/23/trapdeleg-range/core/src/csrunit.veryl,intr)
     // Interrupt
     let raise_interrupt : logic = valid && can_intr && (@<b>{raise_interrupt_mmode || raise_interrupt_smode});
@@ -916,7 +916,7 @@ mipレジスタのSSIPビットを@<code>{1}にする要求のための@<code>{s
 @<list>{aclint_if.veryl.sswi.setssip}
 ）。
 
-//list[aclint_if.veryl.sswi.setssip][setssipをインターフェースに追加する (aclint_if.veryl)][lineno=on]{
+//list[aclint_if.veryl.sswi.setssip][setssipをインターフェースに追加する (aclint_if.veryl)]{
 #@maprange(scripts/23/sswi-range/core/src/aclint_if.veryl,setssip)
 interface aclint_if {
     var msip   : logic ;
@@ -937,7 +937,7 @@ aclintモジュールでSETSSIP0への書き込みを検知し、最下位ビッ
 @<list>{aclint_memory.veryl.sswi.comb}
 )。
 
-//list[aclint_memory.veryl.sswi.comb][SETSSIP0に書き込むときsetssipにLSBを割り当てる (aclint_memory.veryl)][lineno=on]{
+//list[aclint_memory.veryl.sswi.comb][SETSSIP0に書き込むときsetssipにLSBを割り当てる (aclint_memory.veryl)]{
 #@maprange(scripts/23/sswi-range/core/src/aclint_memory.veryl,comb)
     always_comb {
         aclint.setssip = 0;
@@ -955,13 +955,13 @@ csrunitモジュールで@<code>{setssip}を確認し、mip.SSIPを立てるよ�
 @<list>{csrunit.veryl.sswi.write}
 )。
 
-//list[csrunit.veryl.sswi.reg][setssipをXLENビットに拡張する (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.sswi.reg][setssipをXLENビットに拡張する (csrunit.veryl)]{
 #@maprange(scripts/23/sswi-range/core/src/csrunit.veryl,reg)
     let setssip: UIntX = {1'b0 repeat XLEN - 2, aclint.setssip, 1'b0};
 #@end
 //}
 
-//list[csrunit.veryl.sswi.update][setssipでmipを更新する (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.sswi.update][setssipでmipを更新する (csrunit.veryl)]{
 #@maprange(scripts/23/sswi-range/core/src/csrunit.veryl,update)
     } else {
         mcycle  += 1;
@@ -969,7 +969,7 @@ csrunitモジュールで@<code>{setssip}を確認し、mip.SSIPを立てるよ�
 #@end
 //}
 
-//list[csrunit.veryl.sswi.write][setssipでmipを更新する (csrunit.veryl)][lineno=on]{
+//list[csrunit.veryl.sswi.write][setssipでmipを更新する (csrunit.veryl)]{
 #@maprange(scripts/23/sswi-range/core/src/csrunit.veryl,write)
     CsrAddr::MIP       : mip_reg    = @<b>{(}wdata & MIP_WMASK@<b>{) | setssip};
 #@end
