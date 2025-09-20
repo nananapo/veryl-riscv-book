@@ -183,7 +183,7 @@ PASS : ~/core/test/share/riscv-tests/isa/rv32ui-p-srl.bin.hex
 Test Result : 40 / 40
 </pre>
 </div>
-<p>RV32I向けのテストにすべて成功しました。しかし、<code class="inline-code" translate="no" >rv32ui-p-ma_data</code>は失敗するはずです(<span class="listref"><a href="./04b-riscvtests.html#python.test.py">リスト5.14</a></span>)。これは、riscv-testsのRV32I向けのテストは、XLENが64のときはテストを実行せずに成功とするためです(<span class="listref"><a href="./05-impl-rv64i.html#riscvtests.rv32i.xlen">リスト6.8</a></span>)。</p>
+<p>RV32I向けのテストにすべて成功しました。riscv-testsのRV32I向けのテストは、XLENが64のときにテストを実行せずに成功とします(<span class="listref"><a href="./05-impl-rv64i.html#riscvtests.rv32i.xlen">リスト6.8</a></span>)。</p>
 <div id="riscvtests.rv32i.xlen" class="caption-code">
 <span class="caption">リスト6.8: リスト6.8: rv32ui-p-addはXLENが64のときにテストせずに成功する (rv32ui-p-add.dump)</span>
 <pre class="list language-xlen" translate="no">00000050 &lt;reset_vector&gt;:

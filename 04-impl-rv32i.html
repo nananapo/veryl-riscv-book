@@ -2365,11 +2365,17 @@ $ <span class="userinput">obj_dir/sim src/sample.hex 13</span>
     };
 </pre>
 </div>
+<p>ソースレジスタの値はLSB側(右)に寄せられているため、アドレスを4で割った値が1, 2, 3のとき、アドレスに合わせてSB命令で書き込む値の左シフトが必要です(<span class="listref"><a href="./04-impl-rv32i.html#memunit.veryl.lbhsbh-range.always_wdata">リスト3.79</a></span>)。</p>
+<div id="memunit.veryl.lbhsbh-range.always_wdata" class="caption-code">
+<span class="caption">リスト3.79: リスト3.79: 書き込みデータをシフトする (memunit.veryl)</span>
+<pre class="list language-always_wdata" translate="no">    req_wdata = rs2 &lt;&lt; {addr[1:0], 3'b0};
+</pre>
+</div>
 
 <h3 class="none"><a id="h3-11-4"></a><span class="secno">3.11.4</span> LB、LBU、LH、LHU、SB、SH命令をテストする</h3>
 <p>簡単なテストを作成し、動作をテストします。2つテストを記載するので、正しく動いているか確認してください。</p>
 <div id="sample_lbh.hex" class="caption-code">
-<span class="caption">リスト3.79: リスト3.79: src/sample_lbh.hex</span>
+<span class="caption">リスト3.80: リスト3.80: src/sample_lbh.hex</span>
 <pre class="list language-hex" translate="no">02000083 // lb x1, 0x20(x0)  : x1 = ffffffef
 02104083 // lbu x1, 0x21(x0) : x1 = 000000be
 02201083 // lh x1, 0x22(x0)  : x1 = ffffdead
@@ -2382,7 +2388,7 @@ deadbeef // 0x0
 </pre>
 </div>
 <div id="sample_sbsh.hex" class="caption-code">
-<span class="caption">リスト3.80: リスト3.80: src/sample_sbsh.hex</span>
+<span class="caption">リスト3.81: リスト3.81: src/sample_sbsh.hex</span>
 <pre class="list language-hex" translate="no">12300093 // addi x1, x0, 0x123
 02101023 // sh x1, 0x20(x0)
 02100123 // sb x1, 0x22(x0)
@@ -2417,9 +2423,9 @@ deadbeef // 0x0
 <p>無条件ジャンプであるかどうかは<code class="inline-code" translate="no" >InstCtrl.is_jump</code>で確かめられます。また、<code class="inline-code" translate="no" >InstCtrl.is_aluop</code>が<code class="inline-code" translate="no" >0</code>なため、ALUは常に加算を行います。加算の対象のデータが、JAL命令(J形式)ならPCと即値、JALR命令(I形式)ならrs1と即値になっていることを確認してください(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.alu-range.data">リスト3.43</a></span>)。</p>
 
 <h4><a id="h3-12-1-1"></a>無条件ジャンプの実装</h4>
-<p>それでは、無条件ジャンプを実装します。まず、ジャンプ命令を実行するときにライトバックする値を<code class="inline-code" translate="no" >inst_pc + 4</code>にします(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.jump-range.wb">リスト3.81</a></span>)。</p>
+<p>それでは、無条件ジャンプを実装します。まず、ジャンプ命令を実行するときにライトバックする値を<code class="inline-code" translate="no" >inst_pc + 4</code>にします(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.jump-range.wb">リスト3.82</a></span>)。</p>
 <div id="core.veryl.jump-range.wb" class="caption-code">
-<span class="caption">リスト3.81: リスト3.81: pc + 4を書き込む (core.veryl)</span>
+<span class="caption">リスト3.82: リスト3.82: pc + 4を書き込む (core.veryl)</span>
 <pre class="list language-wb" translate="no">    let wb_data: UIntX    = switch {
         inst_ctrl.is_lui : inst_imm,
         <b>inst_ctrl.is_jump: inst_pc + 4,</b>
@@ -2428,22 +2434,22 @@ deadbeef // 0x0
     };
 </pre>
 </div>
-<p>次に、次にフェッチする命令をジャンプ先の命令に変更します。フェッチ先の変更が発生を示す信号<code class="inline-code" translate="no" >control_hazard</code>と、新しいフェッチ先を示す信号<code class="inline-code" translate="no" >control_hazard_pc_next</code>を作成します(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.jump-range.hazard_reg">リスト3.82</a></span>、<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.jump-range.hazard_assign">リスト3.83</a></span>)。</p>
+<p>次に、次にフェッチする命令をジャンプ先の命令に変更します。フェッチ先の変更が発生を示す信号<code class="inline-code" translate="no" >control_hazard</code>と、新しいフェッチ先を示す信号<code class="inline-code" translate="no" >control_hazard_pc_next</code>を作成します(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.jump-range.hazard_reg">リスト3.83</a></span>、<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.jump-range.hazard_assign">リスト3.84</a></span>)。</p>
 <div id="core.veryl.jump-range.hazard_reg" class="caption-code">
-<span class="caption">リスト3.82: リスト3.82: control_hazardとcontrol_hazard_pc_nextの定義 (core.veryl)</span>
+<span class="caption">リスト3.83: リスト3.83: control_hazardとcontrol_hazard_pc_nextの定義 (core.veryl)</span>
 <pre class="list language-hazard_reg" translate="no">    var control_hazard        : logic;
     var control_hazard_pc_next: Addr ;
 </pre>
 </div>
 <div id="core.veryl.jump-range.hazard_assign" class="caption-code">
-<span class="caption">リスト3.83: リスト3.83: control_hazardとcontrol_hazard_pc_nextの割り当て (core.veryl)</span>
+<span class="caption">リスト3.84: リスト3.84: control_hazardとcontrol_hazard_pc_nextの割り当て (core.veryl)</span>
 <pre class="list language-hazard_assign" translate="no">    assign control_hazard         = inst_valid &amp;&amp; inst_ctrl.is_jump;
     assign control_hazard_pc_next = alu_result &amp; ~1;
 </pre>
 </div>
-<p><code class="inline-code" translate="no" >control_hazard</code>を利用して<code class="inline-code" translate="no" >if_pc</code>を更新し、新しく命令をフェッチしなおすようにします(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.jump-range.always">リスト3.84</a></span>)。</p>
+<p><code class="inline-code" translate="no" >control_hazard</code>を利用して<code class="inline-code" translate="no" >if_pc</code>を更新し、新しく命令をフェッチしなおすようにします(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.jump-range.always">リスト3.85</a></span>)。</p>
 <div id="core.veryl.jump-range.always" class="caption-code">
-<span class="caption">リスト3.84: リスト3.84: PCをジャンプ先に変更する (core.veryl)</span>
+<span class="caption">リスト3.85: リスト3.85: PCをジャンプ先に変更する (core.veryl)</span>
 <pre class="list language-always" translate="no">    always_ff {
         if_reset {
             ...
@@ -2473,9 +2479,9 @@ deadbeef // 0x0
 </p>
 </div>
 <p>実行するべきではない命令を実行しないようにするために、ジャンプ命令を実行するときに、FIFOをリセットします。</p>
-<p>FIFOに、中身をリセットするための信号<code class="inline-code" translate="no" >flush</code>を実装します(<span class="listref"><a href="./04-impl-rv32i.html#fifo.veryl.jump-range.port">リスト3.85</a></span>)。</p>
+<p>FIFOに、中身をリセットするための信号<code class="inline-code" translate="no" >flush</code>を実装します(<span class="listref"><a href="./04-impl-rv32i.html#fifo.veryl.jump-range.port">リスト3.86</a></span>)。</p>
 <div id="fifo.veryl.jump-range.port" class="caption-code">
-<span class="caption">リスト3.85: リスト3.85: ポートにflushを追加する (fifo.veryl)</span>
+<span class="caption">リスト3.86: リスト3.86: ポートにflushを追加する (fifo.veryl)</span>
 <pre class="list language-port" translate="no">module fifo #(
     param DATA_TYPE: type = logic,
     param WIDTH    : u32  = 2    ,
@@ -2486,9 +2492,9 @@ deadbeef // 0x0
     wready    : output logic        ,
 </pre>
 </div>
-<p><code class="inline-code" translate="no" >flush</code>が<code class="inline-code" translate="no" >1</code>のとき、<code class="inline-code" translate="no" >head</code>と<code class="inline-code" translate="no" >tail</code>を<code class="inline-code" translate="no" >0</code>に初期化することでFIFOを空にします(<span class="listref"><a href="./04-impl-rv32i.html#fifo.veryl.jump-range.always_one">リスト3.86</a></span>、<span class="listref"><a href="./04-impl-rv32i.html#fifo.veryl.jump-range.always_two">リスト3.87</a></span>)。</p>
+<p><code class="inline-code" translate="no" >flush</code>が<code class="inline-code" translate="no" >1</code>のとき、<code class="inline-code" translate="no" >head</code>と<code class="inline-code" translate="no" >tail</code>を<code class="inline-code" translate="no" >0</code>に初期化することでFIFOを空にします(<span class="listref"><a href="./04-impl-rv32i.html#fifo.veryl.jump-range.always_one">リスト3.87</a></span>、<span class="listref"><a href="./04-impl-rv32i.html#fifo.veryl.jump-range.always_two">リスト3.88</a></span>)。</p>
 <div id="fifo.veryl.jump-range.always_one" class="caption-code">
-<span class="caption">リスト3.86: リスト3.86: flushが1のとき、FIFOを空にする (fifo.veryl、WIDTH==1)</span>
+<span class="caption">リスト3.87: リスト3.87: flushが1のとき、FIFOを空にする (fifo.veryl、WIDTH==1)</span>
 <pre class="list language-always_one" translate="no">    always_ff {
         if_reset {
             rdata  = 0;
@@ -2509,7 +2515,7 @@ deadbeef // 0x0
 </pre>
 </div>
 <div id="fifo.veryl.jump-range.always_two" class="caption-code">
-<span class="caption">リスト3.87: リスト3.87: flushが1のとき、FIFOを空にする (fifo.veryl、WIDTH!=1)</span>
+<span class="caption">リスト3.88: リスト3.88: flushが1のとき、FIFOを空にする (fifo.veryl、WIDTH!=1)</span>
 <pre class="list language-always_two" translate="no">    always_ff {
         if_reset {
             head = 0;
@@ -2531,9 +2537,9 @@ deadbeef // 0x0
     }
 </pre>
 </div>
-<p>coreモジュールで、<code class="inline-code" translate="no" >control_hazard</code>と<code class="inline-code" translate="no" >flush</code>を接続し、FIFOをリセットします(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.jump-range.fifo">リスト3.88</a></span>)。</p>
+<p>coreモジュールで、<code class="inline-code" translate="no" >control_hazard</code>と<code class="inline-code" translate="no" >flush</code>を接続し、FIFOをリセットします(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.jump-range.fifo">リスト3.89</a></span>)。</p>
 <div id="core.veryl.jump-range.fifo" class="caption-code">
-<span class="caption">リスト3.88: リスト3.88: ジャンプ命令のとき、FIFOをリセットする (core.veryl)</span>
+<span class="caption">リスト3.89: リスト3.89: ジャンプ命令のとき、FIFOをリセットする (core.veryl)</span>
 <pre class="list language-fifo" translate="no">    inst if_fifo: fifo #(
         DATA_TYPE: if_fifo_type,
         WIDTH    : 3           ,
@@ -2547,9 +2553,9 @@ deadbeef // 0x0
 </div>
 
 <h4><a id="h3-12-1-2"></a>無条件ジャンプのテスト</h4>
-<p>簡単なテストを作成し、動作をテストします(<span class="listref"><a href="./04-impl-rv32i.html#sample_jump.hex">リスト3.89</a></span>、<span class="listref"><a href="./04-impl-rv32i.html#jump.test">リスト3.90</a></span>)。</p>
+<p>簡単なテストを作成し、動作をテストします(<span class="listref"><a href="./04-impl-rv32i.html#sample_jump.hex">リスト3.90</a></span>、<span class="listref"><a href="./04-impl-rv32i.html#jump.test">リスト3.91</a></span>)。</p>
 <div id="sample_jump.hex" class="caption-code">
-<span class="caption">リスト3.89: リスト3.89: sample_jump.hex</span>
+<span class="caption">リスト3.90: リスト3.90: sample_jump.hex</span>
 <pre class="list language-hex" translate="no">0100006f //  0: jal x0, 0x10 : 0x10にジャンプする
 deadbeef //  4:
 deadbeef //  8:
@@ -2562,7 +2568,7 @@ fe1ff06f // 20: jal x0, -0x20 : 0にジャンプする
 </pre>
 </div>
 <div id="jump.test" class="cmd-code">
-<span class="caption">リスト3.90: リスト3.90: テストの実行</span>
+<span class="caption">リスト3.91: リスト3.91: テストの実行</span>
 <pre class="list language-test" translate="no">$ <span class="userinput">make build</span>
 $ <span class="userinput">make sim</span>
 $ <span class="userinput">obj_dir/sim src/sample_jump.hex 17</span>
@@ -2600,9 +2606,9 @@ $ <span class="userinput">obj_dir/sim src/sample_jump.hex 17</span>
 </div>
 
 <h4><a id="h3-12-2-1"></a>条件分岐の実装</h4>
-<p>分岐の条件が成立するかどうかを判定するモジュールを作成します。<code class="inline-code" translate="no" >src/brunit.veryl</code>を作成し、次のように記述します(<span class="listref"><a href="./04-impl-rv32i.html#brunit.veryl.br-range">リスト3.91</a></span>)。</p>
+<p>分岐の条件が成立するかどうかを判定するモジュールを作成します。<code class="inline-code" translate="no" >src/brunit.veryl</code>を作成し、次のように記述します(<span class="listref"><a href="./04-impl-rv32i.html#brunit.veryl.br-range">リスト3.92</a></span>)。</p>
 <div id="brunit.veryl.br-range" class="caption-code">
-<span class="caption">リスト3.91: リスト3.91: brunit.veryl</span>
+<span class="caption">リスト3.92: リスト3.92: brunit.veryl</span>
 <pre class="list language-br-range" translate="no">import eei::*;
 import corectrl::*;
 
@@ -2631,9 +2637,9 @@ module brunit (
 </pre>
 </div>
 <p>brunitモジュールは、<code class="inline-code" translate="no" >funct3</code>に応じて<code class="inline-code" translate="no" >take</code>の条件を切り替えます。分岐が成立するときに<code class="inline-code" translate="no" >take</code>が<code class="inline-code" translate="no" >1</code>になります。</p>
-<p>brunitモジュールを、coreモジュールでインスタンス化します(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.br-range.inst">リスト3.92</a></span>)。命令がB形式のとき、<code class="inline-code" translate="no" >op1</code>は<code class="inline-code" translate="no" >rs1_data</code>、<code class="inline-code" translate="no" >op2</code>は<code class="inline-code" translate="no" >rs2_data</code>になっていることを確認してください(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.alu-range.data">リスト3.43</a></span>)。</p>
+<p>brunitモジュールを、coreモジュールでインスタンス化します(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.br-range.inst">リスト3.93</a></span>)。命令がB形式のとき、<code class="inline-code" translate="no" >op1</code>は<code class="inline-code" translate="no" >rs1_data</code>、<code class="inline-code" translate="no" >op2</code>は<code class="inline-code" translate="no" >rs2_data</code>になっていることを確認してください(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.alu-range.data">リスト3.43</a></span>)。</p>
 <div id="core.veryl.br-range.inst" class="caption-code">
-<span class="caption">リスト3.92: リスト3.92: brunitモジュールのインスタンス化 (core.veryl)</span>
+<span class="caption">リスト3.93: リスト3.93: brunitモジュールのインスタンス化 (core.veryl)</span>
 <pre class="list language-inst" translate="no">    var brunit_take: logic;
 
     inst bru: brunit (
@@ -2644,9 +2650,9 @@ module brunit (
     );
 </pre>
 </div>
-<p>命令が条件分岐命令で<code class="inline-code" translate="no" >brunit_take</code>が<code class="inline-code" translate="no" >1</code>のとき、次のPCをPC + 即値にします(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.br-range.function">リスト3.93</a></span>、<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.br-range.hazard">リスト3.94</a></span>)。</p>
+<p>命令が条件分岐命令で<code class="inline-code" translate="no" >brunit_take</code>が<code class="inline-code" translate="no" >1</code>のとき、次のPCをPC + 即値にします(<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.br-range.function">リスト3.94</a></span>、<span class="listref"><a href="./04-impl-rv32i.html#core.veryl.br-range.hazard">リスト3.95</a></span>)。</p>
 <div id="core.veryl.br-range.function" class="caption-code">
-<span class="caption">リスト3.93: リスト3.93: 命令が条件分岐命令か判定する関数 (core.veryl)</span>
+<span class="caption">リスト3.94: リスト3.94: 命令が条件分岐命令か判定する関数 (core.veryl)</span>
 <pre class="list language-function" translate="no">    // 命令が分岐命令かどうかを判定する
     function inst_is_br (
         ctrl: input InstCtrl,
@@ -2656,7 +2662,7 @@ module brunit (
 </pre>
 </div>
 <div id="core.veryl.br-range.hazard" class="caption-code">
-<span class="caption">リスト3.94: リスト3.94: 分岐成立時のPCの設定 (core.veryl)</span>
+<span class="caption">リスト3.95: リスト3.95: 分岐成立時のPCの設定 (core.veryl)</span>
 <pre class="list language-hazard" translate="no">    assign control_hazard         = inst_valid &amp;&amp; <b>(</b>inst_ctrl.is_jump <b>|| inst_is_br(inst_ctrl) &amp;&amp; brunit_take)</b>;
     assign control_hazard_pc_next = <b>if inst_is_br(inst_ctrl) {</b>
         <b>inst_pc + inst_imm</b>
@@ -2668,17 +2674,17 @@ module brunit (
 <p><code class="inline-code" translate="no" >control_hazard</code>は、命令が無条件ジャンプ命令か、命令が条件分岐命令かつ分岐が成立するときに<code class="inline-code" translate="no" >1</code>になります。<code class="inline-code" translate="no" >control_hazard_pc_next</code>は、無条件ジャンプ命令のときは<code class="inline-code" translate="no" >alu_result</code>、条件分岐命令のときはPC + 即値になります。</p>
 
 <h4><a id="h3-12-2-2"></a>条件分岐命令のテスト</h4>
-<p>条件分岐命令を実行するとき、分岐の成否をデバッグ表示します。デバッグ表示を行っているalways_ffブロック内に、次のコードを追加します(<span class="listref"><a href="./04-impl-rv32i.html#core.very.br-range.debug">リスト3.95</a></span>)。</p>
+<p>条件分岐命令を実行するとき、分岐の成否をデバッグ表示します。デバッグ表示を行っているalways_ffブロック内に、次のコードを追加します(<span class="listref"><a href="./04-impl-rv32i.html#core.very.br-range.debug">リスト3.96</a></span>)。</p>
 <div id="core.very.br-range.debug" class="caption-code">
-<span class="caption">リスト3.95: リスト3.95: 分岐判定のデバッグ表示 (core.veryl)</span>
+<span class="caption">リスト3.96: リスト3.96: 分岐判定のデバッグ表示 (core.veryl)</span>
 <pre class="list language-debug" translate="no">    if inst_is_br(inst_ctrl) {
         $display(&quot;  br take   : %b&quot;, brunit_take);
     }
 </pre>
 </div>
-<p>簡単なテストを作成し、動作をテストします(<span class="listref"><a href="./04-impl-rv32i.html#sample_br.hex">リスト3.96</a></span>, <span class="listref"><a href="./04-impl-rv32i.html#br.test">リスト3.97</a></span>)。</p>
+<p>簡単なテストを作成し、動作をテストします(<span class="listref"><a href="./04-impl-rv32i.html#sample_br.hex">リスト3.97</a></span>, <span class="listref"><a href="./04-impl-rv32i.html#br.test">リスト3.98</a></span>)。</p>
 <div id="sample_br.hex" class="caption-code">
-<span class="caption">リスト3.96: リスト3.96: sample_br.hex</span>
+<span class="caption">リスト3.97: リスト3.97: sample_br.hex</span>
 <pre class="list language-hex" translate="no">00100093 //  0: addi x1, x0, 1
 10100063 //  4: beq x0, x1, 0x100
 00101863 //  8: bne x0, x1, 0x10
@@ -2689,7 +2695,7 @@ deadbeef // 14:
 </pre>
 </div>
 <div id="br.test" class="cmd-code">
-<span class="caption">リスト3.97: リスト3.97: テストの実行</span>
+<span class="caption">リスト3.98: リスト3.98: テストの実行</span>
 <pre class="list language-test" translate="no">$ <span class="userinput">make build</span>
 $ <span class="userinput">make sim</span>
 $ <span class="userinput">obj_dir/sim src/sample_br.hex 15</span>
