@@ -351,7 +351,7 @@ module ReVIEW
       ##   （他のエラーは出るまま。）
       with_context(:minicolumn) do
         blank2()
-        puts "[#{type}] <b>#{compile_inline(caption||'')}</a>"
+        puts "[#{type}] <b>#{compile_inline(caption||'')}</b>"
         blank()
         yield
         blank()
@@ -520,7 +520,7 @@ module ReVIEW
       with_context(:minicolumn) do
         blank2()
         caption, label = label, nil if caption.nil?
-        puts "[note] <b>#{compile_inline(caption||'')}</a>"
+        puts "[note] <b>#{compile_inline(caption||'')}</b>"
         blank()
         yield
         blank()
