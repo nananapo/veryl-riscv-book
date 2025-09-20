@@ -6,7 +6,7 @@
 
 @<large>{本書では、@<b>{Veryl}という「ハードウェアを記述するための言語」でCPUを自作する方法を解説しています。Verylを使うと、例えば32ビットの足し算をする回路を次のように記述できます。}
 
-//list[][]{
+//list[][][verilog]{
 module Adder (
     x  : input  logic<32>,
     y  : input  logic<32>,

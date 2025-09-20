@@ -276,7 +276,7 @@ IDからEX、EXからMEM、MEMからWBへのFIFOを作成します。
 まず、FIFOに格納するデータの型を定義します。
 それぞれのフィールドが存在する区間は@<img>{fifo_type}の通りです。
 
-//list[fifo.type.ex][ID → EXの間のFIFOのデータ型 (core.veryl)]{
+//list[core.veryl.fifo.type.ex][ID → EXの間のFIFOのデータ型 (core.veryl)]{
 #@maprange(scripts/05a/create-fifo-range/core/src/core.veryl,extype)
     struct exq_type {
         addr: Addr    ,
@@ -288,9 +288,9 @@ IDからEX、EXからMEM、MEMからWBへのFIFOを作成します。
 //}
 
 IDステージは、IFステージから命令のアドレスと命令のビット列を受け取ります。
-命令のビット列をデコードして、制御フラグと即値を生成し、EXステージに渡します(@<list>{fifo.type.ex})。
+命令のビット列をデコードして、制御フラグと即値を生成し、EXステージに渡します(@<list>{core.veryl.fifo.type.ex})。
 
-//list[fifo.type.mem][EX → MEMの間のFIFOのデータ型 (core.veryl)]{
+//list[core.veryl.fifo.type.mem][EX → MEMの間のFIFOのデータ型 (core.veryl)]{
 #@maprange(scripts/05a/create-fifo-range/core/src/core.veryl,memtype)
     struct memq_type {
         addr      : Addr       ,
@@ -311,9 +311,9 @@ EXステージは、IDステージで生成された制御フラグと即値と�
 整数演算命令のとき、レジスタの値を使って計算します。
 分岐命令のとき、分岐判定を行います。
 CSRやメモリアクセスでrs1とrs2を利用するため、
-演算の結果とともにMEMステージに渡します(@<list>{fifo.type.mem})。
+演算の結果とともにMEMステージに渡します(@<list>{core.veryl.fifo.type.mem})。
 
-//list[fifo.type.wb][MEM → WBの間のFIFOのデータ型 (core.veryl)]{
+//list[core.veryl.fifo.type.wb][MEM → WBの間のFIFOのデータ型 (core.veryl)]{
 #@maprange(scripts/05a/create-fifo-range/core/src/core.veryl,wbtype)
     struct wbq_type {
         addr      : Addr    ,
@@ -329,7 +329,7 @@ CSRやメモリアクセスでrs1とrs2を利用するため、
 
 MEMステージは、
 メモリのロード結果とCSRの読み込みデータを生成し、
-WBステージに渡します(@<list>{fifo.type.wb})。
+WBステージに渡します(@<list>{core.veryl.fifo.type.wb})。
 
 WBステージでは、
 命令がライトバックする命令のとき、
@@ -341,14 +341,14 @@ WBステージでは、
 ==== FIFOのインスタンス化
 
 FIFOと接続するための変数を定義し、FIFOをインスタンス化します
-(@<list>{fifo.vars}、@<list>{fifo.inst})。
+(@<list>{core.veryl.fifo.vars}、@<list>{core.veryl.fifo.inst})。
 @<code>{DATA_TYPE}パラメータには先ほど作成した構造体を設定します。
 FIFOのデータ個数は1であるため、@<code>{WIDTH}パラメータには@<code>{1}を設定します@<fn>{fifo.width}。
 @<code>{mem_wb_fifo}の@<code>{flush}は@<code>{0}にしています。
 
 //footnote[fifo.width][FIFOのデータ個数は@<code>{2 ** WIDTH - 1}です]
 
-//list[fifo.vars][FIFOと接続するための変数を定義する (core.veryl)]{
+//list[core.veryl.fifo.vars][FIFOと接続するための変数を定義する (core.veryl)]{
 #@maprange(scripts/05a/create-fifo-range/core/src/core.veryl,var)
     // ID -> EXのFIFO
     var exq_wready: logic   ;
@@ -376,7 +376,7 @@ FIFOのデータ個数は1であるため、@<code>{WIDTH}パラメータには@
 #@end
 //}
 
-//list[fifo.inst][FIFOのインスタンス化 (core.veryl)]{
+//list[core.veryl.fifo.inst][FIFOのインスタンス化 (core.veryl)]{
 #@maprange(scripts/05a/create-fifo-range/core/src/core.veryl,fifos)
     inst id_ex_fifo: fifo #(
         DATA_TYPE: exq_type,
@@ -432,12 +432,12 @@ FIFOのデータ個数は1であるため、@<code>{WIDTH}パラメータには@
 既にIFステージ(=命令フェッチ処理)は独立に動くものとして実装されているため、
 手を加える必要はありません。
 
-@<list>{mark_if}のようなコメントを挿入すると、
+@<list>{core.veryl.mark_if}のようなコメントを挿入すると、
 ステージの処理を書いている区間が分かりやすくなります。
 ID、EX、MEM、WBステージを実装するときにも同様のコメントを挿入し、
 ステージの処理のコードをまとまった場所に配置しましょう。
 
-//list[mark_if][IFステージが始まることを示すコメントを挿入する (core.veryl)]{
+//list[core.veryl.mark_if][IFステージが始まることを示すコメントを挿入する (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,mark_if)
     ///////////////////////////////// IF Stage /////////////////////////////////
 
@@ -456,9 +456,9 @@ IDステージでは、命令をデコードします。
 デコード結果はEXステージに渡します。
 EXステージにデータを渡すには、
 @<code>{exq_wdata}にデータを割り当てます
-(@<list>{always_comb_id})。
+(@<list>{core.veryl.always_comb_id})。
 
-//list[always_comb_id][EXステージに値を渡す (core.veryl)]{
+//list[core.veryl.always_comb_id][EXステージに値を渡す (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,always_comb_id)
     always_comb {
         // ID -> EX
@@ -479,9 +479,9 @@ IDステージを完了してEXステージに処理を進められます。
 @<code>{if_fifo_rready}に@<code>{exq_wready}を割り当てることで実現できます。
 
 最後に、命令が現在のクロックで供給されたかどうかを示す変数@<code>{id_is_new}は必要ないため削除します
-(@<list>{id_is_new})。
+(@<list>{core.veryl.id_is_new})。
 
-//list[id_is_new][ids_is_newを削除する (core.veryl)]{
+//list[core.veryl.id_is_new][ids_is_newを削除する (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,id_is_new)
     @<del>|var ids_is_new   : logic   ;|
 #@end
@@ -493,9 +493,9 @@ EXステージでは、
 整数演算命令のときはALUで計算し、
 分岐命令のときは分岐判定を行います。
 
-まず、EXステージに存在する命令の情報を@<code>{exq_rdata}から取り出します(@<list>{var_ex})。
+まず、EXステージに存在する命令の情報を@<code>{exq_rdata}から取り出します(@<list>{core.veryl.var_ex})。
 
-//list[var_ex][変数の定義 (core.veryl)]{
+//list[core.veryl.var_ex][変数の定義 (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,var_ex)
     let exs_valid    : logic    = exq_rvalid;
     let exs_pc       : Addr     = exq_rdata.addr;
@@ -507,9 +507,9 @@ EXステージでは、
 
 次に、EXステージで扱う変数の名前を変更します。
 変数の名前に@<code>{exs_}をつけます
-(@<list>{ex_prefix})。
+(@<list>{core.veryl.ex_prefix})。
 
-//list[ex_prefix][変数名を変更する (core.veryl)]{
+//list[core.veryl.ex_prefix][変数名を変更する (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,ex_prefix)
     // レジスタ番号
     let @<b>|exs_|rs1_addr: logic<5> = @<b>|exs|_inst_bits[19:15];
@@ -566,9 +566,9 @@ EXステージでは、
 最後に、MEMステージに命令とデータを渡します。
 MEMステージにデータを渡すために、
 @<code>{memq_wdata}にデータを割り当てます
-(@<list>{always_comb_ex})。
+(@<list>{core.veryl.always_comb_ex})。
 
-//list[always_comb_ex][MEMステージにデータを渡す (core.veryl)]{
+//list[core.veryl.always_comb_ex][MEMステージにデータを渡す (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,always_comb_ex)
     always_comb {
         // EX -> MEM
@@ -613,12 +613,12 @@ EXステージからMEMステージに別の命令の処理を進めることは
 パイプライン処理は止まってしまいます。
 パイプライン処理を進められない状態のことを@<b>{パイプラインハザード}(pipeline hazard)と呼びます。
 
-まず、MEMステージに存在する命令の情報を@<code>{memq_rdata}から取り出します(@<list>{var_mem})。
+まず、MEMステージに存在する命令の情報を@<code>{memq_rdata}から取り出します(@<list>{core.veryl.var_mem})。
 MEMステージでは、csrunitモジュールに、
 命令が現在のクロックでMEMステージに供給されたかどうかの情報を渡します。
 そのため、変数@<code>{mem_is_new}を定義しています。
 
-//list[var_mem][変数の定義 (core.veryl)]{
+//list[core.veryl.var_mem][変数の定義 (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,var_mem)
     var mems_is_new   : logic      ;
     let mems_valid    : logic       = memq_rvalid;
@@ -629,9 +629,9 @@ MEMステージでは、csrunitモジュールに、
 #@end
 //}
 
-@<code>{mem_is_new}には、@<code>{id_is_new}の更新に利用していたコードを利用します(@<list>{mem_is_new})。
+@<code>{mem_is_new}には、@<code>{id_is_new}の更新に利用していたコードを利用します(@<list>{core.veryl.mem_is_new})。
 
-//list[mem_is_new][mem_is_newの更新 (core.veryl)]{
+//list[core.veryl.mem_is_new][mem_is_newの更新 (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,mem_is_new)
     always_ff {
         if_reset {
@@ -649,9 +649,9 @@ MEMステージでは、csrunitモジュールに、
 
 次に、MEMモジュールで使う変数に合わせて、
 memunitモジュールとcsrunitモジュールのポートに割り当てている変数名を変更します
-(@<list>{mem_prefix2})。
+(@<list>{core.veryl.mem_prefix2})。
 
-//list[mem_prefix2][変数名を変更する (core.veryl)]{
+//list[core.veryl.mem_prefix2][変数名を変更する (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,mem_prefix2)
     var memu_rdata: UIntX;
     var memu_stall: logic;
@@ -696,9 +696,9 @@ memunitモジュールとcsrunitモジュールのポートに割り当ててい
 フェッチ先が変わったことを表す変数@<code>{control_hazard}と、
 新しいフェッチ先を示す信号@<code>{control_hazard_pc_next}では、
 EXステージで計算したデータとCSRステージのトラップ情報を利用します
-(@<list>{mem_prefix1})。
+(@<list>{core.veryl.mem_prefix1})。
 
-//list[mem_prefix1][ジャンプの判定処理 (core.veryl)]{
+//list[core.veryl.mem_prefix1][ジャンプの判定処理 (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,mem_prefix1)
     assign control_hazard         = @<b>|mems|_valid && (csru_raise_trap || @<b>|mems_|ctrl.is_jump || @<b>|memq_rdata.|br_taken);
     assign control_hazard_pc_next = if csru_raise_trap ? csru_trap_vector : @<b>|memq_rdata.|jump_addr;
@@ -714,11 +714,11 @@ MEMステージの処理は完了しています。
 そのため、フラッシュするとき、
 MEMステージにある命令は必ずWBステージに移動します。
 
-最後に、WBステージに命令とデータを渡します(@<list>{always_comb_mem})。
+最後に、WBステージに命令とデータを渡します(@<list>{core.veryl.always_comb_mem})。
 WBステージにデータを渡すために、
 @<code>{wbq_wdata}にデータを割り当てます
 
-//list[always_comb_mem][WBステージにデータを渡す (core.veryl)]{
+//list[core.veryl.always_comb_mem][WBステージにデータを渡す (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,always_comb_mem)
     always_comb {
         // MEM -> WB
@@ -747,9 +747,9 @@ WBステージでは、命令の結果をレジスタにライトバックしま
 WBステージが完了したら命令の処理は終わりなので、命令を破棄します。
 
 まず、WBステージに存在する命令の情報を@<code>{wbq_rdata}から取り出します
-(@<list>{var_wb})。
+(@<list>{core.veryl.var_wb})。
 
-//list[var_wb][変数の定義 (core.veryl)]{
+//list[core.veryl.var_wb][変数の定義 (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,var_wb)
     let wbs_valid    : logic    = wbq_rvalid;
     let wbs_pc       : Addr     = wbq_rdata.addr;
@@ -761,9 +761,9 @@ WBステージが完了したら命令の処理は終わりなので、命令を
 
 次に、WBステージで扱う変数名を変更します。
 変数名に@<code>{wbs_}をつけます
-(@<list>{wb_prefix})。
+(@<list>{core.veryl.wb_prefix})。
 
-//list[wb_prefix][変数名を変更する (core.veryl)]{
+//list[core.veryl.wb_prefix][変数名を変更する (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,wb_prefix)
     let @<b>|wbs_|rd_addr: logic<5> = @<b>|wbs_|inst_bits[11:7];
     let @<b>|wbs_|wb_data: UIntX    = switch {
@@ -786,9 +786,9 @@ WBステージが完了したら命令の処理は終わりなので、命令を
 WBステージでは命令を複数クロックで処理することはなく、
 WBステージの次のステージを待つ必要もありません。
 @<code>{wbq_rready}に@<code>{1}を割り当てることで、
-常にFIFOから命令を取り出します(@<list>{always_comb_wb})。
+常にFIFOから命令を取り出します(@<list>{core.veryl.always_comb_wb})。
 
-//list[always_comb_wb][命令をFIFOから取り出す (core.veryl)]{
+//list[core.veryl.always_comb_wb][命令をFIFOから取り出す (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,always_comb_wb)
     always_comb {
         // WB -> END
@@ -805,9 +805,9 @@ WBステージの次のステージを待つ必要もありません。
 これからは全てのステージで別の命令を処理することになります。
 デバッグ表示を変更しておきましょう。
 
-@<list>{debug}のように、デバッグ表示のalways_ffブロックを変更します。
+@<list>{core.veryl.debug}のように、デバッグ表示のalways_ffブロックを変更します。
 
-//list[debug][各ステージの情報をデバッグ表示する (core.veryl)]{
+//list[core.veryl.debug][各ステージの情報をデバッグ表示する (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,debug)
     ///////////////////////////////// DEBUG /////////////////////////////////
     var clock_count: u64;
@@ -889,12 +889,12 @@ Test Result : 0 / 1
 
 実は、ただIF、ID、EX、MEM、WBステージに処理を分割するだけでは、
 正しく命令を実行できません。
-例えば、@<list>{dh.example}のようなプログラムは正しく動きません。
+例えば、@<list>{sample_datahazard.hex.dh.example}のようなプログラムは正しく動きません。
 
 @<code>{test/sample_datahazard.hex}を作成し、次のように記述します
-(@<list>{dh.example})。
+(@<list>{sample_datahazard.hex.dh.example})。
 
-//list[dh.example][sample_datahazard.hex]{
+//list[sample_datahazard.hex.dh.example][sample_datahazard.hex]{
 #@mapfile(scripts/05a/datahazard/core/test/sample_datahazard.hex)
 0010811300100093 // 0:addi x1, x0, 1    4: addi x2, x1, 1
 #@end

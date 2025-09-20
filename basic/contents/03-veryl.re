@@ -157,9 +157,9 @@ VerylのSystemVerilogへのトランスパイルをウェブブラウザ上で�
 
 === コメント
 
-Verylでは次のようにコメントを記述できます(@<list>{code.comment})。
+Verylでは次のようにコメントを記述できます(@<list>{code.veryl.comment})。
 
-//list[code.comment][コメント]{
+//list[code.veryl.comment][コメント]{
   // 1行のコメント
   /* 範囲コメント */
   /*
@@ -201,9 +201,9 @@ Nビットのlogic型は@<code>{logic<N>}と記述できます。
 logic型とbit型は、デフォルトで符号が無い型として扱われます。
 符号付き型として扱いたいときは、
 型名の前に@<b>{signed}キーワードを追加します
-(@<list>{code.signed_keyword})。
+(@<list>{code.veryl.signed_keyword})。
 
-//list[code.signed_keyword][符号付き型]{
+//list[code.veryl.signed_keyword][符号付き型]{
 signed logic<4> // 4ビットの符号付きlogic型
 signed bit<2> // 2ビットの符号付きbit型
 //}
@@ -219,9 +219,9 @@ i32		@<code>{signed bit<32>}
 i64		@<code>{signed bit<64>}
 //}
 
-数値は@<list>{code.num_literal}のように記述できます。
+数値は@<list>{code.veryl.num_literal}のように記述できます。
 
-//list[code.num_literal][数値リテラル]{
+//list[code.veryl.num_literal][数値リテラル]{
 4'b0101 // 4ビットの数値 (2進数表記)
 4'bxxzz // 4ビットの数値 (2進数表記)
 
@@ -255,9 +255,9 @@ i64		@<code>{signed bit<64>}
 //}
 
 文字列は@<b>{string}型で表現できます。
-文字列の値は@<list>{string.literal}のように記述できます。
+文字列の値は@<list>{code.veryl.string.literal}のように記述できます。
 
-//list[string.literal][文字列リテラル]{
+//list[code.veryl.string.literal][文字列リテラル]{
 "Hello World!" // 文字列リテラル 
 "abcdef\nabc"  // エスケープシーケンスを含む文字列リテラル
 //}
@@ -308,9 +308,9 @@ always_combブロック内での代入のことを、
 
 具体例で考えます。
 例えばalways_combブロックの中で、1ビットの変数@<code>{x}に1ビットの変数@<code>{y}を代入します
-(@<list>{assign.wave})。
+(@<list>{code.veryl.assign.wave})。
 
-//list[assign.wave][xにyを割り当てる]{
+//list[code.veryl.assign.wave][xにyを割り当てる]{
 always_comb {
 	x = y;
 }
@@ -328,7 +328,7 @@ always_comb {
 always_combブロックには複数の代入文を記述できます。
 このとき、代入文は上から順番に実行(逐次実行)されます。
 
-//list[always_comb.order][ブロッキング代入は逐次実行される]{
+//list[code.veryl.always_comb.order][ブロッキング代入は逐次実行される]{
 always_comb {
 	s = X;
 	a = s; // a = X
@@ -337,21 +337,21 @@ always_comb {
 }
 //}
 
-例えば@<list>{always_comb.order}では、
+例えば@<list>{code.veryl.always_comb.order}では、
 @<code>{a}には@<code>{X}が代入されますが、@<code>{b}には@<code>{Y}が代入されます。
 変数@<code>{a}と@<code>{b}と@<code>{s}は、変数@<code>{X}か@<code>{Y}の変化をトリガーに値が更新されます。
 
 1つの変数にしかブロッキング代入しないとき、
 @<b>{assign}文でもブロッキング代入できます
-(@<list>{always_comb.assign})。
+(@<list>{code.veryl.always_comb.assign})。
 
-//list[always_comb.assign][assign文によるブロッキング代入]{
+//list[code.veryl.always_comb.assign][assign文によるブロッキング代入]{
 // assign 変数名 = 式;
 assign a = b + 100;
 //}
 
 always_combブロック内での代入と同じように、
-@<list>{always_comb.assign}では@<code>{b}の変化をトリガーに@<code>{a}の値が変化します。
+@<list>{code.veryl.always_comb.assign}では@<code>{b}の変化をトリガーに@<code>{a}の値が変化します。
 
 ブロッキング代入は論理回路の状態(レジスタ)を変更しません。
 そのため、ブロッキング代入文は組み合わせ回路になります。
@@ -359,9 +359,9 @@ always_combブロック内での代入と同じように、
 ==== 変数の宣言
 
 モジュールの中では、
-@<b>{var}文によって新しく変数を宣言できます(@<list>{var.stmt})。
+@<b>{var}文によって新しく変数を宣言できます(@<list>{code.veryl.var.stmt})。
 
-//list[var.stmt][変数の宣言]{
+//list[code.veryl.var.stmt][変数の宣言]{
 // var 変数名 : 型名;
 var value : logic<32>;
 //}
@@ -369,9 +369,9 @@ var value : logic<32>;
 var文で宣言した変数に対してブロッキング代入できます。
 
 @<b>{let}文を使うと、
-変数の宣言とブロッキング代入を同時に行えます(@<list>{let.stmt})。
+変数の宣言とブロッキング代入を同時に行えます(@<list>{code.veryl.let.stmt})。
 
-//list[let.stmt][変数の宣言とブロッキング代入]{
+//list[code.veryl.let.stmt][変数の宣言とブロッキング代入]{
 // let 変数名 : 型名 = 式;
 let value : logic<32> = 100 + a;
 //}
@@ -381,9 +381,9 @@ let value : logic<32> = 100 + a;
 変数を宣言するとき、
 変数に式がブロッキング代入されない場合、
 変数はレジスタとして解釈できます
-(@<list>{reg.define})。
+(@<list>{code.veryl.reg.define})。
 
-//list[reg.define][レジスタの定義]{
+//list[code.veryl.reg.define][レジスタの定義]{
 // var レジスタ名 : 型名;
 var reg_value : logic<32>;
 
@@ -401,10 +401,10 @@ var reg_value : logic<32>;
 
 //image[register_wave][レジスタ(value)の値はクロック信号(clk)が立ち上がるタイミングで変わる][width=50%]
 
-レジスタの値は、@<b>{always_ff}ブロックで初期化、変更します(@<list>{always_ff.first})。
+レジスタの値は、@<b>{always_ff}ブロックで初期化、変更します(@<list>{code.veryl.always_ff.first})。
 always_ffブロックには、値の変更タイミングのためのクロック信号とリセット信号を指定します。
 
-//list[always_ff.first][レジスタの値の初期化と変更]{
+//list[code.veryl.always_ff.first][レジスタの値の初期化と変更]{
 // レジスタの定義
 var value : logic<32>;
 
@@ -428,9 +428,9 @@ if_reset文にelse文を付けることで、クロック信号のタイミン�
 クロック信号はclock型、リセット信号はreset型で定義します。
 モジュールのポートに１組のクロック信号とリセット信号が定義されているとき、
 always_ffブロックのクロック信号とリセット信号の指定を省略できます
-(@<list>{always_ff.omit})。
+(@<list>{code.veryl.always_ff.omit})。
 
-//list[always_ff.omit][クロック信号とリセット信号の省略]{
+//list[code.veryl.always_ff.omit][クロック信号とリセット信号の省略]{
 module ModuleA(
   clk: input clock,
   rst: input reset,
@@ -442,14 +442,14 @@ module ModuleA(
 
 レジスタの値は、
 同じタイミングで動くalways_ffブロックの中の全ての代入文の右辺を評価した後に変更されます
-(@<list>{multi.always_ff.nonblocking})。
+(@<list>{code.veryl.multi.always_ff.nonblocking})。
 この代入はブロッキング代入と違って逐次実行されないので、
 @<b>{ノンブロッキング代入}(non-blocking assignment)と呼びます。
 
 2つ以上のalways_ffブロックで、
 1つの同じレジスタの値を変更することはできません。
 
-//list[multi.always_ff.nonblocking][複数のレジスタの値を同じタイミングで変更する]{
+//list[code.veryl.multi.always_ff.nonblocking][複数のレジスタの値を同じタイミングで変更する]{
 // 全ての代入文の右辺を評価した後に、AとBが変更される
 // その結果、AとBの値が入れ替わる
 always_ff(clk, rst) {
@@ -460,13 +460,13 @@ always_ff(clk, rst) {
 }
 //}
 
-@<list>{multi.always_ff.nonblocking}の@<code>{A}と@<code>{B}の代入文は、
-1つのalways_ffブロックにまとめて記述できます(@<list>{always_ff.nonblocking})。
-この場合も@<list>{multi.always_ff.nonblocking}と同様に、
+@<list>{code.veryl.multi.always_ff.nonblocking}の@<code>{A}と@<code>{B}の代入文は、
+1つのalways_ffブロックにまとめて記述できます(@<list>{code.veryl.always_ff.nonblocking})。
+この場合も@<list>{code.veryl.multi.always_ff.nonblocking}と同様に、
 @<code>{A}と@<code>{B}の代入文の右辺を評価した後に、
 レジスタの値が変更されます。
 
-//list[always_ff.nonblocking][ノンブロッキング代入の更新タイミングは同じ]{
+//list[code.veryl.always_ff.nonblocking][ノンブロッキング代入の更新タイミングは同じ]{
 always_ff {
 	// AとBの値を入れ替える
 	A = B;
@@ -494,9 +494,9 @@ always_ff	ノンブロッキング代入	クロック信号、リセット信号
 モジュールの実体を宣言できます。
 
 モジュールは、@<b>{inst}キーワードによってインスタンス化できます
-(@<list>{module.inst})。
+(@<list>{code.veryl.module.inst})。
 
-//list[module.inst][ModuleAモジュール内でHalfAdderモジュールをインスタンス化する]{
+//list[code.veryl.module.inst][ModuleAモジュール内でHalfAdderモジュールをインスタンス化する]{
 module ModuleA {
 	// モジュールと接続するための変数の宣言
 	let x : logic = 0;
@@ -523,9 +523,9 @@ module ModuleA {
 
 モジュールのパラメータは、
 ポート宣言の前の@<code>{#()}の中で@<b>{param}キーワードによって宣言できます
-(@<list>{module.param.define})。
+(@<list>{code.veryl.module.param.define})。
 
-//list[module.param.define][モジュールのパラメータの宣言]{
+//list[code.veryl.module.param.define][モジュールのパラメータの宣言]{
 module ModuleA #(
 	// param パラメータ名 : 型名 = デフォルト値 
 	param WIDTH : u32 = 100, // u32型のパラメータ
@@ -537,9 +537,9 @@ module ModuleA #(
 
 モジュールをインスタンス化するとき、
 ポートの割り当てと同じようにパラメータの値を割り当てられます
-(@<list>{module.param.inst})。
+(@<list>{code.veryl.module.param.inst})。
 
-//list[module.param.inst][パラメータの値を指定する]{
+//list[code.veryl.module.param.inst][パラメータの値を指定する]{
 inst ma : ModuleA #(
 	// パラメータの割り当て
 	WIDTH: 10,
@@ -551,9 +551,9 @@ inst ma : ModuleA #(
 
 モジュール内では、変更不可能なパラメータ(定数)を定義できます。
 定数を定義するには@<b>{const}キーワードを使用します
-(@<list>{const.use})。
+(@<list>{code.veryl.const.use})。
 
-//list[const.use][定数の定義]{
+//list[code.veryl.const.use][定数の定義]{
 // const 定数名 : 型名 = 式;
 // 式に変数が含まれてはいけない
 const SECRET : u32 = 42;
@@ -564,10 +564,10 @@ const SECRET : u32 = 42;
 ==== 構造体型
 
 構造体(struct)とは、複数のデータから構成される型です。
-例えば、@<list>{struct.define}のように記述すると、
+例えば、@<list>{code.veryl.struct.define}のように記述すると、
 @<code>{logic<32>}と@<code>{logic<16>}の2つのデータから構成される型を定義できます。
 
-//list[struct.define][構造体型の定義]{
+//list[code.veryl.struct.define][構造体型の定義]{
 // struct 型名 { フィールドの定義 }
 struct MyPair {
 	// 名前 : 型
@@ -577,9 +577,9 @@ struct MyPair {
 //}
 
 構造体の要素(フィールド, field)には@<code>{.}を介してアクセスできます
-(@<list>{struct.field.access})。
+(@<list>{code.veryl.struct.field.access})。
 
-//list[struct.field.access][フィールドへのアクセス、割り当て]{
+//list[code.veryl.struct.field.access][フィールドへのアクセス、割り当て]{
 // 構造体型の変数の宣言
 var pair: MyPair;
 
@@ -599,9 +599,9 @@ always_comb {
 列挙型の値の候補のことを@<b>{バリアント}(variant)と呼びます。
 
 例えば、A、B、C、Dのいずれかのバリアントをとる型は次のように定義できます
-(@<list>{enum.define})。
+(@<list>{code.veryl.enum.define})。
 
-//list[enum.define][列挙型の定義]{
+//list[code.veryl.enum.define][列挙型の定義]{
 // enum 型名 : logic<バリアント数を保持できるだけのビット数> { バリアントの定義 }
 enum abcd : logic<2> {
 	// バリアント名 : バリアントを表す値,
@@ -612,17 +612,17 @@ enum abcd : logic<2> {
 }
 //}
 
-enum型の値は@<code>{型名::バリアント名}で利用できます(@<list>{enum.use})。
+enum型の値は@<code>{型名::バリアント名}で利用できます(@<list>{code.veryl.enum.use})。
 
-//list[enum.use][列挙型の値]{
+//list[code.veryl.enum.use][列挙型の値]{
 // enum型の変数の定義
 let v : abcd = abcd::A;
 //}
 
 バリアントを表す値や、バリアントを保持できるだけのビット数は省略できます
-(@<list>{enum.omit})。
+(@<list>{code.veryl.enum.omit})。
 
-//list[enum.omit][列挙型の省略した定義]{
+//list[code.veryl.enum.omit][列挙型の省略した定義]{
 enum abcd {
 	A, B, C, D
 }
@@ -631,11 +631,11 @@ enum abcd {
 ==== 配列
 
 @<code>{<>}を使用することで、多次元の型を定義できます
-(@<list>{logic.md})。
+(@<list>{code.veryl.logic.md})。
 @<code>{<>}を使用して構成される型の要素は、
 連続した領域に並ぶことが保証されます(@<img>{packed_array})。
 
-//list[logic.md][多次元の型]{
+//list[code.veryl.logic.md][多次元の型]{
 logic<N>     // Nビットのlogic型
 logic<A, B>  // BビットのlogicがA個並ぶ型
 //}
@@ -643,11 +643,11 @@ logic<A, B>  // BビットのlogicがA個並ぶ型
 //image[packed_array][<>の型の要素は連続した領域に並ぶ (例 : v[1\][0\]とv[0\][3\]が隣り合う)]
 
 @<code>{[]}を使用することでも、多次元の型を定義できます
-(@<list>{array.define})。
+(@<list>{code.veryl.array.define})。
 ただし、@<code>{[]}を使用して構成される型の要素は、
 連続した領域に並ぶことが保証されません。
 
-//list[array.define][配列型]{
+//list[code.veryl.array.define][配列型]{
 // 型名[個数] で、"型名"型が"個数"個の配列になる
 logic[32]     // 要素数が32のlogicの配列型
 logic[4, 8]   // logicが8個の配列が4個ある配列型
@@ -656,9 +656,9 @@ logic[4, 8]   // logicが8個の配列が4個ある配列型
 ==== 型に別名をつける
 
 @<b>{type}キーワードを使うと、型に別名を付けられます
-(@<list>{type.define})。
+(@<list>{code.veryl.type.define})。
 
-//list[type.define][型に別名を付ける]{
+//list[code.veryl.type.define][型に別名を付ける]{
 // type 名前 = 型;
 type ptr = logic<32>;
 type ptr_array = ptr<32>;
@@ -677,9 +677,9 @@ type ptr_array = ptr<32>;
 選択する場所の指定には式を使えます。
 
 よく使われる範囲の選択には、別の書き方が用意されています
-(@<list>{bitsel.range_sel})。
+(@<list>{code.veryl.bitsel.range_sel})。
 
-//list[bitsel.range_sel][範囲の選択の別の記法]{
+//list[code.veryl.bitsel.range_sel][範囲の選択の別の記法]{
 v[s +: w]   // = v[s+w-1   : s    ]
 v[s -: w]   // = v[s       : s-w+1]
 v[i step w] // = v[i*(w+1) : i*w  ] = v[i*w +: w]
@@ -697,11 +697,11 @@ SystemVerilogとの差異を説明すると、
 @<code>{<}と@<code>{>}がそれぞれ@<code>{<:}と@<code>{>:}に変更されています。
 また、@<code>{inside}と@<code>{{{\}\}}、@<code>{?:}(三項演算子)の形式が変更され、case式、switch式が追加されています。
 
-単項、二項演算子の使用例は次の通りです(@<list>{operator.use})。
+単項、二項演算子の使用例は次の通りです(@<list>{code.veryl.operator.use})。
 
 #@# @<bib>{veryl-doc.operators}
 
-//list[operator.use][単項、二項演算子 (Verylのドキュメントの例を改変)]{
+//list[code.veryl.operator.use][単項、二項演算子 (Verylのドキュメントの例を改変)]{
 // 単項算術演算
 a = +1;
 a = -1; // 正負を反転させる
@@ -789,10 +789,10 @@ a = x || y; // xまたはyが真のとき真
 
 ==== if、switch、case
 
-条件によって動作や値を変えたいとき、@<b>{if}文を使用します (@<list>{if.only})。
+条件によって動作や値を変えたいとき、@<b>{if}文を使用します (@<list>{code.veryl.if.only})。
 括弧と@<code>{else}の代わりに@<code>{?}と@<code>{:}を使うことで式にできます。
 
-//list[if.only][if文、if式]{
+//list[code.veryl.if.only][if文、if式]{
 var v : logic<32>;
 always_comb {
 	if WIDTH == 0 {
@@ -812,12 +812,12 @@ always_combブロック内で変数に代入するとき、
 if文の全ての場合で代入する必要があることに注意してください
 (@<code>{v}は常に代入されています)。
 
-@<list>{if.only}と同じ意味の文を@<b>{switch}文で書けます(@<list>{switch.only})。
+@<list>{code.veryl.if.only}と同じ意味の文を@<b>{switch}文で書けます(@<list>{code.veryl.switch.only})。
 どの条件にも当てはまらないときの動作は@<b>{default}で指定します。
 switchは式にできます。
 switch式は必ず値を返す必要があり、defaultが必須です。
 
-//list[switch.only][switch文、switch式]{
+//list[code.veryl.switch.only][switch文、switch式]{
 var v : logic<32>;
 always_comb {
 	switch {
@@ -838,12 +838,12 @@ always_comb {
 }
 //}
 
-@<list>{if.only}のように
+@<list>{code.veryl.if.only}のように
 1つの要素(@<code>{WIDTH})の一致のみが条件のとき、
-同じ意味の文を@<b>{case}文で書けます(@<list>{case.only})。
+同じ意味の文を@<b>{case}文で書けます(@<list>{code.veryl.case.only})。
 式にできたり、式にdefaultが必須なのはswitch文と同様です。
 
-//list[case.only][case文、case式]{
+//list[code.veryl.case.only][case文、case式]{
 var v: logic<32>;
 always_comb {
 	case WIDTH {
@@ -866,16 +866,16 @@ always_comb {
 
 ==== 連結、repeat
 
-ビット列や文字列を連結したいとき、@<code>{{\}}を使用できます(@<list>{renketu})。
+ビット列や文字列を連結したいとき、@<code>{{\}}を使用できます(@<list>{code.veryl.renketu})。
 @<code>{+}では連結できない(値の足し算になる)ことに注意してください。
-同じビット列、文字列を繰り返して連結したいときは@<b>{repeat}キーワードを使用します(@<list>{repeat})。
+同じビット列、文字列を繰り返して連結したいときは@<b>{repeat}キーワードを使用します(@<list>{code.veryl.repeat})。
 
-//list[renketu][連結]{
+//list[code.veryl.renketu][連結]{
 {12'h123, 32'habcd0123} // 44'h123_abcde0123になる
 {"Hello", " ", "World!"} // "Hello World!"になる
 //}
 
-//list[repeat][repeatを使って連結を繰り返す]{
+//list[code.veryl.repeat][repeatを使って連結を繰り返す]{
 // {繰り返したい要素 repeat 繰り返す回数}
 {4'0011 repeat 3, 4'b1111} // 16'b0011_0011_0011_1111になる
 {"Happy" repeat 3} // "HappyHappyHappy"になる
@@ -884,20 +884,20 @@ always_comb {
 ==== for
 
 @<b>{for}文はループを実現するための文です。
-for文は@<list>{for.code}のように記述できます。
+for文は@<list>{code.veryl.for.code}のように記述できます。
 例えばループ変数が0から31になるまで(32回)繰り返すなら、
 範囲に@<code>{0..32}、または@<code>{0..=31}と記述します。
 範囲には定数のみ指定できます。
 
-//list[for.code][for文の記法]{
+//list[code.veryl.for.code][for文の記法]{
 // for ループ変数名: 型 in 範囲 { 処理 }
 for i: u32 in 0..32 { ... }
 //}
 
 @<b>{break}文を使うとループから抜け出せます。
-例えば@<list>{always_comb.for}では@<code>{x}の値は256になります。
+例えば@<list>{code.veryl.always_comb.for}では@<code>{x}の値は256になります。
 
-//list[always_comb.for][always_combブロック内でfor文を記述する例]{
+//list[code.veryl.always_comb.for][always_combブロック内でfor文を記述する例]{
 var x: u32;
 always_comb {
     x = 0;
@@ -915,10 +915,10 @@ always_comb {
 値がある範囲に含まれているかという条件を記述したいとき、
 @<b>{inside}式を利用できます。
 @<code>{inside 式 {範囲\}}で、
-式の結果が範囲内にあるかという条件を記述できます(@<list>{inside-outside})。
+式の結果が範囲内にあるかという条件を記述できます(@<list>{code.veryl.inside-outside})。
 逆に、範囲外にあるという条件は@<b>{outside}式で記述できます。
 
-//list[inside-outside][inside、outside]{
+//list[code.veryl.inside-outside][inside、outside]{
 inside n {0..10}    // nが0以上10未満のとき1
 inside n {0..=10}   // nが0以上10以下のとき1
 inside n {0, 1, 3}  // nが0、1、3のいずれかのとき1
@@ -931,7 +931,7 @@ outside n {0, 1, 3} // nが0、1、3以外の値のとき1
 
 ==== function
 
-何度も記述する操作や計算は、関数(@<b>{function})を使うことでまとめて記述できます(@<list>{function.first})。
+何度も記述する操作や計算は、関数(@<b>{function})を使うことでまとめて記述できます(@<list>{code.veryl.function.first})。
 関数は値を引数で受け取り、@<b>{return}文で値を返します。
 値を返さないとき、戻り値の型の指定を省略できます。
 
@@ -942,7 +942,7 @@ functionの実行が終了するとき、
 @<code>{output}として指定されている仮引数の値が実引数の変数にコピーされます。
 outputを使用することで、変数に値を割り当てることができます。
 
-//list[function.first][関数]{
+//list[code.veryl.function.first][関数]{
 // べき乗を返す関数
 function get_power(
 	a : input u32,
@@ -980,11 +980,11 @@ always_comb {
 
 モジュールに何個もポートが存在するとき、
 ポートの接続は非常に手間のかかる作業になります。
-例えば@<list>{interface.motivate}では、
+例えば@<list>{code.veryl.interface.motivate}では、
 向きが対になっているポートがModuleAとModuleBに定義されており、
 これを一つ一つ接続しています。
 
-//list[interface.motivate][モジュールのポートの相互接続]{
+//list[code.veryl.interface.motivate][モジュールのポートの相互接続]{
 module ModuleA (
 	req_a: output logic,
 	req_b: output logic,
@@ -1014,10 +1014,10 @@ module Top{
 
 モジュール間のポートの接続を簡単に行うために、
 インターフェース(@<b>{interface})という機能が用意されています。
-@<list>{interface.motivate}のModuleAとModuleBを相互接続するような
-インターフェースは次のように定義できます(@<list>{interface.example})。
+@<list>{code.veryl.interface.motivate}のModuleAとModuleBを相互接続するような
+インターフェースは次のように定義できます(@<list>{code.veryl.interface.example})。
 
-//list[interface.example][インターフェースの定義]{
+//list[code.veryl.interface.example][インターフェースの定義]{
 // interface インターフェース名 { }
 interface iff_ab {
 	var a : logic;
@@ -1038,10 +1038,10 @@ interface iff_ab {
 //}
 
 iff_abインターフェースを利用すると、
-@<list>{interface.motivate}を簡潔に記述できます
-(@<list>{interface.good})。
+@<list>{code.veryl.interface.motivate}を簡潔に記述できます
+(@<list>{code.veryl.interface.good})。
 
-//list[interface.good][インターフェースによる接続]{
+//list[code.veryl.interface.good][インターフェースによる接続]{
 module ModuleA (
 	req : modport iff_ab::req,
 ){}
@@ -1063,9 +1063,9 @@ module Top{
 modportで宣言されたポートにインターフェースのインスタンスを渡すことにより、
 ポートの接続を一気に行えます。
 
-モジュールと同じように、インターフェースにはパラメータを宣言できます(@<list>{interface.param})。
+モジュールと同じように、インターフェースにはパラメータを宣言できます(@<list>{code.veryl.interface.param})。
 
-//list[interface.param][パラメータ付きのインターフェース]{
+//list[code.veryl.interface.param][パラメータ付きのインターフェース]{
 // interface インターフェース名 #( パラメータの定義 ) { }
 interface iff_params # (
 	param PARAM_A : u32 = 100,
@@ -1079,9 +1079,9 @@ interface iff_params # (
 
 複数のモジュールやインターフェースにまたがって使用したい
 パラメータや型、関数はパッケージ(@<b>{package})に定義できます
-(@<list>{package.define})。
+(@<list>{code.veryl.package.define})。
 
-//list[package.define][パッケージの定義]{
+//list[code.veryl.package.define][パッケージの定義]{
 package PackageA {
 	const WIDTH : u32 = 1234;
 	type foo = logic<WIDTH>;
@@ -1093,9 +1093,9 @@ package PackageA {
 
 パッケージに定義した要素には、
 @<code>{パッケージ名::要素名}でアクセスできます
-(@<list>{package.access})。
+(@<list>{code.veryl.package.access})。
 
-//list[package.access][パッケージの要素にアクセスする]{
+//list[code.veryl.package.access][パッケージの要素にアクセスする]{
 module ModuleA {
 	const W : u32 = PackageA::WIDTH;
 	var value1 : PackageA::foo;
@@ -1105,9 +1105,9 @@ module ModuleA {
 
 @<b>{import}文を使用すると、
 要素へのアクセス時にパッケージ名の指定を省略できます
-(@<list>{package.import})。
+(@<list>{code.veryl.package.import})。
 
-//list[package.import][パッケージをimportする]{
+//list[code.veryl.package.import][パッケージをimportする]{
 import PackageA::WIDTH; // 特定の要素をimportする
 import PackageA::*; // 全ての要素をimportする
 //}
@@ -1118,11 +1118,11 @@ import PackageA::*; // 全ての要素をimportする
 @<b>{ジェネリクス}(generics)によってパラメータ化できます。
 
 例えば、要素に任意の型TやWビットのデータを持つ構造体は、
-次のように@<b>{ジェネリックパラメータ}(generic parameter)を使うことで定義できます(@<list>{generics.sample})。
+次のように@<b>{ジェネリックパラメータ}(generic parameter)を使うことで定義できます(@<list>{code.veryl.generics.sample})。
 ジェネリックパラメータに渡される値は、
 ジェネリクスの定義位置からアクセスできる定数である必要があります。
 
-//list[generics.sample][パラメータ化された構造体]{
+//list[code.veryl.generics.sample][パラメータ化された構造体]{
 module ModuleA {
 	// ::<>でジェネリックパラメータを定義する
 	// constで数値を受け取る
@@ -1151,9 +1151,9 @@ module ModuleA {
 ==== initial、final
 
 @<b>{initial}ブロックの中の文はシミュレーションの開始時に実行されます。
-@<b>{final}ブロックの中の文はシミュレーションの終了時に実行されます(@<list>{initial.final})。
+@<b>{final}ブロックの中の文はシミュレーションの終了時に実行されます(@<list>{code.veryl.initial.final})。
 
-//list[initial.final][initial、finalブロック]{
+//list[code.veryl.initial.final][initial、finalブロック]{
 module ModuleA {
 	initial {
 		// シミュレーション開始時に実行される
@@ -1167,9 +1167,9 @@ module ModuleA {
 ==== SystemVerilogとの連携
 
 SystemVerilogのモジュールやパッケージ、インターフェースを利用できます。
-SystemVerilogのリソースにアクセスするには@<code>{$sv::}を使用します(@<list>{sv.use})。
+SystemVerilogのリソースにアクセスするには@<code>{$sv::}を使用します(@<list>{code.veryl.sv.use})。
 
-//list[sv.use][SystemVerilogの要素を利用する]{
+//list[code.veryl.sv.use][SystemVerilogの要素を利用する]{
 module ModuleA {
 	// SystemVerilogでsvpackageとして
 	// 定義されているパッケージを利用する
@@ -1192,9 +1192,9 @@ module ModuleA {
 //}
 
 SystemVerilogのソースコードを直接埋め込み、展開できます
-(@<list>{sv.integrate})。
+(@<list>{code.veryl.sv.integrate})。
 
-//list[sv.integrate][SystemVerilog記述を埋め込む]{
+//list[code.veryl.sv.integrate][SystemVerilog記述を埋め込む]{
 // SystemVerilog記述を直接埋め込む
 embed (inline) sv{{{
 	module ModuleA(
@@ -1228,10 +1228,10 @@ $error		エラー出力する							なし
 $finish		シミュレーションを終了する				なし
 //}
 
-それぞれの使用例は次の通りです(@<list>{systemtask.use})。
+それぞれの使用例は次の通りです(@<list>{code.veryl.systemtask.use})。
 システム関数やシステムタスクを利用するときは、通常の関数呼び出しのように使用します。
 
-//list[systemtask.use][システム関数、システムタスクの使用例]{
+//list[code.veryl.systemtask.use][システム関数、システムタスクの使用例]{
 const w1 : u32 = $clog2(32); // 5
 const w2 : u32 = $clog2(35); // 6
 
@@ -1253,9 +1253,9 @@ initial {
 ==== アトリビュート
 
 アトリビュートを使うと、宣言に注釈をつけられます。
-例えば@<list>{attribute.use}は、@<list>{attribute.sv}にトランスパイルされます。
+例えば@<list>{code.veryl.attribute.use}は、@<list>{attribute.sv}にトランスパイルされます。
 
-//list[attribute.use][アトリビュートを使ったVerylコード]{
+//list[code.veryl.attribute.use][アトリビュートを使ったVerylコード]{
 #[sv("keep=\"true\"")]
 var aaa : logic;
 

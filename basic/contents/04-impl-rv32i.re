@@ -829,7 +829,7 @@ $ obj_dir/sim src/sample.hex 5
 @<code>{Makefile}を作成し、
 次のように記述します(@<list>{Makefile})。
 
-//list[Makefile][Makefile]{
+//list[Makefile][Makefile][Makefile]{
 #@mapfile(scripts/04/verilator-tb/core/Makefile)
 PROJECT = core
 FILELIST = $(PROJECT).f
