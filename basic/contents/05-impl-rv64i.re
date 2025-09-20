@@ -156,9 +156,7 @@ Test Result : 40 / 40
 //}
 
 RV32I向けのテストにすべて成功しました。
-しかし、@<code>{rv32ui-p-ma_data}は失敗するはずです(@<list>{04b-riscvtests|python.test.py})。
-これは、riscv-testsのRV32I向けのテストは、
-XLENが64のときはテストを実行せずに成功とするためです(@<list>{riscvtests.rv32i.xlen})。
+riscv-testsのRV32I向けのテストは、XLENが64のときにテストを実行せずに成功とします(@<list>{riscvtests.rv32i.xlen})。
 
 //list[riscvtests.rv32i.xlen][rv32ui-p-addはXLENが64のときにテストせずに成功する (rv32ui-p-add.dump)]{
 00000050 <reset_vector>:
