@@ -2841,6 +2841,17 @@ always_ffの中で、@<code>{req_wmask}の値を設定します。
 #@end
 //}
 
+ソースレジスタの値はLSB側(右)に寄せられているため、アドレスを4で割った値が1, 2, 3のとき、アドレスに合わせてSB命令で書き込む値の左シフトが必要です
+(
+@<list>{memunit.veryl.lbhsbh-range.always_wdata}
+)。
+
+//list[memunit.veryl.lbhsbh-range.always_wdata][書き込みデータをシフトする (memunit.veryl)]{
+#@maprange(scripts/04/lbhsbh-range/core/src/memunit.veryl,always_wdata)
+    req_wdata = rs2 << {addr[1:0], 3'b0};
+#@end
+//}
+
 === LB、LBU、LH、LHU、SB、SH命令をテストする
 
 簡単なテストを作成し、動作をテストします。
