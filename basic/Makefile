@@ -9,6 +9,9 @@ html: preproc
 clean:
 	sudo docker run --rm -v $(PWD):/work -w /work kauplan/review2.5 rake clean
 
+md:
+	sudo docker run --rm -v $(PWD):/work -w /work kauplan/review2.5 rake markdown
+
 preproc: extract-tags
 	sh preproc.sh
 

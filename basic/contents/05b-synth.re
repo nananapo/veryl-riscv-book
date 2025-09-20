@@ -836,7 +836,9 @@ led[0]、led[1]、led[2]、led[3]にR14、P14、N16、M14を割り当てます(@
 ボタンは押されていないときに@<code>{1}、押されているときに@<code>{0}になります。
 LEDは@<code>{1}のときに点灯して、@<code>{0}のときに消灯します。
 
-//image[pynq_z1_gpio][LEDとボタン@<bib>{pynq_z1.manual}][width=50%]
+//image[pynq_z1_gpio][LEDとボタン][width=50%]
+
+#@# @<bib>{pynq_z1.manual}
 
 ==={pynq_z1.test} テスト
 

@@ -1195,7 +1195,9 @@ RISC-Vの命令のビット列には次のような要素が含まれていま�
 RISC-Vにはいくつかの命令の形式がありますが、
 RV32IにはR、I、S、B、U、Jの6つの形式の命令が存在しています (@<img>{riscv-inst-types})。
 
-//image[riscv-inst-types][RISC-Vの命令形式 @<bib>{isa-manual.1.2.3.enc}]
+#@# @<bib>{isa-manual.1.2.3.enc}
+
+//image[riscv-inst-types][RISC-Vの命令形式]
 
  : R形式
 	ソースレジスタ(rs1、rs2)が2つ、デスティネーションレジスタ(rd)が1つの命令形式です。
@@ -1300,8 +1302,8 @@ package corectrl {
 #@end
 //}
 
-これらの値とそれぞれの命令の対応は、
-仕様書@<bib>{isa-manual.1.37}を確認してください。
+これらの値とそれぞれの命令の対応は、仕様書を確認してください。
+#@# @<bib>{isa-manual.1.37}
 
 === 制御フラグと即値を生成する
 
@@ -1696,8 +1698,8 @@ op2 	input	UIntX		2つ目のデータ
 result	output	UIntX		結果
 //}
 
-仕様書で整数演算命令として定義されている命令@<bib>{isa-manual.1.2.4}は、
-funct3とfunct7フィールドによって計算の種類を特定できます(@<table>{alu_funct3})。
+仕様書で整数演算命令として定義されている命令は、funct3とfunct7フィールドによって計算の種類を特定できます(@<table>{alu_funct3})。
+#@# @<bib>{isa-manual.1.2.4}
 
 //table[alu_funct3][ALUの演算の種類]{
 funct3			演算
@@ -2885,7 +2887,7 @@ deadbeef // 0x0
 
 まだ重要な命令を実装できていません。
 プログラムで分岐やループを実現するためにはジャンプや分岐をする命令が必要です。
-RV32Iには、仕様書@<bib>{isa-manual.1.2.5}に次の命令が定義されています(@<table>{jump.br.insts})。
+RV32Iには、次のジャンプ、分岐命令が定義されています(@<table>{jump.br.insts})。
 
 //table[jump.br.insts][ジャンプ命令、分岐命令]{
 命令	形式	動作

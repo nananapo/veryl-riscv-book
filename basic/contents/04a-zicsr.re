@@ -250,9 +250,8 @@ csrunitモジュールには、まだCSRが定義されていません。
 
 ==== mtvecレジスタ、トラップ
 
-//image[mtvec][mtvecのエンコーディング@<bib>{isa-manual.2.fig10}]
+//image[mtvec][mtvecのエンコーディング]
 
-mtvecレジスタは、仕様書@<bib>{isa-manual.2.3.1.7}に定義されています。
 mtvecは、MXLENビットのWARLなレジスタです。
 mtvecのアドレスは@<code>{12'h305}です。
 
@@ -693,7 +692,10 @@ csrunitモジュールと接続するための変数を定義してcsrunitモジ
 #@end
 //}
 
-//image[ecall_enc][ECALL命令のフォーマット@<bib>{isa-manual.1.37}]
+//image[ecall_enc][ECALL命令のエンコーディング]
+
+#@# @<bib>{isa-manual.1.37}
+#@# TODO 画像の置き換え
 
 それでは、csrunitモジュールにトラップの処理を実装します。
 
@@ -846,7 +848,10 @@ mepcレジスタに格納されたアドレスにジャンプします@<fn>{mret
 
 === MRET命令を実装する
 
-//image[mret_enc][MRET命令のフォーマット@<bib>{isa-manual.2.15}]
+//image[mret_enc][MRET命令のエンコーディング]
+
+#@# @<bib>{isa-manual.2.15}
+#@# TODO 画像を置き換え
 
 まず、
 csrunitモジュールに供給されている命令がMRET命令かどうかを判定する変数@<code>{is_mret}を作成します
