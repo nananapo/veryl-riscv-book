@@ -4,22 +4,18 @@ layout: home
 
 hero:
   name: "veryl-riscv-book"
-  text: "Write RISC-V CPU in Veryl"
-  tagline: My great project tagline
+  text: "Verylで作るCPU"
+  tagline: 実用的なRISC-VのCPUを自分で作る
   actions:
     - theme: brand
-      text: Markdown Examples
-      link: /markdown-examples
-    - theme: alt
-      text: API Examples
-      link: /api-examples
+      text: 始める
+      link: /basic/00-preface.md
+    # - theme: alt
+    #   text: API Examples
+    #   link: /api-examples
 
 features:
-  - title: Feature A
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
-  - title: Feature B
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
-  - title: Feature C
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
+  - title: 高機能なRISC-VのCPUの作り方を解説
+    details: 例外、割り込み、ページングなどの機能の実装方法を解説
 ---
 
