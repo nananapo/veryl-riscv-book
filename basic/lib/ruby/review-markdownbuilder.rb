@@ -140,9 +140,27 @@ module ReVIEW
         end
       end
 
+      # 先頭から削除するスペース数を調べる
+      remove_space_count = nil
+      if !(lang.nil? || lang.empty?)
+        lines.each do |line|
+          if !line.strip.empty?
+            if line =~ /\A( +)\S/
+              remove_space_count = remove_space_count.nil? ? $1.length : [remove_space_count, $1.length].min
+            else
+              remove_space_count = 0
+              break
+            end
+          end
+        end
+        remove_space_count ||= 0
+      else
+        remove_space_count = 0
+      end
+
       puts "```#{lang}"
       lines.each do |line|
-        puts compile_inline(line)
+        puts compile_inline(line.sub(/\A {0,#{remove_space_count}}/, ''))
       end
       puts "```"
       blank()
@@ -359,12 +377,18 @@ module ReVIEW
       ## ・タイトルを <b></b> で囲むとこのエラーだけが出なくなる。
       ##   （他のエラーは出るまま。）
       with_context(:minicolumn) do
+        if type == "caution"
+          type = "warning"
+        end
+
         blank2()
-        puts "[#{type}] <b>#{compile_inline(caption||'')}</b>"
+        puts "::: #{type} <b>#{compile_inline(caption||'')}</b>"
+        # puts "[#{type}] <b>#{compile_inline(caption||'')}</b>"
         blank()
         yield
         blank()
-        puts "[/#{type}]"
+        # puts "[/#{type}]"
+        puts ":::"
         blank2()
       end
     end
