@@ -553,11 +553,13 @@ module ReVIEW
       with_context(:minicolumn) do
         blank2()
         caption, label = label, nil if caption.nil?
-        puts "[note] <b>#{compile_inline(caption||'')}</b>"
+        puts "::: info <b>#{compile_inline(caption||'')}</b>"
+        # puts "[note] <b>#{compile_inline(caption||'')}</b>"
         blank()
         yield
         blank()
-        puts "[/note]"
+        # puts "[/note]"
+        puts ":::"
         blank2()
       end
     end
