@@ -800,7 +800,7 @@ ZYNQ7 Processing Systemのoutputポートには、100MHzのクロック信号@<c
 現状のコードではcore_top_vが100MHzで動くように合成できません。
 そのため、Clocking Wizardで50MHzに変換したクロックをcore_top_vに供給します。
 
-clk_wiz_0をダブルクリックして、入力を50MHzに変換する用に設定します。
+clk_wiz_0をダブルクリックして、入力を50MHzに変換するように設定します。
 clk_out1のRequestedを50に変更してください。
 また、Enable Optional ～のresetとlockedのチェックを外します(@<img>{xilinx/bd/16})。
 
