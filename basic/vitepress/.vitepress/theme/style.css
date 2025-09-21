@@ -24,11 +24,21 @@ pre.hljs {
 
 .custom-hl-bold {
   font-weight: bolder;
-  -webkit-text-stroke: 0.05em;
-  text-stroke: 0.05em;
+  /* -webkit-text-stroke: 0.05em; */
+  /* text-stroke: 0.05em; */
+
+  background-color: rgb(255, 255, 0, 0.24);
 }
 
 .custom-hl-del {
   text-decoration: line-through;
   opacity: 0.6; /* 打ち消し線の透明度を調整 */
+
+  background-color: rgba(255, 0, 0, 0.4);
+}
+
+.custom-hl-line {
+  background-color: rgba(255, 0, 0, 0.1);
+  width: 100%;
+  display: inline-block;
 }

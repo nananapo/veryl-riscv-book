@@ -65,6 +65,28 @@ export default defineConfig({
     outline: {
       level: [2, 4]
     },
+
+    search: {
+      provider: 'local',
+      options: {
+        miniSearch: {
+          options: {
+            tokenize: (term) => {
+              if (typeof term === 'string') term = term.toLowerCase();
+              const segmenter = Intl.Segmenter && new Intl.Segmenter('ja-JP', { granularity: 'word' });
+              if (!segmenter) return [term];
+              const tokens = [];
+              for (const seg of segmenter.segment(term)) {
+                // @ts-ignore
+                // ignore spaces
+                if (seg.segment.trim() !== '') tokens.push(seg.segment);
+              }
+              return tokens;
+            },
+          },
+        },
+      },
+    }
   },
   
   markdown: {
@@ -80,20 +102,24 @@ export default defineConfig({
           ).replace(
             /~~~~(.*?)~~~~/g,
             '<span class="custom-hl-del">$1</span>'
-          )
+          ).replace(
+            /\^\^\^\^(.*?)\^\^\^\^/g,
+            '<span class="custom-hl-line">$1</span>'
+          );
       }
 
-      if (lang == 'terminal') {
-        lang = 'shellsession';
+      function highlight(code, language) {
+        let result = hljs.highlight(code, { language: language, ignoreIllegals: true });
+        return escapeHtml(`<pre class="hljs" v-pre><code>${result.value}</code></pre>`);
       }
+
+      if (lang == 'terminal') lang = 'shellsession';
       if (lang && hljs.getLanguage(lang)) {
         try {
-          const result = hljs.highlight(str, { language: lang, ignoreIllegals: true });
-          return escapeHtml(`<pre class="hljs" v-pre><code>${result.value}</code></pre>`);
+          return highlight(str, lang);
         } catch (__) {}
       }
-      const escaped = hljs.highlight(str, { language: 'plaintext', ignoreIllegals: true }).value;
-      return escapeHtml(`<pre class="hljs" v-pre><code>${escaped}</code></pre>`);
+      return highlight(str, 'plaintext');
     }
   }
 })
