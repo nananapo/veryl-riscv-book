@@ -777,8 +777,8 @@ module ReVIEW
 
     def on_inline_b()
       if within_codeblock?()
-        #"<b>#{yield}</b>"
-        yield
+        # 特別なキーワードで囲む
+        "@@@@#{yield}@@@@"
       else
         "**#{yield}**"
       end

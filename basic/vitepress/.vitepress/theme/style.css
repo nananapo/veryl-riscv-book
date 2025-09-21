@@ -21,3 +21,9 @@ pre.hljs {
   padding: 1rem; /* 内側の余白 */
   border-radius: 8px; /* preタグ自体の角も丸める */
 }
+
+.custom-hl-bold {
+  font-weight: bold;
+  -webkit-text-stroke: 0.5px; /* 線の太さと色 */
+  text-stroke: 0.5px;
+}

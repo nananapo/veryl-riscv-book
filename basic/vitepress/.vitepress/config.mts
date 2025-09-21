@@ -75,10 +75,16 @@ export default defineConfig({
       md.use(footnote)
     },
     highlight: (str, lang) => {
+      if (lang == 'terminal') {
+        lang = 'shellsession';
+      }
       if (lang && hljs.getLanguage(lang)) {
         try {
           const result = hljs.highlight(str, { language: lang, ignoreIllegals: true });
-          return `<pre class="hljs" v-pre><code>${result.value}</code></pre>`;
+          return `<pre class="hljs" v-pre><code>${result.value}</code></pre>`.replace(
+            /@@@@(.*?)@@@@/g,
+            '<span class="custom-hl-bold">$1</span>'
+          );
         } catch (__) {}
       }
       const escaped = hljs.highlight(str, { language: 'plaintext', ignoreIllegals: true }).value;
