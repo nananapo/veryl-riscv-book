@@ -361,7 +361,7 @@ module ReVIEW
     ## 画像横に文章
     def _render_sideimage(filepath, imagewidth, opts, &b)
       blank()
-      puts "<img src=\"#{filepath}\">"
+      puts "<img src=\"#{filepath}\"  style=\"max-width: 120px\" >"
       blank()
       yield
     end
@@ -377,7 +377,7 @@ module ReVIEW
       ## ・タイトルを <b></b> で囲むとこのエラーだけが出なくなる。
       ##   （他のエラーは出るまま。）
       with_context(:minicolumn) do
-        if type == "caution"
+        if "#{type}" == 'caution'
           type = "warning"
         end
 
@@ -947,7 +947,7 @@ module ReVIEW
 
     def inline_icon(imagefile)
       filepath = find_image_filepath(imagefile)
-      "<img src=\"#{filepath}\">"
+      "<img src=\"#{filepath}\" style=\"max-width=300px\" >"
     end
 
     def inline_par(arg)
