@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en-US" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>ハードウェア記述言語 Veryl | veryl-riscv-book</title>
+    <meta name="description" content="Write RISC-V CPU in Veryl">
+    <meta name="generator" content="VitePress v2.0.0-alpha.12">
+    <link rel="preload stylesheet" href="/assets/style.CaWnRaAO.css" as="style">
+    <link rel="preload stylesheet" href="/vp-icons.css" as="style">
+    
+    <script type="module" src="/assets/app.C5T7VUJy.js"></script>
+    <link rel="preload" href="/assets/inter-roman-latin.Di8DUHzh.woff2" as="font" type="font/woff2" crossorigin="">
+    <link rel="modulepreload" href="/assets/chunks/theme.Bi7Ru2r6.js">
+    <link rel="modulepreload" href="/assets/chunks/framework.D5l_65jD.js">
+    <link rel="modulepreload" href="/assets/basic_03-veryl.md.BMFhgRXG.lean.js">
+    <script id="check-dark-mode">(()=>{const e=localStorage.getItem("vitepress-theme-appearance")||"auto",a=window.matchMedia("(prefers-color-scheme: dark)").matches;(!e||e==="auto"?a:e==="dark")&&document.documentElement.classList.add("dark")})();</script>
+    <script id="check-mac-os">document.documentElement.classList.toggle("mac",/Mac|iPhone|iPod|iPad/i.test(navigator.platform));</script>
+  </head>
+  <body>
+    <div id="app"><div class="Layout" data-v-1df9f90f><!--[--><!--]--><!--[--><span tabindex="-1" data-v-0b0ada53></span><a href="#VPContent" class="VPSkipLink visually-hidden" data-v-0b0ada53>Skip to content</a><!--]--><!----><header class="VPNav" data-v-1df9f90f data-v-9f75dce3><div class="VPNavBar" data-v-9f75dce3 data-v-2a96a3d0><div class="wrapper" data-v-2a96a3d0><div class="container" data-v-2a96a3d0><div class="title" data-v-2a96a3d0><div class="VPNavBarTitle has-sidebar" data-v-2a96a3d0 data-v-1e38c6bc><a class="title" href="/" data-v-1e38c6bc><!--[--><!--]--><!----><span data-v-1e38c6bc>veryl-riscv-book</span><!--[--><!--]--></a></div></div><div class="content" data-v-2a96a3d0><div class="content-body" data-v-2a96a3d0><!--[--><!--]--><div class="VPNavBarSearch search" data-v-2a96a3d0><!----></div><nav aria-labelledby="main-nav-aria-label" class="VPNavBarMenu menu" data-v-2a96a3d0 data-v-39714824><span id="main-nav-aria-label" class="visually-hidden" data-v-39714824> Main Navigation </span><!--[--><!--[--><a class="VPLink link vp-external-link-icon VPNavBarMenuLink" href="https://github.com/nananapo/bluecore" target="_blank" rel="noreferrer" tabindex="0" data-v-39714824 data-v-e56f3d57><!--[--><span data-v-e56f3d57>プログラムを入手する</span><!--]--></a><!--]--><!--]--></nav><!----><div class="VPNavBarAppearance appearance" data-v-2a96a3d0 data-v-6c893767><button class="VPSwitch VPSwitchAppearance" type="button" role="switch" title aria-checked="false" data-v-6c893767 data-v-5337faa4 data-v-1d5665e3><span class="check" data-v-1d5665e3><span class="icon" data-v-1d5665e3><!--[--><span class="vpi-sun sun" data-v-5337faa4></span><span class="vpi-moon moon" data-v-5337faa4></span><!--]--></span></span></button></div><div class="VPSocialLinks VPNavBarSocialLinks social-links" data-v-2a96a3d0 data-v-0394ad82 data-v-d07f11e6><!--[--><a class="VPSocialLink no-icon" href="https://github.com/nananapo/veryl-riscv-book" aria-label="github" target="_blank" rel="me noopener" data-v-d07f11e6 data-v-591a6b30><span class="vpi-social-github"></span></a><!--]--></div><div class="VPFlyout VPNavBarExtra extra" data-v-2a96a3d0 data-v-bb2aa2f0 data-v-42cb505d><button type="button" class="button" aria-haspopup="true" aria-expanded="false" aria-label="extra navigation" data-v-42cb505d><span class="vpi-more-horizontal icon" data-v-42cb505d></span></button><div class="menu" data-v-42cb505d><div class="VPMenu" data-v-42cb505d data-v-25a6cce8><!----><!--[--><!--[--><!----><div class="group" data-v-bb2aa2f0><div class="item appearance" data-v-bb2aa2f0><p class="label" data-v-bb2aa2f0>Appearance</p><div class="appearance-action" data-v-bb2aa2f0><button class="VPSwitch VPSwitchAppearance" type="button" role="switch" title aria-checked="false" data-v-bb2aa2f0 data-v-5337faa4 data-v-1d5665e3><span class="check" data-v-1d5665e3><span class="icon" data-v-1d5665e3><!--[--><span class="vpi-sun sun" data-v-5337faa4></span><span class="vpi-moon moon" data-v-5337faa4></span><!--]--></span></span></button></div></div></div><div class="group" data-v-bb2aa2f0><div class="item social-links" data-v-bb2aa2f0><div class="VPSocialLinks social-links-list" data-v-bb2aa2f0 data-v-d07f11e6><!--[--><a class="VPSocialLink no-icon" href="https://github.com/nananapo/veryl-riscv-book" aria-label="github" target="_blank" rel="me noopener" data-v-d07f11e6 data-v-591a6b30><span class="vpi-social-github"></span></a><!--]--></div></div></div><!--]--><!--]--></div></div></div><!--[--><!--]--><button type="button" class="VPNavBarHamburger hamburger" aria-label="mobile navigation" aria-expanded="false" aria-controls="VPNavScreen" data-v-2a96a3d0 data-v-e5dd9c1c><span class="container" data-v-e5dd9c1c><span class="top" data-v-e5dd9c1c></span><span class="middle" data-v-e5dd9c1c></span><span class="bottom" data-v-e5dd9c1c></span></span></button></div></div></div></div><div class="divider" data-v-2a96a3d0><div class="divider-line" data-v-2a96a3d0></div></div></div><!----></header><div class="VPLocalNav has-sidebar empty" data-v-1df9f90f data-v-8acdfeb5><div class="container" data-v-8acdfeb5><button class="menu" aria-expanded="false" aria-controls="VPSidebarNav" data-v-8acdfeb5><span class="vpi-align-left menu-icon" data-v-8acdfeb5></span><span class="menu-text" data-v-8acdfeb5>Menu</span></button><div class="VPLocalNavOutlineDropdown" style="--vp-vh:0px;" data-v-8acdfeb5 data-v-0bf0e06f><button data-v-0bf0e06f>Return to top</button><!----></div></div></div><aside class="VPSidebar" data-v-1df9f90f data-v-e7c6e512><div class="curtain" data-v-e7c6e512></div><nav class="nav" id="VPSidebarNav" aria-labelledby="sidebar-aria-label" tabindex="-1" data-v-e7c6e512><span class="visually-hidden" id="sidebar-aria-label" data-v-e7c6e512> Sidebar Navigation </span><!--[--><!--]--><!--[--><div class="no-transition group" data-v-8d50c081><section class="VPSidebarItem level-0 has-active" data-v-8d50c081 data-v-d81de50c><div class="item" role="button" tabindex="0" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><h2 class="text" data-v-d81de50c>第I部 RV32I/RV64Iの実装</h2><!----></div><div class="items" data-v-d81de50c><!--[--><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/basic/00-preface.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>まえがき</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/basic/02-setup.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>1 環境構築</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/basic/03-veryl.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>2 ハードウェア記述言語 Veryl</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/basic/04-impl-rv32i.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>3 RV32Iの実装</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/basic/04a-zicsr.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>4 Zicsr拡張の実装</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/basic/04b-riscvtests.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>5 riscv-testsによるテスト</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/basic/05-impl-rv64i.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>6 RV64Iの実装</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/basic/05a-pipeline.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>7 CPUのパイプライン化</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/basic/05b-synth.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>8 CPUの合成</p><!--]--></a><!----></div><!----></div><!--]--></div></section></div><div class="no-transition group" data-v-8d50c081><section class="VPSidebarItem level-0" data-v-8d50c081 data-v-d81de50c><div class="item" role="button" tabindex="0" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><h2 class="text" data-v-d81de50c>第II部 RV64IMACの実装</h2><!----></div><div class="items" data-v-d81de50c><!--[--><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/basic/10-impl-m.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>9 M拡張の実装</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/basic/11-impl-exception.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>10 例外の実装</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/basic/12-impl-mmio.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>11 Memory-mapped I/Oの実装</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/basic/13-impl-a.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>12 A拡張の実装</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/basic/14-impl-c.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>13 C拡張の実装</p><!--]--></a><!----></div><!----></div><!--]--></div></section></div><div class="no-transition group" data-v-8d50c081><section class="VPSidebarItem level-0" data-v-8d50c081 data-v-d81de50c><div class="item" role="button" tabindex="0" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><h2 class="text" data-v-d81de50c>第III部 特権/割り込みの実装</h2><!----></div><div class="items" data-v-d81de50c><!--[--><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/basic/20-mmode-csr.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>14 M-modeの実装 (1. CSRの実装)</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/basic/21-impl-interrupt.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>15 M-modeの実装 (2. 割り込みの実装)</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/basic/22-umode-csr.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>16 U-modeの実装</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/basic/23-smode-csr.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>17 S-modeの実装 (1. CSRの実装)</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/basic/24-impl-paging.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>18 S-modeの実装 (2. 仮想記憶システム)</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/basic/25-impl-plic.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>19 PLICの実装</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/basic/26-run-linux.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>20 Linuxを動かす</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/basic/99-postface.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>あとがき (第Ⅰ部)</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/basic/99b-postface.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>あとがき (第Ⅱ部、第Ⅲ部)</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/basic/100-contribute.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>このプロジェクトに貢献する</p><!--]--></a><!----></div><!----></div><!--]--></div></section></div><!--]--><!--[--><!--]--></nav></aside><div class="VPContent has-sidebar" id="VPContent" data-v-1df9f90f data-v-aff0b8d7><div class="VPDoc has-sidebar has-aside" data-v-aff0b8d7 data-v-7011f0d8><!--[--><!--]--><div class="container" data-v-7011f0d8><div class="aside" data-v-7011f0d8><div class="aside-curtain" data-v-7011f0d8></div><div class="aside-container" data-v-7011f0d8><div class="aside-content" data-v-7011f0d8><div class="VPDocAside" data-v-7011f0d8 data-v-3f215769><!--[--><!--]--><!--[--><!--]--><nav aria-labelledby="doc-outline-aria-label" class="VPDocAsideOutline" data-v-3f215769 data-v-60d5052e><div class="content" data-v-60d5052e><div class="outline-marker" data-v-60d5052e></div><div aria-level="2" class="outline-title" id="doc-outline-aria-label" role="heading" data-v-60d5052e>On this page</div><ul class="VPDocOutlineItem root" data-v-60d5052e data-v-2d0bdf9b><!--[--><!--]--></ul></div></nav><!--[--><!--]--><div class="spacer" data-v-3f215769></div><!--[--><!--]--><!----><!--[--><!--]--><!--[--><!--]--></div></div></div></div><div class="content" data-v-7011f0d8><div class="content-container" data-v-7011f0d8><!--[--><!--]--><main class="main" data-v-7011f0d8><div style="position:relative;" class="vp-doc _basic_03-veryl" data-v-7011f0d8><div><h1 id="ハードウェア記述言語-veryl" tabindex="-1">ハードウェア記述言語 Veryl <a class="header-anchor" href="#ハードウェア記述言語-veryl" aria-label="Permalink to “ハードウェア記述言語 Veryl”">​</a></h1><p>CPU (Central Proccessing Unit, 中央演算処理装置)は、 コンピュータを構成する主要な部品の1つであり、 電気で動くとても複雑な回路で構成されています。</p><p>本書では「ハードウェア記述言語」によってCPUをの回路を記述します。 回路を記述するといっても、いったい何をどうやって記述するのでしょうか?</p><p>まずは、論理回路を構成する方法から考えます。</p><h2 id="ハードウェア記述言語" tabindex="-1">ハードウェア記述言語 <a class="header-anchor" href="#ハードウェア記述言語" aria-label="Permalink to “ハードウェア記述言語”">​</a></h2><h3 id="論理回路の構成" tabindex="-1">論理回路の構成 <a class="header-anchor" href="#論理回路の構成" aria-label="Permalink to “論理回路の構成”">​</a></h3><p><strong>論理回路</strong>とは、 デジタル(例えば0と1だけ)なデータを利用して、データを加工、保持する回路のことです。 論理回路は、組み合わせ回路と順序回路に分類できます。</p><p><strong>組み合わせ回路</strong>とは、 入力に対して、一意に出力の決まる回路のことです。 例えば、1ビット同士の加算をする回路は図1、表1のように表されます。 この回路は半加算器と呼ばれていて、 1ビットのXとYを入力として受けとり、1ビットの和Sと桁上げCを出力します。 入力(X、Y)が決まると出力(C、S)が一意に決まるため、半加算器は組み合わせ回路です。</p><p><img src="/assets/halfadder.BC1oisbq.png" alt="半加算器 (MIL記法の回路図)"></p><div id="halfadder.truth" class="table"><p class="caption">表2.1: 半加算器 (真理値表)</p><table><tr class="hline"><th>X</th><th>Y</th><th>C</th><th>S</th></tr><tr class="hline"><td>0</td><td>0</td><td>0</td><td>0</td></tr><tr class="hline"><td>0</td><td>1</td><td>0</td><td>1</td></tr><tr class="hline"><td>1</td><td>0</td><td>0</td><td>1</td></tr><tr class="hline"><td>1</td><td>1</td><td>1</td><td>0</td></tr></table></div> **順序回路**とは、 入力と回路自身の状態によって一意に出力の決まる回路です。 例えば、入力が1になるたびにカウントアップして値を表示するカウンタを考えます(図2)。 カウントアップするためには、 今のカウンタの値(状態)を保持する必要があります。 そのため、このカウンタは入力と状態によって一意に出力の決まる順序回路です。 <p>1ビットの値はフリップフロップ(flip-flop, FF)という回路によって保持できます。 フリップフロップをN個並列に並べると、Nビットの値を保持できます。 フリップフロップを並列に並べた記憶装置のことを<strong>レジスタ</strong>(register, 置数器)と呼びます。 基本的に、レジスタの値は<strong>リセット信号</strong>(reset signal, reset)によって初期化し、 <strong>クロック信号</strong>(clock signal, clock)に同期したタイミングで変更します。</p><p><img src="/assets/downcounter.BgF3wmO9.png" alt="カウンタ (順序回路の例)"> 論理回路を設計するには、真理値表を作成し、 それを実現する論理演算を構成します。 入力数や状態数が数十個ならどうにか人力で設計できるかもしれませんが、 数千、数万の入力や状態があるとき、 手作業で設計するのはほとんど不可能です。 これを設計するために、ハードウェア記述言語を利用します。</p><h3 id="ハードウェア記述言語-1" tabindex="-1">ハードウェア記述言語 <a class="header-anchor" href="#ハードウェア記述言語-1" aria-label="Permalink to “ハードウェア記述言語”">​</a></h3><p><strong>ハードウェア記述言語</strong>(Hardware Description Language, HDL)とは、 デジタル回路を設計するための言語です。 例えばHDLであるSystemVerilogを利用すると、 半加算器はリスト1のように記述できます。</p><p><span class="caption">▼リスト2.1: SystemVerilogによる半加算器の記述</span></p><div class="language-sv"><button title="Copy Code" class="copy"></button><span class="lang">sv</span><pre class="hljs"><code><span class="hljs-keyword">module</span> HalfAdder(
+  <span class="hljs-keyword">input</span> <span class="hljs-keyword">logic</span> x,        <span class="hljs-comment">// 入力値X</span>
+  <span class="hljs-keyword">input</span> <span class="hljs-keyword">logic</span> y,        <span class="hljs-comment">// 入力値Y</span>
+  <span class="hljs-keyword">output</span> <span class="hljs-keyword">logic</span> c,       <span class="hljs-comment">// 出力値C</span>
+  <span class="hljs-keyword">output</span> <span class="hljs-keyword">logic</span> s        <span class="hljs-comment">// 出力値S</span>
+);
+  <span class="hljs-keyword">assign</span> c = x &amp; y; <span class="hljs-comment">// &amp;はAND演算</span>
+  <span class="hljs-keyword">assign</span> s = x ^ y; <span class="hljs-comment">// ^はXOR演算</span>
+<span class="hljs-keyword">endmodule</span>
+</code></pre></div><p>半加算器(HalfAdder)モジュールは、 入力としてxとyを受け取り、 出力cとsにxとyを使った演算を割り当てています。</p><p>また、レジスタを利用した回路をリスト2のように記述できます。 レジスタの値を、 リセット信号<code>rst</code>が<code>0</code>になったタイミングで<code>0</code>に初期化し、 クロック信号<code>clk</code>が<code>1</code>になったタイミングでカウントアップします。</p><p><span class="caption">▼リスト2.2: SystemVerilogによるカウンタの記述</span></p><div class="language-sv"><button title="Copy Code" class="copy"></button><span class="lang">sv</span><pre class="hljs"><code><span class="hljs-keyword">module</span> Counter(
+  <span class="hljs-keyword">input</span> <span class="hljs-keyword">logic</span> clk, <span class="hljs-comment">// クロック信号</span>
+  <span class="hljs-keyword">input</span> <span class="hljs-keyword">logic</span> rst  <span class="hljs-comment">// リセット信号</span>
+);
+  <span class="hljs-comment">// 32ビットのレジスタの定義</span>
+  <span class="hljs-keyword">logic</span> [<span class="hljs-number">31</span>:<span class="hljs-number">0</span>] count;
+
+  <span class="hljs-keyword">always_ff</span> @(<span class="hljs-keyword">posedge</span> clk, <span class="hljs-keyword">negedge</span> rst) <span class="hljs-keyword">begin</span>
+    <span class="hljs-keyword">if</span> (!rst) <span class="hljs-keyword">begin</span>
+      <span class="hljs-comment">// rstが0になったとき、countを0に初期化する</span>
+      count &lt;= <span class="hljs-number">0</span>;
+    <span class="hljs-keyword">end</span> <span class="hljs-keyword">else</span> <span class="hljs-keyword">begin</span>
+      <span class="hljs-comment">// clkが1になったとき、countの値をカウントアップする</span>
+      count &lt;= count + <span class="hljs-number">1</span>;
+    <span class="hljs-keyword">end</span>
+  <span class="hljs-keyword">end</span>
+<span class="hljs-keyword">endmodule</span>
+</code></pre></div><p>HDLを使用した論理回路の設計は、 レジスタの値と入力値を使った組み合わせ回路と、 その結果をレジスタに格納する操作の記述によって行えます。 このような、レジスタからレジスタに、 組み合わせ回路を通したデータを転送する抽象度のことを <strong>レジスタ転送レベル</strong>(Register Transfer Level, <strong>RTL</strong>)と呼びます。</p><p>HDLで記述されたRTLを実際の回路のデータに変換することを<strong>合成</strong>と呼びます。 合成するソフトウェアのことを合成系と呼びます。</p><h3 id="veryl" tabindex="-1">Veryl <a class="header-anchor" href="#veryl" aria-label="Permalink to “Veryl”">​</a></h3><p>メジャーなHDLといえば、Verilog HDL、SystemVerilog, VHDLなどが挙げられます。</p><p>Verilog HDL(Verilog)とVHDLは1980年代に開発された言語であり、 最近のプログラミング言語と比べると機能が少なく、冗長な記述が必要です。 SystemVerilogはVerilogのスーパーセットです。 言語機能が増えて便利になっていますが、 スーパーセットであることから、 あまり推奨されない古い書き方が可能だったり、 バグの原因となるような良くない仕様<sup class="footnote-ref"><a href="#fn1" id="fnref1">[1]</a></sup>を受け継いでいます。</p><p>本書では、CPUの実装にVerylというHDLを使用します。 Verylは2022年12月に公開された言語です。 Verylの抽象度は、Verilogと同じくレジスタ転送レベルです。 Verylの文法や機能は、VerilogやSystemVerilogに似通ったものになっています。 しかし、 case式、 クロックとリセットの抽象化、 ジェネリクスなどの痒い所に手が届く機能が提供されており、 高い生産性を発揮します。</p><p>Verylのソースコードはコンパイラ(トランスパイラ)によって、 自然で読みやすいSystemVerilogのソースコードに変換されます。 そのため、Verylは旧来のSystemVerilogの環境と共存でき、 SystemVerilogの資産を利用できます。</p><h2 id="verylの基本文法、機能" tabindex="-1">Verylの基本文法、機能 <a class="header-anchor" href="#verylの基本文法、機能" aria-label="Permalink to “Verylの基本文法、機能”">​</a></h2><p>それでは、Verylの書き方を学んでいきましょう。 Verylのドキュメントは<a href="https://doc.veryl-lang.org/book/ja/%E3%81%AB%E5%AD%98%E5%9C%A8%E3%81%97%E3%81%BE%E3%81%99%E3%80%82" target="_blank" rel="noreferrer">https://doc.veryl-lang.org/book/ja/に存在します。</a> また、<a href="https://doc.veryl-lang.org/playground/" target="_blank" rel="noreferrer">Veryl Playground</a>では、 VerylのSystemVerilogへのトランスパイルをウェブブラウザ上でお試しできます。</p><h3 id="コメント" tabindex="-1">コメント <a class="header-anchor" href="#コメント" aria-label="Permalink to “コメント”">​</a></h3><p>Verylでは次のようにコメントを記述できます(リスト3)。</p><p><span class="caption">▼リスト2.3: コメント</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-comment">// 1行のコメント</span>
+<span class="hljs-comment">/* 範囲コメント */</span>
+<span class="hljs-comment">/*
+   範囲コメントは改行してもOK
+*/</span>
+</code></pre></div><h3 id="値、リテラル" tabindex="-1">値、リテラル <a class="header-anchor" href="#値、リテラル" aria-label="Permalink to “値、リテラル”">​</a></h3><p>論理回路では、デジタルな値を扱います。 デジタルな値は<code>0</code>と<code>1</code>の二値(2-state)で表現されますが、 一般的なハードウェア記述言語では、 <code>0</code>と<code>1</code>に<code>x</code>と<code>z</code>を加えた四値(4-state)が利用されます(表2)。</p><div id="table.fourstate" class="table"><p class="caption">表2.2: 4-stateの値</p><table><tr class="hline"><th>値</th><th>意味</th><th>真偽</th></tr><tr class="hline"><td>0</td><td>0</td><td>偽</td></tr><tr class="hline"><td>1</td><td>1</td><td>真</td></tr><tr class="hline"><td>x</td><td>不定値</td><td>偽</td></tr><tr class="hline"><td>z</td><td>ハイインピーダンス</td><td>偽</td></tr></table></div> **不定値**(unknown value, `x`)とは、`0`か`1`のどちらか分からない値です。 不定値は、未初期化のレジスタの値の表現に利用されたり、 不定値との演算の結果として生成されます。 **ハイインピーダンス**(high-inpedance, `z`)とは、 どのレジスタや信号とも接続されていないことを表す値です。 物理的なハードウェア上では、 全ての値は`0`か`1`の二値として解釈されますが、 信号の状態としてハイインピーダンスを持ちます。 不定値はシミュレーションのときに利用します。 <p>1ビットの四値を表現するための型は<strong>logic</strong>です。 Nビットのlogic型は<code>logic&lt;N&gt;</code>と記述できます。 1ビットの二値を表現する型は<strong>bit</strong>です。 基本的に、レジスタや信号の定義にbit型は利用せず、logic型を利用します。</p><p>logic型とbit型は、デフォルトで符号が無い型として扱われます。 符号付き型として扱いたいときは、 型名の前に<strong>signed</strong>キーワードを追加します (リスト4)。</p><p><span class="caption">▼リスト2.4: 符号付き型</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">signed</span> <span class="hljs-keyword">logic</span>&lt;<span class="hljs-number">4</span>&gt; <span class="hljs-comment">// 4ビットの符号付きlogic型</span>
+<span class="hljs-keyword">signed</span> <span class="hljs-keyword">bit</span>&lt;<span class="hljs-number">2</span>&gt; <span class="hljs-comment">// 2ビットの符号付きbit型</span>
+</code></pre></div><p>32ビットと64ビットのbit型を表す型が定義されています(表3)。</p><div id="ui3264" class="table"><p class="caption">表2.3: 整数型</p><table><tr class="hline"><th>型名</th><th>等価な型</th></tr><tr class="hline"><td>u32</td><td>`bit&lt;32&gt;`</td></tr><tr class="hline"><td>u64</td><td>`bit&lt;64&gt;`</td></tr><tr class="hline"><td>i32</td><td>`signed bit&lt;32&gt;`</td></tr><tr class="hline"><td>i64</td><td>`signed bit&lt;64&gt;`</td></tr></table></div> 数値はリスト5のように記述できます。 <p><span class="caption">▼リスト2.5: 数値リテラル</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-number">4&#39;b0101</span> <span class="hljs-comment">// 4ビットの数値 (2進数表記)</span>
+<span class="hljs-number">4&#39;bxxzz</span> <span class="hljs-comment">// 4ビットの数値 (2進数表記)</span>
+
+<span class="hljs-number">12&#39;o34xz</span> <span class="hljs-comment">// 12ビットの数値 (8進数表記)</span>
+<span class="hljs-number">32&#39;h89abcdef</span> <span class="hljs-comment">// 32ビットの数値 (16進数表記)</span>
+
+<span class="hljs-number">123</span> <span class="hljs-comment">// 10進数の数値</span>
+<span class="hljs-number">32&#39;d12345</span> <span class="hljs-comment">// 32ビットの数値 (10進数表記)</span>
+
+<span class="hljs-comment">// 数値リテラルの好きな場所に_を挿入できる</span>
+<span class="hljs-number">1_2_34_567</span>
+
+<span class="hljs-comment">// xとzは大文字でも良い</span>
+<span class="hljs-number">4&#39;bxXzZ</span>
+
+<span class="hljs-comment">// 全ビット0、1、x、zにする</span>
+&#39;<span class="hljs-number">0</span>
+&#39;<span class="hljs-number">1</span>
+&#39;x
+&#39;z
+
+<span class="hljs-comment">// 指定したビット幅だけ0、1、x、zにする</span>
+<span class="hljs-number">8</span>&#39;<span class="hljs-number">0</span> <span class="hljs-comment">// 8ビット0</span>
+<span class="hljs-number">8</span>&#39;<span class="hljs-number">1</span> <span class="hljs-comment">// 8ビット1</span>
+<span class="hljs-number">8</span>&#39;x <span class="hljs-comment">// 8ビットx</span>
+<span class="hljs-number">8</span>&#39;z <span class="hljs-comment">// 8ビットz</span>
+
+<span class="hljs-comment">// 幅を指定しない場合、幅が自動で推定される</span>
+<span class="hljs-number">&#39;hffff</span> <span class="hljs-comment">// 16ビット</span>
+<span class="hljs-number">&#39;h1fff</span> <span class="hljs-comment">// 13ビット (13&#39;b1_1111_1111_1111)</span>
+</code></pre></div><p>文字列は<strong>string</strong>型で表現できます。 文字列の値はリスト6のように記述できます。</p><p><span class="caption">▼リスト2.6: 文字列リテラル</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-string">&quot;Hello World!&quot;</span> <span class="hljs-comment">// 文字列リテラル </span>
+<span class="hljs-string">&quot;abcdef\nabc&quot;</span>  <span class="hljs-comment">// エスケープシーケンスを含む文字列リテラル</span>
+</code></pre></div><h3 id="module" tabindex="-1">module <a class="header-anchor" href="#module" aria-label="Permalink to “module”">​</a></h3><p>論理回路は<strong>モジュール</strong>(Module)というコンポーネントで構成されます。 例えば、半加算器のモジュールは次のように定義できます(リスト7).</p><p><span class="caption">▼リスト2.7: 半加算器(HalfAdder)モジュール</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">module</span> HalfAdder (
+        x: <span class="hljs-keyword">input</span>  <span class="hljs-keyword">logic</span>, <span class="hljs-comment">// 1ビットのlogic型の入力</span>
+        y: <span class="hljs-keyword">input</span>  <span class="hljs-keyword">logic</span>, <span class="hljs-comment">// 1ビットのlogic型の入力</span>
+        s: <span class="hljs-keyword">output</span> <span class="hljs-keyword">logic</span>, <span class="hljs-comment">// 1ビットのlogic型の出力</span>
+        c: <span class="hljs-keyword">output</span> <span class="hljs-keyword">logic</span>, <span class="hljs-comment">// 1ビットのlogic型の出力</span>
+) {
+        <span class="hljs-keyword">always_comb</span> {
+                s = x ^ y; <span class="hljs-comment">// sにx XOR yを代入</span>
+                c = x &amp; y; <span class="hljs-comment">// cにx AND yを代入</span>
+        }
+}
+</code></pre></div><p>HalfAdderモジュールには、 入力変数として<code>x</code>と<code>y</code>、 出力変数として<code>s</code>と<code>c</code>が宣言されています。 入出力の変数のことを<strong>接続ポート</strong>、または単に<strong>ポート</strong>と呼びます。</p><p>入力ポートを定義するとき、モジュール名の後の括弧の中に、 <code>変数名 : input 型名</code>と記述します。 出力ポートを宣言するときは<code>input</code>の代わりに<code>output</code>と記述します。 複数のポートを宣言するとき、宣言の末尾にカンマ(<code>,</code>)を記述します。</p><h4 id="変数のブロッキング代入" tabindex="-1">変数のブロッキング代入 <a class="header-anchor" href="#変数のブロッキング代入" aria-label="Permalink to “変数のブロッキング代入”">​</a></h4><p>HalfAdderモジュールでは、 <strong>always_comb</strong>ブロックの中で出力変数 <code>s</code>と<code>c</code>に値を代入しています。 変数への代入は<code>変数名 = 式;</code>で行います。 always_combブロック内での代入のことを、 <strong>ブロッキング代入</strong>(blocking assignment)と呼びます。</p><p>通常のプログラミング言語での代入とは、 スタック領域やレジスタに存在する変数に値を格納することです。 これに対してalways_combブロック内での代入は、 式が評価(計算)された値が変数に1度だけ代入されるのではなく、 変数の値は常に式の計算結果になります。</p><p>具体例で考えます。 例えばalways_combブロックの中で、1ビットの変数<code>x</code>に1ビットの変数<code>y</code>を代入します (リスト8)。</p><p><span class="caption">▼リスト2.8: xにyを割り当てる</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">always_comb</span> {
+        x = y;
+}
+</code></pre></div><p><code>y</code>の値が時間経過により<code>0</code>→<code>1</code>→<code>0</code>→<code>1</code>→<code>0</code>と変化したとします。 このとき、<code>x</code>の値は<code>y</code>が変わるのと同時に変化します(図3)。 図3は、時間を横軸、<code>x</code>と<code>y</code>の値を線の高低で表しています。 図3のような図を<strong>波形図</strong>(waveform)、または単に<strong>波形</strong>と呼びます。</p><p><code>x</code>に<code>y</code>ではなく<code>a + b</code>を代入すると、<code>a</code>か<code>b</code>の変化をトリガーに<code>x</code>の値が変化します。</p><p><img src="/assets/assign_wave.evRk6Z4M.png" alt="xはyの値の変化に追従する"> always_combブロックには複数の代入文を記述できます。 このとき、代入文は上から順番に実行(逐次実行)されます。</p><p><span class="caption">▼リスト2.9: ブロッキング代入は逐次実行される</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">always_comb</span> {
+        s = X;
+        a = s; <span class="hljs-comment">// a = X</span>
+        s = Y;
+        b = a; <span class="hljs-comment">// b = Y</span>
+}
+</code></pre></div><p>例えばリスト9では、 <code>a</code>には<code>X</code>が代入されますが、<code>b</code>には<code>Y</code>が代入されます。 変数<code>a</code>と<code>b</code>と<code>s</code>は、変数<code>X</code>か<code>Y</code>の変化をトリガーに値が更新されます。</p><p>1つの変数にしかブロッキング代入しないとき、 <strong>assign</strong>文でもブロッキング代入できます (リスト10)。</p><p><span class="caption">▼リスト2.10: assign文によるブロッキング代入</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-comment">// assign 変数名 = 式;</span>
+<span class="hljs-keyword">assign</span> a = b + <span class="hljs-number">100</span>;
+</code></pre></div><p>always_combブロック内での代入と同じように、 リスト10では<code>b</code>の変化をトリガーに<code>a</code>の値が変化します。</p><p>ブロッキング代入は論理回路の状態(レジスタ)を変更しません。 そのため、ブロッキング代入文は組み合わせ回路になります。</p><h4 id="変数の宣言" tabindex="-1">変数の宣言 <a class="header-anchor" href="#変数の宣言" aria-label="Permalink to “変数の宣言”">​</a></h4><p>モジュールの中では、 <strong>var</strong>文によって新しく変数を宣言できます(リスト11)。</p><p><span class="caption">▼リスト2.11: 変数の宣言</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-comment">// var 変数名 : 型名;</span>
+<span class="hljs-keyword">var</span> value : <span class="hljs-keyword">logic</span>&lt;<span class="hljs-number">32</span>&gt;;
+</code></pre></div><p>var文で宣言した変数に対してブロッキング代入できます。</p><p><strong>let</strong>文を使うと、 変数の宣言とブロッキング代入を同時に行えます(リスト12)。</p><p><span class="caption">▼リスト2.12: 変数の宣言とブロッキング代入</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-comment">// let 変数名 : 型名 = 式;</span>
+<span class="hljs-keyword">let</span> value : <span class="hljs-keyword">logic</span>&lt;<span class="hljs-number">32</span>&gt; = <span class="hljs-number">100</span> + a;
+</code></pre></div><h4 id="レジスタの定義と代入" tabindex="-1">レジスタの定義と代入 <a class="header-anchor" href="#レジスタの定義と代入" aria-label="Permalink to “レジスタの定義と代入”">​</a></h4><p>変数を宣言するとき、 変数に式がブロッキング代入されない場合、 変数はレジスタとして解釈できます (リスト13)。</p><p><span class="caption">▼リスト2.13: レジスタの定義</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-comment">// var レジスタ名 : 型名;</span>
+<span class="hljs-keyword">var</span> reg_value : <span class="hljs-keyword">logic</span>&lt;<span class="hljs-number">32</span>&gt;;
+
+<span class="hljs-comment">// reg_valueにブロッキング代入しない</span>
+</code></pre></div><p>本書ではレジスタのことを変数、 または変数のことをレジスタと呼ぶことがあります。</p><p>レジスタの値はクロック信号に同期したタイミングで変更し、 リセット信号に同期したタイミングで初期化します(図4)。 本書では、 クロック信号が<strong>立ち上がる</strong>(<code>0</code>から<code>1</code>に変わる)タイミングでレジスタの値を変更し、 リセット信号が<strong>立ち下がる</strong>(<code>1</code>から<code>0</code>に変わる)タイミングでレジスタの値を初期化することとします。</p><p><img src="/assets/register_wave.CShFYgrn.png" alt="レジスタ(value)の値はクロック信号(clk)が立ち上がるタイミングで変わる"> レジスタの値は、<strong>always_ff</strong>ブロックで初期化、変更します(リスト14)。 always_ffブロックには、値の変更タイミングのためのクロック信号とリセット信号を指定します。</p><p><span class="caption">▼リスト2.14: レジスタの値の初期化と変更</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-comment">// レジスタの定義</span>
+<span class="hljs-keyword">var</span> value : <span class="hljs-keyword">logic</span>&lt;<span class="hljs-number">32</span>&gt;;
+
+<span class="hljs-comment">// always_ff(クロック信号, リセット信号)</span>
+<span class="hljs-keyword">always_ff</span>(clk, rst) {
+        <span class="hljs-keyword">if_reset</span> {
+                <span class="hljs-comment">// リセット信号のタイミングで0に初期化する</span>
+                value = <span class="hljs-number">0</span>;
+        } <span class="hljs-keyword">else</span> {
+                <span class="hljs-comment">// クロック信号のタイミングでカウントアップする</span>
+                value = value + <span class="hljs-number">1</span>;
+        }
+}
+</code></pre></div><p><strong>if_reset</strong>文の中の文は、リセット信号のタイミングで実行されます。 if_reset文にelse文を付けることで、クロック信号のタイミングで処理を実行できます。 レジスタの値をリセットしない場合、リセット信号とif_reset文を省略できます。 逆に、リセット信号を指定する場合は必ずif_reset文を書かなければいけません。</p><p>クロック信号はclock型、リセット信号はreset型で定義します。 モジュールのポートに１組のクロック信号とリセット信号が定義されているとき、 always_ffブロックのクロック信号とリセット信号の指定を省略できます (リスト15)。</p><p><span class="caption">▼リスト2.15: クロック信号とリセット信号の省略</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">module</span> ModuleA(
+  clk: <span class="hljs-keyword">input</span> <span class="hljs-keyword">clock</span>,
+  rst: <span class="hljs-keyword">input</span> <span class="hljs-keyword">reset</span>,
+){
+        <span class="hljs-comment">// always_ff(clk, rst)と等しい</span>
+        <span class="hljs-keyword">always_ff</span> {}
+}
+</code></pre></div><p>レジスタの値は、 同じタイミングで動くalways_ffブロックの中の全ての代入文の右辺を評価した後に変更されます (リスト16)。 この代入はブロッキング代入と違って逐次実行されないので、 <strong>ノンブロッキング代入</strong>(non-blocking assignment)と呼びます。</p><p>2つ以上のalways_ffブロックで、 1つの同じレジスタの値を変更することはできません。</p><p><span class="caption">▼リスト2.16: 複数のレジスタの値を同じタイミングで変更する</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-comment">// 全ての代入文の右辺を評価した後に、AとBが変更される</span>
+<span class="hljs-comment">// その結果、AとBの値が入れ替わる</span>
+<span class="hljs-keyword">always_ff</span>(clk, rst) {
+        A = B;
+}
+<span class="hljs-keyword">always_ff</span>(clk, rst) {
+        B = A;
+}
+</code></pre></div><p>リスト16の<code>A</code>と<code>B</code>の代入文は、 1つのalways_ffブロックにまとめて記述できます(リスト17)。 この場合もリスト16と同様に、 <code>A</code>と<code>B</code>の代入文の右辺を評価した後に、 レジスタの値が変更されます。</p><p><span class="caption">▼リスト2.17: ノンブロッキング代入の更新タイミングは同じ</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">always_ff</span> {
+        <span class="hljs-comment">// AとBの値を入れ替える</span>
+        A = B;
+        B = A;
+}
+</code></pre></div><p>本書ではブロッキング代入とノンブロッキング代入を区別せず、 どちらも代入と呼ぶことがあります。</p><p>変数への代入方法と動作を表4にまとめます。 大変間違えやすいため、気を付けてください。</p><div id="table.assign" class="table"><p class="caption">表2.4: 変数への代入方法と動作の違い</p><table><tr class="hline"><th>代入場所</th><th>代入文の名称</th><th>更新タイミング</th></tr><tr class="hline"><td>always_comb</td><td>ブロッキング代入</td><td>ブロック内の式で参照されている変数が更新されたとき。<br>上から順に実行される。</td></tr><tr class="hline"><td>always_ff</td><td>ノンブロッキング代入</td><td>クロック信号、リセット信号のタイミング。<br>同じタイミングで実行される全ての代入文の右辺を評価した後<br>にレジスタの値が変更される。</td></tr></table></div><h4 id="モジュールのインスタンス化" tabindex="-1">モジュールのインスタンス化 <a class="header-anchor" href="#モジュールのインスタンス化" aria-label="Permalink to “モジュールのインスタンス化”">​</a></h4><p>あるモジュールを利用したいとき、 モジュールを<strong>インスタンス化</strong>(instantiate)することにより、 モジュールの実体を宣言できます。</p><p>モジュールは、<strong>inst</strong>キーワードによってインスタンス化できます (リスト18)。</p><p><span class="caption">▼リスト2.18: ModuleAモジュール内でHalfAdderモジュールをインスタンス化する</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">module</span> ModuleA {
+        <span class="hljs-comment">// モジュールと接続するための変数の宣言</span>
+        <span class="hljs-keyword">let</span> x : <span class="hljs-keyword">logic</span> = <span class="hljs-number">0</span>;
+        <span class="hljs-keyword">let</span> y : <span class="hljs-keyword">logic</span> = <span class="hljs-number">1</span>;
+        <span class="hljs-keyword">var</span> s : <span class="hljs-keyword">logic</span>;
+        <span class="hljs-keyword">var</span> c : <span class="hljs-keyword">logic</span>;
+
+        <span class="hljs-comment">// inst インスタンス名 : モジュール名(ポートとの接続);</span>
+        <span class="hljs-keyword">inst</span> ha1 : HalfAdder(
+                x: x, <span class="hljs-comment">// ポートxに変数xを接続する</span>
+                y: y,
+                s,    <span class="hljs-comment">// ポート名と変数名が同じとき、ポート名の指定を省略できる </span>
+                c,
+        );
+}
+</code></pre></div><p>インスタンス名が違えば、 同一のモジュールを2つ以上インスタンス化できます。</p><h4 id="パラメータ、定数" tabindex="-1">パラメータ、定数 <a class="header-anchor" href="#パラメータ、定数" aria-label="Permalink to “パラメータ、定数”">​</a></h4><p>モジュールには、インスタンス化するときに変更可能な定数(<strong>パラメータ</strong>)を用意できます。</p><p>モジュールのパラメータは、 ポート宣言の前の<code>#()</code>の中で<strong>param</strong>キーワードによって宣言できます (リスト19)。</p><p><span class="caption">▼リスト2.19: モジュールのパラメータの宣言</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">module</span> ModuleA #(
+        <span class="hljs-comment">// param パラメータ名 : 型名 = デフォルト値 </span>
+        <span class="hljs-keyword">param</span> WIDTH : <span class="hljs-keyword">u32</span> = <span class="hljs-number">100</span>, <span class="hljs-comment">// u32型のパラメータ</span>
+        <span class="hljs-keyword">param</span> DATA_TYPE : <span class="hljs-keyword">type</span> = <span class="hljs-keyword">logic</span>, <span class="hljs-comment">// type型のパラメータには型を指定できる</span>
+) (
+        <span class="hljs-comment">// ポートの宣言</span>
+) {}
+</code></pre></div><p>モジュールをインスタンス化するとき、 ポートの割り当てと同じようにパラメータの値を割り当てられます (リスト20)。</p><p><span class="caption">▼リスト2.20: パラメータの値を指定する</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">inst</span> ma : ModuleA #(
+        <span class="hljs-comment">// パラメータの割り当て</span>
+        WIDTH: <span class="hljs-number">10</span>,
+        DATA_TYPE: <span class="hljs-keyword">logic</span>&lt;<span class="hljs-number">10</span>&gt;
+) ( <span class="hljs-comment">/* ポートの接続 */</span> );
+</code></pre></div><p>パラメータに指定する値は、合成時に確定する値(定数)である必要があります。</p><p>モジュール内では、変更不可能なパラメータ(定数)を定義できます。 定数を定義するには<strong>const</strong>キーワードを使用します (リスト21)。</p><p><span class="caption">▼リスト2.21: 定数の定義</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-comment">// const 定数名 : 型名 = 式;</span>
+<span class="hljs-comment">// 式に変数が含まれてはいけない</span>
+<span class="hljs-keyword">const</span> SECRET : <span class="hljs-keyword">u32</span> = <span class="hljs-number">42</span>;
+</code></pre></div><h3 id="ユーザー定義型" tabindex="-1">ユーザー定義型 <a class="header-anchor" href="#ユーザー定義型" aria-label="Permalink to “ユーザー定義型”">​</a></h3><h4 id="構造体型" tabindex="-1">構造体型 <a class="header-anchor" href="#構造体型" aria-label="Permalink to “構造体型”">​</a></h4><p>構造体(struct)とは、複数のデータから構成される型です。 例えば、リスト22のように記述すると、 <code>logic&lt;32&gt;</code>と<code>logic&lt;16&gt;</code>の2つのデータから構成される型を定義できます。</p><p><span class="caption">▼リスト2.22: 構造体型の定義</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-comment">// struct 型名 { フィールドの定義 }</span>
+<span class="hljs-keyword">struct</span> MyPair {
+        <span class="hljs-comment">// 名前 : 型</span>
+        word: <span class="hljs-keyword">logic</span>&lt;<span class="hljs-number">32</span>&gt;,
+        half: <span class="hljs-keyword">logic</span>&lt;<span class="hljs-number">16</span>&gt;,
+}
+</code></pre></div><p>構造体の要素(フィールド, field)には<code>.</code>を介してアクセスできます (リスト23)。</p><p><span class="caption">▼リスト2.23: フィールドへのアクセス、割り当て</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-comment">// 構造体型の変数の宣言</span>
+<span class="hljs-keyword">var</span> pair: MyPair;
+
+<span class="hljs-comment">// フィールドにアクセスする</span>
+<span class="hljs-keyword">let</span> w : <span class="hljs-keyword">logic</span>&lt;<span class="hljs-number">32</span>&gt; = pair.word;
+
+<span class="hljs-comment">// フィールドに値を割り当てる</span>
+<span class="hljs-keyword">always_comb</span> {
+        pair.word = <span class="hljs-number">12345</span>;
+}
+</code></pre></div><h4 id="列挙型" tabindex="-1">列挙型 <a class="header-anchor" href="#列挙型" aria-label="Permalink to “列挙型”">​</a></h4><p>複数の値の候補から値を選択できる型を作りたいとき、 <strong>列挙型</strong>(enumerable type)を利用できます。 列挙型の値の候補のことを<strong>バリアント</strong>(variant)と呼びます。</p><p>例えば、A、B、C、Dのいずれかのバリアントをとる型は次のように定義できます (リスト24)。</p><p><span class="caption">▼リスト2.24: 列挙型の定義</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-comment">// enum 型名 : logic&lt;バリアント数を保持できるだけのビット数&gt; { バリアントの定義 }</span>
+<span class="hljs-keyword">enum</span> abcd : <span class="hljs-keyword">logic</span>&lt;<span class="hljs-number">2</span>&gt; {
+        <span class="hljs-comment">// バリアント名 : バリアントを表す値,</span>
+        A = <span class="hljs-number">2&#39;d0</span>,
+        B = <span class="hljs-number">2&#39;d1</span>,
+        C = <span class="hljs-number">2&#39;d2</span>,
+        D = <span class="hljs-number">2&#39;d3</span>,
+}
+</code></pre></div><p>enum型の値は<code>型名::バリアント名</code>で利用できます(リスト25)。</p><p><span class="caption">▼リスト2.25: 列挙型の値</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-comment">// enum型の変数の定義</span>
+<span class="hljs-keyword">let</span> v : abcd = abcd::A;
+</code></pre></div><p>バリアントを表す値や、バリアントを保持できるだけのビット数は省略できます (リスト26)。</p><p><span class="caption">▼リスト2.26: 列挙型の省略した定義</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">enum</span> abcd {
+        A, B, C, D
+}
+</code></pre></div><h4 id="配列" tabindex="-1">配列 <a class="header-anchor" href="#配列" aria-label="Permalink to “配列”">​</a></h4><p><code>&lt;&gt;</code>を使用することで、多次元の型を定義できます (リスト27)。 <code>&lt;&gt;</code>を使用して構成される型の要素は、 連続した領域に並ぶことが保証されます(図5)。</p><p><span class="caption">▼リスト2.27: 多次元の型</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">logic</span>&lt;N&gt;     <span class="hljs-comment">// Nビットのlogic型</span>
+<span class="hljs-keyword">logic</span>&lt;A, B&gt;  <span class="hljs-comment">// BビットのlogicがA個並ぶ型</span>
+</code></pre></div><p><img src="/assets/packed_array.CzyMfiQz.png" alt="の型の要素は連続した領域に並ぶ (例 : v[1][0]とv[0][3]が隣り合う)"><code>[]</code>を使用することでも、多次元の型を定義できます (リスト28)。 ただし、<code>[]</code>を使用して構成される型の要素は、 連続した領域に並ぶことが保証されません。</p><p><span class="caption">▼リスト2.28: 配列型</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-comment">// 型名[個数] で、&quot;型名&quot;型が&quot;個数&quot;個の配列になる</span>
+<span class="hljs-keyword">logic</span>[<span class="hljs-number">32</span>]     <span class="hljs-comment">// 要素数が32のlogicの配列型</span>
+<span class="hljs-keyword">logic</span>[<span class="hljs-number">4</span>, <span class="hljs-number">8</span>]   <span class="hljs-comment">// logicが8個の配列が4個ある配列型</span>
+</code></pre></div><h4 id="型に別名をつける" tabindex="-1">型に別名をつける <a class="header-anchor" href="#型に別名をつける" aria-label="Permalink to “型に別名をつける”">​</a></h4><p><strong>type</strong>キーワードを使うと、型に別名を付けられます (リスト29)。</p><p><span class="caption">▼リスト2.29: 型に別名を付ける</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-comment">// type 名前 = 型;</span>
+<span class="hljs-keyword">type</span> ptr = <span class="hljs-keyword">logic</span>&lt;<span class="hljs-number">32</span>&gt;;
+<span class="hljs-keyword">type</span> ptr_array = ptr&lt;<span class="hljs-number">32</span>&gt;;
+</code></pre></div><h3 id="式、文、宣言" tabindex="-1">式、文、宣言 <a class="header-anchor" href="#式、文、宣言" aria-label="Permalink to “式、文、宣言”">​</a></h3><h4 id="ビット選択" tabindex="-1">ビット選択 <a class="header-anchor" href="#ビット選択" aria-label="Permalink to “ビット選択”">​</a></h4><p><img src="/assets/bitsel.Cwd2KLCm.png" alt="ビット選択"> 変数の任意のビットを切り出すには<code>[]</code>を使用します(図6)。 範囲の選択には<code>[:]</code>を使用します。 最上位ビット(most significant bit, MSB)は<strong>msb</strong>キーワード、 最下位ビット(least significant bit, LSB)は<strong>lsb</strong>キーワードで指定できます。 選択する場所の指定には式を使えます。</p><p>よく使われる範囲の選択には、別の書き方が用意されています (リスト30)。</p><p><span class="caption">▼リスト2.30: 範囲の選択の別の記法</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code>v[s +: w]   <span class="hljs-comment">// = v[s+w-1   : s    ]</span>
+v[s -: w]   <span class="hljs-comment">// = v[s       : s-w+1]</span>
+v[i <span class="hljs-keyword">step</span> w] <span class="hljs-comment">// = v[i*(w+1) : i*w  ] = v[i*w +: w]</span>
+</code></pre></div><h4 id="演算子" tabindex="-1">演算子 <a class="header-anchor" href="#演算子" aria-label="Permalink to “演算子”">​</a></h4><p>Verylでは、表5の演算子を使用できます。 ほとんどの演算子と優先度は通常のプログラミング言語と同じですが、 ビット演算の種類が多かったり、 <code>x</code>と<code>z</code>を考慮した演算があるなどの違いがあります。</p><p>SystemVerilogとの差異を説明すると、 <code>++</code>、<code>--</code>、<code>:=</code>、<code>:/</code>、<code>&lt;=</code>(代入)、 <code>&lt;</code>と<code>&gt;</code>がそれぞれ<code>&lt;:</code>と<code>&gt;:</code>に変更されています。 また、<code>inside</code>と<code></code>、<code>?:</code>(三項演算子)の形式が変更され、case式、switch式が追加されています。</p><p>単項、二項演算子の使用例は次の通りです(リスト31)。</p><p><span class="caption">▼リスト2.31: 単項、二項演算子 (Verylのドキュメントの例を改変)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-comment">// 単項算術演算</span>
+a = +<span class="hljs-number">1</span>;
+a = -<span class="hljs-number">1</span>; <span class="hljs-comment">// 正負を反転させる</span>
+
+<span class="hljs-comment">// 単項論理演算</span>
+a = !<span class="hljs-number">1</span>; <span class="hljs-comment">// 否定 (真偽を反転させる)</span>
+a = ~<span class="hljs-number">1</span>; <span class="hljs-comment">// ビット反転 (0を1、1を0にする)</span>
+
+<span class="hljs-comment">// 単項集約演算</span>
+<span class="hljs-comment">//</span>
+<span class="hljs-comment">// 集約: 左のビットから順に1ビットずつビット演算する</span>
+<span class="hljs-comment">//   例: k = 3&#39;b110のとき、&amp;k = 0</span>
+<span class="hljs-comment">//       &amp;k = 1 &amp; 1 &amp; 0          </span>
+<span class="hljs-comment">//       まず、k[msb]とk[1]をANDして1を得る。</span>
+<span class="hljs-comment">//       次に、その結果とk[0]をANDして0を得る。</span>
+<span class="hljs-comment">//       この値が&amp;kの結果になる。</span>
+a = &amp;<span class="hljs-number">1</span>;  <span class="hljs-comment">// AND</span>
+a = |<span class="hljs-number">1</span>;  <span class="hljs-comment">// OR</span>
+a = ^<span class="hljs-number">1</span>;  <span class="hljs-comment">// XOR</span>
+a = ~&amp;<span class="hljs-number">1</span>; <span class="hljs-comment">// NAND</span>
+a = ~|<span class="hljs-number">1</span>; <span class="hljs-comment">// NOR</span>
+a = ~^<span class="hljs-number">1</span>; <span class="hljs-comment">// XNOR</span>
+a = ^~<span class="hljs-number">1</span>; <span class="hljs-comment">// XNOR</span>
+
+<span class="hljs-comment">// 二項算術演算</span>
+a = k ** p; <span class="hljs-comment">// kのp乗</span>
+a = <span class="hljs-number">1</span> * <span class="hljs-number">1</span>;  <span class="hljs-comment">// かけ算</span>
+a = <span class="hljs-number">1</span> / <span class="hljs-number">1</span>;  <span class="hljs-comment">// 割り算</span>
+a = <span class="hljs-number">1</span> % <span class="hljs-number">1</span>;  <span class="hljs-comment">// 剰余</span>
+a = <span class="hljs-number">1</span> + <span class="hljs-number">1</span>;  <span class="hljs-comment">// 足し算</span>
+a = <span class="hljs-number">1</span> - <span class="hljs-number">1</span>;  <span class="hljs-comment">// 引き算</span>
+
+<span class="hljs-comment">// シフト演算</span>
+<span class="hljs-comment">// 注意 : 右オペランド(シフト数)は符号無しの数として扱われる</span>
+a = k &lt;&lt;  n; <span class="hljs-comment">// kをnビット左シフトする。空いたビットは0で埋める</span>
+a = k &lt;&lt;&lt; n; <span class="hljs-comment">// &lt;&lt;と同じ</span>
+a = k &gt;&gt;  n; <span class="hljs-comment">// kをnビット右シフトする。空いたビットは0で埋める</span>
+a = k &gt;&gt;&gt; n; <span class="hljs-comment">// kが符号無しのとき&gt;&gt;と同じ。符号付きのとき、空いたビットはMSBで埋める</span>
+
+<span class="hljs-comment">// 比較演算</span>
+a = n &lt;: m;  <span class="hljs-comment">// nはm未満</span>
+a = n &lt;= m;  <span class="hljs-comment">// nはm以下</span>
+a = n &gt;: m;  <span class="hljs-comment">// nはmよりも大きい (mを含まない)</span>
+a = n &gt;= m;  <span class="hljs-comment">// nはm以上 (mを含む)</span>
+a = n == m;  <span class="hljs-comment">// nはmと等しい (xかzを含む場合、x)</span>
+a = n != m;  <span class="hljs-comment">// nはmと等しくない (xかzを含む場合、x)</span>
+a = n === m; <span class="hljs-comment">// nはmと等しい (xとzを含めて完全に一致)</span>
+a = n !== m; <span class="hljs-comment">// nはmと等しくない (xとzを含めて完全に一致)</span>
+a = n ==? m; <span class="hljs-comment">// ===と同じ。ただし、mに含まれるx,zはワイルドカードになる</span>
+a = n !=? m; <span class="hljs-comment">// !(==?)と同じ</span>
+
+<span class="hljs-comment">// ビット演算 (ビット単位, bitwise)</span>
+a = <span class="hljs-number">1</span> &amp; <span class="hljs-number">1</span>;  <span class="hljs-comment">// ビット単位AND</span>
+a = <span class="hljs-number">1</span> ^ <span class="hljs-number">1</span>;  <span class="hljs-comment">// ビット単位XOR</span>
+a = <span class="hljs-number">1</span> ~^ <span class="hljs-number">1</span>; <span class="hljs-comment">// ビット単位XNOR</span>
+a = <span class="hljs-number">1</span> ^~ <span class="hljs-number">1</span>; <span class="hljs-comment">// ビット単位XNOR</span>
+a = <span class="hljs-number">1</span> | <span class="hljs-number">1</span>;  <span class="hljs-comment">// ビット単位OR</span>
+
+<span class="hljs-comment">// 二項論理演算</span>
+a = x &amp;&amp; y; <span class="hljs-comment">// xとyの両方が真のとき真</span>
+a = x || y; <span class="hljs-comment">// xまたはyが真のとき真</span>
+</code></pre></div><div id="operator.priority" class="table"><p class="caption">表2.5: 演算子と優先度</p><table><tr class="hline"><th>演算子</th><th>結合性</th><th>優先順位</th></tr><tr class="hline"><td>`()` `[]` `::` `.`</td><td>左</td><td>高い</td></tr><tr class="hline"><td>`+` `-` `!` `~` `&amp;` `~&amp;` `|` `~|` `^` `~^` `^~`(単項)</td><td>左</td><td></td></tr><tr class="hline"><td>`**`</td><td>左</td><td></td></tr><tr class="hline"><td>`*` `/` `%`</td><td>左</td><td></td></tr><tr class="hline"><td>`+` `-` (二項)</td><td>左</td><td></td></tr><tr class="hline"><td>`&lt;&lt;` `&gt;&gt;` `&lt;&lt;&lt;` `&gt;&gt;&gt;`</td><td>左</td><td></td></tr><tr class="hline"><td>`&lt;:` `&lt;=` `&gt;:` `&gt;=`</td><td>左</td><td></td></tr><tr class="hline"><td>`==` `!=` `===` `!==` `==?` `!=?`</td><td>左</td><td></td></tr><tr class="hline"><td>`&amp;` (二項)</td><td>左</td><td></td></tr><tr class="hline"><td>`^` `~^` `^~` (二項)</td><td>左</td><td></td></tr><tr class="hline"><td>`|` (二項)</td><td>左</td><td></td></tr><tr class="hline"><td>`&amp;&amp;`</td><td>左</td><td></td></tr><tr class="hline"><td>`||`</td><td>左</td><td></td></tr><tr class="hline"><td>`=` `+=` `-=` `*=` `/=` `%=` `&amp;=` `^=` `|=` `&lt;&lt;=` `&gt;&gt;=` `&lt;&lt;&lt;=` `&gt;&gt;&gt;=`</td><td>なし</td><td></td></tr><tr class="hline"><td>`{}` `inside` `outside` `if` `case` `switch`</td><td>なし</td><td>低い</td></tr></table></div><h4 id="if、switch、case" tabindex="-1">if、switch、case <a class="header-anchor" href="#if、switch、case" aria-label="Permalink to “if、switch、case”">​</a></h4><p>条件によって動作や値を変えたいとき、<strong>if</strong>文を使用します (リスト32)。 括弧と<code>else</code>の代わりに<code>?</code>と<code>:</code>を使うことで式にできます。</p><p><span class="caption">▼リスト2.32: if文、if式</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">var</span> v : <span class="hljs-keyword">logic</span>&lt;<span class="hljs-number">32</span>&gt;;
+<span class="hljs-keyword">always_comb</span> {
+        <span class="hljs-keyword">if</span> WIDTH == <span class="hljs-number">0</span> {
+                <span class="hljs-comment">// WIDTH == 0のとき</span>
+                v = <span class="hljs-number">0</span>;
+        } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> WIDTH == <span class="hljs-number">1</span> {
+                <span class="hljs-comment">// WIDTH != 0かつWIDTH == 1のとき</span>
+                v = <span class="hljs-number">1</span>;
+        } <span class="hljs-keyword">else</span> {
+                <span class="hljs-comment">// WIDTH != 0かつWIDTH != 1のとき</span>
+                v = <span class="hljs-keyword">if</span> WIDTH == <span class="hljs-number">3</span> ? <span class="hljs-number">3</span> : <span class="hljs-number">4</span>; <span class="hljs-comment">// ifは式にもなる</span>
+        }
+}
+</code></pre></div><p>always_combブロック内で変数に代入するとき、 if文の全ての場合で代入する必要があることに注意してください (<code>v</code>は常に代入されています)。</p><p>リスト32と同じ意味の文を<strong>switch</strong>文で書けます(リスト33)。 どの条件にも当てはまらないときの動作は<strong>default</strong>で指定します。 switchは式にできます。 switch式は必ず値を返す必要があり、defaultが必須です。</p><p><span class="caption">▼リスト2.33: switch文、switch式</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">var</span> v : <span class="hljs-keyword">logic</span>&lt;<span class="hljs-number">32</span>&gt;;
+<span class="hljs-keyword">always_comb</span> {
+        <span class="hljs-keyword">switch</span> {
+                <span class="hljs-comment">// WIDTH == 0のとき</span>
+                WIDTH == <span class="hljs-number">0</span>: {
+                        v = <span class="hljs-number">0</span>;
+                }
+                <span class="hljs-comment">// WIDTH != 0かつWIDTH == 1のとき</span>
+                WIDTH == <span class="hljs-number">1</span>: v = <span class="hljs-number">1</span>; <span class="hljs-comment">// 要素が1つの文のとき、{}は省略できる</span>
+                <span class="hljs-comment">// WIDTH != 0かつWIDTH != 1のとき</span>
+                <span class="hljs-keyword">default</span>: 
+                        <span class="hljs-comment">// switch式</span>
+                        v = <span class="hljs-keyword">switch</span> {
+                                WIDTH == <span class="hljs-number">3</span>: <span class="hljs-number">3</span>, <span class="hljs-comment">// カンマで区切る</span>
+                                <span class="hljs-keyword">default</span> : <span class="hljs-number">4</span>, <span class="hljs-comment">// switch式はdefaultが必須</span>
+                        };
+        }
+}
+</code></pre></div><p>リスト32のように 1つの要素(<code>WIDTH</code>)の一致のみが条件のとき、 同じ意味の文を<strong>case</strong>文で書けます(リスト34)。 式にできたり、式にdefaultが必須なのはswitch文と同様です。</p><p><span class="caption">▼リスト2.34: case文、case式</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">var</span> v: <span class="hljs-keyword">logic</span>&lt;<span class="hljs-number">32</span>&gt;;
+<span class="hljs-keyword">always_comb</span> {
+        <span class="hljs-keyword">case</span> WIDTH {
+                <span class="hljs-comment">// WIDTH == 0のとき</span>
+                <span class="hljs-number">0</span>: {
+                        v = <span class="hljs-number">0</span>;
+                }
+                <span class="hljs-comment">// WIDTH != 0かつWIDTH == 1のとき</span>
+                <span class="hljs-number">1</span>: v = <span class="hljs-number">1</span>; <span class="hljs-comment">// 要素が1つの文のとき、{}は省略できる</span>
+                <span class="hljs-comment">// WIDTH != 0かつWIDTH != 1のとき</span>
+                <span class="hljs-keyword">default</span>: 
+                        <span class="hljs-comment">// case式</span>
+                        v = <span class="hljs-keyword">case</span> WIDTH {
+                                <span class="hljs-number">3</span>: <span class="hljs-number">3</span>, <span class="hljs-comment">// カンマで区切る</span>
+                                <span class="hljs-keyword">default</span> : <span class="hljs-number">4</span>, <span class="hljs-comment">// case式はdefaultが必須</span>
+                        };
+        }
+}
+</code></pre></div><h4 id="連結、repeat" tabindex="-1">連結、repeat <a class="header-anchor" href="#連結、repeat" aria-label="Permalink to “連結、repeat”">​</a></h4><p>ビット列や文字列を連結したいとき、<code>{}</code>を使用できます(リスト35)。 <code>+</code>では連結できない(値の足し算になる)ことに注意してください。 同じビット列、文字列を繰り返して連結したいときは<strong>repeat</strong>キーワードを使用します(リスト36)。</p><p><span class="caption">▼リスト2.35: 連結</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code>{<span class="hljs-number">12&#39;h123</span>, <span class="hljs-number">32&#39;habcd0123</span>} <span class="hljs-comment">// 44&#39;h123_abcde0123になる</span>
+{<span class="hljs-string">&quot;Hello&quot;</span>, <span class="hljs-string">&quot; &quot;</span>, <span class="hljs-string">&quot;World!&quot;</span>} <span class="hljs-comment">// &quot;Hello World!&quot;になる</span>
+</code></pre></div><p><span class="caption">▼リスト2.36: repeatを使って連結を繰り返す</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-comment">// {繰り返したい要素 repeat 繰り返す回数}</span>
+{<span class="hljs-number">4</span>&#39;<span class="hljs-number">0011</span> <span class="hljs-keyword">repeat</span> <span class="hljs-number">3</span>, <span class="hljs-number">4&#39;b1111</span>} <span class="hljs-comment">// 16&#39;b0011_0011_0011_1111になる</span>
+{<span class="hljs-string">&quot;Happy&quot;</span> <span class="hljs-keyword">repeat</span> <span class="hljs-number">3</span>} <span class="hljs-comment">// &quot;HappyHappyHappy&quot;になる</span>
+</code></pre></div><h4 id="for" tabindex="-1">for <a class="header-anchor" href="#for" aria-label="Permalink to “for”">​</a></h4><p><strong>for</strong>文はループを実現するための文です。 for文はリスト37のように記述できます。 例えばループ変数が0から31になるまで(32回)繰り返すなら、 範囲に<code>0..32</code>、または<code>0..=31</code>と記述します。 範囲には定数のみ指定できます。</p><p><span class="caption">▼リスト2.37: for文の記法</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-comment">// for ループ変数名: 型 in 範囲 { 処理 }</span>
+<span class="hljs-keyword">for</span> i: <span class="hljs-keyword">u32</span> <span class="hljs-keyword">in</span> <span class="hljs-number">0</span>..<span class="hljs-number">32</span> { ... }
+</code></pre></div><p><strong>break</strong>文を使うとループから抜け出せます。 例えばリスト38では<code>x</code>の値は256になります。</p><p><span class="caption">▼リスト2.38: always_combブロック内でfor文を記述する例</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">var</span> x: <span class="hljs-keyword">u32</span>;
+<span class="hljs-keyword">always_comb</span> {
+    x = <span class="hljs-number">0</span>;
+    <span class="hljs-keyword">for</span> _: <span class="hljs-keyword">u32</span> <span class="hljs-keyword">in</span> <span class="hljs-number">0</span>..<span class="hljs-number">1024</span> {
+        <span class="hljs-keyword">if</span> x == <span class="hljs-number">256</span> {
+            <span class="hljs-keyword">break</span>;
+        }
+        x += <span class="hljs-number">1</span>;
+    }
+}
+</code></pre></div><h4 id="inside、outside" tabindex="-1">inside、outside <a class="header-anchor" href="#inside、outside" aria-label="Permalink to “inside、outside”">​</a></h4><p>値がある範囲に含まれているかという条件を記述したいとき、 <strong>inside</strong>式を利用できます。 <code>inside 式 {範囲}</code>で、 式の結果が範囲内にあるかという条件を記述できます(リスト39)。 逆に、範囲外にあるという条件は<strong>outside</strong>式で記述できます。</p><p><span class="caption">▼リスト2.39: inside、outside</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">inside</span> n {<span class="hljs-number">0</span>..<span class="hljs-number">10</span>}    <span class="hljs-comment">// nが0以上10未満のとき1</span>
+<span class="hljs-keyword">inside</span> n {<span class="hljs-number">0</span>..=<span class="hljs-number">10</span>}   <span class="hljs-comment">// nが0以上10以下のとき1</span>
+<span class="hljs-keyword">inside</span> n {<span class="hljs-number">0</span>, <span class="hljs-number">1</span>, <span class="hljs-number">3</span>}  <span class="hljs-comment">// nが0、1、3のいずれかのとき1</span>
+<span class="hljs-keyword">inside</span> n {<span class="hljs-number">0</span>, <span class="hljs-number">2</span>..<span class="hljs-number">10</span>} <span class="hljs-comment">// nが0、または2以上10未満のとき1</span>
+
+<span class="hljs-comment">// outsideはinsideの逆</span>
+<span class="hljs-keyword">outside</span> n {<span class="hljs-number">0</span>..<span class="hljs-number">10</span>}   <span class="hljs-comment">// nが0未満、または10より大きいとき1</span>
+<span class="hljs-keyword">outside</span> n {<span class="hljs-number">0</span>, <span class="hljs-number">1</span>, <span class="hljs-number">3</span>} <span class="hljs-comment">// nが0、1、3以外の値のとき1</span>
+</code></pre></div><h4 id="function" tabindex="-1">function <a class="header-anchor" href="#function" aria-label="Permalink to “function”">​</a></h4><p>何度も記述する操作や計算は、関数(<strong>function</strong>)を使うことでまとめて記述できます(リスト40)。 関数は値を引数で受け取り、<strong>return</strong>文で値を返します。 値を返さないとき、戻り値の型の指定を省略できます。</p><p>引数には向きを指定できます。 functionの実行を開始するとき、 <code>input</code>として指定されている実引数の値が仮引数にコピーされます。 functionの実行が終了するとき、 <code>output</code>として指定されている仮引数の値が実引数の変数にコピーされます。 outputを使用することで、変数に値を割り当てることができます。</p><p><span class="caption">▼リスト2.40: 関数</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-comment">// べき乗を返す関数</span>
+<span class="hljs-keyword">function</span> get_power(
+        a : <span class="hljs-keyword">input</span> <span class="hljs-keyword">u32</span>,
+        b : <span class="hljs-keyword">input</span> <span class="hljs-keyword">u32</span>,
+) -&gt; <span class="hljs-keyword">u32</span> {
+        <span class="hljs-keyword">return</span> a ** b;
+}
+
+val v1 : <span class="hljs-keyword">logic</span>&lt;<span class="hljs-number">32</span>&gt;;
+val v2 : <span class="hljs-keyword">logic</span>&lt;<span class="hljs-number">32</span>&gt;;
+
+<span class="hljs-keyword">always_comb</span> {
+        v1 = get_power(<span class="hljs-number">2</span>, <span class="hljs-number">10</span>); <span class="hljs-comment">// v1 = 1024</span>
+        v2 = get_power(<span class="hljs-number">3</span>, <span class="hljs-number">3</span>); <span class="hljs-comment">// v2 = 27</span>
+}
+
+
+
+<span class="hljs-comment">// a + 1をbに代入する関数</span>
+<span class="hljs-keyword">function</span> assign_plus1(
+        a : <span class="hljs-keyword">input</span>  <span class="hljs-keyword">logic</span>&lt;<span class="hljs-number">32</span>&gt;,
+        b : <span class="hljs-keyword">output</span> <span class="hljs-keyword">logic</span>&lt;<span class="hljs-number">32</span>&gt;,
+) { <span class="hljs-comment">// 戻り値はないので省略</span>
+        b = a + <span class="hljs-number">1</span>;
+}
+
+val v3 : <span class="hljs-keyword">logic</span>&lt;<span class="hljs-number">32</span>&gt;;
+
+<span class="hljs-keyword">always_comb</span> {
+        assign_plus1(v1, v3); <span class="hljs-comment">// v3 = v1 + 1</span>
+}
+</code></pre></div><h3 id="interface" tabindex="-1">interface <a class="header-anchor" href="#interface" aria-label="Permalink to “interface”">​</a></h3><p>モジュールに何個もポートが存在するとき、 ポートの接続は非常に手間のかかる作業になります。 例えばリスト41では、 向きが対になっているポートがModuleAとModuleBに定義されており、 これを一つ一つ接続しています。</p><p><span class="caption">▼リスト2.41: モジュールのポートの相互接続</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">module</span> ModuleA (
+        req_a: <span class="hljs-keyword">output</span> <span class="hljs-keyword">logic</span>,
+        req_b: <span class="hljs-keyword">output</span> <span class="hljs-keyword">logic</span>,
+        req_c: <span class="hljs-keyword">output</span> <span class="hljs-keyword">logic</span>,
+){}
+<span class="hljs-keyword">module</span> ModuleB (
+        resp_a: <span class="hljs-keyword">input</span> <span class="hljs-keyword">logic</span>,
+        resp_b: <span class="hljs-keyword">input</span> <span class="hljs-keyword">logic</span>,
+        resp_c: <span class="hljs-keyword">input</span> <span class="hljs-keyword">logic</span>,
+){}
+<span class="hljs-keyword">module</span> Top{
+        <span class="hljs-keyword">var</span> a: <span class="hljs-keyword">logic</span>;
+        <span class="hljs-keyword">var</span> b: <span class="hljs-keyword">logic</span>;
+        <span class="hljs-keyword">var</span> c: <span class="hljs-keyword">logic</span>;
+        <span class="hljs-keyword">inst</span> ma : ModuleA (
+                req_a:a,
+                req_b:b,
+                req_c:c,
+        );
+        <span class="hljs-keyword">inst</span> mb : ModuleB (
+                resp_a:a,
+                resp_b:b,
+                resp_c:c,
+        );
+}
+</code></pre></div><p>モジュール間のポートの接続を簡単に行うために、 インターフェース(<strong>interface</strong>)という機能が用意されています。 リスト41のModuleAとModuleBを相互接続するような インターフェースは次のように定義できます(リスト42)。</p><p><span class="caption">▼リスト2.42: インターフェースの定義</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-comment">// interface インターフェース名 { }</span>
+<span class="hljs-keyword">interface</span> iff_ab {
+        <span class="hljs-keyword">var</span> a : <span class="hljs-keyword">logic</span>;
+        <span class="hljs-keyword">var</span> b : <span class="hljs-keyword">logic</span>;
+        <span class="hljs-keyword">var</span> c : <span class="hljs-keyword">logic</span>;
+
+        <span class="hljs-keyword">modport</span> req {
+                a: <span class="hljs-keyword">input</span>,
+                b: <span class="hljs-keyword">input</span>,
+                c: <span class="hljs-keyword">input</span>,
+        }
+        <span class="hljs-keyword">modport</span> resp {
+                a: <span class="hljs-keyword">output</span>,
+                b: <span class="hljs-keyword">output</span>,
+                c: <span class="hljs-keyword">output</span>,
+        }
+}
+</code></pre></div><p>iff_abインターフェースを利用すると、 リスト41を簡潔に記述できます (リスト43)。</p><p><span class="caption">▼リスト2.43: インターフェースによる接続</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">module</span> ModuleA (
+        req : <span class="hljs-keyword">modport</span> iff_ab::req,
+){}
+<span class="hljs-keyword">module</span> ModuleB (
+        resp : <span class="hljs-keyword">modport</span> iff_ab::resp,
+){}
+<span class="hljs-keyword">module</span> Top{
+        <span class="hljs-comment">// インターフェースのインスタンス化</span>
+        <span class="hljs-keyword">inst</span> iab : iff_ab;
+        <span class="hljs-keyword">inst</span> ma : ModuleA (req: iab);
+        <span class="hljs-keyword">inst</span> mb : ModuleB (resp: iab);
+}
+</code></pre></div><p>インターフェースはポートの宣言と接続を抽象化します。 インターフェース内に変数を定義すると、 <strong>modport</strong>文によってポートと向きを宣言できます。 モジュールでのポートの宣言は、<code>ポート名 : **modport** インターフェース名::modport名</code>と記述できます。 modportで宣言されたポートにインターフェースのインスタンスを渡すことにより、 ポートの接続を一気に行えます。</p><p>モジュールと同じように、インターフェースにはパラメータを宣言できます(リスト44)。</p><p><span class="caption">▼リスト2.44: パラメータ付きのインターフェース</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-comment">// interface インターフェース名 #( パラメータの定義 ) { }</span>
+<span class="hljs-keyword">interface</span> iff_params # (
+        <span class="hljs-keyword">param</span> PARAM_A : <span class="hljs-keyword">u32</span> = <span class="hljs-number">100</span>,
+        <span class="hljs-keyword">param</span> PARAM_B : <span class="hljs-keyword">u64</span> = <span class="hljs-number">200</span>,
+){ }
+</code></pre></div><p>インターフェース内には関数の定義やalways_combブロック、always_ffブロックなどの文を記述できます。</p><h3 id="package" tabindex="-1">package <a class="header-anchor" href="#package" aria-label="Permalink to “package”">​</a></h3><p>複数のモジュールやインターフェースにまたがって使用したい パラメータや型、関数はパッケージ(<strong>package</strong>)に定義できます (リスト45)。</p><p><span class="caption">▼リスト2.45: パッケージの定義</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">package</span> PackageA {
+        <span class="hljs-keyword">const</span> WIDTH : <span class="hljs-keyword">u32</span> = <span class="hljs-number">1234</span>;
+        <span class="hljs-keyword">type</span> foo = <span class="hljs-keyword">logic</span>&lt;WIDTH&gt;;
+        <span class="hljs-keyword">function</span> bar () -&gt; <span class="hljs-keyword">u32</span> {
+                <span class="hljs-keyword">return</span> <span class="hljs-number">1234</span>;
+        }
+}
+</code></pre></div><p>パッケージに定義した要素には、 <code>パッケージ名::要素名</code>でアクセスできます (リスト46)。</p><p><span class="caption">▼リスト2.46: パッケージの要素にアクセスする</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">module</span> ModuleA {
+        <span class="hljs-keyword">const</span> W : <span class="hljs-keyword">u32</span> = PackageA::WIDTH;
+        <span class="hljs-keyword">var</span> value1 : PackageA::foo;
+        <span class="hljs-keyword">let</span> value2 : <span class="hljs-keyword">u32</span> = PackageA::bar();
+}
+</code></pre></div><p><strong>import</strong>文を使用すると、 要素へのアクセス時にパッケージ名の指定を省略できます (リスト47)。</p><p><span class="caption">▼リスト2.47: パッケージをimportする</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">import</span> PackageA::WIDTH; <span class="hljs-comment">// 特定の要素をimportする</span>
+<span class="hljs-keyword">import</span> PackageA::*; <span class="hljs-comment">// 全ての要素をimportする</span>
+</code></pre></div><h3 id="ジェネリクス" tabindex="-1">ジェネリクス <a class="header-anchor" href="#ジェネリクス" aria-label="Permalink to “ジェネリクス”">​</a></h3><p>関数やモジュール、インターフェース、パッケージ、構造体は <strong>ジェネリクス</strong>(generics)によってパラメータ化できます。</p><p>例えば、要素に任意の型TやWビットのデータを持つ構造体は、 次のように<strong>ジェネリックパラメータ</strong>(generic parameter)を使うことで定義できます(リスト48)。 ジェネリックパラメータに渡される値は、 ジェネリクスの定義位置からアクセスできる定数である必要があります。</p><p><span class="caption">▼リスト2.48: パラメータ化された構造体</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">module</span> ModuleA {
+        <span class="hljs-comment">// ::&lt;&gt;でジェネリックパラメータを定義する</span>
+        <span class="hljs-comment">// constで数値を受け取る</span>
+        <span class="hljs-keyword">struct</span> StructA::&lt;W: <span class="hljs-keyword">const</span>&gt; {
+            A: <span class="hljs-keyword">logic</span>&lt;W&gt;,
+        }
+
+        <span class="hljs-comment">// 複数のジェネリックパラメータを定義できる</span>
+        <span class="hljs-comment">// typeで型を受け取る</span>
+        <span class="hljs-comment">// デフォルト値を設定できる</span>
+        <span class="hljs-keyword">struct</span> StructB::&lt;W: <span class="hljs-keyword">const</span>, T: <span class="hljs-keyword">type</span>, D:<span class="hljs-keyword">const</span> = <span class="hljs-number">100</span>&gt; {
+                A: <span class="hljs-keyword">logic</span>&lt;W&gt;,
+                B: T,
+                C: <span class="hljs-keyword">logic</span>&lt;D&gt;
+        }
+
+        <span class="hljs-comment">// ::&lt;&gt;でジェネリックパラメータを指定する</span>
+        <span class="hljs-keyword">type</span> A = StructA::&lt;<span class="hljs-number">16</span>&gt;;
+        <span class="hljs-keyword">type</span> B = StructB::&lt;<span class="hljs-number">17</span>, A&gt;;
+        <span class="hljs-keyword">type</span> C = StructB::&lt;<span class="hljs-number">18</span>, B, <span class="hljs-number">19</span>&gt;;
+}
+</code></pre></div><h3 id="その他の機能、文" tabindex="-1">その他の機能、文 <a class="header-anchor" href="#その他の機能、文" aria-label="Permalink to “その他の機能、文”">​</a></h3><h4 id="initial、final" tabindex="-1">initial、final <a class="header-anchor" href="#initial、final" aria-label="Permalink to “initial、final”">​</a></h4><p><strong>initial</strong>ブロックの中の文はシミュレーションの開始時に実行されます。 <strong>final</strong>ブロックの中の文はシミュレーションの終了時に実行されます(リスト49)。</p><p><span class="caption">▼リスト2.49: initial、finalブロック</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">module</span> ModuleA {
+        <span class="hljs-keyword">initial</span> {
+                <span class="hljs-comment">// シミュレーション開始時に実行される</span>
+        }
+        <span class="hljs-keyword">final</span> {
+                <span class="hljs-comment">// シミュレーション終了時に実行される</span>
+        }
+}
+</code></pre></div><h4 id="systemverilogとの連携" tabindex="-1">SystemVerilogとの連携 <a class="header-anchor" href="#systemverilogとの連携" aria-label="Permalink to “SystemVerilogとの連携”">​</a></h4><p>SystemVerilogのモジュールやパッケージ、インターフェースを利用できます。 SystemVerilogのリソースにアクセスするには<code>$sv::</code>を使用します(リスト50)。</p><p><span class="caption">▼リスト2.50: SystemVerilogの要素を利用する</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">module</span> ModuleA {
+        <span class="hljs-comment">// SystemVerilogでsvpackageとして</span>
+        <span class="hljs-comment">// 定義されているパッケージを利用する</span>
+        <span class="hljs-keyword">let</span> x = $sv::svpackage::X;
+        <span class="hljs-keyword">let</span> y = $sv::svpackage::Y;
+
+        <span class="hljs-keyword">var</span> s: <span class="hljs-keyword">logic</span>;
+        <span class="hljs-keyword">var</span> c: <span class="hljs-keyword">logic</span>;
+
+        <span class="hljs-comment">// SystemVerilogでHalfAdderとして</span>
+        <span class="hljs-comment">// 定義されているモジュールをインスタンス化する</span>
+        <span class="hljs-keyword">inst</span> ha : $sv::HalfAdder(
+                x, y, s, c
+        );
+
+        <span class="hljs-comment">// SystemVerilogでsvinterfaceとして</span>
+        <span class="hljs-comment">// 定義されているインターフェースをインスタンス化する</span>
+        <span class="hljs-keyword">inst</span> c: $sv::svinterface;
+}
+</code></pre></div><p>SystemVerilogのソースコードを直接埋め込み、展開できます (リスト51)。</p><p><span class="caption">▼リスト2.51: SystemVerilog記述を埋め込む</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-comment">// SystemVerilog記述を直接埋め込む</span>
+<span class="hljs-keyword">embed</span> (inline) sv{{{
+        <span class="hljs-keyword">module</span> ModuleA(
+                <span class="hljs-keyword">output</span> <span class="hljs-keyword">logic</span> a
+        );
+                <span class="hljs-keyword">assign</span> a = <span class="hljs-number">0</span>;
+        endmodule
+}}}
+
+<span class="hljs-comment">// SystemVerilogのソースファイルを展開する</span>
+<span class="hljs-comment">// パスは相対パス</span>
+<span class="hljs-keyword">include</span>(inline, <span class="hljs-string">&quot;filename.sv&quot;</span>);
+</code></pre></div><h4 id="システム関数、システムタスク" tabindex="-1">システム関数、システムタスク <a class="header-anchor" href="#システム関数、システムタスク" aria-label="Permalink to “システム関数、システムタスク”">​</a></h4><p>SystemVerilogに標準で用意されている関数(システム関数、システムタスク)を利用できます。 システム関数(system function)とシステムタスク(system task)の名前は<code>$</code>から始まります。 本書で利用するシステム関数とシステムタスクを表6に列挙します。</p><div id="systemtasks" class="table"><p class="caption">表2.6: 本書で使用するシステム関数、システムタスク</p><table><tr class="hline"><th>関数名</th><th>機能</th><th>戻り値</th></tr><tr class="hline"><td>$clog2</td><td>値のlog2のceilを求める</td><td>数値</td></tr><tr class="hline"><td>$size</td><td>配列のサイズを求める</td><td>数値</td></tr><tr class="hline"><td>$bits</td><td>値の幅を求める</td><td>数値</td></tr><tr class="hline"><td>$signed</td><td>値を符号付きとして扱う</td><td>符号付きの値</td></tr><tr class="hline"><td>$readmemh</td><td>レジスタにファイルのデータを代入する</td><td>なし</td></tr><tr class="hline"><td>$display</td><td>文字列を出力する</td><td>なし</td></tr><tr class="hline"><td>$error</td><td>エラー出力する</td><td>なし</td></tr><tr class="hline"><td>$finish</td><td>シミュレーションを終了する</td><td>なし</td></tr></table></div> それぞれの使用例は次の通りです(リスト52)。 システム関数やシステムタスクを利用するときは、通常の関数呼び出しのように使用します。 <p><span class="caption">▼リスト2.52: システム関数、システムタスクの使用例</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">const</span> w1 : <span class="hljs-keyword">u32</span> = $clog2(<span class="hljs-number">32</span>); <span class="hljs-comment">// 5</span>
+<span class="hljs-keyword">const</span> w2 : <span class="hljs-keyword">u32</span> = $clog2(<span class="hljs-number">35</span>); <span class="hljs-comment">// 6</span>
+
+<span class="hljs-keyword">var</span> array : <span class="hljs-keyword">logic</span>&lt;<span class="hljs-number">4</span>,<span class="hljs-number">8</span>&gt;;
+<span class="hljs-keyword">const</span> s1 : <span class="hljs-keyword">u32</span> = $size(array); <span class="hljs-comment">// 4</span>
+<span class="hljs-keyword">const</span> s2 : <span class="hljs-keyword">u32</span> = $bits(array); <span class="hljs-comment">// 32</span>
+
+<span class="hljs-keyword">var</span> uvalue : <span class="hljs-keyword">u32</span>;
+<span class="hljs-keyword">let</span> svalue : <span class="hljs-keyword">i32</span> = $<span class="hljs-keyword">signed</span>(uvalue) + <span class="hljs-number">1</span>;
+
+<span class="hljs-keyword">initial</span> {
+        $readmemh(<span class="hljs-string">&quot;file.hex&quot;</span>, array);
+        $display(<span class="hljs-string">&quot;Hello World!&quot;</span>);
+        $error(<span class="hljs-string">&quot;Error!&quot;</span>);
+        $finish();
+}
+</code></pre></div><h4 id="アトリビュート" tabindex="-1">アトリビュート <a class="header-anchor" href="#アトリビュート" aria-label="Permalink to “アトリビュート”">​</a></h4><p>アトリビュートを使うと、宣言に注釈をつけられます。 例えばリスト53は、リスト54にトランスパイルされます。</p><p><span class="caption">▼リスト2.53: アトリビュートを使ったVerylコード</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code>#[sv(<span class="hljs-string">&quot;keep=\&quot;true\&quot;&quot;</span>)]
+<span class="hljs-keyword">var</span> aaa : <span class="hljs-keyword">logic</span>;
+
+#[ifdef(IS_DEBUG)]
+<span class="hljs-keyword">var</span> bbb : <span class="hljs-keyword">logic</span>;
+
+#[ifndef(TEST)]
+<span class="hljs-keyword">var</span> ccc : <span class="hljs-keyword">logic</span>;
+</code></pre></div><p><span class="caption">▼リスト2.54: 同じ意味のSystemVerilogコード</span></p><div class="language-sv"><button title="Copy Code" class="copy"></button><span class="lang">sv</span><pre class="hljs"><code>(* keep=<span class="hljs-string">&quot;true&quot;</span> *)
+<span class="hljs-keyword">logic</span> aaa;
+
+<span class="hljs-meta">`<span class="hljs-keyword">ifdef</span> IS_DEBUG</span>
+<span class="hljs-keyword">logic</span> bbb;
+<span class="hljs-meta">`<span class="hljs-keyword">endif</span></span>
+
+<span class="hljs-meta">`<span class="hljs-keyword">ifndef</span> TEST</span>
+<span class="hljs-keyword">logic</span> ccc;
+<span class="hljs-meta">`<span class="hljs-keyword">endif</span></span>
+</code></pre></div><p><code>#[sv()]</code>は、宣言にSystemVerilogの属性を付けられます。 属性は使用するときに説明します。 <code>#[ifdef(マクロ名)]</code>をつけられた宣言は、 マクロが存在するときにのみ定義されるようになります。 <code>#[ifndef(マクロ名)]</code>はその逆で、 マクロが存在しないときにのみ定義されるようになります。</p><p>アトリビュートはポートやパラメータ、ブロック、モジュール、インターフェース、パッケージなど、どの宣言にも付けることができます。</p><h4 id="標準ライブラリ" tabindex="-1">標準ライブラリ <a class="header-anchor" href="#標準ライブラリ" aria-label="Permalink to “標準ライブラリ”">​</a></h4><p>Verylには、よく使うモジュールなどが標準ライブラリとして準備されています。 標準ライブラリは<a href="https://std.veryl-lang.org/%E3%81%A7%E7%A2%BA%E8%AA%8D%E3%81%A7%E3%81%8D%E3%81%BE%E3%81%99%E3%80%82" target="_blank" rel="noreferrer">https://std.veryl-lang.org/で確認できます。</a></p><p>本書では標準ライブラリを使用していないため、説明は割愛します。</p><hr class="footnotes-sep"><section class="footnotes"><ol class="footnotes-list"><li id="fn1" class="footnote-item"><p>例えば、未定義の変数が1ビット幅の信号線として解釈される仕様があります <a href="#fnref1" class="footnote-backref">↩︎</a></p></li></ol></section></div></div></main><footer class="VPDocFooter" data-v-7011f0d8 data-v-e257564d><!--[--><!--]--><!----><nav class="prev-next" aria-labelledby="doc-footer-aria-label" data-v-e257564d><span class="visually-hidden" id="doc-footer-aria-label" data-v-e257564d>Pager</span><div class="pager" data-v-e257564d><a class="VPLink link pager-link prev" href="/basic/02-setup.html" data-v-e257564d><!--[--><span class="desc" data-v-e257564d>Previous page</span><span class="title" data-v-e257564d>1 環境構築</span><!--]--></a></div><div class="pager" data-v-e257564d><a class="VPLink link pager-link next" href="/basic/04-impl-rv32i.html" data-v-e257564d><!--[--><span class="desc" data-v-e257564d>Next page</span><span class="title" data-v-e257564d>3 RV32Iの実装</span><!--]--></a></div></nav></footer><!--[--><!--]--></div></div></div><!--[--><!--]--></div></div><!----><!--[--><!--]--></div></div>
+    <script>window.__VP_HASH_MAP__=JSON.parse("{\"api-examples.md\":\"DhLgRsxh\",\"basic_00-preface.md\":\"DcBYjBSi\",\"basic_02-setup.md\":\"CZkpTKSG\",\"basic_03-veryl.md\":\"BMFhgRXG\",\"basic_04-impl-rv32i.md\":\"DFzDBl2k\",\"basic_04a-zicsr.md\":\"DqzBB9qC\",\"basic_04b-riscvtests.md\":\"Dq3V4ukW\",\"basic_05-impl-rv64i.md\":\"Bj5-78A9\",\"basic_05a-pipeline.md\":\"BmgaN6zO\",\"basic_05b-synth.md\":\"4MkWhU86\",\"basic_10-impl-m.md\":\"Dy-x-Szj\",\"basic_100-contribute.md\":\"CwJBebE7\",\"basic_11-impl-exception.md\":\"Y7a73hrB\",\"basic_12-impl-mmio.md\":\"D698ixyx\",\"basic_13-impl-a.md\":\"DnQ3SkJP\",\"basic_14-impl-c.md\":\"FSMWyzrI\",\"basic_20-mmode-csr.md\":\"Le6VUeFq\",\"basic_21-impl-interrupt.md\":\"DRyC1B9o\",\"basic_22-umode-csr.md\":\"BishbjP_\",\"basic_23-smode-csr.md\":\"qH_2PNhG\",\"basic_24-impl-paging.md\":\"BmLZK_LL\",\"basic_25-impl-plic.md\":\"DJx_g3z3\",\"basic_26-run-linux.md\":\"NkfDle94\",\"basic_99-postface.md\":\"BJS3gpBS\",\"basic_99b-postface.md\":\"DlBcMYJl\",\"index.md\":\"CZLRa8fx\",\"markdown-examples.md\":\"Fn0K8xw-\"}");window.__VP_SITE_DATA__=JSON.parse("{\"lang\":\"en-US\",\"dir\":\"ltr\",\"title\":\"veryl-riscv-book\",\"description\":\"Write RISC-V CPU in Veryl\",\"base\":\"/\",\"head\":[],\"router\":{\"prefetchLinks\":true},\"appearance\":true,\"themeConfig\":{\"nav\":[{\"text\":\"プログラムを入手する\",\"link\":\"https://github.com/nananapo/bluecore\"}],\"sidebar\":[{\"text\":\"第I部 RV32I/RV64Iの実装\",\"items\":[{\"text\":\"まえがき\",\"link\":\"/basic/00-preface\"},{\"text\":\"1 環境構築\",\"link\":\"/basic/02-setup\"},{\"text\":\"2 ハードウェア記述言語 Veryl\",\"link\":\"/basic/03-veryl\"},{\"text\":\"3 RV32Iの実装\",\"link\":\"/basic/04-impl-rv32i\"},{\"text\":\"4 Zicsr拡張の実装\",\"link\":\"/basic/04a-zicsr\"},{\"text\":\"5 riscv-testsによるテスト\",\"link\":\"/basic/04b-riscvtests\"},{\"text\":\"6 RV64Iの実装\",\"link\":\"/basic/05-impl-rv64i\"},{\"text\":\"7 CPUのパイプライン化\",\"link\":\"/basic/05a-pipeline\"},{\"text\":\"8 CPUの合成\",\"link\":\"/basic/05b-synth\"}]},{\"text\":\"第II部 RV64IMACの実装\",\"items\":[{\"text\":\"9 M拡張の実装\",\"link\":\"/basic/10-impl-m\"},{\"text\":\"10 例外の実装\",\"link\":\"/basic/11-impl-exception\"},{\"text\":\"11 Memory-mapped I/Oの実装\",\"link\":\"/basic/12-impl-mmio\"},{\"text\":\"12 A拡張の実装\",\"link\":\"/basic/13-impl-a\"},{\"text\":\"13 C拡張の実装\",\"link\":\"/basic/14-impl-c\"}]},{\"text\":\"第III部 特権/割り込みの実装\",\"items\":[{\"text\":\"14 M-modeの実装 (1. CSRの実装)\",\"link\":\"/basic/20-mmode-csr\"},{\"text\":\"15 M-modeの実装 (2. 割り込みの実装)\",\"link\":\"/basic/21-impl-interrupt\"},{\"text\":\"16 U-modeの実装\",\"link\":\"/basic/22-umode-csr\"},{\"text\":\"17 S-modeの実装 (1. CSRの実装)\",\"link\":\"/basic/23-smode-csr\"},{\"text\":\"18 S-modeの実装 (2. 仮想記憶システム)\",\"link\":\"/basic/24-impl-paging\"},{\"text\":\"19 PLICの実装\",\"link\":\"/basic/25-impl-plic\"},{\"text\":\"20 Linuxを動かす\",\"link\":\"/basic/26-run-linux\"},{\"text\":\"あとがき (第Ⅰ部)\",\"link\":\"/basic/99-postface\"},{\"text\":\"あとがき (第Ⅱ部、第Ⅲ部)\",\"link\":\"/basic/99b-postface\"},{\"text\":\"このプロジェクトに貢献する\",\"link\":\"/basic/100-contribute\"}]}],\"socialLinks\":[{\"icon\":\"github\",\"link\":\"https://github.com/nananapo/veryl-riscv-book\"}],\"outline\":{\"level\":[2,4]}},\"locales\":{},\"scrollOffset\":134,\"cleanUrls\":false,\"additionalConfig\":{}}");</script>
+    
+  </body>
+</html>
