@@ -75,20 +75,28 @@ export default defineConfig({
       md.use(footnote)
     },
     highlight: (str, lang) => {
+
+      function escapeHtml(text) {
+        return text.replace(
+            /@@@@(.*?)@@@@/g,
+            '<span class="custom-hl-bold">$1</span>'
+          ).replace(
+            /~~~~(.*?)~~~~/g,
+            '<span class="custom-hl-del">$1</span>'
+          )
+      }
+
       if (lang == 'terminal') {
         lang = 'shellsession';
       }
       if (lang && hljs.getLanguage(lang)) {
         try {
           const result = hljs.highlight(str, { language: lang, ignoreIllegals: true });
-          return `<pre class="hljs" v-pre><code>${result.value}</code></pre>`.replace(
-            /@@@@(.*?)@@@@/g,
-            '<span class="custom-hl-bold">$1</span>'
-          );
+          return escapeHtml(`<pre class="hljs" v-pre><code>${result.value}</code></pre>`);
         } catch (__) {}
       }
       const escaped = hljs.highlight(str, { language: 'plaintext', ignoreIllegals: true }).value;
-      return `<pre class="hljs" v-pre><code>${escaped}</code></pre>`;
+      return escapeHtml(`<pre class="hljs" v-pre><code>${escaped}</code></pre>`);
     }
   }
 })

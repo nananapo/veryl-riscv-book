@@ -766,7 +766,7 @@ module ReVIEW
     #def on_inline_b()     ; "**#{yield}**"           ; end
     #def on_inline_code()  ; "`#{yield}`"     ; end
     def on_inline_tt()    ; "<tt>#{yield}</tt>"         ; end
-    def on_inline_del()   ; "~~#{yield}~~"              ; end
+    # def on_inline_del()   ; "~~#{yield}~~"              ; end
     def on_inline_sub()   ; "<sub>#{yield}</sub>"       ; end
     def on_inline_sup()   ; "<sup>#{yield}</sup>"       ; end
     def on_inline_em()    ; "<em>#{yield}</em>"         ; end
@@ -787,6 +787,15 @@ module ReVIEW
     def on_inline_code()
       with_context(:code) do
         return "`#{yield}`"
+      end
+    end
+    
+    def on_inline_del()
+      if within_codeblock?()
+        # 特別なキーワードで囲む
+        "~~~~#{yield}~~~~"
+      else
+        "~~#{yield}~~"
       end
     end
 
