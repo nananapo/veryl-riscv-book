@@ -23,9 +23,9 @@ pre.hljs {
 }
 
 .custom-hl-bold {
-  font-weight: bold;
-  -webkit-text-stroke: 0.5px; /* 線の太さと色 */
-  text-stroke: 0.5px;
+  font-weight: bolder;
+  -webkit-text-stroke: 0.03rem;
+  text-stroke: 0.03rem;
 }
 
 .custom-hl-del {
