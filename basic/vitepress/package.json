@@ -9,6 +9,8 @@
     "docs:preview": "vitepress preview"
   },
   "dependencies": {
+    "highlight.js": "^11.11.1",
+    "highlightjs-veryl": "^0.16.4",
     "markdown-it-footnote": "^4.0.0"
   }
 }

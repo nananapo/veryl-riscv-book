@@ -1,6 +1,11 @@
 import { defineConfig } from 'vitepress'
 import footnote from 'markdown-it-footnote'
 
+import hljs from 'highlight.js'
+import veryl from 'highlightjs-veryl'
+
+hljs.registerLanguage('veryl', veryl)
+
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   srcDir: "contents",
@@ -59,11 +64,25 @@ export default defineConfig({
     socialLinks: [
       { icon: 'github', link: 'https://github.com/nananapo/veryl-riscv-book' }
     ],
+    
+    outline: {
+      level: [2, 4]
+    },
   },
   
   markdown: {
     config: (md) => {
       md.use(footnote)
+    },
+    highlight: (str, lang) => {
+      if (lang && hljs.getLanguage(lang)) {
+        try {
+          const result = hljs.highlight(str, { language: lang, ignoreIllegals: true });
+          return `<pre class="hljs" v-pre><code>${result.value}</code></pre>`;
+        } catch (__) {}
+      }
+      const escaped = hljs.highlight(str, { language: 'plaintext', ignoreIllegals: true }).value;
+      return `<pre class="hljs" v-pre><code>${escaped}</code></pre>`;
     }
   }
 })

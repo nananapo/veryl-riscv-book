@@ -686,6 +686,16 @@ hast-util-whitespace@^3.0.0:
   dependencies:
     "@types/hast" "^3.0.0"
 
+highlight.js@^11.11.1:
+  version "11.11.1"
+  resolved "https://registry.yarnpkg.com/highlight.js/-/highlight.js-11.11.1.tgz#fca06fa0e5aeecf6c4d437239135fabc15213585"
+  integrity sha512-Xwwo44whKBVCYoliBQwaPvtd/2tYFkRQtXDWj1nackaV2JPXx3L0+Jvd8/qCJ2p+ML0/XVkJ2q+Mr+UVdpJK5w==
+
+highlightjs-veryl@^0.16.4:
+  version "0.16.4"
+  resolved "https://registry.yarnpkg.com/highlightjs-veryl/-/highlightjs-veryl-0.16.4.tgz#09e6e88debed0cb0cae47fc30ead5ff3d9fdf83f"
+  integrity sha512-y9mvtzVABw1JESffNrB2zfZFSHvZosfJAFBBCl0Luw8pcfjrlUBFUM9uw3j/tTQA2EGfEku2797hm7mhCE7l+A==
+
 hookable@^5.5.3:
   version "5.5.3"
   resolved "https://registry.yarnpkg.com/hookable/-/hookable-5.5.3.tgz#6cfc358984a1ef991e2518cb9ed4a778bbd3215d"

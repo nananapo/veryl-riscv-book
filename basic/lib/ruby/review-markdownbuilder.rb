@@ -131,6 +131,15 @@ module ReVIEW
       end
       lang = opts['lang']
       lang ||= 'terminal' if blockname == 'terminal' || blockname == 'cmd'
+
+      if (lang.nil? || lang.empty?) && id && id.include?('.')
+        parts = id.split('.')
+        if parts.size >= 2
+          # lang = "#{parts[0]}.#{parts[1]}"
+          lang = "#{parts[1]}"
+        end
+      end
+
       puts "```#{lang}"
       lines.each do |line|
         puts compile_inline(line)

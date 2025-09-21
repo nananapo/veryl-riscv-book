@@ -1,0 +1,23 @@
+/* ありがとうAI */
+
+/* 1. highlight.jsのテーマをインポート (例: github-dark) */
+@import 'highlight.js/styles/github-dark.css';
+
+/* 2. VitePressのデフォルトのコードブロック背景色を無効化する */
+:root {
+  --vp-code-block-bg: transparent;
+}
+
+/* 3. VitePressが生成するラッパー要素のスタイルを調整し、
+      hljsテーマの背景色が適用されるようにする */
+div[class*="language-"] {
+  background-color: transparent !important; /* VitePressの背景色を無効化 */
+  margin: 1rem 0; /* 上下の余白を調整 */
+  border-radius: 8px; /* コンテナの角を丸める */
+}
+
+/* 4. preタグ自体にhljsテーマの背景を適用させる */
+pre.hljs {
+  padding: 1rem; /* 内側の余白 */
+  border-radius: 8px; /* preタグ自体の角も丸める */
+}
