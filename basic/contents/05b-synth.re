@@ -110,22 +110,22 @@ module csrunit (
 
 //list[csrunit.veryl.ledcsr-range.rdata_wmask][rdataとwmaskに値を割り当てる (csrunit.veryl)]{
 #@maprange(scripts/05b/ledcsr-range/core/src/csrunit.veryl,rdata_wmask)
-    // read
-    rdata = case csr_addr {
-        CsrAddr::MTVEC : mtvec,
-        CsrAddr::MEPC  : mepc,
-        CsrAddr::MCAUSE: mcause,
-        @<b>|CsrAddr::LED   : led,|
-        default        : 'x,
-    };
-    // write
-    wmask = case csr_addr {
-        CsrAddr::MTVEC : MTVEC_WMASK,
-        CsrAddr::MEPC  : MEPC_WMASK,
-        CsrAddr::MCAUSE: MCAUSE_WMASK,
-        @<b>|CsrAddr::LED   : LED_WMASK,|
-        default        : 0,
-    };
+        // read
+        rdata = case csr_addr {
+            CsrAddr::MTVEC : mtvec,
+            CsrAddr::MEPC  : mepc,
+            CsrAddr::MCAUSE: mcause,
+            @<b>|CsrAddr::LED   : led,|
+            default        : 'x,
+        };
+        // write
+        wmask = case csr_addr {
+            CsrAddr::MTVEC : MTVEC_WMASK,
+            CsrAddr::MEPC  : MEPC_WMASK,
+            CsrAddr::MCAUSE: MCAUSE_WMASK,
+            @<b>|CsrAddr::LED   : LED_WMASK,|
+            default        : 0,
+        };
 #@end
 //}
 
@@ -133,12 +133,12 @@ module csrunit (
 
 //list[csrunit.veryl.ledcsr-range.reset][リセット値の設定 (csrunit.veryl)]{
 #@maprange(scripts/05b/ledcsr-range/core/src/csrunit.veryl,reset)
-    if_reset {
-        mtvec  = 0;
-        mepc   = 0;
-        mcause = 0;
-        @<b>|led    = 0;|
-    } else {
+        if_reset {
+            mtvec  = 0;
+            mepc   = 0;
+            mcause = 0;
+            @<b>|led    = 0;|
+        } else {
 #@end
 //}
 
@@ -146,13 +146,13 @@ LEDの制御用レジスタへの書き込み処理を実装します(@<list>{cs
 
 //list[csrunit.veryl.ledcsr-range.write][LEDの制御用レジスタへの書き込み (csrunit.veryl)]{
 #@maprange(scripts/05b/ledcsr-range/core/src/csrunit.veryl,write)
-    case csr_addr {
-        CsrAddr::MTVEC : mtvec  = wdata;
-        CsrAddr::MEPC  : mepc   = wdata;
-        CsrAddr::MCAUSE: mcause = wdata;
-        @<b>|CsrAddr::LED   : led    = wdata;|
-        default        : {}
-    }
+                        case csr_addr {
+                            CsrAddr::MTVEC : mtvec  = wdata;
+                            CsrAddr::MEPC  : mepc   = wdata;
+                            CsrAddr::MCAUSE: mcause = wdata;
+                            @<b>|CsrAddr::LED   : led    = wdata;|
+                            default        : {}
+                        }
 #@end
 //}
 

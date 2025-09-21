@@ -283,10 +283,10 @@ mstatusレジスタは、拡張の設定やトラップ、状態などを管理�
 
 //list[csrunit.veryl.mstatus.write][mstatusレジスタの書き込み (csrunit.veryl)]{
 #@maprange(scripts/20/mstatus-range/core/src/csrunit.veryl,write)
-    if is_wsc {
-        case csr_addr {
-            @<b>|CsrAddr::MSTATUS: mstatus = wdata;|
-            CsrAddr::MTVEC  : mtvec   = wdata;
+                    if is_wsc {
+                        case csr_addr {
+                            @<b>|CsrAddr::MSTATUS: mstatus = wdata;|
+                            CsrAddr::MTVEC  : mtvec   = wdata;
 #@end
 //}
 
@@ -322,7 +322,7 @@ mcycleレジスタを定義して読み込めるようにします。
 
 //list[csrunit.veryl.mcycle.rdata][rdataの割り当てで、mcycleレジスタを読めるようにする (csrunit.veryl)]{
 #@maprange(scripts/20/mcycle-range/core/src/csrunit.veryl,rdata)
-    CsrAddr::MCYCLE : mcycle,
+            CsrAddr::MCYCLE : mcycle,
 #@end
 //}
 
@@ -399,9 +399,9 @@ coreモジュールでinstretレジスタを作成し、
 
 //list[csrunit.veryl.minstret.rdata][minstretレジスタを読めるようにする (csrunit.veryl)]{
 #@maprange(scripts/20/minstret-range/core/src/csrunit.veryl,rdata)
-    CsrAddr::MCYCLE  : mcycle,
-    @<b>|CsrAddr::MINSTRET: minstret,|
-    CsrAddr::MEPC    : mepc,
+            CsrAddr::MCYCLE  : mcycle,
+            @<b>|CsrAddr::MINSTRET: minstret,|
+            CsrAddr::MEPC    : mepc,
 #@end
 //}
 
@@ -485,17 +485,17 @@ mscratchレジスタを定義し、自由に読み書きできるようにしま
 
 //list[csrunit.veryl.mscratch.reset][mscratchレジスタを0でリセットする (csrunit.veryl)]{
 #@maprange(scripts/20/mscratch-range/core/src/csrunit.veryl,reset)
-    mtvec    = 0;
-    @<b>|mscratch = 0;|
-    mcycle   = 0;
+            mtvec    = 0;
+            @<b>|mscratch = 0;|
+            mcycle   = 0;
 #@end
 //}
 
 //list[csrunit.veryl.mscratch.rdata][mscratchレジスタを読めるようにする (csrunit.veryl)]{
 #@maprange(scripts/20/mscratch-range/core/src/csrunit.veryl,rdata)
-    CsrAddr::MINSTRET: minstret,
-    @<b>|CsrAddr::MSCRATCH: mscratch,|
-    CsrAddr::MEPC    : mepc,
+            CsrAddr::MINSTRET: minstret,
+            @<b>|CsrAddr::MSCRATCH: mscratch,|
+            CsrAddr::MEPC    : mepc,
 #@end
 //}
 
@@ -509,16 +509,16 @@ mscratchレジスタを定義し、自由に読み書きできるようにしま
 
 //list[csrunit.veryl.mscratch.wmask][書き込みマスクをwmaskに割り当てる (csrunit.veryl)]{
 #@maprange(scripts/20/mscratch-range/core/src/csrunit.veryl,wmask)
-    CsrAddr::MTVEC   : MTVEC_WMASK,
-    @<b>|CsrAddr::MSCRATCH: MSCRATCH_WMASK,|
-    CsrAddr::MEPC    : MEPC_WMASK,
+            CsrAddr::MTVEC   : MTVEC_WMASK,
+            @<b>|CsrAddr::MSCRATCH: MSCRATCH_WMASK,|
+            CsrAddr::MEPC    : MEPC_WMASK,
 #@end
 //}
 
 //list[csrunit.veryl.mscratch.write][mscratchレジスタの書き込み (csrunit.veryl)]{
 #@maprange(scripts/20/mscratch-range/core/src/csrunit.veryl,write)
-    CsrAddr::MTVEC   : mtvec    = wdata;
-    @<b>|CsrAddr::MSCRATCH: mscratch = wdata;|
-    CsrAddr::MEPC    : mepc     = wdata;
+                            CsrAddr::MTVEC   : mtvec    = wdata;
+                            @<b>|CsrAddr::MSCRATCH: mscratch = wdata;|
+                            CsrAddr::MEPC    : mepc     = wdata;
 #@end
 //}

@@ -298,15 +298,15 @@ mtvalレジスタを実装して、書き込み、読み込みできるように
 
 //list[csrunit.veryl.mtval-range.write][mtvalに書き込めるようにする (csrunit.veryl)]{
 #@maprange(scripts/11/mtval-range/core/src/csrunit.veryl,write)
-    } else {
-        if is_wsc {
-            case csr_addr {
-                ...
-                @<b>|CsrAddr::MTVAL : mtval  = wdata;|
-                ...
-            }
-        }
-    }
+                } else {
+                    if is_wsc {
+                        case csr_addr {
+                            ...
+                            @<b>|CsrAddr::MTVAL : mtval  = wdata;|
+                            ...
+                        }
+                    }
+                }
 #@end
 //}
 
@@ -326,13 +326,13 @@ mtvalレジスタを実装して、書き込み、読み込みできるように
 
 //list[csrunit.veryl.mtval-range.update][例外が発生するとき、mtvalにtvalを書き込む (csrunit.veryl)]{
 #@maprange(scripts/11/mtval-range/core/src/csrunit.veryl,update)
-    if valid {
-        if raise_trap {
-            if raise_expt {
-                mepc   = pc;
-                mcause = trap_cause;
-                @<b>|mtval  = expt_value;|
-            }
+            if valid {
+                if raise_trap {
+                    if raise_expt {
+                        mepc   = pc;
+                        mcause = trap_cause;
+                        @<b>|mtval  = expt_value;|
+                    }
 #@end
 //}
 
@@ -586,13 +586,13 @@ module csrunit (
 
 //list[csrunit.veryl.csrro-range.wdata][rs1の変更に対応する (csrunit.veryl)]{
 #@maprange(scripts/11/csrro-range/core/src/csrunit.veryl,wdata)
-    @<b>|let wsource: UIntX = if ctrl.funct3[2] ? {1'b0 repeat XLEN - 5, rs1_addr} : rs1_data;|
-    wdata   = case ctrl.funct3[1:0] {
-        2'b01  : @<b>|wsource|,
-        2'b10  : rdata | @<b>|wsource|,
-        2'b11  : rdata & ~@<b>|wsource|,
-        default: 'x,
-    } & wmask | (rdata & ~wmask);
+        @<b>|let wsource: UIntX = if ctrl.funct3[2] ? {1'b0 repeat XLEN - 5, rs1_addr} : rs1_data;|
+        wdata   = case ctrl.funct3[1:0] {
+            2'b01  : @<b>|wsource|,
+            2'b10  : rdata | @<b>|wsource|,
+            2'b11  : rdata & ~@<b>|wsource|,
+            default: 'x,
+        } & wmask | (rdata & ~wmask);
 #@end
 //}
 
@@ -657,7 +657,7 @@ csrunitモジュールでトラップを起こすようになりました。
 
 //list[core.veryl.csrro-range.memwb][トラップが発生したかをWBステージに伝える (core.veryl)]{
 #@maprange(scripts/11/csrro-range/core/src/core.veryl,memwb)
-    wbq_wdata.raise_trap = csru_raise_trap;
+        wbq_wdata.raise_trap = csru_raise_trap;
 #@end
 //}
 

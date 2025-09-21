@@ -109,7 +109,7 @@ MPPには@<code>{2'b00}(U-mode)と@<code>{2'b11}(M-mode)のみ設定できるよ
 
 //list[csrunit.veryl.mpp.write][mstatusの書き込み (csrunit.veryl)]{
 #@maprange(scripts/22/mpp-range/core/src/csrunit.veryl,write)
-    CsrAddr::MSTATUS : mstatus  = validate_mstatus(mstatus, wdata);
+                            CsrAddr::MSTATUS : mstatus  = validate_mstatus(mstatus, wdata);
 #@end
 //}
 
@@ -224,9 +224,9 @@ CSRのアドレスと特権レベルを確認して、例外を起こすよう�
 
 //list[csrunit.veryl.csrrwpriv.cause][causeを設定する (csrunit.veryl)]{
 #@maprange(scripts/22/csrrwpriv-range/core/src/csrunit.veryl,cause)
-    expt_write_readonly_csr: CsrCause::ILLEGAL_INSTRUCTION,
-    @<b>|expt_csr_priv_violation: CsrCause::ILLEGAL_INSTRUCTION,|
-    default                : 0,
+        expt_write_readonly_csr: CsrCause::ILLEGAL_INSTRUCTION,
+        @<b>|expt_csr_priv_violation: CsrCause::ILLEGAL_INSTRUCTION,|
+        default                : 0,
 #@end
 //}
 
@@ -263,17 +263,17 @@ mcounterenレジスタを作成し、CY、TM、IRビットに書き込みでき�
 
 //list[csrunit.veryl.mcounteren.reset][mcounterenレジスタを0でリセットする (csrunit.veryl)]{
 #@maprange(scripts/22/mcounteren-range/core/src/csrunit.veryl,reset)
-    mie        = 0;
-    @<b>|mcounteren = 0;|
-    mscratch   = 0;
+            mie        = 0;
+            @<b>|mcounteren = 0;|
+            mscratch   = 0;
 #@end
 //}
 
 //list[csrunit.veryl.mcounteren.rdata][rdataにmcounterenレジスタを設定する (csrunit.veryl)]{
 #@maprange(scripts/22/mcounteren-range/core/src/csrunit.veryl,rdata)
-    CsrAddr::MIE       : mie,
-    @<b>|CsrAddr::MCOUNTEREN: {1'b0 repeat XLEN - 32, mcounteren},|
-    CsrAddr::MCYCLE    : mcycle,
+            CsrAddr::MIE       : mie,
+            @<b>|CsrAddr::MCOUNTEREN: {1'b0 repeat XLEN - 32, mcounteren},|
+            CsrAddr::MCYCLE    : mcycle,
 #@end
 //}
 
@@ -285,17 +285,17 @@ mcounterenレジスタを作成し、CY、TM、IRビットに書き込みでき�
 
 //list[csrunit.veryl.mcounteren.wmask][wmaskに書き込みマスクを設定する (csrunit.veryl)]{
 #@maprange(scripts/22/mcounteren-range/core/src/csrunit.veryl,wmask)
-    CsrAddr::MIE       : MIE_WMASK,
-    @<b>|CsrAddr::MCOUNTEREN: MCOUNTEREN_WMASK,|
-    CsrAddr::MSCRATCH  : MSCRATCH_WMASK,
+            CsrAddr::MIE       : MIE_WMASK,
+            @<b>|CsrAddr::MCOUNTEREN: MCOUNTEREN_WMASK,|
+            CsrAddr::MSCRATCH  : MSCRATCH_WMASK,
 #@end
 //}
 
 //list[csrunit.veryl.mcounteren.write][mcounterenレジスタの書き込み (csrunit.veryl)]{
 #@maprange(scripts/22/mcounteren-range/core/src/csrunit.veryl,write)
-    CsrAddr::MIE       : mie        = wdata;
-    @<b>|CsrAddr::MCOUNTEREN: mcounteren = wdata[31:0];|
-    CsrAddr::MSCRATCH  : mscratch   = wdata;
+                            CsrAddr::MIE       : mie        = wdata;
+                            @<b>|CsrAddr::MCOUNTEREN: mcounteren = wdata[31:0];|
+                            CsrAddr::MSCRATCH  : mscratch   = wdata;
 #@end
 //}
 
@@ -319,9 +319,9 @@ mcounterenレジスタのビットが@<code>{0}ならIllegal instruction例外�
 
 //list[csrunit.veryl.mcounteren.cause][causeを設定する (csrunit.veryl)]{
 #@maprange(scripts/22/mcounteren-range/core/src/csrunit.veryl,cause)
-    expt_csr_priv_violation: CsrCause::ILLEGAL_INSTRUCTION,
-    @<b>|expt_zicntr_priv       : CsrCause::ILLEGAL_INSTRUCTION,|
-    default                : 0,
+        expt_csr_priv_violation: CsrCause::ILLEGAL_INSTRUCTION,
+        @<b>|expt_zicntr_priv       : CsrCause::ILLEGAL_INSTRUCTION,|
+        default                : 0,
 #@end
 //}
 
@@ -381,9 +381,9 @@ U-mode		Environment call from U-mode	8
 
 //list[eei.veryl.ecallm.CsrCause][CsrCause型に例外のcauseを追加する (eei.veryl)]{
 #@maprange(scripts/22/ecallm-range/core/src/eei.veryl,CsrCause)
-    STORE_AMO_ADDRESS_MISALIGNED = 6,
-    @<b>|ENVIRONMENT_CALL_FROM_U_MODE = 8,|
-    ENVIRONMENT_CALL_FROM_M_MODE = 11,
+        STORE_AMO_ADDRESS_MISALIGNED = 6,
+        @<b>|ENVIRONMENT_CALL_FROM_U_MODE = 8,|
+        ENVIRONMENT_CALL_FROM_M_MODE = 11,
 #@end
 //}
 
@@ -412,20 +412,20 @@ IDステージでECALL命令をデコードするときにcauseに@<code>{mode}�
 
 //list[core.veryl.ecallm.port][csrunitモジュールのインスタンスから現在の特権レベルを受け取る (core.veryl)]{
 #@maprange(scripts/22/ecallm-range/core/src/core.veryl,port)
-    rdata      : csru_rdata           ,
-    @<b>|mode       : csru_priv_mode       ,|
-    raise_trap : csru_raise_trap      ,
+        rdata      : csru_rdata           ,
+        @<b>|mode       : csru_priv_mode       ,|
+        raise_trap : csru_raise_trap      ,
 #@end
 //}
 
 //list[core.veryl.ecallm.expt][Environment call from U-mode例外のcauseに特権レベルの数値を足す (core.veryl)]{
 #@maprange(scripts/22/ecallm-range/core/src/core.veryl,expt)
-    } else if ids_inst_bits == 32'h00000073 {
-        // ECALL
-        exq_wdata.expt.valid      = 1;
-        exq_wdata.expt.cause      = @<b>|CsrCause::ENVIRONMENT_CALL_FROM_U_MODE;|
-        @<b>|exq_wdata.expt.cause[1:0] = csru_priv_mode;|
-        exq_wdata.expt.value      = 0;
+        } else if ids_inst_bits == 32'h00000073 {
+            // ECALL
+            exq_wdata.expt.valid      = 1;
+            exq_wdata.expt.cause      = @<b>|CsrCause::ENVIRONMENT_CALL_FROM_U_MODE;|
+            @<b>|exq_wdata.expt.cause[1:0] = csru_priv_mode;|
+            exq_wdata.expt.value      = 0;
 #@end
 //}
 

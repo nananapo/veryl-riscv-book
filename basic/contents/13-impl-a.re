@@ -745,16 +745,16 @@ SC命令が成功、失敗したときに結果を返すための状態を@<code
 
 //list[amounit.veryl.sc.assign_slave][slaveにSC命令の結果を割り当てる (amounit.veryl)]{
 #@maprange(scripts/13/sc-range/core/src/amounit.veryl,assign_slave)
-    State::SCSuccess: {
-        slave.ready  = master.rvalid;
-        slave.rvalid = master.rvalid;
-        slave.rdata  = 0;
-    }
-    State::SCFail: {
-        slave.ready  = 1;
-        slave.rvalid = 1;
-        slave.rdata  = 1;
-    }
+            State::SCSuccess: {
+                slave.ready  = master.rvalid;
+                slave.rvalid = master.rvalid;
+                slave.rdata  = 0;
+            }
+            State::SCFail: {
+                slave.ready  = 1;
+                slave.rvalid = 1;
+                slave.rdata  = 1;
+            }
 #@end
 //}
 
@@ -764,17 +764,17 @@ SC命令を受け入れるときに予約セットを確認し、アドレスが
 
 //list[amounit.veryl.sc.accept_request_ff][accept_request_ff関数で予約セットを確認する (amounit.veryl)]{
 #@maprange(scripts/13/sc-range/core/src/amounit.veryl,accept_request_ff)
-    AMOOp::SC: {
-        // reset reserved
-        let prev            : logic = is_addr_reserved;
-        is_addr_reserved = 0;
-        // check
-        if prev && slave.addr == reserved_addr {
-            state = if master.ready ? State::SCSuccess : State::WaitReady;
-        } else {
-            state = State::SCFail;
-        }
-    }
+                    AMOOp::SC: {
+                        // reset reserved
+                        let prev            : logic = is_addr_reserved;
+                        is_addr_reserved = 0;
+                        // check
+                        if prev && slave.addr == reserved_addr {
+                            state = if master.ready ? State::SCSuccess : State::WaitReady;
+                        } else {
+                            state = State::SCFail;
+                        }
+                    }
 #@end
 //}
 
@@ -816,13 +816,13 @@ SC命令によるメモリへの書き込みを実装します
 
 //list[amounit.veryl.sc.accept_request_comb][accept_request_comb関数で、予約セットをチェックしてからストアを要求する (amounit.veryl)]{
 #@maprange(scripts/13/sc-range/core/src/amounit.veryl,accept_request_comb)
-    case slave.amoop {
-        AMOOp::LR: assign_master(slave.addr, 0, 0, 0);
-        @<b>|AMOOp::SC: if is_addr_reserved && slave.addr == reserved_addr {|
-        @<b>     assign_master(slave.addr, 1, slave.wdata, slave.wmask);|
-        @<b> }|
-        default: {}
-    }
+                case slave.amoop {
+                    AMOOp::LR: assign_master(slave.addr, 0, 0, 0);
+                    @<b>|AMOOp::SC: if is_addr_reserved && slave.addr == reserved_addr {|
+                    @<b>     assign_master(slave.addr, 1, slave.wdata, slave.wmask);|
+                    @<b> }|
+                    default: {}
+                }
 #@end
 //}
 
@@ -897,10 +897,10 @@ modportにimport宣言を追加してください。
 
 //list[core_data_if.veryl.zaamo.master][masterにis_Zaamo関数をimportする (core_data_if.veryl)]{
 #@maprange(scripts/13/zaamo-range/core/src/core_data_if.veryl,master)
-    amoop   : output,
-    funct3  : output,
-    @<b>|is_Zaamo: import,|
-}
+        amoop   : output,
+        funct3  : output,
+        @<b>|is_Zaamo: import,|
+    }
 #@end
 //}
 
@@ -980,11 +980,11 @@ modportにimport宣言を追加してください。
 
 //list[amounit.veryl.zaamo.assign_slave_comb][命令の結果を返す (amounit.veryl)]{
 #@maprange(scripts/13/zaamo-range/core/src/amounit.veryl,assign_slave_comb)
-    State::AMOStoreValid: {
-        slave.ready  = master.rvalid;
-        slave.rvalid = master.rvalid;
-        slave.rdata  = zaamo_fetched_data;
-    }
+            State::AMOStoreValid: {
+                slave.ready  = master.rvalid;
+                slave.rvalid = master.rvalid;
+                slave.rdata  = zaamo_fetched_data;
+            }
 #@end
 //}
 
@@ -996,21 +996,21 @@ modportにimport宣言を追加してください。
 
 //list[amounit.veryl.zaamo.accept_request_comb][accept_request_comb関数で、まずロード要求を行う (amounit.veryl)]{
 #@maprange(scripts/13/zaamo-range/core/src/amounit.veryl,accept_request_comb)
-    default: @<b>|if slave.is_Zaamo()| {
-        @<b>|assign_master(slave.addr, 0, 0, 0);|
-    }
+                    default: @<b>|if slave.is_Zaamo()| {
+                        @<b>|assign_master(slave.addr, 0, 0, 0);|
+                    }
 #@end
 //}
 
 //list[amounit.veryl.zaamo.assign_master_comb][状態に基づいてロード、ストア要求を行う (amounit.veryl)]{
 #@maprange(scripts/13/zaamo-range/core/src/amounit.veryl,assign_master_comb)
-    State::AMOLoadReady                      : assign_master      (slave_saved.addr, 0, 0, 0);
-    State::AMOLoadValid, State::AMOStoreReady: {
-        let rdata        : UIntX = if state == State::AMOLoadValid ? master.rdata : zaamo_fetched_data;
-        let wdata        : UIntX = gen_amo_wdata(slave_saved, rdata);
-        assign_master(slave_saved.addr, 1, wdata, slave_saved.wmask);
-    }
-    State::AMOStoreValid: accept_request_comb();
+            State::AMOLoadReady                      : assign_master      (slave_saved.addr, 0, 0, 0);
+            State::AMOLoadValid, State::AMOStoreReady: {
+                let rdata        : UIntX = if state == State::AMOLoadValid ? master.rdata : zaamo_fetched_data;
+                let wdata        : UIntX = gen_amo_wdata(slave_saved, rdata);
+                assign_master(slave_saved.addr, 1, wdata, slave_saved.wmask);
+            }
+            State::AMOStoreValid: accept_request_comb();
 #@end
 //}
 
@@ -1019,27 +1019,27 @@ modportにimport宣言を追加してください。
 
 //list[amounit.veryl.zaamo.accept_request_ff][accept_request_ff関数で、masterのreadyによって次のstateを決める (amounit.veryl)]{
 #@maprange(scripts/13/zaamo-range/core/src/amounit.veryl,accept_request_ff)
-    default: @<b>|if slave.is_Zaamo()| {
-        @<b>|state = if master.ready ? State::AMOLoadValid : State::AMOLoadReady;|
-    }
+                    default: @<b>|if slave.is_Zaamo()| {
+                        @<b>|state = if master.ready ? State::AMOLoadValid : State::AMOLoadReady;|
+                    }
 #@end
 //}
 
 //list[amounit.veryl.zaamo.on_clock][Zaamo拡張の命令の状態の遷移 (amounit.veryl)]{
 #@maprange(scripts/13/zaamo-range/core/src/amounit.veryl,on_clock)
-    State::AMOLoadReady: if master.ready {
-        state = State::AMOLoadValid;
-    }
-    State::AMOLoadValid: if master.rvalid {
-        zaamo_fetched_data = master.rdata;
-        state              = if slave.ready ? State::AMOStoreValid : State::AMOStoreReady;
-    }
-    State::AMOStoreReady: if master.ready {
-        state = State::AMOStoreValid;
-    }
-    State::AMOStoreValid: if master.rvalid {
-        accept_request_ff();
-    }
+            State::AMOLoadReady: if master.ready {
+                state = State::AMOLoadValid;
+            }
+            State::AMOLoadValid: if master.rvalid {
+                zaamo_fetched_data = master.rdata;
+                state              = if slave.ready ? State::AMOStoreValid : State::AMOStoreReady;
+            }
+            State::AMOStoreReady: if master.ready {
+                state = State::AMOStoreValid;
+            }
+            State::AMOStoreValid: if master.rvalid {
+                accept_request_ff();
+            }
 #@end
 //}
 

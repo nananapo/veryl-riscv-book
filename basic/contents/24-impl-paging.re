@@ -204,9 +204,9 @@ PTWで発生した例外は、最終的にcsrunitモジュールで処理しま�
 
 //list[eei.veryl.CsrCause.def][CsrCause型にページフォルト例外を追加する (eei.veryl)]{
 #@maprange(scripts/24/newexpt-range/core/src/eei.veryl,CsrCause)
-    INSTRUCTION_PAGE_FAULT = 12,
-    LOAD_PAGE_FAULT = 13,
-    STORE_AMO_PAGE_FAULT = 15,
+        INSTRUCTION_PAGE_FAULT = 12,
+        LOAD_PAGE_FAULT = 13,
+        STORE_AMO_PAGE_FAULT = 15,
 #@end
 //}
 
@@ -372,20 +372,20 @@ offsetが@<code>{6}で例外が発生しているとき、
 
 //list[inst_fetcher.veryl.newexpt.offset_comb][offsetが6のときに例外が発生している場合、すぐにissue_fifoに例外を書き込む (inst_fetcher.veryl)]{
 #@maprange(scripts/24/newexpt-range/core/src/inst_fetcher.veryl,offset_comb)
-    fetch_fifo_rready = 1;
-    if rvcc_is_rvc @<b>{|| expt.valid} {
-        issue_fifo_wvalid       = 1;
-        issue_fifo_wdata.addr   = {raddr[msb:3], offset};
-        issue_fifo_wdata.is_rvc = 1;
-        issue_fifo_wdata.bits   = rvcc_inst32;
+                        fetch_fifo_rready = 1;
+                        if rvcc_is_rvc @<b>{|| expt.valid} {
+                            issue_fifo_wvalid       = 1;
+                            issue_fifo_wdata.addr   = {raddr[msb:3], offset};
+                            issue_fifo_wdata.is_rvc = 1;
+                            issue_fifo_wdata.bits   = rvcc_inst32;
 #@end
 //}
 
 //list[inst_fetcher.veryl.newexpt.offset_ff][例外が発生しているときは32ビット幅の命令の上位16ビットを取得しない (inst_fetcher.veryl)]{
 #@maprange(scripts/24/newexpt-range/core/src/inst_fetcher.veryl,offset_ff)
-    if issue_pc_offset == 6 && !rvcc_is_rvc && !issue_is_rdata_saved @<b>|&& !fetch_fifo_rdata.expt.valid| {
-        if fetch_fifo_rvalid {
-            issue_is_rdata_saved = 1;
+                if issue_pc_offset == 6 && !rvcc_is_rvc && !issue_is_rdata_saved @<b>|&& !fetch_fifo_rdata.expt.valid| {
+                    if fetch_fifo_rvalid {
+                        issue_is_rdata_saved = 1;
 #@end
 //}
 
@@ -593,12 +593,12 @@ inst_fetcherモジュールで、
 
 //list[inst_fetcher.veryl.exptoffset.offset][オフセットを2に設定する (inst_fetcher.veryl)]{
 #@maprange(scripts/24/exptoffset-range/core/src/inst_fetcher.veryl,offset)
-    if issue_is_rdata_saved {
-        issue_fifo_wvalid                 = 1;
-        issue_fifo_wdata.addr             = {issue_saved_addr[msb:3], offset};
-        issue_fifo_wdata.bits             = {rdata[15:0], issue_saved_bits};
-        issue_fifo_wdata.is_rvc           = 0;
-        @<b>|issue_fifo_wdata.expt.addr_offset = 2;|
+                    if issue_is_rdata_saved {
+                        issue_fifo_wvalid                 = 1;
+                        issue_fifo_wdata.addr             = {issue_saved_addr[msb:3], offset};
+                        issue_fifo_wdata.bits             = {rdata[15:0], issue_saved_bits};
+                        issue_fifo_wdata.is_rvc           = 0;
+                        @<b>|issue_fifo_wdata.expt.addr_offset = 2;|
 #@end
 //}
 
@@ -610,9 +610,9 @@ xtvalを生成するとき、オフセットを足します
 
 //list[core.veryl.exptoffset.offset][命令アドレスにオフセットを足す (core.veryl)]{
 #@maprange(scripts/24/exptoffset-range/core/src/core.veryl,offset)
-    exq_wdata.expt.valid = 1;
-    exq_wdata.expt.cause = CsrCause::INSTRUCTION_PAGE_FAULT;
-    exq_wdata.expt.value = ids_pc @<b>|+ {1'b0 repeat XLEN - 3, i_membus.expt.addr_offset}|;
+            exq_wdata.expt.valid = 1;
+            exq_wdata.expt.cause = CsrCause::INSTRUCTION_PAGE_FAULT;
+            exq_wdata.expt.value = ids_pc @<b>|+ {1'b0 repeat XLEN - 3, i_membus.expt.addr_offset}|;
 #@end
 //}
 
@@ -649,13 +649,13 @@ satpレジスタを実装します
 
 //list[csrunit.veryl.satp.reset][satpレジスタを0でリセットする (csrunit.veryl)]{
 #@maprange(scripts/24/satp-range/core/src/csrunit.veryl,reset)
-    satp       = 0;
+            satp       = 0;
 #@end
 //}
 
 //list[csrunit.veryl.satp.rdata][rdataにsatpレジスタの値を設定する (csrunit.veryl)]{
 #@maprange(scripts/24/satp-range/core/src/csrunit.veryl,rdata)
-    CsrAddr::SATP      : satp,
+            CsrAddr::SATP      : satp,
 #@end
 //}
 
@@ -667,7 +667,7 @@ satpレジスタを実装します
 
 //list[csrunit.veryl.satp.wmask][wmaskに書き込みマスクを設定する (csrunit.veryl)]{
 #@maprange(scripts/24/satp-range/core/src/csrunit.veryl,wmask)
-    CsrAddr::SATP      : SATP_WMASK,
+            CsrAddr::SATP      : SATP_WMASK,
 #@end
 //}
 
@@ -700,7 +700,7 @@ MODEには@<code>{0}と@<code>{8}のみ書き込めるようにして、
 
 //list[csrunit.veryl.satp.write][satpレジスタに書き込む (csrunit.veryl)]{
 #@maprange(scripts/24/satp-range/core/src/csrunit.veryl,write)
-    CsrAddr::SATP      : satp       = validate_satp(satp, wdata);
+                            CsrAddr::SATP      : satp       = validate_satp(satp, wdata);
 #@end
 //}
 
@@ -743,12 +743,12 @@ mstatus.MPRVは、M-mode以外のモードに戻るときに@<code>{0}に設定�
 
 //list[csrunit.veryl.mstatuses.mprv][mstatus.MPRVをMRET、SRET命令で0に設定する (csrunit.veryl)]{
 #@maprange(scripts/24/mstatuses-range/core/src/csrunit.veryl,mprv)
-    } else if trap_return {
-        @<b>|// set mstatus.mprv = 0 when new mode != M-mode|
-        @<b>|if trap_mode_next <: PrivMode::M {|
-        @<b>|    mstatus[17] = 0;|
-        @<b>|}|
-        if is_mret {
+                    } else if trap_return {
+                        @<b>|// set mstatus.mprv = 0 when new mode != M-mode|
+                        @<b>|if trap_mode_next <: PrivMode::M {|
+                        @<b>|    mstatus[17] = 0;|
+                        @<b>|}|
+                        if is_mret {
 #@end
 //}
 
@@ -1437,19 +1437,19 @@ A、Dビットの更新では下位8ビットのみの書き込みマスクを�
 
 //list[ptw.veryl.sv39.assign_master][masterに要求を割り当てる (ptw.veryl)]{
 #@maprange(scripts/24/sv39-range/core/src/ptw.veryl,assign_master)
-case state {
-    State::IDLE      : accept_request_comb();
-    @<b>|State::WALK_READY: assign_master      (taddr, 0, 0, 0);|
-    @<b>|State::SET_AD    : assign_master      (taddr, 1, // wen = 1|
-    @<b>| {1'b0 repeat MEMBUS_DATA_WIDTH - 8, wdata_ad}, // wdata|
-    @<b>| {1'b0 repeat XLEN / 8 - 1, 1'b1} // wmask|
-    @<b>|);|
-    State::EXECUTE_READY: assign_master(physical_addr, slave_saved.wen, slave_saved.wdata, slave_saved.wmask);
-    State::EXECUTE_VALID: if master.rvalid {
-        accept_request_comb();
-    }
-    default: {}
-}
+        case state {
+            State::IDLE      : accept_request_comb();
+            @<b>|State::WALK_READY: assign_master      (taddr, 0, 0, 0);|
+            @<b>|State::SET_AD    : assign_master      (taddr, 1, // wen = 1|
+            @<b>| {1'b0 repeat MEMBUS_DATA_WIDTH - 8, wdata_ad}, // wdata|
+            @<b>| {1'b0 repeat XLEN / 8 - 1, 1'b1} // wmask|
+            @<b>|);|
+            State::EXECUTE_READY: assign_master(physical_addr, slave_saved.wen, slave_saved.wdata, slave_saved.wmask);
+            State::EXECUTE_VALID: if master.rvalid {
+                accept_request_comb();
+            }
+            default: {}
+        }
 #@end
 //}
 
@@ -1458,11 +1458,11 @@ case state {
 
 //list[ptw.veryl.sv39.assign_slave][ページフォルト例外のときの結果を割り当てる (ptw.veryl)]{
 #@maprange(scripts/24/sv39-range/core/src/ptw.veryl,assign_slave)
-State::PAGE_FAULT: {
-    slave.rvalid          = 1;
-    slave.expt.valid      = 1;
-    slave.expt.page_fault = 1;
-}
+            State::PAGE_FAULT: {
+                slave.rvalid          = 1;
+                slave.expt.valid      = 1;
+                slave.expt.page_fault = 1;
+            }
 #@end
 //}
 
@@ -1473,14 +1473,14 @@ State::PAGE_FAULT: {
 
 //list[ptw.veryl.sv39.accept][ページングが有効なときの要求の受け入れ (ptw.veryl)]{
 #@maprange(scripts/24/sv39-range/core/src/ptw.veryl,accept)
-if paging_enabled {
-    @<b>|state = if is_valid_vaddr(slave.addr) ? State::WALK_READY : State::PAGE_FAULT;|
-    @<b>|taddr = get_first_pte_address(ctrl.satp, slave.addr);|
-    @<b>|level = LEVELS - 1;|
-} else {
-    state         = if master.ready ? State::EXECUTE_VALID : State::EXECUTE_READY;
-    physical_addr = slave.addr;
-}
+            if paging_enabled {
+                @<b>|state = if is_valid_vaddr(slave.addr) ? State::WALK_READY : State::PAGE_FAULT;|
+                @<b>|taddr = get_first_pte_address(ctrl.satp, slave.addr);|
+                @<b>|level = LEVELS - 1;|
+            } else {
+                state         = if master.ready ? State::EXECUTE_VALID : State::EXECUTE_READY;
+                physical_addr = slave.addr;
+            }
 #@end
 //}
 
@@ -1489,7 +1489,7 @@ if paging_enabled {
 
 //list[ptw.veryl.sv39.clockpf][ページフォルト例外が発生したときの状態遷移 (ptw.veryl)]{
 #@maprange(scripts/24/sv39-range/core/src/ptw.veryl,clockpf)
-State::PAGE_FAULT: state = State::IDLE;
+            State::PAGE_FAULT: state = State::IDLE;
 #@end
 //}
 
@@ -1498,9 +1498,9 @@ A、Dビットを更新するとき、メモリが書き込み要求を受け入
 
 //list[ptw.veryl.sv39.clockad][A、Dビットを更新したときの状態遷移 (ptw.veryl)]{
 #@maprange(scripts/24/sv39-range/core/src/ptw.veryl,clockad)
-State::SET_AD: if master.ready {
-    state = State::EXECUTE_READY;
-}
+            State::SET_AD: if master.ready {
+                state = State::EXECUTE_READY;
+            }
 #@end
 //}
 
@@ -1539,33 +1539,33 @@ PTEをフェッチしてページフォルト例外を判定し、次のPTEの�
 
 //list[ptw.veryl.sv39.walk][PTEのフェッチとPTEの確認 (ptw.veryl)]{
 #@maprange(scripts/24/sv39-range/core/src/ptw.veryl,walk)
-State::WALK_READY: if master.ready {
-    state = State::WALK_VALID;
-}
-State::WALK_VALID: if master.rvalid {
-    if !pte.is_valid(level) {
-        state = State::PAGE_FAULT;
-    } else {
-        if pte.is_leaf() {
-            if check_permission(slave_saved) {
-                physical_addr = pte.get_physical_address(level, slave_saved.addr);
-                if pte.need_update_ad(slave_saved.wen) {
-                    state    = State::SET_AD;
-                    wdata_ad = pte.get_updated_ad(slave_saved.wen);
-                } else {
-                    state = State::EXECUTE_READY;
-                }
-            } else {
-                state = State::PAGE_FAULT;
+            State::WALK_READY: if master.ready {
+                state = State::WALK_VALID;
             }
-        } else {
-            // read next pte
-            state = State::WALK_READY;
-            taddr = pte.get_next_pte_addr(level, slave_saved.addr);
-            level = level - 1;
-        }
-    }
-}
+            State::WALK_VALID: if master.rvalid {
+                if !pte.is_valid(level) {
+                    state = State::PAGE_FAULT;
+                } else {
+                    if pte.is_leaf() {
+                        if check_permission(slave_saved) {
+                            physical_addr = pte.get_physical_address(level, slave_saved.addr);
+                            if pte.need_update_ad(slave_saved.wen) {
+                                state    = State::SET_AD;
+                                wdata_ad = pte.get_updated_ad(slave_saved.wen);
+                            } else {
+                                state = State::EXECUTE_READY;
+                            }
+                        } else {
+                            state = State::PAGE_FAULT;
+                        }
+                    } else {
+                        // read next pte
+                        state = State::WALK_READY;
+                        taddr = pte.get_next_pte_addr(level, slave_saved.addr);
+                        level = level - 1;
+                    }
+                }
+            }
 #@end
 //}
 
@@ -1587,9 +1587,9 @@ SFENCE.VMA命令を有効な命令としてデコードします
 
 //list[inst_decoder.veryl.sfence.system][SFENCE.VMA命令を有効な命令としてデコードする (inst_decoder.veryl)]{
 #@maprange(scripts/24/sfence-range/core/src/inst_decoder.veryl,system)
- bits == 32'h10200073 || //SRET
- bits == 32'h10500073 || // WFI
- f7 == 7'b0001001 && bits[11:7] == 0, // SFENCE.VMA
+             bits == 32'h10200073 || //SRET
+             bits == 32'h10500073 || // WFI
+             f7 == 7'b0001001 && bits[11:7] == 0, // SFENCE.VMA
 #@end
 //}
 
@@ -1671,8 +1671,8 @@ csrunitモジュールに、フラッシュするためのフラグを追加し�
 
 //list[csrunit.veryl.flushcsr.port][csrunitモジュールのポートにフラッシュするためのフラグを追加する (csrunit.veryl)]{
 #@maprange(scripts/24/flushcsr-range/core/src/csrunit.veryl,port)
-@<b>|flush      : output  logic                   ,|
-minstret   : input   UInt64                  ,
+    @<b>|flush      : output  logic                   ,|
+    minstret   : input   UInt64                  ,
 #@end
 //}
 
@@ -1686,8 +1686,8 @@ minstret   : input   UInt64                  ,
 
 //list[core.veryl.flushcsr.csru][csrunitモジュールのflushフラグをcsru_flushに割り当てる (core.veryl)]{
 #@maprange(scripts/24/flushcsr-range/core/src/core.veryl,csru)
-@<b>|flush      : csru_flush           ,|
-minstret                          ,
+        @<b>|flush      : csru_flush           ,|
+        minstret                          ,
 #@end
 //}
 

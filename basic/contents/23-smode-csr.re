@@ -130,17 +130,17 @@ scounterenレジスタを作成し、読み書きできるようにします
 
 //list[csrunit.veryl.scounteren.reset][scounterenレジスタを0でリセットする (csrunit.veryl)]{
 #@maprange(scripts/23/scounteren-range/core/src/csrunit.veryl,reset)
-    mtval      = 0;
-    @<b>|scounteren = 0;|
-    led        = 0;
+            mtval      = 0;
+            @<b>|scounteren = 0;|
+            led        = 0;
 #@end
 //}
 
 //list[csrunit.veryl.scounteren.rdata][rdataにscounterenレジスタの値を設定する (csrunit.veryl)]{
 #@maprange(scripts/23/scounteren-range/core/src/csrunit.veryl,rdata)
-    CsrAddr::MTVAL     : mtval,
-    @<b>|CsrAddr::SCOUNTEREN: {1'b0 repeat XLEN - 32, scounteren},|
-    CsrAddr::LED       : led,
+            CsrAddr::MTVAL     : mtval,
+            @<b>|CsrAddr::SCOUNTEREN: {1'b0 repeat XLEN - 32, scounteren},|
+            CsrAddr::LED       : led,
 #@end
 //}
 
@@ -152,17 +152,17 @@ scounterenレジスタを作成し、読み書きできるようにします
 
 //list[csrunit.veryl.scounteren.wmask][wmaskに書き込みマスクを設定する (csrunit.veryl)]{
 #@maprange(scripts/23/scounteren-range/core/src/csrunit.veryl,wmask)
-    CsrAddr::MTVAL     : MTVAL_WMASK,
-    @<b>|CsrAddr::SCOUNTEREN: SCOUNTEREN_WMASK,|
-    CsrAddr::LED       : LED_WMASK,
+            CsrAddr::MTVAL     : MTVAL_WMASK,
+            @<b>|CsrAddr::SCOUNTEREN: SCOUNTEREN_WMASK,|
+            CsrAddr::LED       : LED_WMASK,
 #@end
 //}
 
 //list[csrunit.veryl.scounteren.write][scounterenレジスタに書き込む (csrunit.veryl)]{
 #@maprange(scripts/23/scounteren-range/core/src/csrunit.veryl,write)
-    CsrAddr::MTVAL     : mtval      = wdata;
-    @<b>|CsrAddr::SCOUNTEREN: scounteren = wdata[31:0];|
-    CsrAddr::LED       : led        = wdata;
+                            CsrAddr::MTVAL     : mtval      = wdata;
+                            @<b>|CsrAddr::SCOUNTEREN: scounteren = wdata[31:0];|
+                            CsrAddr::LED       : led        = wdata;
 #@end
 //}
 
@@ -208,9 +208,9 @@ sstatusレジスタの書き込みマスクを定義します
 
 //list[csrunit.veryl.sstatus.wmask][wmaskに書き込みマスクを設定する (csrunit.veryl)]{
 #@maprange(scripts/23/sstatus-range/core/src/csrunit.veryl,wmask)
-    CsrAddr::MTVAL     : MTVAL_WMASK,
-    @<b>|CsrAddr::SSTATUS   : SSTATUS_WMASK,|
-    CsrAddr::SCOUNTEREN: SCOUNTEREN_WMASK,
+            CsrAddr::MTVAL     : MTVAL_WMASK,
+            @<b>|CsrAddr::SSTATUS   : SSTATUS_WMASK,|
+            CsrAddr::SCOUNTEREN: SCOUNTEREN_WMASK,
 #@end
 //}
 
@@ -235,9 +235,9 @@ sstatusレジスタの書き込みマスクを定義します
 
 //list[csrunit.veryl.sstatus.rdata][rdataにsstatusレジスタの値を設定する (csrunit.veryl)]{
 #@maprange(scripts/23/sstatus-range/core/src/csrunit.veryl,rdata)
-    CsrAddr::MTVAL     : mtval,
-    @<b>|CsrAddr::SSTATUS   : sstatus,|
-    CsrAddr::SCOUNTEREN: {1'b0 repeat XLEN - 32, scounteren},
+            CsrAddr::MTVAL     : mtval,
+            @<b>|CsrAddr::SSTATUS   : sstatus,|
+            CsrAddr::SCOUNTEREN: {1'b0 repeat XLEN - 32, scounteren},
 #@end
 //}
 
@@ -248,7 +248,7 @@ sstatusレジスタの書き込みマスクを定義します
 
 //list[csrunit.veryl.sstatus.write][sstatusレジスタへの書き込みでmstatusレジスタに書き込む (csrunit.veryl)]{
 #@maprange(scripts/23/sstatus-range/core/src/csrunit.veryl,write)
-    CsrAddr::SSTATUS   : mstatus    = validate_mstatus(mstatus, wdata | mstatus & ~SSTATUS_WMASK);
+                            CsrAddr::SSTATUS   : mstatus    = validate_mstatus(mstatus, wdata | mstatus & ~SSTATUS_WMASK);
 #@end
 //}
 
@@ -334,21 +334,21 @@ S-modeに委譲されたトラップで使用するstvec、sscratch、sepc、sca
 
 //list[csrunit.veryl.trapreg.reset][レジスタを0でリセットする (csrunit.veryl)]{
 #@maprange(scripts/23/trapreg-range/core/src/csrunit.veryl,reset)
-    stvec      = 0;
-    sscratch   = 0;
-    sepc       = 0;
-    scause     = 0;
-    stval      = 0;
+            stvec      = 0;
+            sscratch   = 0;
+            sepc       = 0;
+            scause     = 0;
+            stval      = 0;
 #@end
 //}
 
 //list[csrunit.veryl.trapreg.rdata][rdataにレジスタの値を割り当てる (csrunit.veryl)]{
 #@maprange(scripts/23/trapreg-range/core/src/csrunit.veryl,rdata)
-    CsrAddr::STVEC     : stvec,
-    CsrAddr::SSCRATCH  : sscratch,
-    CsrAddr::SEPC      : sepc,
-    CsrAddr::SCAUSE    : scause,
-    CsrAddr::STVAL     : stval,
+            CsrAddr::STVEC     : stvec,
+            CsrAddr::SSCRATCH  : sscratch,
+            CsrAddr::SEPC      : sepc,
+            CsrAddr::SCAUSE    : scause,
+            CsrAddr::STVAL     : stval,
 #@end
 //}
 
@@ -366,21 +366,21 @@ S-modeに委譲されたトラップで使用するstvec、sscratch、sepc、sca
 
 //list[csrunit.veryl.trapreg.wmask][wmaskに書き込みマスクを設定する (csrunit.veryl)]{
 #@maprange(scripts/23/trapreg-range/core/src/csrunit.veryl,wmask)
-    CsrAddr::STVEC     : STVEC_WMASK,
-    CsrAddr::SSCRATCH  : SSCRATCH_WMASK,
-    CsrAddr::SEPC      : SEPC_WMASK,
-    CsrAddr::SCAUSE    : SCAUSE_WMASK,
-    CsrAddr::STVAL     : STVAL_WMASK,
+            CsrAddr::STVEC     : STVEC_WMASK,
+            CsrAddr::SSCRATCH  : SSCRATCH_WMASK,
+            CsrAddr::SEPC      : SEPC_WMASK,
+            CsrAddr::SCAUSE    : SCAUSE_WMASK,
+            CsrAddr::STVAL     : STVAL_WMASK,
 #@end
 //}
 
 //list[csrunit.veryl.trapreg.write][レジスタの書き込み (csrunit.veryl)]{
 #@maprange(scripts/23/trapreg-range/core/src/csrunit.veryl,write)
-    CsrAddr::STVEC     : stvec      = wdata;
-    CsrAddr::SSCRATCH  : sscratch   = wdata;
-    CsrAddr::SEPC      : sepc       = wdata;
-    CsrAddr::SCAUSE    : scause     = wdata;
-    CsrAddr::STVAL     : stval      = wdata;
+                            CsrAddr::STVEC     : stvec      = wdata;
+                            CsrAddr::SSCRATCH  : sscratch   = wdata;
+                            CsrAddr::SEPC      : sepc       = wdata;
+                            CsrAddr::SCAUSE    : scause     = wdata;
+                            CsrAddr::STVAL     : stval      = wdata;
 #@end
 //}
 
@@ -423,28 +423,28 @@ mtvecを使っていたところを新しい変数に置き換えます。
 
 //list[csrunit.veryl.trapregchange.ff][遷移先の特権レベルによってトラップ処理を分岐する (csrunit.veryl)]{
 #@maprange(scripts/23/trapregchange-range/core/src/csrunit.veryl,ff)
-if raise_expt || raise_interrupt {
-    @<b>|let x|epc@<b>|: Addr| = if raise_expt ? pc : // exception
-     if raise_interrupt && is_wfi ? pc + 4 : pc; // interrupt when wfi / interrupt
-    @<b>|if trap_mode_next == PrivMode::M {|
-        @<b>|mepc   = xepc;|
-        mcause = trap_cause;
-        if raise_expt {
-            mtval = expt_value;
-        }
-        // save mstatus.mie to mstatus.mpie
-        // and set mstatus.mie = 0
-        mstatus[7] = mstatus[3];
-        mstatus[3] = 0;
-        // save current privilege level to mstatus.mpp
-        mstatus[12:11] = mode;
-    @<b>|} else {|
-        @<b>|sepc   = xepc;|
-        @<b>|scause = trap_cause;|
-        @<b>|if raise_expt {|
-        @<b>|    stval = expt_value;|
-        @<b>|}|
-    @<b>|}|
+                    if raise_expt || raise_interrupt {
+                        @<b>|let x|epc@<b>|: Addr| = if raise_expt ? pc : // exception
+                        if raise_interrupt && is_wfi ? pc + 4 : pc; // interrupt when wfi / interrupt
+                        @<b>|if trap_mode_next == PrivMode::M {|
+                            @<b>|mepc   = xepc;|
+                            mcause = trap_cause;
+                            if raise_expt {
+                                mtval = expt_value;
+                            }
+                            // save mstatus.mie to mstatus.mpie
+                            // and set mstatus.mie = 0
+                            mstatus[7] = mstatus[3];
+                            mstatus[3] = 0;
+                            // save current privilege level to mstatus.mpp
+                            mstatus[12:11] = mode;
+                        @<b>|} else {|
+                        @<b>|   sepc   = xepc;|
+                        @<b>|   scause = trap_cause;|
+                        @<b>|   if raise_expt {|
+                        @<b>|       stval = expt_value;|
+                        @<b>|   }|
+                        @<b>|}|
 #@end
 //}
 
@@ -483,19 +483,19 @@ sstatus.SPPにトラップ前の特権レベルを格納します
 
 //list[csrunit.veryl.spp.ff][sstatus.SPIE、SIE、SPPをトラップで変更する (csrunit.veryl)]{
 #@maprange(scripts/23/spp-range/core/src/csrunit.veryl,ff)
-    } else {
-        sepc   = xepc;
-        scause = trap_cause;
-        if raise_expt {
-            stval = expt_value;
-        }
-        @<b>|// save sstatus.sie to sstatus.spie|
-        @<b>|// and set sstatus.sie = 0|
-        @<b>|mstatus[5] = mstatus[1];|
-        @<b>|mstatus[1] = 0;|
-        @<b>|// save current privilege mode (S or U) to sstatus.spp|
-        @<b>|mstatus[8] = mode[0];|
-    }
+                        } else {
+                            sepc   = xepc;
+                            scause = trap_cause;
+                            if raise_expt {
+                                stval = expt_value;
+                            }
+                            @<b>|// save sstatus.sie to sstatus.spie|
+                            @<b>|// and set sstatus.sie = 0|
+                            @<b>|mstatus[5] = mstatus[1];|
+                            @<b>|mstatus[1] = 0;|
+                            @<b>|// save current privilege mode (S or U) to sstatus.spp|
+                            @<b>|mstatus[8] = mode[0];|
+                        }
 #@end
 //}
 
@@ -511,12 +511,12 @@ inst_decoderモジュールでSRET命令をデコードできるようにしま�
 
 //list[inst_decoder.veryl.sret.SRET][SRET命令のときvalidを1にする (inst_decoder.veryl)]{
 #@maprange(scripts/23/sret-range/core/src/inst_decoder.veryl,SRET)
-   OP_SYSTEM: f3 != 3'b000 && f3 != 3'b100 || // CSRR(W|S|C)[I]
-    bits == 32'h00000073 || // ECALL
-    bits == 32'h00100073 || // EBREAK
-    bits == 32'h30200073 || //MRET
-    @<b>{bits == 32'h10200073 || //SRET}
-    bits == 32'h10500073, // WFI
+            OP_SYSTEM: f3 != 3'b000 && f3 != 3'b100 || // CSRR(W|S|C)[I]
+             bits == 32'h00000073 || // ECALL
+             bits == 32'h00100073 || // EBREAK
+             bits == 32'h30200073 || //MRET
+             @<b>{bits == 32'h10200073 || //SRET}
+             bits == 32'h10500073, // WFI
 #@end
 //}
 
@@ -560,23 +560,23 @@ sstatus.SPPに実装がサポートする最小の特権レベル(U-mode)を示�
 
 //list[csrunit.veryl.sret.ff][SRET命令によるsstatusの変更 (csrunit.veryl)]{
 #@maprange(scripts/23/sret-range/core/src/csrunit.veryl,ff)
-    } else if trap_return {
-        @<b>|if is_mret {|
-            // set mstatus.mie = mstatus.mpie
-            //     mstatus.mpie = 0
-            mstatus[3] = mstatus[7];
-            mstatus[7] = 0;
-            // set mstatus.mpp = U (least privilege level)
-            mstatus[12:11] = PrivMode::U;
-        @<b>|} else if is_sret {|
-        @<b>|    // set sstatus.sie = sstatus.spie|
-        @<b>|    //     sstatus.spie = 0|
-        @<b>|    mstatus[1] = mstatus[5];|
-        @<b>|    mstatus[5] = 0;|
-        @<b>|    // set sstatus.spp = U (least privilege level)|
-        @<b>|    mstatus[8] = 0;|
-        @<b>|}|
-    }
+                    } else if trap_return {
+                        @<b>|if is_mret {|
+                            // set mstatus.mie = mstatus.mpie
+                            //     mstatus.mpie = 0
+                            mstatus[3] = mstatus[7];
+                            mstatus[7] = 0;
+                            // set mstatus.mpp = U (least privilege level)
+                            mstatus[12:11] = PrivMode::U;
+                        @<b>|} else if is_sret {|
+                        @<b>|    // set sstatus.sie = sstatus.spie|
+                        @<b>|    //     sstatus.spie = 0|
+                        @<b>|    mstatus[1] = mstatus[5];|
+                        @<b>|    mstatus[5] = 0;|
+                        @<b>|    // set sstatus.spp = U (least privilege level)|
+                        @<b>|    mstatus[8] = 0;|
+                        @<b>|}|
+                    }
 #@end
 //}
 
@@ -655,7 +655,7 @@ mieレジスタのSEIE、SSIE、STIEビットを変更できるようにしま�
 
 //list[csrunit.veryl.mipreg.wmask][wmaskに書き込みマスクを設定する (csrunit.veryl)]{
 #@maprange(scripts/23/mipreg-range/core/src/csrunit.veryl,wmask)
-    CsrAddr::MIP       : MIP_WMASK,
+            CsrAddr::MIP       : MIP_WMASK,
 #@end
 //}
 
@@ -679,17 +679,17 @@ mieレジスタのSEIE、SSIE、STIEビットを変更できるようにしま�
 
 //list[csrunit.veryl.mipreg.reset][レジスタの値を0でリセットする (csrunit.veryl)]{
 #@maprange(scripts/23/mipreg-range/core/src/csrunit.veryl,reset)
-    mie        = 0;
-    @<b>|mip_reg    = 0;|
-    mcounteren = 0;
+            mie        = 0;
+            @<b>|mip_reg    = 0;|
+            mcounteren = 0;
 #@end
 //}
 
 //list[csrunit.veryl.mipreg.write][mipレジスタの書き込み (csrunit.veryl)]{
 #@maprange(scripts/23/mipreg-range/core/src/csrunit.veryl,write)
-    CsrAddr::MTVEC     : mtvec      = wdata;
-    @<b>|CsrAddr::MIP       : mip_reg    = wdata & MIP_WMASK;|
-    CsrAddr::MIE       : mie        = wdata;
+                            CsrAddr::MTVEC     : mtvec      = wdata;
+                            @<b>|CsrAddr::MIP       : mip_reg    = wdata & MIP_WMASK;|
+                            CsrAddr::MIE       : mie        = wdata;
 #@end
 //}
 
@@ -748,28 +748,28 @@ sieレジスタはmidelegレジスタで委譲された割り込みに対応す�
 
 //list[csrunit.veryl.siesipdeleg.deleg_reset][medeleg、midelegレジスタを0でリセットする (csrunit.veryl)]{
 #@maprange(scripts/23/siesipdeleg-range/core/src/csrunit.veryl,deleg_reset)
-    medeleg    = 0;
-    mideleg    = 0;
+            medeleg    = 0;
+            mideleg    = 0;
 #@end
 //}
 
 //list[csrunit.veryl.siesipdeleg.si_reset][sieレジスタを0でリセットする (csrunit.veryl)]{
 #@maprange(scripts/23/siesipdeleg-range/core/src/csrunit.veryl,sie_reset)
-    sie        = 0;
+            sie        = 0;
 #@end
 //}
 
 //list[csrunit.veryl.siesipdeleg.deleg_rdata][rdataにmedeleg、midelegレジスタの値を割り当てる (csrunit.veryl)]{
 #@maprange(scripts/23/siesipdeleg-range/core/src/csrunit.veryl,deleg_rdata)
-    CsrAddr::MEDELEG   : medeleg,
-    CsrAddr::MIDELEG   : mideleg,
+            CsrAddr::MEDELEG   : medeleg,
+            CsrAddr::MIDELEG   : mideleg,
 #@end
 //}
 
 //list[csrunit.veryl.siesipdeleg.si_rdata][rdataにsip、sieレジスタの値を割り当てる (csrunit.veryl)]{
 #@maprange(scripts/23/siesipdeleg-range/core/src/csrunit.veryl,si_rdata)
-    CsrAddr::SIP       : sip,
-    CsrAddr::SIE       : sie & mideleg,
+            CsrAddr::SIP       : sip,
+            CsrAddr::SIE       : sie & mideleg,
 #@end
 //}
 
@@ -798,28 +798,28 @@ sieレジスタはmidelegレジスタで委譲された割り込みに対応す�
 
 //list[csrunit.veryl.siesipdeleg.deleg_wmask][wmaskに書き込みマスクを設定する (csrunit.veryl)]{
 #@maprange(scripts/23/siesipdeleg-range/core/src/csrunit.veryl,deleg_wmask)
-    CsrAddr::MEDELEG   : MEDELEG_WMASK,
-    CsrAddr::MIDELEG   : MIDELEG_WMASK,
+            CsrAddr::MEDELEG   : MEDELEG_WMASK,
+            CsrAddr::MIDELEG   : MIDELEG_WMASK,
 #@end
 //}
 
 //list[csrunit.veryl.siesipdeleg.sie_wmask][wmaskに書き込みマスクを設定する (csrunit.veryl)]{
 #@maprange(scripts/23/siesipdeleg-range/core/src/csrunit.veryl,sie_wmask)
-    CsrAddr::SIE       : SIE_WMASK & mideleg,
+            CsrAddr::SIE       : SIE_WMASK & mideleg,
 #@end
 //}
 
 
 //list[csrunit.veryl.siesipdeleg.deleg_write][medeleg、midelegレジスタの書き込み (csrunit.veryl)]{
 #@maprange(scripts/23/siesipdeleg-range/core/src/csrunit.veryl,deleg_write)
-    CsrAddr::MEDELEG   : medeleg    = wdata;
-    CsrAddr::MIDELEG   : mideleg    = wdata;
+                            CsrAddr::MEDELEG   : medeleg    = wdata;
+                            CsrAddr::MIDELEG   : mideleg    = wdata;
 #@end
 //}
 
 //list[csrunit.veryl.siesipdeleg.sie_write][sieレジスタの書き込み (csrunit.veryl)]{
 #@maprange(scripts/23/siesipdeleg-range/core/src/csrunit.veryl,sie_write)
-    CsrAddr::SIE       : sie        = wdata;
+                            CsrAddr::SIE       : sie        = wdata;
 #@end
 //}
 
@@ -963,14 +963,14 @@ csrunitモジュールで@<code>{setssip}を確認し、mip.SSIPを立てるよ�
 
 //list[csrunit.veryl.sswi.update][setssipでmipを更新する (csrunit.veryl)]{
 #@maprange(scripts/23/sswi-range/core/src/csrunit.veryl,update)
-    } else {
-        mcycle  += 1;
-        mip_reg |= setssip;
+        } else {
+            mcycle  += 1;
+            mip_reg |= setssip;
 #@end
 //}
 
 //list[csrunit.veryl.sswi.write][setssipでmipを更新する (csrunit.veryl)]{
 #@maprange(scripts/23/sswi-range/core/src/csrunit.veryl,write)
-    CsrAddr::MIP       : mip_reg    = @<b>{(}wdata & MIP_WMASK@<b>{) | setssip};
+                            CsrAddr::MIP       : mip_reg    = @<b>{(}wdata & MIP_WMASK@<b>{) | setssip};
 #@end
 //}

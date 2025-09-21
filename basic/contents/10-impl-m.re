@@ -130,15 +130,15 @@ opcodeが@<code>{OP}か@<code>{OP-32}の場合はfunct7の値によって@<code>
 
 //list[inst_decoder.veryl.create-mdu-range.ctrl][is_muldivを設定する (inst_decoder.veryl) (一部)]{
 #@maprange(scripts/10/create-mdu-range/core/src/inst_decoder.veryl,ctrl)
-    OP_OP: {
-        InstType::R, T, F, T, @<b>|f7 == 7'b0000001,| F, F, F, F
-    },
-    OP_OP_IMM: {
-        InstType::I, T, F, T, @<b>|F,| F, F, F, F
-    },
-    OP_OP_32: {
-        InstType::R, T, F, T, @<b>|f7 == 7'b0000001,| T, F, F, F
-    },
+                OP_OP: {
+                    InstType::R, T, F, T, @<b>|f7 == 7'b0000001,| F, F, F, F
+                },
+                OP_OP_IMM: {
+                    InstType::I, T, F, T, @<b>|F,| F, F, F, F
+                },
+                OP_OP_32: {
+                    InstType::R, T, F, T, @<b>|f7 == 7'b0000001,| T, F, F, F
+                },
 #@end
 //}
 
@@ -567,13 +567,13 @@ abs関数を利用して、MUL、MULH命令のときにmulunitに渡す値を絶
 
 //list[muldivunit.veryl.mulmulh-range.idle][符号を変数に保存する (muldivunit.veryl)]{
 #@maprange(scripts/10/mulmulh-range/core/src/muldivunit.veryl,idle)
-    case state {
-        State::Idle: if ready && valid {
-            state         = State::WaitValid;
-            funct3_saved  = funct3;
-            @<b>|op1sign_saved = op1[msb];|
-            @<b>|op2sign_saved = op2[msb];|
-        }
+            case state {
+                State::Idle: if ready && valid {
+                    state         = State::WaitValid;
+                    funct3_saved  = funct3;
+                    @<b>|op1sign_saved = op1[msb];|
+                    @<b>|op2sign_saved = op2[msb];|
+                }
 #@end
 //}
 
@@ -582,16 +582,16 @@ abs関数を利用して、MUL、MULH命令のときにmulunitに渡す値を絶
 
 //list[muldivunit.veryl.mulmulh-range.wait_valid][計算結果の符号を復元する (muldivunit.veryl)]{
 #@maprange(scripts/10/mulmulh-range/core/src/muldivunit.veryl,wait_valid)
-    State::WaitValid: if is_mul && mu_rvalid {
-        @<b>|let res_signed: logic<MUL_RES_WIDTH> = if op1sign_saved != op2sign_saved ? ~mu_result + 1 : mu_result;|
-        state      = State::Finish;
-        result     = case funct3_saved[1:0] {
-            @<b>|2'b00  : res_signed[XLEN - 1:0], // MUL|
-            @<b>|2'b01  : res_signed[XLEN+:XLEN], // MULH|
-            2'b11  : mu_result[XLEN+:XLEN], // MULHU
-            default: 0,
-        };
-    }
+                State::WaitValid: if is_mul && mu_rvalid {
+                    @<b>|let res_signed: logic<MUL_RES_WIDTH> = if op1sign_saved != op2sign_saved ? ~mu_result + 1 : mu_result;|
+                    state      = State::Finish;
+                    result     = case funct3_saved[1:0] {
+                        @<b>|2'b00  : res_signed[XLEN - 1:0], // MUL|
+                        @<b>|2'b01  : res_signed[XLEN+:XLEN], // MULH|
+                        2'b11  : mu_result[XLEN+:XLEN], // MULHU
+                        default: 0,
+                    };
+                }
 #@end
 //}
 
@@ -628,18 +628,18 @@ MULHSU命令も、MUL、MULH命令と同様に符号無しの乗算器で実現�
 
 //list[muldivunit.veryl.mulhsu-range.result][計算結果の符号を復元する (muldivunit.veryl)]{
 #@maprange(scripts/10/mulhsu-range/core/src/muldivunit.veryl,result)
-    State::WaitValid: if is_mul && mu_rvalid {
-        let res_signed: logic<MUL_RES_WIDTH> = if op1sign_saved != op2sign_saved ? ~mu_result + 1 : mu_result;
-        @<b>|let res_mulhsu: logic<MUL_RES_WIDTH> = if op1sign_saved == 1 ? ~mu_result + 1 : mu_result;|
-        state      = State::Finish;
-        result     = case funct3_saved[1:0] {
-            2'b00  : res_signed[XLEN - 1:0], // MUL
-            2'b01  : res_signed[XLEN+:XLEN], // MULH
-            @<b>|2'b10  : res_mulhsu[XLEN+:XLEN], // MULHSU|
-            2'b11  : mu_result[XLEN+:XLEN], // MULHU
-            default: 0,
-        };
-    }
+                State::WaitValid: if is_mul && mu_rvalid {
+                    let res_signed: logic<MUL_RES_WIDTH> = if op1sign_saved != op2sign_saved ? ~mu_result + 1 : mu_result;
+                    @<b>|let res_mulhsu: logic<MUL_RES_WIDTH> = if op1sign_saved == 1 ? ~mu_result + 1 : mu_result;|
+                    state      = State::Finish;
+                    result     = case funct3_saved[1:0] {
+                        2'b00  : res_signed[XLEN - 1:0], // MUL
+                        2'b01  : res_signed[XLEN+:XLEN], // MULH
+                        @<b>|2'b10  : res_mulhsu[XLEN+:XLEN], // MULHSU|
+                        2'b11  : mu_result[XLEN+:XLEN], // MULHU
+                        default: 0,
+                    };
+                }
 #@end
 //}
 
@@ -724,13 +724,13 @@ muldivunitモジュールが要求を受け入れる時に@<code>{is_op32}を保
 
 //list[muldivunit.veryl.mulw-range.idle][is_op32を変数に保存する (muldivunit.veryl)]{
 #@maprange(scripts/10/mulw-range/core/src/muldivunit.veryl,idle)
-    State::Idle: if ready && valid {
-        state         = State::WaitValid;
-        funct3_saved  = funct3;
-        @<b>|is_op32_saved = is_op32;|
-        op1sign_saved = op1[msb];
-        op2sign_saved = op2[msb];
-    }
+                State::Idle: if ready && valid {
+                    state         = State::WaitValid;
+                    funct3_saved  = funct3;
+                    @<b>|is_op32_saved = is_op32;|
+                    op1sign_saved = op1[msb];
+                    op2sign_saved = op2[msb];
+                }
 #@end
 //}
 
@@ -770,13 +770,13 @@ mulunitモジュールの@<code>{op1}と@<code>{op2}に、64ビットの値の�
 
 //list[muldivunit.veryl.mulw-range.wait_valid][計算結果を符号拡張する (muldivunit.veryl)]{
 #@maprange(scripts/10/mulw-range/core/src/muldivunit.veryl,wait_valid)
-    State::WaitValid: if is_mul && mu_rvalid {
-        let res_signed: logic<MUL_RES_WIDTH> = if op1sign_saved != op2sign_saved ? ~mu_result + 1 : mu_result;
-        let res_mulhsu: logic<MUL_RES_WIDTH> = if op1sign_saved == 1 ? ~mu_result + 1 : mu_result;
-        state      = State::Finish;
-        result     = case funct3_saved[1:0] {
-            2'b00  : @<b>|if is_op32_saved ? sext::<32, 64>(res_signed[31:0]) :| res_signed[XLEN - 1:0], // MUL@<b>|, MULW|
-            2'b01  : res_signed[XLEN+:XLEN], // MULH
+                State::WaitValid: if is_mul && mu_rvalid {
+                    let res_signed: logic<MUL_RES_WIDTH> = if op1sign_saved != op2sign_saved ? ~mu_result + 1 : mu_result;
+                    let res_mulhsu: logic<MUL_RES_WIDTH> = if op1sign_saved == 1 ? ~mu_result + 1 : mu_result;
+                    state      = State::Finish;
+                    result     = case funct3_saved[1:0] {
+                        2'b00  : @<b>|if is_op32_saved ? sext::<32, 64>(res_signed[31:0]) :| res_signed[XLEN - 1:0], // MUL@<b>|, MULW|
+                        2'b01  : res_signed[XLEN+:XLEN], // MULH
 #@end
 //}
 riscv-testsの@<code>{rv64um-p-mulw}を実行し、成功することを確認してください。
@@ -935,16 +935,16 @@ muldivunitモジュールで、divunitモジュールの処理が終わったら
 
 //list[muldivunit.veryl.divuremu-range.wait_valid][divunitモジュールの結果をresultに割り当てる (muldivunit.veryl)]{
 #@maprange(scripts/10/divuremu-range/core/src/muldivunit.veryl,wait_valid)
-    State::WaitValid: if is_mul && mu_rvalid {
-        ...
-    @<b>|} else if !is_mul && du_rvalid {|
-        @<b>|result = case funct3_saved[1:0] {|
-        @<b>|    2'b01  : du_quotient, // DIVU|
-        @<b>|    2'b11  : du_remainder, // REMU|
-        @<b>|    default: 0,|
-        @<b>|};|
-        @<b>|state = State::Finish;|
-    }
+                State::WaitValid: if is_mul && mu_rvalid {
+                    ...
+                @<b>|} else if !is_mul && du_rvalid {|
+                    @<b>|result = case funct3_saved[1:0] {|
+                    @<b>|    2'b01  : du_quotient, // DIVU|
+                    @<b>|    2'b11  : du_remainder, // REMU|
+                    @<b>|    default: 0,|
+                    @<b>|};|
+                    @<b>|state = State::Finish;|
+                }
 #@end
 //}
 
@@ -1028,25 +1028,25 @@ abs関数を利用して、DIV、REM命令のときにdivunitモジュールに�
 
 //list[muldivunit.veryl.divrem-range.idle][符号付き除算の例外的な結果を処理する (muldivunit.veryl)]{
 #@maprange(scripts/10/divrem-range/core/src/muldivunit.veryl,idle)
-    State::Idle: if ready && valid {
-        funct3_saved  = funct3;
-        is_op32_saved = is_op32;
-        op1sign_saved = op1[msb];
-        op2sign_saved = op2[msb];
-        @<b>|if is_mul {|
-            state = State::WaitValid;
-        @<b>|} else {|
-        @<b>|    if du_signed_overflow {|
-        @<b>|        state  = State::Finish;|
-        @<b>|        result = if funct3[1] ? 0 : {1'b1, 1'b0 repeat XLEN - 1}; // REM : DIV|
-        @<b>|    } else if du_signed_divzero {|
-        @<b>|        state  = State::Finish;|
-        @<b>|        result = if funct3[1] ? op1 : '1; // REM : DIV|
-        @<b>|    } else {|
-        @<b>|        state = State::WaitValid;|
-        @<b>|    }|
-        @<b>|}|
-    }
+                State::Idle: if ready && valid {
+                    funct3_saved  = funct3;
+                    is_op32_saved = is_op32;
+                    op1sign_saved = op1[msb];
+                    op2sign_saved = op2[msb];
+                    @<b>|if is_mul {|
+                        state = State::WaitValid;
+                    @<b>|} else {|
+                    @<b>|    if du_signed_overflow {|
+                    @<b>|        state  = State::Finish;|
+                    @<b>|        result = if funct3[1] ? 0 : {1'b1, 1'b0 repeat XLEN - 1}; // REM : DIV|
+                    @<b>|    } else if du_signed_divzero {|
+                    @<b>|        state  = State::Finish;|
+                    @<b>|        result = if funct3[1] ? op1 : '1; // REM : DIV|
+                    @<b>|    } else {|
+                    @<b>|        state = State::WaitValid;|
+                    @<b>|    }|
+                    @<b>|}|
+                }
 #@end
 //}
 
@@ -1057,18 +1057,18 @@ abs関数を利用して、DIV、REM命令のときにdivunitモジュールに�
 
 //list[muldivunit.veryl.divrem-range.wait_valid][計算結果の符号を復元する (muldivunit.veryl)]{
 #@maprange(scripts/10/divrem-range/core/src/muldivunit.veryl,wait_valid)
-    } else if !is_mul && du_rvalid {
-        @<b>|let quo_signed: logic<DIV_WIDTH> = if op1sign_saved != op2sign_saved ? ~du_quotient + 1 : du_quotient;|
-        @<b>|let rem_signed: logic<DIV_WIDTH> = if op1sign_saved == 1 ? ~du_remainder + 1 : du_remainder;|
-        result     = case funct3_saved[1:0] {
-            @<b>|2'b00  : quo_signed[XLEN - 1:0], // DIV|
-            2'b01  : du_quotient[XLEN - 1:0], // DIVU
-            @<b>|2'b10  : rem_signed[XLEN - 1:0], // REM|
-            2'b11  : du_remainder[XLEN - 1:0], // REMU
-            default: 0,
-        };
-        state = State::Finish;
-    }
+                } else if !is_mul && du_rvalid {
+                    @<b>|let quo_signed: logic<DIV_WIDTH> = if op1sign_saved != op2sign_saved ? ~du_quotient + 1 : du_quotient;|
+                    @<b>|let rem_signed: logic<DIV_WIDTH> = if op1sign_saved == 1 ? ~du_remainder + 1 : du_remainder;|
+                    result     = case funct3_saved[1:0] {
+                        @<b>|2'b00  : quo_signed[XLEN - 1:0], // DIV|
+                        2'b01  : du_quotient[XLEN - 1:0], // DIVU
+                        @<b>|2'b10  : rem_signed[XLEN - 1:0], // REM|
+                        2'b11  : du_remainder[XLEN - 1:0], // REMU
+                        default: 0,
+                    };
+                    state = State::Finish;
+                }
 #@end
 //}
 
@@ -1126,19 +1126,19 @@ generate_div_op関数に@<code>{is_op32}フラグを追加して、
 
 //list[muldivunit.veryl.divwremw-range.wait_valid][32ビット演算のとき、結果を符号拡張する (muldivunit.veryl)]{
 #@maprange(scripts/10/divwremw-range/core/src/muldivunit.veryl,wait_valid)
-    } else if !is_mul && du_rvalid {
-        let quo_signed: logic<DIV_WIDTH> = if op1sign_saved != op2sign_saved ? ~du_quotient + 1 : du_quotient;
-        let rem_signed: logic<DIV_WIDTH> = if op1sign_saved == 1 ? ~du_remainder + 1 : du_remainder;
-        @<b>|let resultX   : UIntX|            = case funct3_saved[1:0] {
-            2'b00  : quo_signed[XLEN - 1:0], // DIV
-            2'b01  : du_quotient[XLEN - 1:0], // DIVU
-            2'b10  : rem_signed[XLEN - 1:0], // REM
-            2'b11  : du_remainder[XLEN - 1:0], // REMU
-            default: 0,
-        };
-        state  = State::Finish;
-        @<b>|result = if is_op32_saved ? sext::<32, 64>(resultX[31:0]) : resultX;|
-    }
+                } else if !is_mul && du_rvalid {
+                    let quo_signed: logic<DIV_WIDTH> = if op1sign_saved != op2sign_saved ? ~du_quotient + 1 : du_quotient;
+                    let rem_signed: logic<DIV_WIDTH> = if op1sign_saved == 1 ? ~du_remainder + 1 : du_remainder;
+                    @<b>|let resultX   : UIntX|            = case funct3_saved[1:0] {
+                        2'b00  : quo_signed[XLEN - 1:0], // DIV
+                        2'b01  : du_quotient[XLEN - 1:0], // DIVU
+                        2'b10  : rem_signed[XLEN - 1:0], // REM
+                        2'b11  : du_remainder[XLEN - 1:0], // REMU
+                        default: 0,
+                    };
+                    state  = State::Finish;
+                    @<b>|result = if is_op32_saved ? sext::<32, 64>(resultX[31:0]) : resultX;|
+                }
 #@end
 //}
 

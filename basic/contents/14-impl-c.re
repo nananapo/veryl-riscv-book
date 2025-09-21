@@ -719,30 +719,30 @@ inst_fetcherモジュールで、@<code>{is_rvc}を@<code>{0}に設定してcore
 
 //list[inst_fetcher.veryl.is_rvc.issue_comb][is_rvcフラグを0に設定する (inst_fetcher.veryl)]{
 #@maprange(scripts/14/is_rvc-range/core/src/inst_fetcher.veryl,issue_comb)
-    if offset == 6 {
-        // offsetが6な32ビット命令の場合、
-        // 命令は{rdata_next[15:0], rdata[63:48}になる
-        if issue_is_rdata_saved {
-            issue_fifo_wvalid       = 1;
-            issue_fifo_wdata.addr   = {issue_saved_addr[msb:3], offset};
-            issue_fifo_wdata.bits   = {rdata[15:0], issue_saved_bits};
-            @<b>|issue_fifo_wdata.is_rvc = 0;|
-        } else {
-            // Read next 8 bytes
-            fetch_fifo_rready = 1;
-        }
-    } else {
-        fetch_fifo_rready     = offset == 4;
-        issue_fifo_wvalid     = 1;
-        issue_fifo_wdata.addr = {raddr[msb:3], offset};
-        issue_fifo_wdata.bits = case offset {
-            0      : rdata[31:0],
-            2      : rdata[47:16],
-            4      : rdata[63:32],
-            default: 0,
-        };
-        @<b>|issue_fifo_wdata.is_rvc = 0;|
-    }
+                if offset == 6 {
+                    // offsetが6な32ビット命令の場合、
+                    // 命令は{rdata_next[15:0], rdata[63:48}になる
+                    if issue_is_rdata_saved {
+                        issue_fifo_wvalid       = 1;
+                        issue_fifo_wdata.addr   = {issue_saved_addr[msb:3], offset};
+                        issue_fifo_wdata.bits   = {rdata[15:0], issue_saved_bits};
+                        @<b>|issue_fifo_wdata.is_rvc = 0;|
+                    } else {
+                        // Read next 8 bytes
+                        fetch_fifo_rready = 1;
+                    }
+                } else {
+                    fetch_fifo_rready     = offset == 4;
+                    issue_fifo_wvalid     = 1;
+                    issue_fifo_wdata.addr = {raddr[msb:3], offset};
+                    issue_fifo_wdata.bits = case offset {
+                        0      : rdata[31:0],
+                        2      : rdata[47:16],
+                        4      : rdata[63:32],
+                        default: 0,
+                    };
+                    @<b>|issue_fifo_wdata.is_rvc = 0;|
+                }
 #@end
 //}
 
@@ -1127,64 +1127,64 @@ RVC命令のとき、変換された32ビット幅の命令を@<code>{issue_fifo
 
 //list[inst_fetcher.veryl.rvcc.issue_ff][RVC命令のときのオフセットの更新 (inst_fetcher.veryl)]{
 #@maprange(scripts/14/rvcc-range/core/src/inst_fetcher.veryl,issue_ff)
-// offsetが6な32ビット命令の場合、
-// アドレスと上位16ビットを保存してFIFOを読み進める
-if issue_pc_offset == 6 && @<b>|!rvcc_is_rvc &&| !issue_is_rdata_saved {
-    if fetch_fifo_rvalid {
-        issue_is_rdata_saved = 1;
-        issue_saved_addr     = fetch_fifo_rdata.addr;
-        issue_saved_bits     = fetch_fifo_rdata.bits[63:48];
-    }
-} else {
-    if issue_fifo_wready && issue_fifo_wvalid {
-        issue_pc_offset      += @<b>{if issue_is_rdata_saved || !rvcc_is_rvc ?} 4 @<b>{: 2};
-        issue_is_rdata_saved =  0;
-    }
-}
+                // offsetが6な32ビット命令の場合、
+                // アドレスと上位16ビットを保存してFIFOを読み進める
+                if issue_pc_offset == 6 && @<b>|!rvcc_is_rvc &&| !issue_is_rdata_saved {
+                    if fetch_fifo_rvalid {
+                        issue_is_rdata_saved = 1;
+                        issue_saved_addr     = fetch_fifo_rdata.addr;
+                        issue_saved_bits     = fetch_fifo_rdata.bits[63:48];
+                    }
+                } else {
+                    if issue_fifo_wready && issue_fifo_wvalid {
+                        issue_pc_offset      += @<b>{if issue_is_rdata_saved || !rvcc_is_rvc ?} 4 @<b>{: 2};
+                        issue_is_rdata_saved =  0;
+                    }
+                }
 #@end
 //}
 
 //list[inst_fetcher.veryl.rvcc.issue_comb][RVC命令のときのissue_fifoへの書き込み (inst_fetcher.veryl)]{
 #@maprange(scripts/14/rvcc-range/core/src/inst_fetcher.veryl,issue_comb)
-if !core_if.is_hazard && fetch_fifo_rvalid {
-    if issue_fifo_wready {
-        if offset == 6 {
-            // offsetが6な32ビット命令の場合、
-            // 命令は{rdata_next[15:0], rdata[63:48}になる
-            if issue_is_rdata_saved {
-                issue_fifo_wvalid       = 1;
-                issue_fifo_wdata.addr   = {issue_saved_addr[msb:3], offset};
-                issue_fifo_wdata.bits   = {rdata[15:0], issue_saved_bits};
-                issue_fifo_wdata.is_rvc = 0;
-            } else {
-                fetch_fifo_rready = 1;
-                @<b>|if rvcc_is_rvc {|
-                @<b>|    issue_fifo_wvalid       = 1;|
-                @<b>|    issue_fifo_wdata.addr   = {raddr[msb:3], offset};|
-                @<b>|    issue_fifo_wdata.is_rvc = 1;|
-                @<b>|    issue_fifo_wdata.bits   = rvcc_inst32;|
-                @<b>|} else {|
-                    // Read next 8 bytes
-                @<b>|}|
+        if !core_if.is_hazard && fetch_fifo_rvalid {
+            if issue_fifo_wready {
+                if offset == 6 {
+                    // offsetが6な32ビット命令の場合、
+                    // 命令は{rdata_next[15:0], rdata[63:48}になる
+                    if issue_is_rdata_saved {
+                        issue_fifo_wvalid       = 1;
+                        issue_fifo_wdata.addr   = {issue_saved_addr[msb:3], offset};
+                        issue_fifo_wdata.bits   = {rdata[15:0], issue_saved_bits};
+                        issue_fifo_wdata.is_rvc = 0;
+                    } else {
+                        fetch_fifo_rready = 1;
+                        @<b>|if rvcc_is_rvc {|
+                        @<b>|    issue_fifo_wvalid       = 1;|
+                        @<b>|    issue_fifo_wdata.addr   = {raddr[msb:3], offset};|
+                        @<b>|    issue_fifo_wdata.is_rvc = 1;|
+                        @<b>|    issue_fifo_wdata.bits   = rvcc_inst32;|
+                        @<b>|} else {|
+                            // Read next 8 bytes
+                        @<b>|}|
+                    }
+                } else {
+                    fetch_fifo_rready     = @<b>|!rvcc_is_rvc &&| offset == 4;
+                    issue_fifo_wvalid     = 1;
+                    issue_fifo_wdata.addr = {raddr[msb:3], offset};
+                    @<b>|if rvcc_is_rvc {|
+                    @<b>|    issue_fifo_wdata.bits = rvcc_inst32;|
+                    @<b>|} else {|
+                        issue_fifo_wdata.bits = case offset {
+                            0      : rdata[31:0],
+                            2      : rdata[47:16],
+                            4      : rdata[63:32],
+                            default: 0,
+                        };
+                    @<b>|}|
+                    issue_fifo_wdata.is_rvc = @<b>|rvcc_is_rvc|;
+                }
             }
-        } else {
-            fetch_fifo_rready     = @<b>|!rvcc_is_rvc &&| offset == 4;
-            issue_fifo_wvalid     = 1;
-            issue_fifo_wdata.addr = {raddr[msb:3], offset};
-            @<b>|if rvcc_is_rvc {|
-            @<b>|    issue_fifo_wdata.bits = rvcc_inst32;|
-            @<b>|} else {|
-                issue_fifo_wdata.bits = case offset {
-                    0      : rdata[31:0],
-                    2      : rdata[47:16],
-                    4      : rdata[63:32],
-                    default: 0,
-                };
-            @<b>|}|
-            issue_fifo_wdata.is_rvc = @<b>|rvcc_is_rvc|;
         }
-    }
-}
 #@end
 //}
 

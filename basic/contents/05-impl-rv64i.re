@@ -120,7 +120,7 @@ RV64Iでは、LW命令の結果が64ビットに符号拡張されるように�
 
 //list[memunit.veryl.xlen-memunit-range.lw][LW命令のメモリの読み込み結果を符号拡張する (memunit.veryl)]{
 #@maprange(scripts/05/xlen-memunit-range/core/src/memunit.veryl,lw)
-    2'b10  : @<b>|{D[31] repeat W - 32, D[31:0]}|,
+            2'b10  : @<b>|{D[31] repeat W - 32, D[31:0]}|,
 #@end
 //}
 
@@ -131,12 +131,12 @@ RV64Iでは、LW命令の結果が64ビットに符号拡張されるように�
 
 //list[memunit.veryl.xlen-memunit-range.req_wdata][左辺と右辺でビット幅を合わせる (memunit.veryl)]{
 #@maprange(scripts/05/xlen-memunit-range/core/src/memunit.veryl,req_wdata)
-    case state {
-        State::Init: if is_new & inst_is_memop(ctrl) {
-            state     = State::WaitReady;
-            req_wen   = inst_is_store(ctrl);
-            req_addr  = addr;
-            req_wdata = rs2@<b>|[MEM_DATA_WIDTH - 1:0]| << {addr[1:0], 3'b0};
+                case state {
+                    State::Init: if is_new & inst_is_memop(ctrl) {
+                        state     = State::WaitReady;
+                        req_wen   = inst_is_store(ctrl);
+                        req_addr  = addr;
+                        req_wdata = rs2@<b>|[MEM_DATA_WIDTH - 1:0]| << {addr[1:0], 3'b0};
 #@end
 //}
 
@@ -493,7 +493,7 @@ memunitモジュールの、ロードする部分を変更します。
 
 //list[memunit.veryl.lwu-range.lwu][LWU命令の実装 (memunit.veryl)]{
 #@maprange(scripts/05/lwu-range/core/src/memunit.veryl,lwu)
-    2'b10  : {@<b>|sext & D[31]| repeat W - 32, D[31:0]},
+            2'b10  : {@<b>|sext & D[31]| repeat W - 32, D[31:0]},
 #@end
 //}
 

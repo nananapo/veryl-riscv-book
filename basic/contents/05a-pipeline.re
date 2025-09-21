@@ -996,13 +996,13 @@ EXステージのFIFOの@<code>{rready}とMEMステージの@<code>{wvalid}に�
 
 //list[core.veryl.datahazard-range.debug][データハザードが発生しているかをデバッグ表示する (core.veryl)]{
 #@maprange(scripts/05a/datahazard-range/core/src/core.veryl,debug)
-    $display("EX -----");
-    if exs_valid {
-        $display("  %h : %h", exq_rdata.addr, exq_rdata.bits);
-        $display("  op1     : %h", exs_op1);
-        $display("  op2     : %h", exs_op2);
-        $display("  alu     : %h", exs_alu_result);
-        @<b>|$display("  dhazard : %b", exs_data_hazard);|
+            $display("EX -----");
+            if exs_valid {
+                $display("  %h : %h", exq_rdata.addr, exq_rdata.bits);
+                $display("  op1     : %h", exs_op1);
+                $display("  op2     : %h", exs_op2);
+                $display("  alu     : %h", exs_alu_result);
+                @<b>|$display("  dhazard : %b", exs_data_hazard);|
 #@end
 //}
 

@@ -1609,11 +1609,11 @@ dir_walk関数を、ELFファイルを探す関数に変更します
 
 //list[test.py.debugouttest.dir_walk][dir_walk関数でELFファイルを探す (test/test.py)]{
 #@map_range(scripts/12/debugouttest-range/core/test/test.py,dir_walk)
-if entry.is_file():
-    if not @<b>|is_elf(entry.path)|:
-        continue
-    if len(args.files) == 0:
-        yield entry.path
+        if entry.is_file():
+            if not @<b>|is_elf(entry.path)|:
+                continue
+            if len(args.files) == 0:
+                yield entry.path
 #@end
 //}
 
@@ -1638,15 +1638,15 @@ def test(@<b>|dbg_addr,| romhex, file_name):
 
 //list[test.py.debugouttest.for][DBG_ADDRをtest関数に渡す (test/test.py)]{
 #@map_range(scripts/12/debugouttest-range/core/test/test.py,for)
-for @<b>|elf|path in dir_walk(args.dir):
-    @<b>|hexpath = elfpath + args.extension|
-    @<b>|if not os.path.exists(hexpath):|
-    @<b>|    print("SKIP :", elfpath)|
-    @<b>|    continue|
-    @<b>|dbg_addr = get_section_address(elfpath, args.debug_label)|
-    f, s = test(@<b>|dbg_addr,| os.path.abspath(args.rom), os.path.abspath(hexpath))
-    res_strs.append(("PASS" if s else "FAIL") + " : " + f)
-    res_statuses.append(s)
+    for @<b>|elf|path in dir_walk(args.dir):
+        @<b>|hexpath = elfpath + args.extension|
+        @<b>|if not os.path.exists(hexpath):|
+        @<b>|    print("SKIP :", elfpath)|
+        @<b>|    continue|
+        @<b>|dbg_addr = get_section_address(elfpath, args.debug_label)|
+        f, s = test(@<b>|dbg_addr,| os.path.abspath(args.rom), os.path.abspath(hexpath))
+        res_strs.append(("PASS" if s else "FAIL") + " : " + f)
+        res_statuses.append(s)
 #@end
 //}
 

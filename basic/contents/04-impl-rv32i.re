@@ -1094,16 +1094,16 @@ FIFOに2つ以上空きがあるという条件に変更しています@<fn>{why
 
 //list[core.veryl.if-fifo-range.fifo_ctrl][FIFOへのデータの格納 (core.veryl)]{
 #@maprange(scripts/04/if-fifo-range/core/src/core.veryl,fifo_ctrl)
-    // IFのFIFOの制御
-    if if_is_requested && membus.rvalid { @<balloon>{フェッチできた時}
-        if_fifo_wvalid     = 1;
-        if_fifo_wdata.addr = if_pc_requested;
-        if_fifo_wdata.bits = membus.rdata;
-    } else {
-        if if_fifo_wvalid && if_fifo_wready { @<balloon>{FIFOにデータを格納できる時}
-            if_fifo_wvalid = 0;
-        }
-    }
+            // IFのFIFOの制御
+            if if_is_requested && membus.rvalid { @<balloon>{フェッチできた時}
+                if_fifo_wvalid     = 1;
+                if_fifo_wdata.addr = if_pc_requested;
+                if_fifo_wdata.bits = membus.rdata;
+            } else {
+                if if_fifo_wvalid && if_fifo_wready { @<balloon>{FIFOにデータを格納できる時}
+                    if_fifo_wvalid = 0;
+                }
+            }
 #@end
 //}
 
@@ -1111,13 +1111,13 @@ FIFOに2つ以上空きがあるという条件に変更しています@<fn>{why
 
 //list[core.veryl.if-fifo-range.if_reset][変数の初期化 (core.veryl)]{
 #@maprange(scripts/04/if-fifo-range/core/src/core.veryl,if_reset)
-    if_reset {
-        if_pc           = 0;
-        if_is_requested = 0;
-        if_pc_requested = 0;
-        @<b>|if_fifo_wvalid  = 0;|
-        @<b>|if_fifo_wdata   = 0;|
-    } else {
+        if_reset {
+            if_pc           = 0;
+            if_is_requested = 0;
+            if_pc_requested = 0;
+            @<b>|if_fifo_wvalid  = 0;|
+            @<b>|if_fifo_wdata   = 0;|
+        } else {
 #@end
 //}
 
@@ -1500,9 +1500,9 @@ RV32Iには、32ビット幅のレジスタが32個用意されています。
 
 coreモジュールにレジスタを定義します。
 レジスタの幅はXLEN(=32)ビットであるため、
-@<code>{UIntX}型のレジスタの配列を定義します(@<list>{core.reg.define})。
+@<code>{UIntX}型のレジスタの配列を定義します(@<list>{core.veryl.reg.define})。
 
-//list[core.reg.define][レジスタの定義 (core.veryl)]{
+//list[core.veryl.reg.define][レジスタの定義 (core.veryl)]{
 #@maprange(scripts/04/reg-range/core/src/core.veryl,define)
     // レジスタ
     var regfile: UIntX<32>;
@@ -1943,9 +1943,9 @@ LUI命令のときは即値をそのまま、
 
 //list[core.veryl.wb.debug][ライトバックのデバッグ表示 (core.veryl)]{
 #@maprange(scripts/04/wb-range/core/src/core.veryl,debug)
-    if inst_ctrl.rwb_en {
-        $display("  reg[%d] <= %h", rd_addr, wb_data);
-    }
+            if inst_ctrl.rwb_en {
+                $display("  reg[%d] <= %h", rd_addr, wb_data);
+            }
 #@end
 //}
 
@@ -2258,11 +2258,11 @@ module core (
 
 //list[core.veryl.lwsw-range.fetch][membusをi_membusに置き換える (core.veryl)]{
 #@maprange(scripts/04/lwsw-range/core/src/core.veryl,fetch)
-    // FIFOに2個以上空きがあるとき、命令をフェッチする
-    @<b>|i_|membus.valid = if_fifo_wready_two;
-    @<b>|i_|membus.addr  = if_pc;
-    @<b>|i_|membus.wen   = 0;
-    @<b>|i_|membus.wdata = 'x; // wdataは使用しない
+        // FIFOに2個以上空きがあるとき、命令をフェッチする
+        @<b>|i_|membus.valid = if_fifo_wready_two;
+        @<b>|i_|membus.addr  = if_pc;
+        @<b>|i_|membus.wen   = 0;
+        @<b>|i_|membus.wdata = 'x; // wdataは使用しない
 #@end
 //}
 
@@ -2366,8 +2366,8 @@ FIFOから命令を取り出すのを止めます(@<list>{core.veryl.lwsw-range.
 
 //list[core.veryl.lwsw-range.rready][memunitモジュールの処理が終わるのを待つ (core.veryl)]{
 #@maprange(scripts/04/lwsw-range/core/src/core.veryl,rready)
-    // memunitが処理中ではないとき、FIFOから命令を取り出していい
-    if_fifo_rready = @<b>|!memu_stall|;
+        // memunitが処理中ではないとき、FIFOから命令を取り出していい
+        if_fifo_rready = @<b>|!memu_stall|;
 #@end
 //}
 
@@ -2409,9 +2409,9 @@ FIFOからの命令の取り出しを停止します。
 
 //list[core.veryl.lwsw-range.wb_debug][ライトバックするときにのみデバッグ表示する (core.veryl)]{
 #@maprange(scripts/04/lwsw-range/core/src/core.veryl,wb_debug)
-    if @<b>|if_fifo_rready &&| inst_ctrl.rwb_en {
-        $display("  reg[%d] <= %h", rd_addr, wb_data);
-    }
+                if @<b>|if_fifo_rready &&| inst_ctrl.rwb_en {
+                    $display("  reg[%d] <= %h", rd_addr, wb_data);
+                }
 #@end
 //}
 
@@ -2422,8 +2422,8 @@ LW命令とSW命令が正しく動作していることを確認するために�
 
 //list[core.veryl.lwsw-range.mem][メモリモジュールの状態をデバッグ表示する (core.veryl)]{
 #@maprange(scripts/04/lwsw-range/core/src/core.veryl,mem)
-    $display("  mem stall : %b", memu_stall);
-    $display("  mem rdata : %h", memu_rdata);
+                $display("  mem stall : %b", memu_stall);
+                $display("  mem rdata : %h", memu_rdata);
 #@end
 //}
 
@@ -2766,18 +2766,18 @@ topモジュールの調停処理で、
 
 //list[top.veryl.lbhsbh-range.wmask][wmaskの調停 (top.veryl)]{
 #@maprange(scripts/04/lbhsbh-range/core/src/top.veryl,wmask)
-    membus.valid = i_membus.valid | d_membus.valid;
-    if d_membus.valid {
-        membus.addr  = addr_to_memaddr(d_membus.addr);
-        membus.wen   = d_membus.wen;
-        membus.wdata = d_membus.wdata;
-        @<b>|membus.wmask = d_membus.wmask;|
-    } else {
-        membus.addr  = addr_to_memaddr(i_membus.addr);
-        membus.wen   = 0; // 命令フェッチは常に読み込み
-        membus.wdata = 'x;
-        @<b>|membus.wmask = 'x;|
-    }
+        membus.valid = i_membus.valid | d_membus.valid;
+        if d_membus.valid {
+            membus.addr  = addr_to_memaddr(d_membus.addr);
+            membus.wen   = d_membus.wen;
+            membus.wdata = d_membus.wdata;
+            @<b>|membus.wmask = d_membus.wmask;|
+        } else {
+            membus.addr  = addr_to_memaddr(i_membus.addr);
+            membus.wen   = 0; // 命令フェッチは常に読み込み
+            membus.wdata = 'x;
+            @<b>|membus.wmask = 'x;|
+        }
 #@end
 //}
 
@@ -2818,28 +2818,28 @@ always_ffの中で、@<code>{req_wmask}の値を設定します。
 
 //list[memunit.veryl.lbhsbh-range.always_reset][if_resetでreq_wmaskを初期化する (memunit.veryl)]{
 #@maprange(scripts/04/lbhsbh-range/core/src/memunit.veryl,always_reset)
-    if_reset {
-        state     = State::Init;
-        req_wen   = 0;
-        req_addr  = 0;
-        req_wdata = 0;
-        @<b>|req_wmask = 0;|
-    } else {
+        if_reset {
+            state     = State::Init;
+            req_wen   = 0;
+            req_addr  = 0;
+            req_wdata = 0;
+            @<b>|req_wmask = 0;|
+        } else {
 #@end
 //}
 
 //list[memunit.veryl.lbhsbh-range.always_wmask][メモリにアクセスする命令のとき、wmaskを設定する (memunit.veryl)]{
 #@maprange(scripts/04/lbhsbh-range/core/src/memunit.veryl,always_wmask)
-    req_wmask = case ctrl.funct3[1:0] {
-        2'b00: 4'b1 << addr[1:0],@<balloon>{SB命令のとき、アドレス下位2ビット分だけ1を左シフトする}
-        2'b01: case addr[1:0] { @<balloon>{SH命令のとき}
-            2      : 4'b1100, @<balloon>{上位2バイトに書き込む}
-            0      : 4'b0011, @<balloon>{下位2バイトに書き込む}
-            default: 'x,
-        },
-        2'b10  : 4'b1111, @<balloon>{SW命令のとき、全体に書き込む}
-        default: 'x,
-    };
+                        req_wmask = case ctrl.funct3[1:0] {
+                            2'b00: 4'b1 << addr[1:0],@<balloon>{SB命令のとき、アドレス下位2ビット分だけ1を左シフトする}
+                            2'b01: case addr[1:0] { @<balloon>{SH命令のとき}
+                                2      : 4'b1100, @<balloon>{上位2バイトに書き込む}
+                                0      : 4'b0011, @<balloon>{下位2バイトに書き込む}
+                                default: 'x,
+                            },
+                            2'b10  : 4'b1111, @<balloon>{SW命令のとき、全体に書き込む}
+                            default: 'x,
+                        };
 #@end
 //}
 
@@ -2850,7 +2850,7 @@ always_ffの中で、@<code>{req_wmask}の値を設定します。
 
 //list[memunit.veryl.lbhsbh-range.always_wdata][書き込みデータをシフトする (memunit.veryl)]{
 #@maprange(scripts/04/lbhsbh-range/core/src/memunit.veryl,always_wdata)
-    req_wdata = rs2 << {addr[1:0], 3'b0};
+                        req_wdata = rs2 << {addr[1:0], 3'b0};
 #@end
 //}
 
@@ -3029,47 +3029,47 @@ module fifo #(
 
 //list[fifo.veryl.jump-range.always_one][flushが1のとき、FIFOを空にする (fifo.veryl、WIDTH==1)]{
 #@maprange(scripts/04/jump-range/core/src/fifo.veryl,always_one)
-    always_ff {
-        if_reset {
-            rdata  = 0;
-            rvalid = 0;
-        } else {
-            @<b>|if flush {|
-            @<b>|    rvalid = 0;|
-            @<b>|} else {|
-                if wready && wvalid {
-                    rdata  = wdata;
-                    rvalid = 1;
-                } else if rready {
-                    rvalid = 0;
-                }
-            @<b>|}|
+        always_ff {
+            if_reset {
+                rdata  = 0;
+                rvalid = 0;
+            } else {
+                @<b>|if flush {|
+                @<b>|    rvalid = 0;|
+                @<b>|} else {|
+                    if wready && wvalid {
+                        rdata  = wdata;
+                        rvalid = 1;
+                    } else if rready {
+                        rvalid = 0;
+                    }
+                @<b>|}|
+            }
         }
-    }
 #@end
 //}
 
 //list[fifo.veryl.jump-range.always_two][flushが1のとき、FIFOを空にする (fifo.veryl、WIDTH!=1)]{
 #@maprange(scripts/04/jump-range/core/src/fifo.veryl,always_two)
-    always_ff {
-        if_reset {
-            head = 0;
-            tail = 0;
-        } else {
-            @<b>|if flush {|
-            @<b>|    head = 0;|
-            @<b>|    tail = 0;|
-            @<b>|} else {|
-                if wready && wvalid {
-                    mem[tail] = wdata;
-                    tail      = tail + 1;
-                }
-                if rready && rvalid {
-                    head = head + 1;
-                }
-            @<b>|}|
+        always_ff {
+            if_reset {
+                head = 0;
+                tail = 0;
+            } else {
+                @<b>|if flush {|
+                @<b>|    head = 0;|
+                @<b>|    tail = 0;|
+                @<b>|} else {|
+                    if wready && wvalid {
+                        mem[tail] = wdata;
+                        tail      = tail + 1;
+                    }
+                    if rready && rvalid {
+                        head = head + 1;
+                    }
+                @<b>|}|
+            }
         }
-    }
 #@end
 //}
 
@@ -3244,9 +3244,9 @@ coreモジュールでインスタンス化します(@<list>{core.veryl.br-range
 
 //list[core.very.br-range.debug][分岐判定のデバッグ表示 (core.veryl)]{
 #@maprange(scripts/04/br-range/core/src/core.veryl,debug)
-    if inst_is_br(inst_ctrl) {
-        $display("  br take   : %b", brunit_take);
-    }
+                if inst_is_br(inst_ctrl) {
+                    $display("  br take   : %b", brunit_take);
+                }
 #@end
 //}
 

@@ -234,9 +234,9 @@ csrunitモジュールをインスタンス化しています。
 
 //list[core.veryl.create-csrunit-range.debug][rdataをデバッグ表示する (core.veryl)]{
 #@maprange(scripts/04a/create-csrunit-range/core/src/core.veryl,debug)
-    if inst_ctrl.is_csr {
-        $display("  csr rdata : %h", csru_rdata);
-    }
+                if inst_ctrl.is_csr {
+                    $display("  csr rdata : %h", csru_rdata);
+                }
 #@end
 //}
 
@@ -329,7 +329,7 @@ mtvecレジスタの読み込みを実装します(@<list>{csrunit.veryl.create-
     var wmask: UIntX; // write mask
     var wdata: UIntX; // write data
 
-     always_comb {
+    always_comb {
         // read
         rdata = case csr_addr {
             CsrAddr::MTVEC: mtvec,
@@ -547,23 +547,23 @@ mepcとmcauseレジスタを作成します。
 
 //list[csrunit.veryl.create-ecall-range.rdata][mepcとmcauseの読み込み (csrunit.veryl)]{
 #@maprange(scripts/04a/create-ecall-range/core/src/csrunit.veryl,rdata)
-    rdata = case csr_addr {
-        CsrAddr::MTVEC : mtvec,
-        @<b>|CsrAddr::MEPC  : mepc,|
-        @<b>|CsrAddr::MCAUSE: mcause,|
-        default        : 'x,
-    };
+        rdata = case csr_addr {
+            CsrAddr::MTVEC : mtvec,
+            @<b>|CsrAddr::MEPC  : mepc,|
+            @<b>|CsrAddr::MCAUSE: mcause,|
+            default        : 'x,
+        };
 #@end
 //}
 
 //list[csrunit.veryl.create-ecall-range.always_wmask][mepcとmcauseの書き込みマスクの設定 (csrunit.veryl)]{
 #@maprange(scripts/04a/create-ecall-range/core/src/csrunit.veryl,always_wmask)
-    wmask = case csr_addr {
-        CsrAddr::MTVEC : MTVEC_WMASK,
-        @<b>|CsrAddr::MEPC  : MEPC_WMASK,|
-        @<b>|CsrAddr::MCAUSE: MCAUSE_WMASK,|
-        default        : 0,
-    };
+        wmask = case csr_addr {
+            CsrAddr::MTVEC : MTVEC_WMASK,
+            @<b>|CsrAddr::MEPC  : MEPC_WMASK,|
+            @<b>|CsrAddr::MCAUSE: MCAUSE_WMASK,|
+            default        : 0,
+        };
 #@end
 //}
 
@@ -573,24 +573,24 @@ if_resetで値を@<code>{0}に初期化し、case文にmepcとmcauseの場合を
 
 //list[csrunit.veryl.create-ecall-range.always_ff_csr][mepcとmcauseの書き込み (csrunit.veryl)]{
 #@maprange(scripts/04a/create-ecall-range/core/src/csrunit.veryl,always_ff_csr)
-always_ff {
-    if_reset {
-        mtvec  = 0;
-        @<b>|mepc   = 0;|
-        @<b>|mcause = 0;|
-    } else {
-        if valid {
-            if is_wsc {
-                case csr_addr {
-                    CsrAddr::MTVEC : mtvec  = wdata;
-                    @<b>|CsrAddr::MEPC  : mepc   = wdata;|
-                    @<b>|CsrAddr::MCAUSE: mcause = wdata;|
-                    default        : {}
+    always_ff {
+        if_reset {
+            mtvec  = 0;
+            @<b>|mepc   = 0;|
+            @<b>|mcause = 0;|
+        } else {
+            if valid {
+                if is_wsc {
+                    case csr_addr {
+                        CsrAddr::MTVEC : mtvec  = wdata;
+                        @<b>|CsrAddr::MEPC  : mepc   = wdata;|
+                        @<b>|CsrAddr::MCAUSE: mcause = wdata;|
+                        default        : {}
+                    }
                 }
             }
         }
     }
-}
 #@end
 //}
 
@@ -747,19 +747,19 @@ mcauseレジスタにトラップの発生原因を格納します
 
 //list[csrunit.veryl.create-ecall-range.always_ff_trap][トラップが発生したらCSRを変更する (csrunit.veryl)]{
 #@maprange(scripts/04a/create-ecall-range/core/src/csrunit.veryl,always_ff_trap)
-always_ff {
-    if_reset {
-        ...
-    } else {
-        if valid {
-            @<b>|if raise_trap {| @<balloon>{トラップ時の動作}
-                @<b>|if raise_expt {| @<balloon>{例外時の動作}
-                    @<b>|mepc   = pc;|
-                    @<b>|mcause = trap_cause;|
-                @<b>|}|
-            @<b>|} else {|
-                if is_wsc {
-                    ...
+    always_ff {
+        if_reset {
+            ...
+        } else {
+            if valid {
+                @<b>|if raise_trap {| @<balloon>{トラップ時の動作}
+                    @<b>|if raise_expt {| @<balloon>{例外時の動作}
+                        @<b>|mepc   = pc;|
+                        @<b>|mcause = trap_cause;|
+                    @<b>|}|
+                @<b>|} else {|
+                    if is_wsc {
+                        ...
 #@end
 //}
 
@@ -773,11 +773,11 @@ ECALL命令をテストする前に、
 
 //list[core.veryl.create-ecall-range.debug][トラップの情報をデバッグ表示する (core.veryl)]{
 #@maprange(scripts/04a/create-ecall-range/core/src/core.veryl,debug)
-    if inst_ctrl.is_csr {
-        $display("  csr rdata : %h", csru_rdata);
-        @<b>|$display("  csr trap  : %b", csru_raise_trap);|
-        @<b>|$display("  csr vec   : %h", csru_trap_vector);|
-    }
+                if inst_ctrl.is_csr {
+                    $display("  csr rdata : %h", csru_rdata);
+                    @<b>|$display("  csr trap  : %b", csru_raise_trap);|
+                    @<b>|$display("  csr vec   : %h", csru_trap_vector);|
+                }
 #@end
 //}
 

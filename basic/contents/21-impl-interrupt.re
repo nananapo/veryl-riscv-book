@@ -219,9 +219,9 @@ aclint_memoryモジュールにアクセスできるようにします。
 
 //list[mmio_controller.veryl.createaclint.get_device][get_device関数でACLINTの範囲を定義する (mmio_controller.veryl)]{
 #@maprange(scripts/21/createaclint-range/core/src/mmio_controller.veryl, get_device)
-    if MMAP_ACLINT_BEGIN <= addr && addr <= MMAP_ACLINT_END {
-        return Device::ACLINT;
-    }
+        if MMAP_ACLINT_BEGIN <= addr && addr <= MMAP_ACLINT_END {
+            return Device::ACLINT;
+        }
 #@end
 //}
 
@@ -266,13 +266,13 @@ module mmio_controller (
 
 //list[mmio_controller.veryl.createaclint.get_device_ready][get_device_ready関数にACLINTのreadyを追加 (mmio_controller.veryl)]{
 #@maprange(scripts/21/createaclint-range/core/src/mmio_controller.veryl, get_device_ready)
-    Device::ACLINT: return aclint_membus.ready;
+            Device::ACLINT: return aclint_membus.ready;
 #@end
 //}
 
 //list[mmio_controller.veryl.createaclint.get_device_rvalid][get_device_rvalid関数にACLINTのrvalidを追加 (mmio_controller.veryl)]{
 #@maprange(scripts/21/createaclint-range/core/src/mmio_controller.veryl, get_device_rvalid)
-    Device::ACLINT: return aclint_membus.rvalid;
+            Device::ACLINT: return aclint_membus.rvalid;
 #@end
 //}
 
@@ -283,7 +283,7 @@ ACLINTの@<code>{rvalid}、@<code>{rdata}を@<code>{req_core}に割り当てま�
 
 //list[mmio_controller.veryl.createaclint.assign_device_slave][ACLINTへのアクセス結果をreqに割り当てる (mmio_controller.veryl)]{
 #@maprange(scripts/21/createaclint-range/core/src/mmio_controller.veryl, assign_device_slave)
-    Device::ACLINT: req <> aclint_membus;
+            Device::ACLINT: req <> aclint_membus;
 #@end
 //}
 
@@ -294,10 +294,10 @@ ACLINTのインターフェースに要求を割り当てます
 
 //list[mmio_controller.veryl.createaclint.assign_device_master][ACLINTにreqを割り当ててアクセス要求する (mmio_controller.veryl)]{
 #@maprange(scripts/21/createaclint-range/core/src/mmio_controller.veryl, assign_device_master)
-    Device::ACLINT: {
-        aclint_membus      <> req;
-        aclint_membus.addr -= MMAP_ACLINT_BEGIN;
-    }
+            Device::ACLINT: {
+                aclint_membus      <> req;
+                aclint_membus.addr -= MMAP_ACLINT_BEGIN;
+            }
 #@end
 //}
 
@@ -463,38 +463,38 @@ aclint_memoryモジュールに@<code>{msip0}レジスタを作成し、読み�
 
 //list[aclint_memory.veryl.msip.reg][msip0レジスタの定義 (aclint_memory.veryl)]{
 #@maprange(scripts/21/msip-range/core/src/aclint_memory.veryl,reg)
-var msip0: logic;
+    var msip0: logic;
 #@end
 //}
 
 //list[aclint_memory.veryl.msip.if_reset][msip0レジスタを0でリセットする (aclint_memory.veryl)]{
 #@maprange(scripts/21/msip-range/core/src/aclint_memory.veryl,if_reset)
-always_ff {
-    if_reset {
-        membus.rvalid = 0;
-        membus.rdata  = 0;
-        @<b>|msip0         = 0;|
+    always_ff {
+        if_reset {
+            membus.rvalid = 0;
+            membus.rdata  = 0;
+            @<b>|msip0         = 0;|
 #@end
 //}
 
 //list[aclint_memory.veryl.msip.rw][msip0レジスタの書き込み、読み込み (aclint_memory.veryl)]{
 #@maprange(scripts/21/msip-range/core/src/aclint_memory.veryl,rw)
-if membus.valid {
-    let addr: Addr = {membus.addr[XLEN - 1:3], 3'b0};
-    if membus.wen {
-        let M: logic<MEMBUS_DATA_WIDTH> = membus.wmask_expand();
-        let D: logic<MEMBUS_DATA_WIDTH> = membus.wdata & M;
-        case addr {
-            MMAP_ACLINT_MSIP: msip0 = D[0] | msip0 & ~M[0];
-            default         : {}
-        }
-    } else {
-        membus.rdata = case addr {
-            MMAP_ACLINT_MSIP: {63'b0, msip0},
-            default         : 0,
-        };
-    }
-}
+            if membus.valid {
+                let addr: Addr = {membus.addr[XLEN - 1:3], 3'b0};
+                if membus.wen {
+                    let M: logic<MEMBUS_DATA_WIDTH> = membus.wmask_expand();
+                    let D: logic<MEMBUS_DATA_WIDTH> = membus.wdata & M;
+                    case addr {
+                        MMAP_ACLINT_MSIP: msip0 = D[0] | msip0 & ~M[0];
+                        default         : {}
+                    }
+                } else {
+                    membus.rdata = case addr {
+                        MMAP_ACLINT_MSIP: {63'b0, msip0},
+                        default         : 0,
+                    };
+                }
+            }
 #@end
 //}
 
@@ -505,9 +505,9 @@ if membus.valid {
 
 //list[aclint_memory.veryl.msip.aclint_msip][インターフェースのmsipとmsip0レジスタを接続する (aclint_memory.veryl)]{
 #@maprange(scripts/21/msip-range/core/src/aclint_memory.veryl,aclint_msip)
-always_comb {
-    aclint.msip = msip0;
-}
+    always_comb {
+        aclint.msip = msip0;
+    }
 #@end
 //}
 
@@ -535,12 +535,12 @@ csrunitモジュールにmieレジスタを作成します
 
 //list[csrunit.veryl.miemip.if_reset][mieレジスタを0でリセットする (csrunit.veryl)]{
 #@maprange(scripts/21/miemip-range/core/src/csrunit.veryl,if_reset)
-if_reset {
-    mode     = PrivMode::M;
-    mstatus  = 0;
-    mtvec    = 0;
-    @<b>|mie      = 0;|
-    mscratch = 0;
+        if_reset {
+            mode     = PrivMode::M;
+            mstatus  = 0;
+            mtvec    = 0;
+            @<b>|mie      = 0;|
+            mscratch = 0;
 #@end
 //}
 
@@ -552,7 +552,7 @@ MSIPビットをMSWIデバイスのMSIP0レジスタと接続し、
 //list[csrunit.veryl.miemip.mip][mipレジスタの定義 (csrunit.veryl)]{
 #@maprange(scripts/21/miemip-range/core/src/csrunit.veryl,mip)
     let mip: UIntX = {
-        1'b0 repeat XLEN - 12, // 0
+        1'b0 repeat XLEN - 12, // 0, LCOFIP
         1'b0, // MEIP
         1'b0, // 0
         1'b0, // SEIP
@@ -574,10 +574,10 @@ mie、mipレジスタの値を読み込めるようにします
 
 //list[csrunit.veryl.miemip.rdata][rdataにmip、mieレジスタの値を割り当てる (csrunit.veryl)]{
 #@maprange(scripts/21/miemip-range/core/src/csrunit.veryl,rdata)
-CsrAddr::MTVEC   : mtvec,
-@<b>|CsrAddr::MIP     : mip,|
-@<b>|CsrAddr::MIE     : mie,|
-CsrAddr::MCYCLE  : mcycle,
+            CsrAddr::MTVEC   : mtvec,
+            @<b>|CsrAddr::MIP     : mip,|
+            @<b>|CsrAddr::MIE     : mie,|
+            CsrAddr::MCYCLE  : mcycle,
 #@end
 //}
 
@@ -600,20 +600,20 @@ mieレジスタの書き込みマスクを設定して、MSIEビットを書き�
 
 //list[csrunit.veryl.miemip.wmask][wmaskに書き込みマスクを設定する (csrunit.veryl)]{
 #@maprange(scripts/21/miemip-range/core/src/csrunit.veryl,wmask)
-CsrAddr::MTVEC   : MTVEC_WMASK,
-@<b>|CsrAddr::MIE     : MIE_WMASK,|
-CsrAddr::MSCRATCH: MSCRATCH_WMASK,
+            CsrAddr::MTVEC   : MTVEC_WMASK,
+            @<b>|CsrAddr::MIE     : MIE_WMASK,|
+            CsrAddr::MSCRATCH: MSCRATCH_WMASK,
 #@end
 //}
 
 //list[csrunit.veryl.miemip.write][mieレジスタの書き込み (csrunit.veryl)]{
 #@maprange(scripts/21/miemip-range/core/src/csrunit.veryl,write)
-if is_wsc {
-    case csr_addr {
-        CsrAddr::MSTATUS : mstatus  = wdata;
-        CsrAddr::MTVEC   : mtvec    = wdata;
-        @<b>|CsrAddr::MIE     : mie      = wdata;|
-        CsrAddr::MSCRATCH: mscratch = wdata;
+                    if is_wsc {
+                        case csr_addr {
+                            CsrAddr::MSTATUS : mstatus  = wdata;
+                            CsrAddr::MTVEC   : mtvec    = wdata;
+                            @<b>|CsrAddr::MIE     : mie      = wdata;|
+                            CsrAddr::MSCRATCH: mscratch = wdata;
 #@end
 //}
 
@@ -647,21 +647,21 @@ mstatus.MIE、MPIEを変更できるようにします
 
 //list[csrunit.veryl.mstatuswmask.change][トラップ、MRET命令の動作の実装 (csrunit.veryl)]{
 #@maprange(scripts/21/mstatuswmask-range/core/src/csrunit.veryl,change)
-if raise_trap {
-    if raise_expt {
-        mepc   = pc;
-        mcause = trap_cause;
-        mtval  = expt_value;
-        @<b>|// save mstatus.mie to mstatus.mpie|
-        @<b>|// and set mstatus.mie = 0|
-        @<b>|mstatus[7] = mstatus[3];|
-        @<b>|mstatus[3] = 0;|
-    } @<b>|else if trap_return {|
-        @<b>|// set mstatus.mie = mstatus.mpie|
-        @<b>|//     mstatus.mpie = 0|
-        @<b>|mstatus[3] = mstatus[7];|
-        @<b>|mstatus[7] = 0;|
-    @<b>|}|
+                if raise_trap {
+                    if raise_expt {
+                        mepc   = pc;
+                        mcause = trap_cause;
+                        mtval  = expt_value;
+                        @<b>|// save mstatus.mie to mstatus.mpie|
+                        @<b>|// and set mstatus.mie = 0|
+                        @<b>|mstatus[7] = mstatus[3];|
+                        @<b>|mstatus[3] = 0;|
+                    } @<b>|else if trap_return {|
+                        @<b>|// set mstatus.mie = mstatus.mpie|
+                        @<b>|//     mstatus.mpie = 0|
+                        @<b>|mstatus[3] = mstatus[7];|
+                        @<b>|mstatus[7] = 0;|
+                    @<b>|}|
 #@end
 //}
 
@@ -711,9 +711,9 @@ mepcレジスタにストア命令のアドレスを書き込んでしまいま�
 
 //list[core.veryl.intr.csru][mem_is_newをcan_intrに割り当てる (core.veryl)]{
 #@maprange(scripts/21/intr-range/core/src/core.veryl,csru)
-    rs1_data   : memq_rdata.rs1_data  ,
-    @<b>|can_intr   : mems_is_new          ,|
-    rdata      : csru_rdata           ,
+        rs1_data   : memq_rdata.rs1_data  ,
+        @<b>|can_intr   : mems_is_new          ,|
+        rdata      : csru_rdata           ,
 #@end
 //}
 
@@ -739,12 +739,12 @@ memunitモジュールが無効(@<code>{!valid})なとき、
 
 //list[memunit.veryl.intr.reset][validではないとき、stateをInitにリセットする (core.veryl)]{
 #@maprange(scripts/21/intr-range/core/src/memunit.veryl,reset)
-    } else {
-        if @<b>|!|valid {
-            @<b>|state = State::Init;|
-        @<b>|} else {|
-            case state {
-                State::Init: if is_new & inst_is_memop(ctrl) {
+        } else {
+            if @<b>|!|valid {
+                @<b>|state = State::Init;|
+            @<b>|} else {|
+                case state {
+                    State::Init: if is_new & inst_is_memop(ctrl) {
 #@end
 //}
 
@@ -803,13 +803,13 @@ memunitモジュールが無効(@<code>{!valid})なとき、
 
 //list[csrunit.veryl.intr.ff][例外が発生したときにのみmtvalレジスタに書き込む (csrunit.veryl)]{
 #@maprange(scripts/21/intr-range/core/src/csrunit.veryl,ff)
-    if raise_trap {
-        if raise_expt @<b>{|| raise_interrupt} {
-            mepc   = pc;
-            mcause = trap_cause;
-            @<b>|if raise_expt {|
-                mtval = expt_value;
-            @<b>|}|
+                if raise_trap {
+                    if raise_expt @<b>{|| raise_interrupt} {
+                        mepc   = pc;
+                        mcause = trap_cause;
+                        @<b>|if raise_expt {|
+                            mtval = expt_value;
+                        @<b>|}|
 #@end
 //}
 
@@ -986,23 +986,23 @@ ACLINTモジュールにMTIME、MTIMECMPレジスタを実装します。
 
 //list[aclint_memory.veryl.mtime.rw][mtime、mtimecmpの書き込み、読み込み (aclint_memory.veryl)]{
 #@maprange(scripts/21/mtime-range/core/src/aclint_memory.veryl,rw)
-    if membus.wen {
-        let M: logic<MEMBUS_DATA_WIDTH> = membus.wmask_expand();
-        let D: logic<MEMBUS_DATA_WIDTH> = membus.wdata & M;
-        case addr {
-            MMAP_ACLINT_MSIP    : msip0     = D[0] | msip0 & ~M[0];
-            @<b>{MMAP_ACLINT_MTIME   : mtime     = D | mtime & ~M;}
-            @<b>{MMAP_ACLINT_MTIMECMP: mtimecmp0 = D | mtimecmp0 & ~M;}
-            default             : {}
-        }
-    } else {
-        membus.rdata = case addr {
-            MMAP_ACLINT_MSIP    : {63'b0, msip0},
-            @<b>|MMAP_ACLINT_MTIME   : mtime,|
-            @<b>|MMAP_ACLINT_MTIMECMP: mtimecmp0,|
-            default             : 0,
-        };
-    }
+                if membus.wen {
+                    let M: logic<MEMBUS_DATA_WIDTH> = membus.wmask_expand();
+                    let D: logic<MEMBUS_DATA_WIDTH> = membus.wdata & M;
+                    case addr {
+                        MMAP_ACLINT_MSIP    : msip0     = D[0] | msip0 & ~M[0];
+                        @<b>{MMAP_ACLINT_MTIME   : mtime     = D | mtime & ~M;}
+                        @<b>{MMAP_ACLINT_MTIMECMP: mtimecmp0 = D | mtimecmp0 & ~M;}
+                        default             : {}
+                    }
+                } else {
+                    membus.rdata = case addr {
+                        MMAP_ACLINT_MSIP    : {63'b0, msip0},
+                        @<b>|MMAP_ACLINT_MTIME   : mtime,|
+                        @<b>|MMAP_ACLINT_MTIMECMP: mtimecmp0,|
+                        default             : 0,
+                    };
+                }
 #@end
 //}
 
@@ -1146,12 +1146,12 @@ inst_decoderモジュールでWFI命令をデコードできるようにしま�
 
 //list[inst_decoder.veryl.wfi.wfi][WFI命令のデコード (inst_decoder.veryl)]{
 #@maprange(scripts/21/wfi-range/core/src/inst_decoder.veryl,wfi)
-    OP_SYSTEM: f3 != 3'b000 && f3 != 3'b100 || // CSRR(W|S|C)[I]
-     bits == 32'h00000073 || // ECALL
-     bits == 32'h00100073 || // EBREAK
-     bits == 32'h30200073 @<b>{||} //MRET
-     @<b>{bits == 32'h10500073}, @<b>{// WFI}
-    OP_MISC_MEM: T, // FENCE
+            OP_SYSTEM: f3 != 3'b000 && f3 != 3'b100 || // CSRR(W|S|C)[I]
+             bits == 32'h00000073 || // ECALL
+             bits == 32'h00100073 || // EBREAK
+             bits == 32'h30200073 @<b>{||} //MRET
+             @<b>{bits == 32'h10500073}, @<b>{// WFI}
+            OP_MISC_MEM: T, // FENCE
 #@end
 //}
 
@@ -1169,10 +1169,10 @@ WFI命令で割り込みが発生するとき、mepcレジスタに@<code>{pc + 
 
 //list[csrunit.veryl.wfi.expt][WFI命令のとき、mepcをpc+4にする (csrunit.veryl)]{
 #@maprange(scripts/21/wfi-range/core/src/csrunit.veryl,expt)
-    if raise_expt || raise_interrupt {
-        mepc = @<b>|if raise_expt ? pc : // exception|
-         @<b>|if raise_interrupt && is_wfi ? pc + 4 : pc; // interrupt when wfi / interrupt|
-        mcause = trap_cause;
+                    if raise_expt || raise_interrupt {
+                        mepc = @<b>|if raise_expt ? pc : // exception|
+                        @<b>|if raise_interrupt && is_wfi ? pc + 4 : pc; // interrupt when wfi / interrupt|
+                        mcause = trap_cause;
 #@end
 //}
 
@@ -1188,10 +1188,10 @@ RISC-Vにはtime、instret、cycleという読み込み専用のCSRが定義さ�
 
 //list[eei.veryl.zicntr.CsrAddr][アドレスの定義 (eei.veryl)]{
 #@maprange(scripts/21/zicntr-range/core/src/eei.veryl,CsrAddr)
-    // Unprivileged Counter/Timers
-    CYCLE = 12'hC00,
-    TIME = 12'hC01,
-    INSTRET = 12'hC02,
+        // Unprivileged Counter/Timers
+        CYCLE = 12'hC00,
+        TIME = 12'hC01,
+        INSTRET = 12'hC02,
 #@end
 //}
 
@@ -1232,8 +1232,8 @@ time、instret、cycleレジスタを読み込めるようにします
 
 //list[csrunit.veryl.zicntr.rdata][rdataにインターフェースのmtimeを割り当てる (csrunit.veryl)]{
 #@maprange(scripts/21/zicntr-range/core/src/csrunit.veryl,rdata)
-    CsrAddr::CYCLE   : mcycle,
-    CsrAddr::TIME    : aclint.mtime,
-    CsrAddr::INSTRET : minstret,
+            CsrAddr::CYCLE   : mcycle,
+            CsrAddr::TIME    : aclint.mtime,
+            CsrAddr::INSTRET : minstret,
 #@end
 //}
