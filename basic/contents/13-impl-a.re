@@ -1,5 +1,8 @@
 = A拡張の実装
 
+//abstract{
+//}
+
 本章では、メモリの不可分操作を実現するA拡張を実装します。
 A拡張にはLoad-Reserved、Store-Conditionalを実現するZalrsc拡張(@<table>{a.instructions.zalrsc})、
 ロードした値を加工し、その結果をメモリにストアする操作を単一の命令で実装するZaamo拡張(@<table>{a.instructions.zaamo})が含まれています。

@@ -1,5 +1,8 @@
 = Memory-mapped I/Oの実装
 
+//abstract{
+//}
+
 == Memory-mapped I/Oとは何か？
 
 これまでの実装では、

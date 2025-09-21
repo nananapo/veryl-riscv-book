@@ -1,5 +1,8 @@
 = まえがき
 
+//abstract{
+//}
+
 @<large>{本書は「Verylで作るCPU 基本編」の@<b>{第II部と第III部}です。}
 @<large>{本書に第I部は含まれていませんが、@<hlink>{https://cpu.kanataso.net Web版}にすべて無料で公開しています。}
 

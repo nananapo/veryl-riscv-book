@@ -8,7 +8,7 @@ build:
 	mv ./.vitepress/dist ../webroot
 	
 import:
-	cp -R ../veryl-riscv-book-md contents/
+	cp -R ../veryl-riscv-book-md/* contents/
 	cp -R ../images contents/images
 
 clean:

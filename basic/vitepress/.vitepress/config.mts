@@ -10,15 +10,12 @@ hljs.registerLanguage('veryl', veryl)
 export default defineConfig({
   srcDir: "contents",
   
-  title: "veryl-riscv-book",
+  title: "Verylで作るCPU",
   description: "Write RISC-V CPU in Veryl",
   themeConfig: {
-    // https://vitepress.dev/reference/default-theme-config
     nav: [
-      // { text: 'Home', link: '/' },
-      { text: 'プログラムを入手する', link: 'https://github.com/nananapo/bluecore' }
+      // { text: 'プログラムを入手する', link: 'https://github.com/nananapo/bluecore' }
     ],
-
     sidebar: [
       {
         text: '第I部 RV32I/RV64Iの実装',

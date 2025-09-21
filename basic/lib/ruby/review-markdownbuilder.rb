@@ -423,10 +423,11 @@ module ReVIEW
     ## 章 (Chapter) の概要
     def on_abstract_block()
       blank()
-      puts "[abstract]"; twospaces()
-      yield
-      truncate_blank(); twospaces()
-      puts "[/abstract]"
+      # puts "[abstract]"; twospaces()
+      # yield
+      # truncate_blank(); twospaces()
+      # puts "[/abstract]"
+      puts ''
       blank()
     end
 
