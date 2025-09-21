@@ -24,8 +24,8 @@ pre.hljs {
 
 .custom-hl-bold {
   font-weight: bolder;
-  -webkit-text-stroke: 0.03rem;
-  text-stroke: 0.03rem;
+  -webkit-text-stroke: 0.05em;
+  text-stroke: 0.05em;
 }
 
 .custom-hl-del {
