@@ -1,980 +1,560 @@
-<!doctype html>
-<html lang="ja">
+<!DOCTYPE html>
+<html lang="en-US" dir="ltr">
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>A拡張の実装 | veryl-riscv-book</title>
+    <meta name="description" content="Write RISC-V CPU in Veryl">
+    <meta name="generator" content="VitePress v2.0.0-alpha.12">
+    <link rel="preload stylesheet" href="/assets/style.CaWnRaAO.css" as="style">
+    <link rel="preload stylesheet" href="/vp-icons.css" as="style">
     
-    <title>A拡張の実装 | Verylで作るCPU</title>
-
-    <link rel="stylesheet" type="text/css" href="css/normalize.css" />
-    <link rel="stylesheet" type="text/css" href="css/webstyle.css" />
-    <link rel="next" title="C拡張の実装" href="14-impl-c.html">
-    <link rel="prev" title="Memory-mapped I/Oの実装" href="12-impl-mmio.html">
-    <meta name="generator" content="Re:VIEW Starter">
-
-    <script async defer src="https://buttons.github.io/buttons.js"></script>
-
+    <script type="module" src="/assets/app.C5T7VUJy.js"></script>
+    <link rel="preload" href="/assets/inter-roman-latin.Di8DUHzh.woff2" as="font" type="font/woff2" crossorigin="">
+    <link rel="modulepreload" href="/assets/chunks/theme.Bi7Ru2r6.js">
+    <link rel="modulepreload" href="/assets/chunks/framework.D5l_65jD.js">
+    <link rel="modulepreload" href="/assets/13-impl-a.md.CnPlYOpQ.lean.js">
+    <script id="check-dark-mode">(()=>{const e=localStorage.getItem("vitepress-theme-appearance")||"auto",a=window.matchMedia("(prefers-color-scheme: dark)").matches;(!e||e==="auto"?a:e==="dark")&&document.documentElement.classList.add("dark")})();</script>
+    <script id="check-mac-os">document.documentElement.classList.toggle("mac",/Mac|iPhone|iPod|iPad/i.test(navigator.platform));</script>
   </head>
-  <body style="background-color:#eff4ff">
-    <div class="page-outer" style="background-color:white">
-      <div class="side-content">
-                <a class="nav-title" href="index.html">Verylで作るCPU</a>
+  <body>
+    <div id="app"><div class="Layout" data-v-1df9f90f><!--[--><!--]--><!--[--><span tabindex="-1" data-v-0b0ada53></span><a href="#VPContent" class="VPSkipLink visually-hidden" data-v-0b0ada53>Skip to content</a><!--]--><!----><header class="VPNav" data-v-1df9f90f data-v-9f75dce3><div class="VPNavBar" data-v-9f75dce3 data-v-2a96a3d0><div class="wrapper" data-v-2a96a3d0><div class="container" data-v-2a96a3d0><div class="title" data-v-2a96a3d0><div class="VPNavBarTitle has-sidebar" data-v-2a96a3d0 data-v-1e38c6bc><a class="title" href="/" data-v-1e38c6bc><!--[--><!--]--><!----><span data-v-1e38c6bc>veryl-riscv-book</span><!--[--><!--]--></a></div></div><div class="content" data-v-2a96a3d0><div class="content-body" data-v-2a96a3d0><!--[--><!--]--><div class="VPNavBarSearch search" data-v-2a96a3d0><!----></div><nav aria-labelledby="main-nav-aria-label" class="VPNavBarMenu menu" data-v-2a96a3d0 data-v-39714824><span id="main-nav-aria-label" class="visually-hidden" data-v-39714824> Main Navigation </span><!--[--><!--[--><a class="VPLink link vp-external-link-icon VPNavBarMenuLink" href="https://github.com/nananapo/bluecore" target="_blank" rel="noreferrer" tabindex="0" data-v-39714824 data-v-e56f3d57><!--[--><span data-v-e56f3d57>プログラムを入手する</span><!--]--></a><!--]--><!--]--></nav><!----><div class="VPNavBarAppearance appearance" data-v-2a96a3d0 data-v-6c893767><button class="VPSwitch VPSwitchAppearance" type="button" role="switch" title aria-checked="false" data-v-6c893767 data-v-5337faa4 data-v-1d5665e3><span class="check" data-v-1d5665e3><span class="icon" data-v-1d5665e3><!--[--><span class="vpi-sun sun" data-v-5337faa4></span><span class="vpi-moon moon" data-v-5337faa4></span><!--]--></span></span></button></div><div class="VPSocialLinks VPNavBarSocialLinks social-links" data-v-2a96a3d0 data-v-0394ad82 data-v-d07f11e6><!--[--><a class="VPSocialLink no-icon" href="https://github.com/nananapo/veryl-riscv-book" aria-label="github" target="_blank" rel="me noopener" data-v-d07f11e6 data-v-591a6b30><span class="vpi-social-github"></span></a><!--]--></div><div class="VPFlyout VPNavBarExtra extra" data-v-2a96a3d0 data-v-bb2aa2f0 data-v-42cb505d><button type="button" class="button" aria-haspopup="true" aria-expanded="false" aria-label="extra navigation" data-v-42cb505d><span class="vpi-more-horizontal icon" data-v-42cb505d></span></button><div class="menu" data-v-42cb505d><div class="VPMenu" data-v-42cb505d data-v-25a6cce8><!----><!--[--><!--[--><!----><div class="group" data-v-bb2aa2f0><div class="item appearance" data-v-bb2aa2f0><p class="label" data-v-bb2aa2f0>Appearance</p><div class="appearance-action" data-v-bb2aa2f0><button class="VPSwitch VPSwitchAppearance" type="button" role="switch" title aria-checked="false" data-v-bb2aa2f0 data-v-5337faa4 data-v-1d5665e3><span class="check" data-v-1d5665e3><span class="icon" data-v-1d5665e3><!--[--><span class="vpi-sun sun" data-v-5337faa4></span><span class="vpi-moon moon" data-v-5337faa4></span><!--]--></span></span></button></div></div></div><div class="group" data-v-bb2aa2f0><div class="item social-links" data-v-bb2aa2f0><div class="VPSocialLinks social-links-list" data-v-bb2aa2f0 data-v-d07f11e6><!--[--><a class="VPSocialLink no-icon" href="https://github.com/nananapo/veryl-riscv-book" aria-label="github" target="_blank" rel="me noopener" data-v-d07f11e6 data-v-591a6b30><span class="vpi-social-github"></span></a><!--]--></div></div></div><!--]--><!--]--></div></div></div><!--[--><!--]--><button type="button" class="VPNavBarHamburger hamburger" aria-label="mobile navigation" aria-expanded="false" aria-controls="VPNavScreen" data-v-2a96a3d0 data-v-e5dd9c1c><span class="container" data-v-e5dd9c1c><span class="top" data-v-e5dd9c1c></span><span class="middle" data-v-e5dd9c1c></span><span class="bottom" data-v-e5dd9c1c></span></span></button></div></div></div></div><div class="divider" data-v-2a96a3d0><div class="divider-line" data-v-2a96a3d0></div></div></div><!----></header><div class="VPLocalNav has-sidebar empty" data-v-1df9f90f data-v-8acdfeb5><div class="container" data-v-8acdfeb5><button class="menu" aria-expanded="false" aria-controls="VPSidebarNav" data-v-8acdfeb5><span class="vpi-align-left menu-icon" data-v-8acdfeb5></span><span class="menu-text" data-v-8acdfeb5>Menu</span></button><div class="VPLocalNavOutlineDropdown" style="--vp-vh:0px;" data-v-8acdfeb5 data-v-0bf0e06f><button data-v-0bf0e06f>Return to top</button><!----></div></div></div><aside class="VPSidebar" data-v-1df9f90f data-v-e7c6e512><div class="curtain" data-v-e7c6e512></div><nav class="nav" id="VPSidebarNav" aria-labelledby="sidebar-aria-label" tabindex="-1" data-v-e7c6e512><span class="visually-hidden" id="sidebar-aria-label" data-v-e7c6e512> Sidebar Navigation </span><!--[--><!--]--><!--[--><div class="no-transition group" data-v-8d50c081><section class="VPSidebarItem level-0" data-v-8d50c081 data-v-d81de50c><div class="item" role="button" tabindex="0" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><h2 class="text" data-v-d81de50c>第I部 RV32I/RV64Iの実装</h2><!----></div><div class="items" data-v-d81de50c><!--[--><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/00-preface.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>まえがき</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/02-setup.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>1 環境構築</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/03-veryl.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>2 ハードウェア記述言語 Veryl</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/04-impl-rv32i.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>3 RV32Iの実装</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/04a-zicsr.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>4 Zicsr拡張の実装</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/04b-riscvtests.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>5 riscv-testsによるテスト</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/05-impl-rv64i.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>6 RV64Iの実装</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/05a-pipeline.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>7 CPUのパイプライン化</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/05b-synth.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>8 CPUの合成</p><!--]--></a><!----></div><!----></div><!--]--></div></section></div><div class="no-transition group" data-v-8d50c081><section class="VPSidebarItem level-0 has-active" data-v-8d50c081 data-v-d81de50c><div class="item" role="button" tabindex="0" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><h2 class="text" data-v-d81de50c>第II部 RV64IMACの実装</h2><!----></div><div class="items" data-v-d81de50c><!--[--><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/10-impl-m.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>9 M拡張の実装</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/11-impl-exception.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>10 例外の実装</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/12-impl-mmio.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>11 Memory-mapped I/Oの実装</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/13-impl-a.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>12 A拡張の実装</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/14-impl-c.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>13 C拡張の実装</p><!--]--></a><!----></div><!----></div><!--]--></div></section></div><div class="no-transition group" data-v-8d50c081><section class="VPSidebarItem level-0" data-v-8d50c081 data-v-d81de50c><div class="item" role="button" tabindex="0" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><h2 class="text" data-v-d81de50c>第III部 特権/割り込みの実装</h2><!----></div><div class="items" data-v-d81de50c><!--[--><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/20-mmode-csr.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>14 M-modeの実装 (1. CSRの実装)</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/21-impl-interrupt.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>15 M-modeの実装 (2. 割り込みの実装)</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/22-umode-csr.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>16 U-modeの実装</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/23-smode-csr.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>17 S-modeの実装 (1. CSRの実装)</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/24-impl-paging.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>18 S-modeの実装 (2. 仮想記憶システム)</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/25-impl-plic.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>19 PLICの実装</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/26-run-linux.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>20 Linuxを動かす</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/99-postface.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>あとがき (第Ⅰ部)</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/99b-postface.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>あとがき (第Ⅱ部、第Ⅲ部)</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/100-contribute.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>このプロジェクトに貢献する</p><!--]--></a><!----></div><!----></div><!--]--></div></section></div><!--]--><!--[--><!--]--></nav></aside><div class="VPContent has-sidebar" id="VPContent" data-v-1df9f90f data-v-aff0b8d7><div class="VPDoc has-sidebar has-aside" data-v-aff0b8d7 data-v-7011f0d8><!--[--><!--]--><div class="container" data-v-7011f0d8><div class="aside" data-v-7011f0d8><div class="aside-curtain" data-v-7011f0d8></div><div class="aside-container" data-v-7011f0d8><div class="aside-content" data-v-7011f0d8><div class="VPDocAside" data-v-7011f0d8 data-v-3f215769><!--[--><!--]--><!--[--><!--]--><nav aria-labelledby="doc-outline-aria-label" class="VPDocAsideOutline" data-v-3f215769 data-v-60d5052e><div class="content" data-v-60d5052e><div class="outline-marker" data-v-60d5052e></div><div aria-level="2" class="outline-title" id="doc-outline-aria-label" role="heading" data-v-60d5052e>On this page</div><ul class="VPDocOutlineItem root" data-v-60d5052e data-v-2d0bdf9b><!--[--><!--]--></ul></div></nav><!--[--><!--]--><div class="spacer" data-v-3f215769></div><!--[--><!--]--><!----><!--[--><!--]--><!--[--><!--]--></div></div></div></div><div class="content" data-v-7011f0d8><div class="content-container" data-v-7011f0d8><!--[--><!--]--><main class="main" data-v-7011f0d8><div style="position:relative;" class="vp-doc _13-impl-a" data-v-7011f0d8><div><h1 id="a拡張の実装" tabindex="-1">A拡張の実装 <a class="header-anchor" href="#a拡張の実装" aria-label="Permalink to “A拡張の実装”">​</a></h1><p>本章では、メモリの不可分操作を実現するA拡張を実装します。 A拡張にはLoad-Reserved、Store-Conditionalを実現するZalrsc拡張(表2)、 ロードした値を加工し、その結果をメモリにストアする操作を単一の命令で実装するZaamo拡張(表1)が含まれています。 A拡張の命令を利用すると、同じメモリ空間で複数のソフトウェアを並列、並行して実行するとき、 ソフトウェア間で同期をとりながら実行できます。</p><h2 id="アトミック操作" tabindex="-1">アトミック操作 <a class="header-anchor" href="#アトミック操作" aria-label="Permalink to “アトミック操作”">​</a></h2><h3 id="アトミック操作とは何か" tabindex="-1">アトミック操作とは何か？ <a class="header-anchor" href="#アトミック操作とは何か" aria-label="Permalink to “アトミック操作とは何か？”">​</a></h3><p>アトミック操作(Atomic operation、不可分操作)とは、他のシステムからその操作を観測するとき、1つの操作として観測される操作のことです。 つまり、他のシステムは、アトミック操作を行う前、アトミック操作を行った後の状態しか観測できません。</p><p><img src="/assets/sampleprogram_2cpu.DFUBut6R.png" alt="図2のプログラムを2つに分割して2つのCPUで実行する (Xは11になる)"><img src="/assets/sampleprogram_1cpu.pMVHibUi.png" alt="1つのCPUでメモリ上の値を2回インクリメントする (Xは12になる)"> アトミック操作は実行、観測される順序が重要なアプリケーションで利用します。 例えば、アドレスXの値をロードして1を足した値を書き戻すプログラムを、 2つのコアで同時に実行するとします(図1)。 このとき命令の実行順序によっては、最終的な値が1つのコアで2回プログラムを実行した場合と異なってしまいます(図2)。 この状態を避けるためにはロード、加算、ストアをアトミックに行う必要があります。 このアトミック操作の実現方法として、A拡張はAMOADD命令、LR命令とSC命令を提供します。</p><h3 id="zaamo拡張" tabindex="-1">Zaamo拡張 <a class="header-anchor" href="#zaamo拡張" aria-label="Permalink to “Zaamo拡張”">​</a></h3><p>Zaamo拡張は、値をロードして、演算した値をストアする操作を1つの命令で行う命令を定義しています。 AMOADD命令はロード、加算、ストアを行う単一の命令です。 Zaamo拡張は他にも簡単な操作を行う命令も提供しています。</p><div id="a.instructions.zaamo" class="table"><p class="caption">表12.1: Zaamo拡張の命令</p><table><tr class="hline"><th>命令</th><th>動作 (読み込んだ値をレジスタにライトバックする)</th></tr><tr class="hline"><td>AMOSWAP.W/D</td><td>メモリから32/64ビット読み込み、<br>rs2の値を書き込む</td></tr><tr class="hline"><td>AMOADD.W/D</td><td>メモリから32/64ビット(符号付き)読み込み<br>rs2(符号付き)の値を足して書き込む</td></tr><tr class="hline"><td>AMOAND.W/D</td><td>メモリから32/64ビット読み込み<br>rs2の値をAND演算して書き込む</td></tr><tr class="hline"><td>AMOOR.W/D</td><td>メモリから32/64ビット読み込み<br>rs2の値をOR演算して書き込む</td></tr><tr class="hline"><td>AMOXOR.W/D</td><td>メモリから32/64ビット読み込み<br>rs2の値をXOR演算して書き込む</td></tr><tr class="hline"><td>AMOMIN.W/D</td><td>メモリから32/64ビット(符号付き)読み込み<br>rs2(符号付き)の値と比べて小さい値を書き込む</td></tr><tr class="hline"><td>AMOMAX.W/D</td><td>メモリから32/64ビット(符号付き)読み込み<br>rs2(符号付き)の値と比べて大きい値をを書き込む</td></tr><tr class="hline"><td>AMOMINU.W/D</td><td>メモリから32/64ビット(符号無し)読み込み<br>rs2(符号無し)の値と比べて小さい値を書き込む</td></tr><tr class="hline"><td>AMOMAXU.W/D</td><td>メモリから32/64ビット(符号無し)読み込み<br>rs2(符号無し)の値と比べて大きい値を書き込む</td></tr></table></div><h3 id="zalrsc拡張" tabindex="-1">Zalrsc拡張 <a class="header-anchor" href="#zalrsc拡張" aria-label="Permalink to “Zalrsc拡張”">​</a></h3><p>Zalrsc拡張は、LR命令とSC命令を定義しています。 LR、SC命令は、それぞれLoad-Reserved、Store-Conditional操作を実現する命令です。 それぞれ次のように動作します。</p><dl><dt>LR命令</dt><dd> 指定されたアドレスのデータを読み込み、指定されたアドレスを予約セット(Reservation set)に登録します。 ロードしたデータをレジスタにライトバックします。 </dd><dt>SC命令</dt><dd> 指定されたアドレスが予約セットに存在する場合、指定されたアドレスにデータを書き込みます(ストア成功)。 予約セットにアドレスが存在しない場合は書き込みません(ストア失敗)。 ストアに成功したら`0`、失敗したら`0`以外の値をレジスタにライトバックします。 命令の実行後に必ず予約セットを空にします。 </dd></dl><p>LR、SC命令を使うことで、アトミックなロード、加算、ストアを次のように記述できます (リスト1)。</p><p><span class="caption">▼リスト12.1: LR、SC命令によるアトミックな加算</span></p><div class="language-asm"><button title="Copy Code" class="copy"></button><span class="lang">asm</span><pre class="hljs"><code>atomic_add:
+    LR.W x2, (x3) ← アドレスx3の値をx2にロード
+    ADDI x2, x2, 1 ← x2に1を足す
+    SC.W x4, x2, (x3) ← ストアを試行し、結果をx4に格納
+    BNEZ x4, atomic_add ← SC命令が失敗していたらやり直す
+</code></pre></div><p>例えば同時に2つのコアがリスト1を実行するとき、同期をとれていない書き込みはSC命令で失敗します。 失敗したらLR命令からやり直すことで、1つのコアで2回実行した場合と同一の結果(<code>1</code>を2回加算)になります。</p><p>予約セットのサイズは実装によって異なります。</p><div id="a.instructions.zalrsc" class="table"><p class="caption">表12.2: Zalrsc拡張の命令</p><table><tr class="hline"><th>命令</th><th>動作</th></tr><tr class="hline"><td>LR.W/D</td><td>メモリから32/64ビット読み込み、予約セットにアドレスを登録する<br>読み込んだ値をレジスタにライトバックする</td></tr><tr class="hline"><td>SC.W/D</td><td>予約セットにrs1の値が登録されている場合、メモリにrs2の値を書き込み<br>0をレジスタにライトバックする。予約セットにアドレスが登録されていない場合<br>メモリに書き込まず、0以外の値をレジスタにライトバックする。<br>命令の実行後に予約セットを空にする</td></tr></table></div><h3 id="命令の順序" tabindex="-1">命令の順序 <a class="header-anchor" href="#命令の順序" aria-label="Permalink to “命令の順序”">​</a></h3><p>A拡張の命令のビット列は、それぞれ1ビットのaq、rlビットを含んでいます。 このビットは、他のコアやハードウェアスレッドからメモリ操作を観測したときにメモリ操作がどのような順序で観測されるかを制御するものです。</p><p>A拡張の命令をAとするとき、それぞれのビットの状態に応じて、Aによるメモリ操作は次のように観測されます。</p><dl><dt>aq=0、rl=0</dt><dd> Aの前後でメモリ操作の順序は保証されません。 </dd><dt>aq=1、rl=0</dt><dd> Aの後ろにあるメモリを操作する命令は、Aのメモリ操作の後に観測されることが保証されます。 </dd><dt>aq=0、rl=1</dt><dd> Aのメモリ操作は、Aの前にあるメモリを操作する命令が観測できるようになった後に観測されることが保証されます。 </dd><dt>aq=1、rl=1</dt><dd> Aのメモリ操作は、Aの前にあるメモリを操作する命令よりも後、Aの後ろにあるメモリを操作する命令よりも前に観測されることが保証されます。 </dd></dl><p>今のところ、CPUはメモリ操作を１命令ずつ直列に実行するため、常にaqが<code>1</code>、rlが<code>1</code>であるように動作します。 そのため、本章ではaq、rlビットを考慮しないで実装を行います<sup class="footnote-ref"><a href="#fn1" id="fnref1">[1]</a></sup>。</p><h2 id="命令のデコード" tabindex="-1">命令のデコード <a class="header-anchor" href="#命令のデコード" aria-label="Permalink to “命令のデコード”">​</a></h2><p>A拡張の命令はすべてR形式で、opcodeはOP-AMO(<code>7&#39;b0101111</code>)です。 それぞれの命令はfunct5(リスト3)とfunct3(Wは<code>2</code>、Dは<code>3</code>)で区別できます。</p><p>eeiパッケージにOP-AMOの定数を定義します (リスト2)。</p><p><span class="caption">▼リスト12.2: OP-AMOの定義 (eei.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">const</span> OP_AMO      : <span class="hljs-keyword">logic</span>&lt;<span class="hljs-number">7</span>&gt; = <span class="hljs-number">7&#39;b0101111</span>;
+</code></pre></div><p>A拡張の命令を区別するための列挙型<code>AMOOp</code>を定義します (リスト3)。 それぞれ命令のfunct5と対応しています。</p><p><span class="caption">▼リスト12.3: AMOOp型の定義 (eei.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">enum</span> AMOOp: <span class="hljs-keyword">logic</span>&lt;<span class="hljs-number">5</span>&gt; {
+    LR = <span class="hljs-number">5&#39;b00010</span>,
+    SC = <span class="hljs-number">5&#39;b00011</span>,
+    SWAP = <span class="hljs-number">5&#39;b00001</span>,
+    ADD = <span class="hljs-number">5&#39;b00000</span>,
+    XOR = <span class="hljs-number">5&#39;b00100</span>,
+    AND = <span class="hljs-number">5&#39;b01100</span>,
+    OR = <span class="hljs-number">5&#39;b01000</span>,
+    MIN = <span class="hljs-number">5&#39;b10000</span>,
+    MAX = <span class="hljs-number">5&#39;b10100</span>,
+    MINU = <span class="hljs-number">5&#39;b11000</span>,
+    MAXU = <span class="hljs-number">5&#39;b11100</span>,
+}
+</code></pre></div><h3 id="is-amoフラグを実装する" tabindex="-1">is_amoフラグを実装する <a class="header-anchor" href="#is-amoフラグを実装する" aria-label="Permalink to “is_amoフラグを実装する”">​</a></h3><p><code>InstCtrl</code>構造体に、 A拡張の命令であることを示す<code>is_amo</code>フラグを追加します (リスト4)。</p><p><span class="caption">▼リスト12.4: InstCtrlにis_amoを定義する (corectrl.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">struct</span> InstCtrl {
+    itype    : InstType   , <span class="hljs-comment">// 命令の形式</span>
+    rwb_en   : <span class="hljs-keyword">logic</span>      , <span class="hljs-comment">// レジスタに書き込むかどうか</span>
+    is_lui   : <span class="hljs-keyword">logic</span>      , <span class="hljs-comment">// LUI命令である</span>
+    is_aluop : <span class="hljs-keyword">logic</span>      , <span class="hljs-comment">// ALUを利用する命令である</span>
+    is_muldiv: <span class="hljs-keyword">logic</span>      , <span class="hljs-comment">// M拡張の命令である</span>
+    is_op32  : <span class="hljs-keyword">logic</span>      , <span class="hljs-comment">// OP-32またはOP-IMM-32である</span>
+    is_jump  : <span class="hljs-keyword">logic</span>      , <span class="hljs-comment">// ジャンプ命令である</span>
+    is_load  : <span class="hljs-keyword">logic</span>      , <span class="hljs-comment">// ロード命令である</span>
+    is_csr   : <span class="hljs-keyword">logic</span>      , <span class="hljs-comment">// CSR命令である</span>
+    <span class="custom-hl-bold">is_amo   : <span class="hljs-keyword">logic</span>      , <span class="hljs-comment">// AMO instruction</span></span>
+    funct3   : <span class="hljs-keyword">logic</span>   &lt;<span class="hljs-number">3</span>&gt;, <span class="hljs-comment">// 命令のfunct3フィールド</span>
+    funct7   : <span class="hljs-keyword">logic</span>   &lt;<span class="hljs-number">7</span>&gt;, <span class="hljs-comment">// 命令のfunct7フィールド</span>
+}
+</code></pre></div><p>命令がメモリにアクセスするかを判定するinst_is_memop関数を、<code>is_amo</code>フラグを利用するように変更します (リスト5)。</p><p><span class="caption">▼リスト12.5: A拡張の命令がメモリにアクセスする命令と判定する (corectrl.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">function</span> inst_is_memop (
+    ctrl: <span class="hljs-keyword">input</span> InstCtrl,
+) -&gt; <span class="hljs-keyword">logic</span> {
+    <span class="hljs-keyword">return</span> ctrl.itype == InstType::S || ctrl.is_load <span class="custom-hl-bold">|| ctrl.is_amo</span>;
+}
+</code></pre></div><p>inst_decoderモジュールの<code>InstCtrl</code>を生成している部分を変更します。 opcodeが<code>OP-AMO</code>のとき、<code>is_amo</code>を<code>T</code>に設定します (リスト6)。 その他のopcodeの<code>is_amo</code>は<code>F</code>に設定してください。</p><p><span class="caption">▼リスト12.6: is_amoフラグを追加する (inst_decoder.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code>OP_SYSTEM: {
+    InstType::I, T, F, F, F, F, F, F, T<span class="custom-hl-bold">, F</span>
+},
+OP_AMO: {
+    InstType::R, T, F, F, F, F, F, F, F<span class="custom-hl-bold">, T</span>
+},
+<span class="hljs-keyword">default</span>: {
+    InstType::X, F, F, F, F, F, F, F, F<span class="custom-hl-bold">, F</span>
+},
+</code></pre></div><p>また、A拡張の命令が有効な命令として判断されるようにします (リスト7)。</p><p><span class="caption">▼リスト12.7: A拡張の命令のとき、validフラグを立てる (inst_decoder.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code>OP_MISC_MEM: T, <span class="hljs-comment">// FENCE</span>
+<span class="custom-hl-bold">OP_AMO     : f3 == <span class="hljs-number">3&#39;b010</span> || f3 == <span class="hljs-number">3&#39;b011</span>, <span class="hljs-comment">// AMO</span></span>
+<span class="hljs-keyword">default</span>    : F,
+</code></pre></div><h3 id="アドレスを変更する" tabindex="-1">アドレスを変更する <a class="header-anchor" href="#アドレスを変更する" aria-label="Permalink to “アドレスを変更する”">​</a></h3><p>A拡張でアクセスするメモリのアドレスはrs1で指定されたレジスタの値です。 これは基本整数命令セットのロードストア命令のアドレス指定方法(rs1と即値を足し合わせる)とは異なるため、 memunitモジュールの<code>addr</code>ポートに割り当てる値を<code>is_amo</code>フラグによって切り替えます (リスト8)。</p><p><span class="caption">▼リスト12.8: メモリアドレスをrs1レジスタの値にする (core.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">var</span> memu_rdata: UIntX;
+<span class="hljs-keyword">var</span> memu_stall: <span class="hljs-keyword">logic</span>;
+<span class="custom-hl-bold"><span class="hljs-keyword">let</span> memu_addr : Addr  = <span class="hljs-keyword">if</span> mems_ctrl.is_amo ? memq_rdata.rs1_data : memq_rdata.alu_result;</span>
 
-        <div style="display:flex; gap:10px; align-items: center;">
-          <a class="github-button" href="https://github.com/nananapo/veryl-riscv-book" data-color-scheme="no-preference: light_high_contrast; light: light; dark: dark;" data-size="large" data-show-count="true" aria-label="Star nananapo/veryl-riscv-book on GitHub">Star</a>
-          <div style="">
-            <a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-show-count="false">Tweet</a>
-          </div>
-          <div style="margin-bottom: 14px;" id="share-facebook" class="fb-share-button" data-href="" data-layout="" data-size=""><a target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Finvalid.invalid%2F&amp;src=sdkpreparse" class="fb-xfbml-parse-ignore">Facebookでシェアする</a></div>
-        </div>
-        <ul class="toc toc-1">
-    <li class="toc-chapter"><a href="./00-preface.html">まえがき</a></li>
-<li class="toc-part">第I部 RV32I/RV64Iの実装
-  <ul class="toc toc-2">
-    <li class="toc-chapter"><a href="./02-setup.html">1 環境構築</a></li>
-    <li class="toc-chapter"><a href="./03-veryl.html">2 ハードウェア記述言語 Veryl</a></li>
-    <li class="toc-chapter"><a href="./04-impl-rv32i.html">3 RV32Iの実装</a></li>
-    <li class="toc-chapter"><a href="./04a-zicsr.html">4 Zicsr拡張の実装</a></li>
-    <li class="toc-chapter"><a href="./04b-riscvtests.html">5 riscv-testsによるテスト</a></li>
-    <li class="toc-chapter"><a href="./05-impl-rv64i.html">6 RV64Iの実装</a></li>
-    <li class="toc-chapter"><a href="./05a-pipeline.html">7 CPUのパイプライン化</a></li>
-    <li class="toc-chapter"><a href="./05b-synth.html">8 CPUの合成</a></li>
-  </ul>
-</li>
-<li class="toc-part">第II部 RV64IMACの実装
-  <ul class="toc toc-2">
-    <li class="toc-chapter"><a href="./10-impl-m.html">9 M拡張の実装</a></li>
-    <li class="toc-chapter"><a href="./11-impl-exception.html">10 例外の実装</a></li>
-    <li class="toc-chapter"><a href="./12-impl-mmio.html">11 Memory-mapped I/Oの実装</a></li>
-    <li class="toc-chapter"><a href="./13-impl-a.html">12 A拡張の実装</a>
-      <ul class="toc toc-3">
-        <li class="toc-section"><a href="./13-impl-a.html#h12-1">12.1 アトミック操作</a></li>
-        <li class="toc-section"><a href="./13-impl-a.html#h12-2">12.2 命令のデコード</a></li>
-        <li class="toc-section"><a href="./13-impl-a.html#h12-3">12.3 amounitモジュールの作成</a></li>
-        <li class="toc-section"><a href="./13-impl-a.html#h12-4">12.4 Zalrsc拡張の実装</a></li>
-        <li class="toc-section"><a href="./13-impl-a.html#h12-5">12.5 Zaamo拡張の実装</a></li>
-      </ul>
-    </li>
-    <li class="toc-chapter"><a href="./14-impl-c.html">13 C拡張の実装</a></li>
-  </ul>
-</li>
-<li class="toc-part">第III部 特権/割り込みの実装
-  <ul class="toc toc-2">
-    <li class="toc-chapter"><a href="./20-mmode-csr.html">14 M-modeの実装 (1. CSRの実装)</a></li>
-    <li class="toc-chapter"><a href="./21-impl-interrupt.html">15 M-modeの実装 (2. 割り込みの実装)</a></li>
-    <li class="toc-chapter"><a href="./22-umode-csr.html">16 U-modeの実装</a></li>
-    <li class="toc-chapter"><a href="./23-smode-csr.html">17 S-modeの実装 (1. CSRの実装)</a></li>
-    <li class="toc-chapter"><a href="./24-impl-paging.html">18 S-modeの実装 (2. 仮想記憶システム)</a></li>
-    <li class="toc-chapter"><a href="./25-impl-plic.html">19 PLICの実装</a></li>
-    <li class="toc-chapter"><a href="./26-run-linux.html">20 Linuxを動かす</a></li>
-  </ul>
-</li>
-    <li class="toc-chapter"><a href="./99-postface.html">あとがき (第Ⅰ部)</a></li>
-    <li class="toc-chapter"><a href="./99b-postface.html">あとがき (第Ⅱ部、第Ⅲ部)</a></li>
-    <li class="toc-chapter"><a href="./100-contribute.html">このプロジェクトに貢献する</a></li>
-    <li class="toc-chapter"><a href="./bib.html">参考文献</a></li>
-</ul>
-      </div>
-      <div class="page-inner">
-        <header class="page-header">
-        </header>
-        <main class="page-main">
-  <h1 class="boldlines center twolines"><a id="h12"></a><span class="secno">第12章</span> <br/>A拡張の実装</h1>
-<p>本章では、メモリの不可分操作を実現するA拡張を実装します。A拡張にはLoad-Reserved、Store-Conditionalを実現するZalrsc拡張(<span class="tableref"><a href="./13-impl-a.html#a.instructions.zalrsc">表12.2</a></span>)、ロードした値を加工し、その結果をメモリにストアする操作を単一の命令で実装するZaamo拡張(<span class="tableref"><a href="./13-impl-a.html#a.instructions.zaamo">表12.1</a></span>)が含まれています。A拡張の命令を利用すると、同じメモリ空間で複数のソフトウェアを並列、並行して実行するとき、ソフトウェア間で同期をとりながら実行できます。</p>
+<span class="hljs-keyword">inst</span> memu: memunit (
+    clk                                   ,
+    rst                                   ,
+    valid : mems_valid &amp;&amp; !mems_expt.valid,
+    is_new: mems_is_new                   ,
+    ctrl  : mems_ctrl                     ,
+    <span class="custom-hl-bold">addr  : memu_addr                     ,</span>
+    rs2   : memq_rdata.rs2_data           ,
+    rdata : memu_rdata                    ,
+    stall : memu_stall                    ,
+    membus: d_membus                      ,
+);
+</code></pre></div><p>A拡張の命令のメモリアドレスが、 操作するデータの幅に整列されていないとき、 Store/AMO address misaligned例外が発生します。 この例外はストア命令の場合の例外と同じです。</p><p>EXステージの例外判定でアドレスを使っている部分を変更します (リスト9)。 causeとtvalの割り当てがストア命令の場合と同じになっていることを確認してください。</p><p><span class="caption">▼リスト12.9: 例外を判定するアドレスを変更する (core.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="custom-hl-bold"><span class="hljs-keyword">let</span> memaddr                       : Addr  = <span class="hljs-keyword">if</span> exs_ctrl.is_amo ? exs_rs1_data : exs_alu_result;</span>
+<span class="hljs-keyword">let</span> loadstore_address_misaligned  : <span class="hljs-keyword">logic</span> = inst_is_memop(exs_ctrl) &amp;&amp; <span class="hljs-keyword">case</span> exs_ctrl.funct3[<span class="hljs-number">1</span>:<span class="hljs-number">0</span>] {
+    <span class="hljs-number">2&#39;b00</span>  : <span class="hljs-number">0</span>, <span class="hljs-comment">// B</span>
+    <span class="hljs-number">2&#39;b01</span>  : <span class="custom-hl-bold">memaddr</span>[<span class="hljs-number">0</span>] != <span class="hljs-number">1&#39;b0</span>, <span class="hljs-comment">// H</span>
+    <span class="hljs-number">2&#39;b10</span>  : <span class="custom-hl-bold">memaddr</span>[<span class="hljs-number">1</span>:<span class="hljs-number">0</span>] != <span class="hljs-number">2&#39;b0</span>, <span class="hljs-comment">// W</span>
+    <span class="hljs-number">2&#39;b11</span>  : <span class="custom-hl-bold">memaddr</span>[<span class="hljs-number">2</span>:<span class="hljs-number">0</span>] != <span class="hljs-number">3&#39;b0</span>, <span class="hljs-comment">// D</span>
+    <span class="hljs-keyword">default</span>: <span class="hljs-number">0</span>,
+};
+</code></pre></div><h3 id="ライトバックする条件を変更する" tabindex="-1">ライトバックする条件を変更する <a class="header-anchor" href="#ライトバックする条件を変更する" aria-label="Permalink to “ライトバックする条件を変更する”">​</a></h3><p>A拡張の命令を実行するとき、 ロードした値をレジスタにライトバックするように変更します (リスト10)。</p><p><span class="caption">▼リスト12.10: メモリからロードした値をライトバックする (core.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">let</span> wbs_wb_data: UIntX    = <span class="hljs-keyword">switch</span> {
+    wbs_ctrl.is_lui                    : wbs_imm,
+    wbs_ctrl.is_jump                   : wbs_pc + <span class="hljs-number">4</span>,
+    wbs_ctrl.is_load <span class="custom-hl-bold">|| wbs_ctrl.is_amo</span>: wbq_rdata.mem_rdata,
+    wbs_ctrl.is_csr                    : wbq_rdata.csr_rdata,
+    <span class="hljs-keyword">default</span>                            : wbq_rdata.alu_result
+};
+</code></pre></div><h2 id="amounitモジュールの作成" tabindex="-1">amounitモジュールの作成 <a class="header-anchor" href="#amounitモジュールの作成" aria-label="Permalink to “amounitモジュールの作成”">​</a></h2><p>A拡張は他のコア、ハードウェアスレッドと同期してメモリ操作を行うためのものであるため、 A拡張の操作はcoreモジュールの外、メモリよりも前で行います。 本書では、coreモジュールとmmio_controllerモジュールの間に、 A拡張の命令を処理するamounitモジュールを実装します(図3)。</p><p><img src="/assets/amo-mmio-structure.ByM4htZK.png" alt="amounitモジュールと他のモジュールの接続"></p><h3 id="インターフェースを作成する" tabindex="-1">インターフェースを作成する <a class="header-anchor" href="#インターフェースを作成する" aria-label="Permalink to “インターフェースを作成する”">​</a></h3><p>amounitモジュールにA拡張の操作を指示するために、 <code>is_amo</code>フラグ、<code>aq</code>ビット、<code>rl</code>ビット、<code>AMOOp</code>型をmembus_ifインターフェースに追加で定義したインターフェースを作成します。</p><p><code>src/core_data_if.veryl</code>を作成し、次のように記述します (リスト11)。</p><p><span class="caption">▼リスト12.11: core_data_if.veryl</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">import</span> eei::*;
 
-<h2 class="numbox"><a id="h12-1"></a><span class="secno">12.1</span> アトミック操作</h2>
+<span class="hljs-keyword">interface</span> core_data_if {
+    <span class="hljs-keyword">var</span> valid : <span class="hljs-keyword">logic</span>                       ;
+    <span class="hljs-keyword">var</span> ready : <span class="hljs-keyword">logic</span>                       ;
+    <span class="hljs-keyword">var</span> addr  : <span class="hljs-keyword">logic</span>&lt;XLEN&gt;                 ;
+    <span class="hljs-keyword">var</span> wen   : <span class="hljs-keyword">logic</span>                       ;
+    <span class="hljs-keyword">var</span> wdata : <span class="hljs-keyword">logic</span>&lt;MEMBUS_DATA_WIDTH&gt;    ;
+    <span class="hljs-keyword">var</span> wmask : <span class="hljs-keyword">logic</span>&lt;MEMBUS_DATA_WIDTH / <span class="hljs-number">8</span>&gt;;
+    <span class="hljs-keyword">var</span> rvalid: <span class="hljs-keyword">logic</span>                       ;
+    <span class="hljs-keyword">var</span> rdata : <span class="hljs-keyword">logic</span>&lt;MEMBUS_DATA_WIDTH&gt;    ;
 
-<h3 class="none"><a id="h12-1-1"></a><span class="secno">12.1.1</span> アトミック操作とは何か？</h3>
-<p>アトミック操作(Atomic operation、不可分操作)とは、他のシステムからその操作を観測するとき、1つの操作として観測される操作のことです。つまり、他のシステムは、アトミック操作を行う前、アトミック操作を行った後の状態しか観測できません。</p>
-<div id="sampleprogram_2cpu" class="image">
-<img src="images/13-impl-a/sampleprogram_2cpu.png" alt="&lt;span class=&quot;imgref&quot;&gt;&lt;a href=&quot;./13-impl-a.html#sampleprogram_1cpu&quot;&gt;図12.2&lt;/a&gt;&lt;/span&gt;のプログラムを2つに分割して2つのCPUで実行する (Xは11になる)" class="img" style="width:80%" />
-<p class="caption">
-図12.1: <span class="imgref"><a href="./13-impl-a.html#sampleprogram_1cpu">図12.2</a></span>のプログラムを2つに分割して2つのCPUで実行する (Xは11になる)
-</p>
-</div>
-<div id="sampleprogram_1cpu" class="image">
-<img src="images/13-impl-a/sampleprogram_1cpu.png" alt="1つのCPUでメモリ上の値を2回インクリメントする (Xは12になる)" class="img" style="width:50%" />
-<p class="caption">
-図12.2: 1つのCPUでメモリ上の値を2回インクリメントする (Xは12になる)
-</p>
-</div>
-<p>アトミック操作は実行、観測される順序が重要なアプリケーションで利用します。例えば、アドレスXの値をロードして1を足した値を書き戻すプログラムを、2つのコアで同時に実行するとします(<span class="imgref"><a href="./13-impl-a.html#sampleprogram_2cpu">図12.1</a></span>)。このとき命令の実行順序によっては、最終的な値が1つのコアで2回プログラムを実行した場合と異なってしまいます(<span class="imgref"><a href="./13-impl-a.html#sampleprogram_1cpu">図12.2</a></span>)。この状態を避けるためにはロード、加算、ストアをアトミックに行う必要があります。このアトミック操作の実現方法として、A拡張はAMOADD命令、LR命令とSC命令を提供します。</p>
+    <span class="hljs-keyword">var</span> is_amo: <span class="hljs-keyword">logic</span>   ;
+    <span class="hljs-keyword">var</span> aq    : <span class="hljs-keyword">logic</span>   ;
+    <span class="hljs-keyword">var</span> rl    : <span class="hljs-keyword">logic</span>   ;
+    <span class="hljs-keyword">var</span> amoop : AMOOp   ;
+    <span class="hljs-keyword">var</span> funct3: <span class="hljs-keyword">logic</span>&lt;<span class="hljs-number">3</span>&gt;;
 
-<h3 class="none"><a id="h12-1-2"></a><span class="secno">12.1.2</span> Zaamo拡張</h3>
-<p>Zaamo拡張は、値をロードして、演算した値をストアする操作を1つの命令で行う命令を定義しています。AMOADD命令はロード、加算、ストアを行う単一の命令です。Zaamo拡張は他にも簡単な操作を行う命令も提供しています。</p>
-<div id="a.instructions.zaamo" class="table">
-<p class="caption">表12.1: Zaamo拡張の命令</p>
-<table>
-<tr class="hline"><th>命令</th><th>動作 (読み込んだ値をレジスタにライトバックする)</th></tr>
-<tr class="hline"><td>AMOSWAP.W/D</td><td>メモリから32/64ビット読み込み、<br />rs2の値を書き込む</td></tr>
-<tr class="hline"><td>AMOADD.W/D</td><td>メモリから32/64ビット(符号付き)読み込み<br />rs2(符号付き)の値を足して書き込む</td></tr>
-<tr class="hline"><td>AMOAND.W/D</td><td>メモリから32/64ビット読み込み<br />rs2の値をAND演算して書き込む</td></tr>
-<tr class="hline"><td>AMOOR.W/D</td><td>メモリから32/64ビット読み込み<br />rs2の値をOR演算して書き込む</td></tr>
-<tr class="hline"><td>AMOXOR.W/D</td><td>メモリから32/64ビット読み込み<br />rs2の値をXOR演算して書き込む</td></tr>
-<tr class="hline"><td>AMOMIN.W/D</td><td>メモリから32/64ビット(符号付き)読み込み<br />rs2(符号付き)の値と比べて小さい値を書き込む</td></tr>
-<tr class="hline"><td>AMOMAX.W/D</td><td>メモリから32/64ビット(符号付き)読み込み<br />rs2(符号付き)の値と比べて大きい値をを書き込む</td></tr>
-<tr class="hline"><td>AMOMINU.W/D</td><td>メモリから32/64ビット(符号無し)読み込み<br />rs2(符号無し)の値と比べて小さい値を書き込む</td></tr>
-<tr class="hline"><td>AMOMAXU.W/D</td><td>メモリから32/64ビット(符号無し)読み込み<br />rs2(符号無し)の値と比べて大きい値を書き込む</td></tr>
-</table>
-</div>
+    <span class="hljs-keyword">modport</span> master {
+        valid : <span class="hljs-keyword">output</span>,
+        ready : <span class="hljs-keyword">input</span> ,
+        addr  : <span class="hljs-keyword">output</span>,
+        wen   : <span class="hljs-keyword">output</span>,
+        wdata : <span class="hljs-keyword">output</span>,
+        wmask : <span class="hljs-keyword">output</span>,
+        rvalid: <span class="hljs-keyword">input</span> ,
+        rdata : <span class="hljs-keyword">input</span> ,
+        is_amo: <span class="hljs-keyword">output</span>,
+        aq    : <span class="hljs-keyword">output</span>,
+        rl    : <span class="hljs-keyword">output</span>,
+        amoop : <span class="hljs-keyword">output</span>,
+        funct3: <span class="hljs-keyword">output</span>,
+    }
 
-<h3 class="none"><a id="h12-1-3"></a><span class="secno">12.1.3</span> Zalrsc拡張</h3>
-<p>Zalrsc拡張は、LR命令とSC命令を定義しています。LR、SC命令は、それぞれLoad-Reserved、Store-Conditional操作を実現する命令です。それぞれ次のように動作します。</p>
-<dl>
-<dt>LR命令</dt>
-<dd>
-   指定されたアドレスのデータを読み込み、指定されたアドレスを予約セット(Reservation set)に登録します。
-   ロードしたデータをレジスタにライトバックします。
-</dd>
-<dt>SC命令</dt>
-<dd>
-   指定されたアドレスが予約セットに存在する場合、指定されたアドレスにデータを書き込みます(ストア成功)。
-   予約セットにアドレスが存在しない場合は書き込みません(ストア失敗)。
-   ストアに成功したら<code class="inline-code" translate="no" >0</code>、失敗したら<code class="inline-code" translate="no" >0</code>以外の値をレジスタにライトバックします。
-   命令の実行後に必ず予約セットを空にします。
-</dd>
-</dl>
-<p>LR、SC命令を使うことで、アトミックなロード、加算、ストアを次のように記述できます(<span class="listref"><a href="./13-impl-a.html#sample.asm.lrsc">リスト12.1</a></span>)。</p>
-<div id="sample.asm.lrsc" class="caption-code">
-<span class="caption">リスト12.1: リスト12.1: LR、SC命令によるアトミックな加算</span>
-<pre class="list language-lrsc" translate="no"><em class="lineno">1: </em>atomic_add:
-<em class="lineno">2: </em>    LR.W x2, (x3) <span class="balloon">← アドレスx3の値をx2にロード</span>
-<em class="lineno">3: </em>    ADDI x2, x2, 1 <span class="balloon">← x2に1を足す</span>
-<em class="lineno">4: </em>    SC.W x4, x2, (x3) <span class="balloon">← ストアを試行し、結果をx4に格納</span>
-<em class="lineno">5: </em>    BNEZ x4, atomic_add <span class="balloon">← SC命令が失敗していたらやり直す</span>
-</pre>
-</div>
-<p>例えば同時に2つのコアが<span class="listref"><a href="./13-impl-a.html#sample.asm.lrsc">リスト12.1</a></span>を実行するとき、同期をとれていない書き込みはSC命令で失敗します。失敗したらLR命令からやり直すことで、1つのコアで2回実行した場合と同一の結果(<code class="inline-code" translate="no" >1</code>を2回加算)になります。</p>
-<p>予約セットのサイズは実装によって異なります。</p>
-<div id="a.instructions.zalrsc" class="table">
-<p class="caption">表12.2: Zalrsc拡張の命令</p>
-<table>
-<tr class="hline"><th>命令</th><th>動作</th></tr>
-<tr class="hline"><td>LR.W/D</td><td>メモリから32/64ビット読み込み、予約セットにアドレスを登録する<br />読み込んだ値をレジスタにライトバックする</td></tr>
-<tr class="hline"><td>SC.W/D</td><td>予約セットにrs1の値が登録されている場合、メモリにrs2の値を書き込み<br />0をレジスタにライトバックする。予約セットにアドレスが登録されていない場合<br />メモリに書き込まず、0以外の値をレジスタにライトバックする。<br />命令の実行後に予約セットを空にする</td></tr>
-</table>
-</div>
+    <span class="hljs-keyword">modport</span> slave {
+        ..<span class="hljs-keyword">converse</span>(master)
+    }
 
-<h3 class="none"><a id="h12-1-4"></a><span class="secno">12.1.4</span> 命令の順序</h3>
-<p>A拡張の命令のビット列は、それぞれ1ビットのaq、rlビットを含んでいます。このビットは、他のコアやハードウェアスレッドからメモリ操作を観測したときにメモリ操作がどのような順序で観測されるかを制御するものです。</p>
-<p>A拡張の命令をAとするとき、それぞれのビットの状態に応じて、Aによるメモリ操作は次のように観測されます。</p>
-<dl>
-<dt>aq=0、rl=0</dt>
-<dd>
-    Aの前後でメモリ操作の順序は保証されません。
-</dd>
-<dt>aq=1、rl=0</dt>
-<dd>
-    Aの後ろにあるメモリを操作する命令は、Aのメモリ操作の後に観測されることが保証されます。
-</dd>
-<dt>aq=0、rl=1</dt>
-<dd>
-    Aのメモリ操作は、Aの前にあるメモリを操作する命令が観測できるようになった後に観測されることが保証されます。
-</dd>
-<dt>aq=1、rl=1</dt>
-<dd>
-    Aのメモリ操作は、Aの前にあるメモリを操作する命令よりも後、Aの後ろにあるメモリを操作する命令よりも前に観測されることが保証されます。
-</dd>
-</dl>
-<p>今のところ、CPUはメモリ操作を１命令ずつ直列に実行するため、常にaqが<code class="inline-code" translate="no" >1</code>、rlが<code class="inline-code" translate="no" >1</code>であるように動作します。そのため、本章ではaq、rlビットを考慮しないで実装を行います<sup><a id="fnb-impl-memory-order" href="#fn-impl-memory-order" class="noteref" epub:type="noteref">*1</a></sup>。</p>
-<div class="footnote-list">
-<div class="footnote" id="fn-impl-memory-order" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>メモリ操作の並び替えによる高速化は応用編で検討します。</p></div>
-</div><!--/.footnote-list-->
+    <span class="hljs-keyword">modport</span> all_input {
+        ..<span class="hljs-keyword">input</span>
+    }
+}
+</code></pre></div><h3 id="amounitモジュールの作成-1" tabindex="-1">amounitモジュールの作成 <a class="header-anchor" href="#amounitモジュールの作成-1" aria-label="Permalink to “amounitモジュールの作成”">​</a></h3><p>メモリ操作をcoreモジュールからそのままmmio_controllerモジュールに受け渡しするだけのモジュールを作成します。 <code>src/amounit.veryl</code>を作成し、次のように記述します (リスト12)。</p><p><span class="caption">▼リスト12.12: amounit.veryl</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">import</span> eei::*;
 
-<h2 class="numbox"><a id="h12-2"></a><span class="secno">12.2</span> 命令のデコード</h2>
-<p>A拡張の命令はすべてR形式で、opcodeはOP-AMO(<code class="inline-code" translate="no" >7'b0101111</code>)です。それぞれの命令はfunct5(<span class="listref"><a href="./13-impl-a.html#eei.veryl.define.AMOOp">リスト12.3</a></span>)とfunct3(Wは<code class="inline-code" translate="no" >2</code>、Dは<code class="inline-code" translate="no" >3</code>)で区別できます。</p>
-<p>eeiパッケージにOP-AMOの定数を定義します(<span class="listref"><a href="./13-impl-a.html#eei.veryl.define.op">リスト12.2</a></span>)。</p>
-<div id="eei.veryl.define.op" class="caption-code">
-<span class="caption">リスト12.2: リスト12.2: OP-AMOの定義 (eei.veryl)</span>
-<pre class="list language-op" translate="no"><em class="lineno">1: </em>    const OP_AMO      : logic&lt;7&gt; = 7'b0101111;
-</pre>
-</div>
-<p>A拡張の命令を区別するための列挙型<code class="inline-code" translate="no" >AMOOp</code>を定義します(<span class="listref"><a href="./13-impl-a.html#eei.veryl.define.AMOOp">リスト12.3</a></span>)。それぞれ命令のfunct5と対応しています。</p>
-<div id="eei.veryl.define.AMOOp" class="caption-code">
-<span class="caption">リスト12.3: リスト12.3: AMOOp型の定義 (eei.veryl)</span>
-<pre class="list language-AMOOp" translate="no"><em class="lineno">1: </em>    enum AMOOp: logic&lt;5&gt; {
-<em class="lineno">2: </em>        LR = 5'b00010,
-<em class="lineno">3: </em>        SC = 5'b00011,
-<em class="lineno">4: </em>        SWAP = 5'b00001,
-<em class="lineno">5: </em>        ADD = 5'b00000,
-<em class="lineno">6: </em>        XOR = 5'b00100,
-<em class="lineno">7: </em>        AND = 5'b01100,
-<em class="lineno">8: </em>        OR = 5'b01000,
-<em class="lineno">9: </em>        MIN = 5'b10000,
-<em class="lineno">10: </em>        MAX = 5'b10100,
-<em class="lineno">11: </em>        MINU = 5'b11000,
-<em class="lineno">12: </em>        MAXU = 5'b11100,
-<em class="lineno">13: </em>    }
-</pre>
-</div>
+<span class="hljs-keyword">module</span> amounit (
+    clk   : <span class="hljs-keyword">input</span>   <span class="hljs-keyword">clock</span>              ,
+    rst   : <span class="hljs-keyword">input</span>   <span class="hljs-keyword">reset</span>              ,
+    slave : <span class="hljs-keyword">modport</span> core_data_if::slave,
+    master: <span class="hljs-keyword">modport</span> Membus::master     ,
+) {
 
-<h3 class="none"><a id="h12-2-1"></a><span class="secno">12.2.1</span> is_amoフラグを実装する</h3>
-<p><code class="inline-code" translate="no" >InstCtrl</code>構造体に、A拡張の命令であることを示す<code class="inline-code" translate="no" >is_amo</code>フラグを追加します(<span class="listref"><a href="./13-impl-a.html#corectrl.veryl.define.is_amo">リスト12.4</a></span>)。</p>
-<div id="corectrl.veryl.define.is_amo" class="caption-code">
-<span class="caption">リスト12.4: リスト12.4: InstCtrlにis_amoを定義する (corectrl.veryl)</span>
-<pre class="list language-is_amo" translate="no"><em class="lineno">1: </em>    struct InstCtrl {
-<em class="lineno">2: </em>        itype    : InstType   , // 命令の形式
-<em class="lineno">3: </em>        rwb_en   : logic      , // レジスタに書き込むかどうか
-<em class="lineno">4: </em>        is_lui   : logic      , // LUI命令である
-<em class="lineno">5: </em>        is_aluop : logic      , // ALUを利用する命令である
-<em class="lineno">6: </em>        is_muldiv: logic      , // M拡張の命令である
-<em class="lineno">7: </em>        is_op32  : logic      , // OP-32またはOP-IMM-32である
-<em class="lineno">8: </em>        is_jump  : logic      , // ジャンプ命令である
-<em class="lineno">9: </em>        is_load  : logic      , // ロード命令である
-<em class="lineno">10: </em>        is_csr   : logic      , // CSR命令である
-<em class="lineno">11: </em>        <b>is_amo   : logic      , // AMO instruction</b>
-<em class="lineno">12: </em>        funct3   : logic   &lt;3&gt;, // 命令のfunct3フィールド
-<em class="lineno">13: </em>        funct7   : logic   &lt;7&gt;, // 命令のfunct7フィールド
-<em class="lineno">14: </em>    }
-</pre>
-</div>
-<p>命令がメモリにアクセスするかを判定するinst_is_memop関数を、<code class="inline-code" translate="no" >is_amo</code>フラグを利用するように変更します(<span class="listref"><a href="./13-impl-a.html#corectrl.veryl.define.inst_is_memop">リスト12.5</a></span>)。</p>
-<div id="corectrl.veryl.define.inst_is_memop" class="caption-code">
-<span class="caption">リスト12.5: リスト12.5: A拡張の命令がメモリにアクセスする命令と判定する (corectrl.veryl)</span>
-<pre class="list language-inst_is_memop" translate="no"><em class="lineno">1: </em>    function inst_is_memop (
-<em class="lineno">2: </em>        ctrl: input InstCtrl,
-<em class="lineno">3: </em>    ) -&gt; logic {
-<em class="lineno">4: </em>        return ctrl.itype == InstType::S || ctrl.is_load <b>|| ctrl.is_amo</b>;
-<em class="lineno">5: </em>    }
-</pre>
-</div>
-<p>inst_decoderモジュールの<code class="inline-code" translate="no" >InstCtrl</code>を生成している部分を変更します。opcodeが<code class="inline-code" translate="no" >OP-AMO</code>のとき、<code class="inline-code" translate="no" >is_amo</code>を<code class="inline-code" translate="no" >T</code>に設定します(<span class="listref"><a href="./13-impl-a.html#inst_decoder.veryl.define.ctrl">リスト12.6</a></span>)。その他のopcodeの<code class="inline-code" translate="no" >is_amo</code>は<code class="inline-code" translate="no" >F</code>に設定してください。</p>
-<div id="inst_decoder.veryl.define.ctrl" class="caption-code">
-<span class="caption">リスト12.6: リスト12.6: is_amoフラグを追加する (inst_decoder.veryl)</span>
-<pre class="list language-ctrl" translate="no"><em class="lineno">1: </em>                OP_SYSTEM: {
-<em class="lineno">2: </em>                    InstType::I, T, F, F, F, F, F, F, T<b>, F</b>
-<em class="lineno">3: </em>                },
-<em class="lineno">4: </em>                OP_AMO: {
-<em class="lineno">5: </em>                    InstType::R, T, F, F, F, F, F, F, F<b>, T</b>
-<em class="lineno">6: </em>                },
-<em class="lineno">7: </em>                default: {
-<em class="lineno">8: </em>                    InstType::X, F, F, F, F, F, F, F, F<b>, F</b>
-<em class="lineno">9: </em>                },
-</pre>
-</div>
-<p>また、A拡張の命令が有効な命令として判断されるようにします(<span class="listref"><a href="./13-impl-a.html#inst_decoder.veryl.define.valid">リスト12.7</a></span>)。</p>
-<div id="inst_decoder.veryl.define.valid" class="caption-code">
-<span class="caption">リスト12.7: リスト12.7: A拡張の命令のとき、validフラグを立てる (inst_decoder.veryl)</span>
-<pre class="list language-valid" translate="no"><em class="lineno">1: </em>            OP_MISC_MEM: T, // FENCE
-<em class="lineno">2: </em>            <b>OP_AMO     : f3 == 3'b010 || f3 == 3'b011, // AMO</b>
-<em class="lineno">3: </em>            default    : F,
-</pre>
-</div>
+    <span class="hljs-keyword">enum</span> State {
+        Init,
+        WaitReady,
+        WaitValid,
+    }
 
-<h3 class="none"><a id="h12-2-2"></a><span class="secno">12.2.2</span> アドレスを変更する</h3>
-<p>A拡張でアクセスするメモリのアドレスはrs1で指定されたレジスタの値です。これは基本整数命令セットのロードストア命令のアドレス指定方法(rs1と即値を足し合わせる)とは異なるため、memunitモジュールの<code class="inline-code" translate="no" >addr</code>ポートに割り当てる値を<code class="inline-code" translate="no" >is_amo</code>フラグによって切り替えます(<span class="listref"><a href="./13-impl-a.html#core.veryl.define.memu_addr">リスト12.8</a></span>)。</p>
-<div id="core.veryl.define.memu_addr" class="caption-code">
-<span class="caption">リスト12.8: リスト12.8: メモリアドレスをrs1レジスタの値にする (core.veryl)</span>
-<pre class="list language-memu_addr" translate="no"><em class="lineno">1: </em>    var memu_rdata: UIntX;
-<em class="lineno">2: </em>    var memu_stall: logic;
-<em class="lineno">3: </em>    <b>let memu_addr : Addr  = if mems_ctrl.is_amo ? memq_rdata.rs1_data : memq_rdata.alu_result;</b>
-<em class="lineno">4: </em>
-<em class="lineno">5: </em>    inst memu: memunit (
-<em class="lineno">6: </em>        clk                                   ,
-<em class="lineno">7: </em>        rst                                   ,
-<em class="lineno">8: </em>        valid : mems_valid &amp;&amp; !mems_expt.valid,
-<em class="lineno">9: </em>        is_new: mems_is_new                   ,
-<em class="lineno">10: </em>        ctrl  : mems_ctrl                     ,
-<em class="lineno">11: </em>        <b>addr  : memu_addr                     ,</b>
-<em class="lineno">12: </em>        rs2   : memq_rdata.rs2_data           ,
-<em class="lineno">13: </em>        rdata : memu_rdata                    ,
-<em class="lineno">14: </em>        stall : memu_stall                    ,
-<em class="lineno">15: </em>        membus: d_membus                      ,
-<em class="lineno">16: </em>    );
-</pre>
-</div>
-<p>A拡張の命令のメモリアドレスが、操作するデータの幅に整列されていないとき、Store/AMO address misaligned例外が発生します。この例外はストア命令の場合の例外と同じです。</p>
-<p>EXステージの例外判定でアドレスを使っている部分を変更します(<span class="listref"><a href="./13-impl-a.html#core.veryl.define.exception">リスト12.9</a></span>)。causeとtvalの割り当てがストア命令の場合と同じになっていることを確認してください。</p>
-<div id="core.veryl.define.exception" class="caption-code">
-<span class="caption">リスト12.9: リスト12.9: 例外を判定するアドレスを変更する (core.veryl)</span>
-<pre class="list language-exception" translate="no"><em class="lineno">1: </em>        <b>let memaddr                       : Addr  = if exs_ctrl.is_amo ? exs_rs1_data : exs_alu_result;</b>
-<em class="lineno">2: </em>        let loadstore_address_misaligned  : logic = inst_is_memop(exs_ctrl) &amp;&amp; case exs_ctrl.funct3[1:0] {
-<em class="lineno">3: </em>            2'b00  : 0, // B
-<em class="lineno">4: </em>            2'b01  : <b>memaddr</b>[0] != 1'b0, // H
-<em class="lineno">5: </em>            2'b10  : <b>memaddr</b>[1:0] != 2'b0, // W
-<em class="lineno">6: </em>            2'b11  : <b>memaddr</b>[2:0] != 3'b0, // D
-<em class="lineno">7: </em>            default: 0,
-<em class="lineno">8: </em>        };
-</pre>
-</div>
+    <span class="hljs-keyword">var</span> state      : State;
+    <span class="hljs-keyword">inst</span> slave_saved: core_data_if;
 
-<h3 class="none"><a id="h12-2-3"></a><span class="secno">12.2.3</span> ライトバックする条件を変更する</h3>
-<p>A拡張の命令を実行するとき、ロードした値をレジスタにライトバックするように変更します(<span class="listref"><a href="./13-impl-a.html#core.veryl.define.wb_data">リスト12.10</a></span>)。</p>
-<div id="core.veryl.define.wb_data" class="caption-code">
-<span class="caption">リスト12.10: リスト12.10: メモリからロードした値をライトバックする (core.veryl)</span>
-<pre class="list language-wb_data" translate="no"><em class="lineno">1: </em>    let wbs_wb_data: UIntX    = switch {
-<em class="lineno">2: </em>        wbs_ctrl.is_lui                    : wbs_imm,
-<em class="lineno">3: </em>        wbs_ctrl.is_jump                   : wbs_pc + 4,
-<em class="lineno">4: </em>        wbs_ctrl.is_load <b>|| wbs_ctrl.is_amo</b>: wbq_rdata.mem_rdata,
-<em class="lineno">5: </em>        wbs_ctrl.is_csr                    : wbq_rdata.csr_rdata,
-<em class="lineno">6: </em>        default                            : wbq_rdata.alu_result
-<em class="lineno">7: </em>    };
-</pre>
-</div>
+    <span class="hljs-comment">// masterをリセットする</span>
+    <span class="hljs-keyword">function</span> reset_master () {
+        master.valid = <span class="hljs-number">0</span>;
+        master.addr  = <span class="hljs-number">0</span>;
+        master.wen   = <span class="hljs-number">0</span>;
+        master.wdata = <span class="hljs-number">0</span>;
+        master.wmask = <span class="hljs-number">0</span>;
+    }
 
-<h2 class="numbox"><a id="h12-3"></a><span class="secno">12.3</span> amounitモジュールの作成</h2>
-<p>A拡張は他のコア、ハードウェアスレッドと同期してメモリ操作を行うためのものであるため、A拡張の操作はcoreモジュールの外、メモリよりも前で行います。本書では、coreモジュールとmmio_controllerモジュールの間に、A拡張の命令を処理するamounitモジュールを実装します(<span class="imgref"><a href="./13-impl-a.html#amo-mmio-structure">図12.3</a></span>)。</p>
-<div id="amo-mmio-structure" class="image">
-<img src="images/13-impl-a/amo-mmio-structure.png" alt="amounitモジュールと他のモジュールの接続" class="img" style="width:90%" />
-<p class="caption">
-図12.3: amounitモジュールと他のモジュールの接続
-</p>
-</div>
+    <span class="hljs-comment">// masterに要求を割り当てる</span>
+    <span class="hljs-keyword">function</span> assign_master (
+        addr : <span class="hljs-keyword">input</span> Addr                   ,
+        wen  : <span class="hljs-keyword">input</span> <span class="hljs-keyword">logic</span>                  ,
+        wdata: <span class="hljs-keyword">input</span> UIntX                  ,
+        wmask: <span class="hljs-keyword">input</span> <span class="hljs-keyword">logic</span>&lt;$size(UIntX) / <span class="hljs-number">8</span>&gt;,
+    ) {
+        master.valid = <span class="hljs-number">1</span>;
+        master.addr  = addr;
+        master.wen   = wen;
+        master.wdata = wdata;
+        master.wmask = wmask;
+    }
 
-<h3 class="none"><a id="h12-3-1"></a><span class="secno">12.3.1</span> インターフェースを作成する</h3>
-<p>amounitモジュールにA拡張の操作を指示するために、<code class="inline-code" translate="no" >is_amo</code>フラグ、<code class="inline-code" translate="no" >aq</code>ビット、<code class="inline-code" translate="no" >rl</code>ビット、<code class="inline-code" translate="no" >AMOOp</code>型をmembus_ifインターフェースに追加で定義したインターフェースを作成します。</p>
-<p><code class="inline-code" translate="no" >src/core_data_if.veryl</code>を作成し、次のように記述します(<span class="listref"><a href="./13-impl-a.html#core_data_if.veryl.empty.all">リスト12.11</a></span>)。</p>
-<div id="core_data_if.veryl.empty.all" class="caption-code">
-<span class="caption">リスト12.11: リスト12.11: core_data_if.veryl</span>
-<pre class="list language-all" translate="no"><em class="lineno">1: </em>import eei::*;
-<em class="lineno">2: </em>
-<em class="lineno">3: </em>interface core_data_if {
-<em class="lineno">4: </em>    var valid : logic                       ;
-<em class="lineno">5: </em>    var ready : logic                       ;
-<em class="lineno">6: </em>    var addr  : logic&lt;XLEN&gt;                 ;
-<em class="lineno">7: </em>    var wen   : logic                       ;
-<em class="lineno">8: </em>    var wdata : logic&lt;MEMBUS_DATA_WIDTH&gt;    ;
-<em class="lineno">9: </em>    var wmask : logic&lt;MEMBUS_DATA_WIDTH / 8&gt;;
-<em class="lineno">10: </em>    var rvalid: logic                       ;
-<em class="lineno">11: </em>    var rdata : logic&lt;MEMBUS_DATA_WIDTH&gt;    ;
-<em class="lineno">12: </em>
-<em class="lineno">13: </em>    var is_amo: logic   ;
-<em class="lineno">14: </em>    var aq    : logic   ;
-<em class="lineno">15: </em>    var rl    : logic   ;
-<em class="lineno">16: </em>    var amoop : AMOOp   ;
-<em class="lineno">17: </em>    var funct3: logic&lt;3&gt;;
-<em class="lineno">18: </em>
-<em class="lineno">19: </em>    modport master {
-<em class="lineno">20: </em>        valid : output,
-<em class="lineno">21: </em>        ready : input ,
-<em class="lineno">22: </em>        addr  : output,
-<em class="lineno">23: </em>        wen   : output,
-<em class="lineno">24: </em>        wdata : output,
-<em class="lineno">25: </em>        wmask : output,
-<em class="lineno">26: </em>        rvalid: input ,
-<em class="lineno">27: </em>        rdata : input ,
-<em class="lineno">28: </em>        is_amo: output,
-<em class="lineno">29: </em>        aq    : output,
-<em class="lineno">30: </em>        rl    : output,
-<em class="lineno">31: </em>        amoop : output,
-<em class="lineno">32: </em>        funct3: output,
-<em class="lineno">33: </em>    }
-<em class="lineno">34: </em>
-<em class="lineno">35: </em>    modport slave {
-<em class="lineno">36: </em>        ..converse(master)
-<em class="lineno">37: </em>    }
-<em class="lineno">38: </em>
-<em class="lineno">39: </em>    modport all_input {
-<em class="lineno">40: </em>        ..input
-<em class="lineno">41: </em>    }
-<em class="lineno">42: </em>}
-</pre>
-</div>
+    <span class="hljs-comment">// 新しく要求を受け入れる</span>
+    <span class="hljs-keyword">function</span> accept_request_comb () {
+        <span class="hljs-keyword">if</span> slave.ready &amp;&amp; slave.valid {
+            assign_master(slave.addr, slave.wen, slave.wdata, slave.wmask);
+        }
+    }
 
-<h3 class="none"><a id="h12-3-2"></a><span class="secno">12.3.2</span> amounitモジュールの作成</h3>
-<p>メモリ操作をcoreモジュールからそのままmmio_controllerモジュールに受け渡しするだけのモジュールを作成します。<code class="inline-code" translate="no" >src/amounit.veryl</code>を作成し、次のように記述します(<span class="listref"><a href="./13-impl-a.html#amounit.veryl.empty.all">リスト12.12</a></span>)。</p>
-<div id="amounit.veryl.empty.all" class="caption-code">
-<span class="caption">リスト12.12: リスト12.12: amounit.veryl</span>
-<pre class="list language-all" translate="no"><em class="lineno">1: </em>import eei::*;
-<em class="lineno">2: </em>
-<em class="lineno">3: </em>module amounit (
-<em class="lineno">4: </em>    clk   : input   clock              ,
-<em class="lineno">5: </em>    rst   : input   reset              ,
-<em class="lineno">6: </em>    slave : modport core_data_if::slave,
-<em class="lineno">7: </em>    master: modport Membus::master     ,
-<em class="lineno">8: </em>) {
-<em class="lineno">9: </em>
-<em class="lineno">10: </em>    enum State {
-<em class="lineno">11: </em>        Init,
-<em class="lineno">12: </em>        WaitReady,
-<em class="lineno">13: </em>        WaitValid,
-<em class="lineno">14: </em>    }
-<em class="lineno">15: </em>
-<em class="lineno">16: </em>    var state      : State;
-<em class="lineno">17: </em>    inst slave_saved: core_data_if;
-<em class="lineno">18: </em>
-<em class="lineno">19: </em>    // masterをリセットする
-<em class="lineno">20: </em>    function reset_master () {
-<em class="lineno">21: </em>        master.valid = 0;
-<em class="lineno">22: </em>        master.addr  = 0;
-<em class="lineno">23: </em>        master.wen   = 0;
-<em class="lineno">24: </em>        master.wdata = 0;
-<em class="lineno">25: </em>        master.wmask = 0;
-<em class="lineno">26: </em>    }
-<em class="lineno">27: </em>
-<em class="lineno">28: </em>    // masterに要求を割り当てる
-<em class="lineno">29: </em>    function assign_master (
-<em class="lineno">30: </em>        addr : input Addr                   ,
-<em class="lineno">31: </em>        wen  : input logic                  ,
-<em class="lineno">32: </em>        wdata: input UIntX                  ,
-<em class="lineno">33: </em>        wmask: input logic&lt;$size(UIntX) / 8&gt;,
-<em class="lineno">34: </em>    ) {
-<em class="lineno">35: </em>        master.valid = 1;
-<em class="lineno">36: </em>        master.addr  = addr;
-<em class="lineno">37: </em>        master.wen   = wen;
-<em class="lineno">38: </em>        master.wdata = wdata;
-<em class="lineno">39: </em>        master.wmask = wmask;
-<em class="lineno">40: </em>    }
-<em class="lineno">41: </em>
-<em class="lineno">42: </em>    // 新しく要求を受け入れる
-<em class="lineno">43: </em>    function accept_request_comb () {
-<em class="lineno">44: </em>        if slave.ready &amp;&amp; slave.valid {
-<em class="lineno">45: </em>            assign_master(slave.addr, slave.wen, slave.wdata, slave.wmask);
-<em class="lineno">46: </em>        }
-<em class="lineno">47: </em>    }
-<em class="lineno">48: </em>
-<em class="lineno">49: </em>    // slaveに結果を割り当てる
-<em class="lineno">50: </em>    always_comb {
-<em class="lineno">51: </em>        slave.ready  = 0;
-<em class="lineno">52: </em>        slave.rvalid = 0;
-<em class="lineno">53: </em>        slave.rdata  = 0;
-<em class="lineno">54: </em>
-<em class="lineno">55: </em>        case state {
-<em class="lineno">56: </em>            State::Init: {
-<em class="lineno">57: </em>                slave.ready = 1;
-<em class="lineno">58: </em>            }
-<em class="lineno">59: </em>            State::WaitValid: {
-<em class="lineno">60: </em>                slave.ready  = master.rvalid;
-<em class="lineno">61: </em>                slave.rvalid = master.rvalid;
-<em class="lineno">62: </em>                slave.rdata  = master.rdata;
-<em class="lineno">63: </em>            }
-<em class="lineno">64: </em>            default: {}
-<em class="lineno">65: </em>        }
-<em class="lineno">66: </em>    }
-<em class="lineno">67: </em>
-<em class="lineno">68: </em>    // masterに要求を割り当てる
-<em class="lineno">69: </em>    always_comb {
-<em class="lineno">70: </em>        reset_master();
-<em class="lineno">71: </em>        case state {
-<em class="lineno">72: </em>            State::Init     : accept_request_comb();
-<em class="lineno">73: </em>            State::WaitReady: {
-<em class="lineno">74: </em>                assign_master(slave_saved.addr, slave_saved.wen, slave_saved.wdata, slave_saved.wmask);
-<em class="lineno">75: </em>            }
-<em class="lineno">76: </em>            State::WaitValid: accept_request_comb();
-<em class="lineno">77: </em>            default         : {}
-<em class="lineno">78: </em>        }
-<em class="lineno">79: </em>    }
-<em class="lineno">80: </em>
-<em class="lineno">81: </em>    // 新しく要求を受け入れる
-<em class="lineno">82: </em>    function accept_request_ff () {
-<em class="lineno">83: </em>        slave_saved.valid = slave.ready &amp;&amp; slave.valid;
-<em class="lineno">84: </em>        if slave.ready &amp;&amp; slave.valid {
-<em class="lineno">85: </em>            slave_saved.addr   = slave.addr;
-<em class="lineno">86: </em>            slave_saved.wen    = slave.wen;
-<em class="lineno">87: </em>            slave_saved.wdata  = slave.wdata;
-<em class="lineno">88: </em>            slave_saved.wmask  = slave.wmask;
-<em class="lineno">89: </em>            slave_saved.is_amo = slave.is_amo;
-<em class="lineno">90: </em>            slave_saved.amoop  = slave.amoop;
-<em class="lineno">91: </em>            slave_saved.aq     = slave.aq;
-<em class="lineno">92: </em>            slave_saved.rl     = slave.rl;
-<em class="lineno">93: </em>            slave_saved.funct3 = slave.funct3;
-<em class="lineno">94: </em>            state              = if master.ready ? State::WaitValid : State::WaitReady;
-<em class="lineno">95: </em>        } else {
-<em class="lineno">96: </em>            state = State::Init;
-<em class="lineno">97: </em>        }
-<em class="lineno">98: </em>    }
-<em class="lineno">99: </em>
-<em class="lineno">100: </em>    function on_clock () {
-<em class="lineno">101: </em>        case state {
-<em class="lineno">102: </em>            State::Init     : accept_request_ff();
-<em class="lineno">103: </em>            State::WaitReady: if master.ready {
-<em class="lineno">104: </em>                state = State::WaitValid;
-<em class="lineno">105: </em>            }
-<em class="lineno">106: </em>            State::WaitValid: if master.rvalid {
-<em class="lineno">107: </em>                accept_request_ff();
-<em class="lineno">108: </em>            }
-<em class="lineno">109: </em>            default: {}
-<em class="lineno">110: </em>        }
-<em class="lineno">111: </em>    }
-<em class="lineno">112: </em>
-<em class="lineno">113: </em>    function on_reset () {
-<em class="lineno">114: </em>        state              = State::Init;
-<em class="lineno">115: </em>        slave_saved.addr   = 0;
-<em class="lineno">116: </em>        slave_saved.wen    = 0;
-<em class="lineno">117: </em>        slave_saved.wdata  = 0;
-<em class="lineno">118: </em>        slave_saved.wmask  = 0;
-<em class="lineno">119: </em>        slave_saved.is_amo = 0;
-<em class="lineno">120: </em>        slave_saved.amoop  = 0 as AMOOp;
-<em class="lineno">121: </em>        slave_saved.aq     = 0;
-<em class="lineno">122: </em>        slave_saved.rl     = 0;
-<em class="lineno">123: </em>        slave_saved.funct3 = 0;
-<em class="lineno">124: </em>    }
-<em class="lineno">125: </em>
-<em class="lineno">126: </em>    always_ff {
-<em class="lineno">127: </em>        if_reset {
-<em class="lineno">128: </em>            on_reset();
-<em class="lineno">129: </em>        } else {
-<em class="lineno">130: </em>            on_clock();
-<em class="lineno">131: </em>        }
-<em class="lineno">132: </em>    }
-<em class="lineno">133: </em>}
-</pre>
-</div>
-<p>amounitモジュールは<code class="inline-code" translate="no" >State::Init</code>、(<code class="inline-code" translate="no" >State::WaitReady</code>、)<code class="inline-code" translate="no" >State::WaitValid</code>の順に状態を移動し、通常のロードストア命令を処理します。</p>
-<p>coreモジュールのロードストア用のインターフェースをmembus_ifからcore_data_ifに変更します(<span class="listref"><a href="./13-impl-a.html#core.veryl.empty.port">リスト12.13</a></span>、<span class="listref"><a href="./13-impl-a.html#top.veryl.empty.port">リスト12.14</a></span>、<span class="listref"><a href="./13-impl-a.html#top.veryl.empty.core">リスト12.15</a></span>)。</p>
-<div id="core.veryl.empty.port" class="caption-code">
-<span class="caption">リスト12.13: リスト12.13: d_membusの型を変更する (core.veryl)</span>
-<pre class="list language-port" translate="no"><em class="lineno">1: </em>    i_membus: modport membus_if::&lt;ILEN, XLEN&gt;::master,
-<em class="lineno">2: </em>    d_membus: modport <b>core_data_if</b>::master           ,
-<em class="lineno">3: </em>    led     : output  UIntX                          ,
-</pre>
-</div>
-<div id="top.veryl.empty.port" class="caption-code">
-<span class="caption">リスト12.14: リスト12.14: core_data_ifインターフェースのインスタンス化 (top.veryl)</span>
-<pre class="list language-port" translate="no"><em class="lineno">1: </em>    inst d_membus_core: core_data_if;
-</pre>
-</div>
-<div id="top.veryl.empty.core" class="caption-code">
-<span class="caption">リスト12.15: リスト12.15: ポートに割り当てるインターフェースを変更する (top.veryl)</span>
-<pre class="list language-core" translate="no"><em class="lineno">1: </em>    inst c: core (
-<em class="lineno">2: </em>        clk                    ,
-<em class="lineno">3: </em>        rst                    ,
-<em class="lineno">4: </em>        i_membus               ,
-<em class="lineno">5: </em>        <b>d_membus: d_membus_core,</b>
-<em class="lineno">6: </em>        led                    ,
-<em class="lineno">7: </em>    );
-</pre>
-</div>
-<p>memunitモジュールのインターフェースも変更し、<code class="inline-code" translate="no" >is_amo</code>、<code class="inline-code" translate="no" >aq</code>、<code class="inline-code" translate="no" >rl</code>、<code class="inline-code" translate="no" >amoop</code>に値を割り当てます(<span class="listref"><a href="./13-impl-a.html#memunit.veryl.empty.port">リスト12.16</a></span>、<span class="listref"><a href="./13-impl-a.html#memunit.veryl.empty.reg">リスト12.17</a></span>、<span class="listref"><a href="./13-impl-a.html#memunit.veryl.empty.assign">リスト12.19</a></span>、<span class="listref"><a href="./13-impl-a.html#memunit.veryl.empty.reset">リスト12.18</a></span>、<span class="listref"><a href="./13-impl-a.html#memunit.veryl.empty.Init">リスト12.20</a></span>)。</p>
-<div id="memunit.veryl.empty.port" class="caption-code">
-<span class="caption">リスト12.16: リスト12.16: membusの型を変更する (memunit.veryl)</span>
-<pre class="list language-port" translate="no"><em class="lineno">1: </em>    stall : output  logic               , // メモリアクセス命令が完了していない
-<em class="lineno">2: </em>    membus: modport <b>core_data_if</b>::master, // メモリとのinterface
-<em class="lineno">3: </em>) {
-</pre>
-</div>
-<div id="memunit.veryl.empty.reg" class="caption-code">
-<span class="caption">リスト12.17: リスト12.17: 一時保存するレジスタの定義 (memunit.veryl)</span>
-<pre class="list language-reg" translate="no"><em class="lineno">1: </em>    var req_wen   : logic                       ;
-<em class="lineno">2: </em>    var req_addr  : Addr                        ;
-<em class="lineno">3: </em>    var req_wdata : logic&lt;MEMBUS_DATA_WIDTH&gt;    ;
-<em class="lineno">4: </em>    var req_wmask : logic&lt;MEMBUS_DATA_WIDTH / 8&gt;;
-<em class="lineno">5: </em>    <b>var req_is_amo: logic                       ;</b>
-<em class="lineno">6: </em>    <b>var req_amoop : AMOOp                       ;</b>
-<em class="lineno">7: </em>    <b>var req_aq    : logic                       ;</b>
-<em class="lineno">8: </em>    <b>var req_rl    : logic                       ;</b>
-<em class="lineno">9: </em>    <b>var req_funct3: logic&lt;3&gt;                    ;</b>
-</pre>
-</div>
-<div id="memunit.veryl.empty.reset" class="caption-code">
-<span class="caption">リスト12.18: リスト12.18: レジスタをリセットする (memunit.veryl)</span>
-<pre class="list language-reset" translate="no"><em class="lineno">1: </em>    always_ff {
-<em class="lineno">2: </em>        if_reset {
-<em class="lineno">3: </em>            state      = State::Init;
-<em class="lineno">4: </em>            req_wen    = 0;
-<em class="lineno">5: </em>            req_addr   = 0;
-<em class="lineno">6: </em>            req_wdata  = 0;
-<em class="lineno">7: </em>            req_wmask  = 0;
-<em class="lineno">8: </em>            <b>req_is_amo = 0;</b>
-<em class="lineno">9: </em>            <b>req_amoop  = 0 as AMOOp;</b>
-<em class="lineno">10: </em>            <b>req_aq     = 0;</b>
-<em class="lineno">11: </em>            <b>req_rl     = 0;</b>
-<em class="lineno">12: </em>            <b>req_funct3 = 0;</b>
-<em class="lineno">13: </em>        } else {
-</pre>
-</div>
-<div id="memunit.veryl.empty.assign" class="caption-code">
-<span class="caption">リスト12.19: リスト12.19: membusにレジスタの値を割り当てる (memunit.veryl)</span>
-<pre class="list language-assign" translate="no"><em class="lineno">1: </em>    always_comb {
-<em class="lineno">2: </em>        // メモリアクセス
-<em class="lineno">3: </em>        membus.valid  = state == State::WaitReady;
-<em class="lineno">4: </em>        membus.addr   = req_addr;
-<em class="lineno">5: </em>        membus.wen    = req_wen;
-<em class="lineno">6: </em>        membus.wdata  = req_wdata;
-<em class="lineno">7: </em>        membus.wmask  = req_wmask;
-<em class="lineno">8: </em>        <b>membus.is_amo = req_is_amo;</b>
-<em class="lineno">9: </em>        <b>membus.amoop  = req_amoop;</b>
-<em class="lineno">10: </em>        <b>membus.aq     = req_aq;</b>
-<em class="lineno">11: </em>        <b>membus.rl     = req_rl;</b>
-<em class="lineno">12: </em>        <b>membus.funct3 = req_funct3;</b>
-</pre>
-</div>
-<div id="memunit.veryl.empty.Init" class="caption-code">
-<span class="caption">リスト12.20: リスト12.20: メモリにアクセスする命令のとき、レジスタに情報を設定する (memunit.veryl)</span>
-<pre class="list language-Init" translate="no"><em class="lineno">1: </em>                case state {
-<em class="lineno">2: </em>                    State::Init: if is_new &amp; inst_is_memop(ctrl) {
-<em class="lineno">3: </em>                        ...
-<em class="lineno">4: </em>                        <b>req_is_amo = ctrl.is_amo;</b>
-<em class="lineno">5: </em>                        <b>req_amoop  = ctrl.funct7[6:2] as AMOOp;</b>
-<em class="lineno">6: </em>                        <b>req_aq     = ctrl.funct7[1];</b>
-<em class="lineno">7: </em>                        <b>req_rl     = ctrl.funct7[0];</b>
-<em class="lineno">8: </em>                        <b>req_funct3 = ctrl.funct3;</b>
-<em class="lineno">9: </em>                    }
-<em class="lineno">10: </em>                    State::WaitReady: if membus.ready {
-</pre>
-</div>
-<p>amounitモジュールをtopモジュールでインスタンス化し、coreモジュールとmmio_controllerモジュールのインターフェースを接続します(<span class="listref"><a href="./13-impl-a.html#top.veryl.empty.amou">リスト12.21</a></span>)。</p>
-<div id="top.veryl.empty.amou" class="caption-code">
-<span class="caption">リスト12.21: リスト12.21: amounitモジュールをインスタンス化する (top.veryl)</span>
-<pre class="list language-amou" translate="no"><em class="lineno">1: </em>    inst amou: amounit (
-<em class="lineno">2: </em>        clk                  ,
-<em class="lineno">3: </em>        rst                  ,
-<em class="lineno">4: </em>        slave : d_membus_core,
-<em class="lineno">5: </em>        master: d_membus     ,
-<em class="lineno">6: </em>    );
-</pre>
-</div>
+    <span class="hljs-comment">// slaveに結果を割り当てる</span>
+    <span class="hljs-keyword">always_comb</span> {
+        slave.ready  = <span class="hljs-number">0</span>;
+        slave.rvalid = <span class="hljs-number">0</span>;
+        slave.rdata  = <span class="hljs-number">0</span>;
 
-<h2 class="numbox"><a id="h12-4"></a><span class="secno">12.4</span> Zalrsc拡張の実装</h2>
-<p>Zalrsc拡張の命令を実装します。予約セットのサイズは実装が自由に決めることができるため、本書では1つのアドレスのみ保持できるようにします。</p>
+        <span class="hljs-keyword">case</span> state {
+            State::Init: {
+                slave.ready = <span class="hljs-number">1</span>;
+            }
+            State::WaitValid: {
+                slave.ready  = master.rvalid;
+                slave.rvalid = master.rvalid;
+                slave.rdata  = master.rdata;
+            }
+            <span class="hljs-keyword">default</span>: {}
+        }
+    }
 
-<h3 class="none"><a id="h12-4-1"></a><span class="secno">12.4.1</span> LR.W、LR.D命令を実装する</h3>
-<p>32ビット幅、64ビット幅のLR命令を実装します。LR.W命令はmemunitモジュールで64ビットに符号拡張されるため、amounitモジュールでLR.W命令とLR.D命令を区別する必要はありません。</p>
-<p>amounitモジュールに予約セットを作成します(<span class="listref"><a href="./13-impl-a.html#amounit.veryl.lr.list">リスト12.22</a></span>、<span class="listref"><a href="./13-impl-a.html#amounit.veryl.lr.reset">リスト12.23</a></span>)。<code class="inline-code" translate="no" >is_addr_reserved</code>で、予約セットに有効なアドレスが格納されているかを管理します。</p>
-<div id="amounit.veryl.lr.list" class="caption-code">
-<span class="caption">リスト12.22: リスト12.22: 予約セットの定義 (amounit.veryl)</span>
-<pre class="list language-list" translate="no"><em class="lineno">1: </em>    // lr/sc
-<em class="lineno">2: </em>    var is_addr_reserved: logic;
-<em class="lineno">3: </em>    var reserved_addr   : Addr ;
-</pre>
-</div>
-<div id="amounit.veryl.lr.reset" class="caption-code">
-<span class="caption">リスト12.23: リスト12.23: レジスタをリセットする (amounit.veryl)</span>
-<pre class="list language-reset" translate="no"><em class="lineno">1: </em>        is_addr_reserved   = 0;
-<em class="lineno">2: </em>        reserved_addr      = 0;
-</pre>
-</div>
-<p>LR命令を実行するとき、予約セットにアドレスを登録してロード結果を返すようにします(<span class="listref"><a href="./13-impl-a.html#amounit.veryl.lr.accept_request_comb">リスト12.24</a></span>、<span class="listref"><a href="./13-impl-a.html#amounit.veryl.lr.master_comb">リスト12.25</a></span>、<span class="listref"><a href="./13-impl-a.html#amounit.veryl.lr.accept_request_ff">リスト12.26</a></span>)。既に予約セットが使われている場合はアドレスを上書きします。</p>
-<div id="amounit.veryl.lr.accept_request_comb" class="caption-code">
-<span class="caption">リスト12.24: リスト12.24: accept_request_comb関数の実装 (amounit.veryl)</span>
-<pre class="list language-accept_request_comb" translate="no"><em class="lineno">1: </em>    function accept_request_comb () {
-<em class="lineno">2: </em>        if slave.ready &amp;&amp; slave.valid {
-<em class="lineno">3: </em>            <b>if slave.is_amo {</b>
-<em class="lineno">4: </em>            <b>    case slave.amoop {</b>
-<em class="lineno">5: </em>            <b>        AMOOp::LR: assign_master(slave.addr, 0, 0, 0);</b>
-<em class="lineno">6: </em>            <b>        default  : {}</b>
-<em class="lineno">7: </em>            <b>    }</b>
-<em class="lineno">8: </em>            <b>} else {</b>
-<em class="lineno">9: </em>                assign_master(slave.addr, slave.wen, slave.wdata, slave.wmask);
-<em class="lineno">10: </em>            <b>}</b>
-<em class="lineno">11: </em>        }
-<em class="lineno">12: </em>    }
-</pre>
-</div>
-<div id="amounit.veryl.lr.master_comb" class="caption-code">
-<span class="caption">リスト12.25: リスト12.25: LR命令のときにmasterにロード要求を割り当てる (amounit.veryl)</span>
-<pre class="list language-master_comb" translate="no"><em class="lineno">1: </em>    always_comb {
-<em class="lineno">2: </em>        reset_master();
-<em class="lineno">3: </em>        case state {
-<em class="lineno">4: </em>            State::Init     : accept_request_comb();
-<em class="lineno">5: </em>            <b>State::WaitReady: if slave_saved.is_amo {</b>
-<em class="lineno">6: </em>            <b>    case slave_saved.amoop {</b>
-<em class="lineno">7: </em>            <b>        AMOOp::LR: assign_master(slave_saved.addr, 0, 0, 0);</b>
-<em class="lineno">8: </em>            <b>        default  : {}</b>
-<em class="lineno">9: </em>            <b>    }</b>
-<em class="lineno">10: </em>            <b>} else {</b>
-<em class="lineno">11: </em>                assign_master(slave_saved.addr, slave_saved.wen, slave_saved.wdata, slave_saved.wmask);
-<em class="lineno">12: </em>            <b>}</b>
-</pre>
-</div>
-<div id="amounit.veryl.lr.accept_request_ff" class="caption-code">
-<span class="caption">リスト12.26: リスト12.26: LR命令のときに予約セットを設定する (amounit.veryl)</span>
-<pre class="list language-accept_request_ff" translate="no"><em class="lineno">1: </em>    function accept_request_ff () {
-<em class="lineno">2: </em>        slave_saved.valid = slave.ready &amp;&amp; slave.valid;
-<em class="lineno">3: </em>        if slave.ready &amp;&amp; slave.valid {
-<em class="lineno">4: </em>            slave_saved.addr   = slave.addr;
-<em class="lineno">5: </em>            ...
-<em class="lineno">6: </em>            slave_saved.funct3 = slave.funct3;
-<em class="lineno">7: </em>            <b>if slave.is_amo {</b>
-<em class="lineno">8: </em>            <b>    case slave.amoop {</b>
-<em class="lineno">9: </em>            <b>        AMOOp::LR: {</b>
-<em class="lineno">10: </em>            <b>            // reserve address</b>
-<em class="lineno">11: </em>            <b>            is_addr_reserved = 1;</b>
-<em class="lineno">12: </em>            <b>            reserved_addr    = slave.addr;</b>
-<em class="lineno">13: </em>            <b>            state            = if master.ready ? State::WaitValid : State::WaitReady;</b>
-<em class="lineno">14: </em>            <b>        }</b>
-<em class="lineno">15: </em>            <b>        default: {}</b>
-<em class="lineno">16: </em>            <b>    }</b>
-<em class="lineno">17: </em>            <b>} else {</b>
-<em class="lineno">18: </em>                state = if master.ready ? State::WaitValid : State::WaitReady;
-<em class="lineno">19: </em>            <b>}</b>
-</pre>
-</div>
+    <span class="hljs-comment">// masterに要求を割り当てる</span>
+    <span class="hljs-keyword">always_comb</span> {
+        reset_master();
+        <span class="hljs-keyword">case</span> state {
+            State::Init     : accept_request_comb();
+            State::WaitReady: {
+                assign_master(slave_saved.addr, slave_saved.wen, slave_saved.wdata, slave_saved.wmask);
+            }
+            State::WaitValid: accept_request_comb();
+            <span class="hljs-keyword">default</span>         : {}
+        }
+    }
 
-<h3 class="none"><a id="h12-4-2"></a><span class="secno">12.4.2</span> SC.W、SC.D命令を実装する</h3>
-<p>32ビット幅、64ビット幅のSC命令を実装します。SC.W命令はmemunitモジュールで書き込みマスクを設定しているため、amounitモジュールでSC.W命令とSC.D命令を区別する必要はありません。</p>
-<p>SC命令が成功、失敗したときに結果を返すための状態を<code class="inline-code" translate="no" >State</code>型に追加します(<span class="listref"><a href="./13-impl-a.html#amounit.veryl.sc.State">リスト12.27</a></span>)。</p>
-<div id="amounit.veryl.sc.State" class="caption-code">
-<span class="caption">リスト12.27: リスト12.27: SC命令用の状態の定義 (amounit.veryl)</span>
-<pre class="list language-State" translate="no"><em class="lineno">1: </em>    enum State {
-<em class="lineno">2: </em>        Init,
-<em class="lineno">3: </em>        WaitReady,
-<em class="lineno">4: </em>        WaitValid,
-<em class="lineno">5: </em>        <b>SCSuccess,</b>
-<em class="lineno">6: </em>        <b>SCFail,</b>
-<em class="lineno">7: </em>    }
-</pre>
-</div>
-<p>それぞれの状態で結果を返し、新しく要求を受け入れるようにします(<span class="listref"><a href="./13-impl-a.html#amounit.veryl.sc.assign_slave">リスト12.28</a></span>)。<code class="inline-code" translate="no" >State::SCSuccess</code>はSC命令に成功してストアが終わったときに結果を返します。成功したら<code class="inline-code" translate="no" >0</code>、失敗したら<code class="inline-code" translate="no" >1</code>を返します。</p>
-<div id="amounit.veryl.sc.assign_slave" class="caption-code">
-<span class="caption">リスト12.28: リスト12.28: slaveにSC命令の結果を割り当てる (amounit.veryl)</span>
-<pre class="list language-assign_slave" translate="no"><em class="lineno">1: </em>    State::SCSuccess: {
-<em class="lineno">2: </em>        slave.ready  = master.rvalid;
-<em class="lineno">3: </em>        slave.rvalid = master.rvalid;
-<em class="lineno">4: </em>        slave.rdata  = 0;
-<em class="lineno">5: </em>    }
-<em class="lineno">6: </em>    State::SCFail: {
-<em class="lineno">7: </em>        slave.ready  = 1;
-<em class="lineno">8: </em>        slave.rvalid = 1;
-<em class="lineno">9: </em>        slave.rdata  = 1;
-<em class="lineno">10: </em>    }
-</pre>
-</div>
-<p>SC命令を受け入れるときに予約セットを確認し、アドレスが予約セットのアドレスと異なる場合は状態を<code class="inline-code" translate="no" >State::SCFail</code>に移動します(<span class="listref"><a href="./13-impl-a.html#amounit.veryl.sc.accept_request_ff">リスト12.29</a></span>)。成功、失敗に関係なく、予約セットを空にします。</p>
-<div id="amounit.veryl.sc.accept_request_ff" class="caption-code">
-<span class="caption">リスト12.29: リスト12.29: accept_request_ff関数で予約セットを確認する (amounit.veryl)</span>
-<pre class="list language-accept_request_ff" translate="no"><em class="lineno">1: </em>    AMOOp::SC: {
-<em class="lineno">2: </em>        // reset reserved
-<em class="lineno">3: </em>        let prev            : logic = is_addr_reserved;
-<em class="lineno">4: </em>        is_addr_reserved = 0;
-<em class="lineno">5: </em>        // check
-<em class="lineno">6: </em>        if prev &amp;&amp; slave.addr == reserved_addr {
-<em class="lineno">7: </em>            state = if master.ready ? State::SCSuccess : State::WaitReady;
-<em class="lineno">8: </em>        } else {
-<em class="lineno">9: </em>            state = State::SCFail;
-<em class="lineno">10: </em>        }
-<em class="lineno">11: </em>    }
-</pre>
-</div>
-<p>SC命令でメモリの<code class="inline-code" translate="no" >ready</code>が<code class="inline-code" translate="no" >1</code>になるのを待っているとき、<code class="inline-code" translate="no" >ready</code>が<code class="inline-code" translate="no" >1</code>になったら状態を<code class="inline-code" translate="no" >State::SCSuccess</code>に移動します(<span class="listref"><a href="./13-impl-a.html#amounit.veryl.sc.on_clock">リスト12.30</a></span>)。また、命令の実行が終了したときに新しく要求を受け入れるようにします。</p>
-<div id="amounit.veryl.sc.on_clock" class="caption-code">
-<span class="caption">リスト12.30: リスト12.30: SC命令の状態遷移 (amounit.veryl)</span>
-<pre class="list language-on_clock" translate="no"><em class="lineno">1: </em>    function on_clock () {
-<em class="lineno">2: </em>        case state {
-<em class="lineno">3: </em>            State::Init     : accept_request_ff();
-<em class="lineno">4: </em>            State::WaitReady: if master.ready {
-<em class="lineno">5: </em>                <b>if slave_saved.is_amo &amp;&amp; slave_saved.amoop == AMOOp::SC {</b>
-<em class="lineno">6: </em>                <b>    state = State::SCSuccess;</b>
-<em class="lineno">7: </em>                <b>} else {</b>
-<em class="lineno">8: </em>                    state = State::WaitValid;
-<em class="lineno">9: </em>                <b>}</b>
-<em class="lineno">10: </em>            }
-<em class="lineno">11: </em>            State::WaitValid: if master.rvalid {
-<em class="lineno">12: </em>                accept_request_ff();
-<em class="lineno">13: </em>            }
-<em class="lineno">14: </em>            <b>State::SCSuccess: if master.rvalid {</b>
-<em class="lineno">15: </em>            <b>    accept_request_ff();</b>
-<em class="lineno">16: </em>            <b>}</b>
-<em class="lineno">17: </em>            <b>State::SCFail: accept_request_ff();</b>
-<em class="lineno">18: </em>            default      : {}
-<em class="lineno">19: </em>        }
-<em class="lineno">20: </em>    }
-</pre>
-</div>
-<p>SC命令によるメモリへの書き込みを実装します(<span class="listref"><a href="./13-impl-a.html#amounit.veryl.sc.accept_request_comb">リスト12.31</a></span>、<span class="listref"><a href="./13-impl-a.html#amounit.veryl.sc.master_comb">リスト12.32</a></span>)。</p>
-<div id="amounit.veryl.sc.accept_request_comb" class="caption-code">
-<span class="caption">リスト12.31: リスト12.31: accept_request_comb関数で、予約セットをチェックしてからストアを要求する (amounit.veryl)</span>
-<pre class="list language-accept_request_comb" translate="no"><em class="lineno">1: </em>    case slave.amoop {
-<em class="lineno">2: </em>        AMOOp::LR: assign_master(slave.addr, 0, 0, 0);
-<em class="lineno">3: </em>        <b>AMOOp::SC: if is_addr_reserved &amp;&amp; slave.addr == reserved_addr {</b>
-<em class="lineno">4: </em>        @&lt;b&gt;     assign_master(slave.addr, 1, slave.wdata, slave.wmask);|
-<em class="lineno">5: </em>        @&lt;b&gt; }|
-<em class="lineno">6: </em>        default: {}
-<em class="lineno">7: </em>    }
-</pre>
-</div>
-<div id="amounit.veryl.sc.master_comb" class="caption-code">
-<span class="caption">リスト12.32: リスト12.32: masterに値を割り当てる (amounit.veryl)</span>
-<pre class="list language-master_comb" translate="no"><em class="lineno">1: </em>    always_comb {
-<em class="lineno">2: </em>        reset_master();
-<em class="lineno">3: </em>        case state {
-<em class="lineno">4: </em>            State::Init     : accept_request_comb();
-<em class="lineno">5: </em>            State::WaitReady: if slave_saved.is_amo {
-<em class="lineno">6: </em>                case slave_saved.amoop {
-<em class="lineno">7: </em>                    AMOOp::LR: assign_master(slave_saved.addr, 0, 0, 0);
-<em class="lineno">8: </em>                    <b>AMOOp::SC: assign_master(slave_saved.addr, 1, slave_saved.wdata, slave_saved.wmask);</b>
-<em class="lineno">9: </em>                    default  : {}
-<em class="lineno">10: </em>                }
-<em class="lineno">11: </em>            } else {
-<em class="lineno">12: </em>                assign_master(slave_saved.addr, slave_saved.wen, slave_saved.wdata, slave_saved.wmask);
-<em class="lineno">13: </em>            }
-<em class="lineno">14: </em>            State::WaitValid               : accept_request_comb();
-<em class="lineno">15: </em>            <b>State::SCFail, State::SCSuccess: accept_request_comb();</b>
-<em class="lineno">16: </em>            default                        : {}
-<em class="lineno">17: </em>        }
-<em class="lineno">18: </em>    }
-</pre>
-</div>
+    <span class="hljs-comment">// 新しく要求を受け入れる</span>
+    <span class="hljs-keyword">function</span> accept_request_ff () {
+        slave_saved.valid = slave.ready &amp;&amp; slave.valid;
+        <span class="hljs-keyword">if</span> slave.ready &amp;&amp; slave.valid {
+            slave_saved.addr   = slave.addr;
+            slave_saved.wen    = slave.wen;
+            slave_saved.wdata  = slave.wdata;
+            slave_saved.wmask  = slave.wmask;
+            slave_saved.is_amo = slave.is_amo;
+            slave_saved.amoop  = slave.amoop;
+            slave_saved.aq     = slave.aq;
+            slave_saved.rl     = slave.rl;
+            slave_saved.funct3 = slave.funct3;
+            state              = <span class="hljs-keyword">if</span> master.ready ? State::WaitValid : State::WaitReady;
+        } <span class="hljs-keyword">else</span> {
+            state = State::Init;
+        }
+    }
 
-<h2 class="numbox"><a id="h12-5"></a><span class="secno">12.5</span> Zaamo拡張の実装</h2>
-<p>Zaamo拡張の命令はロード、演算、ストアを行います。本章では、Zaamo拡張の命令を<code class="inline-code" translate="no" >State::Init</code>(、<code class="inline-code" translate="no" >State::AMOLoadReady</code>)、<code class="inline-code" translate="no" >State::AMOLoadValid</code>(、<code class="inline-code" translate="no" >State::AMOStoreReady</code>)、<code class="inline-code" translate="no" >State::AMOStoreValid</code>という状態遷移で処理するように実装します。</p>
-<p><code class="inline-code" translate="no" >State</code>型に新しい状態を定義してください(<span class="listref"><a href="./13-impl-a.html#amounit.veryl.zaamo.State">リスト12.33</a></span>)。</p>
-<div id="amounit.veryl.zaamo.State" class="caption-code">
-<span class="caption">リスト12.33: リスト12.33: Zaamo拡張の命令用の状態の定義 (amounit.veryl)</span>
-<pre class="list language-State" translate="no"><em class="lineno">1: </em>    enum State {
-<em class="lineno">2: </em>        Init,
-<em class="lineno">3: </em>        WaitReady,
-<em class="lineno">4: </em>        WaitValid,
-<em class="lineno">5: </em>        SCSuccess,
-<em class="lineno">6: </em>        SCFail,
-<em class="lineno">7: </em>        <b>AMOLoadReady,</b>
-<em class="lineno">8: </em>        <b>AMOLoadValid,</b>
-<em class="lineno">9: </em>        <b>AMOStoreReady,</b>
-<em class="lineno">10: </em>        <b>AMOStoreValid,</b>
-<em class="lineno">11: </em>    }
-</pre>
-</div>
-<p>簡単にZalrsc拡張と区別するために、Zaamo拡張による要求かどうかを判定する関数(<code class="inline-code" translate="no" >is_Zaamo</code>)をcore_data_ifインターフェースに作成します(<span class="listref"><a href="./13-impl-a.html#core_data_if.veryl.zaamo.is_Zaamo">リスト12.34</a></span>、<span class="listref"><a href="./13-impl-a.html#core_data_if.veryl.zaamo.master">リスト12.35</a></span>)。modportにimport宣言を追加してください。</p>
-<div id="core_data_if.veryl.zaamo.is_Zaamo" class="caption-code">
-<span class="caption">リスト12.34: リスト12.34: is_Zaamo関数の定義 (core_data_if.veryl)</span>
-<pre class="list language-is_Zaamo" translate="no"><em class="lineno">1: </em>    function is_Zaamo () -&gt; logic {
-<em class="lineno">2: </em>        return is_amo &amp;&amp; (amoop != AMOOp::LR &amp;&amp; amoop != AMOOp::SC);
-<em class="lineno">3: </em>    }
-</pre>
-</div>
-<div id="core_data_if.veryl.zaamo.master" class="caption-code">
-<span class="caption">リスト12.35: リスト12.35: masterにis_Zaamo関数をimportする (core_data_if.veryl)</span>
-<pre class="list language-master" translate="no"><em class="lineno">1: </em>    amoop   : output,
-<em class="lineno">2: </em>    funct3  : output,
-<em class="lineno">3: </em>    <b>is_Zaamo: import,</b>
-<em class="lineno">4: </em>}
-</pre>
-</div>
-<p>ロードした値と<code class="inline-code" translate="no" >wdata</code>、フラグを利用して、ストアする値を生成する関数を作成します(<span class="listref"><a href="./13-impl-a.html#amounit.veryl.zaamo.calc_amo">リスト12.36</a></span>)。32ビット演算のとき、下位32ビットと上位32ビットのどちらを使うかをアドレスによって判別しています。</p>
-<div id="amounit.veryl.zaamo.calc_amo" class="caption-code">
-<span class="caption">リスト12.36: リスト12.36: Zaamo拡張の命令の計算を行う関数の定義 (amounit.veryl)</span>
-<pre class="list language-calc_amo" translate="no"><em class="lineno">1: </em>    // AMO ALU
-<em class="lineno">2: </em>    function calc_amo::&lt;W: u32&gt; (
-<em class="lineno">3: </em>        amoop: input AMOOp   ,
-<em class="lineno">4: </em>        wdata: input logic&lt;W&gt;,
-<em class="lineno">5: </em>        rdata: input logic&lt;W&gt;,
-<em class="lineno">6: </em>    ) -&gt; logic&lt;W&gt; {
-<em class="lineno">7: </em>        let lts: logic = $signed(wdata) &lt;: $signed(rdata);
-<em class="lineno">8: </em>        let ltu: logic = wdata &lt;: rdata;
-<em class="lineno">9: </em>
-<em class="lineno">10: </em>        return case amoop {
-<em class="lineno">11: </em>            AMOOp::SWAP: wdata,
-<em class="lineno">12: </em>            AMOOp::ADD : rdata + wdata,
-<em class="lineno">13: </em>            AMOOp::XOR : rdata ^ wdata,
-<em class="lineno">14: </em>            AMOOp::AND : rdata &amp; wdata,
-<em class="lineno">15: </em>            AMOOp::OR  : rdata | wdata,
-<em class="lineno">16: </em>            AMOOp::MIN : if lts ? wdata : rdata,
-<em class="lineno">17: </em>            AMOOp::MAX : if !lts ? wdata : rdata,
-<em class="lineno">18: </em>            AMOOp::MINU: if ltu ? wdata : rdata,
-<em class="lineno">19: </em>            AMOOp::MAXU: if !ltu ? wdata : rdata,
-<em class="lineno">20: </em>            default    : 0,
-<em class="lineno">21: </em>        };
-<em class="lineno">22: </em>    }
-<em class="lineno">23: </em>
-<em class="lineno">24: </em>    // Zaamo拡張の命令のwdataを生成する
-<em class="lineno">25: </em>    function gen_amo_wdata (
-<em class="lineno">26: </em>        req  : modport core_data_if::all_input,
-<em class="lineno">27: </em>        rdata: input   UIntX                  ,
-<em class="lineno">28: </em>    ) -&gt; UIntX {
-<em class="lineno">29: </em>        case req.funct3 {
-<em class="lineno">30: </em>            3'b010: { // word
-<em class="lineno">31: </em>                let low    : logic  = req.addr[2] == 0;
-<em class="lineno">32: </em>                let rdata32: UInt32 = if low ? rdata[31:0] : rdata[63:32];
-<em class="lineno">33: </em>                let wdata32: UInt32 = if low ? req.wdata[31:0] : req.wdata[63:32];
-<em class="lineno">34: </em>                let result : UInt32 = calc_amo::&lt;32&gt;(req.amoop, wdata32, rdata32);
-<em class="lineno">35: </em>                return if low ? {rdata[63:32], result} : {result, rdata[31:0]};
-<em class="lineno">36: </em>            }
-<em class="lineno">37: </em>            3'b011 : return calc_amo::&lt;64&gt;(req.amoop, req.wdata, rdata); // double
-<em class="lineno">38: </em>            default: return 0;
-<em class="lineno">39: </em>        }
-<em class="lineno">40: </em>    }
-</pre>
-</div>
-<p>ロードした値が命令の結果になるため、値を保持するためのレジスタを作成します(<span class="listref"><a href="./13-impl-a.html#amounit.veryl.zaamo.reg">リスト12.37</a></span>、<span class="listref"><a href="./13-impl-a.html#amounit.veryl.zaamo.reset">リスト12.38</a></span>)。</p>
-<div id="amounit.veryl.zaamo.reg" class="caption-code">
-<span class="caption">リスト12.37: リスト12.37: ロードしたデータを格納するレジスタの定義 (amounit.veryl)</span>
-<pre class="list language-reg" translate="no"><em class="lineno">1: </em>    // amo
-<em class="lineno">2: </em>    var zaamo_fetched_data: UIntX;
-</pre>
-</div>
-<div id="amounit.veryl.zaamo.reset" class="caption-code">
-<span class="caption">リスト12.38: リスト12.38: レジスタのリセット (amounit.veryl)</span>
-<pre class="list language-reset" translate="no"><em class="lineno">1: </em>        reserved_addr      = 0;
-<em class="lineno">2: </em>        <b>zaamo_fetched_data = 0;</b>
-<em class="lineno">3: </em>    }
-</pre>
-</div>
-<p>メモリアクセスが終了したら、ロードした値を返します(<span class="listref"><a href="./13-impl-a.html#amounit.veryl.zaamo.assign_slave_comb">リスト12.39</a></span>)。</p>
-<div id="amounit.veryl.zaamo.assign_slave_comb" class="caption-code">
-<span class="caption">リスト12.39: リスト12.39: 命令の結果を返す (amounit.veryl)</span>
-<pre class="list language-assign_slave_comb" translate="no"><em class="lineno">1: </em>    State::AMOStoreValid: {
-<em class="lineno">2: </em>        slave.ready  = master.rvalid;
-<em class="lineno">3: </em>        slave.rvalid = master.rvalid;
-<em class="lineno">4: </em>        slave.rdata  = zaamo_fetched_data;
-<em class="lineno">5: </em>    }
-</pre>
-</div>
-<p>状態に基づいて、メモリへのロード、ストア要求を割り当てます(<span class="listref"><a href="./13-impl-a.html#amounit.veryl.zaamo.accept_request_comb">リスト12.40</a></span>、<span class="listref"><a href="./13-impl-a.html#amounit.veryl.zaamo.assign_master_comb">リスト12.41</a></span>)。</p>
-<div id="amounit.veryl.zaamo.accept_request_comb" class="caption-code">
-<span class="caption">リスト12.40: リスト12.40: accept_request_comb関数で、まずロード要求を行う (amounit.veryl)</span>
-<pre class="list language-accept_request_comb" translate="no"><em class="lineno">1: </em>    default: <b>if slave.is_Zaamo()</b> {
-<em class="lineno">2: </em>        <b>assign_master(slave.addr, 0, 0, 0);</b>
-<em class="lineno">3: </em>    }
-</pre>
-</div>
-<div id="amounit.veryl.zaamo.assign_master_comb" class="caption-code">
-<span class="caption">リスト12.41: リスト12.41: 状態に基づいてロード、ストア要求を行う (amounit.veryl)</span>
-<pre class="list language-assign_master_comb" translate="no"><em class="lineno">1: </em>    State::AMOLoadReady                      : assign_master      (slave_saved.addr, 0, 0, 0);
-<em class="lineno">2: </em>    State::AMOLoadValid, State::AMOStoreReady: {
-<em class="lineno">3: </em>        let rdata        : UIntX = if state == State::AMOLoadValid ? master.rdata : zaamo_fetched_data;
-<em class="lineno">4: </em>        let wdata        : UIntX = gen_amo_wdata(slave_saved, rdata);
-<em class="lineno">5: </em>        assign_master(slave_saved.addr, 1, wdata, slave_saved.wmask);
-<em class="lineno">6: </em>    }
-<em class="lineno">7: </em>    State::AMOStoreValid: accept_request_comb();
-</pre>
-</div>
-<p><code class="inline-code" translate="no" >master</code>、<code class="inline-code" translate="no" >slave</code>の状態によって<code class="inline-code" translate="no" >state</code>を遷移します(<span class="listref"><a href="./13-impl-a.html#amounit.veryl.zaamo.accept_request_ff">リスト12.42</a></span>)。</p>
-<div id="amounit.veryl.zaamo.accept_request_ff" class="caption-code">
-<span class="caption">リスト12.42: リスト12.42: accept_request_ff関数で、masterのreadyによって次のstateを決める (amounit.veryl)</span>
-<pre class="list language-accept_request_ff" translate="no"><em class="lineno">1: </em>    default: <b>if slave.is_Zaamo()</b> {
-<em class="lineno">2: </em>        <b>state = if master.ready ? State::AMOLoadValid : State::AMOLoadReady;</b>
-<em class="lineno">3: </em>    }
-</pre>
-</div>
-<div id="amounit.veryl.zaamo.on_clock" class="caption-code">
-<span class="caption">リスト12.43: リスト12.43: Zaamo拡張の命令の状態の遷移 (amounit.veryl)</span>
-<pre class="list language-on_clock" translate="no"><em class="lineno">1: </em>    State::AMOLoadReady: if master.ready {
-<em class="lineno">2: </em>        state = State::AMOLoadValid;
-<em class="lineno">3: </em>    }
-<em class="lineno">4: </em>    State::AMOLoadValid: if master.rvalid {
-<em class="lineno">5: </em>        zaamo_fetched_data = master.rdata;
-<em class="lineno">6: </em>        state              = if slave.ready ? State::AMOStoreValid : State::AMOStoreReady;
-<em class="lineno">7: </em>    }
-<em class="lineno">8: </em>    State::AMOStoreReady: if master.ready {
-<em class="lineno">9: </em>        state = State::AMOStoreValid;
-<em class="lineno">10: </em>    }
-<em class="lineno">11: </em>    State::AMOStoreValid: if master.rvalid {
-<em class="lineno">12: </em>        accept_request_ff();
-<em class="lineno">13: </em>    }
-</pre>
-</div>
-<p>riscv-testsの<code class="inline-code" translate="no" >rv64ua-p-</code>から始まるテストを実行し、成功することを確認してください。</p>
-        </main>
-        <nav class="page-navi">
-          <a href="12-impl-mmio.html" class="page-prev">&#9664;</a>
-          <a href="14-impl-c.html" class="page-next">&#9654;</a>
-        </nav>
-        <br>
-        <br>
-        <footer style="background:#dddddd">
-      <div style="padding: 20px 20px 20px 20px;">
-          <div style="font-size:1.4rem"><b>コンピュータは、CPUを書けば理解できる！</b></div><br>
-          コンピュータアーキテクチャはCPUを作れば理解できます。
-          「Verylで作るCPU」は、ハードウェア記述言語VerylでRISC-VのCPUを自作する方法を解説するプロジェクトです。<br>
-          「Verylで作るCPU 基本編」では、ハードウェア記述言語の基礎から、OSを実行できる程度のCPUの実装方法までを解説します。<br>
-          <br>
-          キーワード: 自作CPU , RISC-V , Veryl , FPGA<br>
-      <div>
-        </footer>
-      </div>
-    </div>
+    <span class="hljs-keyword">function</span> on_clock () {
+        <span class="hljs-keyword">case</span> state {
+            State::Init     : accept_request_ff();
+            State::WaitReady: <span class="hljs-keyword">if</span> master.ready {
+                state = State::WaitValid;
+            }
+            State::WaitValid: <span class="hljs-keyword">if</span> master.rvalid {
+                accept_request_ff();
+            }
+            <span class="hljs-keyword">default</span>: {}
+        }
+    }
+
+    <span class="hljs-keyword">function</span> on_reset () {
+        state              = State::Init;
+        slave_saved.addr   = <span class="hljs-number">0</span>;
+        slave_saved.wen    = <span class="hljs-number">0</span>;
+        slave_saved.wdata  = <span class="hljs-number">0</span>;
+        slave_saved.wmask  = <span class="hljs-number">0</span>;
+        slave_saved.is_amo = <span class="hljs-number">0</span>;
+        slave_saved.amoop  = <span class="hljs-number">0</span> <span class="hljs-keyword">as</span> AMOOp;
+        slave_saved.aq     = <span class="hljs-number">0</span>;
+        slave_saved.rl     = <span class="hljs-number">0</span>;
+        slave_saved.funct3 = <span class="hljs-number">0</span>;
+    }
+
+    <span class="hljs-keyword">always_ff</span> {
+        <span class="hljs-keyword">if_reset</span> {
+            on_reset();
+        } <span class="hljs-keyword">else</span> {
+            on_clock();
+        }
+    }
+}
+</code></pre></div><p>amounitモジュールは <code>State::Init</code>、 (<code>State::WaitReady</code>、) <code>State::WaitValid</code>の順に状態を移動し、 通常のロードストア命令を処理します。</p><p>coreモジュールのロードストア用のインターフェースをmembus_ifからcore_data_ifに変更します (リスト13、 リスト14、 リスト15)。</p><p><span class="caption">▼リスト12.13: d_membusの型を変更する (core.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code>i_membus: <span class="hljs-keyword">modport</span> membus_if::&lt;ILEN, XLEN&gt;::master,
+d_membus: <span class="hljs-keyword">modport</span> <span class="custom-hl-bold">core_data_if</span>::master           ,
+led     : <span class="hljs-keyword">output</span>  UIntX                          ,
+</code></pre></div><p><span class="caption">▼リスト12.14: core_data_ifインターフェースのインスタンス化 (top.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">inst</span> d_membus_core: core_data_if;
+</code></pre></div><p><span class="caption">▼リスト12.15: ポートに割り当てるインターフェースを変更する (top.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">inst</span> c: core (
+    clk                    ,
+    rst                    ,
+    i_membus               ,
+    <span class="custom-hl-bold">d_membus: d_membus_core,</span>
+    led                    ,
+);
+</code></pre></div><p>memunitモジュールのインターフェースも変更し、 <code>is_amo</code>、<code>aq</code>、<code>rl</code>、<code>amoop</code>に値を割り当てます (リスト16、 リスト17、 リスト19、 リスト18、 リスト20)。</p><p><span class="caption">▼リスト12.16: membusの型を変更する (memunit.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code>    stall : <span class="hljs-keyword">output</span>  <span class="hljs-keyword">logic</span>               , <span class="hljs-comment">// メモリアクセス命令が完了していない</span>
+    membus: <span class="hljs-keyword">modport</span> <span class="custom-hl-bold">core_data_if</span>::master, <span class="hljs-comment">// メモリとのinterface</span>
+) {
+</code></pre></div><p><span class="caption">▼リスト12.17: 一時保存するレジスタの定義 (memunit.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">var</span> req_wen   : <span class="hljs-keyword">logic</span>                       ;
+<span class="hljs-keyword">var</span> req_addr  : Addr                        ;
+<span class="hljs-keyword">var</span> req_wdata : <span class="hljs-keyword">logic</span>&lt;MEMBUS_DATA_WIDTH&gt;    ;
+<span class="hljs-keyword">var</span> req_wmask : <span class="hljs-keyword">logic</span>&lt;MEMBUS_DATA_WIDTH / <span class="hljs-number">8</span>&gt;;
+<span class="custom-hl-bold"><span class="hljs-keyword">var</span> req_is_amo: <span class="hljs-keyword">logic</span>                       ;</span>
+<span class="custom-hl-bold"><span class="hljs-keyword">var</span> req_amoop : AMOOp                       ;</span>
+<span class="custom-hl-bold"><span class="hljs-keyword">var</span> req_aq    : <span class="hljs-keyword">logic</span>                       ;</span>
+<span class="custom-hl-bold"><span class="hljs-keyword">var</span> req_rl    : <span class="hljs-keyword">logic</span>                       ;</span>
+<span class="custom-hl-bold"><span class="hljs-keyword">var</span> req_funct3: <span class="hljs-keyword">logic</span>&lt;<span class="hljs-number">3</span>&gt;                    ;</span>
+</code></pre></div><p><span class="caption">▼リスト12.18: レジスタをリセットする (memunit.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">always_ff</span> {
+    <span class="hljs-keyword">if_reset</span> {
+        state      = State::Init;
+        req_wen    = <span class="hljs-number">0</span>;
+        req_addr   = <span class="hljs-number">0</span>;
+        req_wdata  = <span class="hljs-number">0</span>;
+        req_wmask  = <span class="hljs-number">0</span>;
+        <span class="custom-hl-bold">req_is_amo = <span class="hljs-number">0</span>;</span>
+        <span class="custom-hl-bold">req_amoop  = <span class="hljs-number">0</span> <span class="hljs-keyword">as</span> AMOOp;</span>
+        <span class="custom-hl-bold">req_aq     = <span class="hljs-number">0</span>;</span>
+        <span class="custom-hl-bold">req_rl     = <span class="hljs-number">0</span>;</span>
+        <span class="custom-hl-bold">req_funct3 = <span class="hljs-number">0</span>;</span>
+    } <span class="hljs-keyword">else</span> {
+</code></pre></div><p><span class="caption">▼リスト12.19: membusにレジスタの値を割り当てる (memunit.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">always_comb</span> {
+    <span class="hljs-comment">// メモリアクセス</span>
+    membus.valid  = state == State::WaitReady;
+    membus.addr   = req_addr;
+    membus.wen    = req_wen;
+    membus.wdata  = req_wdata;
+    membus.wmask  = req_wmask;
+    <span class="custom-hl-bold">membus.is_amo = req_is_amo;</span>
+    <span class="custom-hl-bold">membus.amoop  = req_amoop;</span>
+    <span class="custom-hl-bold">membus.aq     = req_aq;</span>
+    <span class="custom-hl-bold">membus.rl     = req_rl;</span>
+    <span class="custom-hl-bold">membus.funct3 = req_funct3;</span>
+</code></pre></div><p><span class="caption">▼リスト12.20: メモリにアクセスする命令のとき、レジスタに情報を設定する (memunit.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">case</span> state {
+    State::Init: <span class="hljs-keyword">if</span> is_new &amp; inst_is_memop(ctrl) {
+        ...
+        <span class="custom-hl-bold">req_is_amo = ctrl.is_amo;</span>
+        <span class="custom-hl-bold">req_amoop  = ctrl.funct7[<span class="hljs-number">6</span>:<span class="hljs-number">2</span>] <span class="hljs-keyword">as</span> AMOOp;</span>
+        <span class="custom-hl-bold">req_aq     = ctrl.funct7[<span class="hljs-number">1</span>];</span>
+        <span class="custom-hl-bold">req_rl     = ctrl.funct7[<span class="hljs-number">0</span>];</span>
+        <span class="custom-hl-bold">req_funct3 = ctrl.funct3;</span>
+    }
+    State::WaitReady: <span class="hljs-keyword">if</span> membus.ready {
+</code></pre></div><p>amounitモジュールをtopモジュールでインスタンス化し、 coreモジュールとmmio_controllerモジュールのインターフェースを接続します (リスト21)。</p><p><span class="caption">▼リスト12.21: amounitモジュールをインスタンス化する (top.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">inst</span> amou: amounit (
+    clk                  ,
+    rst                  ,
+    slave : d_membus_core,
+    master: d_membus     ,
+);
+</code></pre></div><h2 id="zalrsc拡張の実装" tabindex="-1">Zalrsc拡張の実装 <a class="header-anchor" href="#zalrsc拡張の実装" aria-label="Permalink to “Zalrsc拡張の実装”">​</a></h2><p>Zalrsc拡張の命令を実装します。 予約セットのサイズは実装が自由に決めることができるため、 本書では1つのアドレスのみ保持できるようにします。</p><h3 id="lr-w、lr-d命令を実装する" tabindex="-1">LR.W、LR.D命令を実装する <a class="header-anchor" href="#lr-w、lr-d命令を実装する" aria-label="Permalink to “LR.W、LR.D命令を実装する”">​</a></h3><p>32ビット幅、64ビット幅のLR命令を実装します。 LR.W命令はmemunitモジュールで64ビットに符号拡張されるため、 amounitモジュールでLR.W命令とLR.D命令を区別する必要はありません。</p><p>amounitモジュールに予約セットを作成します (リスト22、 リスト23)。 <code>is_addr_reserved</code>で、予約セットに有効なアドレスが格納されているかを管理します。</p><p><span class="caption">▼リスト12.22: 予約セットの定義 (amounit.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-comment">// lr/sc</span>
+<span class="hljs-keyword">var</span> is_addr_reserved: <span class="hljs-keyword">logic</span>;
+<span class="hljs-keyword">var</span> reserved_addr   : Addr ;
+</code></pre></div><p><span class="caption">▼リスト12.23: レジスタをリセットする (amounit.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code>is_addr_reserved   = <span class="hljs-number">0</span>;
+reserved_addr      = <span class="hljs-number">0</span>;
+</code></pre></div><p>LR命令を実行するとき、予約セットにアドレスを登録してロード結果を返すようにします (リスト24、 リスト25、 リスト26)。 既に予約セットが使われている場合はアドレスを上書きします。</p><p><span class="caption">▼リスト12.24: accept_request_comb関数の実装 (amounit.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">function</span> accept_request_comb () {
+    <span class="hljs-keyword">if</span> slave.ready &amp;&amp; slave.valid {
+        <span class="custom-hl-bold"><span class="hljs-keyword">if</span> slave.is_amo {</span>
+        <span class="custom-hl-bold">    <span class="hljs-keyword">case</span> slave.amoop {</span>
+        <span class="custom-hl-bold">        AMOOp::LR: assign_master(slave.addr, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>);</span>
+        <span class="custom-hl-bold">        <span class="hljs-keyword">default</span>  : {}</span>
+        <span class="custom-hl-bold">    }</span>
+        <span class="custom-hl-bold">} <span class="hljs-keyword">else</span> {</span>
+            assign_master(slave.addr, slave.wen, slave.wdata, slave.wmask);
+        <span class="custom-hl-bold">}</span>
+    }
+}
+</code></pre></div><p><span class="caption">▼リスト12.25: LR命令のときにmasterにロード要求を割り当てる (amounit.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">always_comb</span> {
+    reset_master();
+    <span class="hljs-keyword">case</span> state {
+        State::Init     : accept_request_comb();
+        <span class="custom-hl-bold">State::WaitReady: <span class="hljs-keyword">if</span> slave_saved.is_amo {</span>
+        <span class="custom-hl-bold">    <span class="hljs-keyword">case</span> slave_saved.amoop {</span>
+        <span class="custom-hl-bold">        AMOOp::LR: assign_master(slave_saved.addr, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>);</span>
+        <span class="custom-hl-bold">        <span class="hljs-keyword">default</span>  : {}</span>
+        <span class="custom-hl-bold">    }</span>
+        <span class="custom-hl-bold">} <span class="hljs-keyword">else</span> {</span>
+            assign_master(slave_saved.addr, slave_saved.wen, slave_saved.wdata, slave_saved.wmask);
+        <span class="custom-hl-bold">}</span>
+</code></pre></div><p><span class="caption">▼リスト12.26: LR命令のときに予約セットを設定する (amounit.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">function</span> accept_request_ff () {
+    slave_saved.valid = slave.ready &amp;&amp; slave.valid;
+    <span class="hljs-keyword">if</span> slave.ready &amp;&amp; slave.valid {
+        slave_saved.addr   = slave.addr;
+        ...
+        slave_saved.funct3 = slave.funct3;
+        <span class="custom-hl-bold"><span class="hljs-keyword">if</span> slave.is_amo {</span>
+        <span class="custom-hl-bold">    <span class="hljs-keyword">case</span> slave.amoop {</span>
+        <span class="custom-hl-bold">        AMOOp::LR: {</span>
+        <span class="custom-hl-bold">            <span class="hljs-comment">// reserve address</span></span>
+        <span class="custom-hl-bold">            is_addr_reserved = <span class="hljs-number">1</span>;</span>
+        <span class="custom-hl-bold">            reserved_addr    = slave.addr;</span>
+        <span class="custom-hl-bold">            state            = <span class="hljs-keyword">if</span> master.ready ? State::WaitValid : State::WaitReady;</span>
+        <span class="custom-hl-bold">        }</span>
+        <span class="custom-hl-bold">        <span class="hljs-keyword">default</span>: {}</span>
+        <span class="custom-hl-bold">    }</span>
+        <span class="custom-hl-bold">} <span class="hljs-keyword">else</span> {</span>
+            state = <span class="hljs-keyword">if</span> master.ready ? State::WaitValid : State::WaitReady;
+        <span class="custom-hl-bold">}</span>
+</code></pre></div><h3 id="sc-w、sc-d命令を実装する" tabindex="-1">SC.W、SC.D命令を実装する <a class="header-anchor" href="#sc-w、sc-d命令を実装する" aria-label="Permalink to “SC.W、SC.D命令を実装する”">​</a></h3><p>32ビット幅、64ビット幅のSC命令を実装します。 SC.W命令はmemunitモジュールで書き込みマスクを設定しているため、 amounitモジュールでSC.W命令とSC.D命令を区別する必要はありません。</p><p>SC命令が成功、失敗したときに結果を返すための状態を<code>State</code>型に追加します (リスト27)。</p><p><span class="caption">▼リスト12.27: SC命令用の状態の定義 (amounit.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">enum</span> State {
+    Init,
+    WaitReady,
+    WaitValid,
+    <span class="custom-hl-bold">SCSuccess,</span>
+    <span class="custom-hl-bold">SCFail,</span>
+}
+</code></pre></div><p>それぞれの状態で結果を返し、新しく要求を受け入れるようにします (リスト28)。 <code>State::SCSuccess</code>はSC命令に成功してストアが終わったときに結果を返します。 成功したら<code>0</code>、失敗したら<code>1</code>を返します。</p><p><span class="caption">▼リスト12.28: slaveにSC命令の結果を割り当てる (amounit.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code>State::SCSuccess: {
+    slave.ready  = master.rvalid;
+    slave.rvalid = master.rvalid;
+    slave.rdata  = <span class="hljs-number">0</span>;
+}
+State::SCFail: {
+    slave.ready  = <span class="hljs-number">1</span>;
+    slave.rvalid = <span class="hljs-number">1</span>;
+    slave.rdata  = <span class="hljs-number">1</span>;
+}
+</code></pre></div><p>SC命令を受け入れるときに予約セットを確認し、アドレスが予約セットのアドレスと異なる場合は状態を<code>State::SCFail</code>に移動します (リスト29)。 成功、失敗に関係なく、予約セットを空にします。</p><p><span class="caption">▼リスト12.29: accept_request_ff関数で予約セットを確認する (amounit.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code>AMOOp::SC: {
+    <span class="hljs-comment">// reset reserved</span>
+    <span class="hljs-keyword">let</span> prev            : <span class="hljs-keyword">logic</span> = is_addr_reserved;
+    is_addr_reserved = <span class="hljs-number">0</span>;
+    <span class="hljs-comment">// check</span>
+    <span class="hljs-keyword">if</span> prev &amp;&amp; slave.addr == reserved_addr {
+        state = <span class="hljs-keyword">if</span> master.ready ? State::SCSuccess : State::WaitReady;
+    } <span class="hljs-keyword">else</span> {
+        state = State::SCFail;
+    }
+}
+</code></pre></div><p>SC命令でメモリの<code>ready</code>が<code>1</code>になるのを待っているとき、 <code>ready</code>が<code>1</code>になったら状態を<code>State::SCSuccess</code>に移動します (リスト30)。 また、命令の実行が終了したときに新しく要求を受け入れるようにします。</p><p><span class="caption">▼リスト12.30: SC命令の状態遷移 (amounit.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">function</span> on_clock () {
+    <span class="hljs-keyword">case</span> state {
+        State::Init     : accept_request_ff();
+        State::WaitReady: <span class="hljs-keyword">if</span> master.ready {
+            <span class="custom-hl-bold"><span class="hljs-keyword">if</span> slave_saved.is_amo &amp;&amp; slave_saved.amoop == AMOOp::SC {</span>
+            <span class="custom-hl-bold">    state = State::SCSuccess;</span>
+            <span class="custom-hl-bold">} <span class="hljs-keyword">else</span> {</span>
+                state = State::WaitValid;
+            <span class="custom-hl-bold">}</span>
+        }
+        State::WaitValid: <span class="hljs-keyword">if</span> master.rvalid {
+            accept_request_ff();
+        }
+        <span class="custom-hl-bold">State::SCSuccess: <span class="hljs-keyword">if</span> master.rvalid {</span>
+        <span class="custom-hl-bold">    accept_request_ff();</span>
+        <span class="custom-hl-bold">}</span>
+        <span class="custom-hl-bold">State::SCFail: accept_request_ff();</span>
+        <span class="hljs-keyword">default</span>      : {}
+    }
+}
+</code></pre></div><p>SC命令によるメモリへの書き込みを実装します ( リスト31、 リスト32 )。</p><p><span class="caption">▼リスト12.31: accept_request_comb関数で、予約セットをチェックしてからストアを要求する (amounit.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">case</span> slave.amoop {
+    AMOOp::LR: assign_master(slave.addr, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>);
+    <span class="custom-hl-bold">AMOOp::SC: <span class="hljs-keyword">if</span> is_addr_reserved &amp;&amp; slave.addr == reserved_addr {</span>
+    @&lt;b&gt;     assign_master(slave.addr, <span class="hljs-number">1</span>, slave.wdata, slave.wmask);|
+    @&lt;b&gt; }|
+    <span class="hljs-keyword">default</span>: {}
+}
+</code></pre></div><p><span class="caption">▼リスト12.32: masterに値を割り当てる (amounit.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">always_comb</span> {
+    reset_master();
+    <span class="hljs-keyword">case</span> state {
+        State::Init     : accept_request_comb();
+        State::WaitReady: <span class="hljs-keyword">if</span> slave_saved.is_amo {
+            <span class="hljs-keyword">case</span> slave_saved.amoop {
+                AMOOp::LR: assign_master(slave_saved.addr, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>);
+                <span class="custom-hl-bold">AMOOp::SC: assign_master(slave_saved.addr, <span class="hljs-number">1</span>, slave_saved.wdata, slave_saved.wmask);</span>
+                <span class="hljs-keyword">default</span>  : {}
+            }
+        } <span class="hljs-keyword">else</span> {
+            assign_master(slave_saved.addr, slave_saved.wen, slave_saved.wdata, slave_saved.wmask);
+        }
+        State::WaitValid               : accept_request_comb();
+        <span class="custom-hl-bold">State::SCFail, State::SCSuccess: accept_request_comb();</span>
+        <span class="hljs-keyword">default</span>                        : {}
+    }
+}
+</code></pre></div><h2 id="zaamo拡張の実装" tabindex="-1">Zaamo拡張の実装 <a class="header-anchor" href="#zaamo拡張の実装" aria-label="Permalink to “Zaamo拡張の実装”">​</a></h2><p>Zaamo拡張の命令はロード、演算、ストアを行います。 本章では、Zaamo拡張の命令を <code>State::Init</code> (、<code>State::AMOLoadReady</code>) 、<code>State::AMOLoadValid</code> (、<code>State::AMOStoreReady</code>) 、<code>State::AMOStoreValid</code> という状態遷移で処理するように実装します。</p><p><code>State</code>型に新しい状態を定義してください (リスト33)。</p><p><span class="caption">▼リスト12.33: Zaamo拡張の命令用の状態の定義 (amounit.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">enum</span> State {
+    Init,
+    WaitReady,
+    WaitValid,
+    SCSuccess,
+    SCFail,
+    <span class="custom-hl-bold">AMOLoadReady,</span>
+    <span class="custom-hl-bold">AMOLoadValid,</span>
+    <span class="custom-hl-bold">AMOStoreReady,</span>
+    <span class="custom-hl-bold">AMOStoreValid,</span>
+}
+</code></pre></div><p>簡単にZalrsc拡張と区別するために、 Zaamo拡張による要求かどうかを判定する関数(<code>is_Zaamo</code>)をcore_data_ifインターフェースに作成します ( リスト34、 リスト35 )。 modportにimport宣言を追加してください。</p><p><span class="caption">▼リスト12.34: is_Zaamo関数の定義 (core_data_if.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">function</span> is_Zaamo () -&gt; <span class="hljs-keyword">logic</span> {
+    <span class="hljs-keyword">return</span> is_amo &amp;&amp; (amoop != AMOOp::LR &amp;&amp; amoop != AMOOp::SC);
+}
+</code></pre></div><p><span class="caption">▼リスト12.35: masterにis_Zaamo関数をimportする (core_data_if.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code>    amoop   : <span class="hljs-keyword">output</span>,
+    funct3  : <span class="hljs-keyword">output</span>,
+    <span class="custom-hl-bold">is_Zaamo: <span class="hljs-keyword">import</span>,</span>
+}
+</code></pre></div><p>ロードした値と<code>wdata</code>、フラグを利用して、ストアする値を生成する関数を作成します (リスト36)。 32ビット演算のとき、下位32ビットと上位32ビットのどちらを使うかをアドレスによって判別しています。</p><p><span class="caption">▼リスト12.36: Zaamo拡張の命令の計算を行う関数の定義 (amounit.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-comment">// AMO ALU</span>
+<span class="hljs-keyword">function</span> calc_amo::&lt;W: <span class="hljs-keyword">u32</span>&gt; (
+    amoop: <span class="hljs-keyword">input</span> AMOOp   ,
+    wdata: <span class="hljs-keyword">input</span> <span class="hljs-keyword">logic</span>&lt;W&gt;,
+    rdata: <span class="hljs-keyword">input</span> <span class="hljs-keyword">logic</span>&lt;W&gt;,
+) -&gt; <span class="hljs-keyword">logic</span>&lt;W&gt; {
+    <span class="hljs-keyword">let</span> lts: <span class="hljs-keyword">logic</span> = $<span class="hljs-keyword">signed</span>(wdata) &lt;: $<span class="hljs-keyword">signed</span>(rdata);
+    <span class="hljs-keyword">let</span> ltu: <span class="hljs-keyword">logic</span> = wdata &lt;: rdata;
+
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">case</span> amoop {
+        AMOOp::SWAP: wdata,
+        AMOOp::ADD : rdata + wdata,
+        AMOOp::XOR : rdata ^ wdata,
+        AMOOp::AND : rdata &amp; wdata,
+        AMOOp::OR  : rdata | wdata,
+        AMOOp::MIN : <span class="hljs-keyword">if</span> lts ? wdata : rdata,
+        AMOOp::MAX : <span class="hljs-keyword">if</span> !lts ? wdata : rdata,
+        AMOOp::MINU: <span class="hljs-keyword">if</span> ltu ? wdata : rdata,
+        AMOOp::MAXU: <span class="hljs-keyword">if</span> !ltu ? wdata : rdata,
+        <span class="hljs-keyword">default</span>    : <span class="hljs-number">0</span>,
+    };
+}
+
+<span class="hljs-comment">// Zaamo拡張の命令のwdataを生成する</span>
+<span class="hljs-keyword">function</span> gen_amo_wdata (
+    req  : <span class="hljs-keyword">modport</span> core_data_if::all_input,
+    rdata: <span class="hljs-keyword">input</span>   UIntX                  ,
+) -&gt; UIntX {
+    <span class="hljs-keyword">case</span> req.funct3 {
+        <span class="hljs-number">3&#39;b010</span>: { <span class="hljs-comment">// word</span>
+            <span class="hljs-keyword">let</span> low    : <span class="hljs-keyword">logic</span>  = req.addr[<span class="hljs-number">2</span>] == <span class="hljs-number">0</span>;
+            <span class="hljs-keyword">let</span> rdata32: UInt32 = <span class="hljs-keyword">if</span> low ? rdata[<span class="hljs-number">31</span>:<span class="hljs-number">0</span>] : rdata[<span class="hljs-number">63</span>:<span class="hljs-number">32</span>];
+            <span class="hljs-keyword">let</span> wdata32: UInt32 = <span class="hljs-keyword">if</span> low ? req.wdata[<span class="hljs-number">31</span>:<span class="hljs-number">0</span>] : req.wdata[<span class="hljs-number">63</span>:<span class="hljs-number">32</span>];
+            <span class="hljs-keyword">let</span> result : UInt32 = calc_amo::&lt;<span class="hljs-number">32</span>&gt;(req.amoop, wdata32, rdata32);
+            <span class="hljs-keyword">return</span> <span class="hljs-keyword">if</span> low ? {rdata[<span class="hljs-number">63</span>:<span class="hljs-number">32</span>], result} : {result, rdata[<span class="hljs-number">31</span>:<span class="hljs-number">0</span>]};
+        }
+        <span class="hljs-number">3&#39;b011</span> : <span class="hljs-keyword">return</span> calc_amo::&lt;<span class="hljs-number">64</span>&gt;(req.amoop, req.wdata, rdata); <span class="hljs-comment">// double</span>
+        <span class="hljs-keyword">default</span>: <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+    }
+}
+</code></pre></div><p>ロードした値が命令の結果になるため、 値を保持するためのレジスタを作成します ( リスト37、 リスト38 )。</p><p><span class="caption">▼リスト12.37: ロードしたデータを格納するレジスタの定義 (amounit.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-comment">// amo</span>
+<span class="hljs-keyword">var</span> zaamo_fetched_data: UIntX;
+</code></pre></div><p><span class="caption">▼リスト12.38: レジスタのリセット (amounit.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code>    reserved_addr      = <span class="hljs-number">0</span>;
+    <span class="custom-hl-bold">zaamo_fetched_data = <span class="hljs-number">0</span>;</span>
+}
+</code></pre></div><p>メモリアクセスが終了したら、ロードした値を返します (リスト39)。</p><p><span class="caption">▼リスト12.39: 命令の結果を返す (amounit.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code>State::AMOStoreValid: {
+    slave.ready  = master.rvalid;
+    slave.rvalid = master.rvalid;
+    slave.rdata  = zaamo_fetched_data;
+}
+</code></pre></div><p>状態に基づいて、メモリへのロード、ストア要求を割り当てます ( リスト40、 リスト41 )。</p><p><span class="caption">▼リスト12.40: accept_request_comb関数で、まずロード要求を行う (amounit.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">default</span>: <span class="custom-hl-bold"><span class="hljs-keyword">if</span> slave.is_Zaamo()</span> {
+    <span class="custom-hl-bold">assign_master(slave.addr, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>);</span>
+}
+</code></pre></div><p><span class="caption">▼リスト12.41: 状態に基づいてロード、ストア要求を行う (amounit.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code>State::AMOLoadReady                      : assign_master      (slave_saved.addr, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>);
+State::AMOLoadValid, State::AMOStoreReady: {
+    <span class="hljs-keyword">let</span> rdata        : UIntX = <span class="hljs-keyword">if</span> state == State::AMOLoadValid ? master.rdata : zaamo_fetched_data;
+    <span class="hljs-keyword">let</span> wdata        : UIntX = gen_amo_wdata(slave_saved, rdata);
+    assign_master(slave_saved.addr, <span class="hljs-number">1</span>, wdata, slave_saved.wmask);
+}
+State::AMOStoreValid: accept_request_comb();
+</code></pre></div><p><code>master</code>、<code>slave</code>の状態によって<code>state</code>を遷移します (リスト42)。</p><p><span class="caption">▼リスト12.42: accept_request_ff関数で、masterのreadyによって次のstateを決める (amounit.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">default</span>: <span class="custom-hl-bold"><span class="hljs-keyword">if</span> slave.is_Zaamo()</span> {
+    <span class="custom-hl-bold">state = <span class="hljs-keyword">if</span> master.ready ? State::AMOLoadValid : State::AMOLoadReady;</span>
+}
+</code></pre></div><p><span class="caption">▼リスト12.43: Zaamo拡張の命令の状態の遷移 (amounit.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code>State::AMOLoadReady: <span class="hljs-keyword">if</span> master.ready {
+    state = State::AMOLoadValid;
+}
+State::AMOLoadValid: <span class="hljs-keyword">if</span> master.rvalid {
+    zaamo_fetched_data = master.rdata;
+    state              = <span class="hljs-keyword">if</span> slave.ready ? State::AMOStoreValid : State::AMOStoreReady;
+}
+State::AMOStoreReady: <span class="hljs-keyword">if</span> master.ready {
+    state = State::AMOStoreValid;
+}
+State::AMOStoreValid: <span class="hljs-keyword">if</span> master.rvalid {
+    accept_request_ff();
+}
+</code></pre></div><p>riscv-testsの<code>rv64ua-p-</code>から始まるテストを実行し、成功することを確認してください。</p><hr class="footnotes-sep"><section class="footnotes"><ol class="footnotes-list"><li id="fn1" class="footnote-item"><p>メモリ操作の並び替えによる高速化は応用編で検討します。 <a href="#fnref1" class="footnote-backref">↩︎</a></p></li></ol></section></div></div></main><footer class="VPDocFooter" data-v-7011f0d8 data-v-e257564d><!--[--><!--]--><!----><nav class="prev-next" aria-labelledby="doc-footer-aria-label" data-v-e257564d><span class="visually-hidden" id="doc-footer-aria-label" data-v-e257564d>Pager</span><div class="pager" data-v-e257564d><a class="VPLink link pager-link prev" href="/12-impl-mmio.html" data-v-e257564d><!--[--><span class="desc" data-v-e257564d>Previous page</span><span class="title" data-v-e257564d>11 Memory-mapped I/Oの実装</span><!--]--></a></div><div class="pager" data-v-e257564d><a class="VPLink link pager-link next" href="/14-impl-c.html" data-v-e257564d><!--[--><span class="desc" data-v-e257564d>Next page</span><span class="title" data-v-e257564d>13 C拡張の実装</span><!--]--></a></div></nav></footer><!--[--><!--]--></div></div></div><!--[--><!--]--></div></div><!----><!--[--><!--]--></div></div>
+    <script>window.__VP_HASH_MAP__=JSON.parse("{\"00-preface.md\":\"DDGdJIg5\",\"02-setup.md\":\"NAwwJXp_\",\"03-veryl.md\":\"CfdP0nz9\",\"04-impl-rv32i.md\":\"D6HQhn-G\",\"04a-zicsr.md\":\"CThtddlO\",\"04b-riscvtests.md\":\"CW6e-oy1\",\"05-impl-rv64i.md\":\"DIMikneB\",\"05a-pipeline.md\":\"D92Nx-aw\",\"05b-synth.md\":\"CzClCWWq\",\"10-impl-m.md\":\"UxkEDKtO\",\"100-contribute.md\":\"CVKavJib\",\"11-impl-exception.md\":\"wScD8kDX\",\"12-impl-mmio.md\":\"BwxxU3HD\",\"13-impl-a.md\":\"CnPlYOpQ\",\"14-impl-c.md\":\"DqX93--N\",\"20-mmode-csr.md\":\"BSmJhJfG\",\"21-impl-interrupt.md\":\"BoBntBW9\",\"22-umode-csr.md\":\"BxF3jNM8\",\"23-smode-csr.md\":\"BTgvI4wQ\",\"24-impl-paging.md\":\"lA83XObo\",\"25-impl-plic.md\":\"BxNtHdp_\",\"26-run-linux.md\":\"CZfjbJCn\",\"99-postface.md\":\"CDNPw-b0\",\"99b-postface.md\":\"B_P9oVa3\",\"index.md\":\"7pP7Y4R2\"}");window.__VP_SITE_DATA__=JSON.parse("{\"lang\":\"en-US\",\"dir\":\"ltr\",\"title\":\"veryl-riscv-book\",\"description\":\"Write RISC-V CPU in Veryl\",\"base\":\"/\",\"head\":[],\"router\":{\"prefetchLinks\":true},\"appearance\":true,\"themeConfig\":{\"nav\":[{\"text\":\"プログラムを入手する\",\"link\":\"https://github.com/nananapo/bluecore\"}],\"sidebar\":[{\"text\":\"第I部 RV32I/RV64Iの実装\",\"items\":[{\"text\":\"まえがき\",\"link\":\"/00-preface\"},{\"text\":\"1 環境構築\",\"link\":\"/02-setup\"},{\"text\":\"2 ハードウェア記述言語 Veryl\",\"link\":\"/03-veryl\"},{\"text\":\"3 RV32Iの実装\",\"link\":\"/04-impl-rv32i\"},{\"text\":\"4 Zicsr拡張の実装\",\"link\":\"/04a-zicsr\"},{\"text\":\"5 riscv-testsによるテスト\",\"link\":\"/04b-riscvtests\"},{\"text\":\"6 RV64Iの実装\",\"link\":\"/05-impl-rv64i\"},{\"text\":\"7 CPUのパイプライン化\",\"link\":\"/05a-pipeline\"},{\"text\":\"8 CPUの合成\",\"link\":\"/05b-synth\"}]},{\"text\":\"第II部 RV64IMACの実装\",\"items\":[{\"text\":\"9 M拡張の実装\",\"link\":\"/10-impl-m\"},{\"text\":\"10 例外の実装\",\"link\":\"/11-impl-exception\"},{\"text\":\"11 Memory-mapped I/Oの実装\",\"link\":\"/12-impl-mmio\"},{\"text\":\"12 A拡張の実装\",\"link\":\"/13-impl-a\"},{\"text\":\"13 C拡張の実装\",\"link\":\"/14-impl-c\"}]},{\"text\":\"第III部 特権/割り込みの実装\",\"items\":[{\"text\":\"14 M-modeの実装 (1. CSRの実装)\",\"link\":\"/20-mmode-csr\"},{\"text\":\"15 M-modeの実装 (2. 割り込みの実装)\",\"link\":\"/21-impl-interrupt\"},{\"text\":\"16 U-modeの実装\",\"link\":\"/22-umode-csr\"},{\"text\":\"17 S-modeの実装 (1. CSRの実装)\",\"link\":\"/23-smode-csr\"},{\"text\":\"18 S-modeの実装 (2. 仮想記憶システム)\",\"link\":\"/24-impl-paging\"},{\"text\":\"19 PLICの実装\",\"link\":\"/25-impl-plic\"},{\"text\":\"20 Linuxを動かす\",\"link\":\"/26-run-linux\"},{\"text\":\"あとがき (第Ⅰ部)\",\"link\":\"/99-postface\"},{\"text\":\"あとがき (第Ⅱ部、第Ⅲ部)\",\"link\":\"/99b-postface\"},{\"text\":\"このプロジェクトに貢献する\",\"link\":\"/100-contribute\"}]}],\"socialLinks\":[{\"icon\":\"github\",\"link\":\"https://github.com/nananapo/veryl-riscv-book\"}],\"outline\":{\"level\":[2,4]}},\"locales\":{},\"scrollOffset\":134,\"cleanUrls\":false,\"additionalConfig\":{}}");</script>
     
-    <script>
-      let url = window.location.href;
-      let encoded_url = encodeURI(url);
-      let fb = document.getElementById("share-facebook");
-      fb["data-href"] = url;
-      console.log(fb);
-    </script>
-    <div id="fb-root"></div>
-    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/ja_JP/sdk.js#xfbml=1&version=v21.0"></script>
-    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-
   </body>
 </html>
-<!-- layout.html5.erb -->

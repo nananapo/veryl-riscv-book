@@ -1,230 +1,38 @@
-<!doctype html>
-<html lang="ja">
+<!DOCTYPE html>
+<html lang="en-US" dir="ltr">
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>まえがき | veryl-riscv-book</title>
+    <meta name="description" content="Write RISC-V CPU in Veryl">
+    <meta name="generator" content="VitePress v2.0.0-alpha.12">
+    <link rel="preload stylesheet" href="/assets/style.CaWnRaAO.css" as="style">
+    <link rel="preload stylesheet" href="/vp-icons.css" as="style">
     
-    <title>まえがき | Verylで作るCPU</title>
-
-    <link rel="stylesheet" type="text/css" href="css/normalize.css" />
-    <link rel="stylesheet" type="text/css" href="css/webstyle.css" />
-    <link rel="next" title="環境構築" href="02-setup.html">
-    <meta name="generator" content="Re:VIEW Starter">
-
-    <script async defer src="https://buttons.github.io/buttons.js"></script>
-
+    <script type="module" src="/assets/app.C5T7VUJy.js"></script>
+    <link rel="preload" href="/assets/inter-roman-latin.Di8DUHzh.woff2" as="font" type="font/woff2" crossorigin="">
+    <link rel="modulepreload" href="/assets/chunks/theme.Bi7Ru2r6.js">
+    <link rel="modulepreload" href="/assets/chunks/framework.D5l_65jD.js">
+    <link rel="modulepreload" href="/assets/00-preface.md.DDGdJIg5.lean.js">
+    <script id="check-dark-mode">(()=>{const e=localStorage.getItem("vitepress-theme-appearance")||"auto",a=window.matchMedia("(prefers-color-scheme: dark)").matches;(!e||e==="auto"?a:e==="dark")&&document.documentElement.classList.add("dark")})();</script>
+    <script id="check-mac-os">document.documentElement.classList.toggle("mac",/Mac|iPhone|iPod|iPad/i.test(navigator.platform));</script>
   </head>
-  <body style="background-color:#eff4ff">
-    <div class="page-outer" style="background-color:white">
-      <div class="side-content">
-                <a class="nav-title" href="index.html">Verylで作るCPU</a>
-
-        <div style="display:flex; gap:10px; align-items: center;">
-          <a class="github-button" href="https://github.com/nananapo/veryl-riscv-book" data-color-scheme="no-preference: light_high_contrast; light: light; dark: dark;" data-size="large" data-show-count="true" aria-label="Star nananapo/veryl-riscv-book on GitHub">Star</a>
-          <div style="">
-            <a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-show-count="false">Tweet</a>
-          </div>
-          <div style="margin-bottom: 14px;" id="share-facebook" class="fb-share-button" data-href="" data-layout="" data-size=""><a target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Finvalid.invalid%2F&amp;src=sdkpreparse" class="fb-xfbml-parse-ignore">Facebookでシェアする</a></div>
-        </div>
-        <ul class="toc toc-1">
-    <li class="toc-chapter"><a href="./00-preface.html">まえがき</a>
-      <ul class="toc toc-2">
-        <li class="toc-section"><a href="./00-preface.html#h">本書を読むとわかること</a></li>
-        <li class="toc-section"><a href="./00-preface.html#h">対象読者</a></li>
-        <li class="toc-section"><a href="./00-preface.html#h">必要な知識</a></li>
-        <li class="toc-section"><a href="./00-preface.html#h">本書のソースコード / 問い合わせ先</a></li>
-        <li class="toc-section"><a href="./00-preface.html#h">CPUの自作</a></li>
-        <li class="toc-section"><a href="./00-preface.html#h">RISC-V</a></li>
-        <li class="toc-section"><a href="./00-preface.html#h">本書の構成</a></li>
-        <li class="toc-section"><a href="./00-preface.html#h">凡例</a></li>
-      </ul>
-    </li>
-<li class="toc-part">第I部 RV32I/RV64Iの実装
-  <ul class="toc toc-2">
-    <li class="toc-chapter"><a href="./02-setup.html">1 環境構築</a></li>
-    <li class="toc-chapter"><a href="./03-veryl.html">2 ハードウェア記述言語 Veryl</a></li>
-    <li class="toc-chapter"><a href="./04-impl-rv32i.html">3 RV32Iの実装</a></li>
-    <li class="toc-chapter"><a href="./04a-zicsr.html">4 Zicsr拡張の実装</a></li>
-    <li class="toc-chapter"><a href="./04b-riscvtests.html">5 riscv-testsによるテスト</a></li>
-    <li class="toc-chapter"><a href="./05-impl-rv64i.html">6 RV64Iの実装</a></li>
-    <li class="toc-chapter"><a href="./05a-pipeline.html">7 CPUのパイプライン化</a></li>
-    <li class="toc-chapter"><a href="./05b-synth.html">8 CPUの合成</a></li>
-  </ul>
-</li>
-<li class="toc-part">第II部 RV64IMACの実装
-  <ul class="toc toc-2">
-    <li class="toc-chapter"><a href="./10-impl-m.html">9 M拡張の実装</a></li>
-    <li class="toc-chapter"><a href="./11-impl-exception.html">10 例外の実装</a></li>
-    <li class="toc-chapter"><a href="./12-impl-mmio.html">11 Memory-mapped I/Oの実装</a></li>
-    <li class="toc-chapter"><a href="./13-impl-a.html">12 A拡張の実装</a></li>
-    <li class="toc-chapter"><a href="./14-impl-c.html">13 C拡張の実装</a></li>
-  </ul>
-</li>
-<li class="toc-part">第III部 特権/割り込みの実装
-  <ul class="toc toc-2">
-    <li class="toc-chapter"><a href="./20-mmode-csr.html">14 M-modeの実装 (1. CSRの実装)</a></li>
-    <li class="toc-chapter"><a href="./21-impl-interrupt.html">15 M-modeの実装 (2. 割り込みの実装)</a></li>
-    <li class="toc-chapter"><a href="./22-umode-csr.html">16 U-modeの実装</a></li>
-    <li class="toc-chapter"><a href="./23-smode-csr.html">17 S-modeの実装 (1. CSRの実装)</a></li>
-    <li class="toc-chapter"><a href="./24-impl-paging.html">18 S-modeの実装 (2. 仮想記憶システム)</a></li>
-    <li class="toc-chapter"><a href="./25-impl-plic.html">19 PLICの実装</a></li>
-    <li class="toc-chapter"><a href="./26-run-linux.html">20 Linuxを動かす</a></li>
-  </ul>
-</li>
-    <li class="toc-chapter"><a href="./99-postface.html">あとがき (第Ⅰ部)</a></li>
-    <li class="toc-chapter"><a href="./99b-postface.html">あとがき (第Ⅱ部、第Ⅲ部)</a></li>
-    <li class="toc-chapter"><a href="./100-contribute.html">このプロジェクトに貢献する</a></li>
-    <li class="toc-chapter"><a href="./bib.html">参考文献</a></li>
-</ul>
-      </div>
-      <div class="page-inner">
-        <header class="page-header">
-        </header>
-        <main class="page-main">
-  <h1 class="none center"><a id="h"></a><br/>まえがき</h1>
-<p><span style="font-size:large">こんにちは! あなたはCPUを自作したことがありますか? 自作したことがあってもなくても大歓迎、この本はCPU自作の面白さを世に広めるために執筆されました。</span></p>
-<p><span style="font-size:large">パソコンの主要な部品であるCPUは、とても規模が大きくて複雑な電子回路で構成されています。現代的で、高速で、ゲームができるようなCPUを作るのは非常に難しいです。ですが、ちょっと遅くて機能が少ないCPUなら、誰でも簡単に作ることができます。</span></p>
-<p><span style="font-size:large">本書では、<b>Veryl</b>という「ハードウェアを記述するための言語」でCPUを自作する方法を解説しています。Verylを使うと、例えば32ビットの足し算をする回路を次のように記述できます。</span></p>
-<div class="caption-code">
-<pre class="emlist" translate="no">module Adder (
-    x  : input  logic&lt;32&gt;,
-    y  : input  logic&lt;32&gt;,
-    sum: output logic&lt;32&gt;,
+  <body>
+    <div id="app"><div class="Layout" data-v-1df9f90f><!--[--><!--]--><!--[--><span tabindex="-1" data-v-0b0ada53></span><a href="#VPContent" class="VPSkipLink visually-hidden" data-v-0b0ada53>Skip to content</a><!--]--><!----><header class="VPNav" data-v-1df9f90f data-v-9f75dce3><div class="VPNavBar" data-v-9f75dce3 data-v-2a96a3d0><div class="wrapper" data-v-2a96a3d0><div class="container" data-v-2a96a3d0><div class="title" data-v-2a96a3d0><div class="VPNavBarTitle has-sidebar" data-v-2a96a3d0 data-v-1e38c6bc><a class="title" href="/" data-v-1e38c6bc><!--[--><!--]--><!----><span data-v-1e38c6bc>veryl-riscv-book</span><!--[--><!--]--></a></div></div><div class="content" data-v-2a96a3d0><div class="content-body" data-v-2a96a3d0><!--[--><!--]--><div class="VPNavBarSearch search" data-v-2a96a3d0><!----></div><nav aria-labelledby="main-nav-aria-label" class="VPNavBarMenu menu" data-v-2a96a3d0 data-v-39714824><span id="main-nav-aria-label" class="visually-hidden" data-v-39714824> Main Navigation </span><!--[--><!--[--><a class="VPLink link vp-external-link-icon VPNavBarMenuLink" href="https://github.com/nananapo/bluecore" target="_blank" rel="noreferrer" tabindex="0" data-v-39714824 data-v-e56f3d57><!--[--><span data-v-e56f3d57>プログラムを入手する</span><!--]--></a><!--]--><!--]--></nav><!----><div class="VPNavBarAppearance appearance" data-v-2a96a3d0 data-v-6c893767><button class="VPSwitch VPSwitchAppearance" type="button" role="switch" title aria-checked="false" data-v-6c893767 data-v-5337faa4 data-v-1d5665e3><span class="check" data-v-1d5665e3><span class="icon" data-v-1d5665e3><!--[--><span class="vpi-sun sun" data-v-5337faa4></span><span class="vpi-moon moon" data-v-5337faa4></span><!--]--></span></span></button></div><div class="VPSocialLinks VPNavBarSocialLinks social-links" data-v-2a96a3d0 data-v-0394ad82 data-v-d07f11e6><!--[--><a class="VPSocialLink no-icon" href="https://github.com/nananapo/veryl-riscv-book" aria-label="github" target="_blank" rel="me noopener" data-v-d07f11e6 data-v-591a6b30><span class="vpi-social-github"></span></a><!--]--></div><div class="VPFlyout VPNavBarExtra extra" data-v-2a96a3d0 data-v-bb2aa2f0 data-v-42cb505d><button type="button" class="button" aria-haspopup="true" aria-expanded="false" aria-label="extra navigation" data-v-42cb505d><span class="vpi-more-horizontal icon" data-v-42cb505d></span></button><div class="menu" data-v-42cb505d><div class="VPMenu" data-v-42cb505d data-v-25a6cce8><!----><!--[--><!--[--><!----><div class="group" data-v-bb2aa2f0><div class="item appearance" data-v-bb2aa2f0><p class="label" data-v-bb2aa2f0>Appearance</p><div class="appearance-action" data-v-bb2aa2f0><button class="VPSwitch VPSwitchAppearance" type="button" role="switch" title aria-checked="false" data-v-bb2aa2f0 data-v-5337faa4 data-v-1d5665e3><span class="check" data-v-1d5665e3><span class="icon" data-v-1d5665e3><!--[--><span class="vpi-sun sun" data-v-5337faa4></span><span class="vpi-moon moon" data-v-5337faa4></span><!--]--></span></span></button></div></div></div><div class="group" data-v-bb2aa2f0><div class="item social-links" data-v-bb2aa2f0><div class="VPSocialLinks social-links-list" data-v-bb2aa2f0 data-v-d07f11e6><!--[--><a class="VPSocialLink no-icon" href="https://github.com/nananapo/veryl-riscv-book" aria-label="github" target="_blank" rel="me noopener" data-v-d07f11e6 data-v-591a6b30><span class="vpi-social-github"></span></a><!--]--></div></div></div><!--]--><!--]--></div></div></div><!--[--><!--]--><button type="button" class="VPNavBarHamburger hamburger" aria-label="mobile navigation" aria-expanded="false" aria-controls="VPNavScreen" data-v-2a96a3d0 data-v-e5dd9c1c><span class="container" data-v-e5dd9c1c><span class="top" data-v-e5dd9c1c></span><span class="middle" data-v-e5dd9c1c></span><span class="bottom" data-v-e5dd9c1c></span></span></button></div></div></div></div><div class="divider" data-v-2a96a3d0><div class="divider-line" data-v-2a96a3d0></div></div></div><!----></header><div class="VPLocalNav has-sidebar empty" data-v-1df9f90f data-v-8acdfeb5><div class="container" data-v-8acdfeb5><button class="menu" aria-expanded="false" aria-controls="VPSidebarNav" data-v-8acdfeb5><span class="vpi-align-left menu-icon" data-v-8acdfeb5></span><span class="menu-text" data-v-8acdfeb5>Menu</span></button><div class="VPLocalNavOutlineDropdown" style="--vp-vh:0px;" data-v-8acdfeb5 data-v-0bf0e06f><button data-v-0bf0e06f>Return to top</button><!----></div></div></div><aside class="VPSidebar" data-v-1df9f90f data-v-e7c6e512><div class="curtain" data-v-e7c6e512></div><nav class="nav" id="VPSidebarNav" aria-labelledby="sidebar-aria-label" tabindex="-1" data-v-e7c6e512><span class="visually-hidden" id="sidebar-aria-label" data-v-e7c6e512> Sidebar Navigation </span><!--[--><!--]--><!--[--><div class="no-transition group" data-v-8d50c081><section class="VPSidebarItem level-0 has-active" data-v-8d50c081 data-v-d81de50c><div class="item" role="button" tabindex="0" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><h2 class="text" data-v-d81de50c>第I部 RV32I/RV64Iの実装</h2><!----></div><div class="items" data-v-d81de50c><!--[--><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/00-preface.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>まえがき</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/02-setup.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>1 環境構築</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/03-veryl.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>2 ハードウェア記述言語 Veryl</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/04-impl-rv32i.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>3 RV32Iの実装</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/04a-zicsr.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>4 Zicsr拡張の実装</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/04b-riscvtests.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>5 riscv-testsによるテスト</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/05-impl-rv64i.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>6 RV64Iの実装</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/05a-pipeline.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>7 CPUのパイプライン化</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/05b-synth.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>8 CPUの合成</p><!--]--></a><!----></div><!----></div><!--]--></div></section></div><div class="no-transition group" data-v-8d50c081><section class="VPSidebarItem level-0" data-v-8d50c081 data-v-d81de50c><div class="item" role="button" tabindex="0" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><h2 class="text" data-v-d81de50c>第II部 RV64IMACの実装</h2><!----></div><div class="items" data-v-d81de50c><!--[--><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/10-impl-m.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>9 M拡張の実装</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/11-impl-exception.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>10 例外の実装</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/12-impl-mmio.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>11 Memory-mapped I/Oの実装</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/13-impl-a.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>12 A拡張の実装</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/14-impl-c.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>13 C拡張の実装</p><!--]--></a><!----></div><!----></div><!--]--></div></section></div><div class="no-transition group" data-v-8d50c081><section class="VPSidebarItem level-0" data-v-8d50c081 data-v-d81de50c><div class="item" role="button" tabindex="0" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><h2 class="text" data-v-d81de50c>第III部 特権/割り込みの実装</h2><!----></div><div class="items" data-v-d81de50c><!--[--><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/20-mmode-csr.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>14 M-modeの実装 (1. CSRの実装)</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/21-impl-interrupt.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>15 M-modeの実装 (2. 割り込みの実装)</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/22-umode-csr.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>16 U-modeの実装</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/23-smode-csr.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>17 S-modeの実装 (1. CSRの実装)</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/24-impl-paging.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>18 S-modeの実装 (2. 仮想記憶システム)</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/25-impl-plic.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>19 PLICの実装</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/26-run-linux.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>20 Linuxを動かす</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/99-postface.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>あとがき (第Ⅰ部)</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/99b-postface.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>あとがき (第Ⅱ部、第Ⅲ部)</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/100-contribute.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>このプロジェクトに貢献する</p><!--]--></a><!----></div><!----></div><!--]--></div></section></div><!--]--><!--[--><!--]--></nav></aside><div class="VPContent has-sidebar" id="VPContent" data-v-1df9f90f data-v-aff0b8d7><div class="VPDoc has-sidebar has-aside" data-v-aff0b8d7 data-v-7011f0d8><!--[--><!--]--><div class="container" data-v-7011f0d8><div class="aside" data-v-7011f0d8><div class="aside-curtain" data-v-7011f0d8></div><div class="aside-container" data-v-7011f0d8><div class="aside-content" data-v-7011f0d8><div class="VPDocAside" data-v-7011f0d8 data-v-3f215769><!--[--><!--]--><!--[--><!--]--><nav aria-labelledby="doc-outline-aria-label" class="VPDocAsideOutline" data-v-3f215769 data-v-60d5052e><div class="content" data-v-60d5052e><div class="outline-marker" data-v-60d5052e></div><div aria-level="2" class="outline-title" id="doc-outline-aria-label" role="heading" data-v-60d5052e>On this page</div><ul class="VPDocOutlineItem root" data-v-60d5052e data-v-2d0bdf9b><!--[--><!--]--></ul></div></nav><!--[--><!--]--><div class="spacer" data-v-3f215769></div><!--[--><!--]--><!----><!--[--><!--]--><!--[--><!--]--></div></div></div></div><div class="content" data-v-7011f0d8><div class="content-container" data-v-7011f0d8><!--[--><!--]--><main class="main" data-v-7011f0d8><div style="position:relative;" class="vp-doc _00-preface" data-v-7011f0d8><div><h1 id="まえがき" tabindex="-1">まえがき <a class="header-anchor" href="#まえがき" aria-label="Permalink to “まえがき”">​</a></h1><p>こんにちは! あなたはCPUを自作したことがありますか? 自作したことがあってもなくても大歓迎、この本はCPU自作の面白さを世に広めるために執筆されました。</p><p>パソコンの主要な部品であるCPUは、とても規模が大きくて複雑な電子回路で構成されています。現代的で、高速で、ゲームができるようなCPUを作るのは非常に難しいです。ですが、ちょっと遅くて機能が少ないCPUなら、誰でも簡単に作ることができます。</p><p>本書では、<strong>Veryl</strong>という「ハードウェアを記述するための言語」でCPUを自作する方法を解説しています。Verylを使うと、例えば32ビットの足し算をする回路を次のように記述できます。</p><div class="language-verilog"><button title="Copy Code" class="copy"></button><span class="lang">verilog</span><pre class="hljs"><code><span class="hljs-keyword">module</span> Adder (
+    x  : <span class="hljs-keyword">input</span>  <span class="hljs-keyword">logic</span>&lt;<span class="hljs-number">32</span>&gt;,
+    y  : <span class="hljs-keyword">input</span>  <span class="hljs-keyword">logic</span>&lt;<span class="hljs-number">32</span>&gt;,
+    sum: <span class="hljs-keyword">output</span> <span class="hljs-keyword">logic</span>&lt;<span class="hljs-number">32</span>&gt;,
 ) {
-    always_comb {
+    <span class="hljs-keyword">always_comb</span> {
         sum = x + y;
     }
 }
-</pre>
-</div>
-<p><span style="font-size:large"><code class="inline-code" translate="no" >x</code>と<code class="inline-code" translate="no" >y</code>を受け取って、<code class="inline-code" translate="no" >sum</code>に<code class="inline-code" translate="no" >x + y</code>を割り当てるだけ....簡単ですね。これと同様に、入出力を書いて、足し算やAND、OR、NOT演算などを書くだけで、CPUを書くことができます。</span></p>
-<p><span style="font-size:large">CPUは大きな論理回路です。でも、Verylで書いた小さな部品を組み合わせていけば、簡単に作ることができます。</span></p>
-<p><span style="font-size:large"><b>あなたもCPUを自作してみませんか？</b>自分好みのCPUを作る第一歩を踏み出しましょう。</span></p>
-
-<h2 id="id_00-preface_nonum1" notoc="true">本書を読むとわかること</h2>
-<ul>
-<li><span style="font-size:large">CPUの仕組み、動作、実装</span>
-</li>
-<li><span style="font-size:large">Verylの基本文法</span>
-</li>
-<li><span style="font-size:large">VerylでのCPUの実装方法</span>
-</li>
-<li><span style="font-size:large">RISC-Vの基本整数命令セット</span>
-</li>
-</ul>
-
-<h2 id="id_00-preface_nonum2" notoc="true">対象読者</h2>
-<ul>
-<li><span style="font-size:large"><b>自作CPUに興味がある人</b></span>
-</li>
-<li><span style="font-size:large">コンピュータアーキテクチャに興味がある人</span>
-</li>
-<li><span style="font-size:large">Verylが気になっている人</span>
-</li>
-</ul>
-
-<h2 id="id_00-preface_nonum3" notoc="true">必要な知識</h2>
-<ul>
-<li><span style="font-size:large">基本的な論理演算 (AND、OR、NOTくらいしか使いません)</span>
-</li>
-<li><span style="font-size:large">C、C++、JavaScript、Python、Ruby、Rustのような一般的なプログラミング言語の経験</span>
-</li>
-</ul>
-<p><span style="font-size:large">本書では、Verylの他にC++, Python, Makefile, シェルスクリプトを使用します。Verylについては詳細を解説しています。他の言語については、動作とどのような機能を持つかは解説しますが、言語の仕様や書き方、ライブラリなどは説明しません。</span></p>
-
-<h2 id="id_00-preface_nonum4" notoc="true">本書のソースコード / 問い合わせ先</h2>
-<p><span style="font-size:large">本書で利用するソースコードは、以下のサポートページから入手できます。質問やお問い合わせ方法についてもサポートページを確認してください。</span></p>
-<ul>
-<li><span style="font-size:large"><a href="https://github.com/nananapo/veryl-riscv-book/wiki/techbookfest17-support-page" class="link">https://github.com/nananapo/veryl-riscv-book/wiki/techbookfest17-support-page</a></span>
-</li>
-</ul>
-<p></p>
-<hr />
-<p></p>
-
-<h2 id="id_00-preface_nonum5" notoc="true">CPUの自作</h2>
-<p>CPUって自作できるのでしょうか?そもそもCPUの自作って何でしょうか?CPUの自作の一般的な定義はありませんが、筆者は「命令セットアーキテクチャの設計」「論理設計」「物理的に製造する」に分類できると考えています。</p>
-<p><b>命令セットアーキテクチャ</b>(Instruction Set Architecture, <b>ISA</b>)とは、CPUがどのような命令を実行できるかを定めたもの(仕様)です。<b>論理設計</b>とは、簡単に言うと、仕様の動作を実現する論理回路を設計することです。CPUは論理回路で構成されているため、CPUの設計には論理設計が必要になります。最近のCPUは、物理的には<b>VLSI</b>(Very Large Scale Integration, 超大規模集積回路)によって実装されています。VLSIの製造には莫大なお金が必要です<sup><a id="fnb-vlsi" href="#fn-vlsi" class="noteref" epub:type="noteref">*1</a></sup>。</p>
-<div class="footnote-list">
-<div class="footnote" id="fn-vlsi" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>小さいチップなら安く(数万 ～ 数百万円で)製造できます。OpenMPWやTinyTapeoutで検索してください</p></div>
-</div><!--/.footnote-list-->
-<p>ISAと実装(設計と製造)には深い関わりがあるため、ISAを知らずして実装はできないし、実装を知らずしてISAを作ることはできません。本書では、RISC-VというISAのCPUを実装することで、一般的なCPUの作り方やアーキテクチャについて学びます。</p>
-<p>物理的な製造のハードルは高いですが、FPGAを使うことで簡単にお試しできます。<b>FPGA</b>(Field Programmable Gate Array)とは、任意の論理回路を実現できる集積回路のことです<a href="bib.html#bib-amano.fpga">[1]</a>。最近では、安価(数千 ～ 数万円)でFPGAを入手できます。</p>
-<p>CPUのテストはシミュレータとFPGAで行います。本書では、Tang Nano 9KとPYNQ-Z1というFPGAを利用します。FPGAを持っていると、自作CPUによってLEDを制御したり、手持ちのパソコンと直接通信したりして楽しむことができます。</p>
-
-<h2 id="id_00-preface_nonum6" notoc="true">RISC-V</h2>
-<p><b>RISC-V</b>は、カリフォルニア大学バークレー校で開発されたISAです。仕様書の初版は2011年に公開されました。ISAとしての歴史はまだ浅いですが、仕様が広く公開されていてカスタマイズ可能であるという特徴もあって、着実に広がりつつあります。</p>
-<p>インターネット上には多くのRISC-Vの実装が公開されています。例として、<a href="https://github.com/chipsalliance/rocket-chip" class="link">RocketChip</a>(Chiselによる実装)、<a href="https://shakti.org.in/" class="link">Shakti</a>(Bluespec SystemVerilogによる実装)、<a href="https://github.com/rsd-devel/rsd" class="link">RSD</a>(SystemVerilogによる実装)が挙げられます。</p>
-<p>本書では、RISC-VのバージョンRISC-V ISA Manual, version 20240411 を利用します。RISC-Vの最新の仕様は、GitHubの<a href="https://github.com/riscv/riscv-isa-manual/" class="link">riscv/riscv-isa-manual</a>で確認できます。</p>
-<p>RISC-Vには、基本整数命令セットとしてRV32I、RV64I、RV32E、RV64E<sup><a id="fnb-rv128i" href="#fn-rv128i" class="noteref" epub:type="noteref">*2</a></sup>が定義されています。RVの後ろにつく数字はレジスタの長さが何ビットかです。基本整数命令セットには最低限の命令しか定義されていません。それ以外のかけ算や割り算、不可分操作などの命令や機能は拡張として定義されています。</p>
-<div class="footnote-list">
-<div class="footnote" id="fn-rv128i" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*2] </span>RV128Iもありますが、まだDraft段階(準備中)です</p></div>
-</div><!--/.footnote-list-->
-<p>どの拡張を実装しているかを示す文字列では、例えばかけ算と割り算、不可分操作ができるRV32IのCPUは<code class="inline-code" translate="no" >RV32IMA</code>と表現されます。本書では、まず、<code class="inline-code" translate="no" >RV32I</code>のCPUを実装します。これを、OSを実行できる程度までに進化させることを目標に実装を進めます。</p>
-
-<h2 id="id_00-preface_nonum7" notoc="true">本書の構成</h2>
-<p>本シリーズ(基本編)では、次のようにCPUを実装していきます。</p>
-<ol start="1" type="1">
-<li>RV32IのCPUを実装する (<a href="./04-impl-rv32i.html">第3章</a>)</li>
-<li>Zicsr拡張を実装する (<a href="./04a-zicsr.html">第4章</a>)</li>
-<li>CPUをテストする (<a href="./04b-riscvtests.html">第5章</a>)</li>
-<li>RV64Iを実装する (<a href="./05-impl-rv64i.html">第6章</a>)</li>
-<li>パイプライン化する (<a href="./05a-pipeline.html">第7章</a>)</li>
-<li>実機でテストする (<a href="./05b-synth.html">第8章</a>)</li>
-<li>M拡張、A拡張、C拡張を実装する</li>
-<li>UARTと割り込みを実装する</li>
-<li>OSを実行するために必要なCSRを実装する</li>
-<li>OSを実行する</li>
-</ol>
-
-<h2 id="id_00-preface_nonum8" notoc="true">凡例</h2>
-<p>プログラムコードの差分を表示する場合は、追加されたコードを太字で、削除されたコードを取り消し線で表します。ただし、リスト内のコードが全て新しく追加されるときは太字を利用しません。コードを置き換えるときは太字で示し、削除されたコードを示さない場合もあります。</p>
-<div class="caption-code">
-<pre class="emlist" translate="no"><del>print(&quot;Hello, <b>world</b>!\n&quot;);</del>       <span class="balloon">← 取り消し線は削除したコード</span>
-<b>print(&quot;Hello, &quot;+name+&quot;!\n&quot;);</b>    <span class="balloon">← 太字は追加したコード</span>
-</pre>
-</div>
-<p>長い行が右端で折り返されると、折り返されたことを表す小さな記号がつきます(pdf版のみ)。</p>
-<div class="caption-code">
-<pre class="emlist" translate="no">123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789__123456789_123456789_123456789_123456789_
-</pre>
-</div>
-<p>ターミナル画面は、次のように表示します。行頭の「<code class="inline-code" translate="no" >$</code>」はプロンプトを表し、ユーザが入力するコマンドには下線を引いています。</p>
-<div class="cmd-code">
-<pre class="emlist" translate="no">$ <span class="userinput">echo Hello</span>       <span class="balloon">← 行頭の「$」はプロンプト、それ以降がユーザ入力</span>
-</pre>
-</div>
-<p>プログラムコードやターミナル画面は、<code class="inline-code" translate="no" >...</code>などの複数の点で省略することがあります。</p>
-        </main>
-        <nav class="page-navi">
-          <a href="02-setup.html" class="page-next">&#9654;</a>
-        </nav>
-        <br>
-        <br>
-        <footer style="background:#dddddd">
-      <div style="padding: 20px 20px 20px 20px;">
-          <div style="font-size:1.4rem"><b>コンピュータは、CPUを書けば理解できる！</b></div><br>
-          コンピュータアーキテクチャはCPUを作れば理解できます。
-          「Verylで作るCPU」は、ハードウェア記述言語VerylでRISC-VのCPUを自作する方法を解説するプロジェクトです。<br>
-          「Verylで作るCPU 基本編」では、ハードウェア記述言語の基礎から、OSを実行できる程度のCPUの実装方法までを解説します。<br>
-          <br>
-          キーワード: 自作CPU , RISC-V , Veryl , FPGA<br>
-      <div>
-        </footer>
-      </div>
-    </div>
+</code></pre></div><p><code>x</code>と<code>y</code>を受け取って、<code>sum</code>に<code>x + y</code>を割り当てるだけ....簡単ですね。これと同様に、入出力を書いて、足し算やAND、OR、NOT演算などを書くだけで、CPUを書くことができます。</p><p>CPUは大きな論理回路です。でも、Verylで書いた小さな部品を組み合わせていけば、簡単に作ることができます。</p><p><strong>あなたもCPUを自作してみませんか？</strong>自分好みのCPUを作る第一歩を踏み出しましょう。</p><h2 id="本書を読むとわかること" tabindex="-1">本書を読むとわかること <a class="header-anchor" href="#本書を読むとわかること" aria-label="Permalink to “本書を読むとわかること”">​</a></h2><ul><li>CPUの仕組み、動作、実装</li><li>Verylの基本文法</li><li>VerylでのCPUの実装方法</li><li>RISC-Vの基本整数命令セット</li></ul><h2 id="対象読者" tabindex="-1">対象読者 <a class="header-anchor" href="#対象読者" aria-label="Permalink to “対象読者”">​</a></h2><ul><li><strong>自作CPUに興味がある人</strong></li><li>コンピュータアーキテクチャに興味がある人</li><li>Verylが気になっている人</li></ul><h2 id="必要な知識" tabindex="-1">必要な知識 <a class="header-anchor" href="#必要な知識" aria-label="Permalink to “必要な知識”">​</a></h2><ul><li>基本的な論理演算 (AND、OR、NOTくらいしか使いません)</li><li>C、C++、JavaScript、Python、Ruby、Rustのような一般的なプログラミング言語の経験</li></ul><p>本書では、Verylの他にC++, Python, Makefile, シェルスクリプトを使用します。Verylについては詳細を解説しています。他の言語については、動作とどのような機能を持つかは解説しますが、言語の仕様や書き方、ライブラリなどは説明しません。</p><h2 id="本書のソースコード-問い合わせ先" tabindex="-1">本書のソースコード / 問い合わせ先 <a class="header-anchor" href="#本書のソースコード-問い合わせ先" aria-label="Permalink to “本書のソースコード / 問い合わせ先”">​</a></h2><p>本書で利用するソースコードは、以下のサポートページから入手できます。質問やお問い合わせ方法についてもサポートページを確認してください。</p><ul><li><a href="https://github.com/nananapo/veryl-riscv-book/wiki/techbookfest17-support-page" target="_blank" rel="noreferrer">https://github.com/nananapo/veryl-riscv-book/wiki/techbookfest17-support-page</a></li></ul><h2 id="cpuの自作" tabindex="-1">CPUの自作 <a class="header-anchor" href="#cpuの自作" aria-label="Permalink to “CPUの自作”">​</a></h2><p>CPUって自作できるのでしょうか? そもそもCPUの自作って何でしょうか? CPUの自作の一般的な定義はありませんが、 筆者は 「命令セットアーキテクチャの設計」 「論理設計」 「物理的に製造する」 に分類できると考えています。</p><p><strong>命令セットアーキテクチャ</strong>(Instruction Set Architecture, <strong>ISA</strong>)とは、 CPUがどのような命令を実行できるかを定めたもの(仕様)です。 <strong>論理設計</strong>とは、簡単に言うと、 仕様の動作を実現する論理回路を設計することです。 CPUは論理回路で構成されているため、CPUの設計には論理設計が必要になります。 最近のCPUは、物理的には<strong>VLSI</strong>(Very Large Scale Integration, 超大規模集積回路)によって実装されています。 VLSIの製造には莫大なお金が必要です<sup class="footnote-ref"><a href="#fn1" id="fnref1">[1]</a></sup>。</p><p>ISAと実装(設計と製造)には深い関わりがあるため、 ISAを知らずして実装はできないし、 実装を知らずしてISAを作ることはできません。 本書では、RISC-VというISAのCPUを実装することで、 一般的なCPUの作り方やアーキテクチャについて学びます。</p><p>物理的な製造のハードルは高いですが、 FPGAを使うことで簡単にお試しできます。 <strong>FPGA</strong>(Field Programmable Gate Array)とは、 任意の論理回路を実現できる集積回路のことです。 最近では、安価(数千 ～ 数万円)でFPGAを入手できます。</p><p>CPUのテストはシミュレータとFPGAで行います。 本書では、Tang Nano 9KとPYNQ-Z1というFPGAを利用します。 FPGAを持っていると、 自作CPUによってLEDを制御したり、 手持ちのパソコンと直接通信したりして楽しむことができます。</p><h2 id="risc-v" tabindex="-1">RISC-V <a class="header-anchor" href="#risc-v" aria-label="Permalink to “RISC-V”">​</a></h2><p><strong>RISC-V</strong>は、カリフォルニア大学バークレー校で開発されたISAです。 仕様書の初版は2011年に公開されました。 ISAとしての歴史はまだ浅いですが、 仕様が広く公開されていてカスタマイズ可能であるという特徴もあって、 着実に広がりつつあります。</p><p>インターネット上には多くのRISC-Vの実装が公開されています。 例として、 <a href="https://github.com/chipsalliance/rocket-chip" target="_blank" rel="noreferrer">RocketChip</a>(Chiselによる実装)、 <a href="https://shakti.org.in/" target="_blank" rel="noreferrer">Shakti</a>(Bluespec SystemVerilogによる実装)、 <a href="https://github.com/rsd-devel/rsd" target="_blank" rel="noreferrer">RSD</a>(SystemVerilogによる実装)が挙げられます。</p><p>本書では、RISC-VのバージョンRISC-V ISA Manual, version 20240411 を利用します。 RISC-Vの最新の仕様は、GitHubの <a href="https://github.com/riscv/riscv-isa-manual/" target="_blank" rel="noreferrer">riscv/riscv-isa-manual</a> で確認できます。</p><p>RISC-Vには、基本整数命令セットとしてRV32I、RV64I、RV32E、RV64E<sup class="footnote-ref"><a href="#fn2" id="fnref2">[2]</a></sup>が定義されています。 RVの後ろにつく数字はレジスタの長さが何ビットかです。 基本整数命令セットには最低限の命令しか定義されていません。 それ以外のかけ算や割り算、不可分操作などの命令や機能は拡張として定義されています。</p><p>どの拡張を実装しているかを示す文字列では、 例えばかけ算と割り算、不可分操作ができるRV32IのCPUは<code>RV32IMA</code>と表現されます。 本書では、まず、<code>RV32I</code>のCPUを実装します。 これを、OSを実行できる程度までに進化させることを目標に実装を進めます。</p><h2 id="本書の構成" tabindex="-1">本書の構成 <a class="header-anchor" href="#本書の構成" aria-label="Permalink to “本書の構成”">​</a></h2><p>本シリーズ(基本編)では、次のようにCPUを実装していきます。</p><ol><li>RV32IのCPUを実装する (第3章)</li><li>Zicsr拡張を実装する (第4章)</li><li>CPUをテストする (第5章)</li><li>RV64Iを実装する (第6章)</li><li>パイプライン化する (第7章)</li><li>実機でテストする (第8章)</li><li>M拡張、A拡張、C拡張を実装する</li><li>UARTと割り込みを実装する</li><li>OSを実行するために必要なCSRを実装する</li><li>OSを実行する</li></ol><h2 id="凡例" tabindex="-1">凡例 <a class="header-anchor" href="#凡例" aria-label="Permalink to “凡例”">​</a></h2><p>プログラムコードの差分を表示する場合は、追加されたコードを太字で、削除されたコードを取り消し線で表します。 ただし、リスト内のコードが全て新しく追加されるときは太字を利用しません。 コードを置き換えるときは太字で示し、削除されたコードを示さない場合もあります。</p><div class="language-"><button title="Copy Code" class="copy"></button><span class="lang"></span><pre class="hljs"><code><span class="custom-hl-del">print(&quot;Hello, <span class="custom-hl-bold">world</span>!\n&quot;);</span>       ← 取り消し線は削除したコード
+<span class="custom-hl-bold">print(&quot;Hello, &quot;+name+&quot;!\n&quot;);</span>    ← 太字は追加したコード
+</code></pre></div><p>長い行が右端で折り返されると、折り返されたことを表す小さな記号がつきます(pdf版のみ)。</p><div class="language-"><button title="Copy Code" class="copy"></button><span class="lang"></span><pre class="hljs"><code>123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789__123456789_123456789_123456789_123456789_
+</code></pre></div><p>ターミナル画面は、次のように表示します。 行頭の「<code>$</code>」はプロンプトを表し、ユーザが入力するコマンドには下線を引いています。</p><div class="language-terminal"><button title="Copy Code" class="copy"></button><span class="lang">terminal</span><pre class="hljs"><code><span class="hljs-meta prompt_">$ </span><span class="language-bash"><span class="hljs-built_in">echo</span> Hello       ← 行頭の「$」はプロンプト、それ以降がユーザ入力</span>
+</code></pre></div><p>プログラムコードやターミナル画面は、<code>...</code>などの複数の点で省略することがあります。</p><hr class="footnotes-sep"><section class="footnotes"><ol class="footnotes-list"><li id="fn1" class="footnote-item"><p>小さいチップなら安く(数万 ～ 数百万円で)製造できます。OpenMPWやTinyTapeoutで検索してください <a href="#fnref1" class="footnote-backref">↩︎</a></p></li><li id="fn2" class="footnote-item"><p>RV128Iもありますが、まだDraft段階(準備中)です <a href="#fnref2" class="footnote-backref">↩︎</a></p></li></ol></section></div></div></main><footer class="VPDocFooter" data-v-7011f0d8 data-v-e257564d><!--[--><!--]--><!----><nav class="prev-next" aria-labelledby="doc-footer-aria-label" data-v-e257564d><span class="visually-hidden" id="doc-footer-aria-label" data-v-e257564d>Pager</span><div class="pager" data-v-e257564d><!----></div><div class="pager" data-v-e257564d><a class="VPLink link pager-link next" href="/02-setup.html" data-v-e257564d><!--[--><span class="desc" data-v-e257564d>Next page</span><span class="title" data-v-e257564d>1 環境構築</span><!--]--></a></div></nav></footer><!--[--><!--]--></div></div></div><!--[--><!--]--></div></div><!----><!--[--><!--]--></div></div>
+    <script>window.__VP_HASH_MAP__=JSON.parse("{\"00-preface.md\":\"DDGdJIg5\",\"02-setup.md\":\"NAwwJXp_\",\"03-veryl.md\":\"CfdP0nz9\",\"04-impl-rv32i.md\":\"D6HQhn-G\",\"04a-zicsr.md\":\"CThtddlO\",\"04b-riscvtests.md\":\"CW6e-oy1\",\"05-impl-rv64i.md\":\"DIMikneB\",\"05a-pipeline.md\":\"D92Nx-aw\",\"05b-synth.md\":\"CzClCWWq\",\"10-impl-m.md\":\"UxkEDKtO\",\"100-contribute.md\":\"CVKavJib\",\"11-impl-exception.md\":\"wScD8kDX\",\"12-impl-mmio.md\":\"BwxxU3HD\",\"13-impl-a.md\":\"CnPlYOpQ\",\"14-impl-c.md\":\"DqX93--N\",\"20-mmode-csr.md\":\"BSmJhJfG\",\"21-impl-interrupt.md\":\"BoBntBW9\",\"22-umode-csr.md\":\"BxF3jNM8\",\"23-smode-csr.md\":\"BTgvI4wQ\",\"24-impl-paging.md\":\"lA83XObo\",\"25-impl-plic.md\":\"BxNtHdp_\",\"26-run-linux.md\":\"CZfjbJCn\",\"99-postface.md\":\"CDNPw-b0\",\"99b-postface.md\":\"B_P9oVa3\",\"index.md\":\"7pP7Y4R2\"}");window.__VP_SITE_DATA__=JSON.parse("{\"lang\":\"en-US\",\"dir\":\"ltr\",\"title\":\"veryl-riscv-book\",\"description\":\"Write RISC-V CPU in Veryl\",\"base\":\"/\",\"head\":[],\"router\":{\"prefetchLinks\":true},\"appearance\":true,\"themeConfig\":{\"nav\":[{\"text\":\"プログラムを入手する\",\"link\":\"https://github.com/nananapo/bluecore\"}],\"sidebar\":[{\"text\":\"第I部 RV32I/RV64Iの実装\",\"items\":[{\"text\":\"まえがき\",\"link\":\"/00-preface\"},{\"text\":\"1 環境構築\",\"link\":\"/02-setup\"},{\"text\":\"2 ハードウェア記述言語 Veryl\",\"link\":\"/03-veryl\"},{\"text\":\"3 RV32Iの実装\",\"link\":\"/04-impl-rv32i\"},{\"text\":\"4 Zicsr拡張の実装\",\"link\":\"/04a-zicsr\"},{\"text\":\"5 riscv-testsによるテスト\",\"link\":\"/04b-riscvtests\"},{\"text\":\"6 RV64Iの実装\",\"link\":\"/05-impl-rv64i\"},{\"text\":\"7 CPUのパイプライン化\",\"link\":\"/05a-pipeline\"},{\"text\":\"8 CPUの合成\",\"link\":\"/05b-synth\"}]},{\"text\":\"第II部 RV64IMACの実装\",\"items\":[{\"text\":\"9 M拡張の実装\",\"link\":\"/10-impl-m\"},{\"text\":\"10 例外の実装\",\"link\":\"/11-impl-exception\"},{\"text\":\"11 Memory-mapped I/Oの実装\",\"link\":\"/12-impl-mmio\"},{\"text\":\"12 A拡張の実装\",\"link\":\"/13-impl-a\"},{\"text\":\"13 C拡張の実装\",\"link\":\"/14-impl-c\"}]},{\"text\":\"第III部 特権/割り込みの実装\",\"items\":[{\"text\":\"14 M-modeの実装 (1. CSRの実装)\",\"link\":\"/20-mmode-csr\"},{\"text\":\"15 M-modeの実装 (2. 割り込みの実装)\",\"link\":\"/21-impl-interrupt\"},{\"text\":\"16 U-modeの実装\",\"link\":\"/22-umode-csr\"},{\"text\":\"17 S-modeの実装 (1. CSRの実装)\",\"link\":\"/23-smode-csr\"},{\"text\":\"18 S-modeの実装 (2. 仮想記憶システム)\",\"link\":\"/24-impl-paging\"},{\"text\":\"19 PLICの実装\",\"link\":\"/25-impl-plic\"},{\"text\":\"20 Linuxを動かす\",\"link\":\"/26-run-linux\"},{\"text\":\"あとがき (第Ⅰ部)\",\"link\":\"/99-postface\"},{\"text\":\"あとがき (第Ⅱ部、第Ⅲ部)\",\"link\":\"/99b-postface\"},{\"text\":\"このプロジェクトに貢献する\",\"link\":\"/100-contribute\"}]}],\"socialLinks\":[{\"icon\":\"github\",\"link\":\"https://github.com/nananapo/veryl-riscv-book\"}],\"outline\":{\"level\":[2,4]}},\"locales\":{},\"scrollOffset\":134,\"cleanUrls\":false,\"additionalConfig\":{}}");</script>
     
-    <script>
-      let url = window.location.href;
-      let encoded_url = encodeURI(url);
-      let fb = document.getElementById("share-facebook");
-      fb["data-href"] = url;
-      console.log(fb);
-    </script>
-    <div id="fb-root"></div>
-    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/ja_JP/sdk.js#xfbml=1&version=v21.0"></script>
-    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-
   </body>
 </html>
-<!-- layout.html5.erb -->

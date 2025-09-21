@@ -1,728 +1,366 @@
-<!doctype html>
-<html lang="ja">
+<!DOCTYPE html>
+<html lang="en-US" dir="ltr">
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>例外の実装 | veryl-riscv-book</title>
+    <meta name="description" content="Write RISC-V CPU in Veryl">
+    <meta name="generator" content="VitePress v2.0.0-alpha.12">
+    <link rel="preload stylesheet" href="/assets/style.CaWnRaAO.css" as="style">
+    <link rel="preload stylesheet" href="/vp-icons.css" as="style">
     
-    <title>例外の実装 | Verylで作るCPU</title>
-
-    <link rel="stylesheet" type="text/css" href="css/normalize.css" />
-    <link rel="stylesheet" type="text/css" href="css/webstyle.css" />
-    <link rel="next" title="Memory-mapped I/Oの実装" href="12-impl-mmio.html">
-    <link rel="prev" title="M拡張の実装" href="10-impl-m.html">
-    <meta name="generator" content="Re:VIEW Starter">
-
-    <script async defer src="https://buttons.github.io/buttons.js"></script>
-
+    <script type="module" src="/assets/app.C5T7VUJy.js"></script>
+    <link rel="preload" href="/assets/inter-roman-latin.Di8DUHzh.woff2" as="font" type="font/woff2" crossorigin="">
+    <link rel="modulepreload" href="/assets/chunks/theme.Bi7Ru2r6.js">
+    <link rel="modulepreload" href="/assets/chunks/framework.D5l_65jD.js">
+    <link rel="modulepreload" href="/assets/11-impl-exception.md.wScD8kDX.lean.js">
+    <script id="check-dark-mode">(()=>{const e=localStorage.getItem("vitepress-theme-appearance")||"auto",a=window.matchMedia("(prefers-color-scheme: dark)").matches;(!e||e==="auto"?a:e==="dark")&&document.documentElement.classList.add("dark")})();</script>
+    <script id="check-mac-os">document.documentElement.classList.toggle("mac",/Mac|iPhone|iPod|iPad/i.test(navigator.platform));</script>
   </head>
-  <body style="background-color:#eff4ff">
-    <div class="page-outer" style="background-color:white">
-      <div class="side-content">
-                <a class="nav-title" href="index.html">Verylで作るCPU</a>
+  <body>
+    <div id="app"><div class="Layout" data-v-1df9f90f><!--[--><!--]--><!--[--><span tabindex="-1" data-v-0b0ada53></span><a href="#VPContent" class="VPSkipLink visually-hidden" data-v-0b0ada53>Skip to content</a><!--]--><!----><header class="VPNav" data-v-1df9f90f data-v-9f75dce3><div class="VPNavBar" data-v-9f75dce3 data-v-2a96a3d0><div class="wrapper" data-v-2a96a3d0><div class="container" data-v-2a96a3d0><div class="title" data-v-2a96a3d0><div class="VPNavBarTitle has-sidebar" data-v-2a96a3d0 data-v-1e38c6bc><a class="title" href="/" data-v-1e38c6bc><!--[--><!--]--><!----><span data-v-1e38c6bc>veryl-riscv-book</span><!--[--><!--]--></a></div></div><div class="content" data-v-2a96a3d0><div class="content-body" data-v-2a96a3d0><!--[--><!--]--><div class="VPNavBarSearch search" data-v-2a96a3d0><!----></div><nav aria-labelledby="main-nav-aria-label" class="VPNavBarMenu menu" data-v-2a96a3d0 data-v-39714824><span id="main-nav-aria-label" class="visually-hidden" data-v-39714824> Main Navigation </span><!--[--><!--[--><a class="VPLink link vp-external-link-icon VPNavBarMenuLink" href="https://github.com/nananapo/bluecore" target="_blank" rel="noreferrer" tabindex="0" data-v-39714824 data-v-e56f3d57><!--[--><span data-v-e56f3d57>プログラムを入手する</span><!--]--></a><!--]--><!--]--></nav><!----><div class="VPNavBarAppearance appearance" data-v-2a96a3d0 data-v-6c893767><button class="VPSwitch VPSwitchAppearance" type="button" role="switch" title aria-checked="false" data-v-6c893767 data-v-5337faa4 data-v-1d5665e3><span class="check" data-v-1d5665e3><span class="icon" data-v-1d5665e3><!--[--><span class="vpi-sun sun" data-v-5337faa4></span><span class="vpi-moon moon" data-v-5337faa4></span><!--]--></span></span></button></div><div class="VPSocialLinks VPNavBarSocialLinks social-links" data-v-2a96a3d0 data-v-0394ad82 data-v-d07f11e6><!--[--><a class="VPSocialLink no-icon" href="https://github.com/nananapo/veryl-riscv-book" aria-label="github" target="_blank" rel="me noopener" data-v-d07f11e6 data-v-591a6b30><span class="vpi-social-github"></span></a><!--]--></div><div class="VPFlyout VPNavBarExtra extra" data-v-2a96a3d0 data-v-bb2aa2f0 data-v-42cb505d><button type="button" class="button" aria-haspopup="true" aria-expanded="false" aria-label="extra navigation" data-v-42cb505d><span class="vpi-more-horizontal icon" data-v-42cb505d></span></button><div class="menu" data-v-42cb505d><div class="VPMenu" data-v-42cb505d data-v-25a6cce8><!----><!--[--><!--[--><!----><div class="group" data-v-bb2aa2f0><div class="item appearance" data-v-bb2aa2f0><p class="label" data-v-bb2aa2f0>Appearance</p><div class="appearance-action" data-v-bb2aa2f0><button class="VPSwitch VPSwitchAppearance" type="button" role="switch" title aria-checked="false" data-v-bb2aa2f0 data-v-5337faa4 data-v-1d5665e3><span class="check" data-v-1d5665e3><span class="icon" data-v-1d5665e3><!--[--><span class="vpi-sun sun" data-v-5337faa4></span><span class="vpi-moon moon" data-v-5337faa4></span><!--]--></span></span></button></div></div></div><div class="group" data-v-bb2aa2f0><div class="item social-links" data-v-bb2aa2f0><div class="VPSocialLinks social-links-list" data-v-bb2aa2f0 data-v-d07f11e6><!--[--><a class="VPSocialLink no-icon" href="https://github.com/nananapo/veryl-riscv-book" aria-label="github" target="_blank" rel="me noopener" data-v-d07f11e6 data-v-591a6b30><span class="vpi-social-github"></span></a><!--]--></div></div></div><!--]--><!--]--></div></div></div><!--[--><!--]--><button type="button" class="VPNavBarHamburger hamburger" aria-label="mobile navigation" aria-expanded="false" aria-controls="VPNavScreen" data-v-2a96a3d0 data-v-e5dd9c1c><span class="container" data-v-e5dd9c1c><span class="top" data-v-e5dd9c1c></span><span class="middle" data-v-e5dd9c1c></span><span class="bottom" data-v-e5dd9c1c></span></span></button></div></div></div></div><div class="divider" data-v-2a96a3d0><div class="divider-line" data-v-2a96a3d0></div></div></div><!----></header><div class="VPLocalNav has-sidebar empty" data-v-1df9f90f data-v-8acdfeb5><div class="container" data-v-8acdfeb5><button class="menu" aria-expanded="false" aria-controls="VPSidebarNav" data-v-8acdfeb5><span class="vpi-align-left menu-icon" data-v-8acdfeb5></span><span class="menu-text" data-v-8acdfeb5>Menu</span></button><div class="VPLocalNavOutlineDropdown" style="--vp-vh:0px;" data-v-8acdfeb5 data-v-0bf0e06f><button data-v-0bf0e06f>Return to top</button><!----></div></div></div><aside class="VPSidebar" data-v-1df9f90f data-v-e7c6e512><div class="curtain" data-v-e7c6e512></div><nav class="nav" id="VPSidebarNav" aria-labelledby="sidebar-aria-label" tabindex="-1" data-v-e7c6e512><span class="visually-hidden" id="sidebar-aria-label" data-v-e7c6e512> Sidebar Navigation </span><!--[--><!--]--><!--[--><div class="no-transition group" data-v-8d50c081><section class="VPSidebarItem level-0" data-v-8d50c081 data-v-d81de50c><div class="item" role="button" tabindex="0" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><h2 class="text" data-v-d81de50c>第I部 RV32I/RV64Iの実装</h2><!----></div><div class="items" data-v-d81de50c><!--[--><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/00-preface.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>まえがき</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/02-setup.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>1 環境構築</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/03-veryl.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>2 ハードウェア記述言語 Veryl</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/04-impl-rv32i.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>3 RV32Iの実装</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/04a-zicsr.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>4 Zicsr拡張の実装</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/04b-riscvtests.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>5 riscv-testsによるテスト</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/05-impl-rv64i.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>6 RV64Iの実装</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/05a-pipeline.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>7 CPUのパイプライン化</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/05b-synth.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>8 CPUの合成</p><!--]--></a><!----></div><!----></div><!--]--></div></section></div><div class="no-transition group" data-v-8d50c081><section class="VPSidebarItem level-0 has-active" data-v-8d50c081 data-v-d81de50c><div class="item" role="button" tabindex="0" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><h2 class="text" data-v-d81de50c>第II部 RV64IMACの実装</h2><!----></div><div class="items" data-v-d81de50c><!--[--><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/10-impl-m.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>9 M拡張の実装</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/11-impl-exception.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>10 例外の実装</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/12-impl-mmio.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>11 Memory-mapped I/Oの実装</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/13-impl-a.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>12 A拡張の実装</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/14-impl-c.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>13 C拡張の実装</p><!--]--></a><!----></div><!----></div><!--]--></div></section></div><div class="no-transition group" data-v-8d50c081><section class="VPSidebarItem level-0" data-v-8d50c081 data-v-d81de50c><div class="item" role="button" tabindex="0" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><h2 class="text" data-v-d81de50c>第III部 特権/割り込みの実装</h2><!----></div><div class="items" data-v-d81de50c><!--[--><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/20-mmode-csr.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>14 M-modeの実装 (1. CSRの実装)</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/21-impl-interrupt.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>15 M-modeの実装 (2. 割り込みの実装)</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/22-umode-csr.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>16 U-modeの実装</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/23-smode-csr.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>17 S-modeの実装 (1. CSRの実装)</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/24-impl-paging.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>18 S-modeの実装 (2. 仮想記憶システム)</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/25-impl-plic.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>19 PLICの実装</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/26-run-linux.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>20 Linuxを動かす</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/99-postface.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>あとがき (第Ⅰ部)</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/99b-postface.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>あとがき (第Ⅱ部、第Ⅲ部)</p><!--]--></a><!----></div><!----></div><div class="VPSidebarItem level-1 is-link" data-v-d81de50c data-v-d81de50c><div class="item" data-v-d81de50c><div class="indicator" data-v-d81de50c></div><a class="VPLink link link" href="/100-contribute.html" data-v-d81de50c><!--[--><p class="text" data-v-d81de50c>このプロジェクトに貢献する</p><!--]--></a><!----></div><!----></div><!--]--></div></section></div><!--]--><!--[--><!--]--></nav></aside><div class="VPContent has-sidebar" id="VPContent" data-v-1df9f90f data-v-aff0b8d7><div class="VPDoc has-sidebar has-aside" data-v-aff0b8d7 data-v-7011f0d8><!--[--><!--]--><div class="container" data-v-7011f0d8><div class="aside" data-v-7011f0d8><div class="aside-curtain" data-v-7011f0d8></div><div class="aside-container" data-v-7011f0d8><div class="aside-content" data-v-7011f0d8><div class="VPDocAside" data-v-7011f0d8 data-v-3f215769><!--[--><!--]--><!--[--><!--]--><nav aria-labelledby="doc-outline-aria-label" class="VPDocAsideOutline" data-v-3f215769 data-v-60d5052e><div class="content" data-v-60d5052e><div class="outline-marker" data-v-60d5052e></div><div aria-level="2" class="outline-title" id="doc-outline-aria-label" role="heading" data-v-60d5052e>On this page</div><ul class="VPDocOutlineItem root" data-v-60d5052e data-v-2d0bdf9b><!--[--><!--]--></ul></div></nav><!--[--><!--]--><div class="spacer" data-v-3f215769></div><!--[--><!--]--><!----><!--[--><!--]--><!--[--><!--]--></div></div></div></div><div class="content" data-v-7011f0d8><div class="content-container" data-v-7011f0d8><!--[--><!--]--><main class="main" data-v-7011f0d8><div style="position:relative;" class="vp-doc _11-impl-exception" data-v-7011f0d8><div><h1 id="例外の実装" tabindex="-1">例外の実装 <a class="header-anchor" href="#例外の実装" aria-label="Permalink to “例外の実装”">​</a></h1><h2 id="例外とは何か" tabindex="-1">例外とは何か? <a class="header-anchor" href="#例外とは何か" aria-label="Permalink to “例外とは何か?”">​</a></h2><p>CPUがソフトウェアを実行するとき、 処理を中断したり終了しなければならないような異常な状態<sup class="footnote-ref"><a href="#fn1" id="fnref1">[1]</a></sup>が発生することがあります。 例えば、実行環境(EEI)がサポートしていない、 または実行を禁止しているような違法(illegal)<sup class="footnote-ref"><a href="#fn2" id="fnref2">[2]</a></sup>な命令を実行しようとする場合です。 このとき、CPUはどのような動作をすればいいのでしょうか？</p><p>RISC-Vでは、命令によって引き起こされる異常な状態のことを<strong>例外(Exception)</strong>と呼び、 例外が発生した場合には<strong>トラップ(Trap)</strong>を引き起こします。 トラップとは例外、または割り込み(Interrupt)<sup class="footnote-ref"><a href="#fn3" id="fnref3">[3]</a></sup>によってCPUの状態、制御を変更することです。 具体的にはPCをトラップベクタ(trap vector)に移動したり、CSRを変更します。</p><p>本書では既にECALL命令の実行によって発生するEnvironment call from M-mode例外を実装しており、 例外が発生したら次のように動作します。</p><ol><li>mcauseレジスタにトラップの発生原因を示す値(<code>11</code>)を書き込む</li><li>mepcレジスタにPCの値を書き込む</li><li>PCをmtvecレジスタの値に設定する</li></ol><p>本章では、例外発生時に例外に固有の情報を書き込むmtvalレジスタと、現在の実装で発生する可能性がある例外を実装します。 本書ではこれ以降、トラップの発生原因を示す値のことをcauseと呼びます。</p><h2 id="例外情報の伝達" tabindex="-1">例外情報の伝達 <a class="header-anchor" href="#例外情報の伝達" aria-label="Permalink to “例外情報の伝達”">​</a></h2><h3 id="environment-call-from-m-mode例外をifステージで処理する" tabindex="-1">Environment call from M-mode例外をIFステージで処理する <a class="header-anchor" href="#environment-call-from-m-mode例外をifステージで処理する" aria-label="Permalink to “Environment call from M-mode例外をIFステージで処理する”">​</a></h3><p>今のところ、ECALL命令による例外はMEM(CSR)ステージのcsrunitモジュールで例外判定、処理されています。 ECALL命令によって例外が発生するかは命令がECALLであるかどうかだけを判定すれば分かるため、 命令をデコードする時点、つまりIDステージで判定できます。</p><p>本章で実装する例外にはMEMステージよりも前で発生する例外があるため、 IDステージから順に次のステージに例外の有無、causeを受け渡していく仕組みを実装します。</p><p>まず、例外が発生するかどうか(<code>valid</code>)、例外のcause(<code>cause</code>)をまとめた<code>ExceptionInfo</code>構造体を定義します (リスト1)。</p><p><span class="caption">▼リスト10.1: ExceptionInfo構造体を定義する (corectrl.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-comment">// 例外の情報を保存するための型</span>
+<span class="hljs-keyword">struct</span> ExceptionInfo {
+    valid: <span class="hljs-keyword">logic</span>   ,
+    cause: CsrCause,
+}
+</code></pre></div><p>EXステージ、MEMステージのFIFOのデータ型に構造体を追加します (リスト2、リスト3)。</p><p><span class="caption">▼リスト10.2: EXステージのFIFOにExceptionInfoを追加する (core.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">struct</span> exq_type {
+    addr: Addr         ,
+    bits: Inst         ,
+    ctrl: InstCtrl     ,
+    imm : UIntX        ,
+    <span class="custom-hl-bold">expt: ExceptionInfo,</span>
+}
+</code></pre></div><p><span class="caption">▼リスト10.3: MEMステージのFIFOにExceptionInfoを追加する (core.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">struct</span> memq_type {
+    addr      : Addr            ,
+    bits      : Inst            ,
+    ctrl      : InstCtrl        ,
+    imm       : UIntX           ,
+    <span class="custom-hl-bold">expt      : ExceptionInfo   ,</span>
+    alu_result: UIntX           ,
+    rs1_addr  : <span class="hljs-keyword">logic</span>        &lt;<span class="hljs-number">5</span>&gt;,
+</code></pre></div><p>IDステージからEXステージに命令を渡すとき、 命令がECALL命令なら例外が発生することを伝えます (リスト4)。</p><p><span class="caption">▼リスト10.4: IDステージでECALL命令を判定する (core.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">always_comb</span> {
+    <span class="hljs-comment">// ID -&gt; EX</span>
+    if_fifo_rready = exq_wready;
+    exq_wvalid     = if_fifo_rvalid;
+    exq_wdata.addr = if_fifo_rdata.addr;
+    exq_wdata.bits = if_fifo_rdata.bits;
+    exq_wdata.ctrl = ids_ctrl;
+    exq_wdata.imm  = ids_imm;
+    <span class="custom-hl-bold"><span class="hljs-comment">// exception</span></span>
+    <span class="custom-hl-bold">exq_wdata.expt.valid = ids_inst_bits == <span class="hljs-number">32&#39;h00000073</span>; <span class="hljs-comment">// ECALL</span></span>
+    <span class="custom-hl-bold">exq_wdata.expt.cause = CsrCause::ENVIRONMENT_CALL_FROM_M_MODE;</span>
+}
+</code></pre></div><p>EXステージで例外は発生しないので、 例外情報をそのままMEMステージに渡します (リスト5)。</p><p><span class="caption">▼リスト10.5: EXステージからMEMステージに例外情報を渡す (core.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">always_comb</span> {
+    <span class="hljs-comment">// EX -&gt; MEM</span>
+    exq_rready            = memq_wready &amp;&amp; !exs_stall;
+    ...
+    memq_wdata.jump_addr  = <span class="hljs-keyword">if</span> inst_is_br(exs_ctrl) ? exs_pc + exs_imm : exs_alu_result &amp; ~<span class="hljs-number">1</span>;
+    <span class="custom-hl-bold">memq_wdata.expt       = exq_rdata.expt;</span>
+}
+</code></pre></div><p>csrunitモジュールを変更します。 <code>expt_info</code>ポートを追加して、MEMステージ以前の例外情報を受け取ります ( リスト6、 リスト7、 リスト8 )。</p><p><span class="caption">▼リスト10.6: csrunitモジュールに例外情報を受け取るためのポートを追加する (csrunit.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">module</span> csrunit (
+    clk        : <span class="hljs-keyword">input</span>  <span class="hljs-keyword">clock</span>            ,
+    rst        : <span class="hljs-keyword">input</span>  <span class="hljs-keyword">reset</span>            ,
+    valid      : <span class="hljs-keyword">input</span>  <span class="hljs-keyword">logic</span>            ,
+    pc         : <span class="hljs-keyword">input</span>  Addr             ,
+    ctrl       : <span class="hljs-keyword">input</span>  InstCtrl         ,
+    <span class="custom-hl-bold">expt_info  : <span class="hljs-keyword">input</span>  ExceptionInfo    ,</span>
+    rd_addr    : <span class="hljs-keyword">input</span>  <span class="hljs-keyword">logic</span>        &lt;<span class="hljs-number">5</span>&gt; ,
+</code></pre></div><p><span class="caption">▼リスト10.7: MEMステージの例外情報の変数を作成する (core.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-comment">///////////////////////////////// MEM Stage /////////////////////////////////</span>
+<span class="hljs-keyword">var</span> mems_is_new   : <span class="hljs-keyword">logic</span>           ;
+<span class="hljs-keyword">let</span> mems_valid    : <span class="hljs-keyword">logic</span>            = memq_rvalid;
+<span class="hljs-keyword">let</span> mems_pc       : Addr             = memq_rdata.addr;
+<span class="hljs-keyword">let</span> mems_inst_bits: Inst             = memq_rdata.bits;
+<span class="hljs-keyword">let</span> mems_ctrl     : InstCtrl         = memq_rdata.ctrl;
+<span class="custom-hl-bold"><span class="hljs-keyword">let</span> mems_expt     : ExceptionInfo    = memq_rdata.expt;</span>
+<span class="hljs-keyword">let</span> mems_rd_addr  : <span class="hljs-keyword">logic</span>        &lt;<span class="hljs-number">5</span>&gt; = mems_inst_bits[<span class="hljs-number">11</span>:<span class="hljs-number">7</span>];
+</code></pre></div><p><span class="caption">▼リスト10.8: csrunitモジュールに例外情報を供給する (core.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">inst</span> csru: csrunit (
+    clk                             ,
+    rst                             ,
+    valid    : mems_valid           ,
+    pc       : mems_pc              ,
+    ctrl     : mems_ctrl            ,
+    <span class="custom-hl-bold">expt_info: mems_expt            ,</span>
+    rd_addr  : mems_rd_addr         ,
+</code></pre></div><p>ECALL命令かどうかを判定する<code>is_ecall</code>変数を削除して、 例外の発生条件、例外の種類を示す値を変更します ( リスト9、 リスト10 )。</p><p><span class="caption">▼リスト10.9: csrunitモジュールでのECALL命令の判定を削除する (csrunit.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-comment">// CSRR(W|S|C)[I]命令かどうか</span>
+<span class="hljs-keyword">let</span> is_wsc: <span class="hljs-keyword">logic</span> = ctrl.is_csr &amp;&amp; ctrl.funct3[<span class="hljs-number">1</span>:<span class="hljs-number">0</span>] != <span class="hljs-number">0</span>;
+<span class="custom-hl-del"><span class="hljs-comment">// ECALL命令かどうか</span></span>
+<span class="custom-hl-del"><span class="hljs-keyword">let</span> is_ecall: <span class="hljs-keyword">logic</span> = ctrl.is_csr &amp;&amp; csr_addr == <span class="hljs-number">0</span> &amp;&amp; rs1[<span class="hljs-number">4</span>:<span class="hljs-number">0</span>] == <span class="hljs-number">0</span> &amp;&amp; ctrl.funct3 == <span class="hljs-number">0</span> &amp;&amp; rd_addr == <span class="hljs-number">0</span>;</span>
+</code></pre></div><p><span class="caption">▼リスト10.10: ExceptionInfoを使って例外を起こす (csrunit.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-comment">// Exception</span>
+<span class="hljs-keyword">let</span> raise_expt: <span class="hljs-keyword">logic</span> = valid &amp;&amp; expt_info.valid;
+<span class="hljs-keyword">let</span> expt_cause: UIntX = expt_info.cause;
+</code></pre></div><h3 id="mtvalレジスタを実装する" tabindex="-1">mtvalレジスタを実装する <a class="header-anchor" href="#mtvalレジスタを実装する" aria-label="Permalink to “mtvalレジスタを実装する”">​</a></h3><p>例外が発生すると、CPUはトラップベクタにジャンプして例外を処理します。 mcauseレジスタを読むことでどの例外が発生したかを判別できますが、 その例外の詳しい情報を知りたいことがあります。</p><p><img src="/assets/mtval.V-_aW319.png" alt="mtvalレジスタ"> RISC-Vには、例外が発生したときのソフトウェアによるハンドリングを補助するために、 MXLENビットのmtvalレジスタが定義されています(図1)。 例外が発生したとき、CPUはmtvalレジスタに例外に固有の情報を書き込みます。 これ以降、例外に固有の情報のことをtvalと呼びます。</p><p><code>ExceptionInfo</code>構造体に例外に固有の情報を示す<code>value</code>を追加します (リスト11)。</p><p><span class="caption">▼リスト10.11: tvalをExceptionInfoに追加する (corectrl.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">struct</span> ExceptionInfo {
+    valid: <span class="hljs-keyword">logic</span>   ,
+    cause: CsrCause,
+    <span class="custom-hl-bold">value: UIntX   ,</span>
+}
+</code></pre></div><p>ECALL命令はmtvalに書き込むような情報がないので<code>0</code>に設定します (リスト12)。</p><p><span class="caption">▼リスト10.12: ECALL命令のtvalを設定する (corectrl.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-comment">// exception</span>
+exq_wdata.expt.valid = ids_inst_bits == <span class="hljs-number">32&#39;h00000073</span>; <span class="hljs-comment">// ECALL</span>
+exq_wdata.expt.cause = CsrCause::ENVIRONMENT_CALL_FROM_M_MODE;
+<span class="custom-hl-bold">exq_wdata.expt.value = <span class="hljs-number">0</span>;</span>
+</code></pre></div><p><code>CsrAddr</code>型にmtvalレジスタのアドレスを追加します (リスト13)。</p><p><span class="caption">▼リスト10.13: mtvalのアドレスを定義する (eei.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">enum</span> CsrAddr: <span class="hljs-keyword">logic</span>&lt;<span class="hljs-number">12</span>&gt; {
+    MTVEC = <span class="hljs-number">12&#39;h305</span>,
+    MEPC = <span class="hljs-number">12&#39;h341</span>,
+    MCAUSE = <span class="hljs-number">12&#39;h342</span>,
+    <span class="custom-hl-bold">MTVAL = <span class="hljs-number">12&#39;h343</span>,</span>
+    LED = <span class="hljs-number">12&#39;h800</span>,
+}
+</code></pre></div><p>mtvalレジスタを実装して、書き込み、読み込みできるようにします ( リスト14、 リスト15、 リスト16、 リスト17、 リスト18 )。</p><p><span class="caption">▼リスト10.14: mtvalの書き込みマスクを定義する (csrunit.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">const</span> MTVAL_WMASK : UIntX = <span class="hljs-number">&#39;hffff_ffff_ffff_ffff</span>;
+</code></pre></div><p><span class="caption">▼リスト10.15: mtvalレジスタを作成する (csrunit.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">var</span> mtvec : UIntX;
+<span class="hljs-keyword">var</span> mepc  : UIntX;
+<span class="hljs-keyword">var</span> mcause: UIntX;
+<span class="custom-hl-bold"><span class="hljs-keyword">var</span> mtval : UIntX;</span>
+</code></pre></div><p><span class="caption">▼リスト10.16: mtvalの読み込みデータ、書き込みマスクを設定する (csrunit.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">always_comb</span> {
+    <span class="hljs-comment">// read</span>
+    rdata = <span class="hljs-keyword">case</span> csr_addr {
+        ...
+        <span class="custom-hl-bold">CsrAddr::MTVAL : mtval,</span>
+        ...
+    };
+    <span class="hljs-comment">// write</span>
+    wmask = <span class="hljs-keyword">case</span> csr_addr {
+        ...
+        <span class="custom-hl-bold">CsrAddr::MTVAL : MTVAL_WMASK,</span>
+        ...
+    };
+</code></pre></div><p><span class="caption">▼リスト10.17: mtvalレジスタをリセットする (csrunit.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">always_ff</span> {
+    <span class="hljs-keyword">if_reset</span> {
+        mtvec  = <span class="hljs-number">0</span>;
+        mepc   = <span class="hljs-number">0</span>;
+        mcause = <span class="hljs-number">0</span>;
+        <span class="custom-hl-bold">mtval  = <span class="hljs-number">0</span>;</span>
+        led    = <span class="hljs-number">0</span>;
+</code></pre></div><p><span class="caption">▼リスト10.18: mtvalに書き込めるようにする (csrunit.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code>} <span class="hljs-keyword">else</span> {
+    <span class="hljs-keyword">if</span> is_wsc {
+        <span class="hljs-keyword">case</span> csr_addr {
+            ...
+            <span class="custom-hl-bold">CsrAddr::MTVAL : mtval  = wdata;</span>
+            ...
+        }
+    }
+}
+</code></pre></div><p>例外が発生するとき、mtvalレジスタに<code>expt_info.value</code>を書き込むようにします ( リスト19、 リスト20 )。</p><p><span class="caption">▼リスト10.19: tvalを変数に割り当てる (csrunit.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">let</span> raise_expt: <span class="hljs-keyword">logic</span> = valid &amp;&amp; expt_info.valid;
+<span class="hljs-keyword">let</span> expt_cause: UIntX = expt_info.cause;
+<span class="custom-hl-bold"><span class="hljs-keyword">let</span> expt_value: UIntX = expt_info.value;</span>
+</code></pre></div><p><span class="caption">▼リスト10.20: 例外が発生するとき、mtvalにtvalを書き込む (csrunit.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">if</span> valid {
+    <span class="hljs-keyword">if</span> raise_trap {
+        <span class="hljs-keyword">if</span> raise_expt {
+            mepc   = pc;
+            mcause = trap_cause;
+            <span class="custom-hl-bold">mtval  = expt_value;</span>
+        }
+</code></pre></div><h2 id="breakpoint例外の実装" tabindex="-1">Breakpoint例外の実装 <a class="header-anchor" href="#breakpoint例外の実装" aria-label="Permalink to “Breakpoint例外の実装”">​</a></h2><p>Breakpoint例外は、EBREAK命令によって引き起こされる例外です。 EBREAK命令はデバッガがプログラムを中断させる場合などに利用されます。 EBREAK命令はECALL命令と同様に例外を発生させるだけで、ほかに操作を行いません。 causeは<code>3</code>で、tvalは例外が発生した命令のアドレスになります。</p><p><code>CsrCause</code>型にBreakpoint例外のcauseを追加します (リスト21)。</p><p><span class="caption">▼リスト10.21: Breakpoint例外のcauseを定義する (eei.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">enum</span> CsrCause: UIntX {
+    BREAKPOINT = <span class="hljs-number">3</span>,
+    ENVIRONMENT_CALL_FROM_M_MODE = <span class="hljs-number">11</span>,
+}
+</code></pre></div><p>IDステージでEBREAK命令を判定して、tvalにPCを設定します (リスト22)。</p><p><span class="caption">▼リスト10.22: IDステージでEBREAK命令を判定する (core.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code>exq_wdata.expt = <span class="hljs-number">0</span>;
+<span class="custom-hl-bold"><span class="hljs-keyword">if</span> ids_inst_bits == <span class="hljs-number">32&#39;h00000073</span> {</span>
+    <span class="hljs-comment">// ECALL</span>
+    exq_wdata.expt.valid = <span class="custom-hl-bold"><span class="hljs-number">1</span>;</span>
+    exq_wdata.expt.cause = CsrCause::ENVIRONMENT_CALL_FROM_M_MODE;
+    exq_wdata.expt.value = <span class="hljs-number">0</span>;
+<span class="custom-hl-bold">} <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> ids_inst_bits == <span class="hljs-number">32&#39;h00100073</span> {</span>
+    <span class="custom-hl-bold"><span class="hljs-comment">// EBREAK</span></span>
+    <span class="custom-hl-bold">exq_wdata.expt.valid = <span class="hljs-number">1</span>;</span>
+    <span class="custom-hl-bold">exq_wdata.expt.cause = CsrCause::BREAKPOINT;</span>
+    <span class="custom-hl-bold">exq_wdata.expt.value = ids_pc;</span>
+<span class="custom-hl-bold">}</span>
+</code></pre></div><h2 id="illegal-instruction例外の実装" tabindex="-1">Illegal instruction例外の実装 <a class="header-anchor" href="#illegal-instruction例外の実装" aria-label="Permalink to “Illegal instruction例外の実装”">​</a></h2><p>Illegal instruction例外は、 現在の環境で実行できない命令を実行しようとしたときに発生する例外です。 causeは<code>2</code>で、tvalは例外が発生した命令のビット列になります。</p><p>本章では、 EEIが認識できない不正な命令ビット列を実行しようとした場合と、 読み込み専用のCSRに書き込もうとした場合の2つの状況で例外を発生させます。</p><h3 id="不正な命令ビット列で例外を起こす" tabindex="-1">不正な命令ビット列で例外を起こす <a class="header-anchor" href="#不正な命令ビット列で例外を起こす" aria-label="Permalink to “不正な命令ビット列で例外を起こす”">​</a></h3><p>CPUに実装していない命令、つまりデコードできない命令を実行しようとするとき、 Illegal instruction例外が発生します。</p><p>今のところ未知の命令は何もしない命令として実行しています。 ここで、inst_decoderモジュールを、未知の命令であることを報告するように変更します。</p><p>inst_decoderモジュールに、命令が有効かどうかを示す<code>valid</code>ポートを追加します ( リスト23、 リスト24 )。</p><p><span class="caption">▼リスト10.23: validポートを追加する (inst_decoder.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">module</span> inst_decoder (
+    bits : <span class="hljs-keyword">input</span>  Inst    ,
+    <span class="custom-hl-bold">valid: <span class="hljs-keyword">output</span> <span class="hljs-keyword">logic</span>   ,</span>
+    ctrl : <span class="hljs-keyword">output</span> InstCtrl,
+    imm  : <span class="hljs-keyword">output</span> UIntX   ,
+) {
+</code></pre></div><p><span class="caption">▼リスト10.24: inst_decoderモジュールのvalidポートと変数を接続する (core.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">let</span> ids_valid     : <span class="hljs-keyword">logic</span>    = if_fifo_rvalid;
+<span class="hljs-keyword">let</span> ids_pc        : Addr     = if_fifo_rdata.addr;
+<span class="hljs-keyword">let</span> ids_inst_bits : Inst     = if_fifo_rdata.bits;
+<span class="custom-hl-bold"><span class="hljs-keyword">var</span> ids_inst_valid: <span class="hljs-keyword">logic</span>   ;</span>
+<span class="hljs-keyword">var</span> ids_ctrl      : InstCtrl;
+<span class="hljs-keyword">var</span> ids_imm       : UIntX   ;
 
-        <div style="display:flex; gap:10px; align-items: center;">
-          <a class="github-button" href="https://github.com/nananapo/veryl-riscv-book" data-color-scheme="no-preference: light_high_contrast; light: light; dark: dark;" data-size="large" data-show-count="true" aria-label="Star nananapo/veryl-riscv-book on GitHub">Star</a>
-          <div style="">
-            <a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-show-count="false">Tweet</a>
-          </div>
-          <div style="margin-bottom: 14px;" id="share-facebook" class="fb-share-button" data-href="" data-layout="" data-size=""><a target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Finvalid.invalid%2F&amp;src=sdkpreparse" class="fb-xfbml-parse-ignore">Facebookでシェアする</a></div>
-        </div>
-        <ul class="toc toc-1">
-    <li class="toc-chapter"><a href="./00-preface.html">まえがき</a></li>
-<li class="toc-part">第I部 RV32I/RV64Iの実装
-  <ul class="toc toc-2">
-    <li class="toc-chapter"><a href="./02-setup.html">1 環境構築</a></li>
-    <li class="toc-chapter"><a href="./03-veryl.html">2 ハードウェア記述言語 Veryl</a></li>
-    <li class="toc-chapter"><a href="./04-impl-rv32i.html">3 RV32Iの実装</a></li>
-    <li class="toc-chapter"><a href="./04a-zicsr.html">4 Zicsr拡張の実装</a></li>
-    <li class="toc-chapter"><a href="./04b-riscvtests.html">5 riscv-testsによるテスト</a></li>
-    <li class="toc-chapter"><a href="./05-impl-rv64i.html">6 RV64Iの実装</a></li>
-    <li class="toc-chapter"><a href="./05a-pipeline.html">7 CPUのパイプライン化</a></li>
-    <li class="toc-chapter"><a href="./05b-synth.html">8 CPUの合成</a></li>
-  </ul>
-</li>
-<li class="toc-part">第II部 RV64IMACの実装
-  <ul class="toc toc-2">
-    <li class="toc-chapter"><a href="./10-impl-m.html">9 M拡張の実装</a></li>
-    <li class="toc-chapter"><a href="./11-impl-exception.html">10 例外の実装</a>
-      <ul class="toc toc-3">
-        <li class="toc-section"><a href="./11-impl-exception.html#h10-1">10.1 例外とは何か?</a></li>
-        <li class="toc-section"><a href="./11-impl-exception.html#h10-2">10.2 例外情報の伝達</a></li>
-        <li class="toc-section"><a href="./11-impl-exception.html#h10-3">10.3 Breakpoint例外の実装</a></li>
-        <li class="toc-section"><a href="./11-impl-exception.html#h10-4">10.4 Illegal instruction例外の実装</a></li>
-        <li class="toc-section"><a href="./11-impl-exception.html#h10-5">10.5 命令アドレスのミスアライン例外</a></li>
-        <li class="toc-section"><a href="./11-impl-exception.html#h10-6">10.6 ロードストア命令のミスアライン例外</a></li>
-      </ul>
-    </li>
-    <li class="toc-chapter"><a href="./12-impl-mmio.html">11 Memory-mapped I/Oの実装</a></li>
-    <li class="toc-chapter"><a href="./13-impl-a.html">12 A拡張の実装</a></li>
-    <li class="toc-chapter"><a href="./14-impl-c.html">13 C拡張の実装</a></li>
-  </ul>
-</li>
-<li class="toc-part">第III部 特権/割り込みの実装
-  <ul class="toc toc-2">
-    <li class="toc-chapter"><a href="./20-mmode-csr.html">14 M-modeの実装 (1. CSRの実装)</a></li>
-    <li class="toc-chapter"><a href="./21-impl-interrupt.html">15 M-modeの実装 (2. 割り込みの実装)</a></li>
-    <li class="toc-chapter"><a href="./22-umode-csr.html">16 U-modeの実装</a></li>
-    <li class="toc-chapter"><a href="./23-smode-csr.html">17 S-modeの実装 (1. CSRの実装)</a></li>
-    <li class="toc-chapter"><a href="./24-impl-paging.html">18 S-modeの実装 (2. 仮想記憶システム)</a></li>
-    <li class="toc-chapter"><a href="./25-impl-plic.html">19 PLICの実装</a></li>
-    <li class="toc-chapter"><a href="./26-run-linux.html">20 Linuxを動かす</a></li>
-  </ul>
-</li>
-    <li class="toc-chapter"><a href="./99-postface.html">あとがき (第Ⅰ部)</a></li>
-    <li class="toc-chapter"><a href="./99b-postface.html">あとがき (第Ⅱ部、第Ⅲ部)</a></li>
-    <li class="toc-chapter"><a href="./100-contribute.html">このプロジェクトに貢献する</a></li>
-    <li class="toc-chapter"><a href="./bib.html">参考文献</a></li>
-</ul>
-      </div>
-      <div class="page-inner">
-        <header class="page-header">
-        </header>
-        <main class="page-main">
-  <h1 class="boldlines center twolines"><a id="h10"></a><span class="secno">第10章</span> <br/>例外の実装</h1>
+<span class="hljs-keyword">inst</span> decoder: inst_decoder (
+    bits : ids_inst_bits ,
+    <span class="custom-hl-bold">valid: ids_inst_valid,</span>
+    ctrl : ids_ctrl      ,
+    imm  : ids_imm       ,
+);
+</code></pre></div><p>今のところ実装してある命令を有効な命令として判定する処理をalways_combブロックに記述します (リスト25)。</p><p><span class="caption">▼リスト10.25: 命令の有効判定を行う (inst_decoder.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code>valid = <span class="hljs-keyword">case</span> op {
+    OP_LUI, OP_AUIPC, OP_JAL, OP_JALR: T,
+    OP_BRANCH                        : f3 != <span class="hljs-number">3&#39;b010</span> &amp;&amp; f3 != <span class="hljs-number">3&#39;b011</span>,
+    OP_LOAD                          : f3 != <span class="hljs-number">3&#39;b111</span>,
+    OP_STORE                         : f3[<span class="hljs-number">2</span>] == <span class="hljs-number">1&#39;b0</span>,
+    OP_OP                            : <span class="hljs-keyword">case</span> f7 {
+        <span class="hljs-number">7&#39;b0000000</span>: T, <span class="hljs-comment">// RV32I</span>
+        <span class="hljs-number">7&#39;b0100000</span>: f3 == <span class="hljs-number">3&#39;b000</span> || f3 == <span class="hljs-number">3&#39;b101</span>, <span class="hljs-comment">// SUB, SRA</span>
+        <span class="hljs-number">7&#39;b0000001</span>: T, <span class="hljs-comment">// RV32M</span>
+        <span class="hljs-keyword">default</span>   : F,
+    },
+    OP_OP_IMM: <span class="hljs-keyword">case</span> f3 {
+        <span class="hljs-number">3&#39;b001</span> : f7[<span class="hljs-number">6</span>:<span class="hljs-number">1</span>] == <span class="hljs-number">6&#39;b000000</span>, <span class="hljs-comment">// SLLI (RV64I)</span>
+        <span class="hljs-number">3&#39;b101</span> : f7[<span class="hljs-number">6</span>:<span class="hljs-number">1</span>] == <span class="hljs-number">6&#39;b000000</span> || f7[<span class="hljs-number">6</span>:<span class="hljs-number">1</span>] == <span class="hljs-number">6&#39;b010000</span>, <span class="hljs-comment">// SRLI, SRAI (RV64I)</span>
+        <span class="hljs-keyword">default</span>: T,
+    },
+    OP_OP_32: <span class="hljs-keyword">case</span> f7 {
+        <span class="hljs-number">7&#39;b0000001</span>: f3 == <span class="hljs-number">3&#39;b000</span> || f3[<span class="hljs-number">2</span>] == <span class="hljs-number">1&#39;b1</span>, <span class="hljs-comment">// RV64M</span>
+        <span class="hljs-number">7&#39;b0000000</span>: f3 == <span class="hljs-number">3&#39;b000</span> || f3 == <span class="hljs-number">3&#39;b001</span> || f3 == <span class="hljs-number">3&#39;b101</span>, <span class="hljs-comment">// ADDW, SLLW, SRLW</span>
+        <span class="hljs-number">7&#39;b0100000</span>: f3 == <span class="hljs-number">3&#39;b000</span> || f3 == <span class="hljs-number">3&#39;b101</span>, <span class="hljs-comment">// SUBW, SRAW</span>
+        <span class="hljs-keyword">default</span>   : F,
+    },
+    OP_OP_IMM_32: <span class="hljs-keyword">case</span> f3 {
+        <span class="hljs-number">3&#39;b000</span> : T, <span class="hljs-comment">// ADDIW</span>
+        <span class="hljs-number">3&#39;b001</span> : f7 == <span class="hljs-number">7&#39;b0000000</span>, <span class="hljs-comment">// SLLIW</span>
+        <span class="hljs-number">3&#39;b101</span> : f7 == <span class="hljs-number">7&#39;b0000000</span> || f7 == <span class="hljs-number">7&#39;b0100000</span>, <span class="hljs-comment">// SRLIW, SRAIW</span>
+        <span class="hljs-keyword">default</span>: F,
+    },
+    OP_SYSTEM: f3 != <span class="hljs-number">3&#39;b000</span> &amp;&amp; f3 != <span class="hljs-number">3&#39;b100</span> || <span class="hljs-comment">// CSRR(W|S|C)[I]</span>
+     bits == <span class="hljs-number">32&#39;h00000073</span> || <span class="hljs-comment">// ECALL</span>
+     bits == <span class="hljs-number">32&#39;h00100073</span> || <span class="hljs-comment">// EBREAK</span>
+     bits == <span class="hljs-number">32&#39;h30200073</span>, <span class="hljs-comment">//MRET</span>
+    OP_MISC_MEM: T, <span class="hljs-comment">// FENCE</span>
+    <span class="hljs-keyword">default</span>    : F,
+};
+</code></pre></div><p>riscv-testsでメモリ読み書きの順序を保証するFENCE命令<sup class="footnote-ref"><a href="#fn4" id="fnref4">[4]</a></sup>を使用しているため、 opcodeがOP-MISCである命令を合法な命令として取り扱っています。 OP-MISCのopcode(<code>7&#39;b0001111</code>)をeeiパッケージに定義してください (リスト26)。</p><p><span class="caption">▼リスト10.26: OP-MISCのビット列を定義する (eei.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">const</span> OP_MISC_MEM : <span class="hljs-keyword">logic</span>&lt;<span class="hljs-number">7</span>&gt; = <span class="hljs-number">7&#39;b0001111</span>;
+</code></pre></div><p><code>CsrCause</code>型にIllegal instruction例外のcauseを追加します (リスト27)。</p><p><span class="caption">▼リスト10.27: Illegal instruction例外のcauseを定義する (eei.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">enum</span> CsrCause: UIntX {
+    <span class="custom-hl-bold">ILLEGAL_INSTRUCTION = <span class="hljs-number">2</span>,</span>
+    BREAKPOINT = <span class="hljs-number">3</span>,
+    ENVIRONMENT_CALL_FROM_M_MODE = <span class="hljs-number">11</span>,
+}
+</code></pre></div><p><code>valid</code>フラグを利用して、IDステージでIllegal instruction例外を発生させます (リスト28)。 tvalには、命令を右に詰めてゼロで拡張した値を設定します。</p><p><span class="caption">▼リスト10.28: 不正な命令のとき、例外を発生させる (core.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code>exq_wdata.expt = <span class="hljs-number">0</span>;
+<span class="custom-hl-bold"><span class="hljs-keyword">if</span> !ids_inst_valid {</span>
+    <span class="custom-hl-bold"><span class="hljs-comment">// illegal instruction</span></span>
+    <span class="custom-hl-bold">exq_wdata.expt.valid = <span class="hljs-number">1</span>;</span>
+    <span class="custom-hl-bold">exq_wdata.expt.cause = CsrCause::ILLEGAL_INSTRUCTION;</span>
+    <span class="custom-hl-bold">exq_wdata.expt.value = {<span class="hljs-number">1&#39;b0</span> <span class="hljs-keyword">repeat</span> XLEN - ILEN, ids_inst_bits};</span>
+<span class="custom-hl-bold">} <span class="hljs-keyword">else</span></span> <span class="hljs-keyword">if</span> ids_inst_bits == <span class="hljs-number">32&#39;h00000073</span> {
+</code></pre></div><h3 id="読み込み専用のcsrへの書き込みで例外を起こす" tabindex="-1">読み込み専用のCSRへの書き込みで例外を起こす <a class="header-anchor" href="#読み込み専用のcsrへの書き込みで例外を起こす" aria-label="Permalink to “読み込み専用のCSRへの書き込みで例外を起こす”">​</a></h3><p>RISC-VのCSRには読み込み専用のレジスタが存在しており、 アドレスの上位2ビットが<code>2&#39;b11</code>のCSRが読み込み専用として定義されています。 読み込み専用のCSRに書き込みを行おうとするとIllegal instruction例外が発生します。</p><p>CSRに値が書き込まれるのは次のいずれかの場合です。 読み書き可能なレジスタ内の読み込み専用のフィールドへの書き込みは例外を引き起こしません。</p><ol><li>CSRRW、CSRRWI命令である</li><li>CSRRS命令でrs1が0番目のレジスタ以外である</li><li>CSRRSI命令で即値が<code>0</code>以外である</li><li>CSRRC命令でrs1が0番目のレジスタ以外である</li><li>CSRRCI命令で即値が<code>0</code>以外である</li></ol><p>ソースレジスタの値が<code>0</code>だとしても、0番目のレジスタではない場合にはCSRに書き込むと判断します。 CSRに書き込むかどうかを正しく判定するために、 csrunitモジュールの<code>rs1</code>ポートを<code>rs1_addr</code>と<code>rs1_data</code>に分解します ( リスト30、 リスト29、 リスト31 )<sup class="footnote-ref"><a href="#fn5" id="fnref5">[5]</a></sup>。 また、causeを設定するためにcsrunitモジュールに命令のビット列を供給します。</p><p><span class="caption">▼リスト10.29: csrunitモジュールのポート定義を変更する (csrunit.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">module</span> csrunit (
+    clk        : <span class="hljs-keyword">input</span>  <span class="hljs-keyword">clock</span>            ,
+    rst        : <span class="hljs-keyword">input</span>  <span class="hljs-keyword">reset</span>            ,
+    valid      : <span class="hljs-keyword">input</span>  <span class="hljs-keyword">logic</span>            ,
+    pc         : <span class="hljs-keyword">input</span>  Addr             ,
+    <span class="custom-hl-bold">inst_bits  : <span class="hljs-keyword">input</span>  Inst             ,</span>
+    ctrl       : <span class="hljs-keyword">input</span>  InstCtrl         ,
+    expt_info  : <span class="hljs-keyword">input</span>  ExceptionInfo    ,
+    rd_addr    : <span class="hljs-keyword">input</span>  <span class="hljs-keyword">logic</span>        &lt;<span class="hljs-number">5</span>&gt; ,
+    csr_addr   : <span class="hljs-keyword">input</span>  <span class="hljs-keyword">logic</span>        &lt;<span class="hljs-number">12</span>&gt;,
+    <span class="custom-hl-bold">rs1_addr   : <span class="hljs-keyword">input</span>  <span class="hljs-keyword">logic</span>        &lt;<span class="hljs-number">5</span>&gt; ,</span>
+    <span class="custom-hl-bold">rs1_data   : <span class="hljs-keyword">input</span>  UIntX            ,</span>
+    rdata      : <span class="hljs-keyword">output</span> UIntX            ,
+    raise_trap : <span class="hljs-keyword">output</span> <span class="hljs-keyword">logic</span>            ,
+    trap_vector: <span class="hljs-keyword">output</span> Addr             ,
+    led        : <span class="hljs-keyword">output</span> UIntX            ,
+) {
+</code></pre></div><p><span class="caption">▼リスト10.30: csrunitモジュールのポート定義を変更する (core.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">inst</span> csru: csrunit (
+    clk                               ,
+    rst                               ,
+    valid      : mems_valid           ,
+    pc         : mems_pc              ,
+    <span class="custom-hl-bold">inst_bits  : mems_inst_bits       ,</span>
+    ctrl       : mems_ctrl            ,
+    expt_info  : mems_expt            ,
+    rd_addr    : mems_rd_addr         ,
+    csr_addr   : <span class="custom-hl-bold">mems_inst_bits[<span class="hljs-number">31</span>:<span class="hljs-number">20</span>],</span>
+    <span class="custom-hl-bold">rs1_addr   : memq_rdata.rs1_addr  ,</span>
+    <span class="custom-hl-bold">rs1_data   : memq_rdata.rs1_data  ,</span>
+    rdata      : csru_rdata           ,
+    raise_trap : csru_raise_trap      ,
+    trap_vector: csru_trap_vector     ,
+    led                               ,
+);
+</code></pre></div><p><span class="caption">▼リスト10.31: rs1の変更に対応する (csrunit.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="custom-hl-bold"><span class="hljs-keyword">let</span> wsource: UIntX = <span class="hljs-keyword">if</span> ctrl.funct3[<span class="hljs-number">2</span>] ? {<span class="hljs-number">1&#39;b0</span> <span class="hljs-keyword">repeat</span> XLEN - <span class="hljs-number">5</span>, rs1_addr} : rs1_data;</span>
+wdata   = <span class="hljs-keyword">case</span> ctrl.funct3[<span class="hljs-number">1</span>:<span class="hljs-number">0</span>] {
+    <span class="hljs-number">2&#39;b01</span>  : <span class="custom-hl-bold">wsource</span>,
+    <span class="hljs-number">2&#39;b10</span>  : rdata | <span class="custom-hl-bold">wsource</span>,
+    <span class="hljs-number">2&#39;b11</span>  : rdata &amp; ~<span class="custom-hl-bold">wsource</span>,
+    <span class="hljs-keyword">default</span>: &#39;x,
+} &amp; wmask | (rdata &amp; ~wmask);
+</code></pre></div><p>命令のfunct3とrs1のアドレスを利用して、書き込み先が読み込み専用レジスタかどうかを判定します<sup class="footnote-ref"><a href="#fn6" id="fnref6">[6]</a></sup> (リスト32)。 また、命令のビット列を利用できるようになったので、MRET命令の判定を命令のビット列の比較に書き換えています。</p><p><span class="caption">▼リスト10.32: 読み込み専用CSRへの書き込みが発生するか判定する (csrunit.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-comment">// CSRR(W|S|C)[I]命令かどうか</span>
+<span class="hljs-keyword">let</span> is_wsc: <span class="hljs-keyword">logic</span> = ctrl.is_csr &amp;&amp; ctrl.funct3[<span class="hljs-number">1</span>:<span class="hljs-number">0</span>] != <span class="hljs-number">0</span>;
+<span class="hljs-comment">// MRET命令かどうか</span>
+<span class="hljs-keyword">let</span> is_mret: <span class="hljs-keyword">logic</span> = inst_bits == <span class="hljs-number">32&#39;h30200073</span>;
 
-<h2 class="numbox"><a id="h10-1"></a><span class="secno">10.1</span> 例外とは何か?</h2>
-<p>CPUがソフトウェアを実行するとき、処理を中断したり終了しなければならないような異常な状態<sup><a id="fnb-unusual-condition" href="#fn-unusual-condition" class="noteref" epub:type="noteref">*1</a></sup>が発生することがあります。例えば、実行環境(EEI)がサポートしていない、または実行を禁止しているような違法(illegal)<sup><a id="fnb-illegal" href="#fn-illegal" class="noteref" epub:type="noteref">*2</a></sup>な命令を実行しようとする場合です。このとき、CPUはどのような動作をすればいいのでしょうか？</p>
-<div class="footnote-list">
-<div class="footnote" id="fn-unusual-condition" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*1] </span>異常な状態(unusual condition)。予期しない(unexpected)事象と呼ぶ場合もあります。</p></div>
-<div class="footnote" id="fn-illegal" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*2] </span>不正と呼ぶこともあります。逆に実行できる命令のことを合法(legal)な命令と呼びます</p></div>
-</div><!--/.footnote-list-->
-<p>RISC-Vでは、命令によって引き起こされる異常な状態のことを<b>例外(Exception)</b>と呼び、例外が発生した場合には<b>トラップ(Trap)</b>を引き起こします。トラップとは例外、または割り込み(Interrupt)<sup><a id="fnb-interrupt" href="#fn-interrupt" class="noteref" epub:type="noteref">*3</a></sup>によってCPUの状態、制御を変更することです。具体的にはPCをトラップベクタ(trap vector)に移動したり、CSRを変更します。</p>
-<div class="footnote-list">
-<div class="footnote" id="fn-interrupt" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*3] </span>割り込みは<a href="./21-impl-interrupt.html">第15章「M-modeの実装 (2. 割り込みの実装)」</a>で実装します。</p></div>
-</div><!--/.footnote-list-->
-<p>本書では既にECALL命令の実行によって発生するEnvironment call from M-mode例外を実装しており、例外が発生したら次のように動作します。</p>
-<ol start="1" type="1">
-<li>mcauseレジスタにトラップの発生原因を示す値(<code class="inline-code" translate="no" >11</code>)を書き込む</li>
-<li>mepcレジスタにPCの値を書き込む</li>
-<li>PCをmtvecレジスタの値に設定する</li>
-</ol>
-<p>本章では、例外発生時に例外に固有の情報を書き込むmtvalレジスタと、現在の実装で発生する可能性がある例外を実装します。本書ではこれ以降、トラップの発生原因を示す値のことをcauseと呼びます。</p>
-
-<h2 class="numbox"><a id="h10-2"></a><span class="secno">10.2</span> 例外情報の伝達</h2>
-
-<h3 class="none"><a id="h10-2-1"></a><span class="secno">10.2.1</span> Environment call from M-mode例外をIFステージで処理する</h3>
-<p>今のところ、ECALL命令による例外はMEM(CSR)ステージのcsrunitモジュールで例外判定、処理されています。ECALL命令によって例外が発生するかは命令がECALLであるかどうかだけを判定すれば分かるため、命令をデコードする時点、つまりIDステージで判定できます。</p>
-<p>本章で実装する例外にはMEMステージよりも前で発生する例外があるため、IDステージから順に次のステージに例外の有無、causeを受け渡していく仕組みを実装します。</p>
-<p>まず、例外が発生するかどうか(<code class="inline-code" translate="no" >valid</code>)、例外のcause(<code class="inline-code" translate="no" >cause</code>)をまとめた<code class="inline-code" translate="no" >ExceptionInfo</code>構造体を定義します(<span class="listref"><a href="./11-impl-exception.html#corectrl.veryl.exptinfo-range.ExceptionInfo">リスト10.1</a></span>)。</p>
-<div id="corectrl.veryl.exptinfo-range.ExceptionInfo" class="caption-code">
-<span class="caption">リスト10.1: リスト10.1: ExceptionInfo構造体を定義する (corectrl.veryl)</span>
-<pre class="list language-ExceptionInfo" translate="no"><em class="lineno">1: </em>    // 例外の情報を保存するための型
-<em class="lineno">2: </em>    struct ExceptionInfo {
-<em class="lineno">3: </em>        valid: logic   ,
-<em class="lineno">4: </em>        cause: CsrCause,
-<em class="lineno">5: </em>    }
-</pre>
-</div>
-<p>EXステージ、MEMステージのFIFOのデータ型に構造体を追加します(<span class="listref"><a href="./11-impl-exception.html#core.veryl.exptinfo-range.exq_type">リスト10.2</a></span>、<span class="listref"><a href="./11-impl-exception.html#core.veryl.exptinfo-range.memq_type">リスト10.3</a></span>)。</p>
-<div id="core.veryl.exptinfo-range.exq_type" class="caption-code">
-<span class="caption">リスト10.2: リスト10.2: EXステージのFIFOにExceptionInfoを追加する (core.veryl)</span>
-<pre class="list language-exq_type" translate="no"><em class="lineno">1: </em>    struct exq_type {
-<em class="lineno">2: </em>        addr: Addr         ,
-<em class="lineno">3: </em>        bits: Inst         ,
-<em class="lineno">4: </em>        ctrl: InstCtrl     ,
-<em class="lineno">5: </em>        imm : UIntX        ,
-<em class="lineno">6: </em>        <b>expt: ExceptionInfo,</b>
-<em class="lineno">7: </em>    }
-</pre>
-</div>
-<div id="core.veryl.exptinfo-range.memq_type" class="caption-code">
-<span class="caption">リスト10.3: リスト10.3: MEMステージのFIFOにExceptionInfoを追加する (core.veryl)</span>
-<pre class="list language-memq_type" translate="no"><em class="lineno">1: </em>    struct memq_type {
-<em class="lineno">2: </em>        addr      : Addr            ,
-<em class="lineno">3: </em>        bits      : Inst            ,
-<em class="lineno">4: </em>        ctrl      : InstCtrl        ,
-<em class="lineno">5: </em>        imm       : UIntX           ,
-<em class="lineno">6: </em>        <b>expt      : ExceptionInfo   ,</b>
-<em class="lineno">7: </em>        alu_result: UIntX           ,
-<em class="lineno">8: </em>        rs1_addr  : logic        &lt;5&gt;,
-</pre>
-</div>
-<p>IDステージからEXステージに命令を渡すとき、命令がECALL命令なら例外が発生することを伝えます(<span class="listref"><a href="./11-impl-exception.html#core.veryl.exptinfo-range.idex">リスト10.4</a></span>)。</p>
-<div id="core.veryl.exptinfo-range.idex" class="caption-code">
-<span class="caption">リスト10.4: リスト10.4: IDステージでECALL命令を判定する (core.veryl)</span>
-<pre class="list language-idex" translate="no"><em class="lineno">1: </em>    always_comb {
-<em class="lineno">2: </em>        // ID -&gt; EX
-<em class="lineno">3: </em>        if_fifo_rready = exq_wready;
-<em class="lineno">4: </em>        exq_wvalid     = if_fifo_rvalid;
-<em class="lineno">5: </em>        exq_wdata.addr = if_fifo_rdata.addr;
-<em class="lineno">6: </em>        exq_wdata.bits = if_fifo_rdata.bits;
-<em class="lineno">7: </em>        exq_wdata.ctrl = ids_ctrl;
-<em class="lineno">8: </em>        exq_wdata.imm  = ids_imm;
-<em class="lineno">9: </em>        <b>// exception</b>
-<em class="lineno">10: </em>        <b>exq_wdata.expt.valid = ids_inst_bits == 32'h00000073; // ECALL</b>
-<em class="lineno">11: </em>        <b>exq_wdata.expt.cause = CsrCause::ENVIRONMENT_CALL_FROM_M_MODE;</b>
-<em class="lineno">12: </em>    }
-</pre>
-</div>
-<p>EXステージで例外は発生しないので、例外情報をそのままMEMステージに渡します(<span class="listref"><a href="./11-impl-exception.html#core.veryl.exptinfo-range.exmem">リスト10.5</a></span>)。</p>
-<div id="core.veryl.exptinfo-range.exmem" class="caption-code">
-<span class="caption">リスト10.5: リスト10.5: EXステージからMEMステージに例外情報を渡す (core.veryl)</span>
-<pre class="list language-exmem" translate="no"><em class="lineno">1: </em>    always_comb {
-<em class="lineno">2: </em>        // EX -&gt; MEM
-<em class="lineno">3: </em>        exq_rready            = memq_wready &amp;&amp; !exs_stall;
-<em class="lineno">4: </em>        ...
-<em class="lineno">5: </em>        memq_wdata.jump_addr  = if inst_is_br(exs_ctrl) ? exs_pc + exs_imm : exs_alu_result &amp; ~1;
-<em class="lineno">6: </em>        <b>memq_wdata.expt       = exq_rdata.expt;</b>
-<em class="lineno">7: </em>    }
-</pre>
-</div>
-<p>csrunitモジュールを変更します。<code class="inline-code" translate="no" >expt_info</code>ポートを追加して、MEMステージ以前の例外情報を受け取ります(<span class="listref"><a href="./11-impl-exception.html#csrunit.veryl.exptinfo-range.port">リスト10.6</a></span>、<span class="listref"><a href="./11-impl-exception.html#core.veryl.exptinfo-range.memreg">リスト10.7</a></span>、<span class="listref"><a href="./11-impl-exception.html#core.veryl.exptinfo-range.csru">リスト10.8</a></span>)。</p>
-<div id="csrunit.veryl.exptinfo-range.port" class="caption-code">
-<span class="caption">リスト10.6: リスト10.6: csrunitモジュールに例外情報を受け取るためのポートを追加する (csrunit.veryl)</span>
-<pre class="list language-port" translate="no"><em class="lineno">1: </em>module csrunit (
-<em class="lineno">2: </em>    clk        : input  clock            ,
-<em class="lineno">3: </em>    rst        : input  reset            ,
-<em class="lineno">4: </em>    valid      : input  logic            ,
-<em class="lineno">5: </em>    pc         : input  Addr             ,
-<em class="lineno">6: </em>    ctrl       : input  InstCtrl         ,
-<em class="lineno">7: </em>    <b>expt_info  : input  ExceptionInfo    ,</b>
-<em class="lineno">8: </em>    rd_addr    : input  logic        &lt;5&gt; ,
-</pre>
-</div>
-<div id="core.veryl.exptinfo-range.memreg" class="caption-code">
-<span class="caption">リスト10.7: リスト10.7: MEMステージの例外情報の変数を作成する (core.veryl)</span>
-<pre class="list language-memreg" translate="no"><em class="lineno">1: </em>    ///////////////////////////////// MEM Stage /////////////////////////////////
-<em class="lineno">2: </em>    var mems_is_new   : logic           ;
-<em class="lineno">3: </em>    let mems_valid    : logic            = memq_rvalid;
-<em class="lineno">4: </em>    let mems_pc       : Addr             = memq_rdata.addr;
-<em class="lineno">5: </em>    let mems_inst_bits: Inst             = memq_rdata.bits;
-<em class="lineno">6: </em>    let mems_ctrl     : InstCtrl         = memq_rdata.ctrl;
-<em class="lineno">7: </em>    <b>let mems_expt     : ExceptionInfo    = memq_rdata.expt;</b>
-<em class="lineno">8: </em>    let mems_rd_addr  : logic        &lt;5&gt; = mems_inst_bits[11:7];
-</pre>
-</div>
-<div id="core.veryl.exptinfo-range.csru" class="caption-code">
-<span class="caption">リスト10.8: リスト10.8: csrunitモジュールに例外情報を供給する (core.veryl)</span>
-<pre class="list language-csru" translate="no"><em class="lineno">1: </em>    inst csru: csrunit (
-<em class="lineno">2: </em>        clk                             ,
-<em class="lineno">3: </em>        rst                             ,
-<em class="lineno">4: </em>        valid    : mems_valid           ,
-<em class="lineno">5: </em>        pc       : mems_pc              ,
-<em class="lineno">6: </em>        ctrl     : mems_ctrl            ,
-<em class="lineno">7: </em>        <b>expt_info: mems_expt            ,</b>
-<em class="lineno">8: </em>        rd_addr  : mems_rd_addr         ,
-</pre>
-</div>
-<p>ECALL命令かどうかを判定する<code class="inline-code" translate="no" >is_ecall</code>変数を削除して、例外の発生条件、例外の種類を示す値を変更します(<span class="listref"><a href="./11-impl-exception.html#csrunit.veryl.exptinfo-range.remove_ecall">リスト10.9</a></span>、<span class="listref"><a href="./11-impl-exception.html#csrunit.veryl.exptinfo-range.expt">リスト10.10</a></span>)。</p>
-<div id="csrunit.veryl.exptinfo-range.remove_ecall" class="caption-code">
-<span class="caption">リスト10.9: リスト10.9: csrunitモジュールでのECALL命令の判定を削除する (csrunit.veryl)</span>
-<pre class="list language-remove_ecall" translate="no"><em class="lineno">1: </em>    // CSRR(W|S|C)[I]命令かどうか
-<em class="lineno">2: </em>    let is_wsc: logic = ctrl.is_csr &amp;&amp; ctrl.funct3[1:0] != 0;
-<em class="lineno">3: </em>    <del>// ECALL命令かどうか</del>
-<em class="lineno">4: </em>    <del>let is_ecall: logic = ctrl.is_csr &amp;&amp; csr_addr == 0 &amp;&amp; rs1[4:0] == 0 &amp;&amp; ctrl.funct3 == 0 &amp;&amp; rd_addr == 0;</del>
-</pre>
-</div>
-<div id="csrunit.veryl.exptinfo-range.expt" class="caption-code">
-<span class="caption">リスト10.10: リスト10.10: ExceptionInfoを使って例外を起こす (csrunit.veryl)</span>
-<pre class="list language-expt" translate="no"><em class="lineno">1: </em>    // Exception
-<em class="lineno">2: </em>    let raise_expt: logic = valid &amp;&amp; expt_info.valid;
-<em class="lineno">3: </em>    let expt_cause: UIntX = expt_info.cause;
-</pre>
-</div>
-
-<h3 class="none"><a id="h10-2-2"></a><span class="secno">10.2.2</span> mtvalレジスタを実装する</h3>
-<p>例外が発生すると、CPUはトラップベクタにジャンプして例外を処理します。mcauseレジスタを読むことでどの例外が発生したかを判別できますが、その例外の詳しい情報を知りたいことがあります。</p>
-<div id="mtval" class="image">
-<img src="images/11-impl-exception/mtval.png" alt="mtvalレジスタ" class="img" style="width:90%" />
-<p class="caption">
-図10.1: mtvalレジスタ
-</p>
-</div>
-<p>RISC-Vには、例外が発生したときのソフトウェアによるハンドリングを補助するために、MXLENビットのmtvalレジスタが定義されています(<span class="imgref"><a href="./11-impl-exception.html#mtval">図10.1</a></span>)。例外が発生したとき、CPUはmtvalレジスタに例外に固有の情報を書き込みます。これ以降、例外に固有の情報のことをtvalと呼びます。</p>
-<p><code class="inline-code" translate="no" >ExceptionInfo</code>構造体に例外に固有の情報を示す<code class="inline-code" translate="no" >value</code>を追加します(<span class="listref"><a href="./11-impl-exception.html#corectrl.veryl.mtval-range.ExceptionInfo">リスト10.11</a></span>)。</p>
-<div id="corectrl.veryl.mtval-range.ExceptionInfo" class="caption-code">
-<span class="caption">リスト10.11: リスト10.11: tvalをExceptionInfoに追加する (corectrl.veryl)</span>
-<pre class="list language-ExceptionInfo" translate="no"><em class="lineno">1: </em>    struct ExceptionInfo {
-<em class="lineno">2: </em>        valid: logic   ,
-<em class="lineno">3: </em>        cause: CsrCause,
-<em class="lineno">4: </em>        <b>value: UIntX   ,</b>
-<em class="lineno">5: </em>    }
-</pre>
-</div>
-<p>ECALL命令はmtvalに書き込むような情報がないので<code class="inline-code" translate="no" >0</code>に設定します(<span class="listref"><a href="./11-impl-exception.html#core.veryl.mtval-range.idex">リスト10.12</a></span>)。</p>
-<div id="core.veryl.mtval-range.idex" class="caption-code">
-<span class="caption">リスト10.12: リスト10.12: ECALL命令のtvalを設定する (corectrl.veryl)</span>
-<pre class="list language-idex" translate="no"><em class="lineno">1: </em>        // exception
-<em class="lineno">2: </em>        exq_wdata.expt.valid = ids_inst_bits == 32'h00000073; // ECALL
-<em class="lineno">3: </em>        exq_wdata.expt.cause = CsrCause::ENVIRONMENT_CALL_FROM_M_MODE;
-<em class="lineno">4: </em>        <b>exq_wdata.expt.value = 0;</b>
-</pre>
-</div>
-<p><code class="inline-code" translate="no" >CsrAddr</code>型にmtvalレジスタのアドレスを追加します(<span class="listref"><a href="./11-impl-exception.html#eei.veryl.mtval-range.CsrAddr">リスト10.13</a></span>)。</p>
-<div id="eei.veryl.mtval-range.CsrAddr" class="caption-code">
-<span class="caption">リスト10.13: リスト10.13: mtvalのアドレスを定義する (eei.veryl)</span>
-<pre class="list language-CsrAddr" translate="no"><em class="lineno">1: </em>    enum CsrAddr: logic&lt;12&gt; {
-<em class="lineno">2: </em>        MTVEC = 12'h305,
-<em class="lineno">3: </em>        MEPC = 12'h341,
-<em class="lineno">4: </em>        MCAUSE = 12'h342,
-<em class="lineno">5: </em>        <b>MTVAL = 12'h343,</b>
-<em class="lineno">6: </em>        LED = 12'h800,
-<em class="lineno">7: </em>    }
-</pre>
-</div>
-<p>mtvalレジスタを実装して、書き込み、読み込みできるようにします(<span class="listref"><a href="./11-impl-exception.html#csrunit.veryl.mtval-range.wmask">リスト10.14</a></span>、<span class="listref"><a href="./11-impl-exception.html#csrunit.veryl.mtval-range.reg">リスト10.15</a></span>、<span class="listref"><a href="./11-impl-exception.html#csrunit.veryl.mtval-range.rw">リスト10.16</a></span>、<span class="listref"><a href="./11-impl-exception.html#csrunit.veryl.mtval-range.reset">リスト10.17</a></span>、<span class="listref"><a href="./11-impl-exception.html#csrunit.veryl.mtval-range.write">リスト10.18</a></span>)。</p>
-<div id="csrunit.veryl.mtval-range.wmask" class="caption-code">
-<span class="caption">リスト10.14: リスト10.14: mtvalの書き込みマスクを定義する (csrunit.veryl)</span>
-<pre class="list language-wmask" translate="no"><em class="lineno">1: </em>    const MTVAL_WMASK : UIntX = 'hffff_ffff_ffff_ffff;
-</pre>
-</div>
-<div id="csrunit.veryl.mtval-range.reg" class="caption-code">
-<span class="caption">リスト10.15: リスト10.15: mtvalレジスタを作成する (csrunit.veryl)</span>
-<pre class="list language-reg" translate="no"><em class="lineno">1: </em>    var mtvec : UIntX;
-<em class="lineno">2: </em>    var mepc  : UIntX;
-<em class="lineno">3: </em>    var mcause: UIntX;
-<em class="lineno">4: </em>    <b>var mtval : UIntX;</b>
-</pre>
-</div>
-<div id="csrunit.veryl.mtval-range.rw" class="caption-code">
-<span class="caption">リスト10.16: リスト10.16: mtvalの読み込みデータ、書き込みマスクを設定する (csrunit.veryl)</span>
-<pre class="list language-rw" translate="no"><em class="lineno">1: </em>    always_comb {
-<em class="lineno">2: </em>        // read
-<em class="lineno">3: </em>        rdata = case csr_addr {
-<em class="lineno">4: </em>            ...
-<em class="lineno">5: </em>            <b>CsrAddr::MTVAL : mtval,</b>
-<em class="lineno">6: </em>            ...
-<em class="lineno">7: </em>        };
-<em class="lineno">8: </em>        // write
-<em class="lineno">9: </em>        wmask = case csr_addr {
-<em class="lineno">10: </em>            ...
-<em class="lineno">11: </em>            <b>CsrAddr::MTVAL : MTVAL_WMASK,</b>
-<em class="lineno">12: </em>            ...
-<em class="lineno">13: </em>        };
-</pre>
-</div>
-<div id="csrunit.veryl.mtval-range.reset" class="caption-code">
-<span class="caption">リスト10.17: リスト10.17: mtvalレジスタをリセットする (csrunit.veryl)</span>
-<pre class="list language-reset" translate="no"><em class="lineno">1: </em>    always_ff {
-<em class="lineno">2: </em>        if_reset {
-<em class="lineno">3: </em>            mtvec  = 0;
-<em class="lineno">4: </em>            mepc   = 0;
-<em class="lineno">5: </em>            mcause = 0;
-<em class="lineno">6: </em>            <b>mtval  = 0;</b>
-<em class="lineno">7: </em>            led    = 0;
-</pre>
-</div>
-<div id="csrunit.veryl.mtval-range.write" class="caption-code">
-<span class="caption">リスト10.18: リスト10.18: mtvalに書き込めるようにする (csrunit.veryl)</span>
-<pre class="list language-write" translate="no"><em class="lineno">1: </em>    } else {
-<em class="lineno">2: </em>        if is_wsc {
-<em class="lineno">3: </em>            case csr_addr {
-<em class="lineno">4: </em>                ...
-<em class="lineno">5: </em>                <b>CsrAddr::MTVAL : mtval  = wdata;</b>
-<em class="lineno">6: </em>                ...
-<em class="lineno">7: </em>            }
-<em class="lineno">8: </em>        }
-<em class="lineno">9: </em>    }
-</pre>
-</div>
-<p>例外が発生するとき、mtvalレジスタに<code class="inline-code" translate="no" >expt_info.value</code>を書き込むようにします(<span class="listref"><a href="./11-impl-exception.html#csrunit.veryl.mtval-range.info">リスト10.19</a></span>、<span class="listref"><a href="./11-impl-exception.html#csrunit.veryl.mtval-range.update">リスト10.20</a></span>)。</p>
-<div id="csrunit.veryl.mtval-range.info" class="caption-code">
-<span class="caption">リスト10.19: リスト10.19: tvalを変数に割り当てる (csrunit.veryl)</span>
-<pre class="list language-info" translate="no"><em class="lineno">1: </em>    let raise_expt: logic = valid &amp;&amp; expt_info.valid;
-<em class="lineno">2: </em>    let expt_cause: UIntX = expt_info.cause;
-<em class="lineno">3: </em>    <b>let expt_value: UIntX = expt_info.value;</b>
-</pre>
-</div>
-<div id="csrunit.veryl.mtval-range.update" class="caption-code">
-<span class="caption">リスト10.20: リスト10.20: 例外が発生するとき、mtvalにtvalを書き込む (csrunit.veryl)</span>
-<pre class="list language-update" translate="no"><em class="lineno">1: </em>    if valid {
-<em class="lineno">2: </em>        if raise_trap {
-<em class="lineno">3: </em>            if raise_expt {
-<em class="lineno">4: </em>                mepc   = pc;
-<em class="lineno">5: </em>                mcause = trap_cause;
-<em class="lineno">6: </em>                <b>mtval  = expt_value;</b>
-<em class="lineno">7: </em>            }
-</pre>
-</div>
-
-<h2 class="numbox"><a id="h10-3"></a><span class="secno">10.3</span> Breakpoint例外の実装</h2>
-<p>Breakpoint例外は、EBREAK命令によって引き起こされる例外です。EBREAK命令はデバッガがプログラムを中断させる場合などに利用されます。EBREAK命令はECALL命令と同様に例外を発生させるだけで、ほかに操作を行いません。causeは<code class="inline-code" translate="no" >3</code>で、tvalは例外が発生した命令のアドレスになります。</p>
-<p><code class="inline-code" translate="no" >CsrCause</code>型にBreakpoint例外のcauseを追加します(<span class="listref"><a href="./11-impl-exception.html#eei.veryl.breakpoint-range.CsrCause">リスト10.21</a></span>)。</p>
-<div id="eei.veryl.breakpoint-range.CsrCause" class="caption-code">
-<span class="caption">リスト10.21: リスト10.21: Breakpoint例外のcauseを定義する (eei.veryl)</span>
-<pre class="list language-CsrCause" translate="no"><em class="lineno">1: </em>    enum CsrCause: UIntX {
-<em class="lineno">2: </em>        BREAKPOINT = 3,
-<em class="lineno">3: </em>        ENVIRONMENT_CALL_FROM_M_MODE = 11,
-<em class="lineno">4: </em>    }
-</pre>
-</div>
-<p>IDステージでEBREAK命令を判定して、tvalにPCを設定します(<span class="listref"><a href="./11-impl-exception.html#core.veryl.breakpoint-range.idex">リスト10.22</a></span>)。</p>
-<div id="core.veryl.breakpoint-range.idex" class="caption-code">
-<span class="caption">リスト10.22: リスト10.22: IDステージでEBREAK命令を判定する (core.veryl)</span>
-<pre class="list language-idex" translate="no"><em class="lineno">1: </em>        exq_wdata.expt = 0;
-<em class="lineno">2: </em>        <b>if ids_inst_bits == 32'h00000073 {</b>
-<em class="lineno">3: </em>            // ECALL
-<em class="lineno">4: </em>            exq_wdata.expt.valid = <b>1;</b>
-<em class="lineno">5: </em>            exq_wdata.expt.cause = CsrCause::ENVIRONMENT_CALL_FROM_M_MODE;
-<em class="lineno">6: </em>            exq_wdata.expt.value = 0;
-<em class="lineno">7: </em>        <b>} else if ids_inst_bits == 32'h00100073 {</b>
-<em class="lineno">8: </em>            <b>// EBREAK</b>
-<em class="lineno">9: </em>            <b>exq_wdata.expt.valid = 1;</b>
-<em class="lineno">10: </em>            <b>exq_wdata.expt.cause = CsrCause::BREAKPOINT;</b>
-<em class="lineno">11: </em>            <b>exq_wdata.expt.value = ids_pc;</b>
-<em class="lineno">12: </em>        <b>}</b>
-</pre>
-</div>
-
-<h2 class="numbox"><a id="h10-4"></a><span class="secno">10.4</span> Illegal instruction例外の実装</h2>
-<p>Illegal instruction例外は、現在の環境で実行できない命令を実行しようとしたときに発生する例外です。causeは<code class="inline-code" translate="no" >2</code>で、tvalは例外が発生した命令のビット列になります。</p>
-<p>本章では、EEIが認識できない不正な命令ビット列を実行しようとした場合と、読み込み専用のCSRに書き込もうとした場合の2つの状況で例外を発生させます。</p>
-
-<h3 class="none"><a id="h10-4-1"></a><span class="secno">10.4.1</span> 不正な命令ビット列で例外を起こす</h3>
-<p>CPUに実装していない命令、つまりデコードできない命令を実行しようとするとき、Illegal instruction例外が発生します。</p>
-<p>今のところ未知の命令は何もしない命令として実行しています。ここで、inst_decoderモジュールを、未知の命令であることを報告するように変更します。</p>
-<p>inst_decoderモジュールに、命令が有効かどうかを示す<code class="inline-code" translate="no" >valid</code>ポートを追加します(<span class="listref"><a href="./11-impl-exception.html#inst_decoder.veryl.instillegal-range.port">リスト10.23</a></span>、<span class="listref"><a href="./11-impl-exception.html#core.veryl.instillegal-range.ids">リスト10.24</a></span>)。</p>
-<div id="inst_decoder.veryl.instillegal-range.port" class="caption-code">
-<span class="caption">リスト10.23: リスト10.23: validポートを追加する (inst_decoder.veryl)</span>
-<pre class="list language-port" translate="no"><em class="lineno">1: </em>module inst_decoder (
-<em class="lineno">2: </em>    bits : input  Inst    ,
-<em class="lineno">3: </em>    <b>valid: output logic   ,</b>
-<em class="lineno">4: </em>    ctrl : output InstCtrl,
-<em class="lineno">5: </em>    imm  : output UIntX   ,
-<em class="lineno">6: </em>) {
-</pre>
-</div>
-<div id="core.veryl.instillegal-range.ids" class="caption-code">
-<span class="caption">リスト10.24: リスト10.24: inst_decoderモジュールのvalidポートと変数を接続する (core.veryl)</span>
-<pre class="list language-ids" translate="no"><em class="lineno">1: </em>    let ids_valid     : logic    = if_fifo_rvalid;
-<em class="lineno">2: </em>    let ids_pc        : Addr     = if_fifo_rdata.addr;
-<em class="lineno">3: </em>    let ids_inst_bits : Inst     = if_fifo_rdata.bits;
-<em class="lineno">4: </em>    <b>var ids_inst_valid: logic   ;</b>
-<em class="lineno">5: </em>    var ids_ctrl      : InstCtrl;
-<em class="lineno">6: </em>    var ids_imm       : UIntX   ;
-<em class="lineno">7: </em>
-<em class="lineno">8: </em>    inst decoder: inst_decoder (
-<em class="lineno">9: </em>        bits : ids_inst_bits ,
-<em class="lineno">10: </em>        <b>valid: ids_inst_valid,</b>
-<em class="lineno">11: </em>        ctrl : ids_ctrl      ,
-<em class="lineno">12: </em>        imm  : ids_imm       ,
-<em class="lineno">13: </em>    );
-</pre>
-</div>
-<p>今のところ実装してある命令を有効な命令として判定する処理をalways_combブロックに記述します(<span class="listref"><a href="./11-impl-exception.html#inst_decoder.veryl.instillegal-range.valid">リスト10.25</a></span>)。</p>
-<div id="inst_decoder.veryl.instillegal-range.valid" class="caption-code">
-<span class="caption">リスト10.25: リスト10.25: 命令の有効判定を行う (inst_decoder.veryl)</span>
-<pre class="list language-valid" translate="no"><em class="lineno">1: </em>        valid = case op {
-<em class="lineno">2: </em>            OP_LUI, OP_AUIPC, OP_JAL, OP_JALR: T,
-<em class="lineno">3: </em>            OP_BRANCH                        : f3 != 3'b010 &amp;&amp; f3 != 3'b011,
-<em class="lineno">4: </em>            OP_LOAD                          : f3 != 3'b111,
-<em class="lineno">5: </em>            OP_STORE                         : f3[2] == 1'b0,
-<em class="lineno">6: </em>            OP_OP                            : case f7 {
-<em class="lineno">7: </em>                7'b0000000: T, // RV32I
-<em class="lineno">8: </em>                7'b0100000: f3 == 3'b000 || f3 == 3'b101, // SUB, SRA
-<em class="lineno">9: </em>                7'b0000001: T, // RV32M
-<em class="lineno">10: </em>                default   : F,
-<em class="lineno">11: </em>            },
-<em class="lineno">12: </em>            OP_OP_IMM: case f3 {
-<em class="lineno">13: </em>                3'b001 : f7[6:1] == 6'b000000, // SLLI (RV64I)
-<em class="lineno">14: </em>                3'b101 : f7[6:1] == 6'b000000 || f7[6:1] == 6'b010000, // SRLI, SRAI (RV64I)
-<em class="lineno">15: </em>                default: T,
-<em class="lineno">16: </em>            },
-<em class="lineno">17: </em>            OP_OP_32: case f7 {
-<em class="lineno">18: </em>                7'b0000001: f3 == 3'b000 || f3[2] == 1'b1, // RV64M
-<em class="lineno">19: </em>                7'b0000000: f3 == 3'b000 || f3 == 3'b001 || f3 == 3'b101, // ADDW, SLLW, SRLW
-<em class="lineno">20: </em>                7'b0100000: f3 == 3'b000 || f3 == 3'b101, // SUBW, SRAW
-<em class="lineno">21: </em>                default   : F,
-<em class="lineno">22: </em>            },
-<em class="lineno">23: </em>            OP_OP_IMM_32: case f3 {
-<em class="lineno">24: </em>                3'b000 : T, // ADDIW
-<em class="lineno">25: </em>                3'b001 : f7 == 7'b0000000, // SLLIW
-<em class="lineno">26: </em>                3'b101 : f7 == 7'b0000000 || f7 == 7'b0100000, // SRLIW, SRAIW
-<em class="lineno">27: </em>                default: F,
-<em class="lineno">28: </em>            },
-<em class="lineno">29: </em>            OP_SYSTEM: f3 != 3'b000 &amp;&amp; f3 != 3'b100 || // CSRR(W|S|C)[I]
-<em class="lineno">30: </em>             bits == 32'h00000073 || // ECALL
-<em class="lineno">31: </em>             bits == 32'h00100073 || // EBREAK
-<em class="lineno">32: </em>             bits == 32'h30200073, //MRET
-<em class="lineno">33: </em>            OP_MISC_MEM: T, // FENCE
-<em class="lineno">34: </em>            default    : F,
-<em class="lineno">35: </em>        };
-</pre>
-</div>
-<p>riscv-testsでメモリ読み書きの順序を保証するFENCE命令<sup><a id="fnb-memory.order" href="#fn-memory.order" class="noteref" epub:type="noteref">*4</a></sup>を使用しているため、opcodeがOP-MISCである命令を合法な命令として取り扱っています。OP-MISCのopcode(<code class="inline-code" translate="no" >7'b0001111</code>)をeeiパッケージに定義してください(<span class="listref"><a href="./11-impl-exception.html#eei.veryl.instillegal-range.op">リスト10.26</a></span>)。</p>
-<div id="eei.veryl.instillegal-range.op" class="caption-code">
-<span class="caption">リスト10.26: リスト10.26: OP-MISCのビット列を定義する (eei.veryl)</span>
-<pre class="list language-op" translate="no"><em class="lineno">1: </em>    const OP_MISC_MEM : logic&lt;7&gt; = 7'b0001111;
-</pre>
-</div>
-<div class="footnote-list">
-<div class="footnote" id="fn-memory.order" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*4] </span>基本編で実装するCPUはロードストア命令を直列に実行するため順序を保証する必要がありません。そのためFENCE命令は何もしない命令として扱います。</p></div>
-</div><!--/.footnote-list-->
-<p><code class="inline-code" translate="no" >CsrCause</code>型にIllegal instruction例外のcauseを追加します(<span class="listref"><a href="./11-impl-exception.html#eei.veryl.instillegal-range.CsrCause">リスト10.27</a></span>)。</p>
-<div id="eei.veryl.instillegal-range.CsrCause" class="caption-code">
-<span class="caption">リスト10.27: リスト10.27: Illegal instruction例外のcauseを定義する (eei.veryl)</span>
-<pre class="list language-CsrCause" translate="no"><em class="lineno">1: </em>    enum CsrCause: UIntX {
-<em class="lineno">2: </em>        <b>ILLEGAL_INSTRUCTION = 2,</b>
-<em class="lineno">3: </em>        BREAKPOINT = 3,
-<em class="lineno">4: </em>        ENVIRONMENT_CALL_FROM_M_MODE = 11,
-<em class="lineno">5: </em>    }
-</pre>
-</div>
-<p><code class="inline-code" translate="no" >valid</code>フラグを利用して、IDステージでIllegal instruction例外を発生させます(<span class="listref"><a href="./11-impl-exception.html#core.veryl.instillegal-range.idex">リスト10.28</a></span>)。tvalには、命令を右に詰めてゼロで拡張した値を設定します。</p>
-<div id="core.veryl.instillegal-range.idex" class="caption-code">
-<span class="caption">リスト10.28: リスト10.28: 不正な命令のとき、例外を発生させる (core.veryl)</span>
-<pre class="list language-idex" translate="no"><em class="lineno">1: </em>        exq_wdata.expt = 0;
-<em class="lineno">2: </em>        <b>if !ids_inst_valid {</b>
-<em class="lineno">3: </em>            <b>// illegal instruction</b>
-<em class="lineno">4: </em>            <b>exq_wdata.expt.valid = 1;</b>
-<em class="lineno">5: </em>            <b>exq_wdata.expt.cause = CsrCause::ILLEGAL_INSTRUCTION;</b>
-<em class="lineno">6: </em>            <b>exq_wdata.expt.value = {1'b0 repeat XLEN - ILEN, ids_inst_bits};</b>
-<em class="lineno">7: </em>        <b>} else</b> if ids_inst_bits == 32'h00000073 {
-</pre>
-</div>
-
-<h3 class="none"><a id="h10-4-2"></a><span class="secno">10.4.2</span> 読み込み専用のCSRへの書き込みで例外を起こす</h3>
-<p>RISC-VのCSRには読み込み専用のレジスタが存在しており、アドレスの上位2ビットが<code class="inline-code" translate="no" >2'b11</code>のCSRが読み込み専用として定義されています。読み込み専用のCSRに書き込みを行おうとするとIllegal instruction例外が発生します。</p>
-<p>CSRに値が書き込まれるのは次のいずれかの場合です。読み書き可能なレジスタ内の読み込み専用のフィールドへの書き込みは例外を引き起こしません。</p>
-<ol start="1" type="1">
-<li>CSRRW、CSRRWI命令である</li>
-<li>CSRRS命令でrs1が0番目のレジスタ以外である</li>
-<li>CSRRSI命令で即値が<code class="inline-code" translate="no" >0</code>以外である</li>
-<li>CSRRC命令でrs1が0番目のレジスタ以外である</li>
-<li>CSRRCI命令で即値が<code class="inline-code" translate="no" >0</code>以外である</li>
-</ol>
-<p>ソースレジスタの値が<code class="inline-code" translate="no" >0</code>だとしても、0番目のレジスタではない場合にはCSRに書き込むと判断します。CSRに書き込むかどうかを正しく判定するために、csrunitモジュールの<code class="inline-code" translate="no" >rs1</code>ポートを<code class="inline-code" translate="no" >rs1_addr</code>と<code class="inline-code" translate="no" >rs1_data</code>に分解します(<span class="listref"><a href="./11-impl-exception.html#core.veryl.csrro-range.csru">リスト10.30</a></span>、<span class="listref"><a href="./11-impl-exception.html#csrunit.veryl.csrro-range.port">リスト10.29</a></span>、<span class="listref"><a href="./11-impl-exception.html#csrunit.veryl.csrro-range.wdata">リスト10.31</a></span>)<sup><a id="fnb-fix-wmask-bug" href="#fn-fix-wmask-bug" class="noteref" epub:type="noteref">*5</a></sup>。また、causeを設定するためにcsrunitモジュールに命令のビット列を供給します。</p>
-<div id="csrunit.veryl.csrro-range.port" class="caption-code">
-<span class="caption">リスト10.29: リスト10.29: csrunitモジュールのポート定義を変更する (csrunit.veryl)</span>
-<pre class="list language-port" translate="no"><em class="lineno">1: </em>module csrunit (
-<em class="lineno">2: </em>    clk        : input  clock            ,
-<em class="lineno">3: </em>    rst        : input  reset            ,
-<em class="lineno">4: </em>    valid      : input  logic            ,
-<em class="lineno">5: </em>    pc         : input  Addr             ,
-<em class="lineno">6: </em>    <b>inst_bits  : input  Inst             ,</b>
-<em class="lineno">7: </em>    ctrl       : input  InstCtrl         ,
-<em class="lineno">8: </em>    expt_info  : input  ExceptionInfo    ,
-<em class="lineno">9: </em>    rd_addr    : input  logic        &lt;5&gt; ,
-<em class="lineno">10: </em>    csr_addr   : input  logic        &lt;12&gt;,
-<em class="lineno">11: </em>    <b>rs1_addr   : input  logic        &lt;5&gt; ,</b>
-<em class="lineno">12: </em>    <b>rs1_data   : input  UIntX            ,</b>
-<em class="lineno">13: </em>    rdata      : output UIntX            ,
-<em class="lineno">14: </em>    raise_trap : output logic            ,
-<em class="lineno">15: </em>    trap_vector: output Addr             ,
-<em class="lineno">16: </em>    led        : output UIntX            ,
-<em class="lineno">17: </em>) {
-</pre>
-</div>
-<div id="core.veryl.csrro-range.csru" class="caption-code">
-<span class="caption">リスト10.30: リスト10.30: csrunitモジュールのポート定義を変更する (core.veryl)</span>
-<pre class="list language-csru" translate="no"><em class="lineno">1: </em>    inst csru: csrunit (
-<em class="lineno">2: </em>        clk                               ,
-<em class="lineno">3: </em>        rst                               ,
-<em class="lineno">4: </em>        valid      : mems_valid           ,
-<em class="lineno">5: </em>        pc         : mems_pc              ,
-<em class="lineno">6: </em>        <b>inst_bits  : mems_inst_bits       ,</b>
-<em class="lineno">7: </em>        ctrl       : mems_ctrl            ,
-<em class="lineno">8: </em>        expt_info  : mems_expt            ,
-<em class="lineno">9: </em>        rd_addr    : mems_rd_addr         ,
-<em class="lineno">10: </em>        csr_addr   : <b>mems_inst_bits[31:20],</b>
-<em class="lineno">11: </em>        <b>rs1_addr   : memq_rdata.rs1_addr  ,</b>
-<em class="lineno">12: </em>        <b>rs1_data   : memq_rdata.rs1_data  ,</b>
-<em class="lineno">13: </em>        rdata      : csru_rdata           ,
-<em class="lineno">14: </em>        raise_trap : csru_raise_trap      ,
-<em class="lineno">15: </em>        trap_vector: csru_trap_vector     ,
-<em class="lineno">16: </em>        led                               ,
-<em class="lineno">17: </em>    );
-</pre>
-</div>
-<div id="csrunit.veryl.csrro-range.wdata" class="caption-code">
-<span class="caption">リスト10.31: リスト10.31: rs1の変更に対応する (csrunit.veryl)</span>
-<pre class="list language-wdata" translate="no"><em class="lineno">1: </em>    <b>let wsource: UIntX = if ctrl.funct3[2] ? {1'b0 repeat XLEN - 5, rs1_addr} : rs1_data;</b>
-<em class="lineno">2: </em>    wdata   = case ctrl.funct3[1:0] {
-<em class="lineno">3: </em>        2'b01  : <b>wsource</b>,
-<em class="lineno">4: </em>        2'b10  : rdata | <b>wsource</b>,
-<em class="lineno">5: </em>        2'b11  : rdata &amp; ~<b>wsource</b>,
-<em class="lineno">6: </em>        default: 'x,
-<em class="lineno">7: </em>    } &amp; wmask | (rdata &amp; ~wmask);
-</pre>
-</div>
-<div class="footnote-list">
-<div class="footnote" id="fn-fix-wmask-bug" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*5] </span>基本編 第1部の初版の<code class="inline-code" translate="no" >wdata</code>の生成ロジックに間違いがあったので訂正してあります。</p></div>
-</div><!--/.footnote-list-->
-<p>命令のfunct3とrs1のアドレスを利用して、書き込み先が読み込み専用レジスタかどうかを判定します<sup><a id="fnb-it-can-be-id" href="#fn-it-can-be-id" class="noteref" epub:type="noteref">*6</a></sup>(<span class="listref"><a href="./11-impl-exception.html#csrunit.veryl.csrro-range.check">リスト10.32</a></span>)。また、命令のビット列を利用できるようになったので、MRET命令の判定を命令のビット列の比較に書き換えています。</p>
-<div id="csrunit.veryl.csrro-range.check" class="caption-code">
-<span class="caption">リスト10.32: リスト10.32: 読み込み専用CSRへの書き込みが発生するか判定する (csrunit.veryl)</span>
-<pre class="list language-check" translate="no"><em class="lineno">1: </em>    // CSRR(W|S|C)[I]命令かどうか
-<em class="lineno">2: </em>    let is_wsc: logic = ctrl.is_csr &amp;&amp; ctrl.funct3[1:0] != 0;
-<em class="lineno">3: </em>    // MRET命令かどうか
-<em class="lineno">4: </em>    let is_mret: logic = inst_bits == 32'h30200073;
-<em class="lineno">5: </em>
-<em class="lineno">6: </em>    // Check CSR access
-<em class="lineno">7: </em>    let will_not_write_csr     : logic = (ctrl.funct3[1:0] == 2 || ctrl.funct3[1:0] == 3) &amp;&amp; rs1_addr == 0; // set/clear with source = 0
-<em class="lineno">8: </em>    let expt_write_readonly_csr: logic = is_wsc &amp;&amp; !will_not_write_csr &amp;&amp; csr_addr[11:10] == 2'b11; // attempt to write read-only CSR
-</pre>
-</div>
-<div class="footnote-list">
-<div class="footnote" id="fn-it-can-be-id" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*6] </span>IDステージで判定することもできます。</p></div>
-</div><!--/.footnote-list-->
-<p>例外が発生するとき、causeとtvalを設定します(<span class="listref"><a href="./11-impl-exception.html#csrunit.veryl.csrro-range.expt">リスト10.33</a></span>)。</p>
-<div id="csrunit.veryl.csrro-range.expt" class="caption-code">
-<span class="caption">リスト10.33: リスト10.33: 読み込み専用CSRの書き込みで例外を発生させる (csrunit.veryl)</span>
-<pre class="list language-expt" translate="no"><em class="lineno">1: </em>    let raise_expt: logic = valid &amp;&amp; (expt_info.valid || expt_write_readonly_csr);
-<em class="lineno">2: </em>    let expt_cause: UIntX = <b>switch {</b>
-<em class="lineno">3: </em>        <b>expt_info.valid        :</b> expt_info.cause<b>,</b>
-<em class="lineno">4: </em>        <b>expt_write_readonly_csr: CsrCause::ILLEGAL_INSTRUCTION,</b>
-<em class="lineno">5: </em>        <b>default                : 0,</b>
-<em class="lineno">6: </em>    <b>}</b>;
-<em class="lineno">7: </em>    let expt_value: UIntX = <b>switch {</b>
-<em class="lineno">8: </em>        <b>expt_info.valid                            :</b> expt_info.value<b>,</b>
-<em class="lineno">9: </em>        <b>expt_cause == CsrCause::ILLEGAL_INSTRUCTION: {1'b0 repeat XLEN - $bits(Inst), inst_bits},</b>
-<em class="lineno">10: </em>        <b>default                                    : 0</b>
-<em class="lineno">11: </em>    <b>}</b>;
-</pre>
-</div>
-<p>この変更により、レジスタにライトバックするようにデコードされた命令がcsrunitモジュールでトラップを起こすようになりました。トラップが発生するときにWBステージでライトバックしないように変更します(<span class="listref"><a href="./11-impl-exception.html#core.veryl.csrro-range.wbq_type">リスト10.34</a></span>、<span class="listref"><a href="./11-impl-exception.html#core.veryl.csrro-range.memwb">リスト10.35</a></span>、<span class="listref"><a href="./11-impl-exception.html#core.veryl.csrro-range.wb">リスト10.36</a></span>)。</p>
-<div id="core.veryl.csrro-range.wbq_type" class="caption-code">
-<span class="caption">リスト10.34: リスト10.34: トラップが発生したかを示すlogicをwbq_typeに追加する (core.veryl)</span>
-<pre class="list language-wbq_type" translate="no"><em class="lineno">1: </em>    struct wbq_type {
-<em class="lineno">2: </em>        ...
-<em class="lineno">3: </em>        csr_rdata : UIntX   ,
-<em class="lineno">4: </em>        <b>raise_trap: logic   ,</b>
-<em class="lineno">5: </em>    }
-</pre>
-</div>
-<div id="core.veryl.csrro-range.memwb" class="caption-code">
-<span class="caption">リスト10.35: リスト10.35: トラップが発生したかをWBステージに伝える (core.veryl)</span>
-<pre class="list language-memwb" translate="no"><em class="lineno">1: </em>    wbq_wdata.raise_trap = csru_raise_trap;
-</pre>
-</div>
-<div id="core.veryl.csrro-range.wb" class="caption-code">
-<span class="caption">リスト10.36: リスト10.36: トラップが発生しているとき、レジスタにデータを書き込まないようにする (core.veryl)</span>
-<pre class="list language-wb" translate="no"><em class="lineno">1: </em>    always_ff {
-<em class="lineno">2: </em>        if wbs_valid &amp;&amp; wbs_ctrl.rwb_en &amp;&amp; !wbq_rdata.raise_trap {
-<em class="lineno">3: </em>            regfile[wbs_rd_addr] = wbs_wb_data;
-<em class="lineno">4: </em>        }
-<em class="lineno">5: </em>    }
-</pre>
-</div>
-
-<h2 id="def-ialign" class="numbox"><a id="h10-5"></a><span class="secno">10.5</span> 命令アドレスのミスアライン例外</h2>
-<p>RISC-Vでは、命令アドレスがIALIGNビット境界に整列されていない場合にInstruction address misaligned例外が発生します。causeは<code class="inline-code" translate="no" >0</code>で、tvalは命令のアドレスになります。</p>
-<p><a href="./14-impl-c.html">第13章「C拡張の実装」</a>で実装するC拡張が実装されていない場合、IALIGNは<code class="inline-code" translate="no" >32</code>と定義されています。C拡張が定義されている場合は<code class="inline-code" translate="no" >16</code>になります。</p>
-<p>IALIGNビット境界に整列されていない命令アドレスになるのはジャンプ命令、分岐命令を実行する場合です<sup><a id="fnb-epc-tvec-mask" href="#fn-epc-tvec-mask" class="noteref" epub:type="noteref">*7</a></sup>。PCの遷移先が整列されていない場合に例外が発生します。分岐命令の場合、分岐が成立する場合にしか例外は発生しません。</p>
-<div class="footnote-list">
-<div class="footnote" id="fn-epc-tvec-mask" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*7] </span>mepc、mtvecはIALIGNビットに整列されたアドレスしか書き込めないため、遷移先のアドレスは常に整列されています。</p></div>
-</div><!--/.footnote-list-->
-<p><code class="inline-code" translate="no" >CsrCause</code>型にInstruction address misaligned例外のcauseを追加します(<span class="listref"><a href="./11-impl-exception.html#core.veryl.instmisalign-range.CsrCause">リスト10.37</a></span>)。</p>
-<div id="core.veryl.instmisalign-range.CsrCause" class="caption-code">
-<span class="caption">リスト10.37: リスト10.37: Instruction address misaligned例外のcauseを定義する (eei.veryl)</span>
-<pre class="list language-CsrCause" translate="no"><em class="lineno">1: </em>    enum CsrCause: UIntX {
-<em class="lineno">2: </em>        <b>INSTRUCTION_ADDRESS_MISALIGNED = 0,</b>
-<em class="lineno">3: </em>        ILLEGAL_INSTRUCTION = 2,
-<em class="lineno">4: </em>        BREAKPOINT = 3,
-<em class="lineno">5: </em>        ENVIRONMENT_CALL_FROM_M_MODE = 11,
-<em class="lineno">6: </em>    }
-</pre>
-</div>
-<p>EXステージでアドレスを確認して例外を判定します(<span class="listref"><a href="./11-impl-exception.html#core.veryl.instmisalign-range.exmem">リスト10.38</a></span>)。tvalは遷移先のアドレスになることに注意してください。</p>
-<div id="core.veryl.instmisalign-range.exmem" class="caption-code">
-<span class="caption">リスト10.38: リスト10.38: EXステージでInstruction address misaligned例外の判定を行う (core.veryl)</span>
-<pre class="list language-exmem" translate="no"><em class="lineno">1: </em>        memq_wdata.jump_addr  = if inst_is_br(exs_ctrl) ? exs_pc + exs_imm : exs_alu_result &amp; ~1;
-<em class="lineno">2: </em>        // exception
-<em class="lineno">3: </em>        <b>let instruction_address_misaligned: logic = memq_wdata.br_taken &amp;&amp; memq_wdata.jump_addr[1:0] != 2'b00;</b>
-<em class="lineno">4: </em>        memq_wdata.expt                = exq_rdata.expt;
-<em class="lineno">5: </em>        <b>if !memq_rdata.expt.valid {</b>
-<em class="lineno">6: </em>        <b>    if instruction_address_misaligned {</b>
-<em class="lineno">7: </em>        <b>        memq_wdata.expt.valid = 1;</b>
-<em class="lineno">8: </em>        <b>        memq_wdata.expt.cause = CsrCause::INSTRUCTION_ADDRESS_MISALIGNED;</b>
-<em class="lineno">9: </em>        <b>        memq_wdata.expt.value = memq_wdata.jump_addr;</b>
-<em class="lineno">10: </em>        <b>    }</b>
-<em class="lineno">11: </em>        <b>}</b>
-</pre>
-</div>
-
-<h2 class="numbox"><a id="h10-6"></a><span class="secno">10.6</span> ロードストア命令のミスアライン例外</h2>
-<p>RISC-Vでは、ロード、ストア命令でアクセスするメモリのアドレスが、ロード、ストアするビット幅に整列されていない場合に、それぞれLoad address misaligned例外、Store/AMO address misaligned例外が発生します<sup><a id="fnb-enable-misalign" href="#fn-enable-misalign" class="noteref" epub:type="noteref">*8</a></sup>。例えばLW命令は4バイトに整列されたアドレス、LD命令は8バイトに整列されたアドレスにしかアクセスできません。causeはそれぞれ<code class="inline-code" translate="no" >4</code>、<code class="inline-code" translate="no" >6</code>で、tvalはアクセスするメモリのアドレスになります。</p>
-<div class="footnote-list">
-<div class="footnote" id="fn-enable-misalign" epub:type="footnote"><p class="footnote"><span class="footnote-mark">[*8] </span>例外を発生させず、そのようなメモリアクセスをサポートすることもできます。本書ではCPUを単純に実装するために例外とします。</p></div>
-</div><!--/.footnote-list-->
-<p><code class="inline-code" translate="no" >CsrCause</code>型に例外のcauseを追加します(<span class="listref"><a href="./11-impl-exception.html#eei.veryl.memmisalign-range.CsrCause">リスト10.39</a></span>)。</p>
-<div id="eei.veryl.memmisalign-range.CsrCause" class="caption-code">
-<span class="caption">リスト10.39: リスト10.39: 例外のcauseを定義する (eei.veryl)</span>
-<pre class="list language-CsrCause" translate="no"><em class="lineno">1: </em>    enum CsrCause: UIntX {
-<em class="lineno">2: </em>        INSTRUCTION_ADDRESS_MISALIGNED = 0,
-<em class="lineno">3: </em>        ILLEGAL_INSTRUCTION = 2,
-<em class="lineno">4: </em>        BREAKPOINT = 3,
-<em class="lineno">5: </em>        <b>LOAD_ADDRESS_MISALIGNED = 4,</b>
-<em class="lineno">6: </em>        <b>STORE_AMO_ADDRESS_MISALIGNED = 6,</b>
-<em class="lineno">7: </em>        ENVIRONMENT_CALL_FROM_M_MODE = 11,
-<em class="lineno">8: </em>    }
-</pre>
-</div>
-<p>EXステージでアドレスを確認して例外を判定します(<span class="listref"><a href="./11-impl-exception.html#core.veryl.memmisalign-range.expt">リスト10.40</a></span>)。</p>
-<div id="core.veryl.memmisalign-range.expt" class="caption-code">
-<span class="caption">リスト10.40: リスト10.40: EXステージで例外の判定を行う (core.veryl)</span>
-<pre class="list language-expt" translate="no"><em class="lineno">1: </em>        let instruction_address_misaligned: logic = memq_wdata.br_taken &amp;&amp; memq_wdata.jump_addr[1:0] != 2'b00;
-<em class="lineno">2: </em>        <b>let loadstore_address_misaligned  : logic = inst_is_memop(exs_ctrl) &amp;&amp; case exs_ctrl.funct3[1:0] {</b>
-<em class="lineno">3: </em>        <b>    2'b00  : 0, // B</b>
-<em class="lineno">4: </em>        <b>    2'b01  : exs_alu_result[0] != 1'b0, // H</b>
-<em class="lineno">5: </em>        <b>    2'b10  : exs_alu_result[1:0] != 2'b0, // W</b>
-<em class="lineno">6: </em>        <b>    2'b11  : exs_alu_result[2:0] != 3'b0, // D</b>
-<em class="lineno">7: </em>        <b>    default: 0,</b>
-<em class="lineno">8: </em>        <b>};</b>
-<em class="lineno">9: </em>        memq_wdata.expt = exq_rdata.expt;
-<em class="lineno">10: </em>        if !memq_rdata.expt.valid {
-<em class="lineno">11: </em>            if instruction_address_misaligned {
-<em class="lineno">12: </em>                memq_wdata.expt.valid = 1;
-<em class="lineno">13: </em>                memq_wdata.expt.cause = CsrCause::INSTRUCTION_ADDRESS_MISALIGNED;
-<em class="lineno">14: </em>                memq_wdata.expt.value = memq_wdata.jump_addr;
-<em class="lineno">15: </em>            <b>} else if loadstore_address_misaligned {</b>
-<em class="lineno">16: </em>            <b>    memq_wdata.expt.valid = 1;</b>
-<em class="lineno">17: </em>            <b>    memq_wdata.expt.cause = if exs_ctrl.is_load ? CsrCause::LOAD_ADDRESS_MISALIGNED : CsrCause::STORE_AMO_ADDRESS_MISALIGNED;</b>
-<em class="lineno">18: </em>            <b>    memq_wdata.expt.value = exs_alu_result;</b>
-<em class="lineno">19: </em>            }
-<em class="lineno">20: </em>        }
-</pre>
-</div>
-<p>例外が発生するときにmemunitモジュールが動作しないようにします(<span class="listref"><a href="./11-impl-exception.html#core.veryl.memmisalign-range.memu">リスト10.41</a></span>)。</p>
-<div id="core.veryl.memmisalign-range.memu" class="caption-code">
-<span class="caption">リスト10.41: リスト10.41: 例外が発生するとき、memunitのvalidを0にする (core.veryl)</span>
-<pre class="list language-memu" translate="no"><em class="lineno">1: </em>    inst memu: memunit (
-<em class="lineno">2: </em>        clk                                   ,
-<em class="lineno">3: </em>        rst                                   ,
-<em class="lineno">4: </em>        valid : mems_valid <b>&amp;&amp; !mems_expt.valid</b>,
-<em class="lineno">5: </em>        is_new: mems_is_new                   ,
-<em class="lineno">6: </em>        ctrl  : mems_ctrl                     ,
-<em class="lineno">7: </em>        addr  : memq_rdata.alu_result         ,
-<em class="lineno">8: </em>        rs2   : memq_rdata.rs2_data           ,
-<em class="lineno">9: </em>        rdata : memu_rdata                    ,
-<em class="lineno">10: </em>        stall : memu_stall                    ,
-<em class="lineno">11: </em>        membus: d_membus                      ,
-<em class="lineno">12: </em>    );
-</pre>
-</div>
-        </main>
-        <nav class="page-navi">
-          <a href="10-impl-m.html" class="page-prev">&#9664;</a>
-          <a href="12-impl-mmio.html" class="page-next">&#9654;</a>
-        </nav>
-        <br>
-        <br>
-        <footer style="background:#dddddd">
-      <div style="padding: 20px 20px 20px 20px;">
-          <div style="font-size:1.4rem"><b>コンピュータは、CPUを書けば理解できる！</b></div><br>
-          コンピュータアーキテクチャはCPUを作れば理解できます。
-          「Verylで作るCPU」は、ハードウェア記述言語VerylでRISC-VのCPUを自作する方法を解説するプロジェクトです。<br>
-          「Verylで作るCPU 基本編」では、ハードウェア記述言語の基礎から、OSを実行できる程度のCPUの実装方法までを解説します。<br>
-          <br>
-          キーワード: 自作CPU , RISC-V , Veryl , FPGA<br>
-      <div>
-        </footer>
-      </div>
-    </div>
+<span class="hljs-comment">// Check CSR access</span>
+<span class="hljs-keyword">let</span> will_not_write_csr     : <span class="hljs-keyword">logic</span> = (ctrl.funct3[<span class="hljs-number">1</span>:<span class="hljs-number">0</span>] == <span class="hljs-number">2</span> || ctrl.funct3[<span class="hljs-number">1</span>:<span class="hljs-number">0</span>] == <span class="hljs-number">3</span>) &amp;&amp; rs1_addr == <span class="hljs-number">0</span>; <span class="hljs-comment">// set/clear with source = 0</span>
+<span class="hljs-keyword">let</span> expt_write_readonly_csr: <span class="hljs-keyword">logic</span> = is_wsc &amp;&amp; !will_not_write_csr &amp;&amp; csr_addr[<span class="hljs-number">11</span>:<span class="hljs-number">10</span>] == <span class="hljs-number">2&#39;b11</span>; <span class="hljs-comment">// attempt to write read-only CSR</span>
+</code></pre></div><p>例外が発生するとき、causeとtvalを設定します (リスト33)。</p><p><span class="caption">▼リスト10.33: 読み込み専用CSRの書き込みで例外を発生させる (csrunit.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">let</span> raise_expt: <span class="hljs-keyword">logic</span> = valid &amp;&amp; (expt_info.valid || expt_write_readonly_csr);
+<span class="hljs-keyword">let</span> expt_cause: UIntX = <span class="custom-hl-bold"><span class="hljs-keyword">switch</span> {</span>
+    <span class="custom-hl-bold">expt_info.valid        :</span> expt_info.cause<span class="custom-hl-bold">,</span>
+    <span class="custom-hl-bold">expt_write_readonly_csr: CsrCause::ILLEGAL_INSTRUCTION,</span>
+    <span class="custom-hl-bold"><span class="hljs-keyword">default</span>                : <span class="hljs-number">0</span>,</span>
+<span class="custom-hl-bold">}</span>;
+<span class="hljs-keyword">let</span> expt_value: UIntX = <span class="custom-hl-bold"><span class="hljs-keyword">switch</span> {</span>
+    <span class="custom-hl-bold">expt_info.valid                            :</span> expt_info.value<span class="custom-hl-bold">,</span>
+    <span class="custom-hl-bold">expt_cause == CsrCause::ILLEGAL_INSTRUCTION: {<span class="hljs-number">1&#39;b0</span> <span class="hljs-keyword">repeat</span> XLEN - $bits(Inst), inst_bits},</span>
+    <span class="custom-hl-bold"><span class="hljs-keyword">default</span>                                    : <span class="hljs-number">0</span></span>
+<span class="custom-hl-bold">}</span>;
+</code></pre></div><p>この変更により、レジスタにライトバックするようにデコードされた命令が csrunitモジュールでトラップを起こすようになりました。 トラップが発生するときにWBステージでライトバックしないように変更します ( リスト34、 リスト35、 リスト36 )。</p><p><span class="caption">▼リスト10.34: トラップが発生したかを示すlogicをwbq_typeに追加する (core.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">struct</span> wbq_type {
+    ...
+    csr_rdata : UIntX   ,
+    <span class="custom-hl-bold">raise_trap: <span class="hljs-keyword">logic</span>   ,</span>
+}
+</code></pre></div><p><span class="caption">▼リスト10.35: トラップが発生したかをWBステージに伝える (core.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code>wbq_wdata.raise_trap = csru_raise_trap;
+</code></pre></div><p><span class="caption">▼リスト10.36: トラップが発生しているとき、レジスタにデータを書き込まないようにする (core.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">always_ff</span> {
+    <span class="hljs-keyword">if</span> wbs_valid &amp;&amp; wbs_ctrl.rwb_en &amp;&amp; !wbq_rdata.raise_trap {
+        regfile[wbs_rd_addr] = wbs_wb_data;
+    }
+}
+</code></pre></div><h2 id="命令アドレスのミスアライン例外" tabindex="-1">命令アドレスのミスアライン例外 <a class="header-anchor" href="#命令アドレスのミスアライン例外" aria-label="Permalink to “命令アドレスのミスアライン例外”">​</a></h2><p>RISC-Vでは、命令アドレスがIALIGNビット境界に整列されていない場合に Instruction address misaligned例外が発生します。 causeは<code>0</code>で、tvalは命令のアドレスになります。</p><p>第13章「C拡張の実装」で実装するC拡張が実装されていない場合、 IALIGNは<code>32</code>と定義されています。 C拡張が定義されている場合は<code>16</code>になります。</p><p>IALIGNビット境界に整列されていない命令アドレスになるのはジャンプ命令、分岐命令を実行する場合です<sup class="footnote-ref"><a href="#fn7" id="fnref7">[7]</a></sup>。 PCの遷移先が整列されていない場合に例外が発生します。 分岐命令の場合、分岐が成立する場合にしか例外は発生しません。</p><p><code>CsrCause</code>型にInstruction address misaligned例外のcauseを追加します (リスト37)。</p><p><span class="caption">▼リスト10.37: Instruction address misaligned例外のcauseを定義する (eei.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">enum</span> CsrCause: UIntX {
+    <span class="custom-hl-bold">INSTRUCTION_ADDRESS_MISALIGNED = <span class="hljs-number">0</span>,</span>
+    ILLEGAL_INSTRUCTION = <span class="hljs-number">2</span>,
+    BREAKPOINT = <span class="hljs-number">3</span>,
+    ENVIRONMENT_CALL_FROM_M_MODE = <span class="hljs-number">11</span>,
+}
+</code></pre></div><p>EXステージでアドレスを確認して例外を判定します (リスト38)。 tvalは遷移先のアドレスになることに注意してください。</p><p><span class="caption">▼リスト10.38: EXステージでInstruction address misaligned例外の判定を行う (core.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code>memq_wdata.jump_addr  = <span class="hljs-keyword">if</span> inst_is_br(exs_ctrl) ? exs_pc + exs_imm : exs_alu_result &amp; ~<span class="hljs-number">1</span>;
+<span class="hljs-comment">// exception</span>
+<span class="custom-hl-bold"><span class="hljs-keyword">let</span> instruction_address_misaligned: <span class="hljs-keyword">logic</span> = memq_wdata.br_taken &amp;&amp; memq_wdata.jump_addr[<span class="hljs-number">1</span>:<span class="hljs-number">0</span>] != <span class="hljs-number">2&#39;b00</span>;</span>
+memq_wdata.expt                = exq_rdata.expt;
+<span class="custom-hl-bold"><span class="hljs-keyword">if</span> !memq_rdata.expt.valid {</span>
+<span class="custom-hl-bold">    <span class="hljs-keyword">if</span> instruction_address_misaligned {</span>
+<span class="custom-hl-bold">        memq_wdata.expt.valid = <span class="hljs-number">1</span>;</span>
+<span class="custom-hl-bold">        memq_wdata.expt.cause = CsrCause::INSTRUCTION_ADDRESS_MISALIGNED;</span>
+<span class="custom-hl-bold">        memq_wdata.expt.value = memq_wdata.jump_addr;</span>
+<span class="custom-hl-bold">    }</span>
+<span class="custom-hl-bold">}</span>
+</code></pre></div><h2 id="ロードストア命令のミスアライン例外" tabindex="-1">ロードストア命令のミスアライン例外 <a class="header-anchor" href="#ロードストア命令のミスアライン例外" aria-label="Permalink to “ロードストア命令のミスアライン例外”">​</a></h2><p>RISC-Vでは、ロード、ストア命令でアクセスするメモリのアドレスが、 ロード、ストアするビット幅に整列されていない場合に、 それぞれLoad address misaligned例外、Store/AMO address misaligned例外が発生します<sup class="footnote-ref"><a href="#fn8" id="fnref8">[8]</a></sup>。 例えばLW命令は4バイトに整列されたアドレス、LD命令は8バイトに整列されたアドレスにしかアクセスできません。 causeはそれぞれ<code>4</code>、<code>6</code>で、tvalはアクセスするメモリのアドレスになります。</p><p><code>CsrCause</code>型に例外のcauseを追加します (リスト39)。</p><p><span class="caption">▼リスト10.39: 例外のcauseを定義する (eei.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">enum</span> CsrCause: UIntX {
+    INSTRUCTION_ADDRESS_MISALIGNED = <span class="hljs-number">0</span>,
+    ILLEGAL_INSTRUCTION = <span class="hljs-number">2</span>,
+    BREAKPOINT = <span class="hljs-number">3</span>,
+    <span class="custom-hl-bold">LOAD_ADDRESS_MISALIGNED = <span class="hljs-number">4</span>,</span>
+    <span class="custom-hl-bold">STORE_AMO_ADDRESS_MISALIGNED = <span class="hljs-number">6</span>,</span>
+    ENVIRONMENT_CALL_FROM_M_MODE = <span class="hljs-number">11</span>,
+}
+</code></pre></div><p>EXステージでアドレスを確認して例外を判定します (リスト40)。</p><p><span class="caption">▼リスト10.40: EXステージで例外の判定を行う (core.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">let</span> instruction_address_misaligned: <span class="hljs-keyword">logic</span> = memq_wdata.br_taken &amp;&amp; memq_wdata.jump_addr[<span class="hljs-number">1</span>:<span class="hljs-number">0</span>] != <span class="hljs-number">2&#39;b00</span>;
+<span class="custom-hl-bold"><span class="hljs-keyword">let</span> loadstore_address_misaligned  : <span class="hljs-keyword">logic</span> = inst_is_memop(exs_ctrl) &amp;&amp; <span class="hljs-keyword">case</span> exs_ctrl.funct3[<span class="hljs-number">1</span>:<span class="hljs-number">0</span>] {</span>
+<span class="custom-hl-bold">    <span class="hljs-number">2&#39;b00</span>  : <span class="hljs-number">0</span>, <span class="hljs-comment">// B</span></span>
+<span class="custom-hl-bold">    <span class="hljs-number">2&#39;b01</span>  : exs_alu_result[<span class="hljs-number">0</span>] != <span class="hljs-number">1&#39;b0</span>, <span class="hljs-comment">// H</span></span>
+<span class="custom-hl-bold">    <span class="hljs-number">2&#39;b10</span>  : exs_alu_result[<span class="hljs-number">1</span>:<span class="hljs-number">0</span>] != <span class="hljs-number">2&#39;b0</span>, <span class="hljs-comment">// W</span></span>
+<span class="custom-hl-bold">    <span class="hljs-number">2&#39;b11</span>  : exs_alu_result[<span class="hljs-number">2</span>:<span class="hljs-number">0</span>] != <span class="hljs-number">3&#39;b0</span>, <span class="hljs-comment">// D</span></span>
+<span class="custom-hl-bold">    <span class="hljs-keyword">default</span>: <span class="hljs-number">0</span>,</span>
+<span class="custom-hl-bold">};</span>
+memq_wdata.expt = exq_rdata.expt;
+<span class="hljs-keyword">if</span> !memq_rdata.expt.valid {
+    <span class="hljs-keyword">if</span> instruction_address_misaligned {
+        memq_wdata.expt.valid = <span class="hljs-number">1</span>;
+        memq_wdata.expt.cause = CsrCause::INSTRUCTION_ADDRESS_MISALIGNED;
+        memq_wdata.expt.value = memq_wdata.jump_addr;
+    <span class="custom-hl-bold">} <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> loadstore_address_misaligned {</span>
+    <span class="custom-hl-bold">    memq_wdata.expt.valid = <span class="hljs-number">1</span>;</span>
+    <span class="custom-hl-bold">    memq_wdata.expt.cause = <span class="hljs-keyword">if</span> exs_ctrl.is_load ? CsrCause::LOAD_ADDRESS_MISALIGNED : CsrCause::STORE_AMO_ADDRESS_MISALIGNED;</span>
+    <span class="custom-hl-bold">    memq_wdata.expt.value = exs_alu_result;</span>
+    }
+}
+</code></pre></div><p>例外が発生するときにmemunitモジュールが動作しないようにします (リスト41)。</p><p><span class="caption">▼リスト10.41: 例外が発生するとき、memunitのvalidを0にする (core.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">inst</span> memu: memunit (
+    clk                                   ,
+    rst                                   ,
+    valid : mems_valid <span class="custom-hl-bold">&amp;&amp; !mems_expt.valid</span>,
+    is_new: mems_is_new                   ,
+    ctrl  : mems_ctrl                     ,
+    addr  : memq_rdata.alu_result         ,
+    rs2   : memq_rdata.rs2_data           ,
+    rdata : memu_rdata                    ,
+    stall : memu_stall                    ,
+    membus: d_membus                      ,
+);
+</code></pre></div><hr class="footnotes-sep"><section class="footnotes"><ol class="footnotes-list"><li id="fn1" class="footnote-item"><p>異常な状態(unusual condition)。予期しない(unexpected)事象と呼ぶ場合もあります。 <a href="#fnref1" class="footnote-backref">↩︎</a></p></li><li id="fn2" class="footnote-item"><p>不正と呼ぶこともあります。逆に実行できる命令のことを合法(legal)な命令と呼びます <a href="#fnref2" class="footnote-backref">↩︎</a></p></li><li id="fn3" class="footnote-item"><p>割り込みは第15章「M-modeの実装 (2. 割り込みの実装)」で実装します。 <a href="#fnref3" class="footnote-backref">↩︎</a></p></li><li id="fn4" class="footnote-item"><p>基本編で実装するCPUはロードストア命令を直列に実行するため順序を保証する必要がありません。そのためFENCE命令は何もしない命令として扱います。 <a href="#fnref4" class="footnote-backref">↩︎</a></p></li><li id="fn5" class="footnote-item"><p>基本編 第1部の初版の<code>wdata</code>の生成ロジックに間違いがあったので訂正してあります。 <a href="#fnref5" class="footnote-backref">↩︎</a></p></li><li id="fn6" class="footnote-item"><p>IDステージで判定することもできます。 <a href="#fnref6" class="footnote-backref">↩︎</a></p></li><li id="fn7" class="footnote-item"><p>mepc、mtvecはIALIGNビットに整列されたアドレスしか書き込めないため、遷移先のアドレスは常に整列されています。 <a href="#fnref7" class="footnote-backref">↩︎</a></p></li><li id="fn8" class="footnote-item"><p>例外を発生させず、そのようなメモリアクセスをサポートすることもできます。本書ではCPUを単純に実装するために例外とします。 <a href="#fnref8" class="footnote-backref">↩︎</a></p></li></ol></section></div></div></main><footer class="VPDocFooter" data-v-7011f0d8 data-v-e257564d><!--[--><!--]--><!----><nav class="prev-next" aria-labelledby="doc-footer-aria-label" data-v-e257564d><span class="visually-hidden" id="doc-footer-aria-label" data-v-e257564d>Pager</span><div class="pager" data-v-e257564d><a class="VPLink link pager-link prev" href="/10-impl-m.html" data-v-e257564d><!--[--><span class="desc" data-v-e257564d>Previous page</span><span class="title" data-v-e257564d>9 M拡張の実装</span><!--]--></a></div><div class="pager" data-v-e257564d><a class="VPLink link pager-link next" href="/12-impl-mmio.html" data-v-e257564d><!--[--><span class="desc" data-v-e257564d>Next page</span><span class="title" data-v-e257564d>11 Memory-mapped I/Oの実装</span><!--]--></a></div></nav></footer><!--[--><!--]--></div></div></div><!--[--><!--]--></div></div><!----><!--[--><!--]--></div></div>
+    <script>window.__VP_HASH_MAP__=JSON.parse("{\"00-preface.md\":\"DDGdJIg5\",\"02-setup.md\":\"NAwwJXp_\",\"03-veryl.md\":\"CfdP0nz9\",\"04-impl-rv32i.md\":\"D6HQhn-G\",\"04a-zicsr.md\":\"CThtddlO\",\"04b-riscvtests.md\":\"CW6e-oy1\",\"05-impl-rv64i.md\":\"DIMikneB\",\"05a-pipeline.md\":\"D92Nx-aw\",\"05b-synth.md\":\"CzClCWWq\",\"10-impl-m.md\":\"UxkEDKtO\",\"100-contribute.md\":\"CVKavJib\",\"11-impl-exception.md\":\"wScD8kDX\",\"12-impl-mmio.md\":\"BwxxU3HD\",\"13-impl-a.md\":\"CnPlYOpQ\",\"14-impl-c.md\":\"DqX93--N\",\"20-mmode-csr.md\":\"BSmJhJfG\",\"21-impl-interrupt.md\":\"BoBntBW9\",\"22-umode-csr.md\":\"BxF3jNM8\",\"23-smode-csr.md\":\"BTgvI4wQ\",\"24-impl-paging.md\":\"lA83XObo\",\"25-impl-plic.md\":\"BxNtHdp_\",\"26-run-linux.md\":\"CZfjbJCn\",\"99-postface.md\":\"CDNPw-b0\",\"99b-postface.md\":\"B_P9oVa3\",\"index.md\":\"7pP7Y4R2\"}");window.__VP_SITE_DATA__=JSON.parse("{\"lang\":\"en-US\",\"dir\":\"ltr\",\"title\":\"veryl-riscv-book\",\"description\":\"Write RISC-V CPU in Veryl\",\"base\":\"/\",\"head\":[],\"router\":{\"prefetchLinks\":true},\"appearance\":true,\"themeConfig\":{\"nav\":[{\"text\":\"プログラムを入手する\",\"link\":\"https://github.com/nananapo/bluecore\"}],\"sidebar\":[{\"text\":\"第I部 RV32I/RV64Iの実装\",\"items\":[{\"text\":\"まえがき\",\"link\":\"/00-preface\"},{\"text\":\"1 環境構築\",\"link\":\"/02-setup\"},{\"text\":\"2 ハードウェア記述言語 Veryl\",\"link\":\"/03-veryl\"},{\"text\":\"3 RV32Iの実装\",\"link\":\"/04-impl-rv32i\"},{\"text\":\"4 Zicsr拡張の実装\",\"link\":\"/04a-zicsr\"},{\"text\":\"5 riscv-testsによるテスト\",\"link\":\"/04b-riscvtests\"},{\"text\":\"6 RV64Iの実装\",\"link\":\"/05-impl-rv64i\"},{\"text\":\"7 CPUのパイプライン化\",\"link\":\"/05a-pipeline\"},{\"text\":\"8 CPUの合成\",\"link\":\"/05b-synth\"}]},{\"text\":\"第II部 RV64IMACの実装\",\"items\":[{\"text\":\"9 M拡張の実装\",\"link\":\"/10-impl-m\"},{\"text\":\"10 例外の実装\",\"link\":\"/11-impl-exception\"},{\"text\":\"11 Memory-mapped I/Oの実装\",\"link\":\"/12-impl-mmio\"},{\"text\":\"12 A拡張の実装\",\"link\":\"/13-impl-a\"},{\"text\":\"13 C拡張の実装\",\"link\":\"/14-impl-c\"}]},{\"text\":\"第III部 特権/割り込みの実装\",\"items\":[{\"text\":\"14 M-modeの実装 (1. CSRの実装)\",\"link\":\"/20-mmode-csr\"},{\"text\":\"15 M-modeの実装 (2. 割り込みの実装)\",\"link\":\"/21-impl-interrupt\"},{\"text\":\"16 U-modeの実装\",\"link\":\"/22-umode-csr\"},{\"text\":\"17 S-modeの実装 (1. CSRの実装)\",\"link\":\"/23-smode-csr\"},{\"text\":\"18 S-modeの実装 (2. 仮想記憶システム)\",\"link\":\"/24-impl-paging\"},{\"text\":\"19 PLICの実装\",\"link\":\"/25-impl-plic\"},{\"text\":\"20 Linuxを動かす\",\"link\":\"/26-run-linux\"},{\"text\":\"あとがき (第Ⅰ部)\",\"link\":\"/99-postface\"},{\"text\":\"あとがき (第Ⅱ部、第Ⅲ部)\",\"link\":\"/99b-postface\"},{\"text\":\"このプロジェクトに貢献する\",\"link\":\"/100-contribute\"}]}],\"socialLinks\":[{\"icon\":\"github\",\"link\":\"https://github.com/nananapo/veryl-riscv-book\"}],\"outline\":{\"level\":[2,4]}},\"locales\":{},\"scrollOffset\":134,\"cleanUrls\":false,\"additionalConfig\":{}}");</script>
     
-    <script>
-      let url = window.location.href;
-      let encoded_url = encodeURI(url);
-      let fb = document.getElementById("share-facebook");
-      fb["data-href"] = url;
-      console.log(fb);
-    </script>
-    <div id="fb-root"></div>
-    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/ja_JP/sdk.js#xfbml=1&version=v21.0"></script>
-    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-
   </body>
 </html>
-<!-- layout.html5.erb -->
