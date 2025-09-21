@@ -42,7 +42,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           cname: cpu.kanataso.net
           publish_dir: ./basic/webroot
-          keep_files: true
+          keep_files: false
 
   deploy-other:
     if: ${{ github.ref_name != 'main' }}

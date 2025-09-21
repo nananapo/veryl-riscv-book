@@ -3,14 +3,13 @@ run:
 	yarn run docs:dev --host
 
 build:
-	rm -rf dist
+	rm -rf dist ../webroot
 	yarn run docs:build
-	mv ./.vitepress/dist dist
+	mv ./.vitepress/dist ../webroot
 	
 import:
-	rm -rf contents/basic
-	cp -R ../veryl-riscv-book-md contents/basic
-	cp -R ../images contents/basic/images
+	cp -R ../veryl-riscv-book-md contents/
+	cp -R ../images contents/images
 
 clean:
 	rm -rf dist

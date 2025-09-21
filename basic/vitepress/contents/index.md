@@ -9,10 +9,7 @@ hero:
   actions:
     - theme: brand
       text: 始める
-      link: /basic/00-preface.md
-    # - theme: alt
-    #   text: API Examples
-    #   link: /api-examples
+      link: /00-preface.md
 
 features:
   - title: 高機能なRISC-VのCPUの作り方を解説
