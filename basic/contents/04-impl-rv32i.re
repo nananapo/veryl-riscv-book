@@ -752,7 +752,7 @@ verilatorコマンドを実行し、
 シミュレータをビルドします(@<list>{build.simulator})。
 
 //terminal[build.simulator][シミュレータのビルド]{
-$ verilator --cc -f core.f --exe src/tb_verialtor.cpp --top-module top --Mdir obj_dir
+$ verilator --cc -f core.f --exe src/tb_verilator.cpp --top-module core_top --Mdir obj_dir
 $ make -C obj_dir -f Vcore_top.mk @<balloon>{シミュレータをビルドする}
 $ mv obj_dir/Vcore_top obj_dir/sim @<balloon>{シミュレータの名前をsimに変更する}
 //}
@@ -844,17 +844,17 @@ SIM_NAME = sim
 VERILATOR_FLAGS = ""
 
 build:
-        veryl fmt
-        veryl build
+	veryl fmt
+	veryl build
 
 clean:
-        veryl clean
-        rm -rf $(OBJ_DIR)
+	veryl clean
+	rm -rf $(OBJ_DIR)
 
 sim:
-        verilator --cc $(VERILATOR_FLAGS) -f $(FILELIST) --exe $(TB_PROGRAM) --top-module $(PROJECT)_$(TOP_MODULE) --Mdir $(OBJ_DIR)
-        make -C $(OBJ_DIR) -f V$(PROJECT)_$(TOP_MODULE).mk
-        mv $(OBJ_DIR)/V$(PROJECT)_$(TOP_MODULE) $(OBJ_DIR)/$(SIM_NAME)
+	verilator --cc $(VERILATOR_FLAGS) -f $(FILELIST) --exe $(TB_PROGRAM) --top-module $(PROJECT)_$(TOP_MODULE) --Mdir $(OBJ_DIR)
+	make -C $(OBJ_DIR) -f V$(PROJECT)_$(TOP_MODULE).mk
+	mv $(OBJ_DIR)/V$(PROJECT)_$(TOP_MODULE) $(OBJ_DIR)/$(SIM_NAME)
 
 .PHONY: build clean sim
 #@end
@@ -1434,6 +1434,8 @@ coreモジュールでインスタンス化します(@<list>{core.veryl.id-range
 
 //list[core.veryl.id-range.inst][inst_decoderモジュールのインスタンス化 (core.veryl)]{
 #@maprange(scripts/04/id-range/core/src/core.veryl,inst)
+import corectrl::*;
+
     let inst_pc  : Addr     = if_fifo_rdata.addr;
     let inst_bits: Inst     = if_fifo_rdata.bits;
     var inst_ctrl: InstCtrl;
@@ -1595,7 +1597,7 @@ always_ffブロックのif_resetで、
 //terminal[reg.debug][レジスタ読み込みのデバッグ]{
 $ @<userinput>{make build}
 $ @<userinput>{make sim}
-$ @<userinput>{obj_dir/sim sample.hex 7}
+$ @<userinput>{obj_dir/sim src/sample.hex 7}
 00000000 : 01234567
   itype   : 000010
   imm     : 00000012
@@ -1957,7 +1959,7 @@ LUI命令のときは即値をそのまま、
 //terminal[wb.test][ライトバックのデバッグ]{
 $ @<userinput>{make build}
 $ @<userinput>{make sim}
-$ @<userinput>{obj_dir/sim sample.hex 6}
+$ @<userinput>{obj_dir/sim src/sample.hex 6}
 00000000 : 02000093
   itype   : 000010
   imm     : 00000020
