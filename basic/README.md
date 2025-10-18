@@ -45,11 +45,13 @@ Web版 : https://nananapo.github.io/veryl-riscv-book/
 
 執筆は [nananapo/bluecore](https://github.com/nananapo/bluecore) の実装と同時に行っています。
 
-#### pdfをビルドする
+#### htmlをビルドする
 
 ```sh
-$ make pdf # pdfを生成
-$ make html # web版を生成
+$ cd basic
+$ git clone https://github.com/nananapo/bluecore
+$ make preproc
+$ make md
+$ cd vitepress
+$ make import build
 ```
-
-pdfをビルドするときは、catalogから05b-synthをコメントアウトして、00-preface.reの05bへの参照を消してください(うまく画像を載せられていない)。

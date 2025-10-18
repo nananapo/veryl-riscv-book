@@ -16,10 +16,11 @@ preproc: extract-tags
 	sh preproc.sh
 
 extract-tags:
-	 git extract-tags book/ ../../bluecore -s scripts
+	 git extract-tags book/ ./bluecore -s scripts
 
 update:
-	cd .. && sh update.sh
+	rm -rf ./bluecore
+	git clone https://github.com/nananapo/bluecore
 
 .PHONY: pdf clean preproc extract-tags
 

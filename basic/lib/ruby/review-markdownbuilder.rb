@@ -5,7 +5,7 @@
 ##
 
 require_relative './review-builder'
-
+require 'open3'
 
 module ReVIEW
 
@@ -121,12 +121,78 @@ module ReVIEW
       puts "![#{compile_inline(caption||'')}](#{image_filepath})"
     end
 
+    def _get_commit_hash(blockname, id)
+
+      if blockname == nil || id == nil || blockname.empty? || id.empty?
+        return nil
+      end
+
+      if blockname != "list"
+        return nil
+      end
+
+      loc_path = 'contents/' + @location.filename.to_s
+      lines = File.open(loc_path, 'r:utf-8', &:readlines)
+
+      if lines
+        header_re = /\A\/\/\s*#{Regexp.escape(blockname)}\s*\[\s*#{Regexp.escape(id)}\s*\]\[.*\]\s*\{/
+        maprange_re = /\A#\@maprange\(\s*([^,)\s]+)\s*(?:,.*)?\)\z/
+        mapfile_re  = /\A#\@mapfile\(\s*([^\)\s]+)\s*\)\z/
+
+        lines.each_with_index do |line, idx|
+          next unless line.match?(header_re)
+
+          next_line = (lines[idx + 1] || '').strip
+          m = next_line.match(maprange_re) || next_line.match(mapfile_re)
+          next unless m
+
+          filename = m[1]
+          md = filename.match(%r{\Ascripts/([^/]+/[^/]+)/(.+)$})
+          next unless md
+
+          tag = "book/" + md[1]
+          filename = md[2]
+          repo_dir = "./bluecore"
+
+          # タグから-rangeを消す
+          tag_parts = tag.split('/', 2)
+          tag_parts[1] = tag_parts[1].sub(/-range\z/, '')
+          tag = tag_parts.join('/')
+
+          # Use git -C to avoid Dir.chdir and capture output robustly
+          hash = nil
+          begin
+            out, _ = Open3.capture2('git', '-C', repo_dir, 'rev-parse', '--quiet', tag)
+            hash = out.to_s.strip
+          rescue StandardError
+            return nil
+          end
+
+          return hash.empty? ? nil : [hash, filename]
+        end
+      end
+      return nil
+    end
+
     ## コードブロック（//program, //terminal, //output）
 
     def _render_codeblock(blockname, lines, id, caption_str, opts)
       blank()
+
+      commit_hash, filename = _get_commit_hash(blockname, id)
+      commit_url = nil
+      if commit_hash && filename
+        require 'digest'
+        sha256_filename = Digest::SHA256.hexdigest(filename)
+        commit_url = "https://github.com/nananapo/bluecore/compare/#{commit_hash}~1..#{commit_hash}#diff-#{sha256_filename}"
+      end
+
       if caption_str.present?
-        puts "<span class=\"caption\">▼#{compile_inline(caption_str)}</span>"
+        if commit_url != nil
+          puts "<span class=\"caption\">▼#{compile_inline(caption_str)}</span> <a href=\"#{commit_url}\">差分をみる</a>"
+        else
+          puts "<span class=\"caption\">▼#{compile_inline(caption_str)}</span>"
+        end
         puts ""
       end
       lang = opts['lang']
