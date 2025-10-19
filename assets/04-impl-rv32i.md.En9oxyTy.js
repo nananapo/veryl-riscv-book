@@ -271,7 +271,7 @@ import{_ as a,c as n,o as e,ah as l,ap as p,aq as c,ar as d,as as t}from"./chunk
 
     dut-&gt;<span class="hljs-built_in">final</span>();
 }
-</code></pre></div><p>このC++プログラムは、 topモジュール(プログラム中ではVtop_coreクラス)をインスタンス化し、 そのクロック信号を反転して実行するのを繰り返しています。</p><p>このプログラムは、コマンドライン引数として次の2つの値を受け取ります。</p><dl><dt>MEMORY_FILE_PATH</dt><dd> メモリの初期値のファイルへのパス<br> 実行時に環境変数MEMORY_FILE_PATHとして渡されます。 </dd><dt>CYCLE</dt><dd> 何クロックで実行を終了するかを表す値<br> \`0\`のときは終了しません。デフォルト値は\`0\`です。 </dd></dl><p>Verilatorによるシミュレーションは、 topモジュールのクロック信号を更新してeval関数を呼び出すことにより実行します。 プログラムでは、 <code>clk</code>を反転させて<code>eval</code>するループの前に、 topモジュールをリセット信号によりリセットする必要があります。 そのため、 topモジュールの<code>rst</code>を<code>1</code>にしてから<code>eval</code>を実行し、 <code>rst</code>を<code>0</code>にしてまた<code>eval</code>を実行し、 <code>rst</code>を<code>1</code>にもどしてから<code>clk</code>を反転しています。</p><h4 id="シミュレータのビルド" tabindex="-1">シミュレータのビルド <a class="header-anchor" href="#シミュレータのビルド" aria-label="Permalink to “シミュレータのビルド”">​</a></h4><p>verilatorコマンドを実行し、 シミュレータをビルドします(リスト16)。</p><p><span class="caption">▼リスト3.16: シミュレータのビルド</span></p><div class="language-terminal"><button title="Copy Code" class="copy"></button><span class="lang">terminal</span><pre class="hljs"><code><span class="hljs-meta prompt_">$ </span><span class="language-bash">verilator --cc -f core.f --exe src/tb_verialtor.cpp --top-module top --Mdir obj_dir</span>
+</code></pre></div><p>このC++プログラムは、 topモジュール(プログラム中ではVtop_coreクラス)をインスタンス化し、 そのクロック信号を反転して実行するのを繰り返しています。</p><p>このプログラムは、コマンドライン引数として次の2つの値を受け取ります。</p><dl><dt>MEMORY_FILE_PATH</dt><dd> メモリの初期値のファイルへのパス<br> 実行時に環境変数MEMORY_FILE_PATHとして渡されます。 </dd><dt>CYCLE</dt><dd> 何クロックで実行を終了するかを表す値<br> \`0\`のときは終了しません。デフォルト値は\`0\`です。 </dd></dl><p>Verilatorによるシミュレーションは、 topモジュールのクロック信号を更新してeval関数を呼び出すことにより実行します。 プログラムでは、 <code>clk</code>を反転させて<code>eval</code>するループの前に、 topモジュールをリセット信号によりリセットする必要があります。 そのため、 topモジュールの<code>rst</code>を<code>1</code>にしてから<code>eval</code>を実行し、 <code>rst</code>を<code>0</code>にしてまた<code>eval</code>を実行し、 <code>rst</code>を<code>1</code>にもどしてから<code>clk</code>を反転しています。</p><h4 id="シミュレータのビルド" tabindex="-1">シミュレータのビルド <a class="header-anchor" href="#シミュレータのビルド" aria-label="Permalink to “シミュレータのビルド”">​</a></h4><p>verilatorコマンドを実行し、 シミュレータをビルドします(リスト16)。</p><p><span class="caption">▼リスト3.16: シミュレータのビルド</span></p><div class="language-terminal"><button title="Copy Code" class="copy"></button><span class="lang">terminal</span><pre class="hljs"><code><span class="hljs-meta prompt_">$ </span><span class="language-bash">verilator --cc -f core.f --exe src/tb_verilator.cpp --top-module core_top --Mdir obj_dir</span>
 <span class="hljs-meta prompt_">$ </span><span class="language-bash">make -C obj_dir -f Vcore_top.mk ← シミュレータをビルドする</span>
 <span class="hljs-meta prompt_">$ </span><span class="language-bash"><span class="hljs-built_in">mv</span> obj_dir/Vcore_top obj_dir/sim ← シミュレータの名前をsimに変更する</span>
 </code></pre></div><p><code>verilator --cc</code>コマンドに次のコマンドライン引数を渡して実行することで、 シミュレータを生成するためのプログラムが<code>obj_dir</code>に生成されます。</p><dl><dt>-f</dt><dd> SystemVerilogソースファイルのファイルリストを指定します。 今回は\`core.f\`を指定しています。 </dd><dt>--exe</dt><dd> 実行可能なシミュレータの生成に使用する、main関数が含まれたC++プログラムを指定します。 今回は\`src/tb_verilator.cpp\`を指定しています。 </dd><dt>--top-module</dt><dd> トップモジュールを指定します。 今回はtopモジュールを指定しています。 </dd><dt>--Mdir</dt><dd> 成果物の生成先を指定します。 今回は\`obj_dir\`ディレクトリに指定しています。 </dd></dl><p>リスト16のコマンドの実行により、 シミュレータが<code>obj_dir/sim</code>に生成されました。</p><h4 id="メモリの初期化用ファイルの作成" tabindex="-1">メモリの初期化用ファイルの作成 <a class="header-anchor" href="#メモリの初期化用ファイルの作成" aria-label="Permalink to “メモリの初期化用ファイルの作成”">​</a></h4><p>シミュレータを実行する前にメモリの初期値となるファイルを作成します。 <code>src/sample.hex</code>を作成し、次のように記述します(リスト17)。</p><p><span class="caption">▼リスト3.17: sample.hex</span> <a href="https://github.com/nananapo/bluecore/compare/4d25fdcba026a878fcc49357e9a67f526790b2b0~1..4d25fdcba026a878fcc49357e9a67f526790b2b0#diff-47e0566ba230be822ea6046444a3861b05b42992bceb7f989aead6e0e01c7451">差分をみる</a></p><div class="language-hex"><button title="Copy Code" class="copy"></button><span class="lang">hex</span><pre class="hljs"><code>01234567
@@ -284,7 +284,7 @@ cafebebe
 00000004 : 89abcdef
 00000008 : deadbeef
 0000000c : cafebebe
-</code></pre></div><p>メモリファイルのデータが、 4バイトずつ読み込まれていることを確認できます。</p><h4 id="makefileの作成" tabindex="-1">Makefileの作成 <a class="header-anchor" href="#makefileの作成" aria-label="Permalink to “Makefileの作成”">​</a></h4><p>ビルド、シミュレータのビルドのために一々コマンドを打つのは非常に面倒です。 これらの作業を一つのコマンドで済ますために、 <code>Makefile</code>を作成し、 次のように記述します(リスト19)。</p><p><span class="caption">▼リスト3.19: Makefile</span> <a href="https://github.com/nananapo/bluecore/compare/914e123bd4551f1dcaa26862e86dea04198a3d4a~1..914e123bd4551f1dcaa26862e86dea04198a3d4a#diff-d486e601a844f08eaa052d963bedbdd8a7db76d664a5f44fe34bf4fd6db1064a">差分をみる</a></p><div class="language-Makefile"><button title="Copy Code" class="copy"></button><span class="lang">Makefile</span><pre class="hljs"><code>PROJECT = core
+</code></pre></div><p>メモリファイルのデータが、 4バイトずつ読み込まれていることを確認できます。</p><h4 id="makefileの作成" tabindex="-1">Makefileの作成 <a class="header-anchor" href="#makefileの作成" aria-label="Permalink to “Makefileの作成”">​</a></h4><p>ビルド、シミュレータのビルドのために一々コマンドを打つのは非常に面倒です。 これらの作業を一つのコマンドで済ますために、 <code>Makefile</code>を作成し、 次のように記述します(リスト19)。</p><p><span class="caption">▼リスト3.19: Makefile</span></p><div class="language-Makefile"><button title="Copy Code" class="copy"></button><span class="lang">Makefile</span><pre class="hljs"><code>PROJECT = core
 FILELIST = <span class="hljs-variable">$(PROJECT)</span>.f
 
 TOP_MODULE = top
@@ -294,17 +294,17 @@ SIM_NAME = sim
 VERILATOR_FLAGS = <span class="hljs-string">&quot;&quot;</span>
 
 <span class="hljs-section">build:</span>
-        veryl fmt
-        veryl build
+		veryl fmt
+		veryl build
 
 <span class="hljs-section">clean:</span>
-        veryl clean
-        rm -rf <span class="hljs-variable">$(OBJ_DIR)</span>
+		veryl clean
+		rm -rf <span class="hljs-variable">$(OBJ_DIR)</span>
 
 <span class="hljs-section">sim:</span>
-        verilator --cc <span class="hljs-variable">$(VERILATOR_FLAGS)</span> -f <span class="hljs-variable">$(FILELIST)</span> --exe <span class="hljs-variable">$(TB_PROGRAM)</span> --top-module <span class="hljs-variable">$(PROJECT)</span>_<span class="hljs-variable">$(TOP_MODULE)</span> --Mdir <span class="hljs-variable">$(OBJ_DIR)</span>
-        make -C <span class="hljs-variable">$(OBJ_DIR)</span> -f V<span class="hljs-variable">$(PROJECT)</span>_<span class="hljs-variable">$(TOP_MODULE)</span>.mk
-        mv <span class="hljs-variable">$(OBJ_DIR)</span>/V<span class="hljs-variable">$(PROJECT)</span>_<span class="hljs-variable">$(TOP_MODULE)</span> <span class="hljs-variable">$(OBJ_DIR)</span>/<span class="hljs-variable">$(SIM_NAME)</span>
+		verilator --cc <span class="hljs-variable">$(VERILATOR_FLAGS)</span> -f <span class="hljs-variable">$(FILELIST)</span> --exe <span class="hljs-variable">$(TB_PROGRAM)</span> --top-module <span class="hljs-variable">$(PROJECT)</span>_<span class="hljs-variable">$(TOP_MODULE)</span> --Mdir <span class="hljs-variable">$(OBJ_DIR)</span>
+		make -C <span class="hljs-variable">$(OBJ_DIR)</span> -f V<span class="hljs-variable">$(PROJECT)</span>_<span class="hljs-variable">$(TOP_MODULE)</span>.mk
+		mv <span class="hljs-variable">$(OBJ_DIR)</span>/V<span class="hljs-variable">$(PROJECT)</span>_<span class="hljs-variable">$(TOP_MODULE)</span> <span class="hljs-variable">$(OBJ_DIR)</span>/<span class="hljs-variable">$(SIM_NAME)</span>
 
 <span class="hljs-meta"><span class="hljs-keyword">.PHONY</span>: build clean sim</span>
 </code></pre></div><p>これ以降、 次のようにVerylのソースコードのビルド、 シミュレータのビルド、 成果物の削除ができるようになります(リスト20)。</p><p><span class="caption">▼リスト3.20: Makefileによって追加されたコマンド</span></p><div class="language-terminal"><button title="Copy Code" class="copy"></button><span class="lang">terminal</span><pre class="hljs"><code><span class="hljs-meta prompt_">$ </span><span class="language-bash">make build ← Verylのソースコードのビルド</span>
@@ -556,16 +556,18 @@ const OP_STORE : logic&lt;7&gt; = 7&#39;b0100011;
         };
     }
 }
-</code></pre></div><p>inst_decoderモジュールは、 命令のビット列<code>bits</code>を受け取り、 制御信号<code>ctrl</code>と即値<code>imm</code>を出力します。</p><h4 id="即値の生成" tabindex="-1">即値の生成 <a class="header-anchor" href="#即値の生成" aria-label="Permalink to “即値の生成”">​</a></h4><p>B形式の命令を考えます。 まず、命令のビット列から即値部分を取り出して変数<code>imm_b_g</code>を生成します。 B形式の命令内に含まれている即値は12ビットで、最上位ビットは符号ビットです。 最上位ビットを繰り返す(符号拡張する)ことによって、32ビットの即値<code>imm_b</code>を生成します。</p><p>always_combブロックでは、 opcodeをcase式で分岐することにより <code>imm</code>ポートに適切な即値を供給しています。</p><h4 id="制御フラグの生成" tabindex="-1">制御フラグの生成 <a class="header-anchor" href="#制御フラグの生成" aria-label="Permalink to “制御フラグの生成”">​</a></h4><p>opcodeがOP-IMMな命令、 例えばADDI命令を考えます。 ADDI命令は、即値とソースレジスタの値を足し、 デスティネーションレジスタに結果を格納する命令です。</p><p>always_combブロックでは、 opcodeが<code>OP_OP_IMM</code>(OP-IMM)のとき、 次のように制御信号<code>ctrl</code>を設定します。 1ビットの<code>1&#39;b0</code>と<code>1&#39;b1</code>を入力する手間を省くために、 <code>F</code>と<code>T</code>という定数を用意していることに注意してください。</p><ul><li>命令形式<code>itype</code>を<code>InstType::I</code>に設定します</li><li>結果をレジスタに書き込むため、<code>rwb_en</code>を<code>1</code>に設定します</li><li>ALU(計算を実行する部品)を利用するため、<code>is_aluop</code>を<code>1</code>に設定します</li><li><code>funct3</code>、<code>funct7</code>に命令中のビットをそのまま設定します</li><li>それ以外のフィールドは<code>0</code>に設定します</li></ul><h3 id="デコーダをインスタンス化する" tabindex="-1">デコーダをインスタンス化する <a class="header-anchor" href="#デコーダをインスタンス化する" aria-label="Permalink to “デコーダをインスタンス化する”">​</a></h3><p>inst_decoderモジュールを、 coreモジュールでインスタンス化します(リスト33)。</p><p><span class="caption">▼リスト3.33: inst_decoderモジュールのインスタンス化 (core.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/e4927e3db280938846b2ab2b6eedf887d598bd55~1..e4927e3db280938846b2ab2b6eedf887d598bd55#diff-bdad1723f95a5423ff5ab8ba69bb572aabe1c8def0cda1748f6f980f61b57510">差分をみる</a></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">let</span> inst_pc  : Addr     = if_fifo_rdata.addr;
-<span class="hljs-keyword">let</span> inst_bits: Inst     = if_fifo_rdata.bits;
-<span class="hljs-keyword">var</span> inst_ctrl: InstCtrl;
-<span class="hljs-keyword">var</span> inst_imm : UIntX   ;
+</code></pre></div><p>inst_decoderモジュールは、 命令のビット列<code>bits</code>を受け取り、 制御信号<code>ctrl</code>と即値<code>imm</code>を出力します。</p><h4 id="即値の生成" tabindex="-1">即値の生成 <a class="header-anchor" href="#即値の生成" aria-label="Permalink to “即値の生成”">​</a></h4><p>B形式の命令を考えます。 まず、命令のビット列から即値部分を取り出して変数<code>imm_b_g</code>を生成します。 B形式の命令内に含まれている即値は12ビットで、最上位ビットは符号ビットです。 最上位ビットを繰り返す(符号拡張する)ことによって、32ビットの即値<code>imm_b</code>を生成します。</p><p>always_combブロックでは、 opcodeをcase式で分岐することにより <code>imm</code>ポートに適切な即値を供給しています。</p><h4 id="制御フラグの生成" tabindex="-1">制御フラグの生成 <a class="header-anchor" href="#制御フラグの生成" aria-label="Permalink to “制御フラグの生成”">​</a></h4><p>opcodeがOP-IMMな命令、 例えばADDI命令を考えます。 ADDI命令は、即値とソースレジスタの値を足し、 デスティネーションレジスタに結果を格納する命令です。</p><p>always_combブロックでは、 opcodeが<code>OP_OP_IMM</code>(OP-IMM)のとき、 次のように制御信号<code>ctrl</code>を設定します。 1ビットの<code>1&#39;b0</code>と<code>1&#39;b1</code>を入力する手間を省くために、 <code>F</code>と<code>T</code>という定数を用意していることに注意してください。</p><ul><li>命令形式<code>itype</code>を<code>InstType::I</code>に設定します</li><li>結果をレジスタに書き込むため、<code>rwb_en</code>を<code>1</code>に設定します</li><li>ALU(計算を実行する部品)を利用するため、<code>is_aluop</code>を<code>1</code>に設定します</li><li><code>funct3</code>、<code>funct7</code>に命令中のビットをそのまま設定します</li><li>それ以外のフィールドは<code>0</code>に設定します</li></ul><h3 id="デコーダをインスタンス化する" tabindex="-1">デコーダをインスタンス化する <a class="header-anchor" href="#デコーダをインスタンス化する" aria-label="Permalink to “デコーダをインスタンス化する”">​</a></h3><p>inst_decoderモジュールを、 coreモジュールでインスタンス化します(リスト33)。</p><p><span class="caption">▼リスト3.33: inst_decoderモジュールのインスタンス化 (core.veryl)</span></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">import</span> corectrl::*;
 
-<span class="hljs-keyword">inst</span> decoder: inst_decoder (
-    bits: inst_bits,
-    ctrl: inst_ctrl,
-    imm : inst_imm ,
-);
+    <span class="hljs-keyword">let</span> inst_pc  : Addr     = if_fifo_rdata.addr;
+    <span class="hljs-keyword">let</span> inst_bits: Inst     = if_fifo_rdata.bits;
+    <span class="hljs-keyword">var</span> inst_ctrl: InstCtrl;
+    <span class="hljs-keyword">var</span> inst_imm : UIntX   ;
+
+    <span class="hljs-keyword">inst</span> decoder: inst_decoder (
+        bits: inst_bits,
+        ctrl: inst_ctrl,
+        imm : inst_imm ,
+    );
 </code></pre></div><p>まず、デコーダとcoreモジュールを接続するために<code>inst_ctrl</code>と<code>inst_imm</code>を定義します。 次に、inst_decoderモジュールをインスタンス化します。 <code>bits</code>ポートに<code>inst_bits</code>を渡すことでフェッチした命令をデコードします。</p><p>デバッグ用のalways_ffブロックに、 デコードした結果をデバッグ表示するコードを記述します(リスト34)。</p><p><span class="caption">▼リスト3.34: デコード結果のデバッグ表示 (core.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/e4927e3db280938846b2ab2b6eedf887d598bd55~1..e4927e3db280938846b2ab2b6eedf887d598bd55#diff-bdad1723f95a5423ff5ab8ba69bb572aabe1c8def0cda1748f6f980f61b57510">差分をみる</a></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">always_ff</span> {
     <span class="hljs-keyword">if</span> if_fifo_rvalid {
         $display(<span class="hljs-string">&quot;%h : %h&quot;</span>, inst_pc, inst_bits);
@@ -616,7 +618,7 @@ const OP_STORE : logic&lt;7&gt; = 7&#39;b0100011;
 }
 </code></pre></div><p>レジスタの値を読み込めていることを確認します(リスト40)。</p><p><span class="caption">▼リスト3.40: レジスタ読み込みのデバッグ</span></p><div class="language-terminal"><button title="Copy Code" class="copy"></button><span class="lang">terminal</span><pre class="hljs"><code><span class="hljs-meta prompt_">$ </span><span class="language-bash">make build</span>
 <span class="hljs-meta prompt_">$ </span><span class="language-bash">make sim</span>
-<span class="hljs-meta prompt_">$ </span><span class="language-bash">obj_dir/sim sample.hex 7</span>
+<span class="hljs-meta prompt_">$ </span><span class="language-bash">obj_dir/sim src/sample.hex 7</span>
 00000000 : 01234567
   itype   : 000010
   imm     : 00000012
@@ -769,7 +771,7 @@ const OP_STORE : logic&lt;7&gt; = 7&#39;b0100011;
 }
 </code></pre></div><p>シミュレータを実行し、結果を確かめます(リスト50)。</p><p><span class="caption">▼リスト3.50: ライトバックのデバッグ</span></p><div class="language-terminal"><button title="Copy Code" class="copy"></button><span class="lang">terminal</span><pre class="hljs"><code><span class="hljs-meta prompt_">$ </span><span class="language-bash">make build</span>
 <span class="hljs-meta prompt_">$ </span><span class="language-bash">make sim</span>
-<span class="hljs-meta prompt_">$ </span><span class="language-bash">obj_dir/sim sample.hex 6</span>
+<span class="hljs-meta prompt_">$ </span><span class="language-bash">obj_dir/sim src/sample.hex 6</span>
 00000000 : 02000093
   itype   : 000010
   imm     : 00000020
