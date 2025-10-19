@@ -833,7 +833,7 @@ $ obj_dir/sim src/sample.hex 5
 次のように記述します(@<list>{Makefile})。
 
 //list[Makefile][Makefile][Makefile]{
-#@mapfile(scripts/04/verilator-tb/core/Makefile)
+#@# #@mapfile(scripts/04/verilator-tb/core/Makefile)
 PROJECT = core
 FILELIST = $(PROJECT).f
 
@@ -857,7 +857,7 @@ sim:
 	mv $(OBJ_DIR)/V$(PROJECT)_$(TOP_MODULE) $(OBJ_DIR)/$(SIM_NAME)
 
 .PHONY: build clean sim
-#@end
+#@# #@end
 //}
 
 これ以降、
@@ -1433,8 +1433,8 @@ inst_decoderモジュールを、
 coreモジュールでインスタンス化します(@<list>{core.veryl.id-range.inst})。
 
 //list[core.veryl.id-range.inst][inst_decoderモジュールのインスタンス化 (core.veryl)]{
-#@maprange(scripts/04/id-range/core/src/core.veryl,inst)
 import corectrl::*;
+#@maprange(scripts/04/id-range/core/src/core.veryl,inst)
 
     let inst_pc  : Addr     = if_fifo_rdata.addr;
     let inst_bits: Inst     = if_fifo_rdata.bits;
