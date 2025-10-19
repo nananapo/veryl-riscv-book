@@ -226,7 +226,11 @@ module ReVIEW
 
       puts "```#{lang}"
       lines.each do |line|
-        puts compile_inline(line.sub(/\A {0,#{remove_space_count}}/, ''))
+        l = line.sub(/\A {0,#{remove_space_count}}/, '')
+        if lang == "Makefile"
+          l = l.gsub(/^( {4})+/) { |m| "\t" * (m.length / 4) }
+        end
+        puts compile_inline(l)
       end
       puts "```"
       blank()
