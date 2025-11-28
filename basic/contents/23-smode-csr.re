@@ -432,9 +432,7 @@ mtvecを使っていたところを新しい変数に置き換えます。
                         @<b>|if trap_mode_next == PrivMode::M {|
                             @<b>|mepc   = xepc;|
                             mcause = trap_cause;
-                            if raise_expt {
-                                mtval = expt_value;
-                            }
+                            mtval  = if raise_expt ? expt_value : 0;
                             // save mstatus.mie to mstatus.mpie
                             // and set mstatus.mie = 0
                             mstatus[7] = mstatus[3];
@@ -445,7 +443,7 @@ mtvecを使っていたところを新しい変数に置き換えます。
                         @<b>|   sepc   = xepc;|
                         @<b>|   scause = trap_cause;|
                         @<b>|   if raise_expt {|
-                        @<b>|       stval = expt_value;|
+                        @<b>|       stval  = if raise_expt ? expt_value : 0;|
                         @<b>|   }|
                         @<b>|}|
 #@end
@@ -489,9 +487,7 @@ sstatus.SPPにトラップ前の特権レベルを格納します
                         } else {
                             sepc   = xepc;
                             scause = trap_cause;
-                            if raise_expt {
-                                stval = expt_value;
-                            }
+                            stval  = if raise_expt ? expt_value : 0;
                             @<b>|// save sstatus.sie to sstatus.spie|
                             @<b>|// and set sstatus.sie = 0|
                             @<b>|mstatus[5] = mstatus[1];|

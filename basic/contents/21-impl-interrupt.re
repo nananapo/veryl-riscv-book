@@ -736,20 +736,20 @@ csrunitモジュールからトラップが発生するかどうかの情報を�
 #@end
 //}
 
-memunitモジュールが無効(@<code>{!valid})なとき、
-@<code>{state}を@<code>{State::Init}にリセットします
-(@<list>{memunit.veryl.intr.reset})。
-
-//list[memunit.veryl.intr.reset][validではないとき、stateをInitにリセットする (core.veryl)]{
-#@maprange(scripts/21/intr-range/core/src/memunit.veryl,reset)
-        } else {
-            if @<b>|!|valid {
-                @<b>|state = State::Init;|
-            @<b>|} else {|
-                case state {
-                    State::Init: if is_new & inst_is_memop(ctrl) {
-#@end
-//}
+#@# memunitモジュールが無効(@<code>{!valid})なとき、
+#@# @<code>{state}を@<code>{State::Init}にリセットします
+#@# (@<list>{memunit.veryl.intr.reset})。
+#@# 
+#@# //list[memunit.veryl.intr.reset][validではないとき、stateをInitにリセットする (core.veryl)]{
+#@# #@maprange(scripts/21/intr-range/core/src/memunit.veryl,reset)
+#@#         } else {
+#@#             if @<b>|!|valid {
+#@#                 @<b>|state = State::Init;|
+#@#             @<b>|} else {|
+#@#                 case state {
+#@#                     State::Init: if is_new & inst_is_memop(ctrl) {
+#@# #@end
+#@# //}
 
 ==== 割り込みの判定
 
@@ -799,9 +799,9 @@ memunitモジュールが無効(@<code>{!valid})なとき、
 //}
 
 トラップが発生するとき、
-例外の場合にのみmtvalレジスタに例外に固有の情報が書き込まれます。
-本書では例外を優先するので、
-@<code>{raise_expt}が@<code>{1}ならmtvalレジスタに書き込むようにします
+例外のときはmtvalレジスタに例外に固有の情報、割り込みの時は@<code>{0}が書き込まれます。
+
+割り込みの時に各CSR、mtvalレジスタの値が設定されるようにします
 (@<list>{csrunit.veryl.intr.ff})。
 
 //list[csrunit.veryl.intr.ff][例外が発生したときにのみmtvalレジスタに書き込む (csrunit.veryl)]{
@@ -810,9 +810,7 @@ memunitモジュールが無効(@<code>{!valid})なとき、
                     if raise_expt @<b>{|| raise_interrupt} {
                         mepc   = pc;
                         mcause = trap_cause;
-                        @<b>|if raise_expt {|
-                            mtval = expt_value;
-                        @<b>|}|
+                        mtval  = @<b>|if raise_expt ?| expt_value @<b>|: 0|;
 #@end
 //}
 
