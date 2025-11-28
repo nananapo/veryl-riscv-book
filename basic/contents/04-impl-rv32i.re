@@ -1435,7 +1435,6 @@ coreモジュールでインスタンス化します(@<list>{core.veryl.id-range
 //list[core.veryl.id-range.inst][inst_decoderモジュールのインスタンス化 (core.veryl)]{
 import corectrl::*;
 #@maprange(scripts/04/id-range/core/src/core.veryl,inst)
-
     let inst_pc  : Addr     = if_fifo_rdata.addr;
     let inst_bits: Inst     = if_fifo_rdata.bits;
     var inst_ctrl: InstCtrl;

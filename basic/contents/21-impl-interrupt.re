@@ -646,7 +646,7 @@ mstatus.MIE、MPIEを変更できるようにします
 (
 @<list>{csrunit.veryl.mstatuswmask.change}
 )。
-また、MRET命令でmstatus.MIEにmstatus.MPIE、mstatus.MPIEに@<code>{0}を設定します。
+また、MRET命令でmstatus.MIEにmstatus.MPIE、mstatus.MPIEに@<code>{1}を設定します。
 
 //list[csrunit.veryl.mstatuswmask.change][トラップ、MRET命令の動作の実装 (csrunit.veryl)]{
 #@maprange(scripts/21/mstatuswmask-range/core/src/csrunit.veryl,change)
@@ -661,9 +661,9 @@ mstatus.MIE、MPIEを変更できるようにします
                         @<b>|mstatus[3] = 0;|
                     } @<b>|else if trap_return {|
                         @<b>|// set mstatus.mie = mstatus.mpie|
-                        @<b>|//     mstatus.mpie = 0|
+                        @<b>|//     mstatus.mpie = 1|
                         @<b>|mstatus[3] = mstatus[7];|
-                        @<b>|mstatus[7] = 0;|
+                        @<b>|mstatus[7] = 1;|
                     @<b>|}|
 #@end
 //}

@@ -557,7 +557,7 @@ SRET命令を判定し、ジャンプ先と遷移先の特権レベルを命令�
 
 SRET命令を実行するとき、
 sstatus.SIEにsstatus.SPIE、
-sstatus.SPIEに@<code>{0}、
+sstatus.SPIEに@<code>{1}、
 sstatus.SPPに実装がサポートする最小の特権レベル(U-mode)を示す値を格納します
 (@<list>{csrunit.veryl.sret.ff})。
 
@@ -566,16 +566,16 @@ sstatus.SPPに実装がサポートする最小の特権レベル(U-mode)を示�
                     } else if trap_return {
                         @<b>|if is_mret {|
                             // set mstatus.mie = mstatus.mpie
-                            //     mstatus.mpie = 0
+                            //     mstatus.mpie = 1
                             mstatus[3] = mstatus[7];
-                            mstatus[7] = 0;
+                            mstatus[7] = 1;
                             // set mstatus.mpp = U (least privilege level)
                             mstatus[12:11] = PrivMode::U;
                         @<b>|} else if is_sret {|
                         @<b>|    // set sstatus.sie = sstatus.spie|
-                        @<b>|    //     sstatus.spie = 0|
+                        @<b>|    //     sstatus.spie = 1|
                         @<b>|    mstatus[1] = mstatus[5];|
-                        @<b>|    mstatus[5] = 0;|
+                        @<b>|    mstatus[5] = 1;|
                         @<b>|    // set sstatus.spp = U (least privilege level)|
                         @<b>|    mstatus[8] = 0;|
                         @<b>|}|
