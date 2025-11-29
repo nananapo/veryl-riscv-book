@@ -1766,7 +1766,10 @@ int main(int argc, char** argv) {
 #@mapfile(scripts/12/debuginput-range/core/src/util.veryl)
 embed (inline) sv{{{
     package svutil;
-        ...
+        import "DPI-C" context function string get_env_value(input string key);
+        function string get_env(input string name);
+            return get_env_value(name);
+        endfunction
         @<b>|import "DPI-C" context function longint get_input_dpic();|
         @<b>|function longint get_input();|
         @<b>|    return get_input_dpic();|
@@ -1775,7 +1778,11 @@ embed (inline) sv{{{
 }}}
 
 package util {
-    ...
+    function get_env (
+        name: input string,
+    ) -> string {
+        return $sv::svutil::get_env(name);
+    }
     @<b>|function get_input () -> u64 {|
     @<b>|    return $sv::svutil::get_input();|
     @<b>|}|
@@ -1796,7 +1803,21 @@ package util {
         dbg_membus.rvalid = dbg_membus.valid;
         if dbg_membus.valid {
             if dbg_membus.wen {
-                ...
+                if dbg_membus.wdata[MEMBUS_DATA_WIDTH - 1-:20] == 20'h01010 {
+                    $write("%c", dbg_membus.wdata[7:0]);
+                } else if dbg_membus.wdata[lsb] == 1'b1 {
+                    #[ifdef(TEST_MODE)]
+                    {
+                        test_success = dbg_membus.wdata == 1;
+                    }
+                    if dbg_membus.wdata == 1 {
+                        $display("test success!");
+                    } else {
+                        $display("test failed!");
+                        $error  ("wdata : %h", dbg_membus.wdata);
+                    }
+                    $finish();
+                }
             @<b>|} else {|
             @<b>|    #[ifdef(ENABLE_DEBUG_INPUT)]|
             @<b>|    {|

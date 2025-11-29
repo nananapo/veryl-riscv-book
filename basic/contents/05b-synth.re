@@ -100,7 +100,14 @@ LEDの制御用レジスタをcsrunitモジュールのポートに定義しま�
 //list[csrunit.veryl.ledcsr-range.port][LEDの制御用レジスタを定義する (csrunit.veryl)]{
 #@maprange(scripts/05b/ledcsr-range/core/src/csrunit.veryl,port)
 module csrunit (
-    ...
+    clk        : input  clock       ,
+    rst        : input  reset       ,
+    valid      : input  logic       ,
+    pc         : input  Addr        ,
+    ctrl       : input  InstCtrl    ,
+    rd_addr    : input  logic   <5> ,
+    csr_addr   : input  logic   <12>,
+    rs1        : input  UIntX       ,
     rdata      : output UIntX       ,
     raise_trap : output logic       ,
     trap_vector: output Addr        ,

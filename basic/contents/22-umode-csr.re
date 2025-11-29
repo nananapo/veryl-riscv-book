@@ -185,19 +185,29 @@ MPPには@<code>{2'b00}(U-mode)と@<code>{2'b11}(M-mode)のみ設定できるよ
 mstatus.MPPに実装がサポートする最小の特権レベルである@<code>{PrivMode::U}を書き込みます。
 
 //list[csrunit.veryl.mpp.trap][特権レベル、mstatus.MPPを更新する (csrunit.veryl)]{
-#@# maprange(scripts/22/mpp-range/core/src/csrunit.veryl,trap)
-    if raise_trap {
-        if raise_expt || raise_interrupt {
-            ...
-            @<b>|// save current privilege level to mstatus.mpp|
-            @<b<|mstatus[12:11] = mode;|
-        } else if trap_return {
-            ...
-            @<b>|// set mstatus.mpp = U (least privilege level)|
-            @<b>|mstatus[12:11] = PrivMode::U;|
-        }
-        @<b>|mode = trap_mode_next;|
-#@# end
+#@maprange(scripts/22/mpp-range/core/src/csrunit.veryl,trap)
+                if raise_trap {
+                    if raise_expt || raise_interrupt {
+                        mepc = if raise_expt ? pc : // exception
+                         if raise_interrupt && is_wfi ? pc + 4 : pc; // interrupt when wfi / interrupt
+                        mcause = trap_cause;
+                        mtval  = if raise_expt ? expt_value : 0;
+                        // save mstatus.mie to mstatus.mpie
+                        // and set mstatus.mie = 0
+                        mstatus[7] = mstatus[3];
+                        mstatus[3] = 0;
+                        @<b>|// save current privilege level to mstatus.mpp|
+                        @<b>|mstatus[12:11] = mode;|
+                    } else if trap_return {
+                        // set mstatus.mie = mstatus.mpie
+                        //     mstatus.mpie = 1
+                        mstatus[3] = mstatus[7];
+                        mstatus[7] = 1;
+                        @<b>|// set mstatus.mpp = U (least privilege level)|
+                        @<b>|mstatus[12:11] = PrivMode::U;|
+                    }
+                    mode = trap_mode_next;
+#@end
 //}
 
 == CSRのアクセス権限の確認

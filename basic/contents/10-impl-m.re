@@ -939,7 +939,16 @@ muldivunitモジュールで、divunitモジュールの処理が終わったら
 //list[muldivunit.veryl.divuremu-range.wait_valid][divunitモジュールの結果をresultに割り当てる (muldivunit.veryl)]{
 #@maprange(scripts/10/divuremu-range/core/src/muldivunit.veryl,wait_valid)
                 State::WaitValid: if is_mul && mu_rvalid {
-                    ...
+                    let res_signed: logic<MUL_RES_WIDTH> = if op1sign_saved != op2sign_saved ? ~mu_result + 1 : mu_result;
+                    let res_mulhsu: logic<MUL_RES_WIDTH> = if op1sign_saved == 1 ? ~mu_result + 1 : mu_result;
+                    state      = State::Finish;
+                    result     = case funct3_saved[1:0] {
+                        2'b00  : if is_op32_saved ? sext::<32, 64>(res_signed[31:0]) : res_signed[XLEN - 1:0], // MUL, MULW
+                        2'b01  : res_signed[XLEN+:XLEN], // MULH
+                        2'b10  : res_mulhsu[XLEN+:XLEN], // MULHSU
+                        2'b11  : mu_result[XLEN+:XLEN], // MULHU
+                        default: 0,
+                    };
                 @<b>|} else if !is_mul && du_rvalid {|
                     @<b>|result = case funct3_saved[1:0] {|
                     @<b>|    2'b01  : du_quotient, // DIVU|

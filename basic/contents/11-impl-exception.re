@@ -114,7 +114,16 @@ EXステージで例外は発生しないので、
     always_comb {
         // EX -> MEM
         exq_rready            = memq_wready && !exs_stall;
-        ...
+        memq_wvalid           = exq_rvalid && !exs_stall;
+        memq_wdata.addr       = exq_rdata.addr;
+        memq_wdata.bits       = exq_rdata.bits;
+        memq_wdata.ctrl       = exq_rdata.ctrl;
+        memq_wdata.imm        = exq_rdata.imm;
+        memq_wdata.rs1_addr   = exs_rs1_addr;
+        memq_wdata.rs1_data   = exs_rs1_data;
+        memq_wdata.rs2_data   = exs_rs2_data;
+        memq_wdata.alu_result = if exs_ctrl.is_muldiv ? exs_muldiv_result : exs_alu_result;
+        memq_wdata.br_taken   = exs_ctrl.is_jump || inst_is_br(exs_ctrl) && exs_brunit_take;
         memq_wdata.jump_addr  = if inst_is_br(exs_ctrl) ? exs_pc + exs_imm : exs_alu_result & ~1;
         @<b>|memq_wdata.expt       = exq_rdata.expt;|
     }
@@ -274,15 +283,21 @@ mtvalレジスタを実装して、書き込み、読み込みできるように
     always_comb {
         // read
         rdata = case csr_addr {
-            ...
+            CsrAddr::MTVEC : mtvec,
+            CsrAddr::MEPC  : mepc,
+            CsrAddr::MCAUSE: mcause,
             @<b>|CsrAddr::MTVAL : mtval,|
-            ...
+            CsrAddr::LED   : led,
+            default        : 'x,
         };
         // write
         wmask = case csr_addr {
-            ...
+            CsrAddr::MTVEC : MTVEC_WMASK,
+            CsrAddr::MEPC  : MEPC_WMASK,
+            CsrAddr::MCAUSE: MCAUSE_WMASK,
             @<b>|CsrAddr::MTVAL : MTVAL_WMASK,|
-            ...
+            CsrAddr::LED   : LED_WMASK,
+            default        : 0,
         };
 #@end
 //}
@@ -304,9 +319,12 @@ mtvalレジスタを実装して、書き込み、読み込みできるように
                 } else {
                     if is_wsc {
                         case csr_addr {
-                            ...
+                            CsrAddr::MTVEC : mtvec  = wdata;
+                            CsrAddr::MEPC  : mepc   = wdata;
+                            CsrAddr::MCAUSE: mcause = wdata;
                             @<b>|CsrAddr::MTVAL : mtval  = wdata;|
-                            ...
+                            CsrAddr::LED   : led    = wdata;
+                            default        : {}
                         }
                     }
                 }
@@ -651,7 +669,12 @@ csrunitモジュールでトラップを起こすようになりました。
 //list[core.veryl.csrro-range.wbq_type][トラップが発生したかを示すlogicをwbq_typeに追加する (core.veryl)]{
 #@maprange(scripts/11/csrro-range/core/src/core.veryl,wbq_type)
     struct wbq_type {
-        ...
+        addr      : Addr    ,
+        bits      : Inst    ,
+        ctrl      : InstCtrl,
+        imm       : UIntX   ,
+        alu_result: UIntX   ,
+        mem_rdata : UIntX   ,
         csr_rdata : UIntX   ,
         @<b>|raise_trap: logic   ,|
     }

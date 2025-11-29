@@ -249,9 +249,16 @@ PTWで発生した例外は、最終的にcsrunitモジュールで処理しま�
 //list[membus_if.veryl.newexpt.master][masterにexptを追加する (membus_if.veryl, core_data_if.veryl, core_inst_if.veryl)]{
 #@maprange(scripts/24/newexpt-range/core/src/membus_if.veryl,master)
     modport master {
-        ...
+        valid       : output,
+        ready       : input ,
+        addr        : output,
+        wen         : output,
+        wdata       : output,
+        wmask       : output,
+        rvalid      : input ,
+        rdata       : input ,
         @<b>|expt        : input ,|
-        ...
+        wmask_expand: import,
     }
 #@end
 //}
@@ -503,11 +510,27 @@ csrunitモジュールに、
 //list[csrunit.veryl.newexpt.port][メモリアドレス、例外の監視用のポートを追加する (csrunit.veryl)]{
 #@maprange(scripts/24/newexpt-range/core/src/csrunit.veryl,port)
 module csrunit (
-    ...
+    clk        : input   clock                   ,
+    rst        : input   reset                   ,
+    valid      : input   logic                   ,
+    pc         : input   Addr                    ,
+    inst_bits  : input   Inst                    ,
+    ctrl       : input   InstCtrl                ,
+    expt_info  : input   ExceptionInfo           ,
+    rd_addr    : input   logic               <5> ,
+    csr_addr   : input   logic               <12>,
+    rs1_addr   : input   logic               <5> ,
+    rs1_data   : input   UIntX                   ,
     can_intr   : input   logic                   ,
     @<b>|mem_addr   : input   Addr                    ,|
     rdata      : output  UIntX                   ,
-    ...
+    mode       : output  PrivMode                ,
+    raise_trap : output  logic                   ,
+    trap_vector: output  Addr                    ,
+    trap_return: output  logic                   ,
+    minstret   : input   UInt64                  ,
+    led        : output  UIntX                   ,
+    aclint     : modport aclint_if::slave        ,
     @<b>|membus     : modport core_data_if::master    ,|
 ) {
 #@end
@@ -516,9 +539,27 @@ module csrunit (
 //list[core.veryl.newexpt.csru][csrunitモジュールにメモリアドレスとインターフェースを割り当てる (core.veryl)]{
 #@maprange(scripts/24/newexpt-range/core/src/core.veryl,csru)
     inst csru: csrunit (
-        ...
+        clk                               ,
+        rst                               ,
+        valid      : mems_valid           ,
+        pc         : mems_pc              ,
+        inst_bits  : mems_inst_bits       ,
+        ctrl       : mems_ctrl            ,
+        expt_info  : mems_expt            ,
+        rd_addr    : mems_rd_addr         ,
+        csr_addr   : mems_inst_bits[31:20],
+        rs1_addr   : memq_rdata.rs1_addr  ,
+        rs1_data   : memq_rdata.rs1_data  ,
+        can_intr   : mems_is_new          ,
         @<b>|mem_addr   : memu_addr            ,|
-        ...
+        rdata      : csru_rdata           ,
+        mode       : csru_priv_mode       ,
+        raise_trap : csru_raise_trap      ,
+        trap_vector: csru_trap_vector     ,
+        trap_return: csru_trap_return     ,
+        minstret                          ,
+        led                               ,
+        aclint                            ,
         @<b>|membus     : d_membus             ,|
     );
 #@end
@@ -538,7 +579,11 @@ module csrunit (
 #@maprange(scripts/24/newexpt-range/core/src/csrunit.veryl,raise)
     let raise_expt: logic = valid && (expt_info.valid || expt_write_readonly_csr || expt_csr_priv_violation || expt_zicntr_priv || expt_trap_return_priv @<b>{|| expt_memory_fault});
     let expt_cause: UIntX = switch {
-        ...
+        expt_info.valid        : expt_info.cause,
+        expt_write_readonly_csr: CsrCause::ILLEGAL_INSTRUCTION,
+        expt_csr_priv_violation: CsrCause::ILLEGAL_INSTRUCTION,
+        expt_zicntr_priv       : CsrCause::ILLEGAL_INSTRUCTION,
+        expt_trap_return_priv  : CsrCause::ILLEGAL_INSTRUCTION,
         @<b>|expt_memory_fault      : if ctrl.is_load ? CsrCause::LOAD_PAGE_FAULT : CsrCause::STORE_AMO_PAGE_FAULT,|
         default                : 0,
     };
@@ -1643,7 +1688,12 @@ mstatus.TVMを書き込めるようにします
 #@maprange(scripts/24/sfence-range/core/src/csrunit.veryl,raise)
     let raise_expt: logic = valid && (expt_info.valid || expt_write_readonly_csr || expt_csr_priv_violation || expt_zicntr_priv || expt_trap_return_priv || expt_memory_fault @<b>{|| expt_tvm});
     let expt_cause: UIntX = switch {
-        ...
+        expt_info.valid        : expt_info.cause,
+        expt_write_readonly_csr: CsrCause::ILLEGAL_INSTRUCTION,
+        expt_csr_priv_violation: CsrCause::ILLEGAL_INSTRUCTION,
+        expt_zicntr_priv       : CsrCause::ILLEGAL_INSTRUCTION,
+        expt_trap_return_priv  : CsrCause::ILLEGAL_INSTRUCTION,
+        expt_memory_fault      : if ctrl.is_load ? CsrCause::LOAD_PAGE_FAULT : CsrCause::STORE_AMO_PAGE_FAULT,
         @<b>|expt_tvm               : CsrCause::ILLEGAL_INSTRUCTION,|
         default                : 0,
     };

@@ -598,7 +598,27 @@ memunitモジュールのインターフェースも変更し、
 #@maprange(scripts/13/empty-range/core/src/memunit.veryl,Init)
                 case state {
                     State::Init: if is_new & inst_is_memop(ctrl) {
-                        ...
+                        state     = State::WaitReady;
+                        req_wen   = inst_is_store(ctrl);
+                        req_addr  = addr;
+                        req_wdata = rs2 << {addr[2:0], 3'b0};
+                        req_wmask = case ctrl.funct3[1:0] {
+                            2'b00: 8'b1 << addr[2:0],
+                            2'b01: case addr[2:0] {
+                                6      : 8'b11000000,
+                                4      : 8'b00110000,
+                                2      : 8'b00001100,
+                                0      : 8'b00000011,
+                                default: 'x,
+                            },
+                            2'b10: case addr[2:0] {
+                                0      : 8'b00001111,
+                                4      : 8'b11110000,
+                                default: 'x,
+                            },
+                            2'b11  : 8'b11111111,
+                            default: 'x,
+                        };
                         @<b>|req_is_amo = ctrl.is_amo;|
                         @<b>|req_amoop  = ctrl.funct7[6:2] as AMOOp;|
                         @<b>|req_aq     = ctrl.funct7[1];|
@@ -702,7 +722,13 @@ LR命令を実行するとき、予約セットにアドレスを登録してロ
         slave_saved.valid = slave.ready && slave.valid;
         if slave.ready && slave.valid {
             slave_saved.addr   = slave.addr;
-            ...
+            slave_saved.wen    = slave.wen;
+            slave_saved.wdata  = slave.wdata;
+            slave_saved.wmask  = slave.wmask;
+            slave_saved.is_amo = slave.is_amo;
+            slave_saved.amoop  = slave.amoop;
+            slave_saved.aq     = slave.aq;
+            slave_saved.rl     = slave.rl;
             slave_saved.funct3 = slave.funct3;
             @<b>|if slave.is_amo {|
             @<b>|    case slave.amoop {|
