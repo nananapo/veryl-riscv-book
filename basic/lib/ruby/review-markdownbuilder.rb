@@ -236,8 +236,8 @@ module ReVIEW
       end
 
       # Folding logic
-      x_keep = 3
-      y_keep = 2
+      x_keep = 2
+      y_keep = 4
       z_fold_threshold = 4
 
       total_lines = processed_lines.size
