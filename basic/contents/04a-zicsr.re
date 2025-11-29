@@ -572,30 +572,7 @@ mepcとmcauseレジスタを作成します。
 
 最後に、mepcとmcauseの書き込みを実装します。
 if_resetで値を@<code>{0}に初期化し、case文にmepcとmcauseの場合を実装します
-(@<list>{csrunit.veryl.create-ecall-range.always_ff_csr})。
-
-//list[csrunit.veryl.create-ecall-range.always_ff_csr][mepcとmcauseの書き込み (csrunit.veryl)]{
-#@maprange(scripts/04a/create-ecall-range/core/src/csrunit.veryl,always_ff_csr)
-    always_ff {
-        if_reset {
-            mtvec  = 0;
-            @<b>|mepc   = 0;|
-            @<b>|mcause = 0;|
-        } else {
-            if valid {
-                if is_wsc {
-                    case csr_addr {
-                        CsrAddr::MTVEC : mtvec  = wdata;
-                        @<b>|CsrAddr::MEPC  : mepc   = wdata;|
-                        @<b>|CsrAddr::MCAUSE: mcause = wdata;|
-                        default        : {}
-                    }
-                }
-            }
-        }
-    }
-#@end
-//}
+(@<list>{csrunit.veryl.create-ecall-range.always_ff_trap})。
 
 ==== 例外の実装
 
@@ -748,21 +725,33 @@ mepcレジスタにPC、
 mcauseレジスタにトラップの発生原因を格納します
 (@<list>{csrunit.veryl.create-ecall-range.always_ff_trap})。
 
-//list[csrunit.veryl.create-ecall-range.always_ff_trap][トラップが発生したらCSRを変更する (csrunit.veryl)]{
+//list[csrunit.veryl.create-ecall-range.always_ff_trap][CSR、トラップ発生時の処理を実装する (csrunit.veryl)]{
 #@maprange(scripts/04a/create-ecall-range/core/src/csrunit.veryl,always_ff_trap)
     always_ff {
         if_reset {
-            ...
+            mtvec  = 0;
+            @<b>|mepc   = 0;| @<balloon>{CSRの初期化}
+            @<b>|mcause = 0;|
         } else {
             if valid {
-                @<b>|if raise_trap {| @<balloon>{トラップ時の動作}
-                    @<b>|if raise_expt {| @<balloon>{例外時の動作}
+                @<b>|if raise_trap {| @<balloon>{トラップが発生したときの処理}
+                    @<b>|if raise_expt {|
                         @<b>|mepc   = pc;|
                         @<b>|mcause = trap_cause;|
                     @<b>|}|
                 @<b>|} else {|
                     if is_wsc {
-                        ...
+                        case csr_addr {
+                            CsrAddr::MTVEC : mtvec  = wdata;
+                            @<b>|CsrAddr::MEPC  : mepc   = wdata;| @<balloon>{CSRの書き込み}
+                            @<b>|CsrAddr::MCAUSE: mcause = wdata;|
+                            default        : {}
+                        }
+                    }
+                }
+            }
+        }
+    }
 #@end
 //}
 

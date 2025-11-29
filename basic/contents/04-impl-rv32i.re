@@ -2985,7 +2985,11 @@ JALR命令(I形式)ならrs1と即値になっていることを確認してく�
 #@maprange(scripts/04/jump-range/core/src/core.veryl,always)
     always_ff {
         if_reset {
-            ...
+            if_pc           = 0;
+            if_is_requested = 0;
+            if_pc_requested = 0;
+            if_fifo_wvalid  = 0;
+            if_fifo_wdata   = 0;
         } else {
             @<b>|if control_hazard {|
             @<b>|    if_pc           = control_hazard_pc_next;|
@@ -2993,11 +2997,29 @@ JALR命令(I形式)ならrs1と即値になっていることを確認してく�
             @<b>|    if_fifo_wvalid  = 0;|
             @<b>|} else {|
                 if if_is_requested {
-                    ...
+                    if i_membus.rvalid {
+                        if_is_requested = i_membus.ready && i_membus.valid;
+                        if i_membus.ready && i_membus.valid {
+                            if_pc           = if_pc_next;
+                            if_pc_requested = if_pc;
+                        }
+                    }
+                } else {
+                    if i_membus.ready && i_membus.valid {
+                        if_is_requested = 1;
+                        if_pc           = if_pc_next;
+                        if_pc_requested = if_pc;
+                    }
                 }
                 // IFのFIFOの制御
                 if if_is_requested && i_membus.rvalid {
-                    ...
+                    if_fifo_wvalid     = 1;
+                    if_fifo_wdata.addr = if_pc_requested;
+                    if_fifo_wdata.bits = i_membus.rdata;
+                } else {
+                    if if_fifo_wvalid && if_fifo_wready {
+                        if_fifo_wvalid = 0;
+                    }
                 }
             @<b>|}|
         }
@@ -3090,7 +3112,13 @@ FIFOをリセットします(@<list>{core.veryl.jump-range.fifo})。
         clk                           ,
         rst                           ,
         @<b>|flush     : control_hazard    ,|
-        ...
+        wready    : if_fifo_wready    ,
+        wready_two: if_fifo_wready_two,
+        wvalid    : if_fifo_wvalid    ,
+        wdata     : if_fifo_wdata     ,
+        rready    : if_fifo_rready    ,
+        rvalid    : if_fifo_rvalid    ,
+        rdata     : if_fifo_rdata     ,
     );
 #@end
 //}
