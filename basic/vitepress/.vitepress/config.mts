@@ -92,6 +92,9 @@ export default defineConfig({
   head: [
     ["script", { async: "true", src: "https://www.googletagmanager.com/gtag/js?id=G-EM6HSGNSVY"}],
     ["script", {}, "window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'G-EM6HSGNSVY');"],
+    ["meta", { property: "og:image", content: "https://cpu.kanataso.net/images/ogp.png" }],
+    ["meta", { name: "twitter:image", content: "https://cpu.kanataso.net/images/ogp.png" }],
+    ["meta", { name: "twitter:card", content: "summary_large_image" }],
     ["style", {}, `
       @keyframes blink {
         0% { opacity: 1; }

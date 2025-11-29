@@ -5,6 +5,7 @@ run:
 build:
 	rm -rf dist ../webroot
 	yarn run docs:build
+	cp -R ./public/* ./.vitepress/dist
 	mv ./.vitepress/dist ../webroot
 	
 import:
