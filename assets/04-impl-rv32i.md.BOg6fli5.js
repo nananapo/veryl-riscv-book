@@ -1223,7 +1223,11 @@ deadbeef // 0x0
 <span class="hljs-keyword">assign</span> control_hazard_pc_next = alu_result &amp; ~<span class="hljs-number">1</span>;
 </code></pre></div><p><code>control_hazard</code>を利用して<code>if_pc</code>を更新し、 新しく命令をフェッチしなおすようにします(リスト85)。</p><p><span class="caption">▼リスト3.85: PCをジャンプ先に変更する (core.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/3c044407ef6cb5a6b8a620dee9ab8a247f2bc88e~1..3c044407ef6cb5a6b8a620dee9ab8a247f2bc88e#diff-bdad1723f95a5423ff5ab8ba69bb572aabe1c8def0cda1748f6f980f61b57510">差分をみる</a></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">always_ff</span> {
     <span class="hljs-keyword">if_reset</span> {
-        ...
+        if_pc           = <span class="hljs-number">0</span>;
+        if_is_requested = <span class="hljs-number">0</span>;
+        if_pc_requested = <span class="hljs-number">0</span>;
+        if_fifo_wvalid  = <span class="hljs-number">0</span>;
+        if_fifo_wdata   = <span class="hljs-number">0</span>;
     } <span class="hljs-keyword">else</span> {
         <span class="custom-hl-bold"><span class="hljs-keyword">if</span> control_hazard {</span>
         <span class="custom-hl-bold">    if_pc           = control_hazard_pc_next;</span>
@@ -1231,11 +1235,29 @@ deadbeef // 0x0
         <span class="custom-hl-bold">    if_fifo_wvalid  = <span class="hljs-number">0</span>;</span>
         <span class="custom-hl-bold">} <span class="hljs-keyword">else</span> {</span>
             <span class="hljs-keyword">if</span> if_is_requested {
-                ...
+                <span class="hljs-keyword">if</span> i_membus.rvalid {
+                    if_is_requested = i_membus.ready &amp;&amp; i_membus.valid;
+                    <span class="hljs-keyword">if</span> i_membus.ready &amp;&amp; i_membus.valid {
+                        if_pc           = if_pc_next;
+                        if_pc_requested = if_pc;
+                    }
+                }
+            } <span class="hljs-keyword">else</span> {
+                <span class="hljs-keyword">if</span> i_membus.ready &amp;&amp; i_membus.valid {
+                    if_is_requested = <span class="hljs-number">1</span>;
+                    if_pc           = if_pc_next;
+                    if_pc_requested = if_pc;
+                }
             }
             <span class="hljs-comment">// IFのFIFOの制御</span>
             <span class="hljs-keyword">if</span> if_is_requested &amp;&amp; i_membus.rvalid {
-                ...
+                if_fifo_wvalid     = <span class="hljs-number">1</span>;
+                if_fifo_wdata.addr = if_pc_requested;
+                if_fifo_wdata.bits = i_membus.rdata;
+            } <span class="hljs-keyword">else</span> {
+                <span class="hljs-keyword">if</span> if_fifo_wvalid &amp;&amp; if_fifo_wready {
+                    if_fifo_wvalid = <span class="hljs-number">0</span>;
+                }
             }
         <span class="custom-hl-bold">}</span>
     }
@@ -1291,7 +1313,13 @@ deadbeef // 0x0
     clk                           ,
     rst                           ,
     <span class="custom-hl-bold">flush     : control_hazard    ,</span>
-    ...
+    wready    : if_fifo_wready    ,
+    wready_two: if_fifo_wready_two,
+    wvalid    : if_fifo_wvalid    ,
+    wdata     : if_fifo_wdata     ,
+    rready    : if_fifo_rready    ,
+    rvalid    : if_fifo_rvalid    ,
+    rdata     : if_fifo_rdata     ,
 );
 </code></pre></div><h4 id="無条件ジャンプのテスト" tabindex="-1">無条件ジャンプのテスト <a class="header-anchor" href="#無条件ジャンプのテスト" aria-label="Permalink to “無条件ジャンプのテスト”">​</a></h4><p>簡単なテストを作成し、動作をテストします(リスト90、リスト91)。</p><p><span class="caption">▼リスト3.90: sample_jump.hex</span> <a href="https://github.com/nananapo/bluecore/compare/3c044407ef6cb5a6b8a620dee9ab8a247f2bc88e~1..3c044407ef6cb5a6b8a620dee9ab8a247f2bc88e#diff-4b870828046f4065482146d5dd02dccb5d0523eabe5af669e953963404e810ac">差分をみる</a></p><div class="language-hex"><button title="Copy Code" class="copy"></button><span class="lang">hex</span><pre class="hljs"><code>0100006f //  0: jal x0, 0x10 : 0x10にジャンプする
 deadbeef //  4:
@@ -1320,7 +1348,7 @@ fe1ff06f // 20: jal x0, -0x20 : 0にジャンプする
 <span class="hljs-meta prompt_"># </span><span class="language-bash">                  17</span>
 00000000 : 0100006f ← 0x20 → 0x00にジャンプしている
   reg[ 0] &lt;= 00000004
-</code></pre></div><h3 id="条件分岐命令を実装する" tabindex="-1">条件分岐命令を実装する <a class="header-anchor" href="#条件分岐命令を実装する" aria-label="Permalink to “条件分岐命令を実装する”">​</a></h3><p>条件分岐命令はすべてB形式で、PC+即値で分岐先を指定します。 それぞれの命令は、命令のfunct3フィールドで判別できます (表11)。</p><div id="br.funct3" class="table"><p class="caption">表3.11: 条件分岐命令とfunct3</p><table><tr class="hline"><th>funct3</th><th>命令</th><th>演算</th></tr><tr class="hline"><td>3&#39;b000</td><td>BEQ</td><td>==</td></tr><tr class="hline"><td>3&#39;b001</td><td>BNE</td><td>!=</td></tr><tr class="hline"><td>3&#39;b100</td><td>BLT</td><td>符号付き &lt;=</td></tr><tr class="hline"><td>3&#39;b101</td><td>BGE</td><td>符号付き &gt;</td></tr><tr class="hline"><td>3&#39;b110</td><td>BLTU</td><td>符号なし &lt;=</td></tr><tr class="hline"><td>3&#39;b111</td><td>BGEU</td><td>符号なし &gt;</td></tr></table></div><h4 id="条件分岐の実装" tabindex="-1">条件分岐の実装 <a class="header-anchor" href="#条件分岐の実装" aria-label="Permalink to “条件分岐の実装”">​</a></h4><p>分岐の条件が成立するかどうかを判定するモジュールを作成します。 <code>src/brunit.veryl</code>を作成し、次のように記述します(リスト92)。</p><p><span class="caption">▼リスト3.92: brunit.veryl</span> <a href="https://github.com/nananapo/bluecore/compare/cba69c86bbfddd007e6979a510680595ae3dbc75~1..cba69c86bbfddd007e6979a510680595ae3dbc75#diff-c7c858e8dedcb9ee183784b11dac61207028286cc7fa7d7e5112cdc5a0adeef2">差分をみる</a></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">import</span> eei::*;
+</code></pre></div><h3 id="条件分岐命令を実装する" tabindex="-1">条件分岐命令を実装する <a class="header-anchor" href="#条件分岐命令を実装する" aria-label="Permalink to “条件分岐命令を実装する”">​</a></h3><p>条件分岐命令はすべてB形式で、PC+即値で分岐先を指定します。 それぞれの命令は、命令のfunct3フィールドで判別できます (表11)。</p><div id="br.funct3" class="table"><p class="caption">表3.11: 条件分岐命令とfunct3</p><table><tr class="hline"><th>funct3</th><th>命令</th><th>演算</th></tr><tr class="hline"><td>3&#39;b000</td><td>BEQ</td><td>==</td></tr><tr class="hline"><td>3&#39;b001</td><td>BNE</td><td>!=</td></tr><tr class="hline"><td>3&#39;b100</td><td>BLT</td><td>符号付き &lt;=</td></tr><tr class="hline"><td>3&#39;b101</td><td>BGE</td><td>符号付き &gt;</td></tr><tr class="hline"><td>3&#39;b110</td><td>BLTU</td><td>符号なし &lt;=</td></tr><tr class="hline"><td>3&#39;b111</td><td>BGEU</td><td>符号なし &gt;</td></tr></table></div><h4 id="条件分岐の実装" tabindex="-1">条件分岐の実装 <a class="header-anchor" href="#条件分岐の実装" aria-label="Permalink to “条件分岐の実装”">​</a></h4><p>分岐の条件が成立するかどうかを判定するモジュールを作成します。 <code>src/brunit.veryl</code>を作成し、次のように記述します(リスト92)。</p><p><span class="caption">▼リスト3.92: brunit.veryl</span> <a href="https://github.com/nananapo/bluecore/compare/18576f9b8d3fd867095c690616a40b5b55f010b2~1..18576f9b8d3fd867095c690616a40b5b55f010b2#diff-c7c858e8dedcb9ee183784b11dac61207028286cc7fa7d7e5112cdc5a0adeef2">差分をみる</a></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">import</span> eei::*;
 <span class="hljs-keyword">import</span> corectrl::*;
 
 <span class="hljs-keyword">module</span> brunit (
@@ -1345,7 +1373,7 @@ fe1ff06f // 20: jal x0, -0x20 : 0にジャンプする
         }
     }
 }
-</code></pre></div><p>brunitモジュールは、 <code>funct3</code>に応じて<code>take</code>の条件を切り替えます。 分岐が成立するときに<code>take</code>が<code>1</code>になります。</p><p>brunitモジュールを、 coreモジュールでインスタンス化します(リスト93)。 命令がB形式のとき、 <code>op1</code>は<code>rs1_data</code>、 <code>op2</code>は<code>rs2_data</code>になっていることを確認してください(リスト43)。</p><p><span class="caption">▼リスト3.93: brunitモジュールのインスタンス化 (core.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/cba69c86bbfddd007e6979a510680595ae3dbc75~1..cba69c86bbfddd007e6979a510680595ae3dbc75#diff-bdad1723f95a5423ff5ab8ba69bb572aabe1c8def0cda1748f6f980f61b57510">差分をみる</a></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">var</span> brunit_take: <span class="hljs-keyword">logic</span>;
+</code></pre></div><p>brunitモジュールは、 <code>funct3</code>に応じて<code>take</code>の条件を切り替えます。 分岐が成立するときに<code>take</code>が<code>1</code>になります。</p><p>brunitモジュールを、 coreモジュールでインスタンス化します(リスト93)。 命令がB形式のとき、 <code>op1</code>は<code>rs1_data</code>、 <code>op2</code>は<code>rs2_data</code>になっていることを確認してください(リスト43)。</p><p><span class="caption">▼リスト3.93: brunitモジュールのインスタンス化 (core.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/18576f9b8d3fd867095c690616a40b5b55f010b2~1..18576f9b8d3fd867095c690616a40b5b55f010b2#diff-bdad1723f95a5423ff5ab8ba69bb572aabe1c8def0cda1748f6f980f61b57510">差分をみる</a></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">var</span> brunit_take: <span class="hljs-keyword">logic</span>;
 
 <span class="hljs-keyword">inst</span> bru: brunit (
     funct3: inst_ctrl.funct3,
@@ -1353,22 +1381,22 @@ fe1ff06f // 20: jal x0, -0x20 : 0にジャンプする
     op2                     ,
     take  : brunit_take     ,
 );
-</code></pre></div><p>命令が条件分岐命令で<code>brunit_take</code>が<code>1</code>のとき、 次のPCをPC + 即値にします ( リスト94、 リスト95 )。</p><p><span class="caption">▼リスト3.94: 命令が条件分岐命令か判定する関数 (core.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/cba69c86bbfddd007e6979a510680595ae3dbc75~1..cba69c86bbfddd007e6979a510680595ae3dbc75#diff-6e03bfb8e3afdba1e0b88b561d8b8e5e4f2a7ffc6c4efb228c5797053b78742c">差分をみる</a></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-comment">// 命令が分岐命令かどうかを判定する</span>
+</code></pre></div><p>命令が条件分岐命令で<code>brunit_take</code>が<code>1</code>のとき、 次のPCをPC + 即値にします ( リスト94、 リスト95 )。</p><p><span class="caption">▼リスト3.94: 命令が条件分岐命令か判定する関数 (core.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/18576f9b8d3fd867095c690616a40b5b55f010b2~1..18576f9b8d3fd867095c690616a40b5b55f010b2#diff-6e03bfb8e3afdba1e0b88b561d8b8e5e4f2a7ffc6c4efb228c5797053b78742c">差分をみる</a></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-comment">// 命令が分岐命令かどうかを判定する</span>
 <span class="hljs-keyword">function</span> inst_is_br (
     ctrl: <span class="hljs-keyword">input</span> InstCtrl,
 ) -&gt; <span class="hljs-keyword">logic</span>    {
     <span class="hljs-keyword">return</span> ctrl.itype == InstType::B;
 }
-</code></pre></div><p><span class="caption">▼リスト3.95: 分岐成立時のPCの設定 (core.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/cba69c86bbfddd007e6979a510680595ae3dbc75~1..cba69c86bbfddd007e6979a510680595ae3dbc75#diff-bdad1723f95a5423ff5ab8ba69bb572aabe1c8def0cda1748f6f980f61b57510">差分をみる</a></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">assign</span> control_hazard         = inst_valid &amp;&amp; <span class="custom-hl-bold">(</span>inst_ctrl.is_jump <span class="custom-hl-bold">|| inst_is_br(inst_ctrl) &amp;&amp; brunit_take)</span>;
+</code></pre></div><p><span class="caption">▼リスト3.95: 分岐成立時のPCの設定 (core.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/18576f9b8d3fd867095c690616a40b5b55f010b2~1..18576f9b8d3fd867095c690616a40b5b55f010b2#diff-bdad1723f95a5423ff5ab8ba69bb572aabe1c8def0cda1748f6f980f61b57510">差分をみる</a></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">assign</span> control_hazard         = inst_valid &amp;&amp; <span class="custom-hl-bold">(</span>inst_ctrl.is_jump <span class="custom-hl-bold">|| inst_is_br(inst_ctrl) &amp;&amp; brunit_take)</span>;
 <span class="hljs-keyword">assign</span> control_hazard_pc_next = <span class="custom-hl-bold"><span class="hljs-keyword">if</span> inst_is_br(inst_ctrl) {</span>
     <span class="custom-hl-bold">inst_pc + inst_imm</span>
 <span class="custom-hl-bold">} <span class="hljs-keyword">else</span> {</span>
     alu_result &amp; ~<span class="hljs-number">1</span>
 <span class="custom-hl-bold">}</span>;
-</code></pre></div><p><code>control_hazard</code>は、命令が無条件ジャンプ命令か、命令が条件分岐命令かつ分岐が成立するときに<code>1</code>になります。 <code>control_hazard_pc_next</code>は、無条件ジャンプ命令のときは<code>alu_result</code>、条件分岐命令のときはPC + 即値になります。</p><h4 id="条件分岐命令のテスト" tabindex="-1">条件分岐命令のテスト <a class="header-anchor" href="#条件分岐命令のテスト" aria-label="Permalink to “条件分岐命令のテスト”">​</a></h4><p>条件分岐命令を実行するとき、分岐の成否をデバッグ表示します。 デバッグ表示を行っているalways_ffブロック内に、次のコードを追加します(リスト96)。</p><p><span class="caption">▼リスト3.96: 分岐判定のデバッグ表示 (core.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/cba69c86bbfddd007e6979a510680595ae3dbc75~1..cba69c86bbfddd007e6979a510680595ae3dbc75#diff-bdad1723f95a5423ff5ab8ba69bb572aabe1c8def0cda1748f6f980f61b57510">差分をみる</a></p><div class="language-very"><button title="Copy Code" class="copy"></button><span class="lang">very</span><pre class="hljs"><code>if inst_is_br(inst_ctrl) {
+</code></pre></div><p><code>control_hazard</code>は、命令が無条件ジャンプ命令か、命令が条件分岐命令かつ分岐が成立するときに<code>1</code>になります。 <code>control_hazard_pc_next</code>は、無条件ジャンプ命令のときは<code>alu_result</code>、条件分岐命令のときはPC + 即値になります。</p><h4 id="条件分岐命令のテスト" tabindex="-1">条件分岐命令のテスト <a class="header-anchor" href="#条件分岐命令のテスト" aria-label="Permalink to “条件分岐命令のテスト”">​</a></h4><p>条件分岐命令を実行するとき、分岐の成否をデバッグ表示します。 デバッグ表示を行っているalways_ffブロック内に、次のコードを追加します(リスト96)。</p><p><span class="caption">▼リスト3.96: 分岐判定のデバッグ表示 (core.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/18576f9b8d3fd867095c690616a40b5b55f010b2~1..18576f9b8d3fd867095c690616a40b5b55f010b2#diff-bdad1723f95a5423ff5ab8ba69bb572aabe1c8def0cda1748f6f980f61b57510">差分をみる</a></p><div class="language-very"><button title="Copy Code" class="copy"></button><span class="lang">very</span><pre class="hljs"><code>if inst_is_br(inst_ctrl) {
     $display(&quot;  br take   : %b&quot;, brunit_take);
 }
-</code></pre></div><p>簡単なテストを作成し、動作をテストします(リスト97, リスト98)。</p><p><span class="caption">▼リスト3.97: sample_br.hex</span> <a href="https://github.com/nananapo/bluecore/compare/cba69c86bbfddd007e6979a510680595ae3dbc75~1..cba69c86bbfddd007e6979a510680595ae3dbc75#diff-ed70829e581bd3b76a3741500395b0a2d55950437f287a0db0b81ae8b589e4e0">差分をみる</a></p><div class="language-hex"><button title="Copy Code" class="copy"></button><span class="lang">hex</span><pre class="hljs"><code>00100093 //  0: addi x1, x0, 1
+</code></pre></div><p>簡単なテストを作成し、動作をテストします(リスト97, リスト98)。</p><p><span class="caption">▼リスト3.97: sample_br.hex</span> <a href="https://github.com/nananapo/bluecore/compare/18576f9b8d3fd867095c690616a40b5b55f010b2~1..18576f9b8d3fd867095c690616a40b5b55f010b2#diff-ed70829e581bd3b76a3741500395b0a2d55950437f287a0db0b81ae8b589e4e0">差分をみる</a></p><div class="language-hex"><button title="Copy Code" class="copy"></button><span class="lang">hex</span><pre class="hljs"><code>00100093 //  0: addi x1, x0, 1
 10100063 //  4: beq x0, x1, 0x100
 00101863 //  8: bne x0, x1, 0x10
 deadbeef //  c:
