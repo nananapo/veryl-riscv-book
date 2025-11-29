@@ -1,19 +1,19 @@
-import{_ as a,c as n,o as e,ah as l,bC as p}from"./chunks/framework.BNheOMQd.js";const h=JSON.parse('{"title":"Memory-mapped I/Oの実装","description":"","frontmatter":{},"headers":[],"relativePath":"12-impl-mmio.md","filePath":"12-impl-mmio.md"}'),c={name:"12-impl-mmio.md"};function o(t,s,d,r,b,m){return e(),n("div",null,[...s[0]||(s[0]=[l('<h1 id="memory-mapped-i-oの実装" tabindex="-1">Memory-mapped I/Oの実装 <a class="header-anchor" href="#memory-mapped-i-oの実装" aria-label="Permalink to “Memory-mapped I/Oの実装”">​</a></h1><h2 id="memory-mapped-i-oとは何か" tabindex="-1">Memory-mapped I/Oとは何か？ <a class="header-anchor" href="#memory-mapped-i-oとは何か" aria-label="Permalink to “Memory-mapped I/Oとは何か？”">​</a></h2><p>これまでの実装では、 CPUに内蔵された1つの大きなメモリ空間、 1つのメモリデバイス(memoryモジュール)に命令データを格納、実行し、 データのロードストア命令も同じメモリに対して実行してきました。</p><p>一般に流通するコンピュータは複数のデバイスに接続されています。 CPUが起動すると、読み込み専用の小さなメモリ(ROM)に格納されたプログラムから命令の実行を開始します。 プログラムは周辺デバイスの初期化などを行ったあと、 動かしたいアプリケーションの命令やデータをRAMに展開して、 制御をアプリケーションに移します。</p><p>CPUがデバイスにアクセスする方法にはCSRやメモリ空間を経由する方法があります。 一般的な方法はメモリ空間を通じてデバイスにアクセスする方法であり、 この方式のことを<strong>メモリマップドIO</strong>(Memory-mapped I/O, <strong>MMIO</strong>)と呼びます。 メモリ空間の一部を、デバイスにアクセスするための空間として扱うことを、メモリ(またはアドレス)に<strong>マップ</strong>すると呼びます。 RAMとROMもメモリデバイスであり、異なるアドレスにマップされています。</p><p><img src="'+p+`" alt="メモリマップ"> 本章ではCPUのメモリ部分をRAM(Random Access Memory)<sup class="footnote-ref"><a href="#fn1" id="fnref1">[1]</a></sup>とROM(Read Only Memory)に分割し、 アクセスするアドレスに応じてアクセスするデバイスを切り替える機能を実装します。 また、デバッグ用の入出力デバイス(64ビットのレジスタ)も実装します。 デバイスとメモリ空間の対応は図1のように設定します。 図1のようにメモリがどのように配置されているかを示す図のことを<strong>メモリマップ</strong>(Memory map)と呼びます。 あるメモリ空間の先頭アドレスのことをベースアドレス(base address)と呼ぶことがあります。</p><h2 id="定数の定義" tabindex="-1">定数の定義 <a class="header-anchor" href="#定数の定義" aria-label="Permalink to “定数の定義”">​</a></h2><p>eeiパッケージに定義しているメモリの定数をRAM用の定数に変更します。 また、新しくRAMのベースアドレス、メモリバスのデータ幅、ROMのメモリマップを示す定数を定義してください (リスト1)。 デバッグ入出力デバイス(レジスタ)の位置は、topモジュールのポートで定義します (リスト9)。</p><p><span class="caption">▼リスト11.1: メモリマップの定義 (eei.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/b74bddf85081cf4290607a1f58b25759f5b34d98~1..b74bddf85081cf4290607a1f58b25759f5b34d98#diff-11470b1e7d69c89ea3723d114583fe520f6d8482422a151ad706be8ab57ea6b7">差分をみる</a></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-comment">// メモリ<span class="custom-hl-bold">バス</span>のデータ幅</span>
-<span class="hljs-keyword">const</span> MEM<span class="custom-hl-bold">BUS</span>_DATA_WIDTH: <span class="hljs-keyword">u32</span> = <span class="hljs-number">64</span>;
-<span class="custom-hl-del"><span class="hljs-comment">// メモリのアドレス幅</span></span>
-<span class="custom-hl-del"><span class="hljs-keyword">const</span> MEM_ADDR_WIDTH: <span class="hljs-keyword">u32</span> = <span class="hljs-number">16</span>;</span>
+import{_ as l,c as p,o as c,ah as n,j as s,a,bC as o}from"./chunks/framework.BNheOMQd.js";const f=JSON.parse('{"title":"Memory-mapped I/Oの実装","description":"","frontmatter":{},"headers":[],"relativePath":"12-impl-mmio.md","filePath":"12-impl-mmio.md"}'),d={name:"12-impl-mmio.md"};function t(r,e,b,m,i,h){return c(),p("div",null,[...e[0]||(e[0]=[n('<h1 id="memory-mapped-i-oの実装" tabindex="-1">Memory-mapped I/Oの実装 <a class="header-anchor" href="#memory-mapped-i-oの実装" aria-label="Permalink to “Memory-mapped I/Oの実装”">​</a></h1><h2 id="memory-mapped-i-oとは何か" tabindex="-1">Memory-mapped I/Oとは何か？ <a class="header-anchor" href="#memory-mapped-i-oとは何か" aria-label="Permalink to “Memory-mapped I/Oとは何か？”">​</a></h2><p>これまでの実装では、 CPUに内蔵された1つの大きなメモリ空間、 1つのメモリデバイス(memoryモジュール)に命令データを格納、実行し、 データのロードストア命令も同じメモリに対して実行してきました。</p><p>一般に流通するコンピュータは複数のデバイスに接続されています。 CPUが起動すると、読み込み専用の小さなメモリ(ROM)に格納されたプログラムから命令の実行を開始します。 プログラムは周辺デバイスの初期化などを行ったあと、 動かしたいアプリケーションの命令やデータをRAMに展開して、 制御をアプリケーションに移します。</p><p>CPUがデバイスにアクセスする方法にはCSRやメモリ空間を経由する方法があります。 一般的な方法はメモリ空間を通じてデバイスにアクセスする方法であり、 この方式のことを<strong>メモリマップドIO</strong>(Memory-mapped I/O, <strong>MMIO</strong>)と呼びます。 メモリ空間の一部を、デバイスにアクセスするための空間として扱うことを、メモリ(またはアドレス)に<strong>マップ</strong>すると呼びます。 RAMとROMもメモリデバイスであり、異なるアドレスにマップされています。</p><p><img src="'+o+'" alt="メモリマップ"> 本章ではCPUのメモリ部分をRAM(Random Access Memory)<sup class="footnote-ref"><a href="#fn1" id="fnref1">[1]</a></sup>とROM(Read Only Memory)に分割し、 アクセスするアドレスに応じてアクセスするデバイスを切り替える機能を実装します。 また、デバッグ用の入出力デバイス(64ビットのレジスタ)も実装します。 デバイスとメモリ空間の対応は図1のように設定します。 図1のようにメモリがどのように配置されているかを示す図のことを<strong>メモリマップ</strong>(Memory map)と呼びます。 あるメモリ空間の先頭アドレスのことをベースアドレス(base address)と呼ぶことがあります。</p><h2 id="定数の定義" tabindex="-1">定数の定義 <a class="header-anchor" href="#定数の定義" aria-label="Permalink to “定数の定義”">​</a></h2><p>eeiパッケージに定義しているメモリの定数をRAM用の定数に変更します。 また、新しくRAMのベースアドレス、メモリバスのデータ幅、ROMのメモリマップを示す定数を定義してください (リスト1)。 デバッグ入出力デバイス(レジスタ)の位置は、topモジュールのポートで定義します (リスト9)。</p><p><span class="caption">▼リスト11.1: メモリマップの定義 (eei.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/b74bddf85081cf4290607a1f58b25759f5b34d98~1..b74bddf85081cf4290607a1f58b25759f5b34d98#diff-11470b1e7d69c89ea3723d114583fe520f6d8482422a151ad706be8ab57ea6b7">差分をみる</a></p>',9),s("div",{class:"language-veryl"},[s("button",{title:"Copy Code",class:"copy"}),s("span",{class:"lang"},"veryl"),s("pre",{class:"hljs"},[s("code",null,[s("span",{class:"hljs-comment"},[a("// メモリ"),s("span",{class:"custom-hl-bold"},"バス"),a("のデータ幅")]),a(`
+`),s("span",{class:"hljs-keyword"},"const"),a(" MEM"),s("span",{class:"custom-hl-bold"},"BUS"),a("_DATA_WIDTH: "),s("span",{class:"hljs-keyword"},"u32"),a(" = "),s("span",{class:"hljs-number"},"64"),a(`;
+`),s("span",{class:"custom-hl-del"},[s("span",{class:"hljs-comment"},"// メモリのアドレス幅")]),a(`
+`),s("span",{class:"custom-hl-del"},[s("span",{class:"hljs-keyword"},"const"),a(" MEM_ADDR_WIDTH: "),s("span",{class:"hljs-keyword"},"u32"),a(" = "),s("span",{class:"hljs-number"},"16"),a(";")]),a(`
 
-<span class="hljs-comment">// RAM</span>
-<span class="hljs-keyword">const</span> RAM_ADDR_WIDTH: <span class="hljs-keyword">u32</span>  = <span class="hljs-number">16</span>;
-<span class="hljs-keyword">const</span> RAM_DATA_WIDTH: <span class="hljs-keyword">u32</span>  = <span class="hljs-number">64</span>;
-<span class="hljs-keyword">const</span> MMAP_RAM_BEGIN: Addr = <span class="hljs-number">&#39;h8000_0000</span> <span class="hljs-keyword">as</span> Addr;
+`),s("span",{class:"hljs-comment"},"// RAM"),a(`
+`),s("span",{class:"foldable-code"},[s("span",{class:"fold-trigger",onclick:"this.parentElement.classList.add('expanded')"}),s("span",{class:"fold-content"},[s("span",{class:"hljs-keyword"},"const"),a(" RAM_ADDR_WIDTH: "),s("span",{class:"hljs-keyword"},"u32"),a("  = "),s("span",{class:"hljs-number"},"16"),a(`;
+`),s("span",{class:"hljs-keyword"},"const"),a(" RAM_DATA_WIDTH: "),s("span",{class:"hljs-keyword"},"u32"),a("  = "),s("span",{class:"hljs-number"},"64"),a(`;
+`),s("span",{class:"hljs-keyword"},"const"),a(" MMAP_RAM_BEGIN: Addr = "),s("span",{class:"hljs-number"},"'h8000_0000"),a(),s("span",{class:"hljs-keyword"},"as"),a(` Addr;
 
-<span class="hljs-comment">// ROM</span>
-<span class="hljs-keyword">const</span> ROM_ADDR_WIDTH: <span class="hljs-keyword">u32</span>  = <span class="hljs-number">9</span>;
-<span class="hljs-keyword">const</span> ROM_DATA_WIDTH: <span class="hljs-keyword">u32</span>  = <span class="hljs-number">64</span>;
-<span class="hljs-keyword">const</span> MMAP_ROM_BEGIN: Addr = <span class="hljs-number">&#39;h1000</span> <span class="hljs-keyword">as</span> Addr;
-<span class="hljs-keyword">const</span> MMAP_ROM_END  : Addr = MMAP_ROM_BEGIN + <span class="hljs-number">&#39;h3ff</span> <span class="hljs-keyword">as</span> Addr;
-</code></pre></div><p><code>MEM_DATA_WIDTH</code>、<code>MEM_ADDR_WIDTH</code>を使っている部分を<code>MEMBUS_DATA_WIDTH</code>、<code>XLEN</code>に置き換えます。 <code>MEMBUS_DATA_WIDTH</code>と<code>XLEN</code>を使うmembus_ifインターフェースに別名<code>Membus</code>をつけて利用します ( リスト2、 リスト3、 リスト4、 リスト5 )。</p><p><span class="caption">▼リスト11.2: 別名の定義 (membus_if.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/b74bddf85081cf4290607a1f58b25759f5b34d98~1..b74bddf85081cf4290607a1f58b25759f5b34d98#diff-5b8ff8b1b43eb415d367759fb46872980d16065c43c0a71a75fec85e987ad460">差分をみる</a></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">alias</span> <span class="hljs-keyword">interface</span> Membus = membus_if::&lt;eei::MEMBUS_DATA_WIDTH, eei::XLEN&gt;;
+`),s("span",{class:"hljs-comment"},"// ROM"),a(`
+`),s("span",{class:"hljs-keyword"},"const"),a(" ROM_ADDR_WIDTH: "),s("span",{class:"hljs-keyword"},"u32"),a("  = "),s("span",{class:"hljs-number"},"9"),a(`;
+`)])]),s("span",{class:"hljs-keyword"},"const"),a(" ROM_DATA_WIDTH: "),s("span",{class:"hljs-keyword"},"u32"),a("  = "),s("span",{class:"hljs-number"},"64"),a(`;
+`),s("span",{class:"hljs-keyword"},"const"),a(" MMAP_ROM_BEGIN: Addr = "),s("span",{class:"hljs-number"},"'h1000"),a(),s("span",{class:"hljs-keyword"},"as"),a(` Addr;
+`),s("span",{class:"hljs-keyword"},"const"),a(" MMAP_ROM_END  : Addr = MMAP_ROM_BEGIN + "),s("span",{class:"hljs-number"},"'h3ff"),a(),s("span",{class:"hljs-keyword"},"as"),a(` Addr;
+`)])])],-1),n(`<p><code>MEM_DATA_WIDTH</code>、<code>MEM_ADDR_WIDTH</code>を使っている部分を<code>MEMBUS_DATA_WIDTH</code>、<code>XLEN</code>に置き換えます。 <code>MEMBUS_DATA_WIDTH</code>と<code>XLEN</code>を使うmembus_ifインターフェースに別名<code>Membus</code>をつけて利用します ( リスト2、 リスト3、 リスト4、 リスト5 )。</p><p><span class="caption">▼リスト11.2: 別名の定義 (membus_if.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/b74bddf85081cf4290607a1f58b25759f5b34d98~1..b74bddf85081cf4290607a1f58b25759f5b34d98#diff-5b8ff8b1b43eb415d367759fb46872980d16065c43c0a71a75fec85e987ad460">差分をみる</a></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">alias</span> <span class="hljs-keyword">interface</span> Membus = membus_if::&lt;eei::MEMBUS_DATA_WIDTH, eei::XLEN&gt;;
 </code></pre></div><p><span class="caption">▼リスト11.3: Membusに置き換える (core.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/b74bddf85081cf4290607a1f58b25759f5b34d98~1..b74bddf85081cf4290607a1f58b25759f5b34d98#diff-bdad1723f95a5423ff5ab8ba69bb572aabe1c8def0cda1748f6f980f61b57510">差分をみる</a></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">module</span> core (
     clk     : <span class="hljs-keyword">input</span>   <span class="hljs-keyword">clock</span>                          ,
     rst     : <span class="hljs-keyword">input</span>   <span class="hljs-keyword">reset</span>                          ,
@@ -385,21 +385,21 @@ SECTIONS
 </code></pre></div><p>riscv-testsをビルドしなおし、成果物をtestディレクトリに配置してください。 ビルドしなおしたので、HEXファイルを再度生成します (リスト33)。</p><p><span class="caption">▼リスト11.33: HEXファイルの再生成</span></p><div class="language-terminal"><button title="Copy Code" class="copy"></button><span class="lang">terminal</span><pre class="hljs"><code><span class="hljs-meta prompt_">$ </span><span class="language-bash"><span class="hljs-built_in">cd</span> <span class="hljs-built_in">test</span></span>
 <span class="hljs-meta prompt_">$ </span><span class="language-bash">find share/ -<span class="hljs-built_in">type</span> f -not -name <span class="hljs-string">&quot;*.dump&quot;</span> -<span class="hljs-built_in">exec</span> riscv64-unknown-elf-objcopy -O binary { {}.bin \\;}</span>
 <span class="hljs-meta prompt_">$ </span><span class="language-bash">find share/ -<span class="hljs-built_in">type</span> f -name <span class="hljs-string">&quot;*.bin&quot;</span> -<span class="hljs-built_in">exec</span> sh -c <span class="hljs-string">&quot;python3 bin2hex.py 8 { &gt; {}.hex&quot;</span> \\;}</span>
-</code></pre></div><p>riscv-testsの終了判定用のアドレスを<code>MMAP_RAM_BEGIN</code>基準のアドレスに変更します (リスト34)。</p><p><span class="caption">▼リスト11.34: .tohostのアドレスを変更する (top.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/9a3f3f406ac6f0eb513fce61bb339aa2242093d6~1..9a3f3f406ac6f0eb513fce61bb339aa2242093d6#diff-0c548fd82f89bdf97edffcd89dfccd2aab836eccf57f11b8e25c313abd0d0e6f">差分をみる</a></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code>#[ifdef(TEST_MODE)]
-<span class="hljs-keyword">always_ff</span> {
-    <span class="hljs-keyword">let</span> RISCVTESTS_TOHOST_ADDR: Addr = <span class="custom-hl-bold">MMAP_RAM_BEGIN +</span> <span class="hljs-number">&#39;h1000</span> <span class="hljs-keyword">as</span> Addr;
-    <span class="hljs-keyword">if</span> d_membus.valid &amp;&amp; d_membus.ready &amp;&amp; d_membus.wen == <span class="hljs-number">1</span> &amp;&amp; d_membus.addr == RISCVTESTS_TOHOST_ADDR &amp;&amp; d_membus.wdata[<span class="hljs-keyword">lsb</span>] == <span class="hljs-number">1&#39;b1</span> {
-        test_success = d_membus.wdata == <span class="hljs-number">1</span>;
-        <span class="hljs-keyword">if</span> d_membus.wdata == <span class="hljs-number">1</span> {
-            $display(<span class="hljs-string">&quot;riscv-tests success!&quot;</span>);
-        } <span class="hljs-keyword">else</span> {
-            $display(<span class="hljs-string">&quot;riscv-tests failed!&quot;</span>);
-            $error  (<span class="hljs-string">&quot;wdata : %h&quot;</span>, d_membus.wdata);
+</code></pre></div><p>riscv-testsの終了判定用のアドレスを<code>MMAP_RAM_BEGIN</code>基準のアドレスに変更します (リスト34)。</p><p><span class="caption">▼リスト11.34: .tohostのアドレスを変更する (top.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/9a3f3f406ac6f0eb513fce61bb339aa2242093d6~1..9a3f3f406ac6f0eb513fce61bb339aa2242093d6#diff-0c548fd82f89bdf97edffcd89dfccd2aab836eccf57f11b8e25c313abd0d0e6f">差分をみる</a></p>`,99),s("div",{class:"language-veryl"},[s("button",{title:"Copy Code",class:"copy"}),s("span",{class:"lang"},"veryl"),s("pre",{class:"hljs"},[s("code",null,[a(`#[ifdef(TEST_MODE)]
+`),s("span",{class:"hljs-keyword"},"always_ff"),a(` {
+    `),s("span",{class:"hljs-keyword"},"let"),a(" RISCVTESTS_TOHOST_ADDR: Addr = "),s("span",{class:"custom-hl-bold"},"MMAP_RAM_BEGIN +"),a(),s("span",{class:"hljs-number"},"'h1000"),a(),s("span",{class:"hljs-keyword"},"as"),a(` Addr;
+    `),s("span",{class:"hljs-keyword"},"if"),a(" d_membus.valid && d_membus.ready && d_membus.wen == "),s("span",{class:"hljs-number"},"1"),a(" && d_membus.addr == RISCVTESTS_TOHOST_ADDR && d_membus.wdata["),s("span",{class:"hljs-keyword"},"lsb"),a("] == "),s("span",{class:"hljs-number"},"1'b1"),a(` {
+        test_success = d_membus.wdata == `),s("span",{class:"hljs-number"},"1"),a(`;
+`),s("span",{class:"foldable-code"},[s("span",{class:"fold-trigger",onclick:"this.parentElement.classList.add('expanded')"}),s("span",{class:"fold-content"},[a("        "),s("span",{class:"hljs-keyword"},"if"),a(" d_membus.wdata == "),s("span",{class:"hljs-number"},"1"),a(` {
+            $display(`),s("span",{class:"hljs-string"},'"riscv-tests success!"'),a(`);
+        } `),s("span",{class:"hljs-keyword"},"else"),a(` {
+            $display(`),s("span",{class:"hljs-string"},'"riscv-tests failed!"'),a(`);
+            $error  (`),s("span",{class:"hljs-string"},'"wdata : %h"'),a(`, d_membus.wdata);
         }
-        $finish();
+`)])]),a(`        $finish();
     }
 }
-</code></pre></div><p>riscv-testsを実行し、RAMにアクセスできてテストに成功することを確認してください。</p><h2 id="romの実装" tabindex="-1">ROMの実装 <a class="header-anchor" href="#romの実装" aria-label="Permalink to “ROMの実装”">​</a></h2><h3 id="mmio-controllerモジュールにromを追加する" tabindex="-1">mmio_controllerモジュールにROMを追加する <a class="header-anchor" href="#mmio-controllerモジュールにromを追加する" aria-label="Permalink to “mmio_controllerモジュールにROMを追加する”">​</a></h3><p>mmio_controllerモジュールにROMとのインターフェースを実装します。</p><p><code>Device</code>型にROMを追加して、アドレスにROMをマップします ( リスト35、 リスト36 )。</p><p><span class="caption">▼リスト11.35: Device型にROMを変更する (mmio_controller.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/300f879c67151d924396314a2dbeabe6161b350e~1..300f879c67151d924396314a2dbeabe6161b350e#diff-eb5f5642a61b8f62a17780d16b47a8273fc236beb095a754ff5288b0d30695c7">差分をみる</a></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">enum</span> Device {
+`)])])],-1),n(`<p>riscv-testsを実行し、RAMにアクセスできてテストに成功することを確認してください。</p><h2 id="romの実装" tabindex="-1">ROMの実装 <a class="header-anchor" href="#romの実装" aria-label="Permalink to “ROMの実装”">​</a></h2><h3 id="mmio-controllerモジュールにromを追加する" tabindex="-1">mmio_controllerモジュールにROMを追加する <a class="header-anchor" href="#mmio-controllerモジュールにromを追加する" aria-label="Permalink to “mmio_controllerモジュールにROMを追加する”">​</a></h3><p>mmio_controllerモジュールにROMとのインターフェースを実装します。</p><p><code>Device</code>型にROMを追加して、アドレスにROMをマップします ( リスト35、 リスト36 )。</p><p><span class="caption">▼リスト11.35: Device型にROMを変更する (mmio_controller.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/300f879c67151d924396314a2dbeabe6161b350e~1..300f879c67151d924396314a2dbeabe6161b350e#diff-eb5f5642a61b8f62a17780d16b47a8273fc236beb095a754ff5288b0d30695c7">差分をみる</a></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">enum</span> Device {
     UNKNOWN,
     RAM,
     <span class="custom-hl-bold">ROM,</span>
@@ -648,20 +648,20 @@ Vcore_top *dut = <span class="hljs-keyword">new</span> <span class="hljs-built_i
         }
     }
 }
-</code></pre></div><p>常に要求を受け付け、書き込みの時は書き込むデータ(<code>wdata</code>)を確認します。 <code>wdata</code>の上位20ビットが<code>20&#39;h01010</code>なら下位8ビットを出力し、 LSBが<code>1</code>ならテストの成功判定をして<code>$finish</code>システムタスクを呼び出します。</p><h3 id="出力をテストする" tabindex="-1">出力をテストする <a class="header-anchor" href="#出力をテストする" aria-label="Permalink to “出力をテストする”">​</a></h3><p>実装した出力デバイスで文字を出力できることを確認します。</p><p>デバッグ用に<code>$display</code>システムタスクで表示している情報が邪魔になるので、 デバッグ情報の表示を環境変数<code>PRINT_DEBUG</code>で制御できるようにします ( リスト70 )。</p><p><span class="caption">▼リスト11.70: デバッグ出力をdefineで囲う (core.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/9b5635504c5babd556c5168ef41ad7f5b1d97038~1..9b5635504c5babd556c5168ef41ad7f5b1d97038#diff-bdad1723f95a5423ff5ab8ba69bb572aabe1c8def0cda1748f6f980f61b57510">差分をみる</a></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-comment">///////////////////////////////// DEBUG /////////////////////////////////</span>
-<span class="custom-hl-bold">#[ifdef(PRINT_DEBUG)]</span>
-<span class="custom-hl-bold">{</span>
-    <span class="hljs-keyword">var</span> clock_count: <span class="hljs-keyword">u64</span>;
+</code></pre></div><p>常に要求を受け付け、書き込みの時は書き込むデータ(<code>wdata</code>)を確認します。 <code>wdata</code>の上位20ビットが<code>20&#39;h01010</code>なら下位8ビットを出力し、 LSBが<code>1</code>ならテストの成功判定をして<code>$finish</code>システムタスクを呼び出します。</p><h3 id="出力をテストする" tabindex="-1">出力をテストする <a class="header-anchor" href="#出力をテストする" aria-label="Permalink to “出力をテストする”">​</a></h3><p>実装した出力デバイスで文字を出力できることを確認します。</p><p>デバッグ用に<code>$display</code>システムタスクで表示している情報が邪魔になるので、 デバッグ情報の表示を環境変数<code>PRINT_DEBUG</code>で制御できるようにします ( リスト70 )。</p><p><span class="caption">▼リスト11.70: デバッグ出力をdefineで囲う (core.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/9b5635504c5babd556c5168ef41ad7f5b1d97038~1..9b5635504c5babd556c5168ef41ad7f5b1d97038#diff-bdad1723f95a5423ff5ab8ba69bb572aabe1c8def0cda1748f6f980f61b57510">差分をみる</a></p>`,117),s("div",{class:"language-veryl"},[s("button",{title:"Copy Code",class:"copy"}),s("span",{class:"lang"},"veryl"),s("pre",{class:"hljs"},[s("code",null,[s("span",{class:"hljs-comment"},"///////////////////////////////// DEBUG /////////////////////////////////"),a(`
+`),s("span",{class:"custom-hl-bold"},"#[ifdef(PRINT_DEBUG)]"),a(`
+`),s("span",{class:"custom-hl-bold"},"{"),a(`
+    `),s("span",{class:"hljs-keyword"},"var"),a(" clock_count: "),s("span",{class:"hljs-keyword"},"u64"),a(`;
 
-    <span class="hljs-keyword">always_ff</span> {
-        <span class="hljs-keyword">if_reset</span> {
-            clock_count = <span class="hljs-number">1</span>;
-        } <span class="hljs-keyword">else</span> {
-            clock_count = clock_count + <span class="hljs-number">1</span>;
-
-            $display(<span class="hljs-string">&quot;&quot;</span>);
-            $display(<span class="hljs-string">&quot;# %d&quot;</span>, clock_count);
-</code></pre></div><p><code>test/debug_output.c</code>を作成し、次のように記述します ( リスト71 )。 これは<code>Hello,world!</code>と出力するプログラムです。</p><p><span class="caption">▼リスト11.71: Hello,world!を出力するプログラム (test/debug_output.c)</span> <a href="https://github.com/nananapo/bluecore/compare/425dc17823771024f50a1e4912fe385820f88b9a~1..425dc17823771024f50a1e4912fe385820f88b9a#diff-275c81fc897533424e3007ff6c97845ded45b9ed448f68034c1c4e96cdfab294">差分をみる</a></p><div class="language-c"><button title="Copy Code" class="copy"></button><span class="lang">c</span><pre class="hljs"><code><span class="hljs-meta">#<span class="hljs-keyword">define</span> DEBUG_REG ((volatile unsigned long long*)0x40000000)</span>
+`),s("span",{class:"foldable-code"},[s("span",{class:"fold-trigger",onclick:"this.parentElement.classList.add('expanded')"}),s("span",{class:"fold-content"},[a("    "),s("span",{class:"hljs-keyword"},"always_ff"),a(` {
+        `),s("span",{class:"hljs-keyword"},"if_reset"),a(` {
+            clock_count = `),s("span",{class:"hljs-number"},"1"),a(`;
+        } `),s("span",{class:"hljs-keyword"},"else"),a(` {
+            clock_count = clock_count + `),s("span",{class:"hljs-number"},"1"),a(`;
+`)])]),a(`
+            $display(`),s("span",{class:"hljs-string"},'""'),a(`);
+            $display(`),s("span",{class:"hljs-string"},'"# %d"'),a(`, clock_count);
+`)])])],-1),n(`<p><code>test/debug_output.c</code>を作成し、次のように記述します ( リスト71 )。 これは<code>Hello,world!</code>と出力するプログラムです。</p><p><span class="caption">▼リスト11.71: Hello,world!を出力するプログラム (test/debug_output.c)</span> <a href="https://github.com/nananapo/bluecore/compare/425dc17823771024f50a1e4912fe385820f88b9a~1..425dc17823771024f50a1e4912fe385820f88b9a#diff-275c81fc897533424e3007ff6c97845ded45b9ed448f68034c1c4e96cdfab294">差分をみる</a></p><div class="language-c"><button title="Copy Code" class="copy"></button><span class="lang">c</span><pre class="hljs"><code><span class="hljs-meta">#<span class="hljs-keyword">define</span> DEBUG_REG ((volatile unsigned long long*)0x40000000)</span>
 
 <span class="hljs-type">void</span> <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span> {
     <span class="hljs-type">int</span> <span class="hljs-built_in">strlen</span> = <span class="hljs-number">13</span>;
@@ -853,58 +853,58 @@ Hello,world!
     <span class="custom-hl-bold"><span class="hljs-meta">#<span class="hljs-keyword">ifdef</span> ENABLE_DEBUG_INPUT</span></span>
         <span class="custom-hl-bold"><span class="hljs-built_in">set_nonblocking</span>();</span>
     <span class="custom-hl-bold"><span class="hljs-meta">#<span class="hljs-keyword">endif</span></span></span>
-</code></pre></div><p><code>src/util.veryl</code>にget_input_dpic関数を呼び出す関数を実装します ( リスト86 )。</p><p><span class="caption">▼リスト11.86: get_input関数を定義する (src/util.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/7a1b239f6dde5db39ab6cea0c7aaf3b1994878d1~1..7a1b239f6dde5db39ab6cea0c7aaf3b1994878d1#diff-6b4b63d3522250a8618dfa5acc419267d8fb3cf26815d4da6936aadf5c81d945">差分をみる</a></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">embed</span> (inline) sv{{{
-    <span class="hljs-keyword">package</span> svutil;
-        <span class="hljs-keyword">import</span> <span class="hljs-string">&quot;DPI-C&quot;</span> context <span class="hljs-keyword">function</span> <span class="hljs-keyword">string</span> get_env_value(<span class="hljs-keyword">input</span> <span class="hljs-keyword">string</span> key);
-        <span class="hljs-keyword">function</span> <span class="hljs-keyword">string</span> get_env(<span class="hljs-keyword">input</span> <span class="hljs-keyword">string</span> name);
-            <span class="hljs-keyword">return</span> get_env_value(name);
+</code></pre></div><p><code>src/util.veryl</code>にget_input_dpic関数を呼び出す関数を実装します ( リスト86 )。</p><p><span class="caption">▼リスト11.86: get_input関数を定義する (src/util.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/7a1b239f6dde5db39ab6cea0c7aaf3b1994878d1~1..7a1b239f6dde5db39ab6cea0c7aaf3b1994878d1#diff-6b4b63d3522250a8618dfa5acc419267d8fb3cf26815d4da6936aadf5c81d945">差分をみる</a></p>`,54),s("div",{class:"language-veryl"},[s("button",{title:"Copy Code",class:"copy"}),s("span",{class:"lang"},"veryl"),s("pre",{class:"hljs"},[s("code",null,[s("span",{class:"hljs-keyword"},"embed"),a(` (inline) sv{{{
+    `),s("span",{class:"hljs-keyword"},"package"),a(` svutil;
+        `),s("span",{class:"hljs-keyword"},"import"),a(),s("span",{class:"hljs-string"},'"DPI-C"'),a(" context "),s("span",{class:"hljs-keyword"},"function"),a(),s("span",{class:"hljs-keyword"},"string"),a(" get_env_value("),s("span",{class:"hljs-keyword"},"input"),a(),s("span",{class:"hljs-keyword"},"string"),a(` key);
+        `),s("span",{class:"hljs-keyword"},"function"),a(),s("span",{class:"hljs-keyword"},"string"),a(" get_env("),s("span",{class:"hljs-keyword"},"input"),a(),s("span",{class:"hljs-keyword"},"string"),a(` name);
+            `),s("span",{class:"hljs-keyword"},"return"),a(` get_env_value(name);
         endfunction
-        <span class="custom-hl-bold"><span class="hljs-keyword">import</span> <span class="hljs-string">&quot;DPI-C&quot;</span> context <span class="hljs-keyword">function</span> longint get_input_dpic();</span>
-        <span class="custom-hl-bold"><span class="hljs-keyword">function</span> longint get_input();</span>
-        <span class="custom-hl-bold">    <span class="hljs-keyword">return</span> get_input_dpic();</span>
-        <span class="custom-hl-bold">endfunction</span>
+        `),s("span",{class:"custom-hl-bold"},[s("span",{class:"hljs-keyword"},"import"),a(),s("span",{class:"hljs-string"},'"DPI-C"'),a(" context "),s("span",{class:"hljs-keyword"},"function"),a(" longint get_input_dpic();")]),a(`
+        `),s("span",{class:"custom-hl-bold"},[s("span",{class:"hljs-keyword"},"function"),a(" longint get_input();")]),a(`
+        `),s("span",{class:"custom-hl-bold"},[a("    "),s("span",{class:"hljs-keyword"},"return"),a(" get_input_dpic();")]),a(`
+        `),s("span",{class:"custom-hl-bold"},"endfunction"),a(`
     endpackage
 }}}
-
-<span class="hljs-keyword">package</span> util {
-    <span class="hljs-keyword">function</span> get_env (
-        name: <span class="hljs-keyword">input</span> <span class="hljs-keyword">string</span>,
-    ) -&gt; <span class="hljs-keyword">string</span> {
-        <span class="hljs-keyword">return</span> $sv::svutil::get_env(name);
+`),s("span",{class:"foldable-code"},[s("span",{class:"fold-trigger",onclick:"this.parentElement.classList.add('expanded')"}),s("span",{class:"fold-content"},[a(`
+`),s("span",{class:"hljs-keyword"},"package"),a(` util {
+    `),s("span",{class:"hljs-keyword"},"function"),a(` get_env (
+        name: `),s("span",{class:"hljs-keyword"},"input"),a(),s("span",{class:"hljs-keyword"},"string"),a(`,
+    ) -> `),s("span",{class:"hljs-keyword"},"string"),a(` {
+`)])]),a("        "),s("span",{class:"hljs-keyword"},"return"),a(` $sv::svutil::get_env(name);
     }
-    <span class="custom-hl-bold"><span class="hljs-keyword">function</span> get_input () -&gt; <span class="hljs-keyword">u64</span> {</span>
-    <span class="custom-hl-bold">    <span class="hljs-keyword">return</span> $sv::svutil::get_input();</span>
-    <span class="custom-hl-bold">}</span>
+    `),s("span",{class:"custom-hl-bold"},[s("span",{class:"hljs-keyword"},"function"),a(" get_input () -> "),s("span",{class:"hljs-keyword"},"u64"),a(" {")]),a(`
+    `),s("span",{class:"custom-hl-bold"},[a("    "),s("span",{class:"hljs-keyword"},"return"),a(" $sv::svutil::get_input();")]),a(`
+    `),s("span",{class:"custom-hl-bold"},"}"),a(`
 }
-</code></pre></div><p>デバッグ用の入出力デバイスのロードで<code>util::get_input</code>の結果を返すようにします ( リスト87 )。 このコードは合成できないので、有効化オプション<code>ENABLE_DEBUG_INPUT</code>をつけます。</p><p><span class="caption">▼リスト11.87: 読み込みでget_input関数を呼び出す (src/top.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/7a1b239f6dde5db39ab6cea0c7aaf3b1994878d1~1..7a1b239f6dde5db39ab6cea0c7aaf3b1994878d1#diff-0c548fd82f89bdf97edffcd89dfccd2aab836eccf57f11b8e25c313abd0d0e6f">差分をみる</a></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">always_ff</span> {
-    dbg_membus.ready  = <span class="hljs-number">1</span>;
+`)])])],-1),s("p",null,[a("デバッグ用の入出力デバイスのロードで"),s("code",null,"util::get_input"),a("の結果を返すようにします ( リスト87 )。 このコードは合成できないので、有効化オプション"),s("code",null,"ENABLE_DEBUG_INPUT"),a("をつけます。")],-1),s("p",null,[s("span",{class:"caption"},"▼リスト11.87: 読み込みでget_input関数を呼び出す (src/top.veryl)"),a(),s("a",{href:"https://github.com/nananapo/bluecore/compare/7a1b239f6dde5db39ab6cea0c7aaf3b1994878d1~1..7a1b239f6dde5db39ab6cea0c7aaf3b1994878d1#diff-0c548fd82f89bdf97edffcd89dfccd2aab836eccf57f11b8e25c313abd0d0e6f"},"差分をみる")],-1),s("div",{class:"language-veryl"},[s("button",{title:"Copy Code",class:"copy"}),s("span",{class:"lang"},"veryl"),s("pre",{class:"hljs"},[s("code",null,[s("span",{class:"hljs-keyword"},"always_ff"),a(` {
+    dbg_membus.ready  = `),s("span",{class:"hljs-number"},"1"),a(`;
     dbg_membus.rvalid = dbg_membus.valid;
-    <span class="hljs-keyword">if</span> dbg_membus.valid {
-        <span class="hljs-keyword">if</span> dbg_membus.wen {
-            <span class="hljs-keyword">if</span> dbg_membus.wdata[MEMBUS_DATA_WIDTH - <span class="hljs-number">1</span>-:<span class="hljs-number">20</span>] == <span class="hljs-number">20&#39;h01010</span> {
-                $write(<span class="hljs-string">&quot;%c&quot;</span>, dbg_membus.wdata[<span class="hljs-number">7</span>:<span class="hljs-number">0</span>]);
-            } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> dbg_membus.wdata[<span class="hljs-keyword">lsb</span>] == <span class="hljs-number">1&#39;b1</span> {
+`),s("span",{class:"foldable-code"},[s("span",{class:"fold-trigger",onclick:"this.parentElement.classList.add('expanded')"}),s("span",{class:"fold-content"},[a("    "),s("span",{class:"hljs-keyword"},"if"),a(` dbg_membus.valid {
+        `),s("span",{class:"hljs-keyword"},"if"),a(` dbg_membus.wen {
+            `),s("span",{class:"hljs-keyword"},"if"),a(" dbg_membus.wdata[MEMBUS_DATA_WIDTH - "),s("span",{class:"hljs-number"},"1"),a("-:"),s("span",{class:"hljs-number"},"20"),a("] == "),s("span",{class:"hljs-number"},"20'h01010"),a(` {
+                $write(`),s("span",{class:"hljs-string"},'"%c"'),a(", dbg_membus.wdata["),s("span",{class:"hljs-number"},"7"),a(":"),s("span",{class:"hljs-number"},"0"),a(`]);
+            } `),s("span",{class:"hljs-keyword"},"else"),a(),s("span",{class:"hljs-keyword"},"if"),a(" dbg_membus.wdata["),s("span",{class:"hljs-keyword"},"lsb"),a("] == "),s("span",{class:"hljs-number"},"1'b1"),a(` {
                 #[ifdef(TEST_MODE)]
                 {
-                    test_success = dbg_membus.wdata == <span class="hljs-number">1</span>;
+                    test_success = dbg_membus.wdata == `),s("span",{class:"hljs-number"},"1"),a(`;
                 }
-                <span class="hljs-keyword">if</span> dbg_membus.wdata == <span class="hljs-number">1</span> {
-                    $display(<span class="hljs-string">&quot;test success!&quot;</span>);
-                } <span class="hljs-keyword">else</span> {
-                    $display(<span class="hljs-string">&quot;test failed!&quot;</span>);
-                    $error  (<span class="hljs-string">&quot;wdata : %h&quot;</span>, dbg_membus.wdata);
+                `),s("span",{class:"hljs-keyword"},"if"),a(" dbg_membus.wdata == "),s("span",{class:"hljs-number"},"1"),a(` {
+                    $display(`),s("span",{class:"hljs-string"},'"test success!"'),a(`);
+                } `),s("span",{class:"hljs-keyword"},"else"),a(` {
+                    $display(`),s("span",{class:"hljs-string"},'"test failed!"'),a(`);
+                    $error  (`),s("span",{class:"hljs-string"},'"wdata : %h"'),a(`, dbg_membus.wdata);
                 }
-                $finish();
+`)])]),a(`                $finish();
             }
-        <span class="custom-hl-bold">} <span class="hljs-keyword">else</span> {</span>
-        <span class="custom-hl-bold">    #[ifdef(ENABLE_DEBUG_INPUT)]</span>
-        <span class="custom-hl-bold">    {</span>
-        <span class="custom-hl-bold">        dbg_membus.rdata = util::get_input();</span>
-        <span class="custom-hl-bold">    }</span>
+        `),s("span",{class:"custom-hl-bold"},[a("} "),s("span",{class:"hljs-keyword"},"else"),a(" {")]),a(`
+        `),s("span",{class:"custom-hl-bold"},"    #[ifdef(ENABLE_DEBUG_INPUT)]"),a(`
+        `),s("span",{class:"custom-hl-bold"},"    {"),a(`
+        `),s("span",{class:"custom-hl-bold"},"        dbg_membus.rdata = util::get_input();"),a(`
+        `),s("span",{class:"custom-hl-bold"},"    }"),a(`
         }
     }
 }
-</code></pre></div><h3 id="入力をテストする" tabindex="-1">入力をテストする <a class="header-anchor" href="#入力をテストする" aria-label="Permalink to “入力をテストする”">​</a></h3><p>実装した入出力デバイスで文字を入出力できることを確認します。</p><p><code>test/debug_input.c</code>を作成し、次のように記述します ( リスト88 )。 これは入力された文字に<code>1</code>を足した値を出力するプログラムです。</p><p><span class="caption">▼リスト11.88: test/debug_input.c</span> <a href="https://github.com/nananapo/bluecore/compare/7a1b239f6dde5db39ab6cea0c7aaf3b1994878d1~1..7a1b239f6dde5db39ab6cea0c7aaf3b1994878d1#diff-ecd81d575697e5c25714cf67759e2d0e84cc519b5c93a473ea5e173eaf03d0ad">差分をみる</a></p><div class="language-c"><button title="Copy Code" class="copy"></button><span class="lang">c</span><pre class="hljs"><code><span class="hljs-meta">#<span class="hljs-keyword">define</span> DEBUG_REG ((volatile unsigned long long*)0x40000000)</span>
+`)])])],-1),n(`<h3 id="入力をテストする" tabindex="-1">入力をテストする <a class="header-anchor" href="#入力をテストする" aria-label="Permalink to “入力をテストする”">​</a></h3><p>実装した入出力デバイスで文字を入出力できることを確認します。</p><p><code>test/debug_input.c</code>を作成し、次のように記述します ( リスト88 )。 これは入力された文字に<code>1</code>を足した値を出力するプログラムです。</p><p><span class="caption">▼リスト11.88: test/debug_input.c</span> <a href="https://github.com/nananapo/bluecore/compare/7a1b239f6dde5db39ab6cea0c7aaf3b1994878d1~1..7a1b239f6dde5db39ab6cea0c7aaf3b1994878d1#diff-ecd81d575697e5c25714cf67759e2d0e84cc519b5c93a473ea5e173eaf03d0ad">差分をみる</a></p><div class="language-c"><button title="Copy Code" class="copy"></button><span class="lang">c</span><pre class="hljs"><code><span class="hljs-meta">#<span class="hljs-keyword">define</span> DEBUG_REG ((volatile unsigned long long*)0x40000000)</span>
 
 <span class="hljs-type">void</span> <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span> {
     <span class="hljs-keyword">while</span> (<span class="hljs-number">1</span>) {
@@ -920,4 +920,4 @@ Hello,world!
 <span class="hljs-meta prompt_">$ </span><span class="language-bash">./obj_dir/sim bootrom.hex <span class="hljs-built_in">test</span>/test.bin.hex ← (事前にHEXファイルを作成しておく</span>
 bcd← abcと入力して改行
    efg← defと入力する
-</code></pre></div><hr class="footnotes-sep"><section class="footnotes"><ol class="footnotes-list"><li id="fn1" class="footnote-item"><p>本章では実際のRAMデバイスへのアクセスを実装せずmemoryモジュールで代用します。FPGAに合成するときに実際のデバイスへのアクセスに置き換えます。 <a href="#fnref1" class="footnote-backref">↩︎</a></p></li><li id="fn2" class="footnote-item"><p>pipでインストールできます <a href="#fnref2" class="footnote-backref">↩︎</a></p></li></ol></section>`,296)])])}const u=a(c,[["render",o]]);export{h as __pageData,u as default};
+</code></pre></div><hr class="footnotes-sep"><section class="footnotes"><ol class="footnotes-list"><li id="fn1" class="footnote-item"><p>本章では実際のRAMデバイスへのアクセスを実装せずmemoryモジュールで代用します。FPGAに合成するときに実際のデバイスへのアクセスに置き換えます。 <a href="#fnref1" class="footnote-backref">↩︎</a></p></li><li id="fn2" class="footnote-item"><p>pipでインストールできます <a href="#fnref2" class="footnote-backref">↩︎</a></p></li></ol></section>`,10)])])}const _=l(d,[["render",t]]);export{f as __pageData,_ as default};

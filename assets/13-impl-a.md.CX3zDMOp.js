@@ -1,4 +1,4 @@
-import{_ as s,c as n,o as e,ah as l,bD as c,bE as p,bF as d}from"./chunks/framework.BNheOMQd.js";const u=JSON.parse('{"title":"A拡張の実装","description":"","frontmatter":{},"headers":[],"relativePath":"13-impl-a.md","filePath":"13-impl-a.md"}'),t={name:"13-impl-a.md"};function o(r,a,b,m,h,i){return e(),n("div",null,[...a[0]||(a[0]=[l('<h1 id="a拡張の実装" tabindex="-1">A拡張の実装 <a class="header-anchor" href="#a拡張の実装" aria-label="Permalink to “A拡張の実装”">​</a></h1><p>本章では、メモリの不可分操作を実現するA拡張を実装します。 A拡張にはLoad-Reserved、Store-Conditionalを実現するZalrsc拡張(表2)、 ロードした値を加工し、その結果をメモリにストアする操作を単一の命令で実装するZaamo拡張(表1)が含まれています。 A拡張の命令を利用すると、同じメモリ空間で複数のソフトウェアを並列、並行して実行するとき、 ソフトウェア間で同期をとりながら実行できます。</p><h2 id="アトミック操作" tabindex="-1">アトミック操作 <a class="header-anchor" href="#アトミック操作" aria-label="Permalink to “アトミック操作”">​</a></h2><h3 id="アトミック操作とは何か" tabindex="-1">アトミック操作とは何か？ <a class="header-anchor" href="#アトミック操作とは何か" aria-label="Permalink to “アトミック操作とは何か？”">​</a></h3><p>アトミック操作(Atomic operation、不可分操作)とは、他のシステムからその操作を観測するとき、1つの操作として観測される操作のことです。 つまり、他のシステムは、アトミック操作を行う前、アトミック操作を行った後の状態しか観測できません。</p><p><img src="'+c+'" alt="図2のプログラムを2つに分割して2つのCPUで実行する (Xは11になる)"><img src="'+p+`" alt="1つのCPUでメモリ上の値を2回インクリメントする (Xは12になる)"> アトミック操作は実行、観測される順序が重要なアプリケーションで利用します。 例えば、アドレスXの値をロードして1を足した値を書き戻すプログラムを、 2つのコアで同時に実行するとします(図1)。 このとき命令の実行順序によっては、最終的な値が1つのコアで2回プログラムを実行した場合と異なってしまいます(図2)。 この状態を避けるためにはロード、加算、ストアをアトミックに行う必要があります。 このアトミック操作の実現方法として、A拡張はAMOADD命令、LR命令とSC命令を提供します。</p><h3 id="zaamo拡張" tabindex="-1">Zaamo拡張 <a class="header-anchor" href="#zaamo拡張" aria-label="Permalink to “Zaamo拡張”">​</a></h3><p>Zaamo拡張は、値をロードして、演算した値をストアする操作を1つの命令で行う命令を定義しています。 AMOADD命令はロード、加算、ストアを行う単一の命令です。 Zaamo拡張は他にも簡単な操作を行う命令も提供しています。</p><div id="a.instructions.zaamo" class="table"><p class="caption">表12.1: Zaamo拡張の命令</p><table><tr class="hline"><th>命令</th><th>動作 (読み込んだ値をレジスタにライトバックする)</th></tr><tr class="hline"><td>AMOSWAP.W/D</td><td>メモリから32/64ビット読み込み、<br>rs2の値を書き込む</td></tr><tr class="hline"><td>AMOADD.W/D</td><td>メモリから32/64ビット(符号付き)読み込み<br>rs2(符号付き)の値を足して書き込む</td></tr><tr class="hline"><td>AMOAND.W/D</td><td>メモリから32/64ビット読み込み<br>rs2の値をAND演算して書き込む</td></tr><tr class="hline"><td>AMOOR.W/D</td><td>メモリから32/64ビット読み込み<br>rs2の値をOR演算して書き込む</td></tr><tr class="hline"><td>AMOXOR.W/D</td><td>メモリから32/64ビット読み込み<br>rs2の値をXOR演算して書き込む</td></tr><tr class="hline"><td>AMOMIN.W/D</td><td>メモリから32/64ビット(符号付き)読み込み<br>rs2(符号付き)の値と比べて小さい値を書き込む</td></tr><tr class="hline"><td>AMOMAX.W/D</td><td>メモリから32/64ビット(符号付き)読み込み<br>rs2(符号付き)の値と比べて大きい値をを書き込む</td></tr><tr class="hline"><td>AMOMINU.W/D</td><td>メモリから32/64ビット(符号無し)読み込み<br>rs2(符号無し)の値と比べて小さい値を書き込む</td></tr><tr class="hline"><td>AMOMAXU.W/D</td><td>メモリから32/64ビット(符号無し)読み込み<br>rs2(符号無し)の値と比べて大きい値を書き込む</td></tr></table></div><h3 id="zalrsc拡張" tabindex="-1">Zalrsc拡張 <a class="header-anchor" href="#zalrsc拡張" aria-label="Permalink to “Zalrsc拡張”">​</a></h3><p>Zalrsc拡張は、LR命令とSC命令を定義しています。 LR、SC命令は、それぞれLoad-Reserved、Store-Conditional操作を実現する命令です。 それぞれ次のように動作します。</p><dl><dt>LR命令</dt><dd> 指定されたアドレスのデータを読み込み、指定されたアドレスを予約セット(Reservation set)に登録します。 ロードしたデータをレジスタにライトバックします。 </dd><dt>SC命令</dt><dd> 指定されたアドレスが予約セットに存在する場合、指定されたアドレスにデータを書き込みます(ストア成功)。 予約セットにアドレスが存在しない場合は書き込みません(ストア失敗)。 ストアに成功したら\`0\`、失敗したら\`0\`以外の値をレジスタにライトバックします。 命令の実行後に必ず予約セットを空にします。 </dd></dl><p>LR、SC命令を使うことで、アトミックなロード、加算、ストアを次のように記述できます (リスト1)。</p><p><span class="caption">▼リスト12.1: LR、SC命令によるアトミックな加算</span></p><div class="language-asm"><button title="Copy Code" class="copy"></button><span class="lang">asm</span><pre class="hljs"><code>atomic_add:
+import{_ as l,c,o as p,ah as n,j as a,a as s,bD as d,bE as t,bF as o}from"./chunks/framework.BNheOMQd.js";const j=JSON.parse('{"title":"A拡張の実装","description":"","frontmatter":{},"headers":[],"relativePath":"13-impl-a.md","filePath":"13-impl-a.md"}'),r={name:"13-impl-a.md"};function b(m,e,h,i,f,u){return p(),c("div",null,[...e[0]||(e[0]=[n('<h1 id="a拡張の実装" tabindex="-1">A拡張の実装 <a class="header-anchor" href="#a拡張の実装" aria-label="Permalink to “A拡張の実装”">​</a></h1><p>本章では、メモリの不可分操作を実現するA拡張を実装します。 A拡張にはLoad-Reserved、Store-Conditionalを実現するZalrsc拡張(表2)、 ロードした値を加工し、その結果をメモリにストアする操作を単一の命令で実装するZaamo拡張(表1)が含まれています。 A拡張の命令を利用すると、同じメモリ空間で複数のソフトウェアを並列、並行して実行するとき、 ソフトウェア間で同期をとりながら実行できます。</p><h2 id="アトミック操作" tabindex="-1">アトミック操作 <a class="header-anchor" href="#アトミック操作" aria-label="Permalink to “アトミック操作”">​</a></h2><h3 id="アトミック操作とは何か" tabindex="-1">アトミック操作とは何か？ <a class="header-anchor" href="#アトミック操作とは何か" aria-label="Permalink to “アトミック操作とは何か？”">​</a></h3><p>アトミック操作(Atomic operation、不可分操作)とは、他のシステムからその操作を観測するとき、1つの操作として観測される操作のことです。 つまり、他のシステムは、アトミック操作を行う前、アトミック操作を行った後の状態しか観測できません。</p><p><img src="'+d+'" alt="図2のプログラムを2つに分割して2つのCPUで実行する (Xは11になる)"><img src="'+t+`" alt="1つのCPUでメモリ上の値を2回インクリメントする (Xは12になる)"> アトミック操作は実行、観測される順序が重要なアプリケーションで利用します。 例えば、アドレスXの値をロードして1を足した値を書き戻すプログラムを、 2つのコアで同時に実行するとします(図1)。 このとき命令の実行順序によっては、最終的な値が1つのコアで2回プログラムを実行した場合と異なってしまいます(図2)。 この状態を避けるためにはロード、加算、ストアをアトミックに行う必要があります。 このアトミック操作の実現方法として、A拡張はAMOADD命令、LR命令とSC命令を提供します。</p><h3 id="zaamo拡張" tabindex="-1">Zaamo拡張 <a class="header-anchor" href="#zaamo拡張" aria-label="Permalink to “Zaamo拡張”">​</a></h3><p>Zaamo拡張は、値をロードして、演算した値をストアする操作を1つの命令で行う命令を定義しています。 AMOADD命令はロード、加算、ストアを行う単一の命令です。 Zaamo拡張は他にも簡単な操作を行う命令も提供しています。</p><div id="a.instructions.zaamo" class="table"><p class="caption">表12.1: Zaamo拡張の命令</p><table><tr class="hline"><th>命令</th><th>動作 (読み込んだ値をレジスタにライトバックする)</th></tr><tr class="hline"><td>AMOSWAP.W/D</td><td>メモリから32/64ビット読み込み、<br>rs2の値を書き込む</td></tr><tr class="hline"><td>AMOADD.W/D</td><td>メモリから32/64ビット(符号付き)読み込み<br>rs2(符号付き)の値を足して書き込む</td></tr><tr class="hline"><td>AMOAND.W/D</td><td>メモリから32/64ビット読み込み<br>rs2の値をAND演算して書き込む</td></tr><tr class="hline"><td>AMOOR.W/D</td><td>メモリから32/64ビット読み込み<br>rs2の値をOR演算して書き込む</td></tr><tr class="hline"><td>AMOXOR.W/D</td><td>メモリから32/64ビット読み込み<br>rs2の値をXOR演算して書き込む</td></tr><tr class="hline"><td>AMOMIN.W/D</td><td>メモリから32/64ビット(符号付き)読み込み<br>rs2(符号付き)の値と比べて小さい値を書き込む</td></tr><tr class="hline"><td>AMOMAX.W/D</td><td>メモリから32/64ビット(符号付き)読み込み<br>rs2(符号付き)の値と比べて大きい値をを書き込む</td></tr><tr class="hline"><td>AMOMINU.W/D</td><td>メモリから32/64ビット(符号無し)読み込み<br>rs2(符号無し)の値と比べて小さい値を書き込む</td></tr><tr class="hline"><td>AMOMAXU.W/D</td><td>メモリから32/64ビット(符号無し)読み込み<br>rs2(符号無し)の値と比べて大きい値を書き込む</td></tr></table></div><h3 id="zalrsc拡張" tabindex="-1">Zalrsc拡張 <a class="header-anchor" href="#zalrsc拡張" aria-label="Permalink to “Zalrsc拡張”">​</a></h3><p>Zalrsc拡張は、LR命令とSC命令を定義しています。 LR、SC命令は、それぞれLoad-Reserved、Store-Conditional操作を実現する命令です。 それぞれ次のように動作します。</p><dl><dt>LR命令</dt><dd> 指定されたアドレスのデータを読み込み、指定されたアドレスを予約セット(Reservation set)に登録します。 ロードしたデータをレジスタにライトバックします。 </dd><dt>SC命令</dt><dd> 指定されたアドレスが予約セットに存在する場合、指定されたアドレスにデータを書き込みます(ストア成功)。 予約セットにアドレスが存在しない場合は書き込みません(ストア失敗)。 ストアに成功したら\`0\`、失敗したら\`0\`以外の値をレジスタにライトバックします。 命令の実行後に必ず予約セットを空にします。 </dd></dl><p>LR、SC命令を使うことで、アトミックなロード、加算、ストアを次のように記述できます (リスト1)。</p><p><span class="caption">▼リスト12.1: LR、SC命令によるアトミックな加算</span></p><div class="language-asm"><button title="Copy Code" class="copy"></button><span class="lang">asm</span><pre class="hljs"><code>atomic_add:
     LR.W x2, (x3) ← アドレスx3の値をx2にロード
     ADDI x2, x2, 1 ← x2に1を足す
     SC.W x4, x2, (x3) ← ストアを試行し、結果をx4に格納
@@ -17,21 +17,21 @@ import{_ as s,c as n,o as e,ah as l,bD as c,bE as p,bF as d}from"./chunks/framew
     MINU = <span class="hljs-number">5&#39;b11000</span>,
     MAXU = <span class="hljs-number">5&#39;b11100</span>,
 }
-</code></pre></div><h3 id="is-amoフラグを実装する" tabindex="-1">is_amoフラグを実装する <a class="header-anchor" href="#is-amoフラグを実装する" aria-label="Permalink to “is_amoフラグを実装する”">​</a></h3><p><code>InstCtrl</code>構造体に、 A拡張の命令であることを示す<code>is_amo</code>フラグを追加します (リスト4)。</p><p><span class="caption">▼リスト12.4: InstCtrlにis_amoを定義する (corectrl.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/cb1dcfe57e93d3c8b769206b7d001cb5d6fef1d9~1..cb1dcfe57e93d3c8b769206b7d001cb5d6fef1d9#diff-6e03bfb8e3afdba1e0b88b561d8b8e5e4f2a7ffc6c4efb228c5797053b78742c">差分をみる</a></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">struct</span> InstCtrl {
-    itype    : InstType   , <span class="hljs-comment">// 命令の形式</span>
-    rwb_en   : <span class="hljs-keyword">logic</span>      , <span class="hljs-comment">// レジスタに書き込むかどうか</span>
-    is_lui   : <span class="hljs-keyword">logic</span>      , <span class="hljs-comment">// LUI命令である</span>
-    is_aluop : <span class="hljs-keyword">logic</span>      , <span class="hljs-comment">// ALUを利用する命令である</span>
-    is_muldiv: <span class="hljs-keyword">logic</span>      , <span class="hljs-comment">// M拡張の命令である</span>
-    is_op32  : <span class="hljs-keyword">logic</span>      , <span class="hljs-comment">// OP-32またはOP-IMM-32である</span>
-    is_jump  : <span class="hljs-keyword">logic</span>      , <span class="hljs-comment">// ジャンプ命令である</span>
-    is_load  : <span class="hljs-keyword">logic</span>      , <span class="hljs-comment">// ロード命令である</span>
-    is_csr   : <span class="hljs-keyword">logic</span>      , <span class="hljs-comment">// CSR命令である</span>
-    <span class="custom-hl-bold">is_amo   : <span class="hljs-keyword">logic</span>      , <span class="hljs-comment">// AMO instruction</span></span>
-    funct3   : <span class="hljs-keyword">logic</span>   &lt;<span class="hljs-number">3</span>&gt;, <span class="hljs-comment">// 命令のfunct3フィールド</span>
-    funct7   : <span class="hljs-keyword">logic</span>   &lt;<span class="hljs-number">7</span>&gt;, <span class="hljs-comment">// 命令のfunct7フィールド</span>
+</code></pre></div><h3 id="is-amoフラグを実装する" tabindex="-1">is_amoフラグを実装する <a class="header-anchor" href="#is-amoフラグを実装する" aria-label="Permalink to “is_amoフラグを実装する”">​</a></h3><p><code>InstCtrl</code>構造体に、 A拡張の命令であることを示す<code>is_amo</code>フラグを追加します (リスト4)。</p><p><span class="caption">▼リスト12.4: InstCtrlにis_amoを定義する (corectrl.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/cb1dcfe57e93d3c8b769206b7d001cb5d6fef1d9~1..cb1dcfe57e93d3c8b769206b7d001cb5d6fef1d9#diff-6e03bfb8e3afdba1e0b88b561d8b8e5e4f2a7ffc6c4efb228c5797053b78742c">差分をみる</a></p>`,34),a("div",{class:"language-veryl"},[a("button",{title:"Copy Code",class:"copy"}),a("span",{class:"lang"},"veryl"),a("pre",{class:"hljs"},[a("code",null,[a("span",{class:"hljs-keyword"},"struct"),s(` InstCtrl {
+    itype    : InstType   , `),a("span",{class:"hljs-comment"},"// 命令の形式"),s(`
+    rwb_en   : `),a("span",{class:"hljs-keyword"},"logic"),s("      , "),a("span",{class:"hljs-comment"},"// レジスタに書き込むかどうか"),s(`
+`),a("span",{class:"foldable-code"},[a("span",{class:"fold-trigger",onclick:"this.parentElement.classList.add('expanded')"}),a("span",{class:"fold-content"},[s("    is_lui   : "),a("span",{class:"hljs-keyword"},"logic"),s("      , "),a("span",{class:"hljs-comment"},"// LUI命令である"),s(`
+    is_aluop : `),a("span",{class:"hljs-keyword"},"logic"),s("      , "),a("span",{class:"hljs-comment"},"// ALUを利用する命令である"),s(`
+    is_muldiv: `),a("span",{class:"hljs-keyword"},"logic"),s("      , "),a("span",{class:"hljs-comment"},"// M拡張の命令である"),s(`
+    is_op32  : `),a("span",{class:"hljs-keyword"},"logic"),s("      , "),a("span",{class:"hljs-comment"},"// OP-32またはOP-IMM-32である"),s(`
+    is_jump  : `),a("span",{class:"hljs-keyword"},"logic"),s("      , "),a("span",{class:"hljs-comment"},"// ジャンプ命令である"),s(`
+`)])]),s("    is_load  : "),a("span",{class:"hljs-keyword"},"logic"),s("      , "),a("span",{class:"hljs-comment"},"// ロード命令である"),s(`
+    is_csr   : `),a("span",{class:"hljs-keyword"},"logic"),s("      , "),a("span",{class:"hljs-comment"},"// CSR命令である"),s(`
+    `),a("span",{class:"custom-hl-bold"},[s("is_amo   : "),a("span",{class:"hljs-keyword"},"logic"),s("      , "),a("span",{class:"hljs-comment"},"// AMO instruction")]),s(`
+    funct3   : `),a("span",{class:"hljs-keyword"},"logic"),s("   <"),a("span",{class:"hljs-number"},"3"),s(">, "),a("span",{class:"hljs-comment"},"// 命令のfunct3フィールド"),s(`
+    funct7   : `),a("span",{class:"hljs-keyword"},"logic"),s("   <"),a("span",{class:"hljs-number"},"7"),s(">, "),a("span",{class:"hljs-comment"},"// 命令のfunct7フィールド"),s(`
 }
-</code></pre></div><p>命令がメモリにアクセスするかを判定するinst_is_memop関数を、<code>is_amo</code>フラグを利用するように変更します (リスト5)。</p><p><span class="caption">▼リスト12.5: A拡張の命令がメモリにアクセスする命令と判定する (corectrl.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/cb1dcfe57e93d3c8b769206b7d001cb5d6fef1d9~1..cb1dcfe57e93d3c8b769206b7d001cb5d6fef1d9#diff-6e03bfb8e3afdba1e0b88b561d8b8e5e4f2a7ffc6c4efb228c5797053b78742c">差分をみる</a></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">function</span> inst_is_memop (
+`)])])],-1),n(`<p>命令がメモリにアクセスするかを判定するinst_is_memop関数を、<code>is_amo</code>フラグを利用するように変更します (リスト5)。</p><p><span class="caption">▼リスト12.5: A拡張の命令がメモリにアクセスする命令と判定する (corectrl.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/cb1dcfe57e93d3c8b769206b7d001cb5d6fef1d9~1..cb1dcfe57e93d3c8b769206b7d001cb5d6fef1d9#diff-6e03bfb8e3afdba1e0b88b561d8b8e5e4f2a7ffc6c4efb228c5797053b78742c">差分をみる</a></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">function</span> inst_is_memop (
     ctrl: <span class="hljs-keyword">input</span> InstCtrl,
 ) -&gt; <span class="hljs-keyword">logic</span> {
     <span class="hljs-keyword">return</span> ctrl.itype == InstType::S || ctrl.is_load <span class="custom-hl-bold">|| ctrl.is_amo</span>;
@@ -79,7 +79,7 @@ OP_AMO: {
     wbs_ctrl.is_csr                    : wbq_rdata.csr_rdata,
     <span class="hljs-keyword">default</span>                            : wbq_rdata.alu_result
 };
-</code></pre></div><h2 id="amounitモジュールの作成" tabindex="-1">amounitモジュールの作成 <a class="header-anchor" href="#amounitモジュールの作成" aria-label="Permalink to “amounitモジュールの作成”">​</a></h2><p>A拡張は他のコア、ハードウェアスレッドと同期してメモリ操作を行うためのものであるため、 A拡張の操作はcoreモジュールの外、メモリよりも前で行います。 本書では、coreモジュールとmmio_controllerモジュールの間に、 A拡張の命令を処理するamounitモジュールを実装します(図3)。</p><p><img src="`+d+`" alt="amounitモジュールと他のモジュールの接続"></p><h3 id="インターフェースを作成する" tabindex="-1">インターフェースを作成する <a class="header-anchor" href="#インターフェースを作成する" aria-label="Permalink to “インターフェースを作成する”">​</a></h3><p>amounitモジュールにA拡張の操作を指示するために、 <code>is_amo</code>フラグ、<code>aq</code>ビット、<code>rl</code>ビット、<code>AMOOp</code>型をmembus_ifインターフェースに追加で定義したインターフェースを作成します。</p><p><code>src/core_data_if.veryl</code>を作成し、次のように記述します (リスト11)。</p><p><span class="caption">▼リスト12.11: core_data_if.veryl</span> <a href="https://github.com/nananapo/bluecore/compare/1437002226b254ac0e7dffa4805310790d513657~1..1437002226b254ac0e7dffa4805310790d513657#diff-758b6cef60d94fd7ce6613325ed390f46f67a9270f329aae32db73abcbb60b1d">差分をみる</a></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">import</span> eei::*;
+</code></pre></div><h2 id="amounitモジュールの作成" tabindex="-1">amounitモジュールの作成 <a class="header-anchor" href="#amounitモジュールの作成" aria-label="Permalink to “amounitモジュールの作成”">​</a></h2><p>A拡張は他のコア、ハードウェアスレッドと同期してメモリ操作を行うためのものであるため、 A拡張の操作はcoreモジュールの外、メモリよりも前で行います。 本書では、coreモジュールとmmio_controllerモジュールの間に、 A拡張の命令を処理するamounitモジュールを実装します(図3)。</p><p><img src="`+o+`" alt="amounitモジュールと他のモジュールの接続"></p><h3 id="インターフェースを作成する" tabindex="-1">インターフェースを作成する <a class="header-anchor" href="#インターフェースを作成する" aria-label="Permalink to “インターフェースを作成する”">​</a></h3><p>amounitモジュールにA拡張の操作を指示するために、 <code>is_amo</code>フラグ、<code>aq</code>ビット、<code>rl</code>ビット、<code>AMOOp</code>型をmembus_ifインターフェースに追加で定義したインターフェースを作成します。</p><p><code>src/core_data_if.veryl</code>を作成し、次のように記述します (リスト11)。</p><p><span class="caption">▼リスト12.11: core_data_if.veryl</span> <a href="https://github.com/nananapo/bluecore/compare/1437002226b254ac0e7dffa4805310790d513657~1..1437002226b254ac0e7dffa4805310790d513657#diff-758b6cef60d94fd7ce6613325ed390f46f67a9270f329aae32db73abcbb60b1d">差分をみる</a></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">import</span> eei::*;
 
 <span class="hljs-keyword">interface</span> core_data_if {
     <span class="hljs-keyword">var</span> valid : <span class="hljs-keyword">logic</span>                       ;
@@ -302,37 +302,37 @@ led     : <span class="hljs-keyword">output</span>  UIntX                       
     <span class="custom-hl-bold">membus.aq     = req_aq;</span>
     <span class="custom-hl-bold">membus.rl     = req_rl;</span>
     <span class="custom-hl-bold">membus.funct3 = req_funct3;</span>
-</code></pre></div><p><span class="caption">▼リスト12.20: メモリにアクセスする命令のとき、レジスタに情報を設定する (memunit.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/1437002226b254ac0e7dffa4805310790d513657~1..1437002226b254ac0e7dffa4805310790d513657#diff-d3618e86de098826661fabd111bec51452d943d3e486d18f9c3aa96b2dd9a89e">差分をみる</a></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">case</span> state {
-    State::Init: <span class="hljs-keyword">if</span> is_new &amp; inst_is_memop(ctrl) {
+</code></pre></div><p><span class="caption">▼リスト12.20: メモリにアクセスする命令のとき、レジスタに情報を設定する (memunit.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/1437002226b254ac0e7dffa4805310790d513657~1..1437002226b254ac0e7dffa4805310790d513657#diff-d3618e86de098826661fabd111bec51452d943d3e486d18f9c3aa96b2dd9a89e">差分をみる</a></p>`,51),a("div",{class:"language-veryl"},[a("button",{title:"Copy Code",class:"copy"}),a("span",{class:"lang"},"veryl"),a("pre",{class:"hljs"},[a("code",null,[a("span",{class:"hljs-keyword"},"case"),s(` state {
+    State::Init: `),a("span",{class:"hljs-keyword"},"if"),s(` is_new & inst_is_memop(ctrl) {
         state     = State::WaitReady;
-        req_wen   = inst_is_store(ctrl);
+`),a("span",{class:"foldable-code"},[a("span",{class:"fold-trigger",onclick:"this.parentElement.classList.add('expanded')"}),a("span",{class:"fold-content"},[s(`        req_wen   = inst_is_store(ctrl);
         req_addr  = addr;
-        req_wdata = rs2 &lt;&lt; {addr[<span class="hljs-number">2</span>:<span class="hljs-number">0</span>], <span class="hljs-number">3&#39;b0</span>};
-        req_wmask = <span class="hljs-keyword">case</span> ctrl.funct3[<span class="hljs-number">1</span>:<span class="hljs-number">0</span>] {
-            <span class="hljs-number">2&#39;b00</span>: <span class="hljs-number">8&#39;b1</span> &lt;&lt; addr[<span class="hljs-number">2</span>:<span class="hljs-number">0</span>],
-            <span class="hljs-number">2&#39;b01</span>: <span class="hljs-keyword">case</span> addr[<span class="hljs-number">2</span>:<span class="hljs-number">0</span>] {
-                <span class="hljs-number">6</span>      : <span class="hljs-number">8&#39;b11000000</span>,
-                <span class="hljs-number">4</span>      : <span class="hljs-number">8&#39;b00110000</span>,
-                <span class="hljs-number">2</span>      : <span class="hljs-number">8&#39;b00001100</span>,
-                <span class="hljs-number">0</span>      : <span class="hljs-number">8&#39;b00000011</span>,
-                <span class="hljs-keyword">default</span>: &#39;x,
+        req_wdata = rs2 << {addr[`),a("span",{class:"hljs-number"},"2"),s(":"),a("span",{class:"hljs-number"},"0"),s("], "),a("span",{class:"hljs-number"},"3'b0"),s(`};
+        req_wmask = `),a("span",{class:"hljs-keyword"},"case"),s(" ctrl.funct3["),a("span",{class:"hljs-number"},"1"),s(":"),a("span",{class:"hljs-number"},"0"),s(`] {
+            `),a("span",{class:"hljs-number"},"2'b00"),s(": "),a("span",{class:"hljs-number"},"8'b1"),s(" << addr["),a("span",{class:"hljs-number"},"2"),s(":"),a("span",{class:"hljs-number"},"0"),s(`],
+            `),a("span",{class:"hljs-number"},"2'b01"),s(": "),a("span",{class:"hljs-keyword"},"case"),s(" addr["),a("span",{class:"hljs-number"},"2"),s(":"),a("span",{class:"hljs-number"},"0"),s(`] {
+                `),a("span",{class:"hljs-number"},"6"),s("      : "),a("span",{class:"hljs-number"},"8'b11000000"),s(`,
+                `),a("span",{class:"hljs-number"},"4"),s("      : "),a("span",{class:"hljs-number"},"8'b00110000"),s(`,
+                `),a("span",{class:"hljs-number"},"2"),s("      : "),a("span",{class:"hljs-number"},"8'b00001100"),s(`,
+                `),a("span",{class:"hljs-number"},"0"),s("      : "),a("span",{class:"hljs-number"},"8'b00000011"),s(`,
+                `),a("span",{class:"hljs-keyword"},"default"),s(`: 'x,
             },
-            <span class="hljs-number">2&#39;b10</span>: <span class="hljs-keyword">case</span> addr[<span class="hljs-number">2</span>:<span class="hljs-number">0</span>] {
-                <span class="hljs-number">0</span>      : <span class="hljs-number">8&#39;b00001111</span>,
-                <span class="hljs-number">4</span>      : <span class="hljs-number">8&#39;b11110000</span>,
-                <span class="hljs-keyword">default</span>: &#39;x,
+            `),a("span",{class:"hljs-number"},"2'b10"),s(": "),a("span",{class:"hljs-keyword"},"case"),s(" addr["),a("span",{class:"hljs-number"},"2"),s(":"),a("span",{class:"hljs-number"},"0"),s(`] {
+                `),a("span",{class:"hljs-number"},"0"),s("      : "),a("span",{class:"hljs-number"},"8'b00001111"),s(`,
+                `),a("span",{class:"hljs-number"},"4"),s("      : "),a("span",{class:"hljs-number"},"8'b11110000"),s(`,
+                `),a("span",{class:"hljs-keyword"},"default"),s(`: 'x,
             },
-            <span class="hljs-number">2&#39;b11</span>  : <span class="hljs-number">8&#39;b11111111</span>,
-            <span class="hljs-keyword">default</span>: &#39;x,
+            `),a("span",{class:"hljs-number"},"2'b11"),s("  : "),a("span",{class:"hljs-number"},"8'b11111111"),s(`,
+`)])]),s("            "),a("span",{class:"hljs-keyword"},"default"),s(`: 'x,
         };
-        <span class="custom-hl-bold">req_is_amo = ctrl.is_amo;</span>
-        <span class="custom-hl-bold">req_amoop  = ctrl.funct7[<span class="hljs-number">6</span>:<span class="hljs-number">2</span>] <span class="hljs-keyword">as</span> AMOOp;</span>
-        <span class="custom-hl-bold">req_aq     = ctrl.funct7[<span class="hljs-number">1</span>];</span>
-        <span class="custom-hl-bold">req_rl     = ctrl.funct7[<span class="hljs-number">0</span>];</span>
-        <span class="custom-hl-bold">req_funct3 = ctrl.funct3;</span>
+        `),a("span",{class:"custom-hl-bold"},"req_is_amo = ctrl.is_amo;"),s(`
+        `),a("span",{class:"custom-hl-bold"},[s("req_amoop  = ctrl.funct7["),a("span",{class:"hljs-number"},"6"),s(":"),a("span",{class:"hljs-number"},"2"),s("] "),a("span",{class:"hljs-keyword"},"as"),s(" AMOOp;")]),s(`
+        `),a("span",{class:"custom-hl-bold"},[s("req_aq     = ctrl.funct7["),a("span",{class:"hljs-number"},"1"),s("];")]),s(`
+        `),a("span",{class:"custom-hl-bold"},[s("req_rl     = ctrl.funct7["),a("span",{class:"hljs-number"},"0"),s("];")]),s(`
+        `),a("span",{class:"custom-hl-bold"},"req_funct3 = ctrl.funct3;"),s(`
     }
-    State::WaitReady: <span class="hljs-keyword">if</span> membus.ready {
-</code></pre></div><p>amounitモジュールをtopモジュールでインスタンス化し、 coreモジュールとmmio_controllerモジュールのインターフェースを接続します (リスト21)。</p><p><span class="caption">▼リスト12.21: amounitモジュールをインスタンス化する (top.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/1437002226b254ac0e7dffa4805310790d513657~1..1437002226b254ac0e7dffa4805310790d513657#diff-0c548fd82f89bdf97edffcd89dfccd2aab836eccf57f11b8e25c313abd0d0e6f">差分をみる</a></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">inst</span> amou: amounit (
+    State::WaitReady: `),a("span",{class:"hljs-keyword"},"if"),s(` membus.ready {
+`)])])],-1),n(`<p>amounitモジュールをtopモジュールでインスタンス化し、 coreモジュールとmmio_controllerモジュールのインターフェースを接続します (リスト21)。</p><p><span class="caption">▼リスト12.21: amounitモジュールをインスタンス化する (top.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/1437002226b254ac0e7dffa4805310790d513657~1..1437002226b254ac0e7dffa4805310790d513657#diff-0c548fd82f89bdf97edffcd89dfccd2aab836eccf57f11b8e25c313abd0d0e6f">差分をみる</a></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">inst</span> amou: amounit (
     clk                  ,
     rst                  ,
     slave : d_membus_core,
@@ -367,32 +367,32 @@ reserved_addr      = <span class="hljs-number">0</span>;
         <span class="custom-hl-bold">} <span class="hljs-keyword">else</span> {</span>
             assign_master(slave_saved.addr, slave_saved.wen, slave_saved.wdata, slave_saved.wmask);
         <span class="custom-hl-bold">}</span>
-</code></pre></div><p><span class="caption">▼リスト12.26: LR命令のときに予約セットを設定する (amounit.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/871341ca4da2012dd1ac7643ffab281c8d28d73f~1..871341ca4da2012dd1ac7643ffab281c8d28d73f#diff-5a1c75bb9b272891ae9766e2adfc01dce8800d1fd4faf16cb3310afc2c1e37f6">差分をみる</a></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">function</span> accept_request_ff () {
-    slave_saved.valid = slave.ready &amp;&amp; slave.valid;
-    <span class="hljs-keyword">if</span> slave.ready &amp;&amp; slave.valid {
-        slave_saved.addr   = slave.addr;
+</code></pre></div><p><span class="caption">▼リスト12.26: LR命令のときに予約セットを設定する (amounit.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/871341ca4da2012dd1ac7643ffab281c8d28d73f~1..871341ca4da2012dd1ac7643ffab281c8d28d73f#diff-5a1c75bb9b272891ae9766e2adfc01dce8800d1fd4faf16cb3310afc2c1e37f6">差分をみる</a></p>`,18),a("div",{class:"language-veryl"},[a("button",{title:"Copy Code",class:"copy"}),a("span",{class:"lang"},"veryl"),a("pre",{class:"hljs"},[a("code",null,[a("span",{class:"hljs-keyword"},"function"),s(` accept_request_ff () {
+    slave_saved.valid = slave.ready && slave.valid;
+    `),a("span",{class:"hljs-keyword"},"if"),s(` slave.ready && slave.valid {
+`),a("span",{class:"foldable-code"},[a("span",{class:"fold-trigger",onclick:"this.parentElement.classList.add('expanded')"}),a("span",{class:"fold-content"},`        slave_saved.addr   = slave.addr;
         slave_saved.wen    = slave.wen;
         slave_saved.wdata  = slave.wdata;
         slave_saved.wmask  = slave.wmask;
         slave_saved.is_amo = slave.is_amo;
         slave_saved.amoop  = slave.amoop;
         slave_saved.aq     = slave.aq;
-        slave_saved.rl     = slave.rl;
+`)]),s(`        slave_saved.rl     = slave.rl;
         slave_saved.funct3 = slave.funct3;
-        <span class="custom-hl-bold"><span class="hljs-keyword">if</span> slave.is_amo {</span>
-        <span class="custom-hl-bold">    <span class="hljs-keyword">case</span> slave.amoop {</span>
-        <span class="custom-hl-bold">        AMOOp::LR: {</span>
-        <span class="custom-hl-bold">            <span class="hljs-comment">// reserve address</span></span>
-        <span class="custom-hl-bold">            is_addr_reserved = <span class="hljs-number">1</span>;</span>
-        <span class="custom-hl-bold">            reserved_addr    = slave.addr;</span>
-        <span class="custom-hl-bold">            state            = <span class="hljs-keyword">if</span> master.ready ? State::WaitValid : State::WaitReady;</span>
-        <span class="custom-hl-bold">        }</span>
-        <span class="custom-hl-bold">        <span class="hljs-keyword">default</span>: {}</span>
-        <span class="custom-hl-bold">    }</span>
-        <span class="custom-hl-bold">} <span class="hljs-keyword">else</span> {</span>
-            state = <span class="hljs-keyword">if</span> master.ready ? State::WaitValid : State::WaitReady;
-        <span class="custom-hl-bold">}</span>
-</code></pre></div><h3 id="sc-w、sc-d命令を実装する" tabindex="-1">SC.W、SC.D命令を実装する <a class="header-anchor" href="#sc-w、sc-d命令を実装する" aria-label="Permalink to “SC.W、SC.D命令を実装する”">​</a></h3><p>32ビット幅、64ビット幅のSC命令を実装します。 SC.W命令はmemunitモジュールで書き込みマスクを設定しているため、 amounitモジュールでSC.W命令とSC.D命令を区別する必要はありません。</p><p>SC命令が成功、失敗したときに結果を返すための状態を<code>State</code>型に追加します (リスト27)。</p><p><span class="caption">▼リスト12.27: SC命令用の状態の定義 (amounit.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/eeb496530de394c83a64927900588e17507fd171~1..eeb496530de394c83a64927900588e17507fd171#diff-5a1c75bb9b272891ae9766e2adfc01dce8800d1fd4faf16cb3310afc2c1e37f6">差分をみる</a></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">enum</span> State {
+        `),a("span",{class:"custom-hl-bold"},[a("span",{class:"hljs-keyword"},"if"),s(" slave.is_amo {")]),s(`
+        `),a("span",{class:"custom-hl-bold"},[s("    "),a("span",{class:"hljs-keyword"},"case"),s(" slave.amoop {")]),s(`
+        `),a("span",{class:"custom-hl-bold"},"        AMOOp::LR: {"),s(`
+        `),a("span",{class:"custom-hl-bold"},[s("            "),a("span",{class:"hljs-comment"},"// reserve address")]),s(`
+        `),a("span",{class:"custom-hl-bold"},[s("            is_addr_reserved = "),a("span",{class:"hljs-number"},"1"),s(";")]),s(`
+        `),a("span",{class:"custom-hl-bold"},"            reserved_addr    = slave.addr;"),s(`
+        `),a("span",{class:"custom-hl-bold"},[s("            state            = "),a("span",{class:"hljs-keyword"},"if"),s(" master.ready ? State::WaitValid : State::WaitReady;")]),s(`
+        `),a("span",{class:"custom-hl-bold"},"        }"),s(`
+        `),a("span",{class:"custom-hl-bold"},[s("        "),a("span",{class:"hljs-keyword"},"default"),s(": {}")]),s(`
+        `),a("span",{class:"custom-hl-bold"},"    }"),s(`
+        `),a("span",{class:"custom-hl-bold"},[s("} "),a("span",{class:"hljs-keyword"},"else"),s(" {")]),s(`
+            state = `),a("span",{class:"hljs-keyword"},"if"),s(` master.ready ? State::WaitValid : State::WaitReady;
+        `),a("span",{class:"custom-hl-bold"},"}"),s(`
+`)])])],-1),n(`<h3 id="sc-w、sc-d命令を実装する" tabindex="-1">SC.W、SC.D命令を実装する <a class="header-anchor" href="#sc-w、sc-d命令を実装する" aria-label="Permalink to “SC.W、SC.D命令を実装する”">​</a></h3><p>32ビット幅、64ビット幅のSC命令を実装します。 SC.W命令はmemunitモジュールで書き込みマスクを設定しているため、 amounitモジュールでSC.W命令とSC.D命令を区別する必要はありません。</p><p>SC命令が成功、失敗したときに結果を返すための状態を<code>State</code>型に追加します (リスト27)。</p><p><span class="caption">▼リスト12.27: SC命令用の状態の定義 (amounit.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/eeb496530de394c83a64927900588e17507fd171~1..eeb496530de394c83a64927900588e17507fd171#diff-5a1c75bb9b272891ae9766e2adfc01dce8800d1fd4faf16cb3310afc2c1e37f6">差分をみる</a></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">enum</span> State {
     Init,
     WaitReady,
     WaitValid,
@@ -559,4 +559,4 @@ State::AMOStoreReady: <span class="hljs-keyword">if</span> master.ready {
 State::AMOStoreValid: <span class="hljs-keyword">if</span> master.rvalid {
     accept_request_ff();
 }
-</code></pre></div><p>riscv-testsの<code>rv64ua-p-</code>から始まるテストを実行し、成功することを確認してください。</p><hr class="footnotes-sep"><section class="footnotes"><ol class="footnotes-list"><li id="fn1" class="footnote-item"><p>メモリ操作の並び替えによる高速化は応用編で検討します。 <a href="#fnref1" class="footnote-backref">↩︎</a></p></li></ol></section>`,159)])])}const y=s(t,[["render",o]]);export{u as __pageData,y as default};
+</code></pre></div><p>riscv-testsの<code>rv64ua-p-</code>から始まるテストを実行し、成功することを確認してください。</p><hr class="footnotes-sep"><section class="footnotes"><ol class="footnotes-list"><li id="fn1" class="footnote-item"><p>メモリ操作の並び替えによる高速化は応用編で検討します。 <a href="#fnref1" class="footnote-backref">↩︎</a></p></li></ol></section>`,53)])])}const v=l(r,[["render",b]]);export{j as __pageData,v as default};

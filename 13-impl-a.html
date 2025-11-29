@@ -9,13 +9,67 @@
     <link rel="preload stylesheet" href="/assets/style.C620yUbE.css" as="style">
     <link rel="preload stylesheet" href="/vp-icons.css" as="style">
     
-    <script type="module" src="/assets/app.BuJL3xMw.js"></script>
+    <script type="module" src="/assets/app.Bw9-xlPJ.js"></script>
     <link rel="preload" href="/assets/inter-roman-latin.Di8DUHzh.woff2" as="font" type="font/woff2" crossorigin="">
-    <link rel="modulepreload" href="/assets/chunks/theme.D6tuMo-0.js">
+    <link rel="modulepreload" href="/assets/chunks/theme.DJ5C7NnB.js">
     <link rel="modulepreload" href="/assets/chunks/framework.BNheOMQd.js">
-    <link rel="modulepreload" href="/assets/13-impl-a.md.DBg1LuH9.lean.js">
+    <link rel="modulepreload" href="/assets/13-impl-a.md.CX3zDMOp.lean.js">
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-EM6HSGNSVY"></script>
     <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date),gtag("config","G-EM6HSGNSVY");</script>
+    <style>
+      @keyframes blink {
+        0% { opacity: 1; }
+        50% { opacity: 0.4; }
+        100% { opacity: 1; }
+      }
+      .foldable-code .fold-content {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      .foldable-code.expanded .fold-content {
+        position: static;
+        width: auto;
+        height: auto;
+        margin: 0;
+        overflow: visible;
+        clip: auto;
+        white-space: pre;
+      }
+      .foldable-code.expanded .fold-trigger { display: none; }
+      
+      .fold-trigger {
+        display: block;
+        cursor: pointer;
+        background-color: var(--vp-c-bg-soft, #f6f6f7);
+        border-top: 1px solid var(--vp-c-divider, #e2e2e3);
+        border-bottom: 1px solid var(--vp-c-divider, #e2e2e3);
+        color: var(--vp-c-text-2, #666);
+        padding: 4px 16px;
+        text-align: center;
+        font-size: 12px;
+        font-weight: 500;
+        transition: background-color 0.2s;
+        user-select: none;
+        line-height: 1.5;
+        margin: 4px 0;
+        animation: blink 1.5s infinite ease-in-out;
+      }
+      .fold-trigger:hover {
+        background-color: var(--vp-c-bg-mute, #f1f1f1);
+        color: var(--vp-c-text-1, #333);
+        animation: none;
+      }
+      .fold-trigger::before {
+        content: "⋮ Click to expand";
+      }
+    </style>
     <script id="check-dark-mode">(()=>{const e=localStorage.getItem("vitepress-theme-appearance")||"auto",a=window.matchMedia("(prefers-color-scheme: dark)").matches;(!e||e==="auto"?a:e==="dark")&&document.documentElement.classList.add("dark")})();</script>
     <script id="check-mac-os">document.documentElement.classList.toggle("mac",/Mac|iPhone|iPod|iPad/i.test(navigator.platform));</script>
   </head>
@@ -42,12 +96,12 @@
 </code></pre></div><h3 id="is-amoフラグを実装する" tabindex="-1">is_amoフラグを実装する <a class="header-anchor" href="#is-amoフラグを実装する" aria-label="Permalink to “is_amoフラグを実装する”">​</a></h3><p><code>InstCtrl</code>構造体に、 A拡張の命令であることを示す<code>is_amo</code>フラグを追加します (リスト4)。</p><p><span class="caption">▼リスト12.4: InstCtrlにis_amoを定義する (corectrl.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/cb1dcfe57e93d3c8b769206b7d001cb5d6fef1d9~1..cb1dcfe57e93d3c8b769206b7d001cb5d6fef1d9#diff-6e03bfb8e3afdba1e0b88b561d8b8e5e4f2a7ffc6c4efb228c5797053b78742c">差分をみる</a></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">struct</span> InstCtrl {
     itype    : InstType   , <span class="hljs-comment">// 命令の形式</span>
     rwb_en   : <span class="hljs-keyword">logic</span>      , <span class="hljs-comment">// レジスタに書き込むかどうか</span>
-    is_lui   : <span class="hljs-keyword">logic</span>      , <span class="hljs-comment">// LUI命令である</span>
+<span class="foldable-code"><span class="fold-trigger" onclick="this.parentElement.classList.add(&#39;expanded&#39;)"></span><span class="fold-content">    is_lui   : <span class="hljs-keyword">logic</span>      , <span class="hljs-comment">// LUI命令である</span>
     is_aluop : <span class="hljs-keyword">logic</span>      , <span class="hljs-comment">// ALUを利用する命令である</span>
     is_muldiv: <span class="hljs-keyword">logic</span>      , <span class="hljs-comment">// M拡張の命令である</span>
     is_op32  : <span class="hljs-keyword">logic</span>      , <span class="hljs-comment">// OP-32またはOP-IMM-32である</span>
     is_jump  : <span class="hljs-keyword">logic</span>      , <span class="hljs-comment">// ジャンプ命令である</span>
-    is_load  : <span class="hljs-keyword">logic</span>      , <span class="hljs-comment">// ロード命令である</span>
+</span></span>    is_load  : <span class="hljs-keyword">logic</span>      , <span class="hljs-comment">// ロード命令である</span>
     is_csr   : <span class="hljs-keyword">logic</span>      , <span class="hljs-comment">// CSR命令である</span>
     <span class="custom-hl-bold">is_amo   : <span class="hljs-keyword">logic</span>      , <span class="hljs-comment">// AMO instruction</span></span>
     funct3   : <span class="hljs-keyword">logic</span>   &lt;<span class="hljs-number">3</span>&gt;, <span class="hljs-comment">// 命令のfunct3フィールド</span>
@@ -327,7 +381,7 @@ led     : <span class="hljs-keyword">output</span>  UIntX                       
 </code></pre></div><p><span class="caption">▼リスト12.20: メモリにアクセスする命令のとき、レジスタに情報を設定する (memunit.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/1437002226b254ac0e7dffa4805310790d513657~1..1437002226b254ac0e7dffa4805310790d513657#diff-d3618e86de098826661fabd111bec51452d943d3e486d18f9c3aa96b2dd9a89e">差分をみる</a></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">case</span> state {
     State::Init: <span class="hljs-keyword">if</span> is_new &amp; inst_is_memop(ctrl) {
         state     = State::WaitReady;
-        req_wen   = inst_is_store(ctrl);
+<span class="foldable-code"><span class="fold-trigger" onclick="this.parentElement.classList.add(&#39;expanded&#39;)"></span><span class="fold-content">        req_wen   = inst_is_store(ctrl);
         req_addr  = addr;
         req_wdata = rs2 &lt;&lt; {addr[<span class="hljs-number">2</span>:<span class="hljs-number">0</span>], <span class="hljs-number">3&#39;b0</span>};
         req_wmask = <span class="hljs-keyword">case</span> ctrl.funct3[<span class="hljs-number">1</span>:<span class="hljs-number">0</span>] {
@@ -345,7 +399,7 @@ led     : <span class="hljs-keyword">output</span>  UIntX                       
                 <span class="hljs-keyword">default</span>: &#39;x,
             },
             <span class="hljs-number">2&#39;b11</span>  : <span class="hljs-number">8&#39;b11111111</span>,
-            <span class="hljs-keyword">default</span>: &#39;x,
+</span></span>            <span class="hljs-keyword">default</span>: &#39;x,
         };
         <span class="custom-hl-bold">req_is_amo = ctrl.is_amo;</span>
         <span class="custom-hl-bold">req_amoop  = ctrl.funct7[<span class="hljs-number">6</span>:<span class="hljs-number">2</span>] <span class="hljs-keyword">as</span> AMOOp;</span>
@@ -392,14 +446,14 @@ reserved_addr      = <span class="hljs-number">0</span>;
 </code></pre></div><p><span class="caption">▼リスト12.26: LR命令のときに予約セットを設定する (amounit.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/871341ca4da2012dd1ac7643ffab281c8d28d73f~1..871341ca4da2012dd1ac7643ffab281c8d28d73f#diff-5a1c75bb9b272891ae9766e2adfc01dce8800d1fd4faf16cb3310afc2c1e37f6">差分をみる</a></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">function</span> accept_request_ff () {
     slave_saved.valid = slave.ready &amp;&amp; slave.valid;
     <span class="hljs-keyword">if</span> slave.ready &amp;&amp; slave.valid {
-        slave_saved.addr   = slave.addr;
+<span class="foldable-code"><span class="fold-trigger" onclick="this.parentElement.classList.add(&#39;expanded&#39;)"></span><span class="fold-content">        slave_saved.addr   = slave.addr;
         slave_saved.wen    = slave.wen;
         slave_saved.wdata  = slave.wdata;
         slave_saved.wmask  = slave.wmask;
         slave_saved.is_amo = slave.is_amo;
         slave_saved.amoop  = slave.amoop;
         slave_saved.aq     = slave.aq;
-        slave_saved.rl     = slave.rl;
+</span></span>        slave_saved.rl     = slave.rl;
         slave_saved.funct3 = slave.funct3;
         <span class="custom-hl-bold"><span class="hljs-keyword">if</span> slave.is_amo {</span>
         <span class="custom-hl-bold">    <span class="hljs-keyword">case</span> slave.amoop {</span>
@@ -582,7 +636,7 @@ State::AMOStoreValid: <span class="hljs-keyword">if</span> master.rvalid {
     accept_request_ff();
 }
 </code></pre></div><p>riscv-testsの<code>rv64ua-p-</code>から始まるテストを実行し、成功することを確認してください。</p><hr class="footnotes-sep"><section class="footnotes"><ol class="footnotes-list"><li id="fn1" class="footnote-item"><p>メモリ操作の並び替えによる高速化は応用編で検討します。 <a href="#fnref1" class="footnote-backref">↩︎</a></p></li></ol></section></div></div></main><footer class="VPDocFooter" data-v-7011f0d8 data-v-e257564d><!--[--><!--]--><!----><nav class="prev-next" aria-labelledby="doc-footer-aria-label" data-v-e257564d><span class="visually-hidden" id="doc-footer-aria-label" data-v-e257564d>Pager</span><div class="pager" data-v-e257564d><a class="VPLink link pager-link prev" href="/12-impl-mmio.html" data-v-e257564d><!--[--><span class="desc" data-v-e257564d>Previous page</span><span class="title" data-v-e257564d>11 Memory-mapped I/Oの実装</span><!--]--></a></div><div class="pager" data-v-e257564d><a class="VPLink link pager-link next" href="/14-impl-c.html" data-v-e257564d><!--[--><span class="desc" data-v-e257564d>Next page</span><span class="title" data-v-e257564d>13 C拡張の実装</span><!--]--></a></div></nav></footer><!--[--><!--]--></div></div></div><!--[--><!--]--></div></div><!----><!--[--><!--]--></div></div>
-    <script>window.__VP_HASH_MAP__=JSON.parse("{\"00-preface.md\":\"CYEphBX8\",\"02-setup.md\":\"mMRHRDVs\",\"03-veryl.md\":\"VOHmUq3V\",\"04-impl-rv32i.md\":\"BOg6fli5\",\"04a-zicsr.md\":\"CW112jqc\",\"04b-riscvtests.md\":\"z1S6zah9\",\"05-impl-rv64i.md\":\"scsjm5wh\",\"05a-pipeline.md\":\"BF2w2g9l\",\"05b-synth.md\":\"CpOxqOMr\",\"10-impl-m.md\":\"Bpc6cxbg\",\"100-contribute.md\":\"DBSud0cg\",\"11-impl-exception.md\":\"BWLjilX7\",\"12-impl-mmio.md\":\"D6AhukOD\",\"13-impl-a.md\":\"DBg1LuH9\",\"14-impl-c.md\":\"DKYOuAEq\",\"20-mmode-csr.md\":\"CvEyRCw5\",\"21-impl-interrupt.md\":\"CwE5Uciz\",\"22-umode-csr.md\":\"Cj6azAcK\",\"23-smode-csr.md\":\"C08XnmYV\",\"24-impl-paging.md\":\"CRrKUEWW\",\"25-impl-plic.md\":\"BqXpkrN0\",\"26-run-linux.md\":\"BqelRfuy\",\"99-postface.md\":\"DKyCFrvU\",\"99b-postface.md\":\"Cxpm5DbS\",\"index.md\":\"DsKG6qhs\"}");function deserializeFunctions(r){return Array.isArray(r)?r.map(deserializeFunctions):typeof r=="object"&&r!==null?Object.keys(r).reduce((t,n)=>(t[n]=deserializeFunctions(r[n]),t),{}):typeof r=="string"&&r.startsWith("_vp-fn_")?new Function(`return ${r.slice(7)}`)():r};window.__VP_SITE_DATA__=deserializeFunctions(JSON.parse("{\"lang\":\"en-US\",\"dir\":\"ltr\",\"title\":\"Verylで作るCPU\",\"description\":\"Write RISC-V CPU in Veryl\",\"base\":\"/\",\"head\":[],\"router\":{\"prefetchLinks\":true},\"appearance\":true,\"themeConfig\":{\"nav\":[],\"sidebar\":[{\"text\":\"第I部 RV32I/RV64Iの実装\",\"items\":[{\"text\":\"まえがき\",\"link\":\"/00-preface\"},{\"text\":\"1 環境構築\",\"link\":\"/02-setup\"},{\"text\":\"2 ハードウェア記述言語 Veryl\",\"link\":\"/03-veryl\"},{\"text\":\"3 RV32Iの実装\",\"link\":\"/04-impl-rv32i\"},{\"text\":\"4 Zicsr拡張の実装\",\"link\":\"/04a-zicsr\"},{\"text\":\"5 riscv-testsによるテスト\",\"link\":\"/04b-riscvtests\"},{\"text\":\"6 RV64Iの実装\",\"link\":\"/05-impl-rv64i\"},{\"text\":\"7 CPUのパイプライン化\",\"link\":\"/05a-pipeline\"},{\"text\":\"8 CPUの合成\",\"link\":\"/05b-synth\"}]},{\"text\":\"第II部 RV64IMACの実装\",\"items\":[{\"text\":\"9 M拡張の実装\",\"link\":\"/10-impl-m\"},{\"text\":\"10 例外の実装\",\"link\":\"/11-impl-exception\"},{\"text\":\"11 Memory-mapped I/Oの実装\",\"link\":\"/12-impl-mmio\"},{\"text\":\"12 A拡張の実装\",\"link\":\"/13-impl-a\"},{\"text\":\"13 C拡張の実装\",\"link\":\"/14-impl-c\"}]},{\"text\":\"第III部 特権/割り込みの実装\",\"items\":[{\"text\":\"14 M-modeの実装 (1. CSRの実装)\",\"link\":\"/20-mmode-csr\"},{\"text\":\"15 M-modeの実装 (2. 割り込みの実装)\",\"link\":\"/21-impl-interrupt\"},{\"text\":\"16 U-modeの実装\",\"link\":\"/22-umode-csr\"},{\"text\":\"17 S-modeの実装 (1. CSRの実装)\",\"link\":\"/23-smode-csr\"},{\"text\":\"18 S-modeの実装 (2. 仮想記憶システム)\",\"link\":\"/24-impl-paging\"},{\"text\":\"19 PLICの実装\",\"link\":\"/25-impl-plic\"},{\"text\":\"20 Linuxを動かす\",\"link\":\"/26-run-linux\"},{\"text\":\"あとがき (第Ⅰ部)\",\"link\":\"/99-postface\"},{\"text\":\"あとがき (第Ⅱ部、第Ⅲ部)\",\"link\":\"/99b-postface\"},{\"text\":\"このプロジェクトに貢献する\",\"link\":\"/100-contribute\"}]}],\"socialLinks\":[{\"icon\":\"github\",\"link\":\"https://github.com/nananapo/veryl-riscv-book\"}],\"outline\":{\"level\":[2,4]},\"search\":{\"provider\":\"local\",\"options\":{\"miniSearch\":{\"options\":{\"tokenize\":\"_vp-fn_(term) => {\\n              if (typeof term === \\\"string\\\") term = term.toLowerCase();\\n              const segmenter = Intl.Segmenter && new Intl.Segmenter(\\\"ja-JP\\\", { granularity: \\\"word\\\" });\\n              if (!segmenter) return [term];\\n              const tokens = [];\\n              for (const seg of segmenter.segment(term)) {\\n                if (seg.segment.trim() !== \\\"\\\") tokens.push(seg.segment);\\n              }\\n              return tokens;\\n            }\"}}}}},\"locales\":{},\"scrollOffset\":134,\"cleanUrls\":false,\"additionalConfig\":{}}"));</script>
+    <script>window.__VP_HASH_MAP__=JSON.parse("{\"00-preface.md\":\"CYEphBX8\",\"02-setup.md\":\"mMRHRDVs\",\"03-veryl.md\":\"VOHmUq3V\",\"04-impl-rv32i.md\":\"CWfLX216\",\"04a-zicsr.md\":\"CW112jqc\",\"04b-riscvtests.md\":\"z1S6zah9\",\"05-impl-rv64i.md\":\"scsjm5wh\",\"05a-pipeline.md\":\"9Dj4exe1\",\"05b-synth.md\":\"BQB3fAj_\",\"10-impl-m.md\":\"BUG8GT7N\",\"100-contribute.md\":\"DBSud0cg\",\"11-impl-exception.md\":\"BuZ1xu_x\",\"12-impl-mmio.md\":\"CmVJme4N\",\"13-impl-a.md\":\"CX3zDMOp\",\"14-impl-c.md\":\"DSHYR8gR\",\"20-mmode-csr.md\":\"CvEyRCw5\",\"21-impl-interrupt.md\":\"CwE5Uciz\",\"22-umode-csr.md\":\"TlVgFbbX\",\"23-smode-csr.md\":\"C08XnmYV\",\"24-impl-paging.md\":\"wQACKMHZ\",\"25-impl-plic.md\":\"BqXpkrN0\",\"26-run-linux.md\":\"BqelRfuy\",\"99-postface.md\":\"DKyCFrvU\",\"99b-postface.md\":\"Cxpm5DbS\",\"index.md\":\"DsKG6qhs\"}");function deserializeFunctions(r){return Array.isArray(r)?r.map(deserializeFunctions):typeof r=="object"&&r!==null?Object.keys(r).reduce((t,n)=>(t[n]=deserializeFunctions(r[n]),t),{}):typeof r=="string"&&r.startsWith("_vp-fn_")?new Function(`return ${r.slice(7)}`)():r};window.__VP_SITE_DATA__=deserializeFunctions(JSON.parse("{\"lang\":\"en-US\",\"dir\":\"ltr\",\"title\":\"Verylで作るCPU\",\"description\":\"Write RISC-V CPU in Veryl\",\"base\":\"/\",\"head\":[],\"router\":{\"prefetchLinks\":true},\"appearance\":true,\"themeConfig\":{\"nav\":[],\"sidebar\":[{\"text\":\"第I部 RV32I/RV64Iの実装\",\"items\":[{\"text\":\"まえがき\",\"link\":\"/00-preface\"},{\"text\":\"1 環境構築\",\"link\":\"/02-setup\"},{\"text\":\"2 ハードウェア記述言語 Veryl\",\"link\":\"/03-veryl\"},{\"text\":\"3 RV32Iの実装\",\"link\":\"/04-impl-rv32i\"},{\"text\":\"4 Zicsr拡張の実装\",\"link\":\"/04a-zicsr\"},{\"text\":\"5 riscv-testsによるテスト\",\"link\":\"/04b-riscvtests\"},{\"text\":\"6 RV64Iの実装\",\"link\":\"/05-impl-rv64i\"},{\"text\":\"7 CPUのパイプライン化\",\"link\":\"/05a-pipeline\"},{\"text\":\"8 CPUの合成\",\"link\":\"/05b-synth\"}]},{\"text\":\"第II部 RV64IMACの実装\",\"items\":[{\"text\":\"9 M拡張の実装\",\"link\":\"/10-impl-m\"},{\"text\":\"10 例外の実装\",\"link\":\"/11-impl-exception\"},{\"text\":\"11 Memory-mapped I/Oの実装\",\"link\":\"/12-impl-mmio\"},{\"text\":\"12 A拡張の実装\",\"link\":\"/13-impl-a\"},{\"text\":\"13 C拡張の実装\",\"link\":\"/14-impl-c\"}]},{\"text\":\"第III部 特権/割り込みの実装\",\"items\":[{\"text\":\"14 M-modeの実装 (1. CSRの実装)\",\"link\":\"/20-mmode-csr\"},{\"text\":\"15 M-modeの実装 (2. 割り込みの実装)\",\"link\":\"/21-impl-interrupt\"},{\"text\":\"16 U-modeの実装\",\"link\":\"/22-umode-csr\"},{\"text\":\"17 S-modeの実装 (1. CSRの実装)\",\"link\":\"/23-smode-csr\"},{\"text\":\"18 S-modeの実装 (2. 仮想記憶システム)\",\"link\":\"/24-impl-paging\"},{\"text\":\"19 PLICの実装\",\"link\":\"/25-impl-plic\"},{\"text\":\"20 Linuxを動かす\",\"link\":\"/26-run-linux\"},{\"text\":\"あとがき (第Ⅰ部)\",\"link\":\"/99-postface\"},{\"text\":\"あとがき (第Ⅱ部、第Ⅲ部)\",\"link\":\"/99b-postface\"},{\"text\":\"このプロジェクトに貢献する\",\"link\":\"/100-contribute\"}]}],\"socialLinks\":[{\"icon\":\"github\",\"link\":\"https://github.com/nananapo/veryl-riscv-book\"}],\"outline\":{\"level\":[2,4]},\"search\":{\"provider\":\"local\",\"options\":{\"miniSearch\":{\"options\":{\"tokenize\":\"_vp-fn_(term) => {\\n              if (typeof term === \\\"string\\\") term = term.toLowerCase();\\n              const segmenter = Intl.Segmenter && new Intl.Segmenter(\\\"ja-JP\\\", { granularity: \\\"word\\\" });\\n              if (!segmenter) return [term];\\n              const tokens = [];\\n              for (const seg of segmenter.segment(term)) {\\n                if (seg.segment.trim() !== \\\"\\\") tokens.push(seg.segment);\\n              }\\n              return tokens;\\n            }\"}}}}},\"locales\":{},\"scrollOffset\":134,\"cleanUrls\":false,\"additionalConfig\":{}}"));</script>
     
   </body>
 </html>

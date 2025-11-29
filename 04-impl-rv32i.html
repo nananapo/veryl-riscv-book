@@ -9,13 +9,67 @@
     <link rel="preload stylesheet" href="/assets/style.C620yUbE.css" as="style">
     <link rel="preload stylesheet" href="/vp-icons.css" as="style">
     
-    <script type="module" src="/assets/app.BuJL3xMw.js"></script>
+    <script type="module" src="/assets/app.Bw9-xlPJ.js"></script>
     <link rel="preload" href="/assets/inter-roman-latin.Di8DUHzh.woff2" as="font" type="font/woff2" crossorigin="">
-    <link rel="modulepreload" href="/assets/chunks/theme.D6tuMo-0.js">
+    <link rel="modulepreload" href="/assets/chunks/theme.DJ5C7NnB.js">
     <link rel="modulepreload" href="/assets/chunks/framework.BNheOMQd.js">
-    <link rel="modulepreload" href="/assets/04-impl-rv32i.md.BOg6fli5.lean.js">
+    <link rel="modulepreload" href="/assets/04-impl-rv32i.md.CWfLX216.lean.js">
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-EM6HSGNSVY"></script>
     <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date),gtag("config","G-EM6HSGNSVY");</script>
+    <style>
+      @keyframes blink {
+        0% { opacity: 1; }
+        50% { opacity: 0.4; }
+        100% { opacity: 1; }
+      }
+      .foldable-code .fold-content {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      .foldable-code.expanded .fold-content {
+        position: static;
+        width: auto;
+        height: auto;
+        margin: 0;
+        overflow: visible;
+        clip: auto;
+        white-space: pre;
+      }
+      .foldable-code.expanded .fold-trigger { display: none; }
+      
+      .fold-trigger {
+        display: block;
+        cursor: pointer;
+        background-color: var(--vp-c-bg-soft, #f6f6f7);
+        border-top: 1px solid var(--vp-c-divider, #e2e2e3);
+        border-bottom: 1px solid var(--vp-c-divider, #e2e2e3);
+        color: var(--vp-c-text-2, #666);
+        padding: 4px 16px;
+        text-align: center;
+        font-size: 12px;
+        font-weight: 500;
+        transition: background-color 0.2s;
+        user-select: none;
+        line-height: 1.5;
+        margin: 4px 0;
+        animation: blink 1.5s infinite ease-in-out;
+      }
+      .fold-trigger:hover {
+        background-color: var(--vp-c-bg-mute, #f1f1f1);
+        color: var(--vp-c-text-1, #333);
+        animation: none;
+      }
+      .fold-trigger::before {
+        content: "⋮ Click to expand";
+      }
+    </style>
     <script id="check-dark-mode">(()=>{const e=localStorage.getItem("vitepress-theme-appearance")||"auto",a=window.matchMedia("(prefers-color-scheme: dark)").matches;(!e||e==="auto"?a:e==="dark")&&document.documentElement.classList.add("dark")})();</script>
     <script id="check-mac-os">document.documentElement.classList.toggle("mac",/Mac|iPhone|iPod|iPad/i.test(navigator.platform));</script>
   </head>
@@ -1258,7 +1312,7 @@ deadbeef // 0x0
         <span class="custom-hl-bold">} <span class="hljs-keyword">else</span> {</span>
             <span class="hljs-keyword">if</span> if_is_requested {
                 <span class="hljs-keyword">if</span> i_membus.rvalid {
-                    if_is_requested = i_membus.ready &amp;&amp; i_membus.valid;
+<span class="foldable-code"><span class="fold-trigger" onclick="this.parentElement.classList.add(&#39;expanded&#39;)"></span><span class="fold-content">                    if_is_requested = i_membus.ready &amp;&amp; i_membus.valid;
                     <span class="hljs-keyword">if</span> i_membus.ready &amp;&amp; i_membus.valid {
                         if_pc           = if_pc_next;
                         if_pc_requested = if_pc;
@@ -1279,7 +1333,7 @@ deadbeef // 0x0
             } <span class="hljs-keyword">else</span> {
                 <span class="hljs-keyword">if</span> if_fifo_wvalid &amp;&amp; if_fifo_wready {
                     if_fifo_wvalid = <span class="hljs-number">0</span>;
-                }
+</span></span>                }
             }
         <span class="custom-hl-bold">}</span>
     }
@@ -1447,7 +1501,7 @@ deadbeef // 14:
 00000018 : 0000d063 ← 0x18 → 0x18にジャンプ
   br take   : 1
 </code></pre></div><p>BLT、BLTU、BGEU命令は後の章で紹介するriscv-testsでテストします。</p><div class="warning custom-block"><p class="custom-block-title"><b>実装していないRV32Iの命令</b></p><p>メモリフェンス命令、ECALL命令、EBREAK命令は後の章で実装します。</p></div><hr class="footnotes-sep"><section class="footnotes"><ol class="footnotes-list"><li id="fn1" class="footnote-item"><p>その昔、Setunという3進数のコンピュータが存在したらしく、機械語は3進数のトリット(trit)で構成されていたようです <a href="#fnref1" class="footnote-backref">↩︎</a></p></li><li id="fn2" class="footnote-item"><p>Verilogのソースファイルだけでビルドすることもできます <a href="#fnref2" class="footnote-backref">↩︎</a></p></li><li id="fn3" class="footnote-item"><p><a href="https://std.veryl-lang.org/" target="_blank" rel="noreferrer">https://std.veryl-lang.org/</a> <a href="#fnref3" class="footnote-backref">↩︎</a></p></li><li id="fn4" class="footnote-item"><p>1つ空きがあるという条件だとあふれてしまいます。FIFOが容量いっぱいのときにどうなるか確認してください <a href="#fnref4" class="footnote-backref">↩︎</a></p></li><li id="fn5" class="footnote-item"><p>Verilatorはデフォルト設定では不定値に対応していないため、不定値は0になります <a href="#fnref5" class="footnote-backref">↩︎</a></p></li></ol></section></div></div></main><footer class="VPDocFooter" data-v-7011f0d8 data-v-e257564d><!--[--><!--]--><!----><nav class="prev-next" aria-labelledby="doc-footer-aria-label" data-v-e257564d><span class="visually-hidden" id="doc-footer-aria-label" data-v-e257564d>Pager</span><div class="pager" data-v-e257564d><a class="VPLink link pager-link prev" href="/03-veryl.html" data-v-e257564d><!--[--><span class="desc" data-v-e257564d>Previous page</span><span class="title" data-v-e257564d>2 ハードウェア記述言語 Veryl</span><!--]--></a></div><div class="pager" data-v-e257564d><a class="VPLink link pager-link next" href="/04a-zicsr.html" data-v-e257564d><!--[--><span class="desc" data-v-e257564d>Next page</span><span class="title" data-v-e257564d>4 Zicsr拡張の実装</span><!--]--></a></div></nav></footer><!--[--><!--]--></div></div></div><!--[--><!--]--></div></div><!----><!--[--><!--]--></div></div>
-    <script>window.__VP_HASH_MAP__=JSON.parse("{\"00-preface.md\":\"CYEphBX8\",\"02-setup.md\":\"mMRHRDVs\",\"03-veryl.md\":\"VOHmUq3V\",\"04-impl-rv32i.md\":\"BOg6fli5\",\"04a-zicsr.md\":\"CW112jqc\",\"04b-riscvtests.md\":\"z1S6zah9\",\"05-impl-rv64i.md\":\"scsjm5wh\",\"05a-pipeline.md\":\"BF2w2g9l\",\"05b-synth.md\":\"CpOxqOMr\",\"10-impl-m.md\":\"Bpc6cxbg\",\"100-contribute.md\":\"DBSud0cg\",\"11-impl-exception.md\":\"BWLjilX7\",\"12-impl-mmio.md\":\"D6AhukOD\",\"13-impl-a.md\":\"DBg1LuH9\",\"14-impl-c.md\":\"DKYOuAEq\",\"20-mmode-csr.md\":\"CvEyRCw5\",\"21-impl-interrupt.md\":\"CwE5Uciz\",\"22-umode-csr.md\":\"Cj6azAcK\",\"23-smode-csr.md\":\"C08XnmYV\",\"24-impl-paging.md\":\"CRrKUEWW\",\"25-impl-plic.md\":\"BqXpkrN0\",\"26-run-linux.md\":\"BqelRfuy\",\"99-postface.md\":\"DKyCFrvU\",\"99b-postface.md\":\"Cxpm5DbS\",\"index.md\":\"DsKG6qhs\"}");function deserializeFunctions(r){return Array.isArray(r)?r.map(deserializeFunctions):typeof r=="object"&&r!==null?Object.keys(r).reduce((t,n)=>(t[n]=deserializeFunctions(r[n]),t),{}):typeof r=="string"&&r.startsWith("_vp-fn_")?new Function(`return ${r.slice(7)}`)():r};window.__VP_SITE_DATA__=deserializeFunctions(JSON.parse("{\"lang\":\"en-US\",\"dir\":\"ltr\",\"title\":\"Verylで作るCPU\",\"description\":\"Write RISC-V CPU in Veryl\",\"base\":\"/\",\"head\":[],\"router\":{\"prefetchLinks\":true},\"appearance\":true,\"themeConfig\":{\"nav\":[],\"sidebar\":[{\"text\":\"第I部 RV32I/RV64Iの実装\",\"items\":[{\"text\":\"まえがき\",\"link\":\"/00-preface\"},{\"text\":\"1 環境構築\",\"link\":\"/02-setup\"},{\"text\":\"2 ハードウェア記述言語 Veryl\",\"link\":\"/03-veryl\"},{\"text\":\"3 RV32Iの実装\",\"link\":\"/04-impl-rv32i\"},{\"text\":\"4 Zicsr拡張の実装\",\"link\":\"/04a-zicsr\"},{\"text\":\"5 riscv-testsによるテスト\",\"link\":\"/04b-riscvtests\"},{\"text\":\"6 RV64Iの実装\",\"link\":\"/05-impl-rv64i\"},{\"text\":\"7 CPUのパイプライン化\",\"link\":\"/05a-pipeline\"},{\"text\":\"8 CPUの合成\",\"link\":\"/05b-synth\"}]},{\"text\":\"第II部 RV64IMACの実装\",\"items\":[{\"text\":\"9 M拡張の実装\",\"link\":\"/10-impl-m\"},{\"text\":\"10 例外の実装\",\"link\":\"/11-impl-exception\"},{\"text\":\"11 Memory-mapped I/Oの実装\",\"link\":\"/12-impl-mmio\"},{\"text\":\"12 A拡張の実装\",\"link\":\"/13-impl-a\"},{\"text\":\"13 C拡張の実装\",\"link\":\"/14-impl-c\"}]},{\"text\":\"第III部 特権/割り込みの実装\",\"items\":[{\"text\":\"14 M-modeの実装 (1. CSRの実装)\",\"link\":\"/20-mmode-csr\"},{\"text\":\"15 M-modeの実装 (2. 割り込みの実装)\",\"link\":\"/21-impl-interrupt\"},{\"text\":\"16 U-modeの実装\",\"link\":\"/22-umode-csr\"},{\"text\":\"17 S-modeの実装 (1. CSRの実装)\",\"link\":\"/23-smode-csr\"},{\"text\":\"18 S-modeの実装 (2. 仮想記憶システム)\",\"link\":\"/24-impl-paging\"},{\"text\":\"19 PLICの実装\",\"link\":\"/25-impl-plic\"},{\"text\":\"20 Linuxを動かす\",\"link\":\"/26-run-linux\"},{\"text\":\"あとがき (第Ⅰ部)\",\"link\":\"/99-postface\"},{\"text\":\"あとがき (第Ⅱ部、第Ⅲ部)\",\"link\":\"/99b-postface\"},{\"text\":\"このプロジェクトに貢献する\",\"link\":\"/100-contribute\"}]}],\"socialLinks\":[{\"icon\":\"github\",\"link\":\"https://github.com/nananapo/veryl-riscv-book\"}],\"outline\":{\"level\":[2,4]},\"search\":{\"provider\":\"local\",\"options\":{\"miniSearch\":{\"options\":{\"tokenize\":\"_vp-fn_(term) => {\\n              if (typeof term === \\\"string\\\") term = term.toLowerCase();\\n              const segmenter = Intl.Segmenter && new Intl.Segmenter(\\\"ja-JP\\\", { granularity: \\\"word\\\" });\\n              if (!segmenter) return [term];\\n              const tokens = [];\\n              for (const seg of segmenter.segment(term)) {\\n                if (seg.segment.trim() !== \\\"\\\") tokens.push(seg.segment);\\n              }\\n              return tokens;\\n            }\"}}}}},\"locales\":{},\"scrollOffset\":134,\"cleanUrls\":false,\"additionalConfig\":{}}"));</script>
+    <script>window.__VP_HASH_MAP__=JSON.parse("{\"00-preface.md\":\"CYEphBX8\",\"02-setup.md\":\"mMRHRDVs\",\"03-veryl.md\":\"VOHmUq3V\",\"04-impl-rv32i.md\":\"CWfLX216\",\"04a-zicsr.md\":\"CW112jqc\",\"04b-riscvtests.md\":\"z1S6zah9\",\"05-impl-rv64i.md\":\"scsjm5wh\",\"05a-pipeline.md\":\"9Dj4exe1\",\"05b-synth.md\":\"BQB3fAj_\",\"10-impl-m.md\":\"BUG8GT7N\",\"100-contribute.md\":\"DBSud0cg\",\"11-impl-exception.md\":\"BuZ1xu_x\",\"12-impl-mmio.md\":\"CmVJme4N\",\"13-impl-a.md\":\"CX3zDMOp\",\"14-impl-c.md\":\"DSHYR8gR\",\"20-mmode-csr.md\":\"CvEyRCw5\",\"21-impl-interrupt.md\":\"CwE5Uciz\",\"22-umode-csr.md\":\"TlVgFbbX\",\"23-smode-csr.md\":\"C08XnmYV\",\"24-impl-paging.md\":\"wQACKMHZ\",\"25-impl-plic.md\":\"BqXpkrN0\",\"26-run-linux.md\":\"BqelRfuy\",\"99-postface.md\":\"DKyCFrvU\",\"99b-postface.md\":\"Cxpm5DbS\",\"index.md\":\"DsKG6qhs\"}");function deserializeFunctions(r){return Array.isArray(r)?r.map(deserializeFunctions):typeof r=="object"&&r!==null?Object.keys(r).reduce((t,n)=>(t[n]=deserializeFunctions(r[n]),t),{}):typeof r=="string"&&r.startsWith("_vp-fn_")?new Function(`return ${r.slice(7)}`)():r};window.__VP_SITE_DATA__=deserializeFunctions(JSON.parse("{\"lang\":\"en-US\",\"dir\":\"ltr\",\"title\":\"Verylで作るCPU\",\"description\":\"Write RISC-V CPU in Veryl\",\"base\":\"/\",\"head\":[],\"router\":{\"prefetchLinks\":true},\"appearance\":true,\"themeConfig\":{\"nav\":[],\"sidebar\":[{\"text\":\"第I部 RV32I/RV64Iの実装\",\"items\":[{\"text\":\"まえがき\",\"link\":\"/00-preface\"},{\"text\":\"1 環境構築\",\"link\":\"/02-setup\"},{\"text\":\"2 ハードウェア記述言語 Veryl\",\"link\":\"/03-veryl\"},{\"text\":\"3 RV32Iの実装\",\"link\":\"/04-impl-rv32i\"},{\"text\":\"4 Zicsr拡張の実装\",\"link\":\"/04a-zicsr\"},{\"text\":\"5 riscv-testsによるテスト\",\"link\":\"/04b-riscvtests\"},{\"text\":\"6 RV64Iの実装\",\"link\":\"/05-impl-rv64i\"},{\"text\":\"7 CPUのパイプライン化\",\"link\":\"/05a-pipeline\"},{\"text\":\"8 CPUの合成\",\"link\":\"/05b-synth\"}]},{\"text\":\"第II部 RV64IMACの実装\",\"items\":[{\"text\":\"9 M拡張の実装\",\"link\":\"/10-impl-m\"},{\"text\":\"10 例外の実装\",\"link\":\"/11-impl-exception\"},{\"text\":\"11 Memory-mapped I/Oの実装\",\"link\":\"/12-impl-mmio\"},{\"text\":\"12 A拡張の実装\",\"link\":\"/13-impl-a\"},{\"text\":\"13 C拡張の実装\",\"link\":\"/14-impl-c\"}]},{\"text\":\"第III部 特権/割り込みの実装\",\"items\":[{\"text\":\"14 M-modeの実装 (1. CSRの実装)\",\"link\":\"/20-mmode-csr\"},{\"text\":\"15 M-modeの実装 (2. 割り込みの実装)\",\"link\":\"/21-impl-interrupt\"},{\"text\":\"16 U-modeの実装\",\"link\":\"/22-umode-csr\"},{\"text\":\"17 S-modeの実装 (1. CSRの実装)\",\"link\":\"/23-smode-csr\"},{\"text\":\"18 S-modeの実装 (2. 仮想記憶システム)\",\"link\":\"/24-impl-paging\"},{\"text\":\"19 PLICの実装\",\"link\":\"/25-impl-plic\"},{\"text\":\"20 Linuxを動かす\",\"link\":\"/26-run-linux\"},{\"text\":\"あとがき (第Ⅰ部)\",\"link\":\"/99-postface\"},{\"text\":\"あとがき (第Ⅱ部、第Ⅲ部)\",\"link\":\"/99b-postface\"},{\"text\":\"このプロジェクトに貢献する\",\"link\":\"/100-contribute\"}]}],\"socialLinks\":[{\"icon\":\"github\",\"link\":\"https://github.com/nananapo/veryl-riscv-book\"}],\"outline\":{\"level\":[2,4]},\"search\":{\"provider\":\"local\",\"options\":{\"miniSearch\":{\"options\":{\"tokenize\":\"_vp-fn_(term) => {\\n              if (typeof term === \\\"string\\\") term = term.toLowerCase();\\n              const segmenter = Intl.Segmenter && new Intl.Segmenter(\\\"ja-JP\\\", { granularity: \\\"word\\\" });\\n              if (!segmenter) return [term];\\n              const tokens = [];\\n              for (const seg of segmenter.segment(term)) {\\n                if (seg.segment.trim() !== \\\"\\\") tokens.push(seg.segment);\\n              }\\n              return tokens;\\n            }\"}}}}},\"locales\":{},\"scrollOffset\":134,\"cleanUrls\":false,\"additionalConfig\":{}}"));</script>
     
   </body>
 </html>
