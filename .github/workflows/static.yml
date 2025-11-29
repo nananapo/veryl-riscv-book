@@ -32,6 +32,27 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Generate Markdown
+        run: |
+          cd basic
+          make update
+          make md
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+          cache-dependency-path: 'basic/vitepress/yarn.lock'
+
+      - name: Build VitePress
+        run: |
+          cd basic/vitepress
+          yarn install
+          make import
+          make build
+
       - name: Add robots.txt
         run: |
           echo -e "User-agent: *\nDisallow: /nightly/" > ./basic/webroot/robots.txt
@@ -52,6 +73,27 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Generate Markdown
+        run: |
+          cd basic
+          make update
+          make md
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+          cache-dependency-path: 'basic/vitepress/yarn.lock'
+
+      - name: Build VitePress
+        run: |
+          cd basic/vitepress
+          yarn install
+          make import
+          make build
+
       - name: Add robots.txt
         run: |
           echo -e "User-agent: *\nDisallow: /nightly/" > ./basic/webroot/robots.txt
