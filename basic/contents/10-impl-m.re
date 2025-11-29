@@ -338,7 +338,7 @@ muldivunitモジュールは計算が完了したクロックでしか@<code>{rv
 @<code>{src/muldivunit.veryl}の中にmulunitモジュールを作成します(@<list>{muldivunit.veryl.impl-mulunit-range.mulunit})。
 
 //list[muldivunit.veryl.impl-mulunit-range.mulunit][muldivunit.veryl]{
-#@# maprange(scripts/10/impl-mulunit-range/core/src/muldivunit.veryl,mulunit)
+#@maprange(scripts/10/impl-mulunit-range/core/src/muldivunit.veryl,mulunit)
 module mulunit #(
     param WIDTH: u32 = 0,
 ) (
@@ -398,7 +398,7 @@ module mulunit #(
         }
     }
 }
-#@# end
+#@end
 //}
 
 mulunitモジュールは@<code>{op1 * op2}を計算するモジュールです。
@@ -457,15 +457,15 @@ funct3の下位2ビットによってmulunitモジュールの結果を選択す
 (@<list>{muldivunit.veryl.mulhu-range.result})。
 
 //list[muldivunit.veryl.mulhu-range.result][MULHUモジュールの結果を取得する (muldivunit.veryl)]{
-#@# maprange(scripts/10/mulhu-range/core/src/muldivunit.veryl,result)
-    State::WaitValid: if is_mul && mu_rvalid {
-        state  = State::Finish;
-        @<b>|result = case funct3_saved[1:0] {|
-        @<b>|    2'b11  : mu_result[XLEN+:XLEN], // MULHU|
-        @<b>|    default: 0,|
-        @<b>|};|
-    }
-#@# end
+#@maprange(scripts/10/mulhu-range/core/src/muldivunit.veryl,result)
+                State::WaitValid: @<b>|if is_mul && mu_rvalid {|
+                    state  = State::Finish;
+                    @<b>|result = case funct3_saved[1:0] {|
+                    @<b>|    2'b11  : mu_result[XLEN+:XLEN], // MULHU|
+                    @<b>|    default: 0,|
+                    @<b>|};|
+                @<b>|}|
+#@end
 //}
 
 

@@ -106,13 +106,6 @@ SystemVerilogのシミュレータを生成するためのソフトウェアで�
 @<href>{https://verilator.org/guide/latest/install.html, ドキュメント}
 を参考にインストールしてください。
 
-
-//caution[本書で利用するVerilatorのバージョン]{
-2024/10/28時点の最新バージョンはv5.030ですが、
-Verilatorの問題によりシミュレータをビルドできない場合があります。
-対処方法はサポートページを確認してください。
-//}
-
 == riscv-gnu-toolchain
 
 riscv-gnu-toolchainは、RISC-V向けのコンパイラやシミュレータなどが含まれているツールチェーン(ソフトウェア群)です。

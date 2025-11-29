@@ -515,7 +515,7 @@ Tang Nano 9Kの水晶発振器は27MHzで振動します。
 インポートされた@<code>{top_tang.sv}のtopモジュールをインスタンス化している場所で、
 @<code>{MEMORY_FILEPATH}パラメータの値を@<code>{test/led.hex}のパスに設定します(@<list>{led.hex.set})。
 
-#@# TODO mapに戻す　できれば
+#@# TODO mapに戻す
 //list[led.hex.set][読み込むファイルを設定する (top_tang.sv)]{
 core_top #(
     .MEMORY_FILEPATH_IS_ENV (0 ),
@@ -552,7 +552,7 @@ Tang Nano 9Kの中央2つ以外のLEDが点灯していることを確認でき�
 
 @<code>{MEMORY_FILEPATH}パラメータの値を@<code>{test/led_counter.hex}のパスに設定します(@<list>{led_counter.hex.set})。
 
-#@# TODO mapに戻す　できれば
+#@# TODO mapに戻す
 //list[led_counter.hex.set][読み込むファイルを変更する (top_tang.sv)]{
 core_top #(
     .MEMORY_FILEPATH_IS_ENV (0 ),

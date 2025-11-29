@@ -87,9 +87,8 @@ CPUがリセット(起動)したときの特権レベルはM-modeです。
 本章ではこの中の一部のCSRを実装し、
 新しく実装する機能で使うタイミングで他のCSRを解説、実装します
 
-#@# mapに戻す	できれば mepcを外した
 //list[eei.veryl.define.CsrAddr][CSRのアドレスを定義する (eei.veryl)]{
-#@# maprange(scripts/20/define-range/core/src/eei.veryl,CsrAddr)
+#@maprange(scripts/20/define-range/core/src/eei.veryl,CsrAddr)
     enum CsrAddr: logic<12> {
         @<b>|// Machine Information Registers|
         @<b>|MIMPID = 12'hf13,|
@@ -114,7 +113,7 @@ CPUがリセット(起動)したときの特権レベルはM-modeです。
         // Custom
         LED = 12'h800,
     }
-#@# end
+#@end
 //}
 
 === XLENの定義

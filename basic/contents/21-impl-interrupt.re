@@ -10,7 +10,7 @@
 アプリケーションを記述するとき、キーボードやマウスの入力、時間の経過のようなイベントに起因して何らかのプログラムを実行したいことがあります。
 例えばキーボードから入力を得たいとき、ポーリング(Polling)、または割り込み(Interrupt)という手法が利用されます。
 
-#@# TODO できればポーリングの図
+#@# TODO ポーリングの図
 
 ポーリングとは、定期的に問い合わせを行う方式のことです。
 例えばキーボード入力の場合、定期的にキーボードデバイスにアクセスして入力があるかどうかを確かめます。
@@ -24,7 +24,7 @@
 入力があったタイミングでデバイス側からCPUにイベントを通知すればいいです。
 これを実現するのが割り込みです。
 
-#@# TODO できれば割り込みの図
+#@# TODO 割り込みの図
 
 割り込みとは、何らかのイベントの通知によって実行中のプログラムを中断し、通知内容を処理する方式のことです。
 割り込みを使うと、ポーリングのように無駄にデバイスにアクセスをすることなく、入力の処理が必要な時にだけ実行できます。
@@ -736,6 +736,7 @@ csrunitモジュールからトラップが発生するかどうかの情報を�
 #@end
 //}
 
+#@# TODO この処理はいらないよな....????
 #@# memunitモジュールが無効(@<code>{!valid})なとき、
 #@# @<code>{state}を@<code>{State::Init}にリセットします
 #@# (@<list>{memunit.veryl.intr.reset})。
@@ -964,13 +965,12 @@ ACLINTモジュールにMTIME、MTIMECMPレジスタを実装します。
 )。
 @<code>{mtime}レジスタはクロック毎にインクリメントします。
 
-#@# TODO mapに戻す　できれば
 //list[aclint_memory.veryl.mtime.reg][mtime、mtimecmpレジスタの定義 (aclint_memory.veryl)]{
-#@# maprange(scripts/21/mtime-range/core/src/aclint_memory.veryl,reg)
+#@maprange(scripts/21/mtime-range/core/src/aclint_memory.veryl,reg)
     var msip0    : logic ;
     @<b>|var mtime    : UInt64;|
     @<b>|var mtimecmp0: UInt64;|
-#@# end
+#@end
 //}
 
 //list[aclint_memory.veryl.mtime.reset][レジスタを0でリセットする (aclint_memory.veryl)]{

@@ -1183,9 +1183,8 @@ mmio_controllerモジュールにデバイスを追加します。
 @<list>{mmio_controller.veryl.debugout.reset_all}
 )。
 
-#@# mapにする
 //list[mmio_controller.veryl.debugout.port][DBG_ADDR、インターフェースを追加する (mmio_controller.veryl)]{
-#@# maprange(scripts/12/debugout-range/core/src/mmio_controller.veryl,port)
+#@maprange(scripts/12/debugout-range/core/src/mmio_controller.veryl,port)
 module mmio_controller (
     clk       : input   clock         ,
     rst       : input   reset         ,
@@ -1195,7 +1194,7 @@ module mmio_controller (
     rom_membus: modport Membus::master,
     @<b>|dbg_membus: modport Membus::master,|
 ) {
-#@# end
+#@end
 //}
 
 //list[mmio_controller.veryl.debugout.reset_all][インターフェースの要求部分をリセットする (mmio_controller.veryl)]{
@@ -1376,7 +1375,7 @@ LSBが@<code>{1}ならテストの成功判定をして@<code>{$finish}システ
 )。
 
 //list[core.veryl.debugout.debug][デバッグ出力をdefineで囲う (core.veryl)]{
-#@# maprange(scripts/12/debugout-range/core/src/core.veryl,debug)
+#@maprange(scripts/12/debugout-range/core/src/core.veryl,debug)
     ///////////////////////////////// DEBUG /////////////////////////////////
     @<b>|#[ifdef(PRINT_DEBUG)]|
     @<b>|{|
@@ -1390,7 +1389,7 @@ LSBが@<code>{1}ならテストの成功判定をして@<code>{$finish}システ
 
                 $display("");
                 $display("# %d", clock_count);
-#@# end
+#@end
 //}
 
 @<code>{test/debug_output.c}を作成し、次のように記述します

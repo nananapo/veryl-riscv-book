@@ -79,7 +79,7 @@ C拡張は浮動小数点命令をサポートするF、D拡張が実装され�
 
 == IALIGNの変更
 
-#@# TODO コード削減の図　できれば
+#@# TODO コード削減の図
 
 @<secref>{11-impl-exception|def-ialign}で解説したように、
 命令はIALIGNビットに整列したアドレスに配置されます。
@@ -840,7 +840,7 @@ RVC命令のopcode、functなどのフィールドを読んで、
 関数の名前は基本的に命令名と同じにしていますが、
 Verylのキーワードと被るものは@<code>{inst_}をprefixにしています。
 
-#@# TODO mapに戻す。フォーマットしたい　できれば
+#@# TODO mapに戻す。フォーマットしたい
 //list[inst_gen_pkg.veryl.rvcc][命令のビット列を生成する関数を定義する (inst_gen_pkg.veryl)]{
 import eei::*;
 

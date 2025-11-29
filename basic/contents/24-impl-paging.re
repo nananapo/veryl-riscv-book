@@ -282,15 +282,14 @@ mmio_controllerモジュールで構造体の値をすべて@<code>{0}に設定�
 )。
 いまのところ、デバイスは例外を発生させません。
 
-#@# mapに戻す できれば
 //list[mmio_controller.veryl.newexpt.comb][exptを0に設定する (membus_if.veryl)]{
-#@# maprange(scripts/24/newexpt-range/core/src/mmio_controller.veryl,comb)
+#@maprange(scripts/24/newexpt-range/core/src/mmio_controller.veryl,comb)
     always_comb {
         req_core.ready  = 0;
         req_core.rvalid = 0;
         req_core.rdata  = 0;
         @<b>|req_core.expt   = 0;|
-#@# end
+#@end
 //}
 
 mmio_controllerモジュールからの例外情報を
@@ -1234,9 +1233,8 @@ ptwモジュールで使用する定数と関数を実装します。
 (@<list>{sv39util.veryl.sv39})。
 定数は@<secref>{sv39process}で使用しているものと同じです。
 
-#@# mapに戻す できれば
 //list[sv39util.veryl.sv39][sv39util.veryl]{
-#@# mapfile(scripts/24/sv39-range/core/src/sv39util.veryl)
+#@mapfile(scripts/24/sv39-range/core/src/sv39util.veryl)
 import eei::*;
 package sv39util {
     const PAGESIZE: u32      = 12;
@@ -1279,7 +1277,7 @@ package sv39util {
         };
     }
 }
-#@# end
+#@end
 //}
 
 ==={define_PTE} PTEの定義
@@ -1319,9 +1317,8 @@ interface PTE39 {
 PTEの値を使った関数を定義します
 (@<list>{pte.veryl.sv39.func})。
 
-#@# mapに戻す できれば
 //list[pte.veryl.sv39.func][PTEの値を使った関数を定義する (pte.veryl)]{
-#@# maprange(scripts/24/sv39-range/core/src/pte.veryl,func)
+#@maprange(scripts/24/sv39-range/core/src/pte.veryl,func)
     // leaf PTEか判定する
     function is_leaf () -> logic { return r() || x(); }
 
@@ -1402,7 +1399,7 @@ PTEの値を使った関数を定義します
         let d: logic<8> = wen as u8 << 7;
         return value[7:0] | a | d;
     }
-#@# end
+#@end
 //}
 
 === ptwモジュールの実装
@@ -1465,16 +1462,15 @@ PTEのアドレス(@<code>{taddr})、
 #@end
 //}
 
-#@# mapに戻す できれば
 //list[ptw.veryl.sv39.reset][レジスタをリセットする (ptw.veryl)]{
-#@# maprange(scripts/24/sv39-range/core/src/ptw.veryl,reset)
+#@maprange(scripts/24/sv39-range/core/src/ptw.veryl,reset)
     function on_reset () {
         state             = State::IDLE;
         physical_addr     = 0;
         @<b>|taddr             = 0;|
         @<b>|level             = 0;|
         @<b>|wdata_ad          = 0;|
-#@# end
+#@end
 //}
 
 
@@ -1748,12 +1744,11 @@ satp、mstatus、sstatusレジスタが変更されるときに@<code>{flush}を
 (@<list>{csrunit.veryl.flushcsr.logic})。
 
 
-#@# mapに戻す　できれば　sstatusを追加してる
 //list[csrunit.veryl.flushcsr.logic][satp、mstatus、sstatusレジスタが変更されるときにflushを1にする (csrunit.veryl)]{
-#@#maprange(scripts/24/flushcsr-range/core/src/csrunit.veryl,logic)
+#@maprange(scripts/24/flushcsr-range/core/src/csrunit.veryl,logic)
     let wsc_flush: logic = is_wsc && (csr_addr == CsrAddr::SATP || csr_addr == CsrAddr::MSTATUS || csr_addr == CsrAddr::SSTATUS);
     assign flush     = valid && wsc_flush;
-#@#end
+#@end
 //}
 
 @<code>{flush}が@<code>{1}のとき、制御ハザードが発生したことにしてパイプラインをフラッシュします

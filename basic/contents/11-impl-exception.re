@@ -508,15 +508,14 @@ OP-MISCのopcode(@<code>{7'b0001111})をeeiパッケージに定義してくだ�
 @<code>{CsrCause}型にIllegal instruction例外のcauseを追加します
 (@<list>{eei.veryl.instillegal-range.CsrCause})。
 
-#@# mapにする
 //list[eei.veryl.instillegal-range.CsrCause][Illegal instruction例外のcauseを定義する (eei.veryl)]{
-#@# maprange(scripts/11/instillegal-range/core/src/eei.veryl,CsrCause)
+#@maprange(scripts/11/instillegal-range/core/src/eei.veryl,CsrCause)
     enum CsrCause: UIntX {
         @<b>|ILLEGAL_INSTRUCTION = 2,|
         BREAKPOINT = 3,
         ENVIRONMENT_CALL_FROM_M_MODE = 11,
     }
-#@# end
+#@end
 //}
 
 @<code>{valid}フラグを利用して、IDステージでIllegal instruction例外を発生させます

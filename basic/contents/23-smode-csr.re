@@ -70,14 +70,13 @@ mstatus.SXLを@<code>{64}を示す値である@<code>{2}に設定します
 #@end
 //}
 
-#@# マップにする
 //list[csrunit.veryl.misamppsxl.reset][mstatus.SXLの初期値を設定する (csrunit.veryl)]{
-#@# maprange(scripts/23/misamppsxl-range/core/src/csrunit.veryl,reset)
+#@maprange(scripts/23/misamppsxl-range/core/src/csrunit.veryl,reset)
     always_ff {
         if_reset {
             mode       = PrivMode::M;
             mstatus    = @<b>{MSTATUS_SXL |} MSTATUS_UXL;
-#@# end
+#@end
 //}
 
 今のところmstatus.MPPにはM-modeとU-modeを示す値しか書き込めないようにしているので、

@@ -71,11 +71,8 @@ CSRを制御する命令であることを示す@<code>{is_csr}フラグを追�
 これでデコード処理を書く準備が整いました。
 inst_decoderモジュールの@<code>{InstCtrl}を生成している部分を変更します(@<list>{inst_decoder.veryl.create-csrunit-range.decode})。
 
-#@# TODO 矢印の位置がずれる
-
 //list[inst_decoder.veryl.create-csrunit-range.decode][OP_SYSTEMとis_csrを追加する (inst_decoder.veryl)]{
 #@maprange(scripts/04a/create-csrunit-range/core/src/inst_decoder.veryl,decode)
-                                                ↓ is_csrを追加
         ctrl = {
             case op {
                 OP_LUI: {
