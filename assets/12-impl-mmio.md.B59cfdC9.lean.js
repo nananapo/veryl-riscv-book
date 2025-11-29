@@ -1,4 +1,4 @@
-import{_ as l,c as p,o as c,ah as n,j as s,a,bC as o}from"./chunks/framework.BNheOMQd.js";const f=JSON.parse('{"title":"Memory-mapped I/Oの実装","description":"","frontmatter":{},"headers":[],"relativePath":"12-impl-mmio.md","filePath":"12-impl-mmio.md"}'),d={name:"12-impl-mmio.md"};function t(r,e,b,m,i,h){return c(),p("div",null,[...e[0]||(e[0]=[n("",9),s("div",{class:"language-veryl"},[s("button",{title:"Copy Code",class:"copy"}),s("span",{class:"lang"},"veryl"),s("pre",{class:"hljs"},[s("code",null,[s("span",{class:"hljs-comment"},[a("// メモリ"),s("span",{class:"custom-hl-bold"},"バス"),a("のデータ幅")]),a(`
+import{_ as l,c as p,o as c,ah as n,j as s,a,bC as o}from"./chunks/framework.BNheOMQd.js";const f=JSON.parse('{"title":"Memory-mapped I/Oの実装","description":"","frontmatter":{},"headers":[],"relativePath":"12-impl-mmio.md","filePath":"12-impl-mmio.md"}'),d={name:"12-impl-mmio.md"};function t(r,e,b,i,m,h){return c(),p("div",null,[...e[0]||(e[0]=[n("",9),s("div",{class:"language-veryl"},[s("button",{title:"Copy Code",class:"copy"}),s("span",{class:"lang"},"veryl"),s("pre",{class:"hljs"},[s("code",null,[s("span",{class:"hljs-comment"},[a("// メモリ"),s("span",{class:"custom-hl-bold"},"バス"),a("のデータ幅")]),a(`
 `),s("span",{class:"hljs-keyword"},"const"),a(" MEM"),s("span",{class:"custom-hl-bold"},"BUS"),a("_DATA_WIDTH: "),s("span",{class:"hljs-keyword"},"u32"),a(" = "),s("span",{class:"hljs-number"},"64"),a(`;
 `),s("span",{class:"custom-hl-del"},[s("span",{class:"hljs-comment"},"// メモリのアドレス幅")]),a(`
 `),s("span",{class:"custom-hl-del"},[s("span",{class:"hljs-keyword"},"const"),a(" MEM_ADDR_WIDTH: "),s("span",{class:"hljs-keyword"},"u32"),a(" = "),s("span",{class:"hljs-number"},"16"),a(";")]),a(`
@@ -10,8 +10,8 @@ import{_ as l,c as p,o as c,ah as n,j as s,a,bC as o}from"./chunks/framework.BNh
 
 `),s("span",{class:"hljs-comment"},"// ROM"),a(`
 `),s("span",{class:"hljs-keyword"},"const"),a(" ROM_ADDR_WIDTH: "),s("span",{class:"hljs-keyword"},"u32"),a("  = "),s("span",{class:"hljs-number"},"9"),a(`;
-`)])]),s("span",{class:"hljs-keyword"},"const"),a(" ROM_DATA_WIDTH: "),s("span",{class:"hljs-keyword"},"u32"),a("  = "),s("span",{class:"hljs-number"},"64"),a(`;
-`),s("span",{class:"hljs-keyword"},"const"),a(" MMAP_ROM_BEGIN: Addr = "),s("span",{class:"hljs-number"},"'h1000"),a(),s("span",{class:"hljs-keyword"},"as"),a(` Addr;
+`),s("span",{class:"hljs-keyword"},"const"),a(" ROM_DATA_WIDTH: "),s("span",{class:"hljs-keyword"},"u32"),a("  = "),s("span",{class:"hljs-number"},"64"),a(`;
+`)])]),s("span",{class:"hljs-keyword"},"const"),a(" MMAP_ROM_BEGIN: Addr = "),s("span",{class:"hljs-number"},"'h1000"),a(),s("span",{class:"hljs-keyword"},"as"),a(` Addr;
 `),s("span",{class:"hljs-keyword"},"const"),a(" MMAP_ROM_END  : Addr = MMAP_ROM_BEGIN + "),s("span",{class:"hljs-number"},"'h3ff"),a(),s("span",{class:"hljs-keyword"},"as"),a(` Addr;
 `)])])],-1),n("",99),s("div",{class:"language-veryl"},[s("button",{title:"Copy Code",class:"copy"}),s("span",{class:"lang"},"veryl"),s("pre",{class:"hljs"},[s("code",null,[a(`#[ifdef(TEST_MODE)]
 `),s("span",{class:"hljs-keyword"},"always_ff"),a(` {
@@ -24,10 +24,25 @@ import{_ as l,c as p,o as c,ah as n,j as s,a,bC as o}from"./chunks/framework.BNh
             $display(`),s("span",{class:"hljs-string"},'"riscv-tests failed!"'),a(`);
             $error  (`),s("span",{class:"hljs-string"},'"wdata : %h"'),a(`, d_membus.wdata);
         }
-`)])]),a(`        $finish();
-    }
+        $finish();
+`)])]),a(`    }
 }
-`)])])],-1),n("",117),s("div",{class:"language-veryl"},[s("button",{title:"Copy Code",class:"copy"}),s("span",{class:"lang"},"veryl"),s("pre",{class:"hljs"},[s("code",null,[s("span",{class:"hljs-comment"},"///////////////////////////////// DEBUG /////////////////////////////////"),a(`
+`)])])],-1),n("",96),s("div",{class:"language-veryl"},[s("button",{title:"Copy Code",class:"copy"}),s("span",{class:"lang"},"veryl"),s("pre",{class:"hljs"},[s("code",null,[s("span",{class:"hljs-keyword"},"case"),a(` get_device(req.addr) {
+    Device::RAM: {
+`),s("span",{class:"foldable-code"},[s("span",{class:"fold-trigger",onclick:"this.parentElement.classList.add('expanded')"}),s("span",{class:"fold-content"},`        ram_membus      <> req;
+        ram_membus.addr -= MMAP_RAM_BEGIN;
+    }
+    Device::ROM: {
+        rom_membus      <> req;
+`)]),a(`        rom_membus.addr -= MMAP_ROM_BEGIN;
+    }
+    `),s("span",{class:"custom-hl-bold"},"Device::DEBUG: {"),a(`
+    `),s("span",{class:"custom-hl-bold"},"    dbg_membus      <> req;"),a(`
+    `),s("span",{class:"custom-hl-bold"},"    dbg_membus.addr -= DBG_ADDR;"),a(`
+    `),s("span",{class:"custom-hl-bold"},"}"),a(`
+    `),s("span",{class:"hljs-keyword"},"default"),a(`: {}
+}
+`)])])],-1),n("",20),s("div",{class:"language-veryl"},[s("button",{title:"Copy Code",class:"copy"}),s("span",{class:"lang"},"veryl"),s("pre",{class:"hljs"},[s("code",null,[s("span",{class:"hljs-comment"},"///////////////////////////////// DEBUG /////////////////////////////////"),a(`
 `),s("span",{class:"custom-hl-bold"},"#[ifdef(PRINT_DEBUG)]"),a(`
 `),s("span",{class:"custom-hl-bold"},"{"),a(`
     `),s("span",{class:"hljs-keyword"},"var"),a(" clock_count: "),s("span",{class:"hljs-keyword"},"u64"),a(`;
@@ -37,8 +52,8 @@ import{_ as l,c as p,o as c,ah as n,j as s,a,bC as o}from"./chunks/framework.BNh
             clock_count = `),s("span",{class:"hljs-number"},"1"),a(`;
         } `),s("span",{class:"hljs-keyword"},"else"),a(` {
             clock_count = clock_count + `),s("span",{class:"hljs-number"},"1"),a(`;
-`)])]),a(`
-            $display(`),s("span",{class:"hljs-string"},'""'),a(`);
+
+`)])]),a("            $display("),s("span",{class:"hljs-string"},'""'),a(`);
             $display(`),s("span",{class:"hljs-string"},'"# %d"'),a(`, clock_count);
 `)])])],-1),n("",54),s("div",{class:"language-veryl"},[s("button",{title:"Copy Code",class:"copy"}),s("span",{class:"lang"},"veryl"),s("pre",{class:"hljs"},[s("code",null,[s("span",{class:"hljs-keyword"},"embed"),a(` (inline) sv{{{
     `),s("span",{class:"hljs-keyword"},"package"),a(` svutil;
@@ -65,8 +80,8 @@ import{_ as l,c as p,o as c,ah as n,j as s,a,bC as o}from"./chunks/framework.BNh
 }
 `)])])],-1),s("p",null,[a("デバッグ用の入出力デバイスのロードで"),s("code",null,"util::get_input"),a("の結果を返すようにします ( リスト87 )。 このコードは合成できないので、有効化オプション"),s("code",null,"ENABLE_DEBUG_INPUT"),a("をつけます。")],-1),s("p",null,[s("span",{class:"caption"},"▼リスト11.87: 読み込みでget_input関数を呼び出す (src/top.veryl)"),a(),s("a",{href:"https://github.com/nananapo/bluecore/compare/7a1b239f6dde5db39ab6cea0c7aaf3b1994878d1~1..7a1b239f6dde5db39ab6cea0c7aaf3b1994878d1#diff-0c548fd82f89bdf97edffcd89dfccd2aab836eccf57f11b8e25c313abd0d0e6f"},"差分をみる")],-1),s("div",{class:"language-veryl"},[s("button",{title:"Copy Code",class:"copy"}),s("span",{class:"lang"},"veryl"),s("pre",{class:"hljs"},[s("code",null,[s("span",{class:"hljs-keyword"},"always_ff"),a(` {
     dbg_membus.ready  = `),s("span",{class:"hljs-number"},"1"),a(`;
-    dbg_membus.rvalid = dbg_membus.valid;
-`),s("span",{class:"foldable-code"},[s("span",{class:"fold-trigger",onclick:"this.parentElement.classList.add('expanded')"}),s("span",{class:"fold-content"},[a("    "),s("span",{class:"hljs-keyword"},"if"),a(` dbg_membus.valid {
+`),s("span",{class:"foldable-code"},[s("span",{class:"fold-trigger",onclick:"this.parentElement.classList.add('expanded')"}),s("span",{class:"fold-content"},[a(`    dbg_membus.rvalid = dbg_membus.valid;
+    `),s("span",{class:"hljs-keyword"},"if"),a(` dbg_membus.valid {
         `),s("span",{class:"hljs-keyword"},"if"),a(` dbg_membus.wen {
             `),s("span",{class:"hljs-keyword"},"if"),a(" dbg_membus.wdata[MEMBUS_DATA_WIDTH - "),s("span",{class:"hljs-number"},"1"),a("-:"),s("span",{class:"hljs-number"},"20"),a("] == "),s("span",{class:"hljs-number"},"20'h01010"),a(` {
                 $write(`),s("span",{class:"hljs-string"},'"%c"'),a(", dbg_membus.wdata["),s("span",{class:"hljs-number"},"7"),a(":"),s("span",{class:"hljs-number"},"0"),a(`]);

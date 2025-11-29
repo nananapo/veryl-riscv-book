@@ -35,8 +35,8 @@ import{_ as n,c as l,o as p,ah as c,j as a,a as s,bS as t}from"./chunks/framewor
 };
 </code></pre></div><p>トラップが発生するとき、mstatus.MPPに現在の特権レベルを保存します (リスト13)。 また、トラップから戻るとき、特権レベルをmstatus.MPPに設定し、 mstatus.MPPに実装がサポートする最小の特権レベルである<code>PrivMode::U</code>を書き込みます。</p><p><span class="caption">▼リスト16.13: 特権レベル、mstatus.MPPを更新する (csrunit.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/f827ad4fb0cab3c086acfdfaf262a64175fce9a1~1..f827ad4fb0cab3c086acfdfaf262a64175fce9a1#diff-44dd9efb5b2797bbd5248f96206e5f13442629b6dd3cda87990e383f99c2aeec">差分をみる</a></p>`,47),a("div",{class:"language-veryl"},[a("button",{title:"Copy Code",class:"copy"}),a("span",{class:"lang"},"veryl"),a("pre",{class:"hljs"},[a("code",null,[a("span",{class:"hljs-keyword"},"if"),s(` raise_trap {
     `),a("span",{class:"hljs-keyword"},"if"),s(` raise_expt || raise_interrupt {
-        mepc = `),a("span",{class:"hljs-keyword"},"if"),s(" raise_expt ? pc : "),a("span",{class:"hljs-comment"},"// exception"),s(`
-`),a("span",{class:"foldable-code"},[a("span",{class:"fold-trigger",onclick:"this.parentElement.classList.add('expanded')"}),a("span",{class:"fold-content"},[s("         "),a("span",{class:"hljs-keyword"},"if"),s(" raise_interrupt && is_wfi ? pc + "),a("span",{class:"hljs-number"},"4"),s(" : pc; "),a("span",{class:"hljs-comment"},"// interrupt when wfi / interrupt"),s(`
+`),a("span",{class:"foldable-code"},[a("span",{class:"fold-trigger",onclick:"this.parentElement.classList.add('expanded')"}),a("span",{class:"fold-content"},[s("        mepc = "),a("span",{class:"hljs-keyword"},"if"),s(" raise_expt ? pc : "),a("span",{class:"hljs-comment"},"// exception"),s(`
+         `),a("span",{class:"hljs-keyword"},"if"),s(" raise_interrupt && is_wfi ? pc + "),a("span",{class:"hljs-number"},"4"),s(" : pc; "),a("span",{class:"hljs-comment"},"// interrupt when wfi / interrupt"),s(`
         mcause = trap_cause;
         mtval  = `),a("span",{class:"hljs-keyword"},"if"),s(" raise_expt ? expt_value : "),a("span",{class:"hljs-number"},"0"),s(`;
         `),a("span",{class:"hljs-comment"},"// save mstatus.mie to mstatus.mpie"),s(`

@@ -56,8 +56,8 @@ import{_ as l,c as p,o as c,ah as n,j as a,a as s,aA as d,aB as t,aC as r,aD as 
 <span class="hljs-keyword">var</span> wbq_rdata : wbq_type;
 </code></pre></div><p><span class="caption">▼リスト7.6: FIFOのインスタンス化 (core.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/ea7e7028c132e406bba9582dcf53c5e8b8528dae~1..ea7e7028c132e406bba9582dcf53c5e8b8528dae#diff-bdad1723f95a5423ff5ab8ba69bb572aabe1c8def0cda1748f6f980f61b57510">差分をみる</a></p>`,66),a("div",{class:"language-veryl"},[a("button",{title:"Copy Code",class:"copy"}),a("span",{class:"lang"},"veryl"),a("pre",{class:"hljs"},[a("code",null,[a("span",{class:"hljs-keyword"},"inst"),s(` id_ex_fifo: fifo #(
     DATA_TYPE: exq_type,
-    WIDTH    : `),a("span",{class:"hljs-number"},"1"),s(`       ,
-`),a("span",{class:"foldable-code"},[a("span",{class:"fold-trigger",onclick:"this.parentElement.classList.add('expanded')"}),a("span",{class:"fold-content"},[s(`) (
+`),a("span",{class:"foldable-code"},[a("span",{class:"fold-trigger",onclick:"this.parentElement.classList.add('expanded')"}),a("span",{class:"fold-content"},[s("    WIDTH    : "),a("span",{class:"hljs-number"},"1"),s(`       ,
+) (
     clk                   ,
     rst                   ,
     flush : control_hazard,

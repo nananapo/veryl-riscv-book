@@ -19,8 +19,8 @@ import{_ as l,c,o as p,ah as n,j as a,a as s,bD as d,bE as t,bF as o}from"./chun
 }
 </code></pre></div><h3 id="is-amoフラグを実装する" tabindex="-1">is_amoフラグを実装する <a class="header-anchor" href="#is-amoフラグを実装する" aria-label="Permalink to “is_amoフラグを実装する”">​</a></h3><p><code>InstCtrl</code>構造体に、 A拡張の命令であることを示す<code>is_amo</code>フラグを追加します (リスト4)。</p><p><span class="caption">▼リスト12.4: InstCtrlにis_amoを定義する (corectrl.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/cb1dcfe57e93d3c8b769206b7d001cb5d6fef1d9~1..cb1dcfe57e93d3c8b769206b7d001cb5d6fef1d9#diff-6e03bfb8e3afdba1e0b88b561d8b8e5e4f2a7ffc6c4efb228c5797053b78742c">差分をみる</a></p>`,34),a("div",{class:"language-veryl"},[a("button",{title:"Copy Code",class:"copy"}),a("span",{class:"lang"},"veryl"),a("pre",{class:"hljs"},[a("code",null,[a("span",{class:"hljs-keyword"},"struct"),s(` InstCtrl {
     itype    : InstType   , `),a("span",{class:"hljs-comment"},"// 命令の形式"),s(`
-    rwb_en   : `),a("span",{class:"hljs-keyword"},"logic"),s("      , "),a("span",{class:"hljs-comment"},"// レジスタに書き込むかどうか"),s(`
-`),a("span",{class:"foldable-code"},[a("span",{class:"fold-trigger",onclick:"this.parentElement.classList.add('expanded')"}),a("span",{class:"fold-content"},[s("    is_lui   : "),a("span",{class:"hljs-keyword"},"logic"),s("      , "),a("span",{class:"hljs-comment"},"// LUI命令である"),s(`
+`),a("span",{class:"foldable-code"},[a("span",{class:"fold-trigger",onclick:"this.parentElement.classList.add('expanded')"}),a("span",{class:"fold-content"},[s("    rwb_en   : "),a("span",{class:"hljs-keyword"},"logic"),s("      , "),a("span",{class:"hljs-comment"},"// レジスタに書き込むかどうか"),s(`
+    is_lui   : `),a("span",{class:"hljs-keyword"},"logic"),s("      , "),a("span",{class:"hljs-comment"},"// LUI命令である"),s(`
     is_aluop : `),a("span",{class:"hljs-keyword"},"logic"),s("      , "),a("span",{class:"hljs-comment"},"// ALUを利用する命令である"),s(`
     is_muldiv: `),a("span",{class:"hljs-keyword"},"logic"),s("      , "),a("span",{class:"hljs-comment"},"// M拡張の命令である"),s(`
     is_op32  : `),a("span",{class:"hljs-keyword"},"logic"),s("      , "),a("span",{class:"hljs-comment"},"// OP-32またはOP-IMM-32である"),s(`
@@ -304,8 +304,8 @@ led     : <span class="hljs-keyword">output</span>  UIntX                       
     <span class="custom-hl-bold">membus.funct3 = req_funct3;</span>
 </code></pre></div><p><span class="caption">▼リスト12.20: メモリにアクセスする命令のとき、レジスタに情報を設定する (memunit.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/1437002226b254ac0e7dffa4805310790d513657~1..1437002226b254ac0e7dffa4805310790d513657#diff-d3618e86de098826661fabd111bec51452d943d3e486d18f9c3aa96b2dd9a89e">差分をみる</a></p>`,51),a("div",{class:"language-veryl"},[a("button",{title:"Copy Code",class:"copy"}),a("span",{class:"lang"},"veryl"),a("pre",{class:"hljs"},[a("code",null,[a("span",{class:"hljs-keyword"},"case"),s(` state {
     State::Init: `),a("span",{class:"hljs-keyword"},"if"),s(` is_new & inst_is_memop(ctrl) {
-        state     = State::WaitReady;
-`),a("span",{class:"foldable-code"},[a("span",{class:"fold-trigger",onclick:"this.parentElement.classList.add('expanded')"}),a("span",{class:"fold-content"},[s(`        req_wen   = inst_is_store(ctrl);
+`),a("span",{class:"foldable-code"},[a("span",{class:"fold-trigger",onclick:"this.parentElement.classList.add('expanded')"}),a("span",{class:"fold-content"},[s(`        state     = State::WaitReady;
+        req_wen   = inst_is_store(ctrl);
         req_addr  = addr;
         req_wdata = rs2 << {addr[`),a("span",{class:"hljs-number"},"2"),s(":"),a("span",{class:"hljs-number"},"0"),s("], "),a("span",{class:"hljs-number"},"3'b0"),s(`};
         req_wmask = `),a("span",{class:"hljs-keyword"},"case"),s(" ctrl.funct3["),a("span",{class:"hljs-number"},"1"),s(":"),a("span",{class:"hljs-number"},"0"),s(`] {
@@ -369,15 +369,15 @@ reserved_addr      = <span class="hljs-number">0</span>;
         <span class="custom-hl-bold">}</span>
 </code></pre></div><p><span class="caption">▼リスト12.26: LR命令のときに予約セットを設定する (amounit.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/871341ca4da2012dd1ac7643ffab281c8d28d73f~1..871341ca4da2012dd1ac7643ffab281c8d28d73f#diff-5a1c75bb9b272891ae9766e2adfc01dce8800d1fd4faf16cb3310afc2c1e37f6">差分をみる</a></p>`,18),a("div",{class:"language-veryl"},[a("button",{title:"Copy Code",class:"copy"}),a("span",{class:"lang"},"veryl"),a("pre",{class:"hljs"},[a("code",null,[a("span",{class:"hljs-keyword"},"function"),s(` accept_request_ff () {
     slave_saved.valid = slave.ready && slave.valid;
-    `),a("span",{class:"hljs-keyword"},"if"),s(` slave.ready && slave.valid {
-`),a("span",{class:"foldable-code"},[a("span",{class:"fold-trigger",onclick:"this.parentElement.classList.add('expanded')"}),a("span",{class:"fold-content"},`        slave_saved.addr   = slave.addr;
+`),a("span",{class:"foldable-code"},[a("span",{class:"fold-trigger",onclick:"this.parentElement.classList.add('expanded')"}),a("span",{class:"fold-content"},[s("    "),a("span",{class:"hljs-keyword"},"if"),s(` slave.ready && slave.valid {
+        slave_saved.addr   = slave.addr;
         slave_saved.wen    = slave.wen;
         slave_saved.wdata  = slave.wdata;
         slave_saved.wmask  = slave.wmask;
         slave_saved.is_amo = slave.is_amo;
         slave_saved.amoop  = slave.amoop;
         slave_saved.aq     = slave.aq;
-`)]),s(`        slave_saved.rl     = slave.rl;
+`)])]),s(`        slave_saved.rl     = slave.rl;
         slave_saved.funct3 = slave.funct3;
         `),a("span",{class:"custom-hl-bold"},[a("span",{class:"hljs-keyword"},"if"),s(" slave.is_amo {")]),s(`
         `),a("span",{class:"custom-hl-bold"},[s("    "),a("span",{class:"hljs-keyword"},"case"),s(" slave.amoop {")]),s(`

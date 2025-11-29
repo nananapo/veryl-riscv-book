@@ -1,7 +1,7 @@
 import{_ as l,c as p,o as c,ah as n,j as a,a as s,aA as d,aB as t,aC as r,aD as o,aE as b,aF as i,aG as h}from"./chunks/framework.BNheOMQd.js";const v=JSON.parse('{"title":"CPUのパイプライン化","description":"","frontmatter":{},"headers":[],"relativePath":"05a-pipeline.md","filePath":"05a-pipeline.md"}'),m={name:"05a-pipeline.md"};function _(u,e,f,y,w,j){return c(),p("div",null,[...e[0]||(e[0]=[n("",66),a("div",{class:"language-veryl"},[a("button",{title:"Copy Code",class:"copy"}),a("span",{class:"lang"},"veryl"),a("pre",{class:"hljs"},[a("code",null,[a("span",{class:"hljs-keyword"},"inst"),s(` id_ex_fifo: fifo #(
     DATA_TYPE: exq_type,
-    WIDTH    : `),a("span",{class:"hljs-number"},"1"),s(`       ,
-`),a("span",{class:"foldable-code"},[a("span",{class:"fold-trigger",onclick:"this.parentElement.classList.add('expanded')"}),a("span",{class:"fold-content"},[s(`) (
+`),a("span",{class:"foldable-code"},[a("span",{class:"fold-trigger",onclick:"this.parentElement.classList.add('expanded')"}),a("span",{class:"fold-content"},[s("    WIDTH    : "),a("span",{class:"hljs-number"},"1"),s(`       ,
+) (
     clk                   ,
     rst                   ,
     flush : control_hazard,

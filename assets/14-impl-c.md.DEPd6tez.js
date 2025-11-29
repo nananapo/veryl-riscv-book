@@ -608,8 +608,8 @@ funct3   : <span class="hljs-keyword">logic</span>   &lt;<span class="hljs-numbe
 }
 </code></pre></div><p><span class="caption">▼リスト13.46: RVC命令のときのissue_fifoへの書き込み (inst_fetcher.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/a18f8d5b03ac199d6275b00e9d696effd98ba84b~1..a18f8d5b03ac199d6275b00e9d696effd98ba84b#diff-6e174507e7e639b62798d99d76de83f85f0201a5accd72b2a3190b528191b3b3">差分をみる</a></p>`,44),s("div",{class:"language-veryl"},[s("button",{title:"Copy Code",class:"copy"}),s("span",{class:"lang"},"veryl"),s("pre",{class:"hljs"},[s("code",null,[s("span",{class:"hljs-keyword"},"if"),a(` !core_if.is_hazard && fetch_fifo_rvalid {
     `),s("span",{class:"hljs-keyword"},"if"),a(` issue_fifo_wready {
-        `),s("span",{class:"hljs-keyword"},"if"),a(" offset == "),s("span",{class:"hljs-number"},"6"),a(` {
-`),s("span",{class:"foldable-code"},[s("span",{class:"fold-trigger",onclick:"this.parentElement.classList.add('expanded')"}),s("span",{class:"fold-content"},[a("            "),s("span",{class:"hljs-comment"},"// offsetが6な32ビット命令の場合、"),a(`
+`),s("span",{class:"foldable-code"},[s("span",{class:"fold-trigger",onclick:"this.parentElement.classList.add('expanded')"}),s("span",{class:"fold-content"},[a("        "),s("span",{class:"hljs-keyword"},"if"),a(" offset == "),s("span",{class:"hljs-number"},"6"),a(` {
+            `),s("span",{class:"hljs-comment"},"// offsetが6な32ビット命令の場合、"),a(`
             `),s("span",{class:"hljs-comment"},"// 命令は{rdata_next[15:0], rdata[63:48}になる"),a(`
             `),s("span",{class:"hljs-keyword"},"if"),a(` issue_is_rdata_saved {
                 issue_fifo_wvalid       = `),s("span",{class:"hljs-number"},"1"),a(`;
