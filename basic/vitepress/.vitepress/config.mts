@@ -91,7 +91,61 @@ export default defineConfig({
 
   head: [
     ["script", { async: "true", src: "https://www.googletagmanager.com/gtag/js?id=G-EM6HSGNSVY"}],
-    ["script", {}, "window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'G-EM6HSGNSVY');"]
+    ["script", {}, "window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'G-EM6HSGNSVY');"],
+    ["style", {}, `
+      @keyframes blink {
+        0% { opacity: 1; }
+        50% { opacity: 0.4; }
+        100% { opacity: 1; }
+      }
+      .foldable-code .fold-content {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      .foldable-code.expanded .fold-content {
+        position: static;
+        width: auto;
+        height: auto;
+        margin: 0;
+        overflow: visible;
+        clip: auto;
+        white-space: pre;
+      }
+      .foldable-code.expanded .fold-trigger { display: none; }
+      
+      .fold-trigger {
+        display: block;
+        cursor: pointer;
+        background-color: var(--vp-c-bg-soft, #f6f6f7);
+        border-top: 1px solid var(--vp-c-divider, #e2e2e3);
+        border-bottom: 1px solid var(--vp-c-divider, #e2e2e3);
+        color: var(--vp-c-text-2, #666);
+        padding: 4px 16px;
+        text-align: center;
+        font-size: 12px;
+        font-weight: 500;
+        transition: background-color 0.2s;
+        user-select: none;
+        line-height: 1.5;
+        margin: 4px 0;
+        animation: blink 1.5s infinite ease-in-out;
+      }
+      .fold-trigger:hover {
+        background-color: var(--vp-c-bg-mute, #f1f1f1);
+        color: var(--vp-c-text-1, #333);
+        animation: none;
+      }
+      .fold-trigger::before {
+        content: "⋮ Click to expand";
+      }
+    `]
   ],
   
   markdown: {
@@ -110,6 +164,12 @@ export default defineConfig({
           ).replace(
             /\^\^\^\^(.*?)\^\^\^\^/g,
             '<span class="custom-hl-line">$1</span>'
+          ).replace(
+            /(<span[^>]*>)?====FOLD_START====(<\/span>)?\n?/g,
+            '<span class="foldable-code"><span class="fold-trigger" onclick="this.parentElement.classList.add(\'expanded\')"></span><span class="fold-content">'
+          ).replace(
+            /(<span[^>]*>)?====FOLD_END====(<\/span>)?\n?/g,
+            '</span></span>'
           );
       }
 

@@ -225,13 +225,98 @@ module ReVIEW
       end
 
       puts "```#{lang}"
-      lines.each do |line|
+      
+      # Process lines
+      processed_lines = lines.map do |line|
         l = line.sub(/\A {0,#{remove_space_count}}/, '')
         if lang == "Makefile"
           l = l.gsub(/^( {4})+/) { |m| "\t" * (m.length / 4) }
         end
-        puts compile_inline(l)
+        compile_inline(l)
       end
+
+      # Folding logic
+      x_keep = 3
+      y_keep = 2
+      z_fold_threshold = 4
+
+      total_lines = processed_lines.size
+      protected_mask = Array.new(total_lines, false)
+
+      has_highlights = processed_lines.any? { |l| l.include?('@@@@') || l.include?('~~~~') }
+
+      if !has_highlights
+        protected_mask.fill(true)
+      else
+        # Protect start/end X lines
+        (0...[x_keep, total_lines].min).each { |i| protected_mask[i] = true }
+        ([0, total_lines - x_keep].max...total_lines).each { |i| protected_mask[i] = true }
+
+        # Protect around b/del
+        processed_lines.each_with_index do |line, idx|
+          if line.include?('@@@@') || line.include?('~~~~')
+            start_idx = [0, idx - y_keep].max
+            end_idx = [total_lines - 1, idx + y_keep].min
+            (start_idx..end_idx).each { |i| protected_mask[i] = true }
+          end
+        end
+      end
+
+      # Identify fold regions
+      fold_regions = []
+      current_start = nil
+
+      protected_mask.each_with_index do |protected, idx|
+        if !protected
+          if current_start.nil?
+            current_start = idx
+          end
+        else
+          if current_start
+            # End of a non-protected region
+            length = idx - current_start
+            if length > z_fold_threshold
+              fold_regions << (current_start...idx)
+            end
+            current_start = nil
+          end
+        end
+      end
+      # Check if ended in a non-protected region
+      if current_start
+        length = total_lines - current_start
+        if length > z_fold_threshold
+          fold_regions << (current_start...total_lines)
+        end
+      end
+
+      current_line = 0
+      fold_regions.each do |range|
+        # Print lines before this fold
+        while current_line < range.begin
+          puts processed_lines[current_line]
+          current_line += 1
+        end
+        
+        # Print fold start
+        puts "====FOLD_START===="
+        
+        # Print folded lines
+        while current_line < range.end
+          puts processed_lines[current_line]
+          current_line += 1
+        end
+        
+        # Print fold end
+        puts "====FOLD_END===="
+      end
+      
+      # Print remaining lines
+      while current_line < total_lines
+        puts processed_lines[current_line]
+        current_line += 1
+      end
+
       puts "```"
       blank()
     end
