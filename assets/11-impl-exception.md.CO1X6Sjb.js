@@ -32,7 +32,7 @@ import{_ as l,c,o as p,ah as e,j as s,a,bB as d}from"./chunks/framework.BNheOMQd
 }
 </code></pre></div><p>EXステージで例外は発生しないので、 例外情報をそのままMEMステージに渡します (リスト5)。</p><p><span class="caption">▼リスト10.5: EXステージからMEMステージに例外情報を渡す (core.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/3dd422f62d955514b95a57124c3ebc5522bdecb5~1..3dd422f62d955514b95a57124c3ebc5522bdecb5#diff-bdad1723f95a5423ff5ab8ba69bb572aabe1c8def0cda1748f6f980f61b57510">差分をみる</a></p>`,24),s("div",{class:"language-veryl"},[s("button",{title:"Copy Code",class:"copy"}),s("span",{class:"lang"},"veryl"),s("pre",{class:"hljs"},[s("code",null,[s("span",{class:"hljs-keyword"},"always_comb"),a(` {
     `),s("span",{class:"hljs-comment"},"// EX -> MEM"),a(`
-`),s("span",{class:"foldable-code"},[s("span",{class:"fold-trigger",onclick:"this.parentElement.classList.add('expanded')"}),s("span",{class:"fold-content"},[a(`    exq_rready            = memq_wready && !exs_stall;
+`),s("span",{class:"foldable-code"},[s("span",{class:"fold-trigger",onclick:"this.parentElement.classList.add('expanded')"}),s("span",{class:"fold-content"},`    exq_rready            = memq_wready && !exs_stall;
     memq_wvalid           = exq_rvalid && !exs_stall;
     memq_wdata.addr       = exq_rdata.addr;
     memq_wdata.bits       = exq_rdata.bits;
@@ -40,9 +40,9 @@ import{_ as l,c,o as p,ah as e,j as s,a,bB as d}from"./chunks/framework.BNheOMQd
     memq_wdata.imm        = exq_rdata.imm;
     memq_wdata.rs1_addr   = exs_rs1_addr;
     memq_wdata.rs1_data   = exs_rs1_data;
-    memq_wdata.rs2_data   = exs_rs2_data;
+`)]),a(`    memq_wdata.rs2_data   = exs_rs2_data;
     memq_wdata.alu_result = `),s("span",{class:"hljs-keyword"},"if"),a(` exs_ctrl.is_muldiv ? exs_muldiv_result : exs_alu_result;
-`)])]),a(`    memq_wdata.br_taken   = exs_ctrl.is_jump || inst_is_br(exs_ctrl) && exs_brunit_take;
+    memq_wdata.br_taken   = exs_ctrl.is_jump || inst_is_br(exs_ctrl) && exs_brunit_take;
     memq_wdata.jump_addr  = `),s("span",{class:"hljs-keyword"},"if"),a(" inst_is_br(exs_ctrl) ? exs_pc + exs_imm : exs_alu_result & ~"),s("span",{class:"hljs-number"},"1"),a(`;
     `),s("span",{class:"custom-hl-bold"},"memq_wdata.expt       = exq_rdata.expt;"),a(`
 }

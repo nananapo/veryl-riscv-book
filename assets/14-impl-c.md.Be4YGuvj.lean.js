@@ -8,17 +8,17 @@ import{_ as e,c as p,o as c,ah as n,j as s,a,bG as r,bH as d}from"./chunks/frame
         `),s("span",{class:"custom-hl-bold"},[a("issue_fifo_wdata.is_rvc = "),s("span",{class:"hljs-number"},"0"),a(";")]),a(`
     } `),s("span",{class:"hljs-keyword"},"else"),a(` {
         `),s("span",{class:"hljs-comment"},"// Read next 8 bytes"),a(`
-`),s("span",{class:"foldable-code"},[s("span",{class:"fold-trigger",onclick:"this.parentElement.classList.add('expanded')"}),s("span",{class:"fold-content"},[a("        fetch_fifo_rready = "),s("span",{class:"hljs-number"},"1"),a(`;
+        fetch_fifo_rready = `),s("span",{class:"hljs-number"},"1"),a(`;
     }
-} `),s("span",{class:"hljs-keyword"},"else"),a(` {
+`),s("span",{class:"foldable-code"},[s("span",{class:"fold-trigger",onclick:"this.parentElement.classList.add('expanded')"}),s("span",{class:"fold-content"},[a("} "),s("span",{class:"hljs-keyword"},"else"),a(` {
     fetch_fifo_rready     = offset == `),s("span",{class:"hljs-number"},"4"),a(`;
     issue_fifo_wvalid     = `),s("span",{class:"hljs-number"},"1"),a(`;
     issue_fifo_wdata.addr = {raddr[`),s("span",{class:"hljs-keyword"},"msb"),a(":"),s("span",{class:"hljs-number"},"3"),a(`], offset};
     issue_fifo_wdata.bits = `),s("span",{class:"hljs-keyword"},"case"),a(` offset {
         `),s("span",{class:"hljs-number"},"0"),a("      : rdata["),s("span",{class:"hljs-number"},"31"),a(":"),s("span",{class:"hljs-number"},"0"),a(`],
-        `),s("span",{class:"hljs-number"},"2"),a("      : rdata["),s("span",{class:"hljs-number"},"47"),a(":"),s("span",{class:"hljs-number"},"16"),a(`],
+`)])]),a("        "),s("span",{class:"hljs-number"},"2"),a("      : rdata["),s("span",{class:"hljs-number"},"47"),a(":"),s("span",{class:"hljs-number"},"16"),a(`],
         `),s("span",{class:"hljs-number"},"4"),a("      : rdata["),s("span",{class:"hljs-number"},"63"),a(":"),s("span",{class:"hljs-number"},"32"),a(`],
-`)])]),a("        "),s("span",{class:"hljs-keyword"},"default"),a(": "),s("span",{class:"hljs-number"},"0"),a(`,
+        `),s("span",{class:"hljs-keyword"},"default"),a(": "),s("span",{class:"hljs-number"},"0"),a(`,
     };
     `),s("span",{class:"custom-hl-bold"},[a("issue_fifo_wdata.is_rvc = "),s("span",{class:"hljs-number"},"0"),a(";")]),a(`
 }
@@ -30,9 +30,9 @@ import{_ as e,c as p,o as c,ah as n,j as s,a,bG as r,bH as d}from"./chunks/frame
             `),s("span",{class:"hljs-keyword"},"if"),a(` issue_is_rdata_saved {
                 issue_fifo_wvalid       = `),s("span",{class:"hljs-number"},"1"),a(`;
                 issue_fifo_wdata.addr   = {issue_saved_addr[`),s("span",{class:"hljs-keyword"},"msb"),a(":"),s("span",{class:"hljs-number"},"3"),a(`], offset};
-                issue_fifo_wdata.bits   = {rdata[`),s("span",{class:"hljs-number"},"15"),a(":"),s("span",{class:"hljs-number"},"0"),a(`], issue_saved_bits};
+`)])]),a("                issue_fifo_wdata.bits   = {rdata["),s("span",{class:"hljs-number"},"15"),a(":"),s("span",{class:"hljs-number"},"0"),a(`], issue_saved_bits};
                 issue_fifo_wdata.is_rvc = `),s("span",{class:"hljs-number"},"0"),a(`;
-`)])]),a("            } "),s("span",{class:"hljs-keyword"},"else"),a(` {
+            } `),s("span",{class:"hljs-keyword"},"else"),a(` {
                 fetch_fifo_rready = `),s("span",{class:"hljs-number"},"1"),a(`;
                 `),s("span",{class:"custom-hl-bold"},[s("span",{class:"hljs-keyword"},"if"),a(" rvcc_is_rvc {")]),a(`
                 `),s("span",{class:"custom-hl-bold"},[a("    issue_fifo_wvalid       = "),s("span",{class:"hljs-number"},"1"),a(";")]),a(`

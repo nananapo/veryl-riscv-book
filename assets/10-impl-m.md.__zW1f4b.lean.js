@@ -5,9 +5,9 @@ import{_ as e,c as p,o as c,ah as l,j as s,a,bA as d}from"./chunks/framework.BNh
     result     = `),s("span",{class:"hljs-keyword"},"case"),a(" funct3_saved["),s("span",{class:"hljs-number"},"1"),a(":"),s("span",{class:"hljs-number"},"0"),a(`] {
         `),s("span",{class:"hljs-number"},"2'b00"),a("  : "),s("span",{class:"hljs-keyword"},"if"),a(" is_op32_saved ? sext::<"),s("span",{class:"hljs-number"},"32"),a(", "),s("span",{class:"hljs-number"},"64"),a(">(res_signed["),s("span",{class:"hljs-number"},"31"),a(":"),s("span",{class:"hljs-number"},"0"),a("]) : res_signed[XLEN - "),s("span",{class:"hljs-number"},"1"),a(":"),s("span",{class:"hljs-number"},"0"),a("], "),s("span",{class:"hljs-comment"},"// MUL, MULW"),a(`
         `),s("span",{class:"hljs-number"},"2'b01"),a("  : res_signed[XLEN+:XLEN], "),s("span",{class:"hljs-comment"},"// MULH"),a(`
-        `),s("span",{class:"hljs-number"},"2'b10"),a("  : res_mulhsu[XLEN+:XLEN], "),s("span",{class:"hljs-comment"},"// MULHSU"),a(`
+`)])]),a("        "),s("span",{class:"hljs-number"},"2'b10"),a("  : res_mulhsu[XLEN+:XLEN], "),s("span",{class:"hljs-comment"},"// MULHSU"),a(`
         `),s("span",{class:"hljs-number"},"2'b11"),a("  : mu_result[XLEN+:XLEN], "),s("span",{class:"hljs-comment"},"// MULHU"),a(`
-`)])]),a("        "),s("span",{class:"hljs-keyword"},"default"),a(": "),s("span",{class:"hljs-number"},"0"),a(`,
+        `),s("span",{class:"hljs-keyword"},"default"),a(": "),s("span",{class:"hljs-number"},"0"),a(`,
     };
 `),s("span",{class:"custom-hl-bold"},[a("} "),s("span",{class:"hljs-keyword"},"else"),a(),s("span",{class:"hljs-keyword"},"if"),a(" !is_mul && du_rvalid {")]),a(`
     `),s("span",{class:"custom-hl-bold"},[a("result = "),s("span",{class:"hljs-keyword"},"case"),a(" funct3_saved["),s("span",{class:"hljs-number"},"1"),a(":"),s("span",{class:"hljs-number"},"0"),a("] {")]),a(`

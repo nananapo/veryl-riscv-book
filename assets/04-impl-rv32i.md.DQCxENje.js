@@ -1236,9 +1236,9 @@ deadbeef // 0x0
         `),s("span",{class:"custom-hl-bold"},[a("} "),s("span",{class:"hljs-keyword"},"else"),a(" {")]),a(`
             `),s("span",{class:"hljs-keyword"},"if"),a(` if_is_requested {
                 `),s("span",{class:"hljs-keyword"},"if"),a(` i_membus.rvalid {
-`),s("span",{class:"foldable-code"},[s("span",{class:"fold-trigger",onclick:"this.parentElement.classList.add('expanded')"}),s("span",{class:"fold-content"},[a(`                    if_is_requested = i_membus.ready && i_membus.valid;
+                    if_is_requested = i_membus.ready && i_membus.valid;
                     `),s("span",{class:"hljs-keyword"},"if"),a(` i_membus.ready && i_membus.valid {
-                        if_pc           = if_pc_next;
+`),s("span",{class:"foldable-code"},[s("span",{class:"fold-trigger",onclick:"this.parentElement.classList.add('expanded')"}),s("span",{class:"fold-content"},[a(`                        if_pc           = if_pc_next;
                         if_pc_requested = if_pc;
                     }
                 }
@@ -1255,9 +1255,9 @@ deadbeef // 0x0
                 if_fifo_wdata.addr = if_pc_requested;
                 if_fifo_wdata.bits = i_membus.rdata;
             } `),s("span",{class:"hljs-keyword"},"else"),a(` {
-                `),s("span",{class:"hljs-keyword"},"if"),a(` if_fifo_wvalid && if_fifo_wready {
+`)])]),a("                "),s("span",{class:"hljs-keyword"},"if"),a(` if_fifo_wvalid && if_fifo_wready {
                     if_fifo_wvalid = `),s("span",{class:"hljs-number"},"0"),a(`;
-`)])]),a(`                }
+                }
             }
         `),s("span",{class:"custom-hl-bold"},"}"),a(`
     }

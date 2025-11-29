@@ -17,21 +17,21 @@ import{_ as l,c,o as p,ah as n,j as a,a as s,bD as d,bE as t,bF as o}from"./chun
     MINU = <span class="hljs-number">5&#39;b11000</span>,
     MAXU = <span class="hljs-number">5&#39;b11100</span>,
 }
-</code></pre></div><h3 id="is-amoフラグを実装する" tabindex="-1">is_amoフラグを実装する <a class="header-anchor" href="#is-amoフラグを実装する" aria-label="Permalink to “is_amoフラグを実装する”">​</a></h3><p><code>InstCtrl</code>構造体に、 A拡張の命令であることを示す<code>is_amo</code>フラグを追加します (リスト4)。</p><p><span class="caption">▼リスト12.4: InstCtrlにis_amoを定義する (corectrl.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/cb1dcfe57e93d3c8b769206b7d001cb5d6fef1d9~1..cb1dcfe57e93d3c8b769206b7d001cb5d6fef1d9#diff-6e03bfb8e3afdba1e0b88b561d8b8e5e4f2a7ffc6c4efb228c5797053b78742c">差分をみる</a></p>`,34),a("div",{class:"language-veryl"},[a("button",{title:"Copy Code",class:"copy"}),a("span",{class:"lang"},"veryl"),a("pre",{class:"hljs"},[a("code",null,[a("span",{class:"hljs-keyword"},"struct"),s(` InstCtrl {
-    itype    : InstType   , `),a("span",{class:"hljs-comment"},"// 命令の形式"),s(`
-`),a("span",{class:"foldable-code"},[a("span",{class:"fold-trigger",onclick:"this.parentElement.classList.add('expanded')"}),a("span",{class:"fold-content"},[s("    rwb_en   : "),a("span",{class:"hljs-keyword"},"logic"),s("      , "),a("span",{class:"hljs-comment"},"// レジスタに書き込むかどうか"),s(`
-    is_lui   : `),a("span",{class:"hljs-keyword"},"logic"),s("      , "),a("span",{class:"hljs-comment"},"// LUI命令である"),s(`
-    is_aluop : `),a("span",{class:"hljs-keyword"},"logic"),s("      , "),a("span",{class:"hljs-comment"},"// ALUを利用する命令である"),s(`
-    is_muldiv: `),a("span",{class:"hljs-keyword"},"logic"),s("      , "),a("span",{class:"hljs-comment"},"// M拡張の命令である"),s(`
-    is_op32  : `),a("span",{class:"hljs-keyword"},"logic"),s("      , "),a("span",{class:"hljs-comment"},"// OP-32またはOP-IMM-32である"),s(`
-    is_jump  : `),a("span",{class:"hljs-keyword"},"logic"),s("      , "),a("span",{class:"hljs-comment"},"// ジャンプ命令である"),s(`
-`)])]),s("    is_load  : "),a("span",{class:"hljs-keyword"},"logic"),s("      , "),a("span",{class:"hljs-comment"},"// ロード命令である"),s(`
-    is_csr   : `),a("span",{class:"hljs-keyword"},"logic"),s("      , "),a("span",{class:"hljs-comment"},"// CSR命令である"),s(`
-    `),a("span",{class:"custom-hl-bold"},[s("is_amo   : "),a("span",{class:"hljs-keyword"},"logic"),s("      , "),a("span",{class:"hljs-comment"},"// AMO instruction")]),s(`
-    funct3   : `),a("span",{class:"hljs-keyword"},"logic"),s("   <"),a("span",{class:"hljs-number"},"3"),s(">, "),a("span",{class:"hljs-comment"},"// 命令のfunct3フィールド"),s(`
-    funct7   : `),a("span",{class:"hljs-keyword"},"logic"),s("   <"),a("span",{class:"hljs-number"},"7"),s(">, "),a("span",{class:"hljs-comment"},"// 命令のfunct7フィールド"),s(`
+</code></pre></div><h3 id="is-amoフラグを実装する" tabindex="-1">is_amoフラグを実装する <a class="header-anchor" href="#is-amoフラグを実装する" aria-label="Permalink to “is_amoフラグを実装する”">​</a></h3><p><code>InstCtrl</code>構造体に、 A拡張の命令であることを示す<code>is_amo</code>フラグを追加します (リスト4)。</p><p><span class="caption">▼リスト12.4: InstCtrlにis_amoを定義する (corectrl.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/cb1dcfe57e93d3c8b769206b7d001cb5d6fef1d9~1..cb1dcfe57e93d3c8b769206b7d001cb5d6fef1d9#diff-6e03bfb8e3afdba1e0b88b561d8b8e5e4f2a7ffc6c4efb228c5797053b78742c">差分をみる</a></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">struct</span> InstCtrl {
+    itype    : InstType   , <span class="hljs-comment">// 命令の形式</span>
+    rwb_en   : <span class="hljs-keyword">logic</span>      , <span class="hljs-comment">// レジスタに書き込むかどうか</span>
+    is_lui   : <span class="hljs-keyword">logic</span>      , <span class="hljs-comment">// LUI命令である</span>
+    is_aluop : <span class="hljs-keyword">logic</span>      , <span class="hljs-comment">// ALUを利用する命令である</span>
+    is_muldiv: <span class="hljs-keyword">logic</span>      , <span class="hljs-comment">// M拡張の命令である</span>
+    is_op32  : <span class="hljs-keyword">logic</span>      , <span class="hljs-comment">// OP-32またはOP-IMM-32である</span>
+    is_jump  : <span class="hljs-keyword">logic</span>      , <span class="hljs-comment">// ジャンプ命令である</span>
+    is_load  : <span class="hljs-keyword">logic</span>      , <span class="hljs-comment">// ロード命令である</span>
+    is_csr   : <span class="hljs-keyword">logic</span>      , <span class="hljs-comment">// CSR命令である</span>
+    <span class="custom-hl-bold">is_amo   : <span class="hljs-keyword">logic</span>      , <span class="hljs-comment">// AMO instruction</span></span>
+    funct3   : <span class="hljs-keyword">logic</span>   &lt;<span class="hljs-number">3</span>&gt;, <span class="hljs-comment">// 命令のfunct3フィールド</span>
+    funct7   : <span class="hljs-keyword">logic</span>   &lt;<span class="hljs-number">7</span>&gt;, <span class="hljs-comment">// 命令のfunct7フィールド</span>
 }
-`)])])],-1),n(`<p>命令がメモリにアクセスするかを判定するinst_is_memop関数を、<code>is_amo</code>フラグを利用するように変更します (リスト5)。</p><p><span class="caption">▼リスト12.5: A拡張の命令がメモリにアクセスする命令と判定する (corectrl.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/cb1dcfe57e93d3c8b769206b7d001cb5d6fef1d9~1..cb1dcfe57e93d3c8b769206b7d001cb5d6fef1d9#diff-6e03bfb8e3afdba1e0b88b561d8b8e5e4f2a7ffc6c4efb228c5797053b78742c">差分をみる</a></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">function</span> inst_is_memop (
+</code></pre></div><p>命令がメモリにアクセスするかを判定するinst_is_memop関数を、<code>is_amo</code>フラグを利用するように変更します (リスト5)。</p><p><span class="caption">▼リスト12.5: A拡張の命令がメモリにアクセスする命令と判定する (corectrl.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/cb1dcfe57e93d3c8b769206b7d001cb5d6fef1d9~1..cb1dcfe57e93d3c8b769206b7d001cb5d6fef1d9#diff-6e03bfb8e3afdba1e0b88b561d8b8e5e4f2a7ffc6c4efb228c5797053b78742c">差分をみる</a></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">function</span> inst_is_memop (
     ctrl: <span class="hljs-keyword">input</span> InstCtrl,
 ) -&gt; <span class="hljs-keyword">logic</span> {
     <span class="hljs-keyword">return</span> ctrl.itype == InstType::S || ctrl.is_load <span class="custom-hl-bold">|| ctrl.is_amo</span>;
@@ -302,7 +302,7 @@ led     : <span class="hljs-keyword">output</span>  UIntX                       
     <span class="custom-hl-bold">membus.aq     = req_aq;</span>
     <span class="custom-hl-bold">membus.rl     = req_rl;</span>
     <span class="custom-hl-bold">membus.funct3 = req_funct3;</span>
-</code></pre></div><p><span class="caption">▼リスト12.20: メモリにアクセスする命令のとき、レジスタに情報を設定する (memunit.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/1437002226b254ac0e7dffa4805310790d513657~1..1437002226b254ac0e7dffa4805310790d513657#diff-d3618e86de098826661fabd111bec51452d943d3e486d18f9c3aa96b2dd9a89e">差分をみる</a></p>`,51),a("div",{class:"language-veryl"},[a("button",{title:"Copy Code",class:"copy"}),a("span",{class:"lang"},"veryl"),a("pre",{class:"hljs"},[a("code",null,[a("span",{class:"hljs-keyword"},"case"),s(` state {
+</code></pre></div><p><span class="caption">▼リスト12.20: メモリにアクセスする命令のとき、レジスタに情報を設定する (memunit.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/1437002226b254ac0e7dffa4805310790d513657~1..1437002226b254ac0e7dffa4805310790d513657#diff-d3618e86de098826661fabd111bec51452d943d3e486d18f9c3aa96b2dd9a89e">差分をみる</a></p>`,86),a("div",{class:"language-veryl"},[a("button",{title:"Copy Code",class:"copy"}),a("span",{class:"lang"},"veryl"),a("pre",{class:"hljs"},[a("code",null,[a("span",{class:"hljs-keyword"},"case"),s(` state {
     State::Init: `),a("span",{class:"hljs-keyword"},"if"),s(` is_new & inst_is_memop(ctrl) {
 `),a("span",{class:"foldable-code"},[a("span",{class:"fold-trigger",onclick:"this.parentElement.classList.add('expanded')"}),a("span",{class:"fold-content"},[s(`        state     = State::WaitReady;
         req_wen   = inst_is_store(ctrl);
@@ -321,9 +321,9 @@ led     : <span class="hljs-keyword">output</span>  UIntX                       
                 `),a("span",{class:"hljs-number"},"0"),s("      : "),a("span",{class:"hljs-number"},"8'b00001111"),s(`,
                 `),a("span",{class:"hljs-number"},"4"),s("      : "),a("span",{class:"hljs-number"},"8'b11110000"),s(`,
                 `),a("span",{class:"hljs-keyword"},"default"),s(`: 'x,
-            },
+`)])]),s(`            },
             `),a("span",{class:"hljs-number"},"2'b11"),s("  : "),a("span",{class:"hljs-number"},"8'b11111111"),s(`,
-`)])]),s("            "),a("span",{class:"hljs-keyword"},"default"),s(`: 'x,
+            `),a("span",{class:"hljs-keyword"},"default"),s(`: 'x,
         };
         `),a("span",{class:"custom-hl-bold"},"req_is_amo = ctrl.is_amo;"),s(`
         `),a("span",{class:"custom-hl-bold"},[s("req_amoop  = ctrl.funct7["),a("span",{class:"hljs-number"},"6"),s(":"),a("span",{class:"hljs-number"},"2"),s("] "),a("span",{class:"hljs-keyword"},"as"),s(" AMOOp;")]),s(`
@@ -375,9 +375,9 @@ reserved_addr      = <span class="hljs-number">0</span>;
         slave_saved.wdata  = slave.wdata;
         slave_saved.wmask  = slave.wmask;
         slave_saved.is_amo = slave.is_amo;
-        slave_saved.amoop  = slave.amoop;
+`)])]),s(`        slave_saved.amoop  = slave.amoop;
         slave_saved.aq     = slave.aq;
-`)])]),s(`        slave_saved.rl     = slave.rl;
+        slave_saved.rl     = slave.rl;
         slave_saved.funct3 = slave.funct3;
         `),a("span",{class:"custom-hl-bold"},[a("span",{class:"hljs-keyword"},"if"),s(" slave.is_amo {")]),s(`
         `),a("span",{class:"custom-hl-bold"},[s("    "),a("span",{class:"hljs-keyword"},"case"),s(" slave.amoop {")]),s(`
