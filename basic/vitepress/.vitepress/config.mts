@@ -150,6 +150,49 @@ export default defineConfig({
       }
       img {
         max-height: 300px;
+        cursor: zoom-in;
+      }
+      .lightbox-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 10000;
+        cursor: zoom-out;
+      }
+      .lightbox-image {
+        max-width: 90%;
+        max-height: 90%;
+        object-fit: contain;
+        cursor: default;
+      }
+    `],
+    ["script", {}, `
+      if (typeof window !== 'undefined') {
+        document.addEventListener('click', function(e) {
+          if (e.target.tagName === 'IMG' && !e.target.closest('.lightbox-overlay')) {
+            const overlay = document.createElement('div');
+            overlay.className = 'lightbox-overlay';
+            overlay.onclick = function() {
+              document.body.removeChild(overlay);
+            };
+            
+            const img = document.createElement('img');
+            img.src = e.target.src;
+            img.className = 'lightbox-image';
+            img.onclick = function(evt) {
+              evt.stopPropagation();
+            };
+            
+            overlay.appendChild(img);
+            document.body.appendChild(overlay);
+          }
+        });
       }
     `]
   ],
