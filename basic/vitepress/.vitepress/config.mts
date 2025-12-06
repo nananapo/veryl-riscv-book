@@ -148,6 +148,9 @@ export default defineConfig({
       .fold-trigger::before {
         content: "⋮ Click to expand";
       }
+      img {
+        max-height: 300px;
+      }
     `]
   ],
   

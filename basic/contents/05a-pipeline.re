@@ -222,7 +222,7 @@ MEMステージでCSRを処理しています。
 そのため、それぞれのステージのために、
 現在処理している命令を保持するためのレジスタ(@<b>{パイプラインレジスタ})を用意します。
 
-//image[pipeline_reg][パイプライン処理の概略図]
+//image[pipeline_reg.drawio][パイプライン処理の概略図]
 
 まず、処理を複数ステージに分割する前に、
 既存の変数の名前を変更します。
@@ -263,21 +263,21 @@ IFステージとIDステージはFIFOで区切られており、
 FIFOのレジスタを経由して命令の受け渡しを行います。
 これと同様に、
 5ステージのパイプライン処理の実装では、
-それぞれのステージをFIFOで接続します(@<img>{pipeline_fifo})。
+それぞれのステージをFIFOで接続します(@<img>{pipeline_fifo.drawio})。
 ただし、FIFOのサイズは1とします。
 この場合、FIFOはただの1つのレジスタです。
 
-//image[pipeline_fifo][FIFOを利用したパイプライン処理]
+//image[pipeline_fifo.drawio][FIFOを利用したパイプライン処理]
 
 IFからIDへのFIFOは存在するため、
 IDからEX、EXからMEM、MEMからWBへのFIFOを作成します。
 
 ==== 構造体の定義
 
-//image[fifo_type][構造体のフィールドの生存区間]
+//image[fifo_type.drawio][構造体のフィールドの生存区間]
 
 まず、FIFOに格納するデータの型を定義します。
-それぞれのフィールドが存在する区間は@<img>{fifo_type}の通りです。
+それぞれのフィールドが存在する区間は@<img>{fifo_type.drawio}の通りです。
 
 //list[core.veryl.fifo.type.ex][ID → EXの間のFIFOのデータ型 (core.veryl)]{
 #@maprange(scripts/05a/create-fifo-range/core/src/core.veryl,extype)
@@ -339,7 +339,7 @@ WBステージでは、
 即値、ALUの計算結果、メモリのロード結果、CSRの読み込みデータから1つを選択し、
 レジスタに値を書き込みます。
 
-構造体のフィールドの生存区間が@<img>{fifo_type}のようになっている理由が分かったでしょうか?
+構造体のフィールドの生存区間が@<img>{fifo_type.drawio}のようになっている理由が分かったでしょうか?
 
 ==== FIFOのインスタンス化
 
@@ -955,7 +955,7 @@ MEM -----
 データ依存があることにより発生するパイプラインハザードのことを
 @<b>{データハザード}(data hazard)と呼びます。
 
-//image[datahazard][データ依存関係のあるプログラム][width=40%]
+//image[datahazard.drawio][データ依存関係のあるプログラム][width=40%]
 
 === データ依存に対処する
 

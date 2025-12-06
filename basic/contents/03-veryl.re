@@ -22,14 +22,12 @@ CPU (Central Proccessing Unit, 中央演算処理装置)は、
 
 @<b>{組み合わせ回路}とは、
 入力に対して、一意に出力の決まる回路のことです。
-例えば、1ビット同士の加算をする回路は@<img>{halfadder}、@<table>{halfadder.truth}のように表されます。
+例えば、1ビット同士の加算をする回路は@<img>{halfadder.drawio}、@<table>{halfadder.truth}のように表されます。
 この回路は半加算器と呼ばれていて、
 1ビットのXとYを入力として受けとり、1ビットの和Sと桁上げCを出力します。
 入力(X、Y)が決まると出力(C、S)が一意に決まるため、半加算器は組み合わせ回路です。
 
-#@# @<bib>{ronrikairo}
-
-//image[halfadder][半加算器 (MIL記法の回路図)][width=45%]
+//image[halfadder.drawio][半加算器 (MIL記法の回路図)][width=25%]
 
 //table[halfadder.truth][半加算器 (真理値表)]{
 X	Y	C	S
@@ -42,12 +40,10 @@ X	Y	C	S
 
 @<b>{順序回路}とは、
 入力と回路自身の状態によって一意に出力の決まる回路です。
-例えば、入力が1になるたびにカウントアップして値を表示するカウンタを考えます(@<img>{downcounter})。
+例えば、入力が1になるたびにカウントアップして値を表示するカウンタを考えます(@<img>{downcounter.drawio})。
 カウントアップするためには、
 今のカウンタの値(状態)を保持する必要があります。
 そのため、このカウンタは入力と状態によって一意に出力の決まる順序回路です。
-
-#@# @<bib>{ronrikairo}
 
 1ビットの値はフリップフロップ(flip-flop, FF)という回路によって保持できます。
 フリップフロップをN個並列に並べると、Nビットの値を保持できます。
@@ -55,7 +51,7 @@ X	Y	C	S
 基本的に、レジスタの値は@<b>{リセット信号}(reset signal, reset)によって初期化し、
 @<b>{クロック信号}(clock signal, clock)に同期したタイミングで変更します。
 
-//image[downcounter][カウンタ (順序回路の例)][width=70%]
+//image[downcounter.drawio][カウンタ (順序回路の例)][width=70%]
 
 論理回路を設計するには、真理値表を作成し、
 それを実現する論理演算を構成します。
@@ -320,13 +316,13 @@ always_comb {
 //}
 
 @<code>{y}の値が時間経過により@<code>{0}→@<code>{1}→@<code>{0}→@<code>{1}→@<code>{0}と変化したとします。
-このとき、@<code>{x}の値は@<code>{y}が変わるのと同時に変化します(@<img>{assign_wave})。
-@<img>{assign_wave}は、時間を横軸、@<code>{x}と@<code>{y}の値を線の高低で表しています。
-@<img>{assign_wave}のような図を@<b>{波形図}(waveform)、または単に@<b>{波形}と呼びます。
+このとき、@<code>{x}の値は@<code>{y}が変わるのと同時に変化します(@<img>{assign_wave.drawio})。
+@<img>{assign_wave.drawio}は、時間を横軸、@<code>{x}と@<code>{y}の値を線の高低で表しています。
+@<img>{assign_wave.drawio}のような図を@<b>{波形図}(waveform)、または単に@<b>{波形}と呼びます。
 
 @<code>{x}に@<code>{y}ではなく@<code>{a + b}を代入すると、@<code>{a}か@<code>{b}の変化をトリガーに@<code>{x}の値が変化します。
 
-//image[assign_wave][xはyの値の変化に追従する][width=60%]
+//image[assign_wave.drawio][xはyの値の変化に追従する][width=60%]
 
 always_combブロックには複数の代入文を記述できます。
 このとき、代入文は上から順番に実行(逐次実行)されます。
@@ -636,14 +632,14 @@ enum abcd {
 @<code>{<>}を使用することで、多次元の型を定義できます
 (@<list>{code.veryl.logic.md})。
 @<code>{<>}を使用して構成される型の要素は、
-連続した領域に並ぶことが保証されます(@<img>{packed_array})。
+連続した領域に並ぶことが保証されます(@<img>{packed_array.drawio})。
 
 //list[code.veryl.logic.md][多次元の型]{
 logic<N>     // Nビットのlogic型
 logic<A, B>  // BビットのlogicがA個並ぶ型
 //}
 
-//image[packed_array][<>の型の要素は連続した領域に並ぶ (例 : v[1\][0\]とv[0\][3\]が隣り合う)]
+//image[packed_array.drawio][<>の型の要素は連続した領域に並ぶ (例 : v[1\][0\]とv[0\][3\]が隣り合う)]
 
 @<code>{[]}を使用することでも、多次元の型を定義できます
 (@<list>{code.veryl.array.define})。
@@ -671,9 +667,9 @@ type ptr_array = ptr<32>;
 
 ==== ビット選択
 
-//image[bitsel][ビット選択][width=50%]
+//image[bitsel.drawio][ビット選択][width=50%]
 
-変数の任意のビットを切り出すには@<code>{[]}を使用します(@<img>{bitsel})。
+変数の任意のビットを切り出すには@<code>{[]}を使用します(@<img>{bitsel.drawio})。
 範囲の選択には@<code>{[:]}を使用します。
 最上位ビット(most significant bit, MSB)は@<b>{msb}キーワード、
 最下位ビット(least significant bit, LSB)は@<b>{lsb}キーワードで指定できます。

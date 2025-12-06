@@ -32,14 +32,14 @@ X	Y	A
 1	1	0
 //}
 
-//image[lut][@<table>{lut_sample_truth}を実現するLUT][width=40%]
+//image[lut.drawio][@<table>{lut_sample_truth}を実現するLUT][width=40%]
 
 LUTとは、真理値表を記憶素子に保存しておいて、
 入力によって記憶された真理値を選択して出力する回路のことです。
-例えば、2つの入力@<code>{X}と@<code>{Y}を受け取って@<code>{A}を出力する論理回路(@<table>{lut_sample_truth})は、@<img>{lut}の回路で実現できます。
+例えば、2つの入力@<code>{X}と@<code>{Y}を受け取って@<code>{A}を出力する論理回路(@<table>{lut_sample_truth})は、@<img>{lut.drawio}の回路で実現できます。
 ここでマルチプレクサ(multiplexer, MUX)とは、複数の入力を選択信号によって選択して出力する回路のことです。
 
-@<img>{lut}では、記憶素子のデータを@<code>{Y}によって選択し、さらに@<code>{X}によって選択することで2入力1出力の真理値表の論理回路を実現しています。
+@<img>{lut.drawio}では、記憶素子のデータを@<code>{Y}によって選択し、さらに@<code>{X}によって選択することで2入力1出力の真理値表の論理回路を実現しています。
 入力がN個で出力がM個のLUTのことをN入力M出力LUTと呼びます。
 
 ルックアップ・テーブル方式のFPGAは、多数のLUT、入出力装置、これらを相互接続するための配線によって構成されています。

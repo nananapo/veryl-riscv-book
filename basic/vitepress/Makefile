@@ -12,6 +12,7 @@ import:
 	rm -rf contents/images
 	cp -R ../veryl-riscv-book-md/* contents/
 	cp -R ../images contents/images
+	python3 ./tool/expand_image_background.py contents/images
 
 clean:
 	rm -rf dist
