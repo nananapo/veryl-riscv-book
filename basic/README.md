@@ -2,9 +2,8 @@
 
 「Verylで作るCPU 基本編」では、ハードウェア記述言語の基礎から、OSを実行できる程度のCPUの実装方法までを解説します。
 
-PDF版 : [veryl-riscv-book.pdf](https://github.com/nananapo/veryl-riscv-book/blob/main/basic/veryl-riscv-book.pdf)  
-Web版 : https://nananapo.github.io/veryl-riscv-book/
-
+Web版 : https://cpu.kanataso.net
+PDF版(古い) : [veryl-riscv-book.pdf](https://github.com/nananapo/veryl-riscv-book/blob/main/basic/veryl-riscv-book.pdf)  \
 
 ### 目次
 
