@@ -563,9 +563,9 @@ core_top #(
 合成、配置配線しなおして、設計をFPGAに書き込むとLEDが点滅します@<fn>{tangnano9k.led_counter}。
 @<img>{tangnano9k_led}の左下のボタンを押すと状態がリセットされます。
 
-//raw[|html|<iframe width="100%" max-width="640" style="aspect-ratio: 16 / 9;" src="https://www.youtube.com/embed/OpXiXha-ZnI" title="tangnano9k test ledcounter" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>]
-
 //footnote[tangnano9k.led_counter][@<href>{https://youtu.be/OpXiXha-ZnI}]
+
+//raw[|markdown|<iframe width="100%" max-width="640" style="aspect-ratio: 16 / 9;" src="https://www.youtube.com/embed/OpXiXha-ZnI" title="tangnano9k test ledcounter" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>]
 
 == FPGAへの合成② (PYNQ-Z1)
 
@@ -888,6 +888,6 @@ core_top_vモジュールの@<code>{MEMORY_FILEPATH}パラメータの値を@<co
 Hardware Managerを開いてProgram deviceを押すとLEDが点滅します@<fn>{pynq_z1.led_counter}。
 BTN0を押すと状態がリセットされます。
 
-//raw[|html|<iframe width="100%" max-width="640" style="aspect-ratio: 16 / 9;" src="https://www.youtube.com/embed/byCr_464dW4" title="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>]
-
 //footnote[pynq_z1.led_counter][@<href>{https://youtu.be/byCr_464dW4}]
+
+//raw[|markdown|<iframe width="100%" max-width="640" style="aspect-ratio: 16 / 9;" src="https://www.youtube.com/embed/byCr_464dW4" title="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>]
