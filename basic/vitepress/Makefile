@@ -14,7 +14,10 @@ import:
 	cp -R ../images contents/images
 	python3 ./tool/expand_image_background.py contents/images
 
+setup:
+	pip install -r requirements.txt
+
 clean:
 	rm -rf dist
 
-.PHONY: run build import clean
+.PHONY: run build import clean setup

@@ -50,6 +50,7 @@ jobs:
         run: |
           cd basic/vitepress
           yarn install
+          make setup
           make import
           make build
 
@@ -91,6 +92,7 @@ jobs:
         run: |
           cd basic/vitepress
           yarn install
+          make setup
           make import
           make build
 
