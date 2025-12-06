@@ -119,6 +119,10 @@ module ReVIEW
 
     def _render_image(id, image_filepath, caption, opts)
       puts "![#{compile_inline(caption||'')}](#{image_filepath})"
+      # captionが見えないのでpで表示する
+      if caption.present?
+        puts "<p class=\"caption\">▲図#{@chapter.image(id).number}: #{compile_inline(caption)}</p>"
+      end
     end
 
     def _get_commit_hash(blockname, id)
