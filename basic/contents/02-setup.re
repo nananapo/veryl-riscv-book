@@ -86,11 +86,9 @@ $ @<userinput>|veryl +0.13.2| @<balloon>{+でバージョンを指定する}
 
 ===[notoc] エディタ拡張のインストール
 
-//image[vscode-ext][VerylのVSCode拡張][width=50%]
-エディタにVSCodeを利用している方は、
-@<img>{vscode-ext}の拡張をインストールするとシンタックスハイライトなどの機能を利用できます。
+エディタにVSCodeを利用している方は、拡張をインストールするとシンタックスハイライトなどの機能を利用できます。
 
- * @<href>{https://marketplace.visualstudio.com/items?itemName=dalance.vscode-veryl}
+ * @<href>{https://marketplace.visualstudio.com/items?itemName=veryl-lang.veryl-vscode}
 
 エディタにVimを利用している方は、
 GitHubの@<href>{https://github.com/veryl-lang/veryl.vim, veryl-lang/veryl.vim}
