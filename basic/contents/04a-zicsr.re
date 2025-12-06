@@ -671,9 +671,6 @@ csrunitモジュールと接続するための変数を定義してcsrunitモジ
 
 //image[ecall_enc][ECALL命令のエンコーディング]
 
-#@# @<bib>{isa-manual.1.37}
-#@# TODO 画像の置き換え
-
 それでは、csrunitモジュールにトラップの処理を実装します。
 
 ECALL命令は、
@@ -838,9 +835,6 @@ mepcレジスタに格納されたアドレスにジャンプします@<fn>{mret
 === MRET命令を実装する
 
 //image[mret_enc][MRET命令のエンコーディング]
-
-#@# @<bib>{isa-manual.2.15}
-#@# TODO 画像を置き換え
 
 まず、
 csrunitモジュールに供給されている命令がMRET命令かどうかを判定する変数@<code>{is_mret}を作成します

@@ -698,9 +698,7 @@ SystemVerilogとの差異を説明すると、
 
 単項、二項演算子の使用例は次の通りです(@<list>{code.veryl.operator.use})。
 
-#@# @<bib>{veryl-doc.operators}
-
-//list[code.veryl.operator.use][単項、二項演算子 (Verylのドキュメントの例を改変)]{
+//list[code.veryl.operator.use][単項、二項演算子 (Verylのドキュメントの例@<fn>{veryl_doc_op_ex}を改変)]{
 // 単項算術演算
 a = +1;
 a = -1; // 正負を反転させる
@@ -764,7 +762,7 @@ a = x && y; // xとyの両方が真のとき真
 a = x || y; // xまたはyが真のとき真
 //}
 
-#@# @<bib>{veryl-doc.operator.precedence}
+//footnote[veryl_doc_op_ex][演算子 - The Veryl Hardware Description Language, https://doc.veryl-lang.org/book/ja/05_language_reference/02_lexical_structure/01_operator.html]
 
 //table[operator.priority][演算子と優先度]{
 演算子	結合性	優先順位
@@ -1290,6 +1288,6 @@ logic ccc;
 ==== 標準ライブラリ
 
 Verylには、よく使うモジュールなどが標準ライブラリとして準備されています。
-標準ライブラリは@<href>{https://std.veryl-lang.org/}で確認できます。
+標準ライブラリは @<href>{https://std.veryl-lang.org/} で確認できます。
 
 本書では標準ライブラリを使用していないため、説明は割愛します。

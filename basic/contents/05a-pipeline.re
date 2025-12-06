@@ -25,14 +25,6 @@ CPUの性能指標は、
 
 //image[cpu-seino-houteisiki][CPU性能方程式][width=40%]
 
-#@# TODO imageからtexに置き換える
-#@# (@<eq>{cpu-seino-houteisiki})。
-#@# //texequation[cpu-seino-houteisiki][CPU性能方程式@<bib>{patahene}]{
-#@# CPU時間 = \frac{実行命令数 \times CPI}{クロック周波数}
-#@# //}
-
-#@# @<bib>{patahene}
-
 それぞれの用語の定義は次の通りです。
 
  : CPU時間 (CPU time)

@@ -222,8 +222,6 @@ RV64Iでは、ADD命令は64ビット単位で演算する命令になり、
 === ADD[I]W、SUBW命令をデコードする
 
 //image[addsubw][ADDW、ADDIW、SUBW命令のフォーマット]
-
-#@# @<bib>{isa-manual.1.37}
 #@# TODO 画像を置き換える?
 
 ADDW命令とSUBW命令はR形式で、opcodeは@<code>{OP-32}(@<code>{7'b0111011})です。
@@ -394,8 +392,6 @@ rs1の下位32ビットを0 ～ 31ビットシフトするSLL[I]W、SRL[I]W、SR
 32ビットの演算結果は符号拡張します。
 
 //image[sllsrlsraw][SLL[I\]W、SRL[I\]W、SRA[I\]W命令のフォーマット]
-
-#@# @<bib>{isa-manual.1.37}
 #@# TODO 画像を置き換える
 
 SLL[I]W、SRL[I]W、SRA[I]W命令のフォーマットは、
@@ -481,8 +477,6 @@ LB、LH命令は、ロードした値を符号拡張した値をレジスタに�
 LWU命令が追加されます。
 
 //image[lwu][LWU命令のフォーマット]
-
-#@# @<bib>{isa-manual.1.37}
 #@# 画像を置き換える?
 
 LWU命令はI形式で、opcodeは@<code>{LOAD}です。

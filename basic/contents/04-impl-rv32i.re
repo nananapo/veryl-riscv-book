@@ -1199,8 +1199,6 @@ RISC-Vの命令のビット列には次のような要素が含まれていま�
 RISC-Vにはいくつかの命令の形式がありますが、
 RV32IにはR、I、S、B、U、Jの6つの形式の命令が存在しています (@<img>{riscv-inst-types})。
 
-#@# @<bib>{isa-manual.1.2.3.enc}
-
 //image[riscv-inst-types][RISC-Vの命令形式]
 
  : R形式
@@ -1307,7 +1305,6 @@ package corectrl {
 //}
 
 これらの値とそれぞれの命令の対応は、仕様書を確認してください。
-#@# @<bib>{isa-manual.1.37}
 
 === 制御フラグと即値を生成する
 
@@ -1704,7 +1701,6 @@ result	output	UIntX		結果
 //}
 
 仕様書で整数演算命令として定義されている命令は、funct3とfunct7フィールドによって計算の種類を特定できます(@<table>{alu_funct3})。
-#@# @<bib>{isa-manual.1.2.4}
 
 //table[alu_funct3][ALUの演算の種類]{
 funct3			演算

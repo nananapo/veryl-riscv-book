@@ -122,6 +122,7 @@ module ReVIEW
       # captionが見えないのでpで表示する
       if caption.present?
         puts "<p class=\"caption\" style=\"text-align: center; font-weight: bold\">▲図#{@chapter.image(id).number}: #{compile_inline(caption)}</p>"
+        puts ""
       end
     end
 
