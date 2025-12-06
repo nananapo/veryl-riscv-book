@@ -16,13 +16,13 @@ A拡張の命令を利用すると、同じメモリ空間で複数のソフト�
 アトミック操作(Atomic operation、不可分操作)とは、他のシステムからその操作を観測するとき、1つの操作として観測される操作のことです。
 つまり、他のシステムは、アトミック操作を行う前、アトミック操作を行った後の状態しか観測できません。
 
-//image[sampleprogram_2cpu][@<img>{sampleprogram_1cpu}のプログラムを2つに分割して2つのCPUで実行する (Xは11になる)][width=80%]
-//image[sampleprogram_1cpu][1つのCPUでメモリ上の値を2回インクリメントする (Xは12になる)][width=50%]
+//image[sampleprogram_2cpu.drawio][@<img>{sampleprogram_1cpu.drawio}のプログラムを2つに分割して2つのCPUで実行する (Xは11になる)][width=80%]
+//image[sampleprogram_1cpu.drawio][1つのCPUでメモリ上の値を2回インクリメントする (Xは12になる)][width=50%]
 
 アトミック操作は実行、観測される順序が重要なアプリケーションで利用します。
 例えば、アドレスXの値をロードして1を足した値を書き戻すプログラムを、
-2つのコアで同時に実行するとします(@<img>{sampleprogram_2cpu})。
-このとき命令の実行順序によっては、最終的な値が1つのコアで2回プログラムを実行した場合と異なってしまいます(@<img>{sampleprogram_1cpu})。
+2つのコアで同時に実行するとします(@<img>{sampleprogram_2cpu.drawio})。
+このとき命令の実行順序によっては、最終的な値が1つのコアで2回プログラムを実行した場合と異なってしまいます(@<img>{sampleprogram_1cpu.drawio})。
 この状態を避けるためにはロード、加算、ストアをアトミックに行う必要があります。
 このアトミック操作の実現方法として、A拡張はAMOADD命令、LR命令とSC命令を提供します。
 
@@ -289,9 +289,9 @@ A拡張の命令を実行するとき、
 A拡張は他のコア、ハードウェアスレッドと同期してメモリ操作を行うためのものであるため、
 A拡張の操作はcoreモジュールの外、メモリよりも前で行います。
 本書では、coreモジュールとmmio_controllerモジュールの間に、
-A拡張の命令を処理するamounitモジュールを実装します(@<img>{amo-mmio-structure})。
+A拡張の命令を処理するamounitモジュールを実装します(@<img>{amo-mmio-structure.drawio})。
 
-//image[amo-mmio-structure][amounitモジュールと他のモジュールの接続][width=90%]
+//image[amo-mmio-structure.drawio][amounitモジュールと他のモジュールの接続][width=90%]
 
 === インターフェースを作成する
 

@@ -191,7 +191,7 @@ U-modeでアクセスするときはmcounterenレジスタとscounterenレジス
 
 == sstatusレジスタの実装
 
-//image[sstatus][sstatusレジスタ][width=90%]
+//image[sstatus.drawio][sstatusレジスタ][width=90%]
 
 sstatusレジスタはmstatusレジスタの一部をS-modeで読み込み、書き込みできるようにしたSXLENビットのレジスタです。
 本章ではmstatusレジスタに読み込み、書き込みマスクを適用することでsstatusレジスタを実装します。
@@ -711,8 +711,8 @@ S-modeの割り込みのcauseを設定します
 
 ==== medeleg、mideleg、sip、sieレジスタの実装
 
-//image[sip][sipレジスタ][width=90%]
-//image[sie][sieレジスタ][width=90%]
+//image[sip.drawio][sipレジスタ][width=90%]
+//image[sie.drawio][sieレジスタ][width=90%]
 
 medeleg、mideleg、sip、sieレジスタを実装します。
 
@@ -905,7 +905,7 @@ SETSSIPレジスタを読み込むと常に@<code>{0}を返しますが、
 3ffc			MTIME
 //}
 
-//image[setssip][setssipレジスタ][width=90%]
+//image[setssip.drawio][setssipレジスタ][width=90%]
 
 今のところmhartidが@<code>{0}のハードウェアスレッドしか存在しないため、SETSSIP0のみ実装します。
 aclint_ifインターフェースに、

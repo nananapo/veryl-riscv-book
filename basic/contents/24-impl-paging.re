@@ -27,9 +27,9 @@
 ページング方式は、物理アドレス空間の一部をページ(Page)という単位に割り当て、
 ページを参照するための情報をページテーブル(Page Table)に格納します。
 ページテーブルに格納する情報の単位のことをページテーブルエントリ(Page Table Entry、PTE)と呼びます。
-仮想アドレスから物理アドレスへの変換はページテーブルにあるPTEを参照して行います(@<img>{ptpte})。
+仮想アドレスから物理アドレスへの変換はページテーブルにあるPTEを参照して行います(@<img>{ptpte.drawio})。
 
-//image[ptpte][仮想アドレスの変換にPTEを使う][width=80%]
+//image[ptpte.drawio][仮想アドレスの変換にPTEを使う][width=80%]
 
 === RISC-Vの仮想記憶システム
 
@@ -58,7 +58,7 @@ Sv39の場合、何段階で物理アドレスに変換できるかによって�
 
 == satpレジスタ
 
-//image[satp][satpレジスタ][width=90%]
+//image[satp.drawio][satpレジスタ][width=90%]
 
 RISC-Vの仮想記憶システムはsatpレジスタによって制御します。
 
@@ -81,15 +81,15 @@ ASID(Address Space IDentifier)は仮想アドレスが属するアドレス空�
 
 //footnote[tlb][PTWはページエントリをキャッシュすることで高速化できます。ASIDが異なるときのキャッシュは利用することができません。キャッシュ機構(TLB)は応用編で実装します。]
 
-//image[rootpteaddr][root PTEのアドレスはsatpレジスタと仮想アドレスから構成される][width=90%]
+//image[rootpteaddr.drawio][root PTEのアドレスはsatpレジスタと仮想アドレスから構成される][width=90%]
 
 PPN(Physical Page Number)はroot PTEの物理アドレスの一部を格納するフィールドです。
-root PTEのアドレスは仮想アドレスのVPNビットと組み合わせて作られます(@<img>{rootpteaddr})。
+root PTEのアドレスは仮想アドレスのVPNビットと組み合わせて作られます(@<img>{rootpteaddr.drawio})。
 
 =={sv39process} Sv39のアドレス変換
 
-//image[virtualaddress][仮想アドレス][width=90%]
-//image[physicaladdress][物理アドレス][width=90%]
+//image[virtualaddress.drawio][仮想アドレス][width=90%]
+//image[physicaladdress.drawio][物理アドレス][width=90%]
 
 Sv39では39ビットの仮想アドレスを56ビットの物理アドレスに変換します。
 
@@ -116,7 +116,7 @@ satpレジスタのMODEフィールドがSv39のとき、S-mode、U-modeでア�
 
 === PTEのフェッチ
 
-//image[pteaddress][PTEのアドレス][width=90%]
+//image[pteaddress.drawio][PTEのアドレス][width=90%]
 
 ページングが有効なとき、まずroot PTEをフェッチします。
 ここでlevelという変数の値を@<code>{2}とします。
@@ -127,9 +127,9 @@ satpレジスタのPPNフィールドと仮想アドレスの@<code>{VPN[level]}
 このアドレスは、PPNフィールドを12ビット左シフトしたアドレスに存在するページテーブルの、
 VPN[level]番目のPTEのアドレスです。
 
-//image[pte][PTEのフィールド][width=90%]
+//image[pte.drawio][PTEのフィールド][width=90%]
 
-PTEのフィールドは@<img>{pte}のようになっています。
+PTEのフィールドは@<img>{pte.drawio}のようになっています。
 このうちN、PBMT、Reservedは使用せず、@<code>{0}でなければページフォルト例外を発生させます。
 RSWビットは無視します。
 
@@ -157,17 +157,17 @@ S-modeのときは、Uが立っているページにmstatus.SUMが@<code>{0}の�
 S-modeのときは、Uが立っているページの実行はできません。
 これらに違反した場合、ページフォルト例外が発生します。
 
-//image[level2][levelが2のときの物理アドレス][width=95%]
+//image[level2.drawio][levelが2のときの物理アドレス][width=95%]
 
-levelが@<code>{2}なら、物理アドレスはPTEのPPN[2]、仮想アドレスのVPN[1]、VPN[0]、page offsetを結合した値になります(@<img>{level2})。
+levelが@<code>{2}なら、物理アドレスはPTEのPPN[2]、仮想アドレスのVPN[1]、VPN[0]、page offsetを結合した値になります(@<img>{level2.drawio})。
 
-//image[level1][levelが1のときの物理アドレス][width=95%]
+//image[level1.drawio][levelが1のときの物理アドレス][width=95%]
 
-levelが@<code>{1}なら、物理アドレスはPTEのPPN[2]、PPN[1]、仮想アドレスのVPN[0]、page offsetを結合した値になります(@<img>{level1})。
+levelが@<code>{1}なら、物理アドレスはPTEのPPN[2]、PPN[1]、仮想アドレスのVPN[0]、page offsetを結合した値になります(@<img>{level1.drawio})。
 
-//image[level0][levelが0のときの物理アドレス][width=95%]
+//image[level0.drawio][levelが0のときの物理アドレス][width=95%]
 
-levelが@<code>{0}なら、物理アドレスはPTEのPPN[2]、PPN[1]、PPN[0]、仮想アドレスのpage offsetを結合した値になります(@<img>{level0})。
+levelが@<code>{0}なら、物理アドレスはPTEのPPN[2]、PPN[1]、PPN[0]、仮想アドレスのpage offsetを結合した値になります(@<img>{level0.drawio})。
 
 leaf PTEの使わないPPNフィールドは@<code>{0}である必要があり、@<code>{0}ではないならページフォルト例外を発生させます。
 
@@ -185,7 +185,7 @@ RISC-Vでは命令フェッチ、データのロードストアの両方でペ�
 
 inst_fetcherモジュール、amounitモジュールは仮想アドレスを扱うことがありますが、
 mmio_controllerモジュールは常に物理アドレス空間を扱います。
-そのため、inst_fetcherモジュール、amounitモジュールとmmio_controllerモジュールの間にPTWを配置します(@<img>{ptw-mmio-structure})。
+そのため、inst_fetcherモジュール、amounitモジュールとmmio_controllerモジュールの間にPTWを配置します(@<img>{ptw-mmio-structure.drawio})。
 
 本章では、仮想記憶システムを次の順序で実装します。
 
@@ -195,7 +195,7 @@ mmio_controllerモジュールは常に物理アドレス空間を扱います�
  1. Sv39を実装する
  1. SFENCE.VMA命令、FENCEI命令を実装する
 
-//image[ptw-mmio-structure][PTWと他のモジュールの接続][width=90%]
+//image[ptw-mmio-structure.drawio][PTWと他のモジュールの接続][width=90%]
 
 == メモリで発生する例外の実装
 
@@ -1424,12 +1424,12 @@ PTE39インターフェースをインスタンス化します
 #@end
 //}
 
-//image[statezu][状態の遷移図 (点線の状態で新しく要求を受け付け、二重丸の状態で結果を返す)][width=80%]
+//image[statezu.drawio][状態の遷移図 (点線の状態で新しく要求を受け付け、二重丸の状態で結果を返す)][width=80%]
 
 仮想アドレスを変換するための状態を追加します
 (@<list>{ptw.veryl.sv39.State})。
 本章ではページングが有効な時に、
-@<code>{state}が@<img>{statezu}のように遷移するようにします。
+@<code>{state}が@<img>{statezu.drawio}のように遷移するようにします。
 
 //list[ptw.veryl.sv39.State][状態の定義 (ptw.veryl)]{
 #@maprange(scripts/24/sv39-range/core/src/ptw.veryl,State)

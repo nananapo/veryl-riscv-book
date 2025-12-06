@@ -207,10 +207,10 @@ ECALL命令かどうかを判定する@<code>{is_ecall}変数を削除して、
 mcauseレジスタを読むことでどの例外が発生したかを判別できますが、
 その例外の詳しい情報を知りたいことがあります。
 
-//image[mtval][mtvalレジスタ][width=90%]
+//image[mtval.drawio][mtvalレジスタ][width=90%]
 
 RISC-Vには、例外が発生したときのソフトウェアによるハンドリングを補助するために、
-MXLENビットのmtvalレジスタが定義されています(@<img>{mtval})。
+MXLENビットのmtvalレジスタが定義されています(@<img>{mtval.drawio})。
 例外が発生したとき、CPUはmtvalレジスタに例外に固有の情報を書き込みます。
 これ以降、例外に固有の情報のことをtvalと呼びます。
 

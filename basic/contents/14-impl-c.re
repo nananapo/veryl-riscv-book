@@ -24,9 +24,9 @@ C拡張は16ビット幅の命令を定義する拡張です。
 
 //footnote[zc-pseudo][Zc*拡張の一部の命令は複数の命令になります]
 
-RVC命令は@<img>{rvc-instruction-formats}の9つのフォーマットが定義されています。
+RVC命令は@<img>{rvc-instruction-formats.drawio}の9つのフォーマットが定義されています。
 
-//image[rvc-instruction-formats][RVC命令のフォーマット][width=95%]
+//image[rvc-instruction-formats.drawio][RVC命令のフォーマット][width=95%]
 
 @<code>{rs1'}、@<code>{rs2'}、@<code>{rd'}は3ビットのフィールドで、
 よく使われる8番(x8)から15番(x15)のレジスタを指定します。
@@ -126,9 +126,9 @@ C拡張が実装されている場合には例外が発生しません。
  1. RVC命令を32ビット幅の命令に変換するモジュールを作成する
  1. RVC命令を32ビット幅の命令に変換してcoreモジュールに供給する
 
-最終的な命令フェッチ処理の構成は図@<img>{inst-fetch-structure}のようになります。
+最終的な命令フェッチ処理の構成は図@<img>{inst-fetch-structure.drawio}のようになります。
 
-//image[inst-fetch-structure][命令フェッチ処理の構成][width=90%]
+//image[inst-fetch-structure.drawio][命令フェッチ処理の構成][width=90%]
 
 == 命令フェッチモジュールの実装
 
