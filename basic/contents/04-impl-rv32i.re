@@ -2103,7 +2103,9 @@ module memunit (
             req_addr  = 0;
             req_wdata = 0;
         } else {
-            if valid {
+            if !valid {
+                state = State::Init;
+            } else {
                 case state {
                     State::Init: if is_new & inst_is_memop(ctrl) {
                         state     = State::WaitReady;
