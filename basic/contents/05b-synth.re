@@ -214,11 +214,10 @@ module top #(
     param MEMORY_FILEPATH       : string = "MEMORY_FILE_PATH",
 ) (
     #[ifdef(TEST_MODE)]
-    test_success: output bit,
-
-    clk: input  clock,
-    rst: input  reset,
-    @<b>|led: output UIntX,|
+    test_success: output bit  ,
+    clk         : input  clock,
+    rst         : input  reset,
+    @<b>|led         : output UIntX,|
 ) {
 #@end
 //}

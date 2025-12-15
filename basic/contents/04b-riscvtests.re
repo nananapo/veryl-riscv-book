@@ -283,10 +283,10 @@ module top #(
     param MEMORY_FILEPATH_IS_ENV: bit    = 1                 ,
     param MEMORY_FILEPATH       : string = "MEMORY_FILE_PATH",
 ) (
-    clk: input clock,
-    rst: input reset,
     @<b>|#[ifdef(TEST_MODE)]|
-    @<b>|test_success: output bit,|
+    @<b>|test_success: output bit  ,|
+    clk         : input  clock,
+    rst         : input  reset,
 ) {
 #@end
 //}
