@@ -434,8 +434,10 @@ FIFOにデータが入っているとき、32ビットずつcoreモジュール�
             if core_if.is_hazard {
                 issue_pc_offset = core_if.next_pc[2:0];
             } else {
-                if issue_fifo_wready && issue_fifo_wvalid {
-                    issue_pc_offset += 4;
+                if issue_fifo_wready {
+                    if issue_fifo_wvalid {
+                        issue_pc_offset += 4;
+                    }
                 }
             }
         }
@@ -630,19 +632,21 @@ issueとcoreの間に供給する命令のビット列は@<code>{fetch_fifo_rdat
 //list[inst_fetcher.veryl.232.issue_comb][issue_fifoにoffsetが2、6の命令を格納する (inst_fetcher.veryl)]{
 #@maprange(scripts/14/232-range/core/src/inst_fetcher.veryl,issue_comb)
         if !core_if.is_hazard && fetch_fifo_rvalid {
-            if issue_fifo_wready {
-                @<b>|if offset == 6 {|
-                @<b>|    // offsetが6な32ビット命令の場合、|
-                @<b>|    // 命令は{rdata_next[15:0], rdata[63:48}になる|
-                @<b>|    if issue_is_rdata_saved {|
-                @<b>|        issue_fifo_wvalid     = 1;|
-                @<b>|        issue_fifo_wdata.addr = {issue_saved_addr[msb:3], offset};|
-                @<b>|        issue_fifo_wdata.bits = {rdata[15:0], issue_saved_bits};|
-                @<b>|    } else {|
-                @<b>|        // Read next 8 bytes|
-                @<b>|        fetch_fifo_rready = 1;|
-                @<b>|    }|
-                @<b>|} else {|
+            @<b>|if offset == 6 {|
+            @<b>|    // offsetが6な32ビット命令の場合、|
+            @<b>|    // 命令は{rdata_next[15:0], rdata[63:48}になる|
+            @<b>|    if issue_is_rdata_saved {|
+            @<b>|        if issue_fifo_wready {|
+            @<b>|            issue_fifo_wvalid     = 1;|
+            @<b>|            issue_fifo_wdata.addr = {issue_saved_addr[msb:3], offset};|
+            @<b>|            issue_fifo_wdata.bits = {rdata[15:0], issue_saved_bits};|
+            @<b>|        }|
+            @<b>|    } else {|
+            @<b>|        // Read next 8 bytes|
+            @<b>|        fetch_fifo_rready = 1;|
+            @<b>|    }|
+            @<b>|} else {|
+                if issue_fifo_wready {
                     fetch_fifo_rready     = offset == 4;
                     issue_fifo_wvalid     = 1;
                     issue_fifo_wdata.addr = {raddr[msb:3], offset};
@@ -722,19 +726,22 @@ inst_fetcherモジュールで、@<code>{is_rvc}を@<code>{0}に設定してcore
 
 //list[inst_fetcher.veryl.is_rvc.issue_comb][is_rvcフラグを0に設定する (inst_fetcher.veryl)]{
 #@maprange(scripts/14/is_rvc-range/core/src/inst_fetcher.veryl,issue_comb)
-                if offset == 6 {
-                    // offsetが6な32ビット命令の場合、
-                    // 命令は{rdata_next[15:0], rdata[63:48}になる
-                    if issue_is_rdata_saved {
+            if offset == 6 {
+                // offsetが6な32ビット命令の場合、
+                // 命令は{rdata_next[15:0], rdata[63:48}になる
+                if issue_is_rdata_saved {
+                    if issue_fifo_wready {
                         issue_fifo_wvalid       = 1;
                         issue_fifo_wdata.addr   = {issue_saved_addr[msb:3], offset};
                         issue_fifo_wdata.bits   = {rdata[15:0], issue_saved_bits};
                         @<b>|issue_fifo_wdata.is_rvc = 0;|
-                    } else {
-                        // Read next 8 bytes
-                        fetch_fifo_rready = 1;
                     }
                 } else {
+                    // Read next 8 bytes
+                    fetch_fifo_rready = 1;
+                }
+            } else {
+                if issue_fifo_wready {
                     fetch_fifo_rready     = offset == 4;
                     issue_fifo_wvalid     = 1;
                     issue_fifo_wdata.addr = {raddr[msb:3], offset};
@@ -1150,27 +1157,29 @@ RVC命令のとき、変換された32ビット幅の命令を@<code>{issue_fifo
 //list[inst_fetcher.veryl.rvcc.issue_comb][RVC命令のときのissue_fifoへの書き込み (inst_fetcher.veryl)]{
 #@maprange(scripts/14/rvcc-range/core/src/inst_fetcher.veryl,issue_comb)
         if !core_if.is_hazard && fetch_fifo_rvalid {
-            if issue_fifo_wready {
-                if offset == 6 {
-                    // offsetが6な32ビット命令の場合、
-                    // 命令は{rdata_next[15:0], rdata[63:48}になる
-                    if issue_is_rdata_saved {
+            if offset == 6 {
+                // offsetが6な32ビット命令の場合、
+                // 命令は{rdata_next[15:0], rdata[63:48}になる
+                if issue_is_rdata_saved {
+                    if issue_fifo_wready {
                         issue_fifo_wvalid       = 1;
                         issue_fifo_wdata.addr   = {issue_saved_addr[msb:3], offset};
                         issue_fifo_wdata.bits   = {rdata[15:0], issue_saved_bits};
                         issue_fifo_wdata.is_rvc = 0;
-                    } else {
-                        fetch_fifo_rready = 1;
-                        @<b>|if rvcc_is_rvc {|
-                        @<b>|    issue_fifo_wvalid       = 1;|
-                        @<b>|    issue_fifo_wdata.addr   = {raddr[msb:3], offset};|
-                        @<b>|    issue_fifo_wdata.is_rvc = 1;|
-                        @<b>|    issue_fifo_wdata.bits   = rvcc_inst32;|
-                        @<b>|} else {|
-                            // Read next 8 bytes
-                        @<b>|}|
                     }
                 } else {
+                    fetch_fifo_rready = 1; // Read next 8 bytes
+                    @<b>|if rvcc_is_rvc {|
+                    @<b>|    issue_fifo_wvalid       = 1;|
+                    @<b>|    issue_fifo_wdata.addr   = {raddr[msb:3], offset};|
+                    @<b>|    issue_fifo_wdata.is_rvc = 1;|
+                    @<b>|    issue_fifo_wdata.bits   = rvcc_inst32;|
+                    @<b>|} else {|
+                    @<b>|    // save inst[15:0]|
+                    @<b>|}|
+                }
+            } else {
+                if issue_fifo_wready {
                     fetch_fifo_rready     = @<b>|!rvcc_is_rvc &&| offset == 4;
                     issue_fifo_wvalid     = 1;
                     issue_fifo_wdata.addr = {raddr[msb:3], offset};
