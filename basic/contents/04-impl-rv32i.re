@@ -2673,8 +2673,7 @@ module memory::<DATA_WIDTH: u32, ADDR_WIDTH: u32> #(
     rst   : input   reset                                     ,
     membus: modport membus_if::<DATA_WIDTH, ADDR_WIDTH>::slave,
 ) {
-    type DataType = logic<DATA_WIDTH>    ;
-    type MaskType = logic<DATA_WIDTH / 8>;
+    type DataType = logic<DATA_WIDTH>;
 
     var mem: DataType [2 ** ADDR_WIDTH];
 
@@ -2698,7 +2697,7 @@ module memory::<DATA_WIDTH: u32, ADDR_WIDTH: u32> #(
 
     var addr_saved : logic   <ADDR_WIDTH>;
     var wdata_saved: DataType            ;
-    var wmask_saved: MaskType            ;
+    var wmask_saved: logic   <DATA_WIDTH>;
     var rdata_saved: DataType            ;
 
     always_comb {
@@ -2706,9 +2705,8 @@ module memory::<DATA_WIDTH: u32, ADDR_WIDTH: u32> #(
     }
 
     always_ff {
-        let wmask: logic<DATA_WIDTH> = membus.wmask_expand();
         if state == State::WriteValid {
-            mem[addr_saved[ADDR_WIDTH - 1:0]] = wdata_saved & wmask | rdata_saved & ~wmask;
+            mem[addr_saved[ADDR_WIDTH - 1:0]] = wdata_saved & wmask_saved | rdata_saved & ~wmask_saved;
         }
     }
 
@@ -2728,7 +2726,7 @@ module memory::<DATA_WIDTH: u32, ADDR_WIDTH: u32> #(
                     membus.rdata  = mem[membus.addr[ADDR_WIDTH - 1:0]];
                     addr_saved    = membus.addr[ADDR_WIDTH - 1:0];
                     wdata_saved   = membus.wdata;
-                    wmask_saved   = membus.wmask;
+                    wmask_saved   = membus.wmask_expand();
                     rdata_saved   = mem[membus.addr[ADDR_WIDTH - 1:0]];
                     if membus.valid && membus.wen {
                         state = State::WriteValid;
