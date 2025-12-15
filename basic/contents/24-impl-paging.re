@@ -173,9 +173,17 @@ leaf PTEの使わないPPNフィールドは@<code>{0}である必要があり�
 
 求めた物理アドレスにアクセスする前に、leaf PTEのA、Dビットを確認します。
 Aはページがこれまでにアクセスされたか、Dはページがこれまでに書き換えられたかを示すビットです。
-Aが@<code>{0}のとき、Aを@<code>{1}に設定します。
+
+A、Dビットをハードウェア的に書き換える実装はSvadu拡張として定義されています。
+Svadu拡張が実装されているとき、Aが@<code>{0}のとき、Aを@<code>{1}に設定します。
 Dが@<code>{0}でストアするとき、Dを@<code>{1}に設定します。
 Aは投機的に@<code>{1}に変更できますが、Dは命令が実行された場合にしか@<code>{1}に変更できません。
+
+A、Dビットをソフトウェア的に書き換える実装はSvade拡張として定義されています。
+Svade拡張が実装されているとき、アクセスするページのPTEのAビットが@<code>{0}のとき、ページフォルト例外を発生させます。
+また、ストア命令でアクセスするページのPTEのDビットが@<code>{0}のとき、ページフォルト例外を発生させます。
+
+本書では、実装を簡単にするために、Svade拡張を実装します。
 
 == 実装順序
 
@@ -1457,7 +1465,6 @@ PTE39インターフェースをインスタンス化します
         IDLE,
         @<b>|WALK_READY,|
         @<b>|WALK_VALID,|
-        @<b>|SET_AD,|
         EXECUTE_READY,
         EXECUTE_VALID,
         @<b>|PAGE_FAULT,|
@@ -1466,8 +1473,7 @@ PTE39インターフェースをインスタンス化します
 //}
 
 現在のPTEのlevel(@<code>{level})、
-PTEのアドレス(@<code>{taddr})、
-要求によって更新されるPTEの下位8ビット(@<code>{wdata_ad})を格納するためのレジスタを定義します
+PTEのアドレス(@<code>{taddr})を格納するためのレジスタを定義します
 (
 @<list>{ptw.veryl.sv39.reg}、
 @<list>{ptw.veryl.sv39.reset}
@@ -1478,7 +1484,6 @@ PTEのアドレス(@<code>{taddr})、
     var physical_addr: Addr    ;
     @<b>|var taddr        : Addr    ;|
     @<b>|var level        : Level   ;|
-    @<b>|var wdata_ad     : logic<8>;|
 #@end
 //}
 
@@ -1489,26 +1494,20 @@ PTEのアドレス(@<code>{taddr})、
         physical_addr     = 0;
         @<b>|taddr             = 0;|
         @<b>|level             = 0;|
-        @<b>|wdata_ad          = 0;|
 #@end
 //}
 
 
-PTEのフェッチとA、Dビットの更新のために@<code>{master}に要求を割り当てます
+PTEのフェッチのために@<code>{master}に要求を割り当てます
 (@<list>{ptw.veryl.sv39.assign_master})。
-PTEは@<code>{taddr}を使ってアクセスし、
-A、Dビットの更新では下位8ビットのみの書き込みマスクを設定します。
+PTEは@<code>{taddr}を使ってアクセスします。
 
 //list[ptw.veryl.sv39.assign_master][masterに要求を割り当てる (ptw.veryl)]{
 #@maprange(scripts/24/sv39-range/core/src/ptw.veryl,assign_master)
         case state {
-            State::IDLE      : accept_request_comb();
-            @<b>|State::WALK_READY: assign_master      (taddr, 0, 0, 0);|
-            @<b>|State::SET_AD    : assign_master      (taddr, 1, // wen = 1|
-            @<b>| {1'b0 repeat MEMBUS_DATA_WIDTH - 8, wdata_ad}, // wdata|
-            @<b>| {1'b0 repeat XLEN / 8 - 1, 1'b1} // wmask|
-            @<b>|);|
-            State::EXECUTE_READY: assign_master(physical_addr, slave_saved.wen, slave_saved.wdata, slave_saved.wmask);
+            State::IDLE         : accept_request_comb();
+            @<b>|State::WALK_READY   : assign_master      (taddr, 0, 0, 0);|
+            @<b>|State::EXECUTE_READY: assign_master      (physical_addr, slave_saved.wen, slave_saved.wdata, slave_saved.wmask);|
             State::EXECUTE_VALID: if master.rvalid {
                 accept_request_comb();
             }
@@ -1557,17 +1556,6 @@ A、Dビットの更新では下位8ビットのみの書き込みマスクを�
 #@end
 //}
 
-A、Dビットを更新するとき、メモリが書き込み要求を受け入れたら、状態を@<code>{State::EXECUTE_READY}に移動します
-(@<list>{ptw.veryl.sv39.clockad})。
-
-//list[ptw.veryl.sv39.clockad][A、Dビットを更新したときの状態遷移 (ptw.veryl)]{
-#@maprange(scripts/24/sv39-range/core/src/ptw.veryl,clockad)
-            State::SET_AD: if master.ready {
-                state = State::EXECUTE_READY;
-            }
-#@end
-//}
-
 ページにアクセスする権限があるかをPTEと要求から判定する関数を定義します
 (@<list>{ptw.veryl.sv39.check})。
 条件の詳細は@<secref>{sv39process}を確認してください。
@@ -1598,8 +1586,9 @@ A、Dビットを更新するとき、メモリが書き込み要求を受け入
 #@end
 //}
 
-PTEをフェッチしてページフォルト例外を判定し、次のPTEのフェッチ、A、Dビットを更新する状態への遷移を実装します
+PTEをフェッチしてページフォルト例外を判定し、次のPTEのフェッチの遷移を実装します
 (@<list>{ptw.veryl.sv39.walk})。
+A、Dビットが設定されていない場合はページフォルト例外とします。
 
 //list[ptw.veryl.sv39.walk][PTEのフェッチとPTEの確認 (ptw.veryl)]{
 #@maprange(scripts/24/sv39-range/core/src/ptw.veryl,walk)
@@ -1612,12 +1601,11 @@ PTEをフェッチしてページフォルト例外を判定し、次のPTEの�
                 } else {
                     if pte.is_leaf() {
                         if check_permission(slave_saved) {
-                            physical_addr = pte.get_physical_address(level, slave_saved.addr);
                             if pte.need_update_ad(slave_saved.wen) {
-                                state    = State::SET_AD;
-                                wdata_ad = pte.get_updated_ad(slave_saved.wen);
+                                state = State::PAGE_FAULT; // Svade
                             } else {
-                                state = State::EXECUTE_READY;
+                                state         = State::EXECUTE_READY;
+                                physical_addr = pte.get_physical_address(level, slave_saved.addr);
                             }
                         } else {
                             state = State::PAGE_FAULT;
