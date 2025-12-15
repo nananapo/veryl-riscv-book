@@ -727,8 +727,8 @@ riscv-testsをビルドしなおし、成果物をtestディレクトリに配�
 
 //terminal[terminal.ram.recompile][HEXファイルの再生成]{
 $ @<userinput>{cd test}
-$ @<userinput>{find share/ -type f -not -name "*.dump" -exec riscv64-unknown-elf-objcopy -O binary {} {}.bin \;}
-$ @<userinput>{find share/ -type f -name "*.bin" -exec sh -c "python3 bin2hex.py 8 {} > {}.hex" \;}
+$ @<userinput>{find share/ -type f -not -name "*.dump" -exec riscv64-unknown-elf-objcopy -O binary {\} {\}.bin \;}
+$ @<userinput>{find share/ -type f -name "*.bin" -exec sh -c "python3 bin2hex.py 8 {\} > {\}.hex" \;}
 //}
 
 riscv-testsの終了判定用のアドレスを@<code>{MMAP_RAM_BEGIN}基準のアドレスに変更します
