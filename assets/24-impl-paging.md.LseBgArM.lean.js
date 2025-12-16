@@ -22,7 +22,7 @@ import{_ as l,c as p,o as c,ah as e,j as s,a,bV as d,bW as t,bX as o,bY as r,bZ 
     aclint     : `),s("span",{class:"hljs-keyword"},"modport"),a(` aclint_if::slave        ,
     `),s("span",{class:"custom-hl-bold"},[a("membus     : "),s("span",{class:"hljs-keyword"},"modport"),a(" core_data_if::master    ,")]),a(`
 ) {
-`)])])],-1),s("p",null,[s("span",{class:"caption"},"▼リスト18.21: csrunitモジュールにメモリアドレスとインターフェースを割り当てる (core.veryl)"),a(),s("a",{href:"https://github.com/nananapo/bluecore/compare/0c9a4b1dd04c249d9c19110d1fe4417c995225a8~1..0c9a4b1dd04c249d9c19110d1fe4417c995225a8#diff-bdad1723f95a5423ff5ab8ba69bb572aabe1c8def0cda1748f6f980f61b57510"},"差分をみる")],-1),s("div",{class:"language-veryl"},[s("button",{title:"Copy Code",class:"copy"}),s("span",{class:"lang"},"veryl"),s("pre",{class:"hljs"},[s("code",null,[s("span",{class:"hljs-keyword"},"inst"),a(` csru: csrunit (
+`)])])],-1),s("p",null,[s("span",{class:"caption"},"▼リスト18.21: csrunitモジュールにメモリアドレスとインターフェースを割り当てる (core.veryl)"),a(),s("a",{href:"https://github.com/nananapo/bluecore/compare/922b4c272f94a5c43c1fb7a681b5e07e3f2ecfd7~1..922b4c272f94a5c43c1fb7a681b5e07e3f2ecfd7#diff-bdad1723f95a5423ff5ab8ba69bb572aabe1c8def0cda1748f6f980f61b57510"},"差分をみる")],-1),s("div",{class:"language-veryl"},[s("button",{title:"Copy Code",class:"copy"}),s("span",{class:"lang"},"veryl"),s("pre",{class:"hljs"},[s("code",null,[s("span",{class:"hljs-keyword"},"inst"),a(` csru: csrunit (
     clk                               ,
 `),s("span",{class:"foldable-code"},[s("span",{class:"fold-trigger",onclick:"this.parentElement.classList.add('expanded')"}),s("span",{class:"fold-content"},`    rst                               ,
     valid      : mems_valid           ,
@@ -51,22 +51,21 @@ import{_ as l,c as p,o as c,ah as e,j as s,a,bV as d,bW as t,bX as o,bY as r,bZ 
         `),s("span",{class:"hljs-comment"},"// offsetが6な32ビット命令の場合、"),a(`
         `),s("span",{class:"hljs-comment"},"// 命令は{rdata_next[15:0], rdata[63:48}になる"),a(`
         `),s("span",{class:"hljs-keyword"},"if"),a(` issue_is_rdata_saved {
-            `),s("span",{class:"hljs-keyword"},"if"),a(` issue_fifo_wready {
-                issue_fifo_wvalid                 = `),s("span",{class:"hljs-number"},"1"),a(`;
-                issue_fifo_wdata.addr             = {issue_saved_addr[`),s("span",{class:"hljs-keyword"},"msb"),a(":"),s("span",{class:"hljs-number"},"3"),a(`], offset};
-                issue_fifo_wdata.bits             = {rdata[`),s("span",{class:"hljs-number"},"15"),a(":"),s("span",{class:"hljs-number"},"0"),a(`], issue_saved_bits};
-                issue_fifo_wdata.is_rvc           = `),s("span",{class:"hljs-number"},"0"),a(`;
-                `),s("span",{class:"custom-hl-bold"},[a("issue_fifo_wdata.expt.addr_offset = "),s("span",{class:"hljs-number"},"2"),a(";")]),a(`
-            }
+            issue_fifo_wvalid                 = `),s("span",{class:"hljs-number"},"1"),a(`;
+            issue_fifo_wdata.addr             = {issue_saved_addr[`),s("span",{class:"hljs-keyword"},"msb"),a(":"),s("span",{class:"hljs-number"},"3"),a(`], offset};
+            issue_fifo_wdata.bits             = {rdata[`),s("span",{class:"hljs-number"},"15"),a(":"),s("span",{class:"hljs-number"},"0"),a(`], issue_saved_bits};
+            issue_fifo_wdata.is_rvc           = `),s("span",{class:"hljs-number"},"0"),a(`;
+            `),s("span",{class:"custom-hl-bold"},[a("issue_fifo_wdata.expt.addr_offset = "),s("span",{class:"hljs-number"},"2"),a(";")]),a(`
         } `),s("span",{class:"hljs-keyword"},"else"),a(` {
-            fetch_fifo_rready = `),s("span",{class:"hljs-number"},"1"),a("; "),s("span",{class:"hljs-comment"},"// Read next 8 bytes"),a(`
             `),s("span",{class:"hljs-keyword"},"if"),a(` rvcc_is_rvc || expt.valid {
-`),s("span",{class:"foldable-code"},[s("span",{class:"fold-trigger",onclick:"this.parentElement.classList.add('expanded')"}),s("span",{class:"fold-content"},[a("                issue_fifo_wvalid       = "),s("span",{class:"hljs-number"},"1"),a(`;
-                issue_fifo_wdata.addr   = {raddr[`),s("span",{class:"hljs-keyword"},"msb"),a(":"),s("span",{class:"hljs-number"},"3"),a(`], offset};
+                fetch_fifo_rready       = issue_fifo_wready;
+                issue_fifo_wvalid       = `),s("span",{class:"hljs-number"},"1"),a(`;
+`),s("span",{class:"foldable-code"},[s("span",{class:"fold-trigger",onclick:"this.parentElement.classList.add('expanded')"}),s("span",{class:"fold-content"},[a("                issue_fifo_wdata.addr   = {raddr["),s("span",{class:"hljs-keyword"},"msb"),a(":"),s("span",{class:"hljs-number"},"3"),a(`], offset};
                 issue_fifo_wdata.is_rvc = `),s("span",{class:"hljs-number"},"1"),a(`;
                 issue_fifo_wdata.bits   = rvcc_inst32;
             } `),s("span",{class:"hljs-keyword"},"else"),a(` {
                 `),s("span",{class:"hljs-comment"},"// save inst[15:0]"),a(`
+                fetch_fifo_rready = `),s("span",{class:"hljs-number"},"1"),a("; "),s("span",{class:"hljs-comment"},"// Read next 8 bytes"),a(`
 `)])]),a(`            }
         }
 `)])])],-1),e("",197)])])}const S=l(v,[["render",j]]);export{T as __pageData,S as default};
