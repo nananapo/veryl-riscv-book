@@ -389,14 +389,15 @@ offsetが@<code>{6}で例外が発生しているとき、
 
 //list[inst_fetcher.veryl.newexpt.offset_comb][offsetが6のときに例外が発生している場合、すぐにissue_fifoに例外を書き込む (inst_fetcher.veryl)]{
 #@maprange(scripts/24/newexpt-range/core/src/inst_fetcher.veryl,offset_comb)
-                    fetch_fifo_rready = 1; // Read next 8 bytes
                     if rvcc_is_rvc @<b>{|| expt.valid} {
+                        fetch_fifo_rready       = issue_fifo_wready;
                         issue_fifo_wvalid       = 1;
                         issue_fifo_wdata.addr   = {raddr[msb:3], offset};
                         issue_fifo_wdata.is_rvc = 1;
                         issue_fifo_wdata.bits   = rvcc_inst32;
                     } else {
                         // save inst[15:0]
+                        fetch_fifo_rready = 1; // Read next 8 bytes
                     }
 #@end
 //}
@@ -656,22 +657,21 @@ inst_fetcherモジュールで、
                 // offsetが6な32ビット命令の場合、
                 // 命令は{rdata_next[15:0], rdata[63:48}になる
                 if issue_is_rdata_saved {
-                    if issue_fifo_wready {
-                        issue_fifo_wvalid                 = 1;
-                        issue_fifo_wdata.addr             = {issue_saved_addr[msb:3], offset};
-                        issue_fifo_wdata.bits             = {rdata[15:0], issue_saved_bits};
-                        issue_fifo_wdata.is_rvc           = 0;
-                        @<b>|issue_fifo_wdata.expt.addr_offset = 2;|
-                    }
+                    issue_fifo_wvalid                 = 1;
+                    issue_fifo_wdata.addr             = {issue_saved_addr[msb:3], offset};
+                    issue_fifo_wdata.bits             = {rdata[15:0], issue_saved_bits};
+                    issue_fifo_wdata.is_rvc           = 0;
+                    @<b>|issue_fifo_wdata.expt.addr_offset = 2;|
                 } else {
-                    fetch_fifo_rready = 1; // Read next 8 bytes
                     if rvcc_is_rvc || expt.valid {
+                        fetch_fifo_rready       = issue_fifo_wready;
                         issue_fifo_wvalid       = 1;
                         issue_fifo_wdata.addr   = {raddr[msb:3], offset};
                         issue_fifo_wdata.is_rvc = 1;
                         issue_fifo_wdata.bits   = rvcc_inst32;
                     } else {
                         // save inst[15:0]
+                        fetch_fifo_rready = 1; // Read next 8 bytes
                     }
                 }
 #@end
