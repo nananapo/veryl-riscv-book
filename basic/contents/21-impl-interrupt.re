@@ -158,7 +158,8 @@ aclint_memoryモジュールは割り込みを起こすためにcsrunitモジュ
 #@mapfile(scripts/21/createaclint-range/core/src/aclint_if.veryl)
 interface aclint_if {
     modport master {
-        // TODO
+
+
     }
     modport slave {
         ..converse(master)
