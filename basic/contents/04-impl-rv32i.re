@@ -3246,7 +3246,7 @@ coreモジュールでインスタンス化します(@<list>{core.veryl.br-range
     // 命令が分岐命令かどうかを判定する
     function inst_is_br (
         ctrl: input InstCtrl,
-    ) -> logic    {
+    ) -> logic {
         return ctrl.itype == InstType::B;
     }
 #@end
@@ -3254,12 +3254,8 @@ coreモジュールでインスタンス化します(@<list>{core.veryl.br-range
 
 //list[core.veryl.br-range.hazard][分岐成立時のPCの設定 (core.veryl)]{
 #@maprange(scripts/04/br-range/core/src/core.veryl,hazard)
-    assign control_hazard         = inst_valid && @<b>|(|inst_ctrl.is_jump @<b>{|| inst_is_br(inst_ctrl) && brunit_take)};
-    assign control_hazard_pc_next = @<b>|if inst_is_br(inst_ctrl) {|
-        @<b>|inst_pc + inst_imm|
-    @<b>|} else {|
-        alu_result & ~1
-    @<b>|}|;
+    assign control_hazard         = inst_valid && (inst_ctrl.is_jump || inst_is_br(inst_ctrl) && brunit_take);
+    assign control_hazard_pc_next = @<b>|if inst_is_br(inst_ctrl) ? inst_pc + inst_imm :| alu_result & ~1;
 #@end
 //}
 

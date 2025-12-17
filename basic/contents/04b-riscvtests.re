@@ -85,7 +85,6 @@ import sys
 
 # 使い方を表示する
 def print_usage():
-    print(sys.argv[1])
     print("Usage:", sys.argv[0], "[bytes per line] [filename]")
     exit()
 
