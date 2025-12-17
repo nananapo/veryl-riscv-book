@@ -1,4 +1,4 @@
-import{_ as l,c as p,o as c,ah as e,j as s,a,bF as r,bG as d}from"./chunks/framework.HhScKIQu.js";const j=JSON.parse('{"title":"C拡張の実装","description":"","frontmatter":{},"headers":[],"relativePath":"14-impl-c.md","filePath":"14-impl-c.md"}'),t={name:"14-impl-c.md"};function o(i,n,h,b,f,m){return c(),p("div",null,[...n[0]||(n[0]=[e("",126),s("div",{class:"language-veryl"},[s("button",{title:"Copy Code",class:"copy"}),s("span",{class:"lang"},"veryl"),s("pre",{class:"hljs"},[s("code",null,[s("span",{class:"hljs-keyword"},"if"),a(" offset == "),s("span",{class:"hljs-number"},"6"),a(` {
+import{_ as e,c as p,o as c,ah as l,j as s,a,bF as r,bG as d}from"./chunks/framework.HhScKIQu.js";const j=JSON.parse('{"title":"C拡張の実装","description":"","frontmatter":{},"headers":[],"relativePath":"14-impl-c.md","filePath":"14-impl-c.md"}'),t={name:"14-impl-c.md"};function o(i,n,h,f,b,m){return c(),p("div",null,[...n[0]||(n[0]=[l("",126),s("div",{class:"language-veryl"},[s("button",{title:"Copy Code",class:"copy"}),s("span",{class:"lang"},"veryl"),s("pre",{class:"hljs"},[s("code",null,[s("span",{class:"hljs-keyword"},"if"),a(" offset == "),s("span",{class:"hljs-number"},"6"),a(` {
     `),s("span",{class:"hljs-comment"},"// offsetが6な32ビット命令の場合、"),a(`
     `),s("span",{class:"hljs-comment"},"// 命令は{rdata_next[15:0], rdata[63:48}になる"),a(`
     `),s("span",{class:"hljs-keyword"},"if"),a(` issue_is_rdata_saved {
@@ -22,4 +22,4 @@ import{_ as l,c as p,o as c,ah as e,j as s,a,bF as r,bG as d}from"./chunks/frame
     };
     `),s("span",{class:"custom-hl-bold"},[a("issue_fifo_wdata.is_rvc = "),s("span",{class:"hljs-number"},"0"),a(";")]),a(`
 }
-`)])])],-1),e("",48)])])}const _=l(t,[["render",o]]);export{j as __pageData,_ as default};
+`)])])],-1),l("",48)])])}const _=e(t,[["render",o]]);export{j as __pageData,_ as default};

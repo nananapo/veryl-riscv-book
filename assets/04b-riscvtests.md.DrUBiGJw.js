@@ -116,22 +116,25 @@ SECTIONS
   .text.init : { *(.text.init) }
   <span class="custom-hl-bold">. = ALIGN(0x1000);</span>
   <span class="custom-hl-bold">.tohost : { *(.tohost) }</span>
-</code></pre></div><h2 id="テストの終了検知" tabindex="-1">テストの終了検知 <a class="header-anchor" href="#テストの終了検知" aria-label="Permalink to “テストの終了検知”">​</a></h2><p>テストを実行するとき、テストの終了を検知して、成功か失敗かを報告する必要があります。</p><p>riscv-testsはテストの終了を示すために、<code>.tohost</code>にLSBが<code>1</code>な値を書き込みます。 書き込まれた値が<code>32&#39;h1</code>のとき、テストが正常に終了したことを表しています。 それ以外のときは、テストが失敗したことを表しています。</p><p>riscv-testsが終了したことを検知する処理をtopモジュールに記述します。 topモジュールでメモリへのアクセスを監視し、 <code>.tohost</code>にLSBが<code>1</code>な値が書き込まれたら、 <code>test_success</code>に結果を書き込んでテストを終了します。 (リスト9)。</p><p><span class="caption">▼リスト5.9: メモリアクセスを監視して終了を検知する (top.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/c646d7509ed0b4ef832ccfaeecc9a520440ec2a8~1..c646d7509ed0b4ef832ccfaeecc9a520440ec2a8#diff-0c548fd82f89bdf97edffcd89dfccd2aab836eccf57f11b8e25c313abd0d0e6f">差分をみる</a></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-comment">// riscv-testsの終了を検知する</span>
-#[ifdef(TEST_MODE)]
+</code></pre></div><h2 id="テストの終了検知" tabindex="-1">テストの終了検知 <a class="header-anchor" href="#テストの終了検知" aria-label="Permalink to “テストの終了検知”">​</a></h2><p>テストを実行するとき、テストの終了を検知して、成功か失敗かを報告する必要があります。</p><p>riscv-testsはテストの終了を示すために、<code>.tohost</code>にLSBが<code>1</code>な値を書き込みます。 書き込まれた値が<code>32&#39;h1</code>のとき、テストが正常に終了したことを表しています。 それ以外のときは、テストが失敗したことを表しています。</p><p>riscv-testsが終了したことを検知する処理をtopモジュールに記述します。 topモジュールでメモリへのアクセスを監視し、 <code>.tohost</code>にLSBが<code>1</code>な値が書き込まれたら、 <code>test_success</code>に結果を書き込んでテストを終了します。 (リスト9)。</p><p><span class="caption">▼リスト5.9: メモリアクセスを監視して終了を検知する (top.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/e3ecaff865b394d12b364b7039b70fd96601fae3~1..e3ecaff865b394d12b364b7039b70fd96601fae3#diff-0c548fd82f89bdf97edffcd89dfccd2aab836eccf57f11b8e25c313abd0d0e6f">差分をみる</a></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code>#[ifdef(TEST_MODE)]
 <span class="hljs-keyword">always_ff</span> {
-    <span class="hljs-keyword">let</span> RISCVTESTS_TOHOST_ADDR: Addr = <span class="hljs-number">&#39;h1000</span> <span class="hljs-keyword">as</span> Addr;
-    <span class="hljs-keyword">if</span> d_membus.valid &amp;&amp; d_membus.ready &amp;&amp; d_membus.wen == <span class="hljs-number">1</span> &amp;&amp; d_membus.addr == RISCVTESTS_TOHOST_ADDR &amp;&amp; d_membus.wdata[<span class="hljs-keyword">lsb</span>] == <span class="hljs-number">1&#39;b1</span> {
-        test_success = d_membus.wdata == <span class="hljs-number">1</span>;
-        <span class="hljs-keyword">if</span> d_membus.wdata == <span class="hljs-number">1</span> {
-            $display(<span class="hljs-string">&quot;riscv-tests success!&quot;</span>);
-        } <span class="hljs-keyword">else</span> {
-            $display(<span class="hljs-string">&quot;riscv-tests failed!&quot;</span>);
-            $error  (<span class="hljs-string">&quot;wdata : %h&quot;</span>, d_membus.wdata);
+    <span class="hljs-keyword">const</span> RISCVTESTS_TOHOST_ADDR: Addr = <span class="hljs-number">&#39;h1000</span> <span class="hljs-keyword">as</span> Addr;
+    <span class="hljs-keyword">if</span> d_membus.valid &amp;&amp; d_membus.ready {
+        <span class="hljs-keyword">case</span> d_membus.addr {
+            RISCVTESTS_TOHOST_ADDR: <span class="hljs-keyword">if</span> d_membus.wen == <span class="hljs-number">1</span> &amp;&amp; d_membus.wdata[<span class="hljs-keyword">lsb</span>] == <span class="hljs-number">1&#39;b1</span> {
+                test_success = d_membus.wdata == <span class="hljs-number">1</span>;
+                <span class="hljs-keyword">if</span> d_membus.wdata == <span class="hljs-number">1</span> {
+                    $display(<span class="hljs-string">&quot;riscv-tests success!&quot;</span>);
+                } <span class="hljs-keyword">else</span> {
+                    $display(<span class="hljs-string">&quot;riscv-tests failed!&quot;</span>);
+                    $error  (<span class="hljs-string">&quot;wdata : %h&quot;</span>, d_membus.wdata);
+                }
+                $finish();
+            }
         }
-        $finish();
     }
 }
-</code></pre></div><p><code>test_success</code>はポートとして定義します (リスト10)。</p><p><span class="caption">▼リスト5.10: テスト結果を報告するためのポートを宣言する (top.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/c646d7509ed0b4ef832ccfaeecc9a520440ec2a8~1..c646d7509ed0b4ef832ccfaeecc9a520440ec2a8#diff-0c548fd82f89bdf97edffcd89dfccd2aab836eccf57f11b8e25c313abd0d0e6f">差分をみる</a></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">module</span> top #(
+</code></pre></div><p><code>test_success</code>はポートとして定義します (リスト10)。</p><p><span class="caption">▼リスト5.10: テスト結果を報告するためのポートを宣言する (top.veryl)</span> <a href="https://github.com/nananapo/bluecore/compare/e3ecaff865b394d12b364b7039b70fd96601fae3~1..e3ecaff865b394d12b364b7039b70fd96601fae3#diff-0c548fd82f89bdf97edffcd89dfccd2aab836eccf57f11b8e25c313abd0d0e6f">差分をみる</a></p><div class="language-veryl"><button title="Copy Code" class="copy"></button><span class="lang">veryl</span><pre class="hljs"><code><span class="hljs-keyword">module</span> top #(
     <span class="hljs-keyword">param</span> MEMORY_FILEPATH_IS_ENV: <span class="hljs-keyword">bit</span>    = <span class="hljs-number">1</span>                 ,
     <span class="hljs-keyword">param</span> MEMORY_FILEPATH       : <span class="hljs-keyword">string</span> = <span class="hljs-string">&quot;MEMORY_FILE_PATH&quot;</span>,
 ) (
@@ -161,7 +164,7 @@ SECTIONS
   mem rdata : ff1ff06f
 riscv-tests success!
 - ~/core/src/top.sv:26: Verilog $finish
-</code></pre></div><p><code>riscv-tests success!</code>と表示され、テストが正常終了しました<sup class="footnote-ref"><a href="#fn3" id="fnref3">[3]</a></sup>。</p><h2 id="複数のテストの自動実行" tabindex="-1">複数のテストの自動実行 <a class="header-anchor" href="#複数のテストの自動実行" aria-label="Permalink to “複数のテストの自動実行”">​</a></h2><p>ADD命令以外の命令もテストしたいですが、わざわざコマンドを手打ちしたくありません。 自動でテストを実行して、その結果を報告するプログラムを作成しましょう。</p><p><code>test/test.py</code>を作成し、次のように記述します(リスト12)。</p><p><span class="caption">▼リスト5.12: test.py</span> <a href="https://github.com/nananapo/bluecore/compare/968652fd28f7e394b1ba9f3f0c7a85d5e4d1eda8~1..968652fd28f7e394b1ba9f3f0c7a85d5e4d1eda8#diff-354b34bf98c7e65e1214431540698436073d5e2caf243680551ce1014ba0afde">差分をみる</a></p><div class="language-py"><button title="Copy Code" class="copy"></button><span class="lang">py</span><pre class="hljs"><code><span class="hljs-keyword">import</span> argparse
+</code></pre></div><p><code>riscv-tests success!</code>と表示され、テストが正常終了しました<sup class="footnote-ref"><a href="#fn3" id="fnref3">[3]</a></sup>。</p><h2 id="複数のテストの自動実行" tabindex="-1">複数のテストの自動実行 <a class="header-anchor" href="#複数のテストの自動実行" aria-label="Permalink to “複数のテストの自動実行”">​</a></h2><p>ADD命令以外の命令もテストしたいですが、わざわざコマンドを手打ちしたくありません。 自動でテストを実行して、その結果を報告するプログラムを作成しましょう。</p><p><code>test/test.py</code>を作成し、次のように記述します(リスト12)。</p><p><span class="caption">▼リスト5.12: test.py</span> <a href="https://github.com/nananapo/bluecore/compare/a7eef791fb6ae94d357446675e8aec015f5ac86d~1..a7eef791fb6ae94d357446675e8aec015f5ac86d#diff-354b34bf98c7e65e1214431540698436073d5e2caf243680551ce1014ba0afde">差分をみる</a></p><div class="language-py"><button title="Copy Code" class="copy"></button><span class="lang">py</span><pre class="hljs"><code><span class="hljs-keyword">import</span> argparse
 <span class="hljs-keyword">import</span> os
 <span class="hljs-keyword">import</span> subprocess
 
@@ -233,7 +236,7 @@ args = parser.parse_args()
 
     <span class="hljs-keyword">if</span> <span class="hljs-built_in">sum</span>(res_statuses) != <span class="hljs-built_in">len</span>(res_statuses):
         exit(<span class="hljs-number">1</span>)
-</code></pre></div><p>このPythonプログラムは、 第2引数で指定したディレクトリに存在する、 第3引数で指定した文字列を名前に含むファイルを、 第1引数で指定したシミュレータで実行し、 その結果を報告します。</p><p>次のオプションの引数が存在します。</p><dl><dt>-r</dt><dd> 第2引数で指定されたディレクトリの中にあるディレクトリも走査します。 デフォルトでは走査しません。 </dd><dt>-e 拡張子</dt><dd> 指定した拡張子のファイルのみを対象にテストします。 HEXファイルをテストしたい場合は、\`-e hex\`にします。 デフォルトでは\`hex\`が指定されています。 </dd><dt>-o ディレクトリ</dt><dd> 指定したディレクトリにテスト結果を格納します。 デフォルトでは\`result\`ディレクトリに格納します。 </dd><dt>-t 時間</dt><dd> テストに時間制限を設けます。 0を指定すると時間制限はなくなります。 デフォルト値は10(秒)です。 </dd></dl><p>テストが成功したか失敗したかの判定には、 シミュレータの終了コードを利用しています。 テストが失敗したときに終了コードが<code>1</code>になるように、 Verilatorに渡しているC++プログラムを変更します (リスト13)。</p><p><span class="caption">▼リスト5.13: tb_verilator.cpp</span> <a href="https://github.com/nananapo/bluecore/compare/c646d7509ed0b4ef832ccfaeecc9a520440ec2a8~1..c646d7509ed0b4ef832ccfaeecc9a520440ec2a8#diff-cb1447535f2400768c9115df1ccdcc7be37fd2670577cc465b330f5968ee3013">差分をみる</a></p><div class="language-cpp"><button title="Copy Code" class="copy"></button><span class="lang">cpp</span><pre class="hljs"><code><span class="hljs-meta">#<span class="hljs-keyword">ifdef</span> TEST_MODE</span>
+</code></pre></div><p>このPythonプログラムは、 第2引数で指定したディレクトリに存在する、 第3引数で指定した文字列を名前に含むファイルを、 第1引数で指定したシミュレータで実行し、 その結果を報告します。</p><p>次のオプションの引数が存在します。</p><dl><dt>-r</dt><dd> 第2引数で指定されたディレクトリの中にあるディレクトリも走査します。 デフォルトでは走査しません。 </dd><dt>-e 拡張子</dt><dd> 指定した拡張子のファイルのみを対象にテストします。 HEXファイルをテストしたい場合は、\`-e hex\`にします。 デフォルトでは\`hex\`が指定されています。 </dd><dt>-o ディレクトリ</dt><dd> 指定したディレクトリにテスト結果を格納します。 デフォルトでは\`result\`ディレクトリに格納します。 </dd><dt>-t 時間</dt><dd> テストに時間制限を設けます。 0を指定すると時間制限はなくなります。 デフォルト値は10(秒)です。 </dd></dl><p>テストが成功したか失敗したかの判定には、 シミュレータの終了コードを利用しています。 テストが失敗したときに終了コードが<code>1</code>になるように、 Verilatorに渡しているC++プログラムを変更します (リスト13)。</p><p><span class="caption">▼リスト5.13: tb_verilator.cpp</span> <a href="https://github.com/nananapo/bluecore/compare/e3ecaff865b394d12b364b7039b70fd96601fae3~1..e3ecaff865b394d12b364b7039b70fd96601fae3#diff-cb1447535f2400768c9115df1ccdcc7be37fd2670577cc465b330f5968ee3013">差分をみる</a></p><div class="language-cpp"><button title="Copy Code" class="copy"></button><span class="lang">cpp</span><pre class="hljs"><code><span class="hljs-meta">#<span class="hljs-keyword">ifdef</span> TEST_MODE</span>
     <span class="hljs-keyword">return</span> dut-&gt;test_success != <span class="hljs-number">1</span>;
 <span class="hljs-meta">#<span class="hljs-keyword">endif</span></span>
 </code></pre></div><p>それでは、RV32Iのテストを実行しましょう。 riscv-testsのRV32I向けのテストの接頭辞である<code>rv32ui-p-</code>を引数に指定します(リスト14)。</p><p><span class="caption">▼リスト5.14: rv32ui-pから始まるテストを実行する</span></p><div class="language-terminal"><button title="Copy Code" class="copy"></button><span class="lang">terminal</span><pre class="hljs"><code><span class="hljs-meta prompt_">$ </span><span class="language-bash">make build</span>

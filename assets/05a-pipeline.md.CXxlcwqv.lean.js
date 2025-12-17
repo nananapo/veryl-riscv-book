@@ -1,4 +1,4 @@
-import{_ as l,c as p,o as c,ah as e,j as a,a as s,az as d,aA as t,aB as r,aC as o,aD as i,aE as b,aF as h}from"./chunks/framework.HhScKIQu.js";const v=JSON.parse('{"title":"CPUのパイプライン化","description":"","frontmatter":{},"headers":[],"relativePath":"05a-pipeline.md","filePath":"05a-pipeline.md"}'),m={name:"05a-pipeline.md"};function _(f,n,u,y,w,j){return c(),p("div",null,[...n[0]||(n[0]=[e("",78),a("div",{class:"language-veryl"},[a("button",{title:"Copy Code",class:"copy"}),a("span",{class:"lang"},"veryl"),a("pre",{class:"hljs"},[a("code",null,[a("span",{class:"hljs-keyword"},"inst"),s(` id_ex_fifo: fifo #(
+import{_ as e,c as p,o as c,ah as l,j as a,a as s,az as d,aA as t,aB as r,aC as o,aD as i,aE as b,aF as h}from"./chunks/framework.HhScKIQu.js";const v=JSON.parse('{"title":"CPUのパイプライン化","description":"","frontmatter":{},"headers":[],"relativePath":"05a-pipeline.md","filePath":"05a-pipeline.md"}'),m={name:"05a-pipeline.md"};function _(f,n,u,y,w,j){return c(),p("div",null,[...n[0]||(n[0]=[l("",78),a("div",{class:"language-veryl"},[a("button",{title:"Copy Code",class:"copy"}),a("span",{class:"lang"},"veryl"),a("pre",{class:"hljs"},[a("code",null,[a("span",{class:"hljs-keyword"},"inst"),s(` id_ex_fifo: fifo #(
     DATA_TYPE: exq_type,
 `),a("span",{class:"foldable-code"},[a("span",{class:"fold-trigger",onclick:"this.parentElement.classList.add('expanded')"}),a("span",{class:"fold-content"},[s("    WIDTH    : "),a("span",{class:"hljs-number"},"1"),s(`       ,
 ) (
@@ -42,4 +42,4 @@ import{_ as l,c as p,o as c,ah as e,j as a,a as s,az as d,aA as t,aB as r,aC as 
     rvalid: wbq_rvalid,
     rdata : wbq_rdata ,
 );
-`)])])],-1),e("",106)])])}const q=l(m,[["render",_]]);export{v as __pageData,q as default};
+`)])])],-1),l("",106)])])}const q=e(m,[["render",_]]);export{v as __pageData,q as default};
