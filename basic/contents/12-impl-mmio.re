@@ -738,16 +738,20 @@ riscv-testsの終了判定用のアドレスを@<code>{MMAP_RAM_BEGIN}基準の�
 #@maprange(scripts/12/ram-range/core/src/top.veryl,riscvtests)
     #[ifdef(TEST_MODE)]
     always_ff {
-        let RISCVTESTS_TOHOST_ADDR: Addr = @<b>|MMAP_RAM_BEGIN +| 'h1000 as Addr;
-        if d_membus.valid && d_membus.ready && d_membus.wen == 1 && d_membus.addr == RISCVTESTS_TOHOST_ADDR && d_membus.wdata[lsb] == 1'b1 {
-            test_success = d_membus.wdata == 1;
-            if d_membus.wdata == 1 {
-                $display("riscv-tests success!");
-            } else {
-                $display("riscv-tests failed!");
-                $error  ("wdata : %h", d_membus.wdata);
+        const RISCVTESTS_TOHOST_ADDR: Addr = @<b>|MMAP_RAM_BEGIN +| 'h1000 as Addr;
+        if d_membus.valid && d_membus.ready {
+            case d_membus.addr {
+                RISCVTESTS_TOHOST_ADDR: if d_membus.wen == 1 && d_membus.wdata[lsb] == 1'b1 {
+                    test_success = d_membus.wdata == 1;
+                    if d_membus.wdata == 1 {
+                        $display("riscv-tests success!");
+                    } else {
+                        $display("riscv-tests failed!");
+                        $error  ("wdata : %h", d_membus.wdata);
+                    }
+                    $finish();
+                }
             }
-            $finish();
         }
     }
 #@end

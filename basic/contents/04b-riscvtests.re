@@ -255,19 +255,22 @@ topモジュールでメモリへのアクセスを監視し、
 
 //list[top.veryl.detect-finish-range.detect][メモリアクセスを監視して終了を検知する (top.veryl)]{
 #@maprange(scripts/04b/detect-finish-range/core/src/top.veryl,detect)
-    // riscv-testsの終了を検知する
     #[ifdef(TEST_MODE)]
     always_ff {
-        let RISCVTESTS_TOHOST_ADDR: Addr = 'h1000 as Addr;
-        if d_membus.valid && d_membus.ready && d_membus.wen == 1 && d_membus.addr == RISCVTESTS_TOHOST_ADDR && d_membus.wdata[lsb] == 1'b1 {
-            test_success = d_membus.wdata == 1;
-            if d_membus.wdata == 1 {
-                $display("riscv-tests success!");
-            } else {
-                $display("riscv-tests failed!");
-                $error  ("wdata : %h", d_membus.wdata);
+        const RISCVTESTS_TOHOST_ADDR: Addr = 'h1000 as Addr;
+        if d_membus.valid && d_membus.ready {
+            case d_membus.addr {
+                RISCVTESTS_TOHOST_ADDR: if d_membus.wen == 1 && d_membus.wdata[lsb] == 1'b1 {
+                    test_success = d_membus.wdata == 1;
+                    if d_membus.wdata == 1 {
+                        $display("riscv-tests success!");
+                    } else {
+                        $display("riscv-tests failed!");
+                        $error  ("wdata : %h", d_membus.wdata);
+                    }
+                    $finish();
+                }
             }
-            $finish();
         }
     }
 #@end
