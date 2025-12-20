@@ -49,7 +49,7 @@ eeiパッケージに定義しているメモリの定数をRAM用の定数に�
     @<del>|const MEM_ADDR_WIDTH: u32 = 16;|
 
     // RAM
-    const RAM_ADDR_WIDTH: u32  = 16;
+    const RAM_ADDR_WIDTH: u32  = 20;
     const RAM_DATA_WIDTH: u32  = 64;
     const MMAP_RAM_BEGIN: Addr = 'h8000_0000 as Addr;
 

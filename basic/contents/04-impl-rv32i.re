@@ -383,15 +383,15 @@ memoryモジュールをインスタンス化します。
 memoryモジュールはジェネリックモジュールであるため、
 1つのデータのビット幅とメモリのサイズを指定する必要があります。
 これらを示す定数をeeiパッケージに定義します(@<list>{eei.veryl.memif.width})。
-メモリのアドレス幅(サイズ)には、適当に16を設定しています。
-これによりメモリ容量は32ビット * (2 ** 16) = 256KiBになります。
+メモリのアドレス幅(サイズ)には、適当に20を設定しています。
+これによりメモリ容量は32ビット * (2 ** 20) = 4MiBになります。
 
 //list[eei.veryl.memif.width][メモリのデータ幅とアドレスの幅の定数を定義する (eei.veryl)]{
 #@maprange(scripts/04/memif-range/core/src/eei.veryl,width)
     // メモリのデータ幅
     const MEM_DATA_WIDTH: u32 = 32;
     // メモリのアドレス幅
-    const MEM_ADDR_WIDTH: u32 = 16;
+    const MEM_ADDR_WIDTH: u32 = 20;
 #@end
 //}
 
