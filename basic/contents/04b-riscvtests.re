@@ -15,9 +15,7 @@ riscv-testsは、RISC-Vのプロセッサ向けのユニットテストやベン
 命令や機能ごとにテストが用意されており、
 これを利用することで簡単に実装を確かめられます。
 すべての命令のすべての場合を網羅するようなテストではないため、
-riscv-testsをパスしても、確実に実装が正しいとは言えないことに注意してください@<fn>{about.formal}。
-
-//footnote[about.formal][実装の正しさを完全に確かめるには形式的検証(formal verification)を行う必要があります]
+riscv-testsをパスしても、確実に実装が正しいとは言えないことに注意してください。
 
 GitHubの@<href>{https://github.com/riscv-software-src/riscv-tests, riscv-software-src/riscv-tests}
 からソースコードをダウンロードできます。
@@ -255,9 +253,9 @@ topモジュールでメモリへのアクセスを監視し、
 
 //list[top.veryl.detect-finish-range.detect][メモリアクセスを監視して終了を検知する (top.veryl)]{
 #@maprange(scripts/04b/detect-finish-range/core/src/top.veryl,detect)
+    const RISCVTESTS_TOHOST_ADDR: Addr = 'h1000 as Addr;
     #[ifdef(TEST_MODE)]
     always_ff {
-        const RISCVTESTS_TOHOST_ADDR: Addr = 'h1000 as Addr;
         if d_membus.valid && d_membus.ready {
             case d_membus.addr {
                 RISCVTESTS_TOHOST_ADDR: if d_membus.wen == 1 && d_membus.wdata[lsb] == 1'b1 {
