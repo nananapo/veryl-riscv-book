@@ -1,0 +1,1 @@
+import{_ as e,c as l,o as s,ah as r}from"./chunks/framework.HhScKIQu.js";const u=JSON.parse('{"title":"環境構築","description":"","frontmatter":{},"headers":[],"relativePath":"02-setup.md","filePath":"02-setup.md"}'),n={name:"02-setup.md"};function t(o,a,p,c,i,h){return s(),l("div",null,[...a[0]||(a[0]=[r("",40)])])}const v=e(n,[["render",t]]);export{u as __pageData,v as default};
