@@ -6,6 +6,12 @@
 本書で使用するソフトウェアをインストールします。
 WSLが使えるWindows、Mac、Linuxのいずれかの環境を用意してください。
 
+//info[devcontainerがあります]{
+本書の実装の@<href>{https://github.com/nananapo/bluecore/tree/book/.devcontainer, .devcontainer}フォルダに、devcontainerの設定ファイルを配置しています。
+このdevcontainerを利用すると、本書で使用するソフトウェアがすべてインストールされた開発環境を簡単に構築できます。
+RV32Iの環境を利用するときは@<code>{. ~/setenv32.sh}、RV64Iの環境を利用するときは@<code>{. ~/setenv64.sh}を実行してください。
+//}
+
 == Veryl
 
 ===[notoc] Verylのインストール
