@@ -694,7 +694,8 @@ module muldivunit (
 #@end
 //}
 
-muldivunitモジュールが要求を受け入れる時に@<code>{is_op32}を保存します
+muldivunitモジュールが要求を受け入れる時に@<code>{is_op32}を保存します。
+また、符号ビットを@<code>{is_op32}に応じて設定します
 (
 @<list>{muldivunit.veryl.mulw-range.savereg}、
 @<list>{muldivunit.veryl.mulw-range.always_reset}、
@@ -731,8 +732,8 @@ muldivunitモジュールが要求を受け入れる時に@<code>{is_op32}を保
                     state         = State::WaitValid;
                     funct3_saved  = funct3;
                     @<b>|is_op32_saved = is_op32;|
-                    op1sign_saved = op1[msb];
-                    op2sign_saved = op2[msb];
+                    @<b>|op1sign_saved = if is_op32 ? op1[31] : op1[msb];|
+                    @<b>|op2sign_saved = if is_op32 ? op2[31] : op2[msb];|
                 }
 #@end
 //}
@@ -1043,8 +1044,8 @@ abs関数を利用して、DIV、REM命令のときにdivunitモジュールに�
                 State::Idle: if ready && valid {
                     funct3_saved  = funct3;
                     is_op32_saved = is_op32;
-                    op1sign_saved = op1[msb];
-                    op2sign_saved = op2[msb];
+                    op1sign_saved = if is_op32 ? op1[31] : op1[msb];
+                    op2sign_saved = if is_op32 ? op2[31] : op2[msb];
                     @<b>|if is_mul {|
                         state = State::WaitValid;
                     @<b>|} else {|
@@ -1129,6 +1130,32 @@ generate_div_op関数に@<code>{is_op32}フラグを追加して、
         @<b>|}|
         du_signed_error = du_signed_overflow || du_signed_divzero;
     }
+#@end
+//}
+
+ゼロ除算のときの結果を@<code>{is_op32}に応じて変更します
+(@<list>{muldivunit.veryl.divwremw-range.idle_error_handle})。
+//list[muldivunit.veryl.divwremw-range.idle_error_handle][32ビット演算のときの例外的な処理に対応する (muldivunit.veryl)]{
+#@maprange(scripts/10/divwremw-range/core/src/muldivunit.veryl,idle_error_handle)
+                State::Idle: if ready && valid {
+                    funct3_saved  = funct3;
+                    is_op32_saved = is_op32;
+                    op1sign_saved = if is_op32 ? op1[31] : op1[msb];
+                    op2sign_saved = if is_op32 ? op2[31] : op2[msb];
+                    if is_mul {
+                        state = State::WaitValid;
+                    } else {
+                        if du_signed_overflow {
+                            state  = State::Finish;
+                            result = if funct3[1] ? 0 : {1'b1, 1'b0 repeat XLEN - 1}; // REM : DIV
+                        } else if du_signed_divzero {
+                            state  = State::Finish;
+                            result = if funct3[1] ? @<b>|(if is_op32 ? sext::<32, 64>(op1[31:0]) :| op1@<b>|)| : '1; // REM : DIV
+                        } else {
+                            state = State::WaitValid;
+                        }
+                    }
+                }
 #@end
 //}
 
