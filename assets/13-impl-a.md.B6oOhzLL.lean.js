@@ -1,4 +1,4 @@
-import{_ as l,c,o as p,ah as e,j as a,a as s,bC as d,bD as t,bE as o}from"./chunks/framework.HhScKIQu.js";const j=JSON.parse('{"title":"A拡張の実装","description":"","frontmatter":{},"headers":[],"relativePath":"13-impl-a.md","filePath":"13-impl-a.md"}'),r={name:"13-impl-a.md"};function b(m,n,i,h,f,u){return p(),c("div",null,[...n[0]||(n[0]=[e("",91),a("div",{class:"language-veryl"},[a("button",{title:"Copy Code",class:"copy"}),a("span",{class:"lang"},"veryl"),a("pre",{class:"hljs"},[a("code",null,[a("span",{class:"hljs-keyword"},"case"),s(` state {
+import{_ as l,c,o as p,ah as n,j as a,a as s,bC as d,bD as t,bE as o}from"./chunks/framework.HhScKIQu.js";const j=JSON.parse('{"title":"A拡張の実装","description":"","frontmatter":{},"headers":[],"relativePath":"13-impl-a.md","filePath":"13-impl-a.md"}'),r={name:"13-impl-a.md"};function b(m,e,i,h,f,u){return p(),c("div",null,[...e[0]||(e[0]=[n("",91),a("div",{class:"language-veryl"},[a("button",{title:"Copy Code",class:"copy"}),a("span",{class:"lang"},"veryl"),a("pre",{class:"hljs"},[a("code",null,[a("span",{class:"hljs-keyword"},"case"),s(` state {
     State::Init: `),a("span",{class:"hljs-keyword"},"if"),s(` is_new & inst_is_memop(ctrl) {
 `),a("span",{class:"foldable-code"},[a("span",{class:"fold-trigger",onclick:"this.parentElement.classList.add('expanded')"}),a("span",{class:"fold-content"},[s(`        state     = State::WaitReady;
         req_wen   = inst_is_store(ctrl);
@@ -28,7 +28,7 @@ import{_ as l,c,o as p,ah as e,j as a,a as s,bC as d,bD as t,bE as o}from"./chun
         `),a("span",{class:"custom-hl-bold"},"req_funct3 = ctrl.funct3;"),s(`
     }
     State::WaitReady: `),a("span",{class:"hljs-keyword"},"if"),s(` membus.ready {
-`)])])],-1),e("",18),a("div",{class:"language-veryl"},[a("button",{title:"Copy Code",class:"copy"}),a("span",{class:"lang"},"veryl"),a("pre",{class:"hljs"},[a("code",null,[a("span",{class:"hljs-keyword"},"function"),s(` accept_request_ff () {
+`)])])],-1),n("",18),a("div",{class:"language-veryl"},[a("button",{title:"Copy Code",class:"copy"}),a("span",{class:"lang"},"veryl"),a("pre",{class:"hljs"},[a("code",null,[a("span",{class:"hljs-keyword"},"function"),s(` accept_request_ff () {
     slave_saved.valid = slave.ready && slave.valid;
 `),a("span",{class:"foldable-code"},[a("span",{class:"fold-trigger",onclick:"this.parentElement.classList.add('expanded')"}),a("span",{class:"fold-content"},[s("    "),a("span",{class:"hljs-keyword"},"if"),s(` slave.ready && slave.valid {
         slave_saved.addr   = slave.addr;
@@ -53,4 +53,4 @@ import{_ as l,c,o as p,ah as e,j as a,a as s,bC as d,bD as t,bE as o}from"./chun
         `),a("span",{class:"custom-hl-bold"},[s("} "),a("span",{class:"hljs-keyword"},"else"),s(" {")]),s(`
             state = `),a("span",{class:"hljs-keyword"},"if"),s(` master.ready ? State::WaitValid : State::WaitReady;
         `),a("span",{class:"custom-hl-bold"},"}"),s(`
-`)])])],-1),e("",53)])])}const v=l(r,[["render",b]]);export{j as __pageData,v as default};
+`)])])],-1),n("",53)])])}const v=l(r,[["render",b]]);export{j as __pageData,v as default};

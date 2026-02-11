@@ -1,4 +1,4 @@
-import{_ as l,c,o as p,ah as e,j as s,a,bA as d}from"./chunks/framework.HhScKIQu.js";const h=JSON.parse('{"title":"例外の実装","description":"","frontmatter":{},"headers":[],"relativePath":"11-impl-exception.md","filePath":"11-impl-exception.md"}'),t={name:"11-impl-exception.md"};function o(r,n,b,i,f,m){return p(),c("div",null,[...n[0]||(n[0]=[e("",24),s("div",{class:"language-veryl"},[s("button",{title:"Copy Code",class:"copy"}),s("span",{class:"lang"},"veryl"),s("pre",{class:"hljs"},[s("code",null,[s("span",{class:"hljs-keyword"},"always_comb"),a(` {
+import{_ as l,c as p,o as c,ah as e,j as s,a,bA as d}from"./chunks/framework.HhScKIQu.js";const f=JSON.parse('{"title":"例外の実装","description":"","frontmatter":{},"headers":[],"relativePath":"11-impl-exception.md","filePath":"11-impl-exception.md"}'),t={name:"11-impl-exception.md"};function o(r,n,b,i,m,u){return c(),p("div",null,[...n[0]||(n[0]=[e("",24),s("div",{class:"language-veryl"},[s("button",{title:"Copy Code",class:"copy"}),s("span",{class:"lang"},"veryl"),s("pre",{class:"hljs"},[s("code",null,[s("span",{class:"hljs-keyword"},"always_comb"),a(` {
     `),s("span",{class:"hljs-comment"},"// EX -> MEM"),a(`
 `),s("span",{class:"foldable-code"},[s("span",{class:"fold-trigger",onclick:"this.parentElement.classList.add('expanded')"}),s("span",{class:"fold-content"},`    exq_rready            = memq_wready && !exs_stall;
     memq_wvalid           = exq_rvalid && !exs_stall;
@@ -14,4 +14,4 @@ import{_ as l,c,o as p,ah as e,j as s,a,bA as d}from"./chunks/framework.HhScKIQu
     memq_wdata.jump_addr  = `),s("span",{class:"hljs-keyword"},"if"),a(" inst_is_br(exs_ctrl) ? exs_pc + exs_imm : exs_alu_result & ~"),s("span",{class:"hljs-number"},"1"),a(`;
     `),s("span",{class:"custom-hl-bold"},"memq_wdata.expt       = exq_rdata.expt;"),a(`
 }
-`)])])],-1),e("",120)])])}const _=l(t,[["render",o]]);export{h as __pageData,_ as default};
+`)])])],-1),e("",120)])])}const _=l(t,[["render",o]]);export{f as __pageData,_ as default};
