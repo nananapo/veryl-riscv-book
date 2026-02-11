@@ -281,7 +281,7 @@ muldivunitモジュールはALUのように1クロックの間に入力から出
 //list[core.veryl.create-mdu-range.exs_muldiv_stall][EXステージのストール条件の変更 (core.veryl)]{
 #@maprange(scripts/10/create-mdu-range/core/src/core.veryl,exs_muldiv_stall)
     var exs_muldiv_rvalided: logic;
-    let exs_muldiv_stall   : logic = exs_ctrl.is_muldiv && !exs_muldiv_rvalid && !exs_muldiv_rvalided;
+    let exs_muldiv_stall   : logic = exs_ctrl.is_muldiv && !(exs_muldiv_rvalid && exs_muldiv_is_requested) && !exs_muldiv_rvalided;
 
     always_ff {
         if_reset {
@@ -290,7 +290,7 @@ muldivunitモジュールはALUのように1クロックの間に入力から出
             // 次のステージに遷移
             if exq_rvalid && exq_rready {
                 exs_muldiv_rvalided = 0;
-            } else {
+            } else if exs_muldiv_is_requested {
                 // muldivunitの処理が完了していたら1にする
                 exs_muldiv_rvalided |= exs_muldiv_rvalid;
             }
