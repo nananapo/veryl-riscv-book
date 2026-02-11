@@ -736,9 +736,10 @@ riscv-testsの終了判定用のアドレスを@<code>{MMAP_RAM_BEGIN}基準の�
 
 //list[top.veryl.ram.riscvtests][.tohostのアドレスを変更する (top.veryl)]{
 #@maprange(scripts/12/ram-range/core/src/top.veryl,riscvtests)
+    const RISCVTESTS_TOHOST_ADDR: Addr = @<b>|MMAP_RAM_BEGIN +| 'h1000 as Addr;
+    const RISCOF_SIGNATURE_ADDR : Addr = 'hffffff88 as Addr;
     #[ifdef(TEST_MODE)]
     always_ff {
-        const RISCVTESTS_TOHOST_ADDR: Addr = @<b>|MMAP_RAM_BEGIN +| 'h1000 as Addr;
         if d_membus.valid && d_membus.ready {
             case d_membus.addr {
                 RISCVTESTS_TOHOST_ADDR: if d_membus.wen == 1 && d_membus.wdata[lsb] == 1'b1 {
@@ -750,6 +751,9 @@ riscv-testsの終了判定用のアドレスを@<code>{MMAP_RAM_BEGIN}基準の�
                         $error  ("wdata : %h", d_membus.wdata);
                     }
                     $finish();
+                }
+                RISCOF_SIGNATURE_ADDR: if d_membus.wen == 1 {
+                    $display("signature: %h", d_membus.wdata[31:0]);
                 }
             }
         }
@@ -1345,6 +1349,8 @@ mmio_controllerモジュールと接続します
             if dbg_membus.wen {
                 if dbg_membus.wdata[MEMBUS_DATA_WIDTH - 1-:20] == 20'h01010 {
                     $write("%c", dbg_membus.wdata[7:0]);
+                } else if dbg_membus.wdata[MEMBUS_DATA_WIDTH - 1-:20] == 20'h10101 {
+                    $display("signature: %h", dbg_membus.wdata[31:0]);
                 } else if dbg_membus.wdata[lsb] == 1'b1 {
                     #[ifdef(TEST_MODE)]
                     {
@@ -1808,6 +1814,8 @@ package util {
             if dbg_membus.wen {
                 if dbg_membus.wdata[MEMBUS_DATA_WIDTH - 1-:20] == 20'h01010 {
                     $write("%c", dbg_membus.wdata[7:0]);
+                } else if dbg_membus.wdata[MEMBUS_DATA_WIDTH - 1-:20] == 20'h10101 {
+                    $display("signature: %h", dbg_membus.wdata[31:0]);
                 } else if dbg_membus.wdata[lsb] == 1'b1 {
                     #[ifdef(TEST_MODE)]
                     {
