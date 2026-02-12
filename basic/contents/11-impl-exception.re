@@ -779,11 +779,11 @@ EXステージでアドレスを確認して例外を判定します
 #@maprange(scripts/11/memmisalign-range/core/src/core.veryl,expt)
         let instruction_address_misaligned: logic = memq_wdata.br_taken && memq_wdata.jump_addr[1:0] != 2'b00;
         @<b>|let loadstore_address_misaligned  : logic = inst_is_memop(exs_ctrl) && case exs_ctrl.funct3[1:0] {|
-        @<b>|    2'b00  : 0, // B|
+        @<b>|    2'b00  : 1'b0, // B|
         @<b>|    2'b01  : exs_alu_result[0] != 1'b0, // H|
         @<b>|    2'b10  : exs_alu_result[1:0] != 2'b0, // W|
         @<b>|    2'b11  : exs_alu_result[2:0] != 3'b0, // D|
-        @<b>|    default: 0,|
+        @<b>|    default: 1'b0,|
         @<b>|};|
         memq_wdata.expt = exq_rdata.expt;
         if !memq_rdata.expt.valid {

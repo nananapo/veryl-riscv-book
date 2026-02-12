@@ -257,11 +257,11 @@ causeとtvalの割り当てがストア命令の場合と同じになってい�
 #@maprange(scripts/13/define-range/core/src/core.veryl,exception)
         @<b>|let memaddr                       : Addr  = if exs_ctrl.is_amo ? exs_rs1_data : exs_alu_result;|
         let loadstore_address_misaligned  : logic = inst_is_memop(exs_ctrl) && case exs_ctrl.funct3[1:0] {
-            2'b00  : 0, // B
+            2'b00  : 1'b0, // B
             2'b01  : @<b>|memaddr|[0] != 1'b0, // H
             2'b10  : @<b>|memaddr|[1:0] != 2'b0, // W
             2'b11  : @<b>|memaddr|[2:0] != 3'b0, // D
-            default: 0,
+            default: 1'b0,
         };
 #@end
 //}
