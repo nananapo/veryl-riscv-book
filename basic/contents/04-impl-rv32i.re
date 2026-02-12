@@ -2863,6 +2863,24 @@ always_ffの中で、@<code>{req_wmask}の値を設定します。
 #@end
 //}
 
+coreモジュールで、命令フェッチに使っているインターフェースの@<code>{wmask}を@<code>{'x}に設定します
+(
+@<list>{core.veryl.lbhsbh-range.wmask}
+)。
+
+//list[core.veryl.lbhsbh-range.wmask][coreモジュールでi_membusのwmaskを'xに設定する (core.veryl)]{
+#@maprange(scripts/04/lbhsbh-range/core/src/core.veryl,wmask)
+    // 命令フェッチ処理
+    always_comb {
+        // FIFOに2個以上空きがあるとき、命令をフェッチする
+        i_membus.valid = if_fifo_wready_two;
+        i_membus.addr  = if_pc;
+        i_membus.wen   = 0;
+        i_membus.wdata = 'x; // wdataは使用しない
+        @<b>|i_membus.wmask = 'x; // wmaskは使用しない|
+#@end
+//}
+
 === LB、LBU、LH、LHU、SB、SH命令をテストする
 
 簡単なテストを作成し、動作をテストします。
