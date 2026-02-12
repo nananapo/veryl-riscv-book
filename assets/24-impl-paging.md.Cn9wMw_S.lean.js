@@ -1,4 +1,4 @@
-import{_ as c,c as l,o as p,ah as e,j as s,a,bV as t,bW as d,bX as o,bY as r,bZ as f,b_ as i,b$ as b,c0 as h,c1 as u,c2 as m,c3 as y,c4 as _}from"./chunks/framework.HhScKIQu.js";const T=JSON.parse('{"title":"S-modeの実装 (2. 仮想記憶システム)","description":"","frontmatter":{},"headers":[],"relativePath":"24-impl-paging.md","filePath":"24-impl-paging.md"}'),v={name:"24-impl-paging.md"};function j(w,n,g,k,E,C){return p(),l("div",null,[...n[0]||(n[0]=[e("",136),s("div",{class:"language-veryl"},[s("button",{title:"Copy Code",class:"copy"}),s("span",{class:"lang"},"veryl"),s("pre",{class:"hljs"},[s("code",null,[s("span",{class:"hljs-keyword"},"module"),a(` csrunit (
+import{_ as l,c as p,o as c,ah as e,j as s,a,bV as d,bW as t,bX as o,bY as r,bZ as b,b_ as i,b$ as f,c0 as h,c1 as u,c2 as m,c3 as y,c4 as _}from"./chunks/framework.HhScKIQu.js";const T=JSON.parse('{"title":"S-modeの実装 (2. 仮想記憶システム)","description":"","frontmatter":{},"headers":[],"relativePath":"24-impl-paging.md","filePath":"24-impl-paging.md"}'),v={name:"24-impl-paging.md"};function j(w,n,g,k,E,C){return c(),p("div",null,[...n[0]||(n[0]=[e("",136),s("div",{class:"language-veryl"},[s("button",{title:"Copy Code",class:"copy"}),s("span",{class:"lang"},"veryl"),s("pre",{class:"hljs"},[s("code",null,[s("span",{class:"hljs-keyword"},"module"),a(` csrunit (
     clk        : `),s("span",{class:"hljs-keyword"},"input"),a("   "),s("span",{class:"hljs-keyword"},"clock"),a(`                   ,
 `),s("span",{class:"foldable-code"},[s("span",{class:"fold-trigger",onclick:"this.parentElement.classList.add('expanded')"}),s("span",{class:"fold-content"},[a("    rst        : "),s("span",{class:"hljs-keyword"},"input"),a("   "),s("span",{class:"hljs-keyword"},"reset"),a(`                   ,
     valid      : `),s("span",{class:"hljs-keyword"},"input"),a("   "),s("span",{class:"hljs-keyword"},"logic"),a(`                   ,
@@ -22,7 +22,7 @@ import{_ as c,c as l,o as p,ah as e,j as s,a,bV as t,bW as d,bX as o,bY as r,bZ 
     aclint     : `),s("span",{class:"hljs-keyword"},"modport"),a(` aclint_if::slave        ,
     `),s("span",{class:"custom-hl-bold"},[a("membus     : "),s("span",{class:"hljs-keyword"},"modport"),a(" core_data_if::master    ,")]),a(`
 ) {
-`)])])],-1),s("p",null,[s("span",{class:"caption"},"▼リスト18.21: csrunitモジュールにメモリアドレスとインターフェースを割り当てる (core.veryl)"),a(),s("a",{href:"https://github.com/nananapo/bluecore/compare/909a829204f4cde53f6f5e907c440c27f3d09a59~1..909a829204f4cde53f6f5e907c440c27f3d09a59#diff-bdad1723f95a5423ff5ab8ba69bb572aabe1c8def0cda1748f6f980f61b57510"},"差分をみる")],-1),s("div",{class:"language-veryl"},[s("button",{title:"Copy Code",class:"copy"}),s("span",{class:"lang"},"veryl"),s("pre",{class:"hljs"},[s("code",null,[s("span",{class:"hljs-keyword"},"inst"),a(` csru: csrunit (
+`)])])],-1),s("p",null,[s("span",{class:"caption"},"▼リスト18.21: csrunitモジュールにメモリアドレスとインターフェースを割り当てる (core.veryl)"),a(),s("a",{href:"https://github.com/nananapo/bluecore/compare/df8dd922d812af85e6e08f4347bb51da19a0bf75~1..df8dd922d812af85e6e08f4347bb51da19a0bf75#diff-bdad1723f95a5423ff5ab8ba69bb572aabe1c8def0cda1748f6f980f61b57510"},"差分をみる")],-1),s("div",{class:"language-veryl"},[s("button",{title:"Copy Code",class:"copy"}),s("span",{class:"lang"},"veryl"),s("pre",{class:"hljs"},[s("code",null,[s("span",{class:"hljs-keyword"},"inst"),a(` csru: csrunit (
     clk                               ,
 `),s("span",{class:"foldable-code"},[s("span",{class:"fold-trigger",onclick:"this.parentElement.classList.add('expanded')"}),s("span",{class:"fold-content"},`    rst                               ,
     valid      : mems_valid           ,
@@ -68,4 +68,4 @@ import{_ as c,c as l,o as p,ah as e,j as s,a,bV as t,bW as d,bX as o,bY as r,bZ 
                 fetch_fifo_rready = `),s("span",{class:"hljs-number"},"1"),a("; "),s("span",{class:"hljs-comment"},"// Read next 8 bytes"),a(`
 `)])]),a(`            }
         }
-`)])])],-1),e("",197)])])}const S=c(v,[["render",j]]);export{T as __pageData,S as default};
+`)])])],-1),e("",197)])])}const S=l(v,[["render",j]]);export{T as __pageData,S as default};

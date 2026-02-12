@@ -1,4 +1,4 @@
-import{_ as l,c,o as p,ah as e,j as a,a as s,bC as d,bD as t,bE as o}from"./chunks/framework.HhScKIQu.js";const j=JSON.parse('{"title":"A拡張の実装","description":"","frontmatter":{},"headers":[],"relativePath":"13-impl-a.md","filePath":"13-impl-a.md"}'),r={name:"13-impl-a.md"};function m(b,n,i,h,u,f){return p(),c("div",null,[...n[0]||(n[0]=[e("",91),a("div",{class:"language-veryl"},[a("button",{title:"Copy Code",class:"copy"}),a("span",{class:"lang"},"veryl"),a("pre",{class:"hljs"},[a("code",null,[a("span",{class:"hljs-keyword"},"case"),s(` state {
+import{_ as l,c,o as p,ah as e,j as a,a as s,bC as d,bD as t,bE as o}from"./chunks/framework.HhScKIQu.js";const j=JSON.parse('{"title":"A拡張の実装","description":"","frontmatter":{},"headers":[],"relativePath":"13-impl-a.md","filePath":"13-impl-a.md"}'),r={name:"13-impl-a.md"};function b(m,n,i,h,f,u){return p(),c("div",null,[...n[0]||(n[0]=[e("",91),a("div",{class:"language-veryl"},[a("button",{title:"Copy Code",class:"copy"}),a("span",{class:"lang"},"veryl"),a("pre",{class:"hljs"},[a("code",null,[a("span",{class:"hljs-keyword"},"case"),s(` state {
     State::Init: `),a("span",{class:"hljs-keyword"},"if"),s(` is_new & inst_is_memop(ctrl) {
 `),a("span",{class:"foldable-code"},[a("span",{class:"fold-trigger",onclick:"this.parentElement.classList.add('expanded')"}),a("span",{class:"fold-content"},[s(`        state     = State::WaitReady;
         req_wen   = inst_is_store(ctrl);
@@ -53,4 +53,4 @@ import{_ as l,c,o as p,ah as e,j as a,a as s,bC as d,bD as t,bE as o}from"./chun
         `),a("span",{class:"custom-hl-bold"},[s("} "),a("span",{class:"hljs-keyword"},"else"),s(" {")]),s(`
             state = `),a("span",{class:"hljs-keyword"},"if"),s(` master.ready ? State::WaitValid : State::WaitReady;
         `),a("span",{class:"custom-hl-bold"},"}"),s(`
-`)])])],-1),e("",53)])])}const v=l(r,[["render",m]]);export{j as __pageData,v as default};
+`)])])],-1),e("",53)])])}const v=l(r,[["render",b]]);export{j as __pageData,v as default};
