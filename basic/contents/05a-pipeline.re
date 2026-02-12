@@ -831,7 +831,7 @@ WBステージの次のステージを待つ必要もありません。
                 $display("  op2     : %h", exs_op2);
                 $display("  alu     : %h", exs_alu_result);
                 if inst_is_br(exs_ctrl) {
-                    $display("  br take : ", exs_brunit_take);
+                    $display("  br take : %b", exs_brunit_take);
                 }
             }
             $display("MEM -----");
