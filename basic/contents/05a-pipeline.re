@@ -647,9 +647,6 @@ memunitモジュールとcsrunitモジュールのポートに割り当ててい
 
 //list[core.veryl.mem_prefix2][変数名を変更する (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,mem_prefix2)
-    var memu_rdata: UIntX;
-    var memu_stall: logic;
-
     inst memu: memunit (
         clk                          ,
         rst                          ,

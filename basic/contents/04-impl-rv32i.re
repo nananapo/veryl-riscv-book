@@ -2339,11 +2339,15 @@ coreモジュールとの接続を次のように変更します(@<list>{top.ver
 
 memoryモジュールとmemunitモジュールを接続する準備が整ったので、memunitモジュールをインスタンス化します(@<list>{top.veryl.lwsw-range.inst})。
 
-//list[top.veryl.lwsw-range.inst][memunitモジュールのインスタンス化 (core.veryl)]{
-#@maprange(scripts/04/lwsw-range/core/src/core.veryl,inst)
+//list[core.veryl.lwsw-range.memu_var_inst][memunitモジュールで使うワイヤの定義 (core.veryl)]{
+#@maprange(scripts/04/lwsw-range/core/src/core.veryl,memu_var_inst)
     var memu_rdata: UIntX;
     var memu_stall: logic;
+#@end
+//}
 
+//list[core.veryl.lwsw-range.inst][memunitモジュールのインスタンス化 (core.veryl)]{
+#@maprange(scripts/04/lwsw-range/core/src/core.veryl,inst)
     inst memu: memunit (
         clk                ,
         rst                ,
