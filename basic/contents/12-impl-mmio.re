@@ -1353,7 +1353,7 @@ mmio_controllerモジュールと接続します
                     $display("signature: %h", dbg_membus.wdata[31:0]);
                 } else if dbg_membus.wdata[lsb] == 1'b1 {
                     #[ifdef(TEST_MODE)]
-                    {
+                    block {
                         test_success = dbg_membus.wdata == 1;
                     }
                     if dbg_membus.wdata == 1 {
@@ -1818,7 +1818,7 @@ package util {
                     $display("signature: %h", dbg_membus.wdata[31:0]);
                 } else if dbg_membus.wdata[lsb] == 1'b1 {
                     #[ifdef(TEST_MODE)]
-                    {
+                    block {
                         test_success = dbg_membus.wdata == 1;
                     }
                     if dbg_membus.wdata == 1 {
@@ -1831,7 +1831,7 @@ package util {
                 }
             @<b>|} else {|
             @<b>|    #[ifdef(ENABLE_DEBUG_INPUT)]|
-            @<b>|    {|
+            @<b>|    block {|
             @<b>|        dbg_membus.rdata = util::get_input();|
             @<b>|    }|
             }
