@@ -222,10 +222,13 @@ M拡張の命令がEXステージにあるとき、ALUの結果の代わりにmu
 
 //list[core.veryl.create-mdu-range.muldivinst][muldivunitモジュールをインスタンス化する (core.veryl)]{
 #@maprange(scripts/10/create-mdu-range/core/src/core.veryl,muldivinst)
-    let exs_muldiv_valid : logic = exs_valid && exs_ctrl.is_muldiv && !exs_data_hazard && !exs_muldiv_is_requested;
-    var exs_muldiv_ready : logic;
-    var exs_muldiv_rvalid: logic;
-    var exs_muldiv_result: UIntX;
+    var exs_muldiv_valid       : logic;
+    var exs_muldiv_ready       : logic;
+    var exs_muldiv_rvalid      : logic;
+    var exs_muldiv_result      : UIntX;
+    var exs_muldiv_rvalided    : logic;
+    var exs_muldiv_stall       : logic;
+    var exs_muldiv_is_requested: logic;
 
     inst mdu: muldivunit (
         clk                      ,
@@ -245,24 +248,50 @@ muldivunitモジュールで計算を開始するのは、
 EXステージに命令が存在し(@<code>{exs_valid})、
 命令がM拡張の命令であり(@<code>{exs_ctrl.is_muldiv})、
 データハザードが発生しておらず(@<code>{!exs_data_hazard})、
-既に計算を要求していない(@<code>{!exs_muldiv_is_requested})
-場合です。
+まだ計算を要求していない場合です。
+これらの条件を@<code>{exs_muldiv_valid}に設定します(@<list>{core.veryl.create-mdu-range.muldiv_comb})。
+
+//list[core.veryl.create-mdu-range.muldiv_comb][計算の要求、ストールの条件の設定 (core.veryl)]{
+#@maprange(scripts/10/create-mdu-range/core/src/core.veryl,muldiv_comb)
+    always_comb {
+        exs_muldiv_valid = 0;
+        exs_muldiv_stall = 0;
+        if (exs_valid && exs_ctrl.is_muldiv) {
+            exs_muldiv_valid = !exs_data_hazard && !exs_muldiv_is_requested;
+            exs_muldiv_stall = !(exs_muldiv_rvalid && exs_muldiv_is_requested) && !exs_muldiv_rvalided;
+        }
+    }
+#@end
+//}
+
+muldivunitモジュールはALUモジュールのように1クロックの間に入力から出力を生成しないため、
+計算中はEXステージをストールさせる必要があります。
+ストールするかを示す@<code>{exs_muldiv_stall}変数を定義して、EXステージがストールする条件に追加します(
+@<list>{core.veryl.create-mdu-range.muldiv_comb}、
+@<list>{core.veryl.create-mdu-range.exq_rready}
+)。
 
 @<code>{exs_muldiv_is_requested}変数を定義し、
-ステージの遷移条件とmuldivunitに計算を要求したかの状態によって値を更新します(@<list>{core.veryl.create-mdu-range.exs_muldiv_is_requested})。
+ステージの遷移条件とmuldivunitに計算を要求したかによって値を更新します(@<list>{core.veryl.create-mdu-range.exs_muldiv_is_requested})。
+また、すでに計算が完了しているかを示す@<code>{exs_muldiv_rvalided}変数を定義し、
+muldivunitモジュールの@<code>{rvalid}が@<code>{1}になったかを観測します。
 
-//list[core.veryl.create-mdu-range.exs_muldiv_is_requested][exs_muldiv_is_requested変数 (core.veryl)]{
-#@maprange(scripts/10/create-mdu-range/core/src/core.veryl,exs_muldiv_is_requested)
-    var exs_muldiv_is_requested: logic;
-
+//list[core.veryl.create-mdu-range.muldiv_ff][計算の要求、結果の状態の管理 (core.veryl)]{
+#@maprange(scripts/10/create-mdu-range/core/src/core.veryl,muldiv_ff)
     always_ff {
         if_reset {
+            exs_muldiv_rvalided     = 0;
             exs_muldiv_is_requested = 0;
         } else {
             // 次のステージに遷移
             if exq_rvalid && exq_rready {
+                exs_muldiv_rvalided     = 0;
                 exs_muldiv_is_requested = 0;
             } else {
+                if exs_muldiv_is_requested {
+                    // muldivunitの処理が完了していたら1にする
+                    exs_muldiv_rvalided |= exs_muldiv_rvalid;
+                }
                 // muldivunitにリクエストしたか判定する
                 if exs_muldiv_valid && exs_muldiv_ready {
                     exs_muldiv_is_requested = 1;
@@ -273,31 +302,7 @@ EXステージに命令が存在し(@<code>{exs_valid})、
 #@end
 //}
 
-muldivunitモジュールはALUのように1クロックの間に入力から出力を生成しないため、
-計算中はEXステージをストールさせる必要があります。
-そのために@<code>{exs_muldiv_stall}変数を定義して、ストールの条件に追加します(@<list>{core.veryl.create-mdu-range.exs_muldiv_stall}、@<list>{core.veryl.create-mdu-range.exq_rready})。
-また、M拡張の命令の場合はMEMステージに渡す@<code>{alu_result}の値をmuldivunitモジュールの結果に設定します(@<list>{core.veryl.create-mdu-range.exq_rready})。
-
-//list[core.veryl.create-mdu-range.exs_muldiv_stall][EXステージのストール条件の変更 (core.veryl)]{
-#@maprange(scripts/10/create-mdu-range/core/src/core.veryl,exs_muldiv_stall)
-    var exs_muldiv_rvalided: logic;
-    let exs_muldiv_stall   : logic = exs_ctrl.is_muldiv && !(exs_muldiv_rvalid && exs_muldiv_is_requested) && !exs_muldiv_rvalided;
-
-    always_ff {
-        if_reset {
-            exs_muldiv_rvalided = 0;
-        } else {
-            // 次のステージに遷移
-            if exq_rvalid && exq_rready {
-                exs_muldiv_rvalided = 0;
-            } else if exs_muldiv_is_requested {
-                // muldivunitの処理が完了していたら1にする
-                exs_muldiv_rvalided |= exs_muldiv_rvalid;
-            }
-        }
-    }
-#@end
-//}
+M拡張の命令のとき、MEMステージに渡す@<code>{alu_result}の値をmuldivunitモジュールの結果に設定します(@<list>{core.veryl.create-mdu-range.exq_rready})。
 
 //list[core.veryl.create-mdu-range.exq_rready][EXステージのストール条件の変更とM拡張の命令の結果の設定 (core.veryl)]{
 #@maprange(scripts/10/create-mdu-range/core/src/core.veryl,exq_rready)
