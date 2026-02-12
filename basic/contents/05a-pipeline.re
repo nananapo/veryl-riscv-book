@@ -691,8 +691,10 @@ EXステージで計算したデータとCSRステージのトラップ情報を
 
 //list[core.veryl.mem_prefix1][ジャンプの判定処理 (core.veryl)]{
 #@maprange(scripts/05a/pipeline-range/core/src/core.veryl,mem_prefix1)
-    assign control_hazard         = @<b>|mems|_valid && (csru_raise_trap || @<b>|mems_|ctrl.is_jump || @<b>|memq_rdata.|br_taken);
-    assign control_hazard_pc_next = if csru_raise_trap ? csru_trap_vector : @<b>|memq_rdata.|jump_addr;
+    always_comb {
+        control_hazard         = @<b>|mems|_valid && (csru_raise_trap || @<b>|mems|_ctrl.is_jump || @<b>|memq_rdata.|br_taken);
+        control_hazard_pc_next = if csru_raise_trap ? csru_trap_vector : @<b>|memq_rdata.|jump_addr;
+    }
 #@end
 //}
 
@@ -953,7 +955,11 @@ MEM -----
 データ依存関係があるときにEXステージをストールさせます。
 
 まず、MEMとEXか、WBとEXステージにある命令の間にデータ依存があることを検知します
-(@<list>{core.veryl.datahazard-range.hazard})。
+(
+@<list>{core.veryl.datahazard-range.hazard}、
+@<list>{core.veryl.datahazard-range.mems_hazard}、
+@<list>{core.veryl.datahazard-range.wbs_hazard}
+)。
 例えばMEMステージとデータ依存の関係にあるとき、
 MEMステージの命令はライトバックする命令で、
 rdがEXステージのrs1、またはrs2と一致しています。
@@ -961,9 +967,27 @@ rdがEXステージのrs1、またはrs2と一致しています。
 //list[core.veryl.datahazard-range.hazard][データ依存の検知 (core.veryl)]{
 #@maprange(scripts/05a/datahazard-range/core/src/core.veryl,hazard)
     // データハザード
-    let exs_mem_data_hazard: logic = mems_valid && mems_ctrl.rwb_en && (mems_rd_addr == exs_rs1_addr || mems_rd_addr == exs_rs2_addr);
-    let exs_wb_data_hazard : logic = wbs_valid && wbs_ctrl.rwb_en && (wbs_rd_addr == exs_rs1_addr || wbs_rd_addr == exs_rs2_addr);
+    var exs_mem_data_hazard: logic;
+    var exs_wb_data_hazard : logic;
     let exs_data_hazard    : logic = exs_mem_data_hazard || exs_wb_data_hazard;
+#@end
+//}
+
+//list[core.veryl.datahazard-range.mems_hazard][MEMステージとのデータ依存の検知 (core.veryl)]{
+#@maprange(scripts/05a/datahazard-range/core/src/core.veryl,mems_hazard)
+    always_comb {
+        control_hazard         = mems_valid && (csru_raise_trap || mems_ctrl.is_jump || memq_rdata.br_taken);
+        control_hazard_pc_next = if csru_raise_trap ? csru_trap_vector : memq_rdata.jump_addr;
+        @<b>{exs_mem_data_hazard    = mems_valid && mems_ctrl.rwb_en && (mems_rd_addr == exs_rs1_addr || mems_rd_addr == exs_rs2_addr);}
+    }
+#@end
+//}
+
+//list[core.veryl.datahazard-range.wbs_hazard][WBステージとのデータ依存の検知 (core.veryl)]{
+#@maprange(scripts/05a/datahazard-range/core/src/core.veryl,wbs_hazard)
+    always_comb {
+        exs_wb_data_hazard = wbs_valid && wbs_ctrl.rwb_en && (wbs_rd_addr == exs_rs1_addr || wbs_rd_addr == exs_rs2_addr);
+    }
 #@end
 //}
 

@@ -1764,9 +1764,12 @@ satp、mstatus、sstatusレジスタが変更されるときに@<code>{flush}を
 
 //list[core.veryl.flushcsr.hazard][csru_flushが1のときにパイプラインをフラッシュする (core.veryl)]{
 #@maprange(scripts/24/flushcsr-range/core/src/core.veryl,hazard)
-    assign control_hazard         = mems_valid && (csru_raise_trap || mems_ctrl.is_jump || memq_rdata.br_taken @<b>{|| csru_flush});
-    assign control_hazard_pc_next = if csru_raise_trap ? csru_trap_vector : // trap
-     @<b>{if csru_flush ? mems_pc + 4 :} memq_rdata.jump_addr; // @<b>{flush or} jump
+    always_comb {
+        control_hazard         = mems_valid && (csru_raise_trap || mems_ctrl.is_jump || memq_rdata.br_taken@<b>{ || csru_flush});
+        control_hazard_pc_next = if csru_raise_trap ? csru_trap_vector : // trap
+         @<b>{if csru_flush ? mems_pc + 4 : }memq_rdata.jump_addr; // @<b>{flush or }jump
+        exs_mem_data_hazard = mems_valid && mems_ctrl.rwb_en && (mems_rd_addr == exs_rs1_addr || mems_rd_addr == exs_rs2_addr);
+    }
 #@end
 //}
 
