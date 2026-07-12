@@ -272,7 +272,7 @@ muldivunitモジュールはALUモジュールのように1クロックの間に
 )。
 
 @<code>{exs_muldiv_is_requested}変数を定義し、
-ステージの遷移条件とmuldivunitに計算を要求したかによって値を更新します(@<list>{core.veryl.create-mdu-range.exs_muldiv_is_requested})。
+ステージの遷移条件とmuldivunitに計算を要求したかによって値を更新します(@<list>{core.veryl.create-mdu-range.muldiv_ff})。
 また、すでに計算が完了しているかを示す@<code>{exs_muldiv_rvalided}変数を定義し、
 muldivunitモジュールの@<code>{rvalid}が@<code>{1}になったかを観測します。
 
