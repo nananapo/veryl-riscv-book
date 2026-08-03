@@ -622,7 +622,7 @@ coreモジュールからmmio_controllerモジュールへのアクセスを調�
     always_comb {
         i_membus.ready  = @<b>|mmio_|membus.ready && !d_membus.valid;
         i_membus.rvalid = @<b>|mmio_|membus.rvalid && memarb_last_i;
-        i_membus.rdata  = if memarb_last_iaddr[2] == 0 ? @<b>|mmio_|membus.rdata[31:0] : mmio_|membus.rdata[63:32];
+        i_membus.rdata  = if memarb_last_iaddr[2] == 0 ? @<b>|mmio_|membus.rdata[31:0] : @<b>|mmio_|membus.rdata[63:32];
 
         d_membus.ready  = @<b>|mmio_|membus.ready;
         d_membus.rvalid = @<b>|mmio_|membus.rvalid && !memarb_last_i;
