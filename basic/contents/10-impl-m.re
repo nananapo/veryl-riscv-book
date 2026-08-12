@@ -1127,7 +1127,7 @@ generate_div_op関数に@<code>{is_op32}フラグを追加して、
 #@maprange(scripts/10/divwremw-range/core/src/muldivunit.veryl,error)
     always_comb {
         @<b>|if is_op32 {|
-        @<b>|    du_signed_overflow = !funct3[0] && op1[31] == 1 && op1[31:0] == 0 && &op2[31:0];|
+        @<b>|    du_signed_overflow = !funct3[0] && op1[31] == 1 && op1[31 - 1:0] == 0 && &op2[31:0];|
         @<b>|    du_signed_divzero  = !funct3[0] && op2[31:0] == 0;|
         @<b>|} else {|
             du_signed_overflow = !funct3[0] && op1[msb] == 1 && op1[msb - 1:0] == 0 && &op2;
