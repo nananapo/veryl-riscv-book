@@ -1152,7 +1152,7 @@ generate_div_op関数に@<code>{is_op32}フラグを追加して、
                     } else {
                         if du_signed_overflow {
                             state  = State::Finish;
-                            result = if funct3[1] ? 0 : {1'b1, 1'b0 repeat XLEN - 1}; // REM : DIV
+                            result = if funct3[1] ? 0 : @<b>|(if is_op32 ? sext::<32, XLEN>(op1[31:0]) :| { 1'b1, 1'b0 repeat XLEN - 1}@<b>|)|; // REM : DIV
                         } else if du_signed_divzero {
                             state  = State::Finish;
                             result = if funct3[1] ? @<b>|(if is_op32 ? sext::<32, 64>(op1[31:0]) :| op1@<b>|)| : '1; // REM : DIV
